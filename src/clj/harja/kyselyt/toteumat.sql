@@ -906,7 +906,7 @@ WHERE ulkoinen_oid = :ulkoinen_oid
 
 -- name: tallenna-varustetoteuma-ulkoiset-kohdevirhe<!
 -- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
-INSERT INTO varustetoteuma_ulkoiset_kohdevirhe (ulkoinen_oid,
+INSERT INTO varustetoteuma_ulkoiset_virhe (ulkoinen_oid,
                                                 alkupvm,
                                                 virhekuvaus,
                                                 aikaleima,

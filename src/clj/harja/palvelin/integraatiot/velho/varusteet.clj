@@ -76,18 +76,21 @@
 ;   tl516 "Hiekkalaatikot"
 
 (defn lokita-ja-tallenna-hakuvirhe
-  ([db kohde virhekuvaus] (lokita-ja-tallenna-hakuvirhe db kohde virhekuvaus nil))
-  ([db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus vastaus]
-   (let [hakuvirhe {:ulkoinen_oid (or oid "000")
+  ([db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus]
+   (let [hakuvirhe {:ulkoinen_oid oid
                     :alkupvm (-> version-voimassaolo
                                  :alku
                                  varuste-vastaanottosanoma/velho-pvm->pvm
                                  varuste-vastaanottosanoma/aika->sql)
                     :virhekuvaus virhekuvaus
                     :aikaleima (pvm/nyt)
-                    :vastaus vastaus}]
+                    :vastaus (str kohde)}]
      (log/error virhekuvaus)
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-kohdevirhe<! db hakuvirhe))))
+
+(defn lokita-virhe [virheteksti tallenna-virhe-fn]
+  (log/error virheteksti)
+  (tallenna-virhe-fn nil virheteksti))
 
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (let [s (or sijainti alkusijainti)
@@ -114,30 +117,31 @@
 (defn lokita-oid-haku [oidit url]
   (log/info (str "Haku Velhosta onnistui. Saatiin " (count oidit) " oidia. Url: " url)))
 
-(defn jasenna-varusteiden-oidit [url sisalto otsikot]
-  (let [{oidit :oidit status :tila} (try (let [oidit (json/read-str sisalto :key-fn keyword)]
-                                           {:oidit oidit
-                                            :tila {:virheet []
-                                                   :sanoman-lukuvirhe? false}})
-                                         (catch Throwable e
-                                           {:oidit nil
-                                            :tila {:virheet [{:selite (.getMessage e) :url url
-                                                              :otsikot otsikot :sisalto (alku-500 sisalto)}]
-                                                   :sanoman-lukuvirhe? true}}))
-        virheet (:virheet status)                           ; todo virhekäsittelyä, ainakin 404, 500, 405?
+(defn jasenna-varusteiden-oidit [url sisalto otsikot tallenna-virhe-fn]
+  (let [{oidit :oidit
+         status :tila} (try (let [oidit (json/read-str sisalto :key-fn keyword)]
+                              {:oidit oidit
+                               :tila {:virheet []
+                                      :sanoman-lukuvirhe? false}})
+                            (catch Throwable e
+                              {:oidit nil
+                               :tila {:virheet [{:selite (.getMessage e) :url url
+                                                 :otsikot otsikot :sisalto (alku-500 sisalto)}]
+                                      :sanoman-lukuvirhe? true}}))
+        virheet (:virheet status)
         onnistunut? (and (some? oidit) (empty? virheet))
-        virhe-viesti (str "Jäsennettäessä Velhon vastausta tapahtui seuraavat virheet: " (str/join ", " virheet))]
+        virhe-viesti (str "Jäsennettäessä Velhon vastausta tapahtui virheitä. Url: " url " virheet: " (str/join ", " virheet))]
 
     (if onnistunut?
       (do
         (lokita-oid-haku oidit url)
         {:tila true :oidit oidit})
       (do
-        (log/error (str "Virheitä haettaessa Velhosta: " virhe-viesti " Url: " url))
-        {:tila false :oidit nil}
-        ))))
+        (tallenna-virhe-fn nil virhe-viesti)
+        (log/error virhe-viesti)
+        {:tila false :oidit nil}))))
 
-(defn json->kohde-array [json]
+(defn json->kohde-array [json]                              ; json <=> [<kohde-v1-json>,<kohde-v2-json>,...,<kohde-v2-json>]
   (let [tulos (json/read-str json :key-fn keyword)]
     (if (vector? tulos)
       tulos
@@ -160,7 +164,7 @@
   (let [rivit (clojure.string/split-lines ndjson)
         merkitse-vektorin-viimeinen (fn [v] (concat (butlast v) [(assoc (last v) :uusin-versio true)]))]
     (->> rivit
-         (map json->kohde-array)
+         (map json->kohde-array)                            ;[{:kohde <kohde> :json <json>} ... ]
          (map merkitse-vektorin-viimeinen)
          flatten)))
 
@@ -185,7 +189,8 @@
                     :viimeisin_hakuaika viimeisin-hakuaika}]
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
-(defn tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn]
+
+(defn tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn]
   "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
    `kohteiden-historiat-ndjson`:
     [{<kohde1-v1>},{kohde2-v2}]
@@ -195,34 +200,39 @@
    2. Vertailee saatujen kohteiden oideja `haetut-oidit` joukkoon ja log/warn eroista.
    3. Päättelee tietolajit.
    4. Etsii urakka-idt.
-   5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla."
+   5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla.
+
+   Osittain onnistuminen on mahdollista, vaikka kaikkia kohteita ei saada jäsennettyä."
   (let [haetut-oidit (set haetut-oidit)
         {saadut-kohteet :kohteet
          jasennys-onnistui? :onnistui} (try
-                                        {:kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson)
-                                         :onnistui true}
-                                        (catch Throwable t (log/error "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t)
-                                                           {:kohteet nil :onnistui false}))
+                                         {:kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson)
+                                          :onnistui true}
+                                         (catch Throwable t
+                                           (lokita-virhe (str "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t) tallenna-virhe-fn)
+                                           {:kohteet nil :onnistui false}))
         saadut-oidit (as-> saadut-kohteet a
                            (set/project a [:oid])
                            (map :oid a)
                            (set a))
         puuttuvat-oidit (set/difference haetut-oidit saadut-oidit)
-        ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)]
+        ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)
+        tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit)
+        tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
     (when (not-empty puuttuvat-oidit)
       (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit " (nayte10 puuttuvat-oidit) " Url: " url))
     (when (not-empty ylimaaraiset-oidit)
       (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
     (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
-              (count saadut-oidit) " kpl. Url: " url)
+              (count saadut-oidit) " kpl. Tallennetaan " (count tallennettavat-oidit) " kpl. (Ylimääräisiä oideja " (count ylimaaraiset-oidit) " kpl.) Url: " url)
     (let [tulokset (map (fn [kohde]
                           (try
                             (tallenna-fn kohde)
                             true
                             (catch Throwable t
-                              (log/error "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t)
+                              (lokita-virhe (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t) tallenna-virhe-fn)
                               false)
-                            )) saadut-kohteet)]
+                            )) tallennettavat-kohteet)]
       (and jasennys-onnistui?
            (every? true? tulokset)))))
 
@@ -235,7 +245,7 @@
                        "/historia")]
     (str varuste-api-juuri-url "/" palvelu "/api/" api-versio historia-osa "/kohteet?rikasta=sijainnit")))
 
-(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn]
+(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn tallenna-virhe-fn]
   (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)
         token (token-fn)]
     (if token
@@ -247,15 +257,17 @@
                               :url url
                               :otsikot otsikot}
               {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
-              onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn)]
+              onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn tallenna-virhe-fn)]
           onnistunut?)
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-          (log/error "Haku Velhosta epäonnistui. url: " url " virheet: " virheet)
+          (lokita-virhe (str "Ulkoinen käsittelyvirhe. Haku Velhosta epäonnistui. url: " url " virheet: " virheet) tallenna-virhe-fn)
           false)
         (catch Throwable t
-          (log/error "Haku Velhosta epäonnistui. url: " url " Throwable: " t)
+          (lokita-virhe (str "Poikkeus. Haku Velhosta epäonnistui. url: " url " Throwable: " t) tallenna-virhe-fn)
           false))
-      (do (log/error "Kohteen haku Velhosta epäonnistui. Ei saatu autorisaatio tokenia. Kohteiden url: " url)
+      (do (lokita-virhe
+            (str "Autentikaatio virhe. Haku Velhosta epäonnistui. Käyttäjätunnistus epäonnistui. Kohteiden url: " url)
+            tallenna-virhe-fn)
           false))))
 
 (defn muodosta-oidit-url
@@ -267,7 +279,12 @@
          (http/url-encode viimeksi-haettu-iso-8601))))
 
 
-(defn hae-ja-tallenna [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn]
+(defn hae-ja-tallenna
+  "Hakee muuttuneiden kohdeiten oid-listan ja sen avulla kutsuu partitio kerrallaan joukolle oideja kohdehakua.
+
+  Virhekäsittely menee siten, että kutsutut funktiot hoitavat virheet yksittäisten kohdeiden osalta ja kutsuva funktio hoitaa
+  virheet kokonaisille joukoille kohteita."
+  [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn tallenna-virhe-fn]
   (let [url (muodosta-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
         token (token-fn)]
     (if token
@@ -279,7 +296,7 @@
                               :url url
                               :otsikot otsikot}
               {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)
-              {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers)]
+              {tila :tila oidit :oidit} (jasenna-varusteiden-oidit url body headers tallenna-virhe-fn)]
           (when (and tila (not-empty oidit))
             (let [oidit-alijoukot (partition
                                     +kohde-haku-maksimi-koko+
@@ -288,14 +305,16 @@
                                     oidit)
                   osajoukon-haku-fn (fn [oidit-alijoukko]
                                       (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
-                                                                         oidit-alijoukko tallenna-fn))
+                                                                         oidit-alijoukko tallenna-fn tallenna-virhe-fn))
                   tulokset (map osajoukon-haku-fn oidit-alijoukot)
                   kaikki-onnistunut (every? true? tulokset)]
               (when kaikki-onnistunut
                 (tallenna-hakuaika-fn haku-alkanut)))))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-          (log/error "Haku Velhosta epäonnistui. Virheet: " virheet)))
-      (log/error "Haku Velhosta epäonnistui. Autorisaatio tokenia ei saatu. Kohdeluokan url: " url))))
+          (let [virheilmoitus (str "Haku Velhosta epäonnistui. Virheet: " virheet)]
+            (lokita-virhe virheilmoitus tallenna-virhe-fn))))
+      (let [virheviesti (str "Haku Velhosta epäonnistui. Autorisaatio tokenia ei saatu. Kohdeluokan url: " url)]
+        (lokita-virhe virheviesti tallenna-virhe-fn)))))
 
 (defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
   (let [a (or sijainti alkusijainti)
@@ -351,6 +370,7 @@
               (let [kohdeluokka (:kohdeluokka lahde)
                     viimeksi-haettu (hae-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
                     tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
+                    tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                     tallenna-toteuma-fn (fn [kohde]
                                           (log/debug "Tallennetaan kohdeluokka: " kohdeluokka "oid: " (:oid kohde)
                                                      " version-voimassaolo.alku: " (get-in kohde [:version-voimassaolo :alku]))
@@ -374,7 +394,7 @@
                                                                            (varuste-vastaanottosanoma/aika->velho-aika (:alkupvm varustetoteuma2)))
                                                                  (q-toteumat/paivita-varustetoteuma-ulkoiset! db varustetoteuma2))
                                                     lokita-epaonnistuminen-fn (fn [poikkeus]
-                                                                                (lokita-ja-tallenna-hakuvirhe ;TODO Lisää sijainti ja oid tiedot
+                                                                                (lokita-ja-tallenna-hakuvirhe
                                                                                   db kohde
                                                                                   (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: " poikkeus)))]
                                                 (lisaa-tai-paivita-kantaan
@@ -382,14 +402,13 @@
                                                   paivita-fn
                                                   lokita-epaonnistuminen-fn))
                                               (when tietolaji ; Pelkkä tietolaji aiheuttaa virheen, koska emme saaneet varustetoteuma2 kohdetta.
-                                                (lokita-ja-tallenna-hakuvirhe ;TODO Lisää sijainti ja oid tiedot
+                                                (lokita-ja-tallenna-hakuvirhe
                                                   db kohde
                                                   (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                       (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
-                                                ))))]
+                                                       (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))))))]
                 (hae-ja-tallenna
                   lahde viimeksi-haettu konteksti varuste-api-juuri-url
-                  token-fn tallenna-toteuma-fn tallenna-hakuaika-fn)
+                  token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)
                 true))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Velhoon epäonnistui. Virheet: " virheet)

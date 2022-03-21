@@ -1,2 +1,10 @@
-ALTER TABLE varustetoteuma_ulkoiset_kohdevirhe ADD COLUMN aikaleima TIMESTAMP;
-ALTER TABLE varustetoteuma_ulkoiset_kohdevirhe ADD COLUMN vastaus VARCHAR(8192);
+DROP TABLE varustetoteuma_ulkoiset_kohdevirhe;
+CREATE TABLE varustetoteuma_ulkoiset_virhe
+(
+    id           serial PRIMARY KEY NOT NULL,
+    ulkoinen_oid varchar(128),
+    alkupvm      timestamp,
+    aikaleima    timestamp NOT NULL,
+    virhekuvaus  text NOT NULL,
+    vastaus      VARCHAR(8192)
+);

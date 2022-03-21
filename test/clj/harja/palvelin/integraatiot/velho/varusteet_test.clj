@@ -47,6 +47,12 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+(defn kaikki-kohteet []
+  (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
+
+(defn kaikki-virheet []
+  (q-map "SELECT * FROM varustetoteuma_ulkoiset_virhe"))
+
 (deftest varuste-token-epaonnistunut-ei-saa-kutsua-palvelua-test
   (yhteiset-test/tyhjenna-velho-tokenit-atomi)
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
@@ -72,7 +78,9 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
+        (is (= 1 (count (kaikki-virheet))))
+        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "järjestelmä palautti statuskoodin: 500"))))))
 
 (deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -85,7 +93,9 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
+        (is (= 1 (count (kaikki-virheet))))
+        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside array"))))))
 
 (deftest varuste-velho-kohteet-palauttaa-500-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -99,18 +109,13 @@
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
-        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))))
-
-
-(defn kaikki-kohteet []
-  (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
-
-(defn kaikki-kohdevirheet []
-  (q-map "SELECT ulkoinen_oid, virhekuvaus FROM varustetoteuma_ulkoiset_kohdevirhe"))
+        (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
+        (is (= 1 (count (kaikki-virheet))))
+        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "Ulkoinen käsittelyvirhe"))))))
 
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
-  (u "DELETE FROM varustetoteuma_ulkoiset_kohdevirheet")
+  (u "DELETE FROM varustetoteuma_ulkoiset_virhe")
   (let [odotettu-kohdevirherivien-lukumaara 1               ;TODO VHAR-6099 pitää ensin korjata
         odotettu-kohderivien-lukumaara 0
         fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -125,10 +130,9 @@
        {:url +varuste-kohteet-regex+ :method :post} fake-failaava-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
-        (let [saatu_virheet (kaikki-kohdevirheet)]
-          (is (= odotettu-kohderivien-lukumaara (count (kaikki-kohteet))) "Ei saa lisätä kohderivi")
-          #_(is (= odotettu-kohdevirherivien-lukumaara (count saatu_virheet)))
-          #_(is (= {} (first saatu_virheet))))))))
+        (is (= odotettu-kohderivien-lukumaara (count (kaikki-kohteet))) "Ei saa lisätä kohderiviä")
+        (is (= 1 (count (kaikki-virheet))))
+        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside object"))))))
 
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -460,8 +464,8 @@
 
 (deftest urakka-id-kohteelle-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
-  (u "DELETE FROM varustetoteuma_ulkoiset_kohdevirhe")
-  (let [kohde-virheet-count (fn [] (count (kaikki-kohdevirheet)))
+  (u "DELETE FROM varustetoteuma_ulkoiset_virhe")
+  (let [kohde-virheet (fn [] (kaikki-virheet))
         db (:db jarjestelma)
         oid "1.2.3.4.5"
         a {:tie 22 :osa 5 :etaisyys 4355}
@@ -486,42 +490,43 @@
             (lisaa-pakolliset tuntematon-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm))
           )
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
-    (is (= 1 (kohde-virheet-count)))
+    (is (= 1 (count (kohde-virheet))))
+    (is (str/includes? (kohde-virheet) "{:sijainti {:tie -1, :osa -1, :etaisyys -1}"))
 
     (is (nil?
           (varusteet/urakka-id-kohteelle
             db
             (lisaa-pakolliset varuste-oulussa-sijainti oid ennen-urakoiden-alkuja-pvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
-    (is (= 2 (kohde-virheet-count)))
+    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (kohde-virheet-count)))
+    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-loppupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (kohde-virheet-count)))
+    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (kohde-virheet-count)))
+    (is (= 2 (count (kohde-virheet))))
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= 2 (kohde-virheet-count)))
+    (is (= 2 (count (kohde-virheet))))
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= 2 (kohde-virheet-count)))))
+    (is (= 2 (count (kohde-virheet))))))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)
