@@ -86,7 +86,7 @@
                     :aikaleima (pvm/nyt)
                     :vastaus (str kohde)}]
      (log/error virhekuvaus)
-     (q-toteumat/tallenna-varustetoteuma-ulkoiset-kohdevirhe<! db hakuvirhe))))
+     (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
 (defn lokita-virhe [virheteksti tallenna-virhe-fn]
   (log/error virheteksti)

@@ -904,7 +904,7 @@ SET urakka_id        = :urakka_id,
 WHERE ulkoinen_oid = :ulkoinen_oid
   AND alkupvm = :alkupvm;
 
--- name: tallenna-varustetoteuma-ulkoiset-kohdevirhe<!
+-- name: tallenna-varustetoteuma-ulkoiset-virhe<!
 -- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
 INSERT INTO varustetoteuma_ulkoiset_virhe (ulkoinen_oid,
                                                 alkupvm,
