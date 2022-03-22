@@ -375,7 +375,7 @@
 
      [:teksti (str "Indeksikerroin: " indeksikerroin)
       {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
-                                  [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta Indeksistä ja Perusluvusta.
+                                  [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta indeksistä ja perusluvusta.
                           Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
                                   [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}]
 
