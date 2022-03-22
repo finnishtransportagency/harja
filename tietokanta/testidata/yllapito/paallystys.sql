@@ -912,7 +912,10 @@ VALUES
    116, 'L42', 'Tärkeä kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527523069,
    ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
-   20, 1, 1066, 1, 3827, NULL, NULL, NULL, '{2021}', FALSE),
+   20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
+                                        FROM urakka
+                                       WHERE nimi =
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),

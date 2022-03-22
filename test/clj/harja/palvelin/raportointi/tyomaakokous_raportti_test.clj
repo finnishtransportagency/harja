@@ -50,8 +50,8 @@
         raportin-nimi (-> vastaus second :nimi)
         raportit (nth vastaus 2)
         laskutusyhteenveto (take 14 raportit)
-        laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 12)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 15) second :otsikko)
+        laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 13)
+        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 16) second :otsikko)
         sanktioraportin-otsikko (-> (nth raportit 18) second :otsikko)]
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2021"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
