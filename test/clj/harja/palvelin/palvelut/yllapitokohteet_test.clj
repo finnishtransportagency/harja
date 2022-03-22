@@ -1725,12 +1725,29 @@
 
 
 (def odotetut-tiedot-sahkopostilahetykseen
-  [{:tiemerkintaurakka-id 12, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "4242523-TES4", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827, :id 27, :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Oulun tiemerkinnän palvelusopimus 2013-2022", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
-    :kaistat "11, 12" :sahkopostitiedot {:kopio-lahettajalle? nil, :muut-vastaanottajat #{}, :saate nil}}])
+  {:tiemerkintaurakka-id 12, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "4242523-TES4", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827, :id 27, :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Oulun tiemerkinnän palvelusopimus 2013-2022", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
+   :kaistat "11, 12" :ajoradat "1"
+   :paallysteet "AB16, AN14; SMA16, AN7"
+   :toimenpiteet "MPK; MPKJ"
+   :sahkopostitiedot {:kopio-lahettajalle? nil, :muut-vastaanottajat #{}, :saate nil}})
 
 (deftest yllapitokohteiden-tiedot-sahkopostilahestykseen
   (let [kohteen-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         tiedot (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
                  (:db jarjestelma)
                  [kohteen-id])]
-    (is (= odotetut-tiedot-sahkopostilahetykseen tiedot) "Sähköpostilähetyksen tiedot OK")))
+    (is (= [odotetut-tiedot-sahkopostilahetykseen] tiedot) "Sähköpostilähetyksen tiedot OK")))
+
+(deftest yllapitokohteiden-tiedot-sahkopostilahestykseen-jos-alikohteet-poistettu
+  ;; poistettujen alikohteiden kaistoja, ajorataa, toimenpiteitä ja päällystettä ei saa nostaa sähköpostiin
+  (let [kohteen-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        poista-alikohteet (u (str "UPDATE yllapitokohdeosa SET poistettu = true WHERE yllapitokohde = " kohteen-id))
+        tiedot (yllapitokohteet-q/yllapitokohteiden-tiedot-sahkopostilahetykseen
+                 (:db jarjestelma)
+                 [kohteen-id])]
+    (is (= [(assoc odotetut-tiedot-sahkopostilahetykseen
+              :ajoradat nil
+              :kaistat nil
+              :toimenpiteet nil
+              :paallysteet nil)] tiedot)
+        "Sähköpostilähetyksen tiedot OK, eli eivät sisällä poistettujen alikohteiden tietoja.")))
