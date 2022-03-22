@@ -104,10 +104,6 @@
                       :id)]
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
-    (when (nil? urakka-id)
-      (lokita-ja-tallenna-hakuvirhe
-        db kohde (str "varuste-urakka-id-kohteelle: Kohteelle ei löydy urakkaa: oid: "
-                      (:oid kohde) " sijainti: " sijainti " alkusijainti: " alkusijainti " alkupvm: " alkupvm)))
     urakka-id))
 
 (defn alku-500 [s]

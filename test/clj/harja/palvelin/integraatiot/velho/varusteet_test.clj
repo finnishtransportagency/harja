@@ -490,43 +490,34 @@
             (lisaa-pakolliset tuntematon-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm))
           )
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
-    (is (= 1 (count (kohde-virheet))))
-    (is (str/includes? (kohde-virheet) "{:sijainti {:tie -1, :osa -1, :etaisyys -1}"))
-
     (is (nil?
           (varusteet/urakka-id-kohteelle
             db
             (lisaa-pakolliset varuste-oulussa-sijainti oid ennen-urakoiden-alkuja-pvm)))
         "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
-    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-loppupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (count (kohde-virheet))))
     (is (= expected-oulu-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-alkupvm)))
         (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= 2 (count (kohde-virheet))))
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= 2 (count (kohde-virheet))))
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
-             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= 2 (count (kohde-virheet))))))
+             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)
