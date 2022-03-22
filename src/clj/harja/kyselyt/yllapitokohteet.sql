@@ -869,6 +869,10 @@ SELECT
   ypk.tr_loppuosa           AS "tr-loppuosa",
   ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  -- VHAR-5956 kaistatiedot haetaan alikohteista, jokainen kaista max yhteen kertaan
+  (SELECT string_agg(DISTINCT (tr_kaista::TEXT), ', ')
+    FROM yllapitokohdeosa o
+   WHERE ypk.id = o.yllapitokohde) AS kaistat,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",

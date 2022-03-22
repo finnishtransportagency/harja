@@ -22,7 +22,8 @@
             [harja.ui.modal :as modal]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [harja.ui.aikajana :as aikajana]))
+            [harja.ui.aikajana :as aikajana]
+            [harja.ui.ikonit :as ikonit]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -58,6 +59,13 @@
   [:span.varillinen-teksti
    [:span.arvo {:style {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")}}
     (if fmt (fmt arvo) arvo)]])
+
+(defmethod muodosta-html :infopallura
+  ;; :infopallura elementtiä käytetään näyttämään tooltip tyyppisessä infokentässä lisätietoja kohteesta
+  [[_ {:keys [infoteksti]}]]
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% infoteksti]
+   [:span {:style {:padding-left "4px"}} (ikonit/livicon-info-sign)]])
 
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
@@ -163,8 +171,9 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari]}]]
-  [:p {:style {:color (when vari vari)}} teksti])
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
+  [:p {:style {:color (when vari vari)}} teksti
+   (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))

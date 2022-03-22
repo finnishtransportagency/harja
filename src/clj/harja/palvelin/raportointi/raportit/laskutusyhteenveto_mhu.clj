@@ -15,7 +15,9 @@
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
+            [harja.domain.toimenpidekoodi :as toimenpidekoodit]
+            [harja.tyokalut.big :as big])
+  (:import java.math.BigDecimal))
 
 (defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
@@ -284,6 +286,15 @@
      ;; arvot
      rivit]))
 
+(defn- laske-indeksikerroin 
+  "Indeksikertoimen kaava: indeksiarvo / perusluku = indeksikerroin. Indeksiarvo ja perusluku pyöristetään yhteen desimaaliin
+  ennen käyttämistä. Indeksikerroin pyöristetään kolmeen desimaaliin."
+  [indeksiarvo perusluku]
+  (let [b-indeksiarvo (big/parse (clojure.string/replace (big/fmt (big/->big indeksiarvo) 1) "," ".")) ;; Varmista 1 desimaali
+        b-perusluku (big/parse (clojure.string/replace (big/fmt (big/->big perusluku) 1) "," ".")) ;; Varmista 1 desimaali
+        indeksikerroin (big/fmt (big/div-decimal b-indeksiarvo b-perusluku 3) 3)]
+    indeksikerroin))
+
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [;; Aikavälit ja otsikkotekstit
@@ -349,7 +360,8 @@
                  (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
-        koostettu-yhteenveto (conj [] yhteenveto tavoite)]
+        koostettu-yhteenveto (conj [] yhteenveto tavoite)
+        indeksikerroin (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku)]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
@@ -360,6 +372,12 @@
      (if indeksi-puuttuu
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
        [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
+
+     [:teksti (str "Indeksikerroin: " indeksikerroin)
+      {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
+                                  [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta indeksistä ja perusluvusta.
+                          Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
+                                  [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}]
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat

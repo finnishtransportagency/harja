@@ -84,6 +84,9 @@
       (if fmt (fmt arvo) arvo)
       "-" "\u002D")]])
 
+(defmethod muodosta-pdf :infopallura [_]
+  nil)
+
 
 (def alareuna
   {:border-bottom reunan-tyyli})

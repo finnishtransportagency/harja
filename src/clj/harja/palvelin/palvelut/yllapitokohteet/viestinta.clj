@@ -34,7 +34,7 @@
 
 ;; Viestien muodostukset
 
-(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite pituus
+(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite kaistat pituus
                                                                    tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
   (let [peruminen? (nil? tiemerkintapvm)
         tiivistelma (if peruminen?
@@ -51,6 +51,7 @@
                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                               kohde-osoite
                                               {:teksti-tie? false})]
+                               ["Kaistat" kaistat]
                                ["Pituus" pituus]
                                ["Valmis tiemerkintään" (if peruminen?
                                                          "Ei vielä tiedossa"
@@ -242,7 +243,7 @@
   [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
-                tiemerkintaurakka-nimi pituus]} kohteen-tiedot
+                tiemerkintaurakka-nimi kaistat pituus]} kohteen-tiedot
         kohde-osoite {:tr-numero tr-numero
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
@@ -258,6 +259,7 @@
         viestin-params {:paallystysurakka-nimi paallystysurakka-nimi
                         :kohde-nimi kohde-nimi
                         :kohde-osoite kohde-osoite
+                        :kaistat kaistat
                         :pituus pituus
                         :tiemerkintapvm tiemerkintapvm
                         :saate saate

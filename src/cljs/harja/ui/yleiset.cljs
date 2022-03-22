@@ -771,14 +771,17 @@ jatkon."
                    (+ (/ (.-width rect) -2)
                       (/ (.-width parent-rect) 2)))))
       (fn [auki? sisalto]
-        [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position "absolute"
-                                      :min-width 150
-                                      :left (when-let [x @x]
-                                              x)}}
-         [:div.tooltip-arrow]
-         [:div.tooltip-inner
-          sisalto]]))))
+        (let [s-pituus (count (str sisalto))]
+          [:div.tooltip.bottom {:class (when auki? "in")
+                                :style {:position "absolute"
+                                        :min-width (if (< 150 s-pituus)
+                                                     300
+                                                     150)
+                                        :left (when-let [x @x]
+                                                x)}}
+           [:div.tooltip-arrow]
+           [:div.tooltip-inner
+            sisalto]])))))
 
 (defn tooltip [opts komponentti tooltipin-sisalto]
   (let [tooltip-nakyy? (atom false)
