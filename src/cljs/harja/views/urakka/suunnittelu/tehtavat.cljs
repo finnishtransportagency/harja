@@ -183,14 +183,16 @@
        (if sopimukset-syotetty? 
          "60%"
          "70%")}
+      ;; ennen urakkaa -moodi
       (when (not sopimukset-syotetty?)
         {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
          :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
+      ;; urakan ajan suunnittelu -moodi
       (when sopimukset-syotetty? 
-        {:otsikko "Tarjouksen mukainen määrä yhteensä" :nimi :sopimuksen-tehtavamaarat-yhteensa 
+        {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa 
          :tyyppi :numero :muokattava? (constantly false) :leveys "160px"})
       (when sopimukset-syotetty? 
-        {:otsikko "Tarjouksen mukaista määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
+        {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
          :muokattava? (constantly false) :leveys "160px" })
       (when sopimukset-syotetty? 
         {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
@@ -234,7 +236,10 @@
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)
-         [yleiset/keltainen-vihjelaatikko "Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
+         [yleiset/keltainen-vihjelaatikko 
+
+"Urakan aluksi syötä tehtäville  tarjouksen tehtävä- ja määräluettelosta määrät. Määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”. Tarjouksien määriä käytetään apuna urakan määrien suunniteluun ja seurantaan."
+          #_"Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
        [valitaso-filtteri e! app]
