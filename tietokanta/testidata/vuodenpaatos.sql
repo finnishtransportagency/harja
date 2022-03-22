@@ -2,7 +2,7 @@
 DO
 $$
     DECLARE
-        urakka_id             INT                := (SELECT id
+        urakka_id_            INT                := (SELECT id
                                                      FROM urakka
                                                      WHERE nimi = 'Kittilän MHU 2019-2024');
         vuosi_                INT;
@@ -10,7 +10,7 @@ $$
         sopimus_id            INT                := (SELECT id
                                                      FROM sopimus
                                                      WHERE nimi = 'Kittilän MHU sopimus');
-        kayttaja_              INT                := (SELECT id
+        kayttaja_             INT                := (SELECT id
                                                      FROM kayttaja
                                                      WHERE kayttajanimi = 'Integraatio');
         indeksikorjattu_summa INT;
@@ -24,6 +24,7 @@ $$
         vahvistettavat_osiot  SUUNNITTELU_OSIO[] := ARRAY ['hankintakustannukset', 'erillishankinnat', 'johto-ja-hallintokorvaus', 'hoidonjohtopalkkio', 'tavoite-ja-kattohinta'];
         osio_                 SUUNNITTELU_OSIO;
         kulun_id_             INT;
+        toteuma_              NUMERIC;
     BEGIN
 
         -- Kiinteähintaiset, talvihoito
@@ -34,7 +35,7 @@ $$
             LOOP
                 -- Suunnitellut
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);
-                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(12345, vuosi_, kuukausi_, urakka_id));
+                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(12345, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, tehtavaryhma, sopimus,
                                                   luotu, luoja, summa_indeksikorjattu, indeksikorjaus_vahvistettu,
                                                   vahvistaja, versio)
@@ -45,13 +46,14 @@ $$
                 -- Toteutuneet, alitetaan tavoitehinta
                 INSERT INTO kulu (tyyppi, kokonaissumma, erapaiva, urakka, luotu, luoja,
                                   koontilaskun_kuukausi)
-                VALUES ('laskutettava', indeksikorjattu_summa * 0.5, (vuosi_::TEXT || '-'  || kuukausi_::TEXT || '-'|| '15')::DATE, urakka_id, NOW(),
+                VALUES ('laskutettava', indeksikorjattu_summa * 0.9,
+                        (vuosi_::TEXT || '-' || kuukausi_::TEXT || '-' || '15')::DATE, urakka_id_, NOW(),
                         kayttaja_, kuukauden_nimi(kuukausi_) || '-1-hoitovuosi')
                 RETURNING id INTO kulun_id_;
 
                 INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, luotu,
                                             luoja)
-                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.5, tpi, tr, 'kokonaishintainen', NOW(), kayttaja_);
+                VALUES (0, kulun_id_, indeksikorjattu_summa * 0.9, tpi, tr, 'kokonaishintainen', NOW(), kayttaja_);
             END LOOP;
 
         -- kustannusarvioidut
@@ -62,7 +64,7 @@ $$
                 vuosi_ := (CASE WHEN (kuukausi_ <= 9) THEN 2020 ELSE 2019 END);
 
                 -- Erillishankinnat
-                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(500, vuosi_, kuukausi_, urakka_id));
+                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(500, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtavaryhma, toimenpideinstanssi,
                                                    sopimus, luotu, luoja, summa_indeksikorjattu,
                                                    indeksikorjaus_vahvistettu, vahvistaja, osio)
@@ -74,7 +76,7 @@ $$
                 tpk := (SELECT id
                         FROM toimenpidekoodi
                         WHERE yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388');
-                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(3.50, vuosi_, kuukausi_, urakka_id));
+                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(3.50, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, toimenpideinstanssi,
                                                    sopimus, luotu, luoja, summa_indeksikorjattu,
                                                    indeksikorjaus_vahvistettu, vahvistaja, osio)
@@ -86,7 +88,7 @@ $$
                 tpk := (SELECT id
                         FROM toimenpidekoodi
                         WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8');
-                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(7000, vuosi_, kuukausi_, urakka_id));
+                indeksikorjattu_summa := (SELECT testidata_indeksikorjaa(7000, vuosi_, kuukausi_, urakka_id_));
                 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, toimenpideinstanssi,
                                                    sopimus, luotu, luoja, summa_indeksikorjattu,
                                                    indeksikorjaus_vahvistettu, vahvistaja, osio)
@@ -103,8 +105,8 @@ $$
                 INSERT INTO johto_ja_hallintokorvaus ("urakka-id", "toimenkuva-id", tunnit, tuntipalkka, luotu, luoja,
                                                       vuosi, kuukausi, tuntipalkka_indeksikorjattu,
                                                       indeksikorjaus_vahvistettu, vahvistaja)
-                VALUES (urakka_id, toimenkuvat[1], 120, 20, NOW(), kayttaja_, vuosi_, kuukausi_,
-                        testidata_indeksikorjaa(20, vuosi_, kuukausi_, urakka_id),
+                VALUES (urakka_id_, toimenkuvat[1], 120, 20, NOW(), kayttaja_, vuosi_, kuukausi_,
+                        testidata_indeksikorjaa(20, vuosi_, kuukausi_, urakka_id_),
                         NOW(), kayttaja_)
                 ON CONFLICT DO NOTHING;
 
@@ -114,8 +116,8 @@ $$
                                                           luoja,
                                                           vuosi, kuukausi, tuntipalkka_indeksikorjattu,
                                                           indeksikorjaus_vahvistettu, vahvistaja)
-                    VALUES (urakka_id, toimenkuvat[2], 60, 50, NOW(), kayttaja_, vuosi_, kuukausi_,
-                            testidata_indeksikorjaa(50, vuosi_, kuukausi_, urakka_id),
+                    VALUES (urakka_id_, toimenkuvat[2], 60, 50, NOW(), kayttaja_, vuosi_, kuukausi_,
+                            testidata_indeksikorjaa(50, vuosi_, kuukausi_, urakka_id_),
                             NOW(), kayttaja_)
                     ON CONFLICT DO NOTHING;
                 END IF;
@@ -126,8 +128,8 @@ $$
                                                           luoja,
                                                           vuosi, kuukausi, tuntipalkka_indeksikorjattu,
                                                           indeksikorjaus_vahvistettu, vahvistaja)
-                    VALUES (urakka_id, toimenkuvat[3], 240, 80, NOW(), kayttaja_, vuosi_, kuukausi_,
-                            testidata_indeksikorjaa(80, vuosi_, kuukausi_, urakka_id),
+                    VALUES (urakka_id_, toimenkuvat[3], 240, 80, NOW(), kayttaja_, vuosi_, kuukausi_,
+                            testidata_indeksikorjaa(80, vuosi_, kuukausi_, urakka_id_),
                             NOW(), kayttaja_)
                     ON CONFLICT DO NOTHING;
                 END IF;
@@ -137,9 +139,9 @@ $$
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja, muokattu, muokkaaja,
                                     tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu,
                                     indeksikorjaus_vahvistettu, vahvistaja, tarjous_tavoitehinta)
-        VALUES (urakka_id, 1, 364782, 401260.2, NOW(), kayttaja_, NOW(), kayttaja_,
-                testidata_indeksikorjaa(364782, 2019, 10, urakka_id),
-                testidata_indeksikorjaa(401260.2, 2019, 10, urakka_id),
+        VALUES (urakka_id_, 1, 364782, 401260.2, NOW(), kayttaja_, NOW(), kayttaja_,
+                testidata_indeksikorjaa(364782, 2019, 10, urakka_id_),
+                testidata_indeksikorjaa(401260.2, 2019, 10, urakka_id_),
                 NOW(), kayttaja_, 40000)
         ON CONFLICT DO NOTHING;
         FOR vuosi_ IN 2..4
@@ -148,7 +150,7 @@ $$
                                             muokkaaja,
                                             tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu,
                                             indeksikorjaus_vahvistettu, vahvistaja, tarjous_tavoitehinta)
-                VALUES (urakka_id, vuosi_, 0, 0, NOW(), kayttaja_, NOW(), kayttaja_, 0, 0, NOW(), kayttaja_, 40000)
+                VALUES (urakka_id_, vuosi_, 0, 0, NOW(), kayttaja_, NOW(), kayttaja_, 0, 0, NOW(), kayttaja_, 40000)
                 ON CONFLICT DO NOTHING;
             END LOOP;
 
@@ -156,11 +158,33 @@ $$
             LOOP
                 INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, vahvistettu, luoja, luotu,
                                                                     vahvistaja, vahvistus_pvm)
-                VALUES (urakka_id, osio_, 1, true, kayttaja_, NOW(), kayttaja_, NOW())
+                VALUES (urakka_id_, osio_, 1, true, kayttaja_, NOW(), kayttaja_, NOW())
                 ON CONFLICT DO NOTHING;
             END LOOP;
 
 
         PERFORM siirra_budjetoidut_tyot_toteumiin(current_date);
+
+        toteuma_ := (SELECT SUM(summa_indeksikorjattu)
+                     FROM toteutuneet_kustannukset tk
+                     WHERE tk.urakka_id = urakka_id_
+                       AND (tk.vuosi = 2019
+                         OR
+                            tk.vuosi = 2020 AND kuukausi <= 9)) +
+                    (SELECT SUM(summa)
+                     FROM kulu_kohdistus
+                     WHERE toimenpideinstanssi =
+                           (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Talvihoito TP'));
+
+        INSERT INTO urakka_paatos ("hoitokauden-alkuvuosi", "urakka-id", "urakoitsijan-maksu",
+                                   "tilaajan-maksu", siirto, tyyppi, muokattu, "muokkaaja-id",
+                                   "luoja-id")
+        VALUES (2019, urakka_id_, ((SELECT tavoitehinta_indeksikorjattu
+                                    FROM urakka_tavoite
+                                    WHERE urakka = urakka_id_
+                                      AND hoitokausi = 1) - toteuma_) * 0.3,
+                0, 0, 'tavoitehinnan-alitus', NOW(), kayttaja_,
+                kayttaja_);
+
     END
 $$;
