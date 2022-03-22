@@ -92,7 +92,12 @@
   (let [vuoden-paatoksen-tehtavaryhmat-set
         (into #{}
           (map :id (filter #(str/includes? (:tehtavaryhma %) "Hoitovuoden päättäminen") tehtavaryhmat)))]
-    (boolean (vuoden-paatoksen-tehtavaryhmat-set (:tehtavaryhma (first (:kohdistukset kulu)))))))
+    (-> kulu
+      :kohdistukset
+      first
+      :tehtavaryhma
+      vuoden-paatoksen-tehtavaryhmat-set
+      boolean)))
 
 (defn kulu->lomake [app kulu]
   (let [{suorittaja :suorittaja} kulu]

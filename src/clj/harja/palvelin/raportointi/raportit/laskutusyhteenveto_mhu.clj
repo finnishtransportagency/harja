@@ -133,9 +133,9 @@
   [tp-rivi kyseessa-kk-vali?]
   (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu tp-rivi)
         laskutetaan (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan tp-rivi)]
-    (when-not (and
-                (zero? laskutettu)
-                (zero? laskutetaan))
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
       (rivi
         (str "Hoitovuoden päättäminen / Tavoitepalkkio")
         [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
@@ -148,9 +148,9 @@
   [tp-rivi kyseessa-kk-vali?]
   (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu tp-rivi)
         laskutetaan (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan tp-rivi)]
-    (when-not (and
-                (zero? laskutettu)
-                (zero? laskutetaan))
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
       (rivi
         (str "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä")
         [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
@@ -163,9 +163,9 @@
        [tp-rivi kyseessa-kk-vali?]
   (let [laskutettu (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu tp-rivi)
         laskutetaan (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan tp-rivi)]
-    (when-not (and
-                (zero? laskutettu)
-                (zero? laskutetaan))
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
       (rivi
         (str "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä")
         [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
