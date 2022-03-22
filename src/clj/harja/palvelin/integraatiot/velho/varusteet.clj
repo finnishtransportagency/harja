@@ -222,7 +222,7 @@
                             (tallenna-fn kohde)
                             true
                             (catch Throwable t
-                              (tallenna-virhe-fn nil (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
+                              (tallenna-virhe-fn kohde (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
                               false)
                             )) tallennettavat-kohteet)]
       (and jasennys-onnistui?
