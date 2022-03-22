@@ -88,9 +88,6 @@
      (log/error virhekuvaus)
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
-(defn lokita-virhe [virheteksti tallenna-virhe-fn]
-  (tallenna-virhe-fn nil virheteksti))
-
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (let [s (or sijainti alkusijainti)
         alkupvm (or (:alku version-voimassaolo)
@@ -204,7 +201,7 @@
                                          {:kohteet (kohteet-historia-ndjson->kohteet kohteiden-historiat-ndjson)
                                           :onnistui true}
                                          (catch Throwable t
-                                           (lokita-virhe (str "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t) tallenna-virhe-fn)
+                                           (tallenna-virhe-fn nil (str "Virhe jäsennettäessä kohdehistoria json vastausta. Throwable: " t))
                                            {:kohteet nil :onnistui false}))
         saadut-oidit (as-> saadut-kohteet a
                            (set/project a [:oid])
@@ -225,7 +222,7 @@
                             (tallenna-fn kohde)
                             true
                             (catch Throwable t
-                              (lokita-virhe (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t) tallenna-virhe-fn)
+                              (tallenna-virhe-fn nil (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
                               false)
                             )) tallennettavat-kohteet)]
       (and jasennys-onnistui?
@@ -255,15 +252,15 @@
               onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn tallenna-virhe-fn)]
           onnistunut?)
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-          (lokita-virhe (str "Ulkoinen käsittelyvirhe. Haku Velhosta epäonnistui. url: " url " virheet: " virheet) tallenna-virhe-fn)
+          (tallenna-virhe-fn nil (str "Ulkoinen käsittelyvirhe. Haku Velhosta epäonnistui. url: " url " virheet: " virheet))
           false)
         (catch Throwable t
-          (lokita-virhe (str "Poikkeus. Haku Velhosta epäonnistui. url: " url " Throwable: " t) tallenna-virhe-fn)
+          (tallenna-virhe-fn nil (str "Poikkeus. Haku Velhosta epäonnistui. url: " url " Throwable: " t))
           false))
-      (do (lokita-virhe
-            (str "Autentikaatio virhe. Haku Velhosta epäonnistui. Käyttäjätunnistus epäonnistui. Kohteiden url: " url)
-            tallenna-virhe-fn)
-          false))))
+      (do
+        (tallenna-virhe-fn nil
+                           (str "Autentikaatio virhe. Haku Velhosta epäonnistui. Käyttäjätunnistus epäonnistui. Kohteiden url: " url))
+        false))))
 
 (defn muodosta-oidit-url
   "`kohdeluokka` sisältää /-merkin. esim. `varusteet/kaiteet`"
@@ -307,9 +304,9 @@
                 (tallenna-hakuaika-fn haku-alkanut)))))
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
           (let [virheilmoitus (str "Haku Velhosta epäonnistui. Virheet: " virheet)]
-            (lokita-virhe virheilmoitus tallenna-virhe-fn))))
+            (tallenna-virhe-fn nil virheilmoitus))))
       (let [virheviesti (str "Haku Velhosta epäonnistui. Autorisaatio tokenia ei saatu. Kohdeluokan url: " url)]
-        (lokita-virhe virheviesti tallenna-virhe-fn)))))
+        (tallenna-virhe-fn nil virheviesti)))))
 
 (defn sijainti-kohteelle [db {:keys [sijainti alkusijainti loppusijainti] :as kohde}]
   (let [a (or sijainti alkusijainti)
