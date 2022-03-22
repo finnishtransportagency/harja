@@ -171,10 +171,15 @@
     (jdbc/with-db-transaction [db db]
                              (let [vanha-tiemerkintapvm (:valmis-tiemerkintaan
                                                           (first (q/hae-yllapitokohteen-aikataulu
-                                                                   db {:id kohde-id})))]
+                                                                   db {:id kohde-id})))
+                                   merkinta-ja-jyrsintatiedot (first (q/hae-kohteen-merkinta-ja-jyrsintatiedot db {:yllapitokohde kohde-id}))
+                                   laskettu-takaraja (:aikataulu-tiemerkinta-takaraja
+                                                       (tm-domain/laske-tiemerkinnan-takaraja (assoc merkinta-ja-jyrsintatiedot
+                                                                                                :valmis-tiemerkintaan tiemerkintapvm)))]
                                (q/merkitse-kohde-valmiiksi-tiemerkintaan<!
                                  db
                                  {:valmis_tiemerkintaan           tiemerkintapvm
+                                  :laskettu_takaraja              laskettu-takaraja
                                   :id                             kohde-id
                                   :urakka                         urakka-id})
 

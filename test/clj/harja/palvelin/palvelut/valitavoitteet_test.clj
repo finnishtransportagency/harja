@@ -105,7 +105,7 @@
       (is (nil? (:valmis-kommentti vt3))))
 
     ;; Päivitys toimii
-    (let [paivitetty-yllapitokohde (hae-yllapitokohde-oulun-ohitusramppi)
+    (let [paivitetty-yllapitokohde (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
           muokattu-vt (->> vt-lisayksen-jalkeen
                            (filter #(or (= (:nimi %) "testi566")
                                         (= (:nimi %) "testi34554")))
