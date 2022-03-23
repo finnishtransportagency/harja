@@ -182,7 +182,7 @@ pvm-popupin-sulkevat-nappaimet
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn]}]
+    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
       (let [kiinni #(reset! % false)]
         [:div.kalenteri-kontti
          [:input {:disabled    disabled
@@ -192,7 +192,7 @@ pvm-popupin-sulkevat-nappaimet
                                  (seq @suora-syotto-sisalto) @suora-syotto-sisalto
                                  (not (nil? paivamaara)) (pvm/pvm paivamaara)
                                  :else "")
-
+                  :placeholder placeholder
                   :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
                   :on-click    #(reset! auki? true)
                   :on-focus    #(reset! auki? true)

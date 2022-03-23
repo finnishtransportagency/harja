@@ -75,9 +75,17 @@
    :urakka          (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
    :viite           "2019080022"
    :erapaiva        #inst "2021-12-15T21:00:00.000-00:00"
-   :kokonaissumma   5555.55
+   :kokonaissumma   3999.33
    :tyyppi          "laskutettava"
-   :kohdistukset    [{:kohdistus-id        5
+   :kohdistukset    [{:kohdistus-id        nil
+                       :rivi                1
+                       :summa               666
+                       :suoritus-alku       #inst "2021-11-14T22:00:00.000000000-00:00"
+                       :suoritus-loppu      #inst "2021-11-17T22:00:00.000000000-00:00"
+                       :toimenpideinstanssi (hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi "23116")
+                       :tehtavaryhma        (hae-tehtavaryhman-id "Vesakonraivaukset ja puun poisto (V)")
+                       :tehtava             nil}
+                     {:kohdistus-id        nil
                       :rivi                2
                       :summa               3333.33
                       :suoritus-alku       #inst "2021-03-14T22:00:00.000000000-00:00"
@@ -289,17 +297,20 @@
         paivitetty-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :kulu-kohdistuksineen (assoc tallennettu-kulu :kokonaissumma 9876.54 :id tallennettu-id)})
+                              :kulu-kohdistuksineen (assoc tallennettu-kulu :lisatieto "lisätieto" :id tallennettu-id)})
+        kohdistus-idt (map :kohdistus-id (:kohdistukset paivitetty-kulu))
         paivitetty-kohdistus
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :kulu-kohdistuksineen (assoc kulun-paivitys :id tallennettu-id)})
+                              :kulu-kohdistuksineen (-> (assoc kulun-paivitys :id tallennettu-id)
+                                                      (assoc-in [:kulut 0 :kohdistus-id] (nth kohdistus-idt 0))
+                                                      (assoc-in [:kulut 1 :kohdistus-id] (nth kohdistus-idt 1)))})
         lisatty-kohdistus
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :kulu-kohdistuksineen (assoc paivitetty-kulu
+                              :kulu-kohdistuksineen (assoc paivitetty-kohdistus
                                                :id tallennettu-id
-                                               :kohdistukset (merge (paivitetty-kulu :kohdistukset)
+                                               :kohdistukset (merge (:kohdistukset paivitetty-kohdistus)
                                                                     uusi-kohdistus))})
         poistettu-kohdistus
         (kutsu-http-palvelua :poista-kohdistus (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -324,10 +335,10 @@
 
     ;; Päivitys: arvon muuttaminen
     (is (= (count (:kohdistukset paivitetty-kulu)) 2) "Päivitetyssä kulussa on kaksi kohdistusta (paivitetty-kulu).")
-    (is (= (:kokonaissumma paivitetty-kulu) 9876.54M) "Päivitetyn kulun kokonaissumma päivittyi (paivitetty-kulu).")
+    (is (= (:lisatieto paivitetty-kulu) "lisätieto") "Päivitetyn kulun lisätieto päivittyi (paivitetty-kulu).")
     (is (= (count (:kohdistukset paivitetty-kohdistus)) 2) "Kohdistuksen päivityksen jälkeen on on kaksi kohdistusta (paivitetty-kohdistus).")
     ;;(is (= (map #(:summa %) paivitetty-kohdistus) (2222.22M 3333.33M)) "Päivitetyn kohdistuksen summa päivittyi. Toinen kohdistus säilyi muuttumattomana. (paivitetty-kohdistus)")
-    (is (= (:kokonaissumma paivitetty-kohdistus) 5555.55M) "Päivitetyn kulun kokonaissumma päivittyi (paivitetty-kohdistus).")
+    (is (= (:kokonaissumma paivitetty-kohdistus) 3999.33M) "Päivitetyn kulun kokonaissumma päivittyi (paivitetty-kohdistus).")
 
     ;; Päivitys: kohdistuksen lisääminen
     (is (= (count (:kohdistukset lisatty-kohdistus)) 3) "Kohdistuksen lisääminen kasvatti kohdistusten määrää yhdellä (lisatty-kohdistus).")
