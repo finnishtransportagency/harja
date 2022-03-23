@@ -11,7 +11,6 @@
             [harja.tyokalut.functor :refer [fmap]]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodit]
             [harja.tyokalut.big :as big]
             [harja.fmt :as fmt])
   (:import java.math.BigDecimal))
