@@ -568,7 +568,7 @@
     :tiemerkinta
     [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
      {:teksti "Päällystys" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
-     {:teksti "Tiemerkintä" :sarakkeita 6 :luokka "tiemerkinta-tausta"}]
+     {:teksti "Tiemerkintä" :sarakkeita 7 :luokka "tiemerkinta-tausta"}]
 
     ;; kaikki muut, käytännössä :paallystys
     [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
@@ -693,7 +693,9 @@
        :nimi :yhteystiedot
        :tasaa :keskita
        :tyyppi :komponentti
-       :otsikkorivi-luokka "tiemerkinta-tausta"
+       :otsikkorivi-luokka (if (= (:nakyma optiot) :tiemerkinta)
+                             "paallystys-tausta-tumma"
+                             "tiemerkinta-tausta")
        :komponentti (fn [rivi]
                       [napit/yleinen-toissijainen ""
                        #(yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
