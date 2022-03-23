@@ -494,7 +494,7 @@
 (deftest hae-yllapitokohteen-olemassa-oleva-pot2-paallystysilmoitus
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
                                                     :urakan-paallystysilmoitus-paallystyskohteella
                                                     +kayttaja-jvh+ {:urakka-id urakka-id
@@ -505,7 +505,7 @@
     (is (= (:versio paallystysilmoitus-kannassa) 2))
     (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 1066, :loppuosa 1, :loppuetaisyys 3827}
            (:yha-tr-osoite paallystysilmoitus-kannassa)))
-    (is (= 2 (count kohdeosat)))))   ; TODO ehkä myös varmista että data tuli pot2_ tauluista
+    (is (= 2 (count kohdeosat)))))
 
 (defn- hae-yllapitokohdeosadata [yllapitokohde-id]
   (set (q-map (str "SELECT nimi, paallystetyyppi, raekoko, tyomenetelma, massamaara, toimenpide
@@ -550,7 +550,7 @@
 
 (deftest tallenna-uusi-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (hae-yllapitokohde-kirkkotie)]
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Kirkkotie")]
     (is (some? paallystyskohde-id))
     (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi ilmoitus")
     (let [paallystysilmoitus (-> pot-testidata
@@ -630,21 +630,21 @@
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
 (deftest ei-saa-tallenna-paallystysilmoitus-jos-feilaa-validointi-alkuosa
-  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Kirkkotie")
         paallystysilmoitus (-> pot-testidata
                                (assoc-in [:ilmoitustiedot :osoitteet 0 :tr-alkuosa] 2))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
                                        "Kaista 11 ajoradalla 1 ei kata koko osaa 3")))
 
 (deftest ei-saa-tallenna-paallystysilmoitus-jos-feilaa-validointi-loppuosa
-  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Kirkkotie")
         paallystysilmoitus (-> pot-testidata
                                (assoc-in [:ilmoitustiedot :osoitteet 0 :tr-loppuetaisyys] 6000))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
                                        "(aet: 3, let: 6000)")))
 
 (deftest ei-saa-tallenna-paallystysilmoitus-jos-paallekkain
-  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Kirkkotie")
         paallystysilmoitus (-> pot-testidata
                                (assoc-in [:ilmoitustiedot :osoitteet 2] {;; Alikohteen tiedot
                                                                          :nimi "Tie 22 tosi pieni pätkä"
@@ -680,21 +680,21 @@
                                        "Kohteenosa on päällekkäin osan")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-alkuosa
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:paallystekerros 0 :tr-alkuosa] 2))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-loppuosa
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] 6000))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2021
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-paallekkain
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:paallystekerros 2] {:kohdeosa-id 14,
                                                              :tr-kaista 12,
@@ -716,7 +716,7 @@
                                        "Alikohde ei voi olla pääkohteen ulkopuolella")))
 
 (deftest tallenna-pot2-paallystysilmoitus-jos-paallekkain-mutta-eri-jarjestysnro
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:paallystekerros 2] {:kohdeosa-id 14,
                                                              :tr-kaista 12,
@@ -743,7 +743,7 @@
       (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
 (deftest tallenna-pot2-paallystysilmoitus-jossa-alikohde-muulla-tiella
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         muu-tr-numero 5555
         paallystysilmoitus (-> pot2-testidata
                                (assoc-in [:paallystekerros 1 :tr-numero] muu-tr-numero))
@@ -764,7 +764,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest paivittaa-paallystysilmoitus-muokkaa-yllapitokohdeosaa
-  (let [paallystyskohde-id (hae-yllapitokohde-kirkkotie)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Kirkkotie")
         _ (is (some? paallystyskohde-id))
         alkuperainen-paallystysilmoitus (-> pot-testidata
                                             (assoc :paallystyskohde-id paallystyskohde-id)
@@ -796,7 +796,7 @@
 
 (deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (hae-yllapitokohde-aloittamaton)]
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
     (is (some? paallystyskohde-id))
     (is (= 28 paallystyskohde-id))
     (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
@@ -846,7 +846,7 @@
 
 (deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat
   (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (hae-yllapitokohde-aloittamaton)]
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
     (is (= 28 paallystyskohde-id))
     (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Freude' WHERE yllapitokohde = 28"))
     (let [alkuperainen-paallystysilmoitus (-> pot2-testidata
@@ -887,7 +887,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
@@ -899,7 +899,7 @@
 
 (deftest tallenna-pot2-paallystysilmoitus-salli-null-materiaali-vain-jos-on-kar-toimenpide
   (let [kar-toimenpide pot2-domain/+kulutuskerros-toimenpide-karhinta+
-        paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
@@ -913,7 +913,7 @@
     (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :toimenpide])))))
 
 (deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
@@ -928,7 +928,7 @@
     (is (= (:valmispvm-kohde paallystysilmoitus-kannassa-jalkeen) #inst "2021-06-19T21:00:00.000-00:00") "Kohteen valmispvm-kohde muutoksen jälkeen")))
 
 (deftest tallenna-pot2-paallystysilmoitus-throwaa-jos-loppupvm-puuttuu
-  (let [paallystyskohde-id (hae-yllapitokohde-aloittamaton)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
@@ -1036,7 +1036,7 @@
 (deftest tallenna-pot2-poista-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
                                                                                   urakka-id sopimus-id paallystyskohde-id pot2-alustatestien-ilmoitus)
         alustarivit-ennen (:alusta paallystysilmoitus-kannassa-ennen)
@@ -1054,7 +1054,7 @@
 (deftest tallenna-pot2-lisaa-alustarivi-ja-verkko-tiedot
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (assoc pot2-alustatestien-ilmoitus :alusta pot2-alusta-esimerkki)
         ;; Tehdään tallennus joka lisää kaksi alustariviä
         [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
@@ -1083,7 +1083,7 @@
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-verkko-tiedot
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] dissoc :verkon-tarkoitus))
@@ -1098,7 +1098,7 @@
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-tas-tiedot
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 2] dissoc :murske :massamaara))
@@ -1113,7 +1113,7 @@
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         muu-tr-numero 7777
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc-in [:paallystekerros 2]
@@ -1150,7 +1150,7 @@
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon.
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         muu-tr-numero 837
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (dissoc :alusta)
@@ -1173,7 +1173,7 @@
     #_(poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivi-on-tiella-joka-ei-loydy-kulutuskerroksesta
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         muu-tr-numero 7777
         vaara-tr-numero 5555
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
@@ -1194,7 +1194,7 @@
 (deftest tallenna-pot2-paivittaa-alustarivi-jossa-on-verkko-tiedot
   (let [urakka-id (hae-utajarven-paallystysurakan-id)
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
-        paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         alkuperaiset-verkon-tiedot {:verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
@@ -1215,7 +1215,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-ei-ole-kaikki-pakolliset-verkontiedot
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 3] dissoc :verkon-sijainti))]
@@ -1223,7 +1223,7 @@
                                        "Alustassa väärät lisätiedot.")))
 
 (deftest ei-saa-tallenna-pot2-jos-sama-tr-osoite-samalla-alustatoimenpiteella
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
                                (update-in [:alusta 1] merge {:tr-kaista 11}))]
@@ -1231,7 +1231,7 @@
                                        "Kohteenosa on päällekkäin toisen osan kanssa.")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-lisatiedot
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         verkon-tiedot {:verkon-tyyppi 1 :verkon-sijainti 3 :verkon-tarkoitus 1 :massamaara 1}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
@@ -1240,7 +1240,7 @@
                                        "Alustassa väärät lisätiedot.")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-alustarivilla-on-vaarat-verkontiedot
-  (let [paallystyskohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         verkon-tiedot {:verkon-tyyppi 1 :verkon-tarkoitus 333 :verkon-sijainti 3}
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
                                (assoc :alusta pot2-alusta-esimerkki)
@@ -1531,7 +1531,7 @@
           "Uudet maksuerät ilmestyivät kantaan, vanhat päivitettiin ja payloadissa olemattomiin ei koskettu"))))
 
 (deftest avaa-lukitun-potin-lukitus
-  (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
+  (let [kohde-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
         payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
                  ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
                  ::paallystysilmoitus-domain/tila :valmis}
@@ -1542,7 +1542,7 @@
     (is (= :valmis (:tila vastaus)))))
 
 (deftest avaa-lukitun-potin-lukitus-ei-sallittu-koska-tero-ei-tassa-urakanvalvojana
-  (let [kohde-id (hae-yllapitokohde-oulun-ohitusramppi)
+  (let [kohde-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
         payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
                  ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
                  ::paallystysilmoitus-domain/tila :valmis}]

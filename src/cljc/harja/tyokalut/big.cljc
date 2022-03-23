@@ -11,7 +11,8 @@
   instanssin esim. tietokantaan tallentamista varten."
 
   (:refer-clojure :exclude [+ - * /])
-  #?(:clj (:import java.math.BigDecimal))
+  #?(:clj (:import java.math.BigDecimal
+                   java.math.RoundingMode))
   (:require [clojure.string :as str]
             #?@(:cljs [[cljsjs.big]])))
 
@@ -21,6 +22,7 @@
   (minus [b1 b2])
   (mul [b1 b2])
   (div [b1 b2])
+  (div-decimal [b1 b2 decimals])
   (eq [b1 b2] "True, jos arvot yhtäsuuret")
   (lt [b1 b2] "True, jos b1 pienenmpi kuin b2")
   (gt [b1 b2] "True, jos b1 suurempi kuin b2")
@@ -51,6 +53,10 @@
   (div [{b1 :b} {b2 :b}]
     (->BigDec (#?(:clj .divide
                   :cljs .div) b1 b2)))
+
+  (div-decimal [{b1 :b} {b2 :b} decimals]
+    #?(:clj (->BigDec (.divide b1 b2 decimals RoundingMode/HALF_UP))
+       :cljs (->BigDec (harja.tyokalut.yleiset/round2 decimals (.div b1 b2)))))
 
   (eq [{b1 :b} {b2 :b}]
     #?(:clj (= b1 b2)
