@@ -171,20 +171,17 @@ $$
                        AND (tk.vuosi = 2019
                          OR
                             tk.vuosi = 2020 AND kuukausi <= 9)) +
-                    (SELECT SUM(summa)
-                     FROM kulu_kohdistus
+                    (SELECT SUM(summa) FROM kulu_kohdistus
                      WHERE toimenpideinstanssi =
                            (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kittilä MHU Talvihoito TP'));
 
-        INSERT INTO urakka_paatos ("hoitokauden-alkuvuosi", "urakka-id", "urakoitsijan-maksu",
-                                   "tilaajan-maksu", siirto, tyyppi, muokattu, "muokkaaja-id",
-                                   "luoja-id")
+        INSERT INTO urakka_paatos ("hoitokauden-alkuvuosi", "urakka-id", "urakoitsijan-maksu", "tilaajan-maksu", siirto,
+                                   tyyppi, muokattu, "muokkaaja-id", "luoja-id")
         VALUES (2019, urakka_id_, ((SELECT tavoitehinta_indeksikorjattu
                                     FROM urakka_tavoite
                                     WHERE urakka = urakka_id_
-                                      AND hoitokausi = 1) - toteuma_) * 0.3,
-                0, 0, 'tavoitehinnan-alitus', NOW(), kayttaja_,
-                kayttaja_);
+                                      AND hoitokausi = 1) - toteuma_) * 0.3, 0, 0, 'tavoitehinnan-alitus', NOW(),
+                kayttaja_, kayttaja_);
 
     END
 $$;
