@@ -76,35 +76,42 @@
   [maarat-tahan-asti summa vuosi]
   (+ summa (get maarat-tahan-asti vuosi)))
 
-(defn- map->id-map-maaralla
-  [hoitokausi rivi]
-  (let [maarat-tahan-asti (get rivi :maarat)
+(defn- laske-sopimusmaarat
+  [rivi]
+  (let [{:keys [samat-maarat-vuosittain?]} rivi
+        maarat-tahan-asti (get rivi :maarat)
         hoitokaudet (range 
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
         sovitut-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaarat)) 0 hoitokaudet)
-        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)
-        samat-maarat-vuosittain? (get rivi :samat-maarat-vuosittain?)]
-    [(:id rivi)  
-     (assoc rivi 
-       :hoitokausi hoitokausi
-       :maara (get-in rivi [:maarat hoitokausi])
-       :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
-                               (not samat-maarat-vuosittain?)
-                               false) 
-       :sopimuksen-tehtavamaarat (get rivi :sopimuksen-tehtavamaarat)
-       :sopimuksen-tehtavamaara (when samat-maarat-vuosittain? 
-                                  (get-in 
-                                    rivi 
-                                    [:sopimuksen-tehtavamaarat
-                                     (-> rivi
-                                       :sopimuksen-tehtavamaarat
-                                       (dissoc :samat-maarat-vuosittain?)
-                                       keys
-                                       first)]))
-       ; nämä käytössä suunniteltavien määrien syöttönäkymässä
-       :sopimuksen-tehtavamaarat-yhteensa sovitut-maarat
-       :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))]))
+        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
+    (assoc rivi
+      :sopimuksen-tehtavamaarat (get rivi :sopimuksen-tehtavamaarat)
+      :sopimuksen-tehtavamaara (when samat-maarat-vuosittain? 
+                                 (get-in 
+                                   rivi 
+                                   [:sopimuksen-tehtavamaarat
+                                    (-> rivi
+                                      :sopimuksen-tehtavamaarat
+                                      (dissoc :samat-maarat-vuosittain?)
+                                      keys
+                                      first)]))
+                                        ; nämä käytössä suunniteltavien määrien syöttönäkymässä
+      :sopimuksen-tehtavamaarat-yhteensa sovitut-maarat
+      :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))))
+
+(defn- map->id-map-maaralla
+  [hoitokausi rivi]
+  (let [samat-maarat-vuosittain? (get rivi :samat-maarat-vuosittain?)]
+    [(:id rivi)
+     (-> rivi
+       (assoc  
+         :hoitokausi hoitokausi
+         :maara (get-in rivi [:maarat hoitokausi])
+         :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
+                                 (not samat-maarat-vuosittain?)
+                                 false))
+       laske-sopimusmaarat)]))
 
 (defn liita-sopimusten-tiedot 
   [sopimusten-maarat rivi]
@@ -255,9 +262,29 @@
           urakan-vuodet)))
     (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))
 
+(defn laske-tehtavalle-sopimusmaarat 
+  [[id tehtava]] 
+  [id (laske-sopimusmaarat tehtava)])
+
+(defn laske-toimenpiteen-sopimusmaarat 
+  [[avain toimenpiteen-tehtavat]]
+  [avain 
+   (into {} 
+     (map 
+       laske-tehtavalle-sopimusmaarat)
+     toimenpiteen-tehtavat)])
+
+(defn laske-kaikki-sopimusmaarat 
+  [taulukon-tila]
+  (into {} 
+    (map laske-toimenpiteen-sopimusmaarat) 
+    taulukon-tila))
+
 (defn paivita-kaikki-maarat
   [taulukon-tila valinnat]
-  (toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla taulukon-tila (:hoitokausi valinnat)))
+  (-> taulukon-tila 
+    laske-kaikki-sopimusmaarat
+    (toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla (:hoitokausi valinnat))))
 
 (defn erikseen-syotetyt-vuodet-auki
   [r]
