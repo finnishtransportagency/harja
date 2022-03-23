@@ -367,7 +367,7 @@
   käsittelyvirhe."
 
   [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadi-analytiikka-oikeus?]
-  (oikeudet/vaadi-jarjestelma-oikeudet db (hae-kayttaja db
+  (oikeudet/vaadi-jarjestelmaoikeudet db (hae-kayttaja db
                                             (get (:headers request) "oam_remote_user"))
     vaadi-analytiikka-oikeus?)
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))

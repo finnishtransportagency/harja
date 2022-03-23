@@ -2,8 +2,8 @@
   "Rajapinta oikeustarkistuksiin"
   (:require
    #?(:clj [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])
+   #?(:clj [harja.kyselyt.kayttajat :as kayttajat-kyselyt])
    [harja.domain.roolit :as roolit]
-   [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
    #?(:clj [slingshot.slingshot :refer [throw+]])
    #?(:cljs [harja.tiedot.istunto :as istunto])
    [clojure.set :as s]
@@ -265,11 +265,12 @@
     urakat-toteutus-kokonaishintaisettyot
     urakat-suunnittelu-kokonaishintaisettyot))
 
-(defn vaadi-jarjestelma-oikeudet [db kayttaja vaadi-analytiikka-oikeus?]
+#?(:clj
+(defn vaadi-jarjestelmaoikeudet [db kayttaja vaadi-analytiikka-oikeus?]
   (let [on-oikeus (if vaadi-analytiikka-oikeus?
                     (kayttajat-kyselyt/onko-jarjestelma-ja-analytiikka? db {:kayttajanimi (:kayttajanimi kayttaja)})
                     (kayttajat-kyselyt/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
     (if (nil? on-oikeus)
       (throw+ (roolit/->EiOikeutta
                 (str "Käyttäjällä '" (pr-str kayttaja) "' ei järjestelmäoikeuksia")))
-      true)))
+      true))))
