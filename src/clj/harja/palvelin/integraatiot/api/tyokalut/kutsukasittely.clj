@@ -357,6 +357,39 @@
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
 
+(defn kasittele-get-kutsu
+  "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
+   tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
+   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisest kasittele-kutsu
+   funktiosta.
+
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe."
+
+  [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadi-analytiikka-oikeus?]
+  (oikeudet/vaadi-jarjestelma-oikeudet db (hae-kayttaja db
+                                            (get (:headers request) "oam_remote_user"))
+    vaadi-analytiikka-oikeus?)
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers {"Content-Type" "text/plain"}
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+          xml? (= (kutsun-formaatti request) "xml")
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request nil))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    nil
+                    parametrit
+                    #(let
+                       [vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
+                       (tee-vastaus 200 vastauksen-skeema vastauksen-data xml?)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
+
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
   lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
