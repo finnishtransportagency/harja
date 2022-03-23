@@ -22,11 +22,10 @@
 
   VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this]
-    (let [aloitusaika (pvm/nyt)]
+    (let [aloitusaika-ms (System/currentTimeMillis)]
       (log/info "tuo-uudet-varustetoteumat-velhosta suoritus alkoi")
       (try
         (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
         (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
-      (log/info (str "tuo-uudet-varustetoteumat-velhosta suoritus päättyi " (pvm/nyt) " kesto: "
-                     (int (/ (- (pvm/millisekunteina (pvm/nyt))
-                                (pvm/millisekunteina aloitusaika)) 1000)) " sekuntia")))))
+      (log/info (str "tuo-uudet-varustetoteumat-velhosta suoritus päättyi. Kesto: "
+                     (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
