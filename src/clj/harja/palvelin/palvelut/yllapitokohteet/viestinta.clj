@@ -34,8 +34,10 @@
 
 ;; Viestien muodostukset
 
-(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite pituus
-                                                                   tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
+(defn- viesti-kohde-valmis-merkintaan-tai-valmius-peruttu
+  "Rakentaa sähköpostiviestin, jossa kerrotaan kohteen tietoja tiemerkintää varten."
+  [{:keys [paallystysurakka-nimi kohde-nimi kohde-osoite ajoradat kaistat pituus
+           paallysteet toimenpiteet tiemerkintapvm saate ilmoittaja tiemerkintaurakka-nimi]}]
   (let [peruminen? (nil? tiemerkintapvm)
         tiivistelma (if peruminen?
                       (format "Peruutus: kohde %s ei sittenkään ole vielä valmis tiemerkintään."
@@ -51,7 +53,11 @@
                                ["TR-osoite" (tierekisteri/tierekisteriosoite-tekstina
                                               kohde-osoite
                                               {:teksti-tie? false})]
+                               ["Ajoradat" ajoradat]
+                               ["Kaistat" kaistat]
                                ["Pituus" pituus]
+                               ["Päällysteet" paallysteet]
+                               ["Toimenpiteet" toimenpiteet]
                                ["Valmis tiemerkintään" (if peruminen?
                                                          "Ei vielä tiedossa"
                                                          (fmt/pvm tiemerkintapvm))]
@@ -242,7 +248,7 @@
   [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
-                tiemerkintaurakka-nimi pituus]} kohteen-tiedot
+                tiemerkintaurakka-nimi ajoradat kaistat pituus paallysteet toimenpiteet]} kohteen-tiedot
         kohde-osoite {:tr-numero tr-numero
                       :tr-alkuosa tr-alkuosa
                       :tr-alkuetaisyys tr-alkuetaisyys
@@ -258,7 +264,11 @@
         viestin-params {:paallystysurakka-nimi paallystysurakka-nimi
                         :kohde-nimi kohde-nimi
                         :kohde-osoite kohde-osoite
+                        :ajoradat ajoradat
+                        :kaistat kaistat
                         :pituus pituus
+                        :paallysteet paallysteet
+                        :toimenpiteet toimenpiteet
                         :tiemerkintapvm tiemerkintapvm
                         :saate saate
                         :ilmoittaja ilmoittaja

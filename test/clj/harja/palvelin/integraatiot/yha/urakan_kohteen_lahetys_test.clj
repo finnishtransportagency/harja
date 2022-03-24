@@ -103,7 +103,7 @@
   (xml/luetun-xmln-tagien-sisalto alustarivit {:tagi :alustalle-tehty-toimenpide :positio positio} :tierekisteriosoitevali))
 
 (deftest tarkista-yllapitokohteen-lahetys-pot2
-  (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
+  (let [kohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         urakka-id (hae-utajarven-paallystysurakan-id)
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         ;; Kohteen vuosi ei muutu vuoden vaihtuessa, joten tehdään kova koodaatuna

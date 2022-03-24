@@ -89,6 +89,9 @@
    (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
    fmt])
 
+(defmethod muodosta-solu :infopallura [_ _]
+  nil)
+
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
     (map-indexed

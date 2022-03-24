@@ -61,6 +61,12 @@
     (number? (-> arvo js/parseFloat))
     arvo))
 
+(defn negatiivinen-numero [arvo]
+  (when
+    (and (number? (-> arvo js/parseFloat))
+      (not (pos? arvo)))
+    arvo))
+
 (defn maksimiarvo [maksimi arvo]
   (when (< arvo maksimi)
     arvo))
@@ -74,6 +80,7 @@
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
+                  :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]

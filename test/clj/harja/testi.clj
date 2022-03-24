@@ -1016,25 +1016,11 @@
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka') AND paasopimus IS null)"))))
 
-(defn hae-yllapitokohde-ouluntie2 []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE nimi = 'Ouluntie 2'"))))
-
-(defn hae-yllapitokohde-puolangantie []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE nimi = 'Puolangantie'"))))
-
 (defn hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
-
-(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -1061,42 +1047,11 @@
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
-(defn hae-yllapitokohde-nakkilan-ramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Nakkilan ramppi';"))))
-
-(defn hae-yllapitokohde-kirkkotie []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Kirkkotie';"))))
-
-(defn hae-yllapitokohde-aloittamaton []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Aloittamaton kohde mt20';"))))
-
-(defn hae-yllapitokohde-oulaisten-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulaisten ohitusramppi';"))))
-
-(defn hae-yllapitokohde-oulun-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulun ohitusramppi';"))))
-
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    nimi = 'Kuusamontien testi'
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
-
-(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   tr_numero = 20
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -1106,9 +1061,11 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
-(defn hae-yllapitokohde-tarkea-kohde-pot2 []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE nimi = 'Tärkeä kohde mt20';"))))
+(defn hae-yllapitokohteen-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
 
 (defn hae-lupaus-vaihtoehdot [lupaus-id]
   (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
