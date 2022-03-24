@@ -244,13 +244,17 @@
          (when (> (/ (count @data) pituus-max) 0.75)
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
-(defn- normalisoi-numero [n]
+(defn- normalisoi-numero [n salli-whitespace?]
   (when n (-> n
-              ;; Poistetaan whitespace
-              (str/replace #"\s" "")
+            ;; Poistetaan whitespace, jos ei sallittu
+            (as-> n n
+              (if-not salli-whitespace? (str/replace n #"\s" "")
+                                        n))
+            ;; Poistetaan mahd. euromerkki lopusta
+            (str/replace #"€$" "")
 
-              ;; Poistetaan mahd. euromerkki lopusta
-              (str/replace #"€$" ""))))
+            ;; Poistetaan ympäröivä whitespace joka tapauksessa
+            (str/trim))))
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
@@ -274,7 +278,8 @@
 ;; desimaalien-maara asettaa min-desimaalit ja max-desimaalit samaan arvoon
 ;; ks. harja.fmt/desimaali-fmt
 (defmethod tee-kentta :numero [{:keys [elementin-id oletusarvo validoi-kentta-fn koko input-luokka
-                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down]
+                                       desimaalien-maara min-desimaalit max-desimaalit on-key-down
+                                       veda-oikealle? luokka]
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
@@ -282,11 +287,11 @@
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
-      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? toiminta-f on-blur on-focus disabled?
-                   vayla-tyyli? virhe? yksikko validoi-kentta-fn] :as kentta} data]
+      (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
+                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
-                                  (normalisoi-numero (fmt nykyinen-data))
+                                  (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
                                   "")
               kokonaisluku-re-pattern (re-pattern (str "-?\\d{1," kokonaisosan-maara "}"))
               desimaalien-maara (cond
@@ -314,7 +319,10 @@
                                         (not vayla-tyyli?)) (str "form-control ")
                                    vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
                                    disabled? (str "disabled")
-                                   input-luokka (str " " input-luokka))
+                                   input-luokka (str " " input-luokka)
+                                   veda-oikealle? (str " veda-oikealle"))
+                    :style (when (and veda-oikealle? yksikko)
+                             {:padding-right (str "calc(19px + " (count yksikko) "ch")})
                     :type "text"
                     :disabled disabled?
                     :placeholder (placeholder kentta data)
@@ -325,10 +333,15 @@
                                     (on-blur %))
                                   (reset! teksti nil))
                     :value nykyinen-teksti
-                    :on-change #(let [v (normalisoi-numero (-> % .-target .-value))
-                                      v (if vaadi-ei-negatiivinen?
+                    :on-change #(let [v (normalisoi-numero (-> % .-target .-value) salli-whitespace?)
+                                      v (cond
+                                          vaadi-ei-negatiivinen?
                                           (str/replace v #"-" "")
-                                          v)]
+                                          vaadi-negatiivinen?
+                                          (if (= (first v) \-)
+                                            v
+                                            (str "-" v))
+                                          :default v)]
                                   (when (and
                                           (or (nil? validoi-kentta-fn)
                                               (validoi-kentta-fn v))
@@ -336,10 +349,15 @@
                                               (when-not vaadi-ei-negatiivinen? (= v "-"))
                                               (re-matches (if kokonaisluku?
                                                             kokonaisluku-re-pattern
-                                                            desimaaliluku-re-pattern) v)))
+                                                            desimaaliluku-re-pattern)
+                                                ;; Matchataan whitespacesta huolimatta
+                                                (str/replace v #"\s" ""))))
                                     (reset! teksti v)
 
-                                    (let [numero (if kokonaisluku?
+                                    ;; Numeron parsimista varten pitää poistaa whitespace,
+                                    ;; vaikka haluttaisiin näyttää se.
+                                    (let [v (str/replace v #"\s" "")
+                                          numero (if kokonaisluku?
                                                    (js/parseInt v)
                                                    (js/parseFloat (str/replace v #"," ".")))]
                                       (if (not (js/isNaN numero))
@@ -349,13 +367,21 @@
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
            (when (and yksikko vayla-tyyli?)
-             [:span.sisainen-label {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
+             [:span.sisainen-label.black-lighter {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
-(defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja] :as kentta} data]
+(defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja salli-whitespace?] :as kentta} data]
  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
-             (normalisoi-numero (fmt @data)))]))
+             (normalisoi-numero (fmt @data) salli-whitespace?))]))
+
+(defmethod tee-kentta :negatiivinen-numero [kentta data]
+  [tee-kentta (assoc kentta :vaadi-negatiivinen? true
+                            :tyyppi :numero) data])
+
+(defmethod nayta-arvo :negatiivinen-numero [kentta data]
+  [nayta-arvo (assoc kentta :tyyppi :numero) data])
+
 
 (defmethod tee-kentta :positiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-ei-negatiivinen? true
