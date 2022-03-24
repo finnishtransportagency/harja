@@ -155,9 +155,31 @@
   tr.vetolaatikko-kiinni {
     display: none;
   }
-  td.vetolaatikon-tila {
-    text-align: center;
+  // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
+  // käytetään ns. general sibling selectoria (~)
+  tr.gridin-collapsoitava-valiotsikko ~ tr {
+    td.vetolaatikon-tila {
+      text-align: center;
+      .vetolaatikon-sailio {
+        display: flex;
+        height: 100%;
+        .vetolaatikon-pylvas {
+          position: relative;
+          width: 3px;
+          left: 9px;
+          top: 0px;
+          bottom: 0px;
+          background: @blue-default;
+        }
+        > .navigation-ympyrassa {
+          position: relative;
+          top: 0;
+          left: 16px;
+        }
+      }
+    }
   }
+
   tr, td, th {
     padding: @livi-taulukon-padding;
     &.tiivis {
