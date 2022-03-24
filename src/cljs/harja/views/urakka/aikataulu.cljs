@@ -562,7 +562,7 @@
            #(reset! nayta-lisatieto-modal? true)]
           [:span (str aikataulu-tiemerkinta-lisatieto)])))))
 
-(defn otsikkoalueiden-pituudet
+(defn taulukon-ryhmittely-header
   [nakyma]
   (case nakyma
     :tiemerkinta
@@ -584,7 +584,7 @@
   (let [aikataulurivit (map (fn [rivi]
                               (assoc rivi :aikataulu-tiemerkinta-loppu-alkuperainen (:aikataulu-tiemerkinta-loppu rivi)))
                             aikataulurivit)
-        otsikoidut-aikataulurivit (if (= :aika (:jarjestys @tiedot/valinnat))
+        otsikoidut-aikataulurivit (if (tiedot/aikapohjainen-jarjestys-valittu? (:jarjestys @tiedot/valinnat))
                                     (otsikoi-aikataulurivit
                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
                                     aikataulurivit)]
@@ -594,8 +594,7 @@
                  "Kohteiden aikataulu"
                  [yleiset/tietyoilmoitus-siirtynyt-toast]]
                 [yllapitokohteet-view/vasta-muokatut-vinkki]]
-      ;; VHAR-5949 Taulukon headerin yläpuolinen tyylitelty rivi
-      :rivi-ennen (otsikkoalueiden-pituudet (:nakyma optiot))
+      :rivi-ennen (taulukon-ryhmittely-header (:nakyma optiot))
       :voi-poistaa? (constantly false)
       :voi-lisata? false
       :voi-kumota? false ; Muuten voisi, mutta tiemerkinnän dialogin tietojen kumous vaatisi oman toteutuksen
