@@ -95,6 +95,7 @@
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
+      ; TODO tähän uusi palvelu VHAR-6045
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
