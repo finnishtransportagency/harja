@@ -388,5 +388,5 @@
                   token-fn tallenna-toteuma-fn tallenna-hakuaika-fn)
                 true))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
+      (log/error "Varustetoteumien haku Velhosta epäonnistunut. Virheet: " virheet)
       false)))
