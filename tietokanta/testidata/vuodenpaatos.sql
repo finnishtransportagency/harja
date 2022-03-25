@@ -180,7 +180,7 @@ $$
         VALUES (2019, urakka_id_, ((SELECT tavoitehinta_indeksikorjattu
                                     FROM urakka_tavoite
                                     WHERE urakka = urakka_id_
-                                      AND hoitokausi = 1) - toteuma_) * 0.3, 0, 0, 'tavoitehinnan-alitus', NOW(),
+                                      AND hoitokausi = 1) - toteuma_) * -0.3, 0, 0, 'tavoitehinnan-alitus', NOW(),
                 kayttaja_, kayttaja_);
 
     END
