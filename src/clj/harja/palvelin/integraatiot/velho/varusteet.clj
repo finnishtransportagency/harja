@@ -390,3 +390,17 @@
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Varustetoteumien haku Velhosta epäonnistunut. Virheet: " virheet)
       false)))
+
+(defn hae-mhu-urakka-oidt-velhosta
+  [integraatioloki
+   db
+   {:keys [] :as asetukset}]
+  (log/debug (format "Haetaan MHO urakoita Velhosta."))
+  (try+
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "velho" "urakoiden-haku" nil
+      (fn [konteksti]
+        true)
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      (log/error "MHU urakoiden haku Velhosta epäonnistui. Virheet: " virheet)
+      false))))

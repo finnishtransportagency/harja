@@ -7,7 +7,8 @@
   (laheta-kohde [this urakka-id kohde-id]))
 
 (defprotocol VarustetoteumaHaku
-  (tuo-uudet-varustetoteumat-velhosta [this]))
+  (tuo-uudet-varustetoteumat-velhosta [this])
+  (hae-mhu-urakka-oidt-velhosta [this]))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
@@ -20,4 +21,6 @@
 
   VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this]
-    (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)))
+    (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset))
+  (hae-mhu-urakka-oidt-velhosta [this]
+    (varusteet/hae-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)))

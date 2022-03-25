@@ -77,6 +77,14 @@
        (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
   true)
 
+(defn hae-mhu-urakka-oidt-velhosta
+  "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
+  [velho user]
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-toteumat-varusteet user)
+  (try (velho-komponentti/hae-mhu-urakka-oidt-velhosta velho)
+       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
+  true)
+
 (defrecord VarusteVelho []
   component/Lifecycle
   (start [this]
@@ -95,7 +103,11 @@
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
+
       ; TODO tähän uusi palvelu VHAR-6045
+      (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt
+                        (fn [user data]
+                          (hae-mhu-urakka-oidt-velhosta velho user)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
