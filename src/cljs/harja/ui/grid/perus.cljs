@@ -443,11 +443,14 @@
     [:thead
      (when-let [rivi-ennen (:rivi-ennen opts)]
        [:tr
-        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-          ^{:key teksti}
-          [:th {:colSpan (or sarakkeita 1)
-                :class (y/tasaus-luokka tasaa)}
-           teksti])])
+        (map-indexed
+          (fn [idx {:keys [teksti sarakkeita tasaa luokka]}]
+            ^{:key idx}
+            [:th {:colSpan (or sarakkeita 1)
+                  :class (y/luokat luokka
+                                   (y/tasaus-luokka tasaa))}
+             teksti])
+          rivi-ennen)])
      [:tr
       (map-indexed
         (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
