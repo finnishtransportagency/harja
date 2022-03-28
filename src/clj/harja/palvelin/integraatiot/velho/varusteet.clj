@@ -395,7 +395,7 @@
   [integraatioloki
    db
    {:keys [] :as asetukset}]
-  (log/debug (format "Haetaan MHO urakoita Velhosta."))
+  (log/debug (format "Haetaan MHU urakoita Velhosta."))
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "urakoiden-haku" nil
