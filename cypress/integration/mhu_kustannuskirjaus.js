@@ -8,15 +8,6 @@ let avaaKulujenKohdistus = (urakanNimi) => {
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();
 }
 
-let alustaTietokanta = () => {
-    cy.terminaaliKomento().then((tk) => {
-        ks.alustaKanta('Kittilän MHU 2019-2024')
-
-        let tiedosto = 'tietokanta/testidata/vuodenpaatos.sql'
-        cy.exec(tk + 'psql -h localhost -U harja harja -f' + tiedosto)
-    })
-}
-
 let haeUrakanPaatokset = (urakka, hoitokausi) => {
     return cy.terminaaliKomento().then((tk) => {
         cy.exec(tk + 'psql -h localhost -U harja harja -c ' +
@@ -70,7 +61,6 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 }
 
 describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
-    before('Alusta kanta', () => alustaTietokanta());
 
     it('Kulujen kirjaus-näkymä aukeaa', () => {
         avaaKulujenKohdistus('Kittilän MHU 2019-2024');
