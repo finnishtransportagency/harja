@@ -320,6 +320,14 @@ export function alustaKanta(urakkaNimi) {
                 console.log("Poista johto- ja hallintokorvaukset tulos:", tulos)
             })
 
+        // Poista toteutuneet kustannukset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM toteutuneet_kustannukset tk " +
+            `WHERE tk.urakka_id = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista toteutuneet kustannukset tulos:", tulos)
+            })
+
         // Poista osioiden tilaan liittyvät asiat
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
@@ -333,8 +341,38 @@ export function alustaKanta(urakkaNimi) {
             "\"DELETE FROM urakka_tavoite ut " +
             `WHERE ut.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
-                console.log("Poista osioiden tilaan liittyvät asiat tulos:", tulos)
+                console.log("Poista manuaaliseen kattohintaan liittyvät asiat tulos:", tulos)
             })
+
+        // Poista tehdyt päätökset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM urakka_paatos up " +
+            `WHERE up.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista tehtyihin päätöksiin liittyvät asiat tulos:", tulos)
+            })
+
+        // Nollaa vahvistukset
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM suunnittelu_kustannussuunnitelman_tila skt " +
+            `WHERE skt.\\\"urakka\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista tilan vahvistukseen liittyvät asiat tulos:", tulos)
+            })
+
+        // poista kulut
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM kulu_kohdistus kt " +
+            `WHERE kt.toimenpideinstanssi IN (SELECT id FROM toimenpideinstanssi t WHERE t.urakka = ` +
+            `(SELECT id FROM urakka WHERE nimi = '${urakkaNimi}'));\"`)
+            .then((tulos) => {
+                console.log("Poista kulujen kohdistukset tulos:", tulos)})
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM kulu k " +
+            `WHERE k.urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
+            .then((tulos) => {
+                console.log("Poista kulut tulos:", tulos)})
+
     });
 }
 

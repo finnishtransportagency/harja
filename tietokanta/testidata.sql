@@ -192,6 +192,9 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Tilaajan-konsultti organisaatio
 \i testidata/tilaajan-konsultit.sql
 
+-- Suunnitellut kulut Kittilän urakan 1. vuodelle vuoden päätöstä varten.
+\i testidata/vuodenpaatos.sql
+
 SELECT paivita_raportti_toteutuneet_materiaalit();
 SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
 SELECT paivita_raportti_toteuma_maarat();
