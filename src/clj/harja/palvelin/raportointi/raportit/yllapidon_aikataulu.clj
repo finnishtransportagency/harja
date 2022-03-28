@@ -152,6 +152,14 @@
     (update :tr-ajoradat pilkulla-erotettu)
     (update :tr-kaistat pilkulla-erotettu)))
 
+(defn alikohteiden-tiedot [ko] 
+  (mapv #(merge 
+           (set/rename-keys 
+             (dissoc ko :kohdeosat) 
+             {:nimi :paakohde-nimi})
+           %) 
+    (:kohdeosat ko)))
+
 (defn suorita [db user {jarjestys :jarjestys
                         nayta-tarkka-aikajana? :nayta-tarkka-aikajana?
                         nayta-valitavoitteet? :nayta-valitavoitteet?
@@ -171,17 +179,8 @@
 
                              aikataulun-comparator)
                            aikataulu)
-        alikohteet (reduce 
-                     (fn [kaikki ko] 
-                       (println ko)
-                       (concat kaikki 
-                         (mapv #(merge 
-                                  (set/rename-keys 
-                                    (dissoc ko :kohdeosat) 
-                                    {:nimi :paakohde-nimi})
-                                  %) 
-                           (:kohdeosat ko)))) 
-                     [] 
+        alikohteet (into [] 
+                     (mapcat alikohteiden-tiedot) 
                      aikataulu)
         aikajanan-rivit (some->> aikataulu
                           (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?}))
