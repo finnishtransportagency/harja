@@ -253,12 +253,25 @@
                                  :teksti "Näytä välitavoitteet"}
                  :arvo-atom tiedot/nayta-valitavoitteet?}]}]
 
-     [upotettu-raportti/raportin-vientimuodot
-      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
-                                          {:jarjestys jarjestys
-                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
-                                           :vuosi @u/valittu-urakan-vuosi})]]))
+     (let [parametrit (raportit/urakkaraportin-parametrit 
+                        (:id ur) 
+                        :yllapidon-aikataulu
+                        {:jarjestys jarjestys
+                         :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                         :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
+                         :vuosi @u/valittu-urakan-vuosi})] 
+       [upotettu-raportti/raportin-vientimuodot 
+        (-> parametrit 
+          (assoc       
+            :otsikko "Tallenna alikohteiden Excel"
+            :kasittelija :excel)
+          (assoc-in [:parametrit :alikohderaportti?] true))
+        (assoc parametrit
+          :otsikko "Tallenna Excel"
+          :kasittelija :excel)
+        (assoc parametrit 
+          :otsikko "Tallenna PDF"
+          :kasittelija :pdf)])]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
