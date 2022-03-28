@@ -104,7 +104,6 @@
                         (fn [user data]
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
 
-      ; TODO tähän uusi palvelu VHAR-6045
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt
                         (fn [user data]
                           (hae-mhu-urakka-oidt-velhosta velho user)))
