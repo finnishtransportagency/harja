@@ -842,10 +842,18 @@ WHERE yllapitokohde = :id
            FROM yllapitokohde
            WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
+-- name: hae-kohteen-merkinta-ja-jyrsintatiedot
+SELECT merkinta AS "aikataulu-tiemerkinta-merkinta",
+       jyrsinta AS "aikataulu-tiemerkinta-jyrsinta",
+       tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin"
+  FROM yllapitokohteen_aikataulu
+ WHERE yllapitokohde = :yllapitokohde;
+
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
 SET
-  valmis_tiemerkintaan = :valmis_tiemerkintaan
+  valmis_tiemerkintaan = :valmis_tiemerkintaan,
+  tiemerkinta_takaraja = :laskettu_takaraja
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
@@ -861,6 +869,29 @@ SELECT
   ypk.tr_loppuosa           AS "tr-loppuosa",
   ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  -- ajorata- ja kaistatiedot haetaan alikohteista, jokainen kaista max yhteen kertaan
+  (SELECT string_agg(DISTINCT (tr_ajorata::TEXT), ', ')
+     FROM yllapitokohdeosa o
+    WHERE ypk.id = o.yllapitokohde AND o.poistettu IS FALSE) AS ajoradat,
+  (SELECT string_agg(DISTINCT (tr_kaista::TEXT), ', ')
+     FROM yllapitokohdeosa o
+    WHERE ypk.id = o.yllapitokohde AND o.poistettu IS FALSE) AS kaistat,
+  (SELECT string_agg(DISTINCT (
+      SELECT tp.lyhenne from pot2_mk_paallystekerros_toimenpide tp
+      WHERE paall.toimenpide = tp.koodi AND
+            -- varmistetaan ettei alikohdetta ole poistettu
+            EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
+     FROM pot2_paallystekerros paall
+    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS toimenpiteet,
+  (SELECT string_agg(DISTINCT (
+      select t.lyhenne || m.max_raekoko || ', ' || m.kuulamyllyluokka
+      FROM pot2_mk_urakan_massa m
+               JOIN pot2_mk_massatyyppi t ON t.koodi = m.tyyppi
+       WHERE m.id = paall.materiaali AND
+         -- varmistetaan ettei alikohdetta ole poistettu
+           EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
+    FROM pot2_paallystekerros paall
+   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS paallysteet,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",

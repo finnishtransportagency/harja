@@ -912,7 +912,10 @@ VALUES
    116, 'L42', 'Tärkeä kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527523069,
    ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
-   20, 1, 1066, 1, 3827, NULL, NULL, NULL, '{2021}', FALSE),
+   20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
+                                        FROM urakka
+                                       WHERE nimi =
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -936,7 +939,22 @@ VALUES
    116, 'L62', '0-ajoratainen testikohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527823070,
    ROW(4, 226, 60, 226, 197, NULL)::tr_osoite,
-   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE);
+   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE),
+  ((SELECT id
+      FROM urakka
+     WHERE nimi = 'Utajärven päällystysurakka'),
+   (SELECT id
+      FROM sopimus
+     WHERE urakka = (SELECT id
+                       FROM urakka
+                      WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+   116, 'L42', 'Tärkeä kohde mt20 2022', 'paallyste' :: yllapitokohdetyyppi,
+   'paallystys' ::yllapitokohdetyotyyppi, 547523069,
+   ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
+   20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
+                                        FROM urakka
+                                       WHERE nimi =
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2022}', FALSE);
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -1006,12 +1024,22 @@ VALUES
    (SELECT id
       FROM kayttaja
      WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date(2021, 5, 21), make_date(2021, 6, 4));
+   make_date(2021, 5, 21), make_date(2021, 6, 4)),
+  ((SELECT id
+      FROM yllapitokohde
+     WHERE nimi = 'Tärkeä kohde mt20 2022'), make_date(2022, 4, 19),
+   make_date(2022, 4, 19), make_date(2022, 4, 21), make_date(2022, 4, 22),
+   make_date(2022, 4, 23),
+   NULL,
+   (SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'jvh'), NOW(),
+   NULL, NULL);
 
 -- Tiemerkintäurakan merkintää ja jyrsintää
 UPDATE yllapitokohteen_aikataulu
    SET merkinta = 'massa', jyrsinta = 'keski'
- WHERE yllapitokohde = (SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2');
+ WHERE yllapitokohde IN (SELECT id FROM yllapitokohde WHERE nimi IN ('Ouluntie 2', 'Tärkeä kohde mt20 2022'));
 
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
