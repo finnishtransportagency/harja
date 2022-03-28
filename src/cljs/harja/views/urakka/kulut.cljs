@@ -172,6 +172,7 @@
        {:virhe?        (and 
                          (not disabled)
                          (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta)))
+        :data-cy "koontilaskun-kk-dropdown"
         :disabled      disabled
         :vayla-tyyli?  true
         :skrollattava? true
