@@ -1,5 +1,3 @@
-import * as ks from '../support/kustannussuunnitelmaFns.js';
-
 let avaaKulujenKohdistus = (urakanNimi) => {
     cy.visit('/');
     let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]')
