@@ -160,9 +160,11 @@
 (defn lisaa-urakka-tavoite [{:keys [urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta]}]
   (println "lisaa-urakka-tavoite" urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta)
   (println (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta) VALUES (%s, %s, %s, %s, %s)"
-                   urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta))
+             urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta))
+  (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s"
+       urakka hoitokausi))
   (i (format "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_siirretty, kattohinta) VALUES (%s, %s, %s, %s, %s)"
-             urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta)))
+       urakka hoitokausi tavoitehinta tavoitehinta-siirretty kattohinta)))
 
 (deftest indeksikorjaukset-lasketaan-uudelleen-kun-indeksia-muokataan
   (let [db (:db jarjestelma)
@@ -177,20 +179,20 @@
     (let [summa 70979.86M
           toimenpideinstanssi (hae-kittila-mhu-talvihoito-tpi-id)
           kiinteahintainen-tyo (lisaa-kiinteahintainen-tyo
-                                 {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
+                                 {:vuosi 2020 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
           kustannusarvioitu-tyo (lisaa-kustannusarvioitu-tyo
-                                  {:vuosi 2019 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
+                                  {:vuosi 2020 :kuukausi 10 :summa summa :toimenpideinstanssi toimenpideinstanssi})
           tilaajan-rahavaraus (lisaa-tilaajan-rahavaraus
-                                {:vuosi 2019 :kuukausi 10 :summa summa
+                                {:vuosi 2020 :kuukausi 10 :summa summa
                                  :toimenpideinstanssi (hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id)})
           johto-ja-hallintokorvaus (lisaa-johto-ja-hallintokorvaus
-                                     {:vuosi 2019 :kuukausi 10 :tuntipalkka summa :urakka urakka})
+                                     {:vuosi 2020 :kuukausi 10 :tuntipalkka summa :urakka urakka})
           tavoitehinta summa
           tavoitehinta-siirretty (+ summa 1)
           kattohinta (+ summa 2)
           urakka-tavoite (lisaa-urakka-tavoite
                            {:urakka urakka
-                            :hoitokausi 1
+                            :hoitokausi 2
                             :tavoitehinta tavoitehinta
                             :tavoitehinta-siirretty tavoitehinta-siirretty
                             :kattohinta kattohinta})]
@@ -227,15 +229,18 @@
       (is (nil? (urakka-tavoite-kattohinta-indeksikorjattu urakka-tavoite))
           "urakka_tavoite.kattohinta_indeksikorjattu voidaan laskea vasta kun saadaan syyskuun 2019 indeksi")
 
-      ;; Lisää syyskuun 2019 indeksi, jotta voidaan laskea lokakuun indeksikorjaus
+      ;; Lisää syyskuun 2019 ja 2020 indeksit, jotta voidaan laskea lokakuun indeksikorjaus
       (indeksit/tallenna-indeksi
         db
         +kayttaja-jvh+
         {:nimi     indeksi
          :indeksit [{:kannassa? false
                      :vuosi     2019
+                     9          102.4M}
+                    {:kannassa? false
+                     :vuosi     2020
                      9          102.9M}]})
-      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})]
+      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa summa})]
         (is (= indeksikorjattu-summa ; CLJ-indeksikorjaus
                (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo)) ; SQL-indeksikorjaus
             "kiinteahintainen_tyo.summa_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
@@ -247,13 +252,13 @@
         (is (= indeksikorjattu-summa
                (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
             "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa tavoitehinta})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa tavoitehinta})
                (urakka-tavoite-tavoitehinta-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.tavoitehinta_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa tavoitehinta-siirretty})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa tavoitehinta-siirretty})
                (urakka-tavoite-tavoitehinta-siirretty-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.tavoitehinta_siirretty_indeksikorjattu on laskettu indeksin lisäämisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa kattohinta})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa kattohinta})
                (urakka-tavoite-kattohinta-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.kattohinta_indeksikorjattu on laskettu indeksin lisäämisen jälkeen"))
 
@@ -263,9 +268,9 @@
         +kayttaja-jvh+
         {:nimi     indeksi
          :indeksit [{:kannassa? true
-                     :vuosi     2019
+                     :vuosi     2020
                      9          666.66666666M}]})
-      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa summa})]
+      (let [indeksikorjattu-summa (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa summa})]
         (is (= indeksikorjattu-summa
                (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
             "kiinteahintainen_tyo.summa_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
@@ -277,13 +282,13 @@
         (is (= indeksikorjattu-summa
                (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu johto-ja-hallintokorvaus))
             "johto_ja_hallintokorvaus.tuntipalkka_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa tavoitehinta})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa tavoitehinta})
                (urakka-tavoite-tavoitehinta-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.tavoitehinta_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa tavoitehinta-siirretty})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa tavoitehinta-siirretty})
                (urakka-tavoite-tavoitehinta-siirretty-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.tavoitehinta_siirretty_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen")
-        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 1 :summa kattohinta})
+        (is (= (indeksikorjaa {:db db :urakka-id urakka :hoitovuosi-nro 2 :summa kattohinta})
                (urakka-tavoite-kattohinta-indeksikorjattu urakka-tavoite))
             "urakka_tavoite.kattohinta_indeksikorjattu on laskettu uusiksi indeksin muokkaamisen jälkeen"))
 
@@ -293,7 +298,7 @@
         +kayttaja-jvh+
         {:nimi     indeksi
          :indeksit [{:kannassa? true
-                     :vuosi     2019
+                     :vuosi     2020
                      9          nil}]})
       (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "kiinteahintainen_tyo.summa_indeksikorjattu on poistettu indeksin poistamisen jälkeen")
