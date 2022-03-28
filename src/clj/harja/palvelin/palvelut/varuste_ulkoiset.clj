@@ -67,23 +67,23 @@
   (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen_oid ulkoinen-oid})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
-
-
 (defn tuo-uudet-varustetoteumat-velhosta
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
   (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
-       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
-  true)
+       (catch Throwable t
+         (log/error "Virhe varustetoteumien haussa: " t)
+         false)))
 
 (defn hae-mhu-urakka-oidt-velhosta
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-toteumat-varusteet user)
   (try (velho-komponentti/hae-mhu-urakka-oidt-velhosta velho)
-       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
-  true)
+       (catch Throwable t
+         (log/error "Virhe velho-urakoiden haussa: " t)
+         false)))
 
 (defrecord VarusteVelho []
   component/Lifecycle
