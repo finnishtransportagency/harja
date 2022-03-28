@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.tloik.sahkoposti-test
   (:require [harja.palvelin.integraatiot.tloik.sahkoposti :as sut]
+            [clojure.core.async :as async]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
@@ -135,11 +136,21 @@
   Simuloidaan siis tilanne näin:
   1. Lähetetään toimenpidepyyntö
   2. jonka perusteella Harja lähettää rest-apin kautta sähköpostia väärälle urakalle.
-  2. Väärän urakan päivystäjä vastaa kuittaus-sähköpostilla 'vaara-urakka'
-  3. Harja lähettää 'vaara-urakka' tyyppisen viesitn T-loikin jonolle."
+  3. Väärän urakan päivystäjä vastaa kuittaus-sähköpostilla 'vaara-urakka'
+  4. Harja lähettää 'vaara-urakka' tyyppisen viesitn T-loikin jonolle.
+  5. T-LOIK lähettää saman ilmoituksen uudestaan eri koordinaateilla (Tämän hetken urakan päättely perustuu pelkästään sijaintiin)
+  6. Harja lähettää ilmoituksen oikealle päivystäjälle
+  "
   (let [paivystajan-email "pekka.paivystaja@example.com"
         toimenpiteen-vastausemail "harja@vayla.fi"
-        lokaali-sahkopostipalvelin "http://localhost:8084/api/sahkoposti"]
+        lokaali-sahkopostipalvelin "http://localhost:8084/api/sahkoposti"
+        ;; Asetetaan koordinaatit, jotka ovat millilleen kahden urakan välissä, joten on potentiaalinen mahdollisuus
+        ;; että löydetään väärä urakka, jolle ilmoitukset lähetetään
+        x 4492320.265
+        y 3458642.657
+        eri-x 4492320.300
+        vaara-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        oikea-urakka-id (hae-oulun-valaistusurakan-id)]
 
     (with-redefs
             [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] lokaali-sahkopostipalvelin)
@@ -148,9 +159,13 @@
                                                      :header "jotain"
                                                      :body onnistunut-kuittaus})
              ;; Lokaalisti ei oikein ole tilanteita, joissa tulee 2 urakkaa samalle koordinaatille, joten feikataan tilanne
-             harja.palvelin.palvelut.urakat/hae-urakka-id-sijainnilla (fn [_ _ _ _]
-                                                                        (hae-rovaniemen-maanteiden-hoitourakan-id))
-             ;; Feikatulle rovaniemen urakalle ei ole lokaalikannassa päivystäjiä, joten feikataan sekin
+             harja.palvelin.palvelut.urakat/hae-urakka-id-sijainnilla (fn [db urakkatyyppi x y]
+                                                                        ;; Vähä kämänen tapa pakottaa urakka vaihtumaan
+                                                                        (if (and (= x 4492320.265)
+                                                                              (= y 3458642.657))
+                                                                          vaara-urakka-id
+                                                                          oikea-urakka-id))
+             ;; Feikatulle rovaniemen/oulun valaistus urakalle ei ole lokaalikannassa päivystäjiä, joten feikataan sekin
              harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
              (fn [db urakka-id] (list {:id 1
                                        :etunimi "Pekka"
@@ -163,7 +178,7 @@
                                        :loppu (t/now)
                                        :vastuuhenkilo true
                                        :varahenkilo true}))
-             ;; Feikatulle rovaniemen urakalle ei ole lokaalikannassa päivystäjiä, joten feikataan sekin, uudestaan
+             ;; Feikatulle rovaniemen/oulun valaistus urakalle ei ole lokaalikannassa päivystäjiä, joten feikataan sekin, uudestaan
              harja.kyselyt.yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla
              (fn [db urakka-id lahettaja] (list {:id 1
                                        :etunimi "Pekka"
@@ -178,33 +193,42 @@
                                        :varahenkilo true}))]
 
             (let [;; Alustetaan valaistusurakan viesti, mutta lähetetään se tälle väärälle rovaniemen hoitourakalle
-                  vaara-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
                   viesti-id (str (UUID/randomUUID))
                   ilmoitus-id 987654321
                   nyt-185 (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                             (t/minus (t/now) (t/minutes 185)))
                   nyt-180 (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
                             (t/minus (t/now) (t/minutes 180)))
-                  valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 4492320.265 3458642.657)
+                  valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 x y)
 
                   ;; 1. Lähetä valaistusilmoitus ikään kuin t-loikista jonoihin - sisältää väärät tiedot. Sijainti ja urakka ei täsmää
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ valaistusilmoitus)
-                  ;; Ilmoituksen käsittelyyn menee hetki
+
                   ;; 2. Ei simuloida sähköpostin lähetystä urakkalle, koska se tapahtuu automaattisesti. Sen sijaan odotellaan hetki
-                  _ (Thread/sleep 1000)
+                  _ (async/<!! (async/timeout 1000)) ;; Ilmoituksen käsittelyyn menee hetki
+                  ;; Varmistetaan, että ilmoitus löytyy tietokannasta
+                  ilmoitus-db (q (format "select * from ilmoitus where ilmoitusid = %s" ilmoitus-id ))
 
                   ;; Sähköposti on lähetetty ihan oikein Rest apin kautta ja kun urakoitsija sen saa, niin se vastaa, että väärä urakka
-                  sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" vaara-urakka-id "/" ilmoitus-id "] Väärä urakka")
-                               "[Väärä urakka] Ei kuulu meidän alueelle tämä homma." paivystajan-email toimenpiteen-vastausemail)
+                  sposti_xml (aseta-xml-sahkopostin-sisalto
+                               (str "#[" vaara-urakka-id "/" ilmoitus-id "] Väärä urakka")
+                               "[Väärä urakka] Ei kuulu meidän alueelle tämä homma."
+                               paivystajan-email
+                               toimenpiteen-vastausemail)
                   ;; 3. Urakoitsija vastaa "Väärä urakka"
                   vaara-urakka-email-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja portti sposti_xml nil true))
-                  _ (Thread/sleep 1000)
                   _ (odota-ehdon-tayttymista #(realized? vaara-urakka-email-vastaus) "Saatiin väärä urakka vastaus." 5000)
-                  _ (Thread/sleep 1000)
+                  _ (async/<!! (async/timeout 1000))
                   ;; 4. Harja käsittelee "Väärä urakka" viestin ja lähettää siitä T-LOIKille ilmoituksen
                   ;; Me voidaan tarkistaa integraatioviesteistä, että näin on todella tapahtunut
-                  integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
-          FROM integraatioviesti;"))]
+                  uusi-valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 eri-x y)
+                  _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ uusi-valaistusilmoitus)
+                  _ (async/<!! (async/timeout 1000))
+                  integraatioviestit (hae-kaikki-integraatioviestit)]
+
+              ;; Varmistetaan, että ilmoitus on tallentunut kantaan
+              (is (not (nil? ilmoitus-db)))
+
               ;; 1. Varmistetaan, että jonoista saatiin ilmoitus toimenpiteestä
               (is "sisään" (:suunta (first integraatioviestit)))
               (is "JMS" (:siirtotyyppi (first integraatioviestit)))
@@ -238,4 +262,17 @@
               (is "ulos" (:suunta (nth integraatioviestit 5)))
               (is "JMS" (:siirtotyyppi (nth integraatioviestit 5)))
               (is "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 5)))
-              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 5)) "<tyyppi>vaara-urakka</tyyppi>"))))))
+              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 5)) "<tyyppi>vaara-urakka</tyyppi>"))
+
+              ;; 5. T-LOIK lähettää ilmoituksen uudestaan
+              (is "sisään" (:suunta (nth integraatioviestit 7)))
+              (is "JMS" (:siirtotyyppi (nth integraatioviestit 7)))
+              (is "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 7)))
+              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) viesti-id))
+
+              ;; 6. Harja ilmoittaa toiselle päivystäjälle saapuneesta ilmoituksesta
+              (is "ulos" (:suunta (nth integraatioviestit 8)))
+              (is "HTTP" (:siirtotyyppi (nth integraatioviestit 8)))
+              (is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 8)))
+              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 8)) (str ilmoitus-id)))
+              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 8)) (format "[%s/%s]" oikea-urakka-id ilmoitus-id )))))))
