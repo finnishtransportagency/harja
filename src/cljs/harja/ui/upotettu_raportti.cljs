@@ -15,17 +15,18 @@
   :kasittelija :pdf/:excel ja :otsikko, joka on napin teksti"
   ([parametrit & loput-parametrit]
    [:span  
-    (for [{:keys [kasittelija otsikko]} (concat [parametrit] loput-parametrit)]
-      ^{:key (str "raportti-" otsikko)}
-      [:form {:style {:float "right"} :target "_blank" :method "POST"
-              :action ((if (= kasittelija :excel) 
-                         k/excel-url 
-                         k/pdf-url) :raportointi)}
-       [:input {:type "hidden" :name "parametrit"
-                :value (t/clj->transit (dissoc parametrit :otsikko :kasittelija))}]
-       [:button.nappi-ensisijainen {:type "submit"}
-        (ikonit/print)
-        (str " " otsikko)]])])
+    (for [p (concat [parametrit] loput-parametrit)]
+      (let [{:keys [kasittelija otsikko]} p]
+        ^{:key (str "raportti-" otsikko)}
+        [:form {:style {:float "right"} :target "_blank" :method "POST"
+                :action ((if (= kasittelija :excel) 
+                           k/excel-url 
+                           k/pdf-url) :raportointi)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]
+         [:button.nappi-ensisijainen {:type "submit"}
+          (ikonit/print)
+          (str " " otsikko)]]))])
   ([parametrit]
    [:span
     ^{:key "raporttixls"}
