@@ -270,13 +270,27 @@
         kulu (if (nil? id)
                 (q/luo-kulu<! db yhteiset-tiedot)
                 (q/paivita-kulu<! db (assoc yhteiset-tiedot
-                                        :id id)))]
+                                        :id id)))
+        vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+        sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
+        puuttuvat-kohdistukset (remove
+                                 #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
+                                 vanhat-kohdistukset)]
     (when-not (or (nil? liitteet)
                   (empty? liitteet))
       (doseq [liite liitteet]
         (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kulu)
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
+
+    ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
+    (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
+        (poista-kulun-kohdistus db user
+          {:id id
+           :urakka-id urakka-id
+           :kohdistuksen-id (:kohdistus-id puuttuva-kohdistus)
+           :kohdistus puuttuva-kohdistus}))
+
     (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)

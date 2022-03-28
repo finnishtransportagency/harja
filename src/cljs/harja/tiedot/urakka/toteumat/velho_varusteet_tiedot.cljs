@@ -177,7 +177,6 @@
   (process-event [{:keys [vastaus] :as jotain} app]
     (reset! varusteet-kartalla/karttataso-varusteet
             (map (fn [t] {:sijainti (:sijainti t)}) (:toteumat vastaus)))
-    (println "petar kobajagi resetovao atom count: " (count @varusteet-kartalla/karttataso-varusteet))
     (-> app
         (assoc :haku-paalla false)
         (assoc :varusteet (:toteumat vastaus))))
