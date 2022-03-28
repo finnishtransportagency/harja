@@ -10,9 +10,7 @@
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn palauta-toteumat [db parametrit kayttaja]
-  (json/read-str (->
-                   "resources/api/examples/analytiikka-reittitoteumat-response.json"
-                   slurp)))
+  (json/read-str (slurp "resources/api/examples/analytiikka-reittitoteumat-response.json")))
 
 (defrecord Analytiikka []
   component/Lifecycle
