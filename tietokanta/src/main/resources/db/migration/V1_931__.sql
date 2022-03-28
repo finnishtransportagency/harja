@@ -1,0 +1,1 @@
+-- TODO muuta kaikki varusteiden velho-oid sarakkeet TEXT tyyppisiksi, koska OID voi olla joskus hyvin pitkä
