@@ -151,6 +151,16 @@ kohteiden-sahkopostitiedot (atom nil))
                                           (pvm/nyt))
             aikataulurivit))
 
+(defn aikapohjainen-jarjestys-valittu?
+  "Palauttaa totuudellisen arvon, jos valinta on jokin aikaan perustuva järjestyssuodatin."
+  [valinta]
+  (#{:aika
+     :tiemerkinnan-alku
+     :tiemerkinnan-loppu
+     :tiemerkinnan-valmius
+     :tiemerkinnan-takaraja
+     :paallystyksen-loppu} valinta))
+
 (defn muunna-aikataulurivit-tallennukseen
   "Muuntaa aikataulurivit tallennusta varten"
   [kohteet]
