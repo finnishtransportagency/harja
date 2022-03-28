@@ -127,6 +127,11 @@
                                                             db urakka-id ilmoitus)
           uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
           ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
+          ;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
+          ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
+          _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+              (ilmoitukset-q/paivita-ilmoituksen-urakka db ilmoitus-id urakka-id))
+
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
           kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu

@@ -129,8 +129,6 @@
           (is (true? (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE ilmoitusid = 123456789"))))
             "Sähköpostikuittauksella voi merkitä aiheutuneet toimenpiteet"))))))
 
-(def vaara-urakka-kuittaus "jes")
-
 (deftest vaara-urakka-sahkoposti-test
   "Jos viesti on ensin mennyt väärälle urakalle ja tuo urakka on kuitannut viestin kuittauksella \"Väärä urakka\" ja sen jälkeen Liikennekeskus siirtänyt viestin toiselle urakalle niin tällöin viesti näkyy pelkästään Harjaselaimessa. Siitä ei tule sähköposteja lainkaan.
   Simuloidaan siis tilanne näin:
@@ -207,7 +205,7 @@
                   ;; 2. Ei simuloida sähköpostin lähetystä urakkalle, koska se tapahtuu automaattisesti. Sen sijaan odotellaan hetki
                   _ (async/<!! (async/timeout 1000)) ;; Ilmoituksen käsittelyyn menee hetki
                   ;; Varmistetaan, että ilmoitus löytyy tietokannasta
-                  ilmoitus-db (q (format "select * from ilmoitus where ilmoitusid = %s" ilmoitus-id ))
+                  ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))
 
                   ;; Sähköposti on lähetetty ihan oikein Rest apin kautta ja kun urakoitsija sen saa, niin se vastaa, että väärä urakka
                   sposti_xml (aseta-xml-sahkopostin-sisalto
@@ -224,10 +222,15 @@
                   uusi-valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 eri-x y)
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ uusi-valaistusilmoitus)
                   _ (async/<!! (async/timeout 1000))
-                  integraatioviestit (hae-kaikki-integraatioviestit)]
+                  integraatioviestit (hae-kaikki-integraatioviestit)
+                  ;; Varmistetaan, että ilmoitus löytyy tietokannasta, ja tarkistetaan sen urakka
+                  uusi-ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))]
 
               ;; Varmistetaan, että ilmoitus on tallentunut kantaan
               (is (not (nil? ilmoitus-db)))
+              (is (= vaara-urakka-id (:urakka ilmoitus-db)))
+              ;; Ja varmistetaan, että sen urakka on päivitetty sen jälkeen kun T-LOIK on korjannut ilmoituksen sijainnin
+              (is (= oikea-urakka-id (:urakka uusi-ilmoitus-db)))
 
               ;; 1. Varmistetaan, että jonoista saatiin ilmoitus toimenpiteestä
               (is "sisään" (:suunta (first integraatioviestit)))
