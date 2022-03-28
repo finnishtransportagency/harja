@@ -611,6 +611,9 @@ WHERE id = :id;
 -- name: ilmoitus-loytyy-idlla
 SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
 
+-- name: ilmoitus-on-lahetetty-urakalle
+SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urakka = :urakkaid);
+
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
                            FROM ilmoitus
