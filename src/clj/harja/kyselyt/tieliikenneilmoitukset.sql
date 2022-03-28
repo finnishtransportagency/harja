@@ -398,6 +398,12 @@ SET urakka               = :urakka,
     viestiid = :viestiid
 WHERE id = :id;
 
+-- name: paivita-ilmoituksen-urakka!
+-- Päivittää ilmoitusid:n perusteella urakan. Käytetään, kun on lähetetty ilmoitus ensin väärälle urakalle
+UPDATE ilmoitus
+SET urakka = :urakkaid
+WHERE ilmoitusid = :ilmoitusid;
+
 -- name: paivita-ilmoittaja-ilmoitukselle!
 UPDATE ilmoitus
 SET
