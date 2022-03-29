@@ -398,6 +398,12 @@ SET urakka               = :urakka,
     viestiid = :viestiid
 WHERE id = :id;
 
+-- name: paivita-ilmoituksen-urakka!
+-- Päivittää ilmoitusid:n perusteella urakan. Käytetään, kun on lähetetty ilmoitus ensin väärälle urakalle
+UPDATE ilmoitus
+SET urakka = :urakkaid
+WHERE ilmoitusid = :ilmoitusid;
+
 -- name: paivita-ilmoittaja-ilmoitukselle!
 UPDATE ilmoitus
 SET
@@ -617,6 +623,9 @@ WHERE id = :id;
 
 -- name: ilmoitus-loytyy-idlla
 SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
+
+-- name: ilmoitus-on-lahetetty-urakalle
+SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urakka = :urakkaid);
 
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
