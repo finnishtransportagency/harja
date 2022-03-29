@@ -391,6 +391,61 @@
       (log/error "Varustetoteumien haku Velhosta epäonnistunut. Virheet: " virheet)
       false)))
 
+(defn hae-mhu-urakka-oidt
+  [integraatioloki
+   db
+   {:keys [token-url
+           varuste-kayttajatunnus
+           varuste-salasana
+           varuste-urakka-oid-url
+           varuste-urakka-kohteet-url
+           ] :as asetukset}]
+  (log/debug (format "Haetaan uusia MHU tunnistetietoja (OID) Velhosta."))
+  (try+
+    (integraatiotapahtuma/suorita-integraatio
+      db integraatioloki "velho" "urakoiden-haku" nil
+      (fn [konteksti]
+        (let [token-virhe-fn (fn [x] (log/error "Virhe Velho token haussa: " x))
+              token-fn (fn [] (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti token-virhe-fn))
+              token (token-fn)]
+          (when token
+            ;Haetaan OID lista
+            (let [otsikot {"Authorization" (str "Bearer " token)}
+                  http-asetukset {:metodi :GET
+                                  :otsikot otsikot
+                                  :url varuste-urakka-oid-url}
+                  oid-lista (integraatiotapahtuma/laheta konteksti :http http-asetukset)
+                  oid-joukko (set oid-lista)]
+              (assert (empty? oid-lista) "OID lista ei saa olla tyhjä")
+              ;Haetaan kohteet, (jos saatiin oideja)
+              (when (seq oid-lista)
+                (let [otsikot {"Content-Type" "application/json"
+                               "Authorization" (str "Bearer " token)}
+                      http-asetukset {:metodi :POST
+                                      :otsikot otsikot
+                                      :url varuste-urakka-oid-url}
+                      oid-lista-json (oid-lista->json oid-lista)
+                      urakka-kohteet (integraatiotapahtuma/laheta konteksti :http http-asetukset oid-lista-json)
+                      urakka-oid-joukko (set (map :oid urakka-kohteet))
+                      liikaa (set/difference oid-joukko urakka-oid-joukko)
+                      puuttuu (set/difference urakka-oid-joukko oid-joukko)]
+                  (assert (= oid-joukko urakka-oid-joukko) (str "Urakka kohteet.oid pitää olla sama joukko kuin oid-joukko. Liikaa: "
+                                                                liikaa " puuttuu: " puuttuu))
+                  ;Poista kannasta kaikki velho-oid sarakkeen tiedot UPDATE urakka SET velho_oid=null;
+                  ;Päivitetään urakka tauluun saadut velho-oid:t löytyneille WHERE urakkanro = kohde.ominaisuudet.urakkakoodi
+                  (doseq [kohde urakka-kohteet]
+                    ; P1 Assert yksi ja vain yksi rivi päivittyy jokaisella updatella.
+                    ; P2 Sama rivi ei päivity kahdesti.
+                    ; P3 Kannassa on lopuksi yhtä monta velho-oidia kuin urakka-kohteet oli vastauksessa.
+                    ; P3 <==> P1 && P2
+                    ; P3 on riittävä ehto, ei tarvita P1 ja P2, Voi toteutua, jos kannassa urakka.urakkanro ei ole
+                    ; unique tyyppi IN [hoito, teiden-hoito] joukossa. []
+                    #_(q-toteumat/paivita-urakkanumero db {:urakkanro (-> kohde :ominaisuudet :urakkakohde) (:oid kohde)}))))
+              ))))
+    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+      (log/error "Urakka OID haku Velhosta epäonnistunut. Virheet: " virheet)
+      false)))
+
 (defn hae-mhu-urakka-oidt-velhosta
   [integraatioloki
    db
