@@ -553,7 +553,7 @@ FROM asiakaspalauteluokka apl
     ON i.selitteet && apl.selitteet AND
        (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
        (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
-       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
+       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT CASE WHEN tyyppi = 'teiden-hoito' THEN 'hoito' ELSE tyyppi END FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
        (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
                                                                FROM urakka
                                                                WHERE hallintayksikko = :hallintayksikko_id)) AND
@@ -574,7 +574,14 @@ FROM
 WHERE
   (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
   (ilmoitus.urakka IS NULL OR u.urakkanro IS NOT NULL) AND
-  (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+  (:urakkatyyppi::urakkatyyppi IS NULL OR
+   CASE
+       WHEN :urakkatyyppi = 'hoito' THEN
+           u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+       ELSE
+           u.tyyppi = :urakkatyyppi::urakkatyyppi
+       END)
+  AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
