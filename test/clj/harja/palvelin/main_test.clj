@@ -160,7 +160,8 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
-    :urakan-lupausmuistutukset})
+    :urakan-lupausmuistutukset
+    :api-analytiikka})
 
 (def ei-statusta
   #{:metriikka
@@ -220,7 +221,8 @@
     :paikkauskohteet
     :valikatselmukset
     :lupaukset
-    :urakan-lupausmuistutukset})
+    :urakan-lupausmuistutukset
+    :api-analytiikka})
 
 (def hidas-ok-status #{:sonja :itmf})
 
