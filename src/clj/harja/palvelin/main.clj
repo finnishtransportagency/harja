@@ -129,6 +129,7 @@
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
+    [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
@@ -693,6 +694,10 @@
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
                          [:http-palvelin :db  :integraatioloki :yha-paikkauskomponentti])
+
+      :api-analytiikka (component/using
+                  (analytiikka/->Analytiikka)
+                  [:http-palvelin :db  :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
