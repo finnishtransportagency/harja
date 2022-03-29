@@ -21,6 +21,8 @@
 
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "jvh")
+(def odota-tausta-ajoa 2000)
+
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
@@ -203,7 +205,7 @@
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ valaistusilmoitus)
 
                   ;; 2. Ei simuloida sähköpostin lähetystä urakkalle, koska se tapahtuu automaattisesti. Sen sijaan odotellaan hetki
-                  _ (async/<!! (async/timeout 1000)) ;; Ilmoituksen käsittelyyn menee hetki
+                  _ (async/<!! (async/timeout odota-tausta-ajoa)) ;; Ilmoituksen käsittelyyn menee hetki
                   ;; Varmistetaan, että ilmoitus löytyy tietokannasta
                   ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))
 
@@ -216,12 +218,12 @@
                   ;; 3. Urakoitsija vastaa "Väärä urakka"
                   vaara-urakka-email-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja portti sposti_xml nil true))
                   _ (odota-ehdon-tayttymista #(realized? vaara-urakka-email-vastaus) "Saatiin väärä urakka vastaus." 5000)
-                  _ (async/<!! (async/timeout 1000))
+                  _ (async/<!! (async/timeout odota-tausta-ajoa))
                   ;; 4. Harja käsittelee "Väärä urakka" viestin ja lähettää siitä T-LOIKille ilmoituksen
                   ;; Me voidaan tarkistaa integraatioviesteistä, että näin on todella tapahtunut
                   uusi-valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 eri-x y)
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ uusi-valaistusilmoitus)
-                  _ (async/<!! (async/timeout 1000))
+                  _ (async/<!! (async/timeout odota-tausta-ajoa))
                   integraatioviestit (hae-kaikki-integraatioviestit)
                   ;; Varmistetaan, että ilmoitus löytyy tietokannasta, ja tarkistetaan sen urakka
                   uusi-ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))]
@@ -268,6 +270,7 @@
               (is (clojure.string/includes? (:sisalto (nth integraatioviestit 5)) "<tyyppi>vaara-urakka</tyyppi>"))
 
               ;; 5. T-LOIK lähettää ilmoituksen uudestaan
+              (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) "harja:ilmoitus"))
               (is "sisään" (:suunta (nth integraatioviestit 7)))
               (is "JMS" (:siirtotyyppi (nth integraatioviestit 7)))
               (is "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 7)))
