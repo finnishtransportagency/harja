@@ -535,24 +535,28 @@ $$
                 (SELECT loppupvm FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'), 'tuotepolku', 'sampoid',
                 'talousosastoid', 'talousosastopolku');
 
-        INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, toimenpideinstanssi, sopimus)
-        VALUES (2020, 2, 16666, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id);
+        INSERT INTO kiinteahintainen_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, toimenpideinstanssi, sopimus)
+        VALUES (2020, 2, 16666, testidata_indeksikorjaa(16666, 2020, 2, urakka_id), (select id from toimenpideinstanssi where nimi = 'Oulu MHU Talvihoito TP'), sopimus_id);
 
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
-        VALUES (2020, 4, 220, 'laskutettava-tyo'::TOTEUMATYYPPI, null, null,
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
+        VALUES (2020, 4, 220, testidata_indeksikorjaa(220, 2020, 4, urakka_id),
+                'laskutettava-tyo'::TOTEUMATYYPPI, null, null,
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'), sopimus_id, NOW());
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
-        VALUES (2020, 6, 500, 'akillinen-hoitotyo'::TOTEUMATYYPPI,
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus, luotu)
+        VALUES (2020, 6, 500, testidata_indeksikorjaa(500, 2020, 6, urakka_id),
+                'akillinen-hoitotyo'::TOTEUMATYYPPI,
                 (select id from toimenpidekoodi where yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2'::UUID),
                 null, (select id from toimenpideinstanssi where nimi = 'Oulu MHU Liikenneympäristön hoito TP'), sopimus_id, NOW());
 
 
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES (2020, 2, 234, 'laskutettava-tyo'::TOTEUMATYYPPI, null,
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES (2020, 2, 234, testidata_indeksikorjaa(234, 2020, 2, urakka_id),
+                'laskutettava-tyo'::TOTEUMATYYPPI, null,
                 (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)'),
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
-        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
-        VALUES (2020, 2, 432, 'laskutettava-tyo'::TOTEUMATYYPPI, null,
+        INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu,  tyyppi, tehtava, tehtavaryhma, toimenpideinstanssi, sopimus)
+        VALUES (2020, 2, 432, testidata_indeksikorjaa(432, 2020, 2, urakka_id),
+                'laskutettava-tyo'::TOTEUMATYYPPI, null,
                 (select id from tehtavaryhma where yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'),
                 (select id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), sopimus_id);
     END

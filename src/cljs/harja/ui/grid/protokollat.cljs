@@ -161,6 +161,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                            (.stopPropagation %)
                            (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
-       (if (vetolaatikko-auki? ohjaus id)
-         [ikonit/navigation-ympyrassa :down]
-         [ikonit/navigation-ympyrassa :right]))]))
+       [:div.vetolaatikon-sailio
+        [:div.inline-block.vetolaatikon-pylvas]
+        (if (vetolaatikko-auki? ohjaus id)
+          [ikonit/navigation-ympyrassa :down]
+          [ikonit/navigation-ympyrassa :right])])]))

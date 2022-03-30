@@ -2,7 +2,6 @@
   "POT2-lomakkeen päällystekerros"
   (:require
     [reagent.core :refer [atom] :as r]
-    [harja.domain.oikeudet :as oikeudet]
     [harja.domain.paallystysilmoitus :as pot]
     [harja.domain.pot2 :as pot2-domain]
     [harja.domain.tierekisteri :as tr]
@@ -10,14 +9,10 @@
     [harja.loki :refer [log]]
     [harja.ui.debug :refer [debug]]
     [harja.ui.grid :as grid]
-    [harja.ui.napit :as napit]
     [harja.ui.ikonit :as ikonit]
     [harja.ui.yleiset :refer [ajax-loader]]
-    [harja.tiedot.navigaatio :as nav]
     [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.ui.yleiset :as yleiset]

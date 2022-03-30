@@ -68,3 +68,23 @@ begin
 end
 $$ language plpgsql;
 
+CREATE OR REPLACE FUNCTION kuukauden_nimi(kuukausi INT) RETURNS TEXT AS
+$$
+BEGIN
+    RETURN
+        CASE kuukausi
+               WHEN 1 THEN 'tammikuu'
+               WHEN 2 THEN 'helmikuu'
+               WHEN 3 THEN 'maaliskuu'
+               WHEN 4 THEN 'huhtikuu'
+               WHEN 5 THEN 'toukokuu'
+               WHEN 6 THEN 'kesakuu'
+               WHEN 7 THEN 'heinakuu'
+               WHEN 8 THEN 'elokuu'
+               WHEN 9 THEN 'syyskuu'
+               WHEN 10 THEN 'lokakuu'
+               WHEN 11 THEN 'marraskuu'
+               WHEN 12 THEN 'joulukuu'
+        END;
+    END;
+$$ LANGUAGE plpgsql;

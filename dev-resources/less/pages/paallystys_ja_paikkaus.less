@@ -158,12 +158,35 @@
         }
     }
 }
-.aikataulu .muokkaustoiminnot {
-    position: relative;
-    top: 32px;
-}
-.aikataulu-spacer {
-    height: 24px;
+.aikataulu {
+    .aikataulu-spacer {
+        height: 24px;
+    }
+    .muokkaustoiminnot {
+        position: relative;
+        top: 32px;
+    }
+    // erikoiskäsittelyä ei haluta vetolaatikon sisälle
+    .vetolaatikko-sisalto {
+        .muokkaustoiminnot {
+            position: unset;
+            top: unset;
+        }
+    }
+    thead {
+        > tr:first-child > th {
+            text-align: center;
+        }
+    }
+    .tiemerkinta-tausta {
+        background-color: @lemon-light;
+    }
+    .paallystys-tausta {
+        background-color: @white-dark;
+    }
+    .paallystys-tausta-tumma {
+        background-color: @white-darker;
+    }
 }
 .tuoreusvihje {
     display: flex;

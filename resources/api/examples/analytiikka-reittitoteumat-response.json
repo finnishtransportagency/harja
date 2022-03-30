@@ -1,0 +1,116 @@
+{
+    "reittitoteumat": [
+      {
+        "reittitoteuma": {
+          "toteuma": {
+            "tunniste": {
+              "id": 4
+            },
+            "sopimusId": {
+              "id": 4
+            },
+            "alkanut": "2016-01-30T12:00:00Z",
+            "paattynyt": "2016-01-30T12:00:00Z",
+            "suorittaja": {
+              "id": 4,
+              "nimi": "Seppo Suorittaja",
+              "ytunnus": "12345678-9"
+            },
+            "toteumatyyppi": "yksikkohintainen",
+            "lisatieto": "Reitti oli jäinen",
+            "tehtavat": [
+              {
+                "id": 4,
+                "maara": {
+                  "yksikko": "t",
+                  "maara": 4
+                },
+                "selite": "selite"
+              }
+            ],
+            "materiaalit": [
+              {
+                "materiaali": "suola",
+                "maara": {
+                  "yksikko": "t",
+                  "maara": 4
+                }
+              }
+            ],
+            "tiesijainti": {
+              "nimi": "E3",
+              "numero": 861,
+              "aet": 1,
+              "aosa": 1,
+              "let": 2,
+              "losa": 2
+            },
+            "muutostiedot": {
+              "luotu": "2016-01-30T12:00:00Z",
+              "luoja": "2016-01-30T12:00:00Z",
+              "muokattu": "2016-01-30T12:00:00Z",
+              "muokkaaja": "2016-01-30T12:00:00Z"
+            }
+          },
+          "reitti": [
+            {
+              "reittipiste": {
+                "aika": "2018-01-18T12:00:00+02:00",
+                "koordinaatit": {
+                  "x": 448353,
+                  "y": 7225182
+                },
+                "tehtavat": [
+                  {
+                    "tehtava": {
+                      "id": 1369
+                    }
+                  }
+                ],
+                "materiaalit": [
+                  {
+                    "materiaali": "Talvisuolaliuos NaCl",
+                    "maara": {
+                      "yksikko": "t",
+                      "maara": 4
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "reittipiste": {
+                "aika": "2018-01-18T12:15:00+02:00",
+                "koordinaatit": {
+                  "x": 455574,
+                  "y": 7227716
+                },
+                "tehtavat": [
+                  {
+                    "tehtava": {
+                      "id": 1359
+                    }
+                  }
+                ],
+                "materiaalit": [
+                  {
+                    "materiaali": "Talvisuolaliuos NaCl",
+                    "maara": {
+                      "yksikko": "t",
+                      "maara": 1
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "tyokone": {
+          "id": "työkoneid",
+          "tunnus": "työkonetunnus",
+          "tyokonetyyppi": "työkonetyyppi"
+        }
+      }
+    ]
+
+}

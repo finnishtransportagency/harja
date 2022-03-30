@@ -6,7 +6,10 @@
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.domain.kulut :as kulut]
-    [reagent.core :as r])
+    [reagent.core :as r]
+    [clojure.string :as str]
+    [harja.tiedot.navigaatio :as navigaatio]
+    [harja.pvm :as pvm])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
 
 (defrecord KulujenSyotto [auki?])
@@ -85,11 +88,23 @@
               lomake
               (partition 2 polut-ja-arvot)))))
 
-(defn kulu->lomake [kulu]
+(defn- vuoden-paatoksen-kulu? [{:keys [tehtavaryhmat] :as app} kulu]
+  (let [vuoden-paatoksen-tehtavaryhmat-set
+        (into #{}
+          (map :id (filter #(str/includes? (:tehtavaryhma %) "Hoitovuoden päättäminen") tehtavaryhmat)))]
+    (-> kulu
+      :kohdistukset
+      first
+      :tehtavaryhma
+      vuoden-paatoksen-tehtavaryhmat-set
+      boolean)))
+
+(defn kulu->lomake [app kulu]
   (let [{suorittaja :suorittaja} kulu]
     (-> kulu
         (dissoc :suorittaja)
         (assoc :aliurakoitsija suorittaja)
+        (assoc :vuoden-paatos-valittu? (vuoden-paatoksen-kulu? app kulu))
         (update :kohdistukset (fn [kohdistukset]
                                 (mapv #(assoc %
                                          :lisatyo?
@@ -110,38 +125,46 @@
         (palautuksen-avain kohde)))))
 
 (defn resetoi-kulut []
-  tila/kulut-lomake-default)
+  (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
+        kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
+        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))]
+    (assoc tila/kulut-lomake-default
+      :koontilaskun-kuukausi
+      (when (and
+              kuluva-hoitovuoden-nro
+              (not= "kk ei välillä 1-12" kuluva-kuukausi))
+        (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi")))))
 
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
 
-(defn palauta-tilapainen-erapaiva 
+(defn palauta-tilapainen-erapaiva
   [{:keys [erapaiva-tilapainen] :as lomake}]
-  (-> lomake 
+  (-> lomake
     (assoc :erapaiva erapaiva-tilapainen
       :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi erapaiva-tilapainen (-> @tila/tila :yleiset :urakka :alkupvm)))
     (dissoc :erapaiva-tilapainen)))
 
-(defn talleta-tilapainen-erapaiva 
+(defn talleta-tilapainen-erapaiva
   [{:keys [erapaiva tarkistukset] :as lomake}]
   (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm :erapaiva)]
-    (-> lomake 
+    (-> lomake
       (assoc :erapaiva-tilapainen erapaiva
         :koontilaskun-kuukausi (kulut/pvm->koontilaskun-kuukausi numerolla-tarkistettu-pvm (-> @tila/tila :yleiset :urakka :alkupvm)))
       (assoc :erapaiva numerolla-tarkistettu-pvm))))
 
-(defn paivita-erapaivat-tarvittaessa 
+(defn paivita-erapaivat-tarvittaessa
   [{:keys [tarkistukset erapaiva-tilapainen] :as lomake}]
   (let [numerolla-tarkistettu-pvm (-> tarkistukset :numerolla-tarkistettu-pvm)
         ei-konfliktia-ja-erapaiva-tallessa? (and
                                               (some? erapaiva-tilapainen)
                                               (false? numerolla-tarkistettu-pvm))
-        konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm) 
+        konflikti-laskun-numerossa? (and (some? numerolla-tarkistettu-pvm)
                                       (not (false? numerolla-tarkistettu-pvm)))]
-    (cond-> lomake                               
+    (cond-> lomake
       ei-konfliktia-ja-erapaiva-tallessa?
-      palauta-tilapainen-erapaiva 
-      
+      palauta-tilapainen-erapaiva
+
       konflikti-laskun-numerossa?
       talleta-tilapainen-erapaiva)))
 
@@ -284,7 +307,7 @@
                           :epaonnistui ->KutsuEpaonnistui
                           :epaonnistui-parametrit [{:viesti "Urakan kulujen haku epäonnistui"}]
                           :paasta-virhe-lapi? true}))
-    (-> app 
+    (-> app
         (assoc-in [:parametrit :viimeisin-haku] viimeisin-haku)
         (update-in [:parametrit :haetaan] inc)))
   HaeUrakanToimenpiteetJaTehtavaryhmat
@@ -302,7 +325,7 @@
     (-> app
         (update-in [:parametrit :haetaan] dec)
         (assoc :syottomoodi true
-                   :lomake (kulu->lomake kulu))))
+                   :lomake (kulu->lomake app kulu))))
   AvaaKulu
   (process-event [{kulu :kulu} app]
     (-> app
@@ -342,7 +365,7 @@
   TallennaKulu
   (process-event
     [_ {{:keys [kohdistukset koontilaskun-kuukausi liitteet
-                laskun-numero lisatieto erapaiva id] :as lomake} :lomake 
+                laskun-numero lisatieto erapaiva id] :as lomake} :lomake
         {:keys [viimeisin-haku]} :parametrit :as app}]
     (let [urakka (-> @tila/yleiset :urakka :id)
           kokonaissumma (reduce #(+ %1 (if (true? (:poistettu %2))
@@ -357,7 +380,7 @@
       (when (true? validi?)
         (tuck-apurit/post! :tallenna-kulu
                            {:urakka-id     urakka
-                            :kulu-kohdistuksineen 
+                            :kulu-kohdistuksineen
                             {:kohdistukset          kohdistukset
                              :erapaiva              erapaiva
                              :id                    (when-not (nil? id) id)
@@ -378,7 +401,7 @@
   (process-event
     [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
-    (-> app 
+    (-> app
       (assoc :syottomoodi false)
       (update :lomake resetoi-kulut)))
   PoistaKulu

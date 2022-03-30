@@ -9,14 +9,10 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]
-            [clj-time.local :as l]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodit]
-            [harja.tyokalut.big :as big])
+            [harja.tyokalut.big :as big]
+            [harja.fmt :as fmt])
   (:import java.math.BigDecimal))
 
 (defn- laskettavat-kentat [rivi konteksti]
@@ -137,34 +133,49 @@
                            :fmt :raha}])))
 
 (defn- hj-hoitovuoden-paattaminen-tavoitepalkkio
-       [tp-rivi kyseessa-kk-vali?]
-       (rivi
-         (str "Hoitovuoden päättäminen / Tavoitepalkkio")
-         [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu tp-rivi)  (summa-fmt nil))
-                              :fmt :raha}]
-         (when kyseessa-kk-vali?
-               [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan tp-rivi) (summa-fmt nil))
-                                    :fmt :raha}])))
+  [tp-rivi kyseessa-kk-vali?]
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Tavoitepalkkio")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
 
 (defn- hj-hoitovuoden-paattaminen-tavoitehinnan-ylitys
-       [tp-rivi kyseessa-kk-vali?]
-       (rivi
-         (str "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä")
-         [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu tp-rivi)  (summa-fmt nil))
-                              :fmt :raha}]
-         (when kyseessa-kk-vali?
-               [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan tp-rivi) (summa-fmt nil))
-                                    :fmt :raha}])))
+  [tp-rivi kyseessa-kk-vali?]
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
 
 (defn- hj-hoitovuoden-paattaminen-kattohinnan-ylitys
        [tp-rivi kyseessa-kk-vali?]
-       (rivi
-         (str "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä")
-         [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu tp-rivi)  (summa-fmt nil))
-                              :fmt :raha}]
-         (when kyseessa-kk-vali?
-               [:varillinen-teksti {:arvo (or (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan tp-rivi) (summa-fmt nil))
-                                    :fmt :raha}])))
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
 
 (defn- hj-palkkio
   [tp-rivi kyseessa-kk-vali?]
@@ -286,7 +297,7 @@
      ;; arvot
      rivit]))
 
-(defn- laske-indeksikerroin 
+(defn- laske-indeksikerroin
   "Indeksikertoimen kaava: indeksiarvo / perusluku = indeksikerroin. Indeksiarvo ja perusluku pyöristetään yhteen desimaaliin
   ennen käyttämistä. Indeksikerroin pyöristetään kolmeen desimaaliin."
   [indeksiarvo perusluku]
