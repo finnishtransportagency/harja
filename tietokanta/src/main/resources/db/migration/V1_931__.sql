@@ -1,10 +1,11 @@
 DROP TABLE varustetoteuma_ulkoiset_kohdevirhe;
 CREATE TABLE varustetoteuma_ulkoiset_virhe
 (
-    id           serial PRIMARY KEY NOT NULL,
-    ulkoinen_oid TEXT,
-    alkupvm      timestamp,
     aikaleima    timestamp NOT NULL,
     virhekuvaus  text NOT NULL,
-    vastaus      TEXT
+    virhekohteen_oid TEXT,
+    virhekohteen_alkupvm      timestamp,
+    virhekohteen_vastaus      TEXT
 );
+
+CREATE INDEX aikaleima_idx ON varustetoteuma_ulkoiset_virhe(aikaleima);

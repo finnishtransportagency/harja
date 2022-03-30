@@ -906,16 +906,16 @@ WHERE ulkoinen_oid = :ulkoinen_oid
 
 -- name: tallenna-varustetoteuma-ulkoiset-virhe<!
 -- Tallentaa virheen tiedot tulevaa toipumista varten. Virheet tallennetaan velho-oid + muokattu avaimilla.
-INSERT INTO varustetoteuma_ulkoiset_virhe (ulkoinen_oid,
-                                                alkupvm,
-                                                virhekuvaus,
-                                                aikaleima,
-                                                vastaus)
-VALUES (:ulkoinen_oid,
-        :alkupvm,
+INSERT INTO varustetoteuma_ulkoiset_virhe (aikaleima,
+                                           virhekuvaus,
+                                           virhekohteen_oid,
+                                           virhekohteen_alkupvm,
+                                           virhekohteen_vastaus)
+VALUES (:aikaleima,
         :virhekuvaus,
-        :aikaleima,
-        :vastaus);
+        :virhekohteen_oid,
+        :virhekohteen_alkupvm,
+        :virhekohteen_vastaus);
 
 -- name: hae-yksikkohintaisten-toiden-reitit
 -- fetch-size: 64

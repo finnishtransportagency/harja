@@ -80,7 +80,8 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (is (= 1 (count (kaikki-virheet))))
-        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "järjestelmä palautti statuskoodin: 500"))))))
+        (when (= 1 (count (kaikki-virheet)))
+          (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "järjestelmä palautti statuskoodin: 500")))))))
 
 (deftest varuste-velho-tunnisteet-palauttaa-rikkinaisen-vastauksen-test
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -95,7 +96,8 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (is (= 1 (count (kaikki-virheet))))
-        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside array"))))))
+        (when (= 1 (count (kaikki-virheet)))
+          (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside array")))))))
 
 (deftest varuste-velho-kohteet-palauttaa-500-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -111,7 +113,8 @@
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (is (= 1 (count (kaikki-virheet))))
-        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "Ulkoinen käsittelyvirhe"))))))
+        (when (= 1 (count (kaikki-virheet)))
+          (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "Ulkoinen käsittelyvirhe")))))))
 
 (deftest varuste-velho-kohteet-palauttaa-rikkinaisen-vastauksen-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
@@ -132,7 +135,8 @@
         (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))
         (is (= odotettu-kohderivien-lukumaara (count (kaikki-kohteet))) "Ei saa lisätä kohderiviä")
         (is (= 1 (count (kaikki-virheet))))
-        (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside object"))))))
+        (when (= 1 (count (kaikki-virheet)))
+          (is (str/includes? (:virhekuvaus (first (kaikki-virheet))) "end-of-file inside object")))))))
 
 (deftest varuste-velho-kohteet-palauttaa-vaaraa-tietoa-test
   (let [fake-tunnisteet (fn [_ {:keys [body headers]} _]
@@ -459,8 +463,9 @@
           expected-varustetoteuma-maara 1]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))
-      (let [kohde (first kaikki-varustetoteumat)]
-        (is (= (:muokkaaja kohde) "uusi muokkaaja") "Odotettiin uusimman tiedon korvanneen vanhan.")))))
+      (when (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+        (let [kohde (first kaikki-varustetoteumat)]
+          (is (= (:muokkaaja kohde) "uusi muokkaaja") "Odotettiin uusimman tiedon korvanneen vanhan."))))))
 
 (deftest urakka-id-kohteelle-test
   (u "DELETE FROM varustetoteuma_ulkoiset")

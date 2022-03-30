@@ -77,15 +77,15 @@
 
 (defn lokita-ja-tallenna-hakuvirhe
   ([db {:keys [oid version-voimassaolo] :as kohde} virhekuvaus]
-   (let [hakuvirhe {:ulkoinen_oid oid
-                    :alkupvm (-> version-voimassaolo
-                                 :alku
-                                 varuste-vastaanottosanoma/velho-pvm->pvm
-                                 varuste-vastaanottosanoma/aika->sql)
+   (let [hakuvirhe {:aikaleima (pvm/nyt)
                     :virhekuvaus virhekuvaus
-                    :aikaleima (pvm/nyt)
-                    :vastaus (str kohde)}]
-     (log/error virhekuvaus)
+                    :virhekohteen_oid oid
+                    :virhekohteen_alkupvm (-> version-voimassaolo
+                                              :alku
+                                              varuste-vastaanottosanoma/velho-pvm->pvm
+                                              varuste-vastaanottosanoma/aika->sql)
+                    :virhekohteen_vastaus (str kohde)}
+         _ (println hakuvirhe)]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
 (defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
@@ -130,7 +130,6 @@
         {:tila true :oidit oidit})
       (do
         (tallenna-virhe-fn nil virhe-viesti)
-        (log/error virhe-viesti)
         {:tila false :oidit nil}))))
 
 (defn json->kohde-array [json]                              ; json <=> [<kohde-v1-json>,<kohde-v2-json>,...,<kohde-v2-json>]
@@ -183,18 +182,36 @@
 
 
 (defn tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn]
-  "1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
+  "Kohdetietojen hakeminen ja tallentaminen on kaksivaiheinen toimenpide.
+
+  Aiemmin on Velhosta haettu lista tunnisteita (OID), joille on Velhossa kohdentunut muutoksia annetun pvm jälkeen.
+  Nämä saadaan parametrina `haetut-oidit`. Haku tapahtuu maksimissaan 1000 kohteen joukkoina (batch).
+  Tämä funktio saa maksimissaan 1000 oidia haettavaksi jokaisella kutsukerralla.
+
+  Tässä haetaan itse kohteet Velhon rajapinnasta.
+
+  Velho voi palauttaa vähemmän kohteita kuin pyydetyn joukon. Puuttuvien kohteiden katsotaan olevan poistunutta tietoa, eikä niihin reagoida mitenkään.
+  Tiedon poistuminen on eri asia kuin kohteen poistaminen. Kohde poistuu merkkaamalla sen versio loppuneeksi.
+
+  Koodissa on varauduttu myös siihen, jos Velho palauttaa enemmän kohteita kuin pyydettiin. (Ei voida vielä olla varmoja voiko näin käydä)
+  Myös siihen on varauduttu, että kaikki palautuneet kohteet eivät ole pyydettyjen joukossa.
+
+  Sekvenssi on seuraavan kaltainen:
+   1. Jäsentää kohteet `kohteiden-historiat-ndjson`sta.
    `kohteiden-historiat-ndjson`:
     [{<kohde1-v1>},{kohde2-v2}]
     [{<kohde2-v1>}]
     [{<kohde3-v1>},{kohde3-v2}]
     ...
-   2. Vertailee saatujen kohteiden oideja `haetut-oidit` joukkoon ja log/warn eroista.
+   2. Vertailee saatujen kohteiden oideja `haetut-oidit` joukkoon ja lokitetaan tietokantaan tieto näiden eroista.
    3. Päättelee tietolajit.
    4. Etsii urakka-idt.
-   5. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla.
+   5. Päättelee geometriset sijainnit.
+   6. Tallentaa tietokantaan varustetoteumat `tallenna-fn` funktion avulla.
 
-   Osittain onnistuminen on mahdollista, vaikka kaikkia kohteita ei saada jäsennettyä."
+   Osittain onnistuminen on mahdollista, vaikka kaikkia kohteita ei saada jäsennettyä ja muunnettua.
+   Siitä kuitenkin seuraa, ettei inkrementaalisen hakemisen seuraavan hakukerran päivämäärää kasvateta,
+   vaan ensikerralla kohteita haetaan uudelleen samasta päivästä alkaen. "
   (let [haetut-oidit (set haetut-oidit)
         {saadut-kohteet :kohteet
          jasennys-onnistui? :onnistui} (try
@@ -211,22 +228,25 @@
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)
         tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit)
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
-    (when (not-empty puuttuvat-oidit)
-      (log/warn "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Puuttuvat oidit " (nayte10 puuttuvat-oidit) " Url: " url))
-    (when (not-empty ylimaaraiset-oidit)
-      (log/warn "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " (nayte10 ylimaaraiset-oidit) " Url: " url))
-    (log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
-              (count saadut-oidit) " kpl. Tallennetaan " (count tallennettavat-oidit) " kpl. (Ylimääräisiä oideja " (count ylimaaraiset-oidit) " kpl.) Url: " url)
-    (let [tulokset (map (fn [kohde]
-                          (try
-                            (tallenna-fn kohde)
-                            true
-                            (catch Throwable t
-                              (tallenna-virhe-fn kohde (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
-                              false)
-                            )) tallennettavat-kohteet)]
-      (and jasennys-onnistui?
-           (every? true? tulokset)))))
+    ; TODO VHAR-6139 palauta kohteiden haun ja tallentamisen lopputulokset lokita koostetusti kutsussa
+    #_(log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
+                (count saadut-oidit) " kpl. Tallennetaan " (count tallennettavat-oidit) " kpl. (Ylimääräisiä oideja " (count ylimaaraiset-oidit) " kpl.) Url: " url)
+    (if jasennys-onnistui?
+      (do
+        (when (and jasennys-onnistui? (seq puuttuvat-oidit))
+          (tallenna-virhe-fn nil (str "Varustekohdeiden historiahaku palautti vajaan joukon kohteita. Url: " url " Puuttuvat oidit: " puuttuvat-oidit)))
+        (when (and jasennys-onnistui? (seq ylimaaraiset-oidit))
+          (tallenna-virhe-fn nil (str "Varustekohteiden historiahaku palautti ylimääräisiä kohteita. Ylimääräiset oidit " ylimaaraiset-oidit " Url: " url)))
+        (let [tulokset (map (fn [kohde]
+                              (try
+                                (tallenna-fn kohde)
+                                true
+                                (catch Throwable t
+                                  (tallenna-virhe-fn kohde (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
+                                  false)
+                                )) tallennettavat-kohteet)]
+          (every? true? tulokset)))
+      false)))
 
 (defn oid-lista->json [oidit]
   (json/write-str oidit))
@@ -349,7 +369,6 @@
            varuste-api-juuri-url
            varuste-kayttajatunnus
            varuste-salasana] :as asetukset}]
-  (log/debug (format "Haetaan uusia varustetoteumia Velhosta."))
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "varustetoteumien-haku" nil
@@ -403,5 +422,5 @@
                   token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)
                 true))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (log/error "Velhoon epäonnistui. Virheet: " virheet)
+      (log/error "Integraatioajo tuo-uudet-varustetoteumat-velhosta epäonnistui. Virheet: " virheet)
       false)))
