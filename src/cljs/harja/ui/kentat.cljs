@@ -283,14 +283,8 @@
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
-        data-atomi? (or (instance? ratom/RAtom data) 
-                      (instance? ratom/Wrapper data) 
-                      (instance? ratom/RCursor data))
         kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
         id (or elementin-id (gensym))]
-    (assert (if (not data-atomi?) 
-              (some? data-fn)
-              true) "Jos arvo ei ole atomi, tarvitaan :data-fn -kahva jolla arvo voidaan päivittää tarvittaessa")
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
@@ -369,20 +363,9 @@
                                           numero (if kokonaisluku?
                                                    (js/parseInt v)
                                                    (js/parseFloat (str/replace v #"," ".")))]
-                                      (cond 
-                                        (and (not (js/isNaN numero))
-                                          data-atomi?)
+                                      (if (not (js/isNaN numero))
                                         (reset! data numero)
-
-                                        (and (not (js/isNaN numero))
-                                          (not data-atomi?))
-                                        (data-fn numero)
-
-                                        data-atomi?
-                                        (reset! data nil)
-
-                                        :else
-                                        (data-fn nil))
+                                        (reset! data nil))
                                       (when toiminta-f
                                         (toiminta-f (when-not (js/isNaN numero)
                                                       numero))))))}]
