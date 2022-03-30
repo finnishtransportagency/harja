@@ -314,7 +314,7 @@
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db
                       db-replica :db-replica
-                      :as this} kayttaja {:keys [nimi konteksti parametrit]
+                      :as this} kayttaja {:keys [nimi konteksti kasittelija parametrit]
                                           :as suorituksen-tiedot}]
     (max-n-samaan-aikaan
      5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
@@ -327,12 +327,13 @@
              (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
          (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
                                      kayttaja (when (= "urakka" konteksti)
-                                                (:urakka-id suorituksen-tiedot)))
-          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                     " parametreilla " parametrit)
+                                                (:urakka-id suorituksen-tiedot)))          
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
-            (let [suoritus-id (luo-suoritustieto-raportille
+            (let [parametrit (assoc parametrit :kasittelija kasittelija)
+                  _ (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                     " parametreilla " parametrit)
+                  suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
                                (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
@@ -344,12 +345,12 @@
                             kayttaja
                             (condp = konteksti
                               "urakka" (assoc parametrit
-                                              :urakka-id (:urakka-id suorituksen-tiedot))
+                                         :urakka-id (:urakka-id suorituksen-tiedot))
                               "monta-urakkaa" (assoc parametrit
-                                                     :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
+                                                :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
                               "hallintayksikko" (assoc parametrit
-                                                       :hallintayksikko-id
-                                                       (:hallintayksikko-id suorituksen-tiedot))
+                                                  :hallintayksikko-id
+                                                  (:hallintayksikko-id suorituksen-tiedot))
                               "koko maa" parametrit))]
               ;; tallennetaan suorituksen lopetusaika
               (paivita-suorituksen-valmistumisaika db suoritus-id)
