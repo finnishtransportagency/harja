@@ -3,17 +3,14 @@
    [clojure.set :as set]
    [clojure.string :as string]
    [harja.ui.aikajana :as aj]
-            [harja.pvm :as pvm]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
-            [harja.domain.aikataulu :as aikataulu]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.domain.tierekisteri :as tr]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.sopimus :as sopimus]
-            [specql.core :refer [fetch]]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [taoensso.timbre :as log]))
+   [harja.pvm :as pvm]
+   [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
+   [harja.domain.aikataulu :as aikataulu]
+   [harja.domain.tierekisteri :as tr]
+   [harja.domain.urakka :as urakka]
+   [harja.domain.sopimus :as sopimus]
+   [specql.core :refer [fetch]]
+   [harja.domain.yllapitokohde :as yllapitokohteet-domain]))
 
 (defn- parametrit-urakan-tiedoilla
   "Hae urakan tyyppi ja pääsopimuksen id"
@@ -184,7 +181,7 @@
                      aikataulu)
         aikajanan-rivit (some->> aikataulu
                           (map #(aikataulu/aikataulurivi-jana % {:nayta-tarkka-aikajana? nayta-tarkka-aikajana?}))
-                             (filter #(not (empty? (:harja.ui.aikajana/ajat %)))))
+                             (filter #(not (empty? (::aj/ajat %)))))
         sarakkeet (filter some? 
                     (kohdeluettelo-sarakkeet (:tyyppi parametrit) kasittelija alikohderaportti?))]
     [:raportti {:nimi (str "Ylläpidon aikataulu" (when vuosi
