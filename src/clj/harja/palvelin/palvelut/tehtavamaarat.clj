@@ -1,19 +1,12 @@
 (ns harja.palvelin.palvelut.tehtavamaarat
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
-            [taoensso.timbre :as log]
-            [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as clj-str]
-            [harja.id :refer [id-olemassa?]]
             [harja.kyselyt.tehtavamaarat :as q]
             [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]
-            [clojure.set :as set]))
-
+            [harja.pvm :as pvm]))
 
 (defn hae-validit-tehtavat
   "Palauttaa tehtava-id:t niille tehtäville, joille teiden hoidon urakoissa (MHU) voi kirjata."

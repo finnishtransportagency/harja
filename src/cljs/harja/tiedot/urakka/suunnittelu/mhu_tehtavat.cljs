@@ -3,7 +3,6 @@
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.ui.viesti :as viesti]
             [reagent.core :as r]
-            [harja.ui.kentat :as kentat]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]))
@@ -20,9 +19,7 @@
 (defrecord TehtavaTallennusOnnistui [vastaus])
 (defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
-#_(defrecord HaeMaarat [parametrit])
 (defrecord SamatTulevilleMoodi [samat?])
-#_(defrecord HaeSopimuksenTiedot [])
 (defrecord SopimuksenHakuOnnistui [tulos])
 (defrecord TallennaSopimus [tallennettu])
 (defrecord SopimuksenTallennusOnnistui [vastaus])
@@ -41,8 +38,6 @@
                     :paallystepaikkaukset
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
-
-(defonce sopimuksen-tehtavamaarat-kaytossa? true)
 
 (defn maarille-tehtavien-tiedot
   [maarat-map {:keys [id maarat] :as _r}]
@@ -219,9 +214,9 @@
         syotetty? (cond-> false
                     (or (nil? yksikko)
                       (= "" yksikko)
-                      (= "-" yksikko)) yksikoton
+                      (= "-" yksikko)) ((constantly true)) 
                     
-                    (some? sopimuksen-tehtavamaara) sopimuksen-tehtavamaarallinen
+                    (some? sopimuksen-tehtavamaara) ((constantly true))
                     
                     (some? sopimuksen-tehtavamaarat) kaikki-maarat-fn)] 
     (if-not syotetty?

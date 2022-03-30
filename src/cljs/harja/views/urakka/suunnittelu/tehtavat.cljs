@@ -1,4 +1,3 @@
-
 (ns harja.views.urakka.suunnittelu.tehtavat
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
@@ -204,8 +203,6 @@
   [:div
    [debug/debug valinnat]
    [debug/debug taulukko]
-   #_[debug/debug @t/taulukko-tila]
-   #_[debug/debug @t/taulukko-avatut-vetolaatikot]
    [:div 
     (doall
       (for [t (filter :nayta-toimenpide? taulukko)]        

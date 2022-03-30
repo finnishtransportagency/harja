@@ -138,7 +138,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when-let [vetolaatikko (get vetolaatikot id)]
      (let [auki (@vetolaatikot-auki id)]
        ^{:key (str "vetolaatikko" id)}
-       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni") #_(when ei-paddingia "vetolaatikko-ei-paddingia")]) )}
+       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni")]) )}
         [:td {:colSpan colspan
               :class (apply conj #{} (keep identity [(when ei-paddingia "vetolaatikko-ei-paddingia")]))}
          [:div.vetolaatikko-sisalto
