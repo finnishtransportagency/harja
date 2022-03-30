@@ -306,11 +306,13 @@
     (-> app 
       (assoc :sopimukset-syotetty? (:tallennettu vastaus))
       (update-in [:valinnat :noudetaan] dec)))
+
   SopimuksenTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} app]
     (viesti/nayta! "Sopimuksen määrien tallennus epäonnistui" :danger)
     (update-in app [:valinnat :noudetaan] dec))
+
   TallennaSopimus
   (process-event
     [{:keys [tallennettu]} app]
@@ -329,17 +331,20 @@
         (when (not (empty? (keys virheet))) 
           (reset! taulukko-virheet virheet)
           (assoc app :virhe-sopimuksia-syottaessa? true)))))
+
   SopimuksenTilaEiHaettu
   (process-event 
     [{:keys [vastaus]} app]
     (viesti/nayta! "Sopimuksen määrien tilan tarkastus epäonnistui!" :danger)
     (update-in app [:valinnat :noudetaan] dec))
+
   SopimuksenTilaHaettu
   (process-event 
     [{:keys [vastaus]} {:keys [taulukko] :as app}]
     (-> app 
       (assoc :sopimukset-syotetty? (:tallennettu vastaus))
       (update-in [:valinnat :noudetaan] dec)))
+
   HaeSopimuksenTila
   (process-event
     [_ app]
@@ -348,6 +353,7 @@
       {:onnistui ->SopimuksenTilaHaettu
        :epaonnistui ->SopimuksenTilaEiHaettu})
     (update-in app [:valinnat :noudetaan] inc))
+
   TehtavaTallennusEpaonnistui
   (process-event
     [_ app]
@@ -355,16 +361,19 @@
     (-> app      
       (assoc-in [:valinnat :virhe-tallennettaessa] true)
       (assoc-in [:valinnat :tallennetaan] false)))
+
   TehtavaTallennusOnnistui
   (process-event
     [vastaus {:keys [sopimuksen-maarat] :as app}]
     (-> app 
       (assoc-in [:valinnat :virhe-tallennettaessa] false)
       (assoc-in [:valinnat :tallennetaan] false)))
+
   SopimuksenTehtavaTallennusOnnistui
   (process-event 
     [{:keys [vastaus]} app]
     (dissoc app :tallennettava))
+
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
@@ -373,6 +382,7 @@
           virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
       (reset! taulukko-virheet virheet))      
     (dissoc app :tallennettava))
+
   TallennaSopimuksenTehtavamaara
   (process-event 
     [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
@@ -387,6 +397,7 @@
          :maara sopimuksen-tehtavamaara}
         {:onnistui ->SopimuksenTehtavaTallennusOnnistui
          :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui})))
+
   TallennaTehtavamaara
   (process-event
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
@@ -466,8 +477,8 @@
                                                               (into [] 
                                                                 valitason-toimenpiteet 
                                                                 tehtavat)))
-                             
                              :toimenpide toimenpide)))))
+
   HaeTehtavat
   (process-event
     [{parametrit :parametrit} app]
@@ -482,12 +493,14 @@
       (update :valinnat #(assoc %
                            :virhe-noudettaessa false
                            :noudetaan (inc (:noudetaan %))))))
+
   ValitseTaso
   (process-event
     [{:keys [arvo taso]} {:keys [taulukko valinnat] :as app}]
     (as-> app a      
       (assoc-in a [:valinnat taso] arvo)
       (assoc a :taulukko (paivita-taulukko-valitulle-tasolle taulukko (:valinnat a)))))
+
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
     (assoc-in app [:valinnat :samat-tuleville] samat?)))
