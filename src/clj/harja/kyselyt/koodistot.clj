@@ -9,5 +9,5 @@
 (defn konversio [db koodisto-id lahde]
   (let [rivi (first (hae-koodi-harja-koodin-perusteella db {:koodisto_id koodisto-id :lahde (str lahde)}))
         tulos (:tulos rivi)]
-    (assert (some? tulos) (str "Harja koodi " lahde " ei voi konvertoida taulukossa " koodisto-id))
+    (assert (some? tulos) (str "Harja koodi '" lahde "' ei voi konvertoida taulukossa " koodisto-id))
     tulos))

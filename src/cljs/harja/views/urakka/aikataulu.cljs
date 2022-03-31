@@ -15,9 +15,8 @@
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.leijuke :as leijuke]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :as modal]
-            [harja.ui.yleiset :refer [vihje vihje-elementti]]
+            [harja.ui.yleiset :as yleiset :refer [vihje vihje-elementti]]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.ikonit :as ikonit]
@@ -35,16 +34,13 @@
             [harja.tiedot.raportit :as raportit]
 
             [harja.fmt :as fmt]
-            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
-            [harja.tyokalut.functor :refer [fmap]]
 
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
-  (:require-macros [reagent.ratom :refer [reaction run!]]
-                   [cljs.core.async.macros :refer [go]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
@@ -200,7 +196,7 @@
 
 (defn- otsikoi-aikataulurivit
   "Lisää väliotsikot valmiille, keskeneräisille ja aloittamatta oleville kohteille."
-  [{:keys [valmis kesken aloittamatta] :as luokitellut-rivit}]
+  [{:keys [valmis kesken aloittamatta] :as _luokitellut-rivit}]
   (concat (when-not (empty? valmis)
             (into [(grid/otsikko "Valmiit kohteet")]
                   valmis))
@@ -212,9 +208,7 @@
                   aloittamatta))))
 
 (defn valinnat [ur]
-  (let [{aikajana? :nayta-aikajana?
-         jarjestys :jarjestys
-         :as valinnat} @tiedot/valinnat]
+  (let [{jarjestys :jarjestys} @tiedot/valinnat]
     [:span.aikataulu-valinnat
      [valinnat/urakan-vuosi ur]
      [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
@@ -253,12 +247,25 @@
                                  :teksti "Näytä välitavoitteet"}
                  :arvo-atom tiedot/nayta-valitavoitteet?}]}]
 
-     [upotettu-raportti/raportin-vientimuodot
-      (raportit/urakkaraportin-parametrit (:id ur) :yllapidon-aikataulu
-                                          {:jarjestys jarjestys
-                                           :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                           :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
-                                           :vuosi @u/valittu-urakan-vuosi})]]))
+     (let [parametrit (raportit/urakkaraportin-parametrit 
+                        (:id ur) 
+                        :yllapidon-aikataulu
+                        {:jarjestys jarjestys
+                         :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
+                         :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
+                         :vuosi @u/valittu-urakan-vuosi})] 
+       [upotettu-raportti/raportin-vientimuodot 
+        (-> parametrit 
+          (assoc       
+            :otsikko "Tallenna alikohteiden Excel"
+            :kasittelija :excel)
+          (assoc-in [:parametrit :alikohderaportti?] true))
+        (assoc parametrit
+          :otsikko "Tallenna Excel"
+          :kasittelija :excel)
+        (assoc parametrit 
+          :otsikko "Tallenna PDF"
+          :kasittelija :pdf)])]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
@@ -268,7 +275,7 @@
     true))
 
 (defn visuaalinen-aikataulu
-  [{:keys [urakka-id sopimus-id aikataulurivit urakkatyyppi aikajana? optiot
+  [{:keys [urakka-id sopimus-id aikataulurivit aikajana? optiot
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
   (when aikajana?
     [:div
@@ -452,12 +459,11 @@
 
 (defn tiemerkinnan-takarajan-sarake
   "Gridin sarake, joka käsittelee tiemerkinnän takarajan näyttämisen ja asettamisen erityisten sääntöjen (Figma) pohjalta."
-  [{:keys [valmis-tiemerkintaan aikataulu-tiemerkinta-takaraja aikataulu-tiemerkinta-takaraja-kasin merkinta jyrsinta] :as rivi}
-   {:keys [komp-muokkaa-fn muokataan? saa-asettaa-valmis-takarajan? vuosi optiot] :as params}]
+  [rivi params]
   (let [takarajan-saa-asettaa-kasin? (tiemerkinta-takarajan-voi-maarittaa-kasin? rivi params)
         kasin-syotetty-takaraja-atom (atom (:aikataulu-tiemerkinta-takaraja rivi))]
-    (fn [{:keys [valmis-tiemerkintaan aikataulu-tiemerkinta-takaraja aikataulu-tiemerkinta-takaraja-kasin merkinta jyrsinta] :as rivi}
-         {:keys [komp-muokkaa-fn muokataan? saa-asettaa-valmis-takarajan? vuosi optiot] :as params}]
+    (fn [{:keys [aikataulu-tiemerkinta-takaraja aikataulu-tiemerkinta-takaraja-kasin] :as rivi}
+         {:keys [komp-muokkaa-fn muokataan? vuosi optiot] :as _params}]
       (cond
         (= :paallystys (:nakyma optiot))
         [:span (pvm/pvm-ilman-samaa-vuotta aikataulu-tiemerkinta-takaraja vuosi)]
@@ -535,8 +541,7 @@
 
 (defn tm-lisatietojen-sarake
   "Gridin sarake, joka näyttää ja muokkaa tiemerkintään liittyviä lisätietoja."
-  [{:keys [aikataulu-tiemerkinta-lisatieto] :as rivi}
-   {:keys [muokataan? komp-muokkaa-fn]}]
+  [_ _]
   (let [nayta-lisatieto-modal? (atom false)]
     (fn [{:keys [aikataulu-tiemerkinta-lisatieto] :as rivi}
          {:keys [muokataan? komp-muokkaa-fn]}]
@@ -832,7 +837,7 @@
      otsikoidut-aikataulurivit]))
 
 (defn aikataulu
-  [urakka optiot]
+  [_ _]
   (komp/luo
     (komp/lippu tiedot/aikataulu-nakymassa?)
     (fn [urakka optiot]

@@ -73,8 +73,7 @@
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
-       (catch Throwable t (log/error "Virhe varustetoteumien haussa: " t)))
+  (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
   true)
 
 (defrecord VarusteVelho []
