@@ -10,7 +10,7 @@
 
 (defprotocol VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this])
-  (hae-mhu-urakka-oidt-velhosta [this]))
+  (paivita-mhu-urakka-oidt-velhosta [this]))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
@@ -30,5 +30,5 @@
         (catch Throwable t (log/error "Virhe Velho-varustetoteumien haussa: " t)))
       (log/info (str "tuo-uudet-varustetoteumat-velhosta suoritus päättyi. Kesto: "
                      (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia"))))
-  (hae-mhu-urakka-oidt-velhosta [this]
-    (varusteet/hae-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)))
+  (paivita-mhu-urakka-oidt-velhosta [this]
+    (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)))

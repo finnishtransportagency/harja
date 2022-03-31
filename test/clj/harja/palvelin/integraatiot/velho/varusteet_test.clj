@@ -584,12 +584,15 @@
 (deftest hae-mhu-urakka-oidt-test                           ;Full path, sunny day
   (u "UPDATE urakka SET velho_oid = NULL;")
   (let [odotettu-urakka-lkm 2
-        odotettu-oidit-vastaus "[\"1.2.246.578.8.1.147502788\", \"1.2.246.578.8.1.147502790\"]"
+        odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
+        ;odotettu-urakka-idt #{35,36}
+        ;odotettu-urakka-numerot #{"1238" "1248"}
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
-                          {:status 200 :body odotettu-oidit-vastaus})
+                          {:status 200 :body (json/write-str odotettu-oidit-vastaus)})
         fake-kohteet (fn [_ {:keys [body headers url]} _]
-                       (is (= (json/read-str odotettu-oidit-vastaus) (json/read-str body))
+                       (is (= (set odotettu-oidit-vastaus)
+                              (set (json/read-str body)))
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                        {:status 200 :body odotettu-kohteet-vastaus})]
@@ -597,11 +600,7 @@
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +velho-urakka-oid-url+ :method :get} fake-tunnisteet
        {:url +velho-urakka-kohde-url+ :method :post} fake-kohteet]
-      (velho-integraatio/hae-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma))))
-  ; Fake HTTP palvelu tokenille
-  ; Fake HTTP palvelu urakka-oid listalle
-  ; Fake HTTP palvelu urakka-kohteiden listalle
-  ; Kutsutaan integraatiota
-  ; Assertoidaan tietokannasta saatujen urakoiden lukumäärä
-  ; Assertoidaan tietokannasta jonkun urakan tietoja
-  )
+      (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma)))
+    (let [urakat-joilla-on-velho-oid (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL"))
+          odotettu-urakka-lista #{}]
+      (is (= odotettu-urakka-lista urakat-joilla-on-velho-oid)))))
