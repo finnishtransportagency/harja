@@ -6,7 +6,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
+             [kasittele-kutsu kasittele-get-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
@@ -16,7 +16,9 @@
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
+            [clojure.data.json :as json])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -153,6 +155,37 @@
                                          (log/debug (format "Suljetaan urakan id: %s ilmoitusten kuuntelu." urakka-id))
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
+
+(defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db parametrit kayttaja]
+  (let [;; Varmista, että annettu y-tunnus kuuluu käyttäjälle
+        ytunnus-loytyy? (:exists (first (kayttajat-kyselyt/kayttajan-organisaation-ytunnus-loytyy
+                                          db {:kayttajanimi (:kayttajanimi kayttaja)
+                                              :ytunnus (:ytunnus parametrit)})))
+        _ (when-not ytunnus-loytyy?
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
+                                :viesti "Käyttäjä ja y-tunnus ei täsmää."}]}))
+        ;; Muodostetaan kovakoodattu vastaus.
+        ilmoitukset {:ilmoitukset [{:ilmoitus {:ilmoitusid 123
+                                               :tunniste "UV-1509-1a"
+                                               :tila "vastaanotettu"
+                                               :ilmoitettu "2015-09-29T14:49:45"
+                                               :valitetty-harjaan "2015-09-29T14:50:45"
+                                               :valitetty-urakkaan "2015-09-29T14:49:45"
+                                               :vastaanotettu-harjaan "2015-09-29T14:49:45"
+                                               :paivitetty-harjaan nil
+                                               :ilmoitustyyppi "toimenpidepyynto",
+                                               :yhteydenottopyynto true,
+                                               :ilmoittaja {:sukunimi "Porinmatti", :etunimi "Pekka", :matkapuhelin "0502234567", :tyopuhelin "0501234567", :email "tyonvalvonta@example.org"}
+                                               :lahettaja {:etunimi "Ilmari", :sukunimi "Ilmoitus", :matkapuhelin nil, :tyopuhelin nil, :email "ilmari.ilmoitus@example.org"},
+                                               :selitteet [{:selite "tiellaOnEste"}],
+                                               :sijainti {:koordinaatit {:x 430716.0, :y 7200111.0}},
+                                               :tienumero nil,
+                                               :otsikko nil,
+                                               :paikankuvaus "Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.",
+                                               :lisatieto nil,
+                                               :aiheutti-toimenpiteita nil,}}]}]
+    ilmoitukset))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
