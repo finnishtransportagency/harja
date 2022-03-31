@@ -41,8 +41,8 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
     cy.contains('Kulujen kohdistus')
 
-    cy.get('.pvm-kentta > input').eq(0).type('30.09.2020')
-    cy.get('.pvm-kentta > input').eq(1).type('30.09.2020{enter}')
+    cy.get('.pvm-kentta > input').eq(0).type('{selectall}30.09.2020')
+    cy.get('.pvm-kentta > input').eq(1).type('{selectall}30.09.2020{enter}')
     cy.contains('Haku käynnissä, odota hetki').should('not.exist');
 
     if (Array.isArray(kuluTaiKulut)) {
