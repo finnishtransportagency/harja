@@ -201,7 +201,7 @@
         y-tunnus "1565583-5"
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/?alkupaiva="alkupaiva"&loppupaiva="loppupaiva)]
                    kayttaja portti)
-        odotettu-vastaus-json  "{\"ilmoitukset\":[{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430716.0,\"y\":7200111.0}},\"ilmoitusid\":123,\"valitetty-harjaan\":\"2015-09-29T14:50:45\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"lahettaja\":{\"etunimi\":\"Ilmari\",\"sukunimi\":\"Ilmoitus\",\"email\":\"ilmari.ilmoitus@example.org\"},\"ilmoitettu\":\"2015-09-29T14:49:45\",\"valitetty-urakkaan\":\"2015-09-29T14:49:45\",\"tunniste\":\"UV-1509-1a\",\"vastaanotettu-harjaan\":\"2015-09-29T14:49:45\",\"selitteet\":[{\"selite\":\"tiellaOnEste\"}],\"paikankuvaus\":\"Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}}]}"]
+        odotettu-vastaus-json  "{\"ilmoitukset\":[{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430716.0,\"y\":7200111.0}},\"ilmoitusid\":123,\"valitetty-harjaan\":\"2015-09-29T14:50:45\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"alueurakkanumero\":123,\"lahettaja\":{\"etunimi\":\"Ilmari\",\"sukunimi\":\"Ilmoitus\",\"email\":\"ilmari.ilmoitus@example.org\"},\"ilmoitettu\":\"2015-09-29T14:49:45\",\"valitetty-urakkaan\":\"2015-09-29T14:49:45\",\"tunniste\":\"UV-1509-1a\",\"vastaanotettu-harjaan\":\"2015-09-29T14:49:45\",\"selitteet\":[{\"selite\":\"tiellaOnEste\"}],\"kuittaukset\":[{\"kuittaus\":{\"kuitattu\":\"2015-09-29T14:49:45\",\"kuittaustyyppi\":\"lopetus\",\"vakiofraasi\":\"tosivakio\",\"vapaateksti\":\"Tämä voi olla vaikka vapaata\",\"kuittaaja\":{\"id\":1,\"etunimi\":\"etunimi\",\"sukunimi\":\"sukunimi\"},\"kuittaajaorganisaatio\":{\"nimi\":\"Apaattinen Yritys Oy\",\"ytunnus\":\"1234567-8\"},\"alkusijainti\":{\"x\":430716.0,\"y\":7200111.0},\"loppusijainti\":{\"x\":430716.0,\"y\":7200111.0}}}],\"paikankuvaus\":\"Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}}]}" ]
     (is (= odotettu-vastaus-json (:body vastaus)))))
 
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu
@@ -210,5 +210,5 @@
         y-tunnus "1234567-8"
         vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/?alkupaiva="alkupaiva"&loppupaiva="loppupaiva)]
                   kayttaja portti)
-        odotettu-vastaus-json  "{\"virheet\":[{\"virhe\":{\"koodi\":\"tuntematon-kayttaja\",\"viesti\":\"Käyttäjä ja y-tunnus ei täsmää.\"}}]}"]
+        odotettu-vastaus-json "{\"virheet\":[{\"virhe\":{\"koodi\":\"kayttajalla-puutteelliset-oikeudet\",\"viesti\":\"Käyttäjällä: yit-rakennus ei ole oikeuksia organisaatioon: 1234567-8\"}}]}"]
     (is (= odotettu-vastaus-json (:body vastaus)))))

@@ -158,15 +158,7 @@
 
 (defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db parametrit kayttaja]
   (validointi/tarkista-onko-kayttaja-organisaatiossa db (:ytunnus parametrit) kayttaja)
-  (let [;; Varmista, että annettu y-tunnus kuuluu käyttäjälle
-        ytunnus-loytyy? (:exists (first (kayttajat-kyselyt/kayttajan-organisaation-ytunnus-loytyy
-                                          db {:kayttajanimi (:kayttajanimi kayttaja)
-                                              :ytunnus (:ytunnus parametrit)})))
-        _ (when-not ytunnus-loytyy?
-            (throw+ {:type virheet/+viallinen-kutsu+
-                     :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
-                                :viesti "Käyttäjä ja y-tunnus ei täsmää."}]}))
-        ;; Muodostetaan kovakoodattu vastaus.
+  (let [;; Muodostetaan kovakoodattu vastaus.
         ilmoitukset {:ilmoitukset [{:ilmoitus {:ilmoitusid 123
                                                :tunniste "UV-1509-1a"
                                                :tila "vastaanotettu"
@@ -175,6 +167,7 @@
                                                :valitetty-urakkaan "2015-09-29T14:49:45"
                                                :vastaanotettu-harjaan "2015-09-29T14:49:45"
                                                :paivitetty-harjaan nil
+                                               :alueurakkanumero 123
                                                :ilmoitustyyppi "toimenpidepyynto",
                                                :yhteydenottopyynto true,
                                                :ilmoittaja {:sukunimi "Porinmatti", :etunimi "Pekka", :matkapuhelin "0502234567", :tyopuhelin "0501234567", :email "tyonvalvonta@example.org"}
@@ -185,7 +178,15 @@
                                                :otsikko nil,
                                                :paikankuvaus "Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.",
                                                :lisatieto nil,
-                                               :aiheutti-toimenpiteita nil,}}]}]
+                                               :aiheutti-toimenpiteita nil,
+                                               :kuittaukset [{:kuittaus {:kuitattu "2015-09-29T14:49:45"
+                                                                         :kuittaustyyppi "lopetus"
+                                                                         :vakiofraasi "tosivakio"
+                                                                         :vapaateksti "Tämä voi olla vaikka vapaata"
+                                                                         :kuittaaja {:id 1 :etunimi "etunimi" :sukunimi "sukunimi"}
+                                                                         :kuittaajaorganisaatio {:nimi "Apaattinen Yritys Oy" :ytunnus "1234567-8"}
+                                                                         :alkusijainti {:x 430716.0, :y 7200111.0}
+                                                                         :loppusijainti {:x 430716.0, :y 7200111.0}}}]}}]}]
     ilmoitukset))
 
 (defrecord Ilmoitukset []
