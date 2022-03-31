@@ -424,3 +424,9 @@ SELECT
   sahkoposti
 FROM kayttaja
 WHERE sahkoposti IS NOT NULL;
+
+-- name: kayttajan-organisaation-ytunnus-loytyy
+SELECT EXISTS(SELECT o.id
+                FROM kayttaja k JOIN organisaatio o ON k.organisaatio = o.id
+               WHERE k.kayttajanimi = :kayttajanimi
+                 AND o.ytunnus = :ytunnus);
