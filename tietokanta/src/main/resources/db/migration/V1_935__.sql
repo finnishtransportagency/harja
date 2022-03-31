@@ -1,1 +1,1 @@
-INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'urakka-haku');
+INSERT INTO integraatio (jarjestelma, nimi) VALUES ('velho', 'urakoiden-haku');

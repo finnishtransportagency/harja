@@ -27,8 +27,10 @@
 
 (def +varuste-kohteet-regex+
   (re-pattern
-    (format "%s/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet"
-            +velho-api-juuri+)))
+    (str +velho-api-juuri+ "/(varusterekisteri|tiekohderekisteri|sijaintipalvelu)/api/v[0-9]/historia/kohteet")))
+
+(def +velho-urakka-oid-url+ (str +velho-api-juuri+ "/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"))
+(def +velho-urakka-kohde-url+ (str +velho-api-juuri+ "hallintorekisteri/api/v1/kohteet"))
 
 (def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4.5\"}]")
 
@@ -178,8 +180,6 @@
   (let [testitunniste "osajoukkoja-test"
         osajoukkojen-koko 2
         odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -227,7 +227,7 @@
                          {:status 200 :body vastauksen-kohteet}))]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
@@ -252,8 +252,6 @@
   ; ASETA
   (let [testitunniste "onnistuneet-test"
         odotettu-syotetiedostoparien-maara 2                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -286,7 +284,7 @@
                        {:status 200 :body @odotettu-kohteet-vastaus})]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
@@ -310,8 +308,6 @@
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "idempotentti-test"
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
@@ -333,7 +329,7 @@
                        {:status 200 :body @odotettu-kohteet-vastaus})]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]]
@@ -344,8 +340,6 @@
 (deftest varuste-ei-saa-kutsua-kohde-hakua-jos-oid-lista-on-tyhja-test
   ; ASETA
   (let [testitunniste "oid-lista-on-tyhja-test"
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         annettu-kohteet-vastaus (atom {})
         annettu-oidit-vastaus (atom {})
         annettu-ei-tyhja-oid-vastaus (atom 0)
@@ -375,7 +369,7 @@
                    (is false (str "Ei saa kutsua jos ei oikeita oid-tunnuksia url: " url " headers: " headers "  body: " body "")))]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} kieletty]
       (let [raportoi-onnistunut-fn varusteet/lokita-oid-haku]
@@ -410,8 +404,6 @@
   ; ASETA
   (let [testitunniste "uusin-voittaa-test"
         odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         odotettu-kohteet-vastaus (atom {})
         odotettu-oidit-vastaus (atom {})
         odotettu-ei-tyhja-oid-vastaus (atom 0)
@@ -444,7 +436,7 @@
                        {:status 200 :body @odotettu-kohteet-vastaus})]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
       (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
@@ -540,8 +532,6 @@
    2. Tarkistetaan, että tunnisteita haetaan tallennetulla päivämäärällä (jälkeen parametri get:ssa)."
   ; ASETA
   (let [odotettu-viimeisin-aika (pvm/iso-8601->aika "2021-11-23T00:00:00Z")
-        fake-token-palvelin (fn [_ {:keys [body headers]} _]
-                              "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
                           {:status 200 :body "[]"})
         fake-tunnisteet-2 (fn [_ {:keys [body headers url]} _]
@@ -555,7 +545,7 @@
                       (is false "Oid-lista oli tyhjä. Tätä ei saa kutsua."))]
     ; SUORITA
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
       ; with-redefs korvataan kello, josta viimeisin hakuaika poimitaan
@@ -573,7 +563,7 @@
     ; Haetaan varusteet uudelleen.
     ; Fake-tunnisteet-2 tarkistaa, että viimeksi haettu on odotettu
     (with-fake-http
-      [{:url +velho-token-url+ :method :post} fake-token-palvelin
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet-2
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
       (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
@@ -590,3 +580,28 @@
                                 (map :kohdeluokka)
                                 set)]
     (is (= koodin-kohdeluokat tietokannan-kohdeluokat) "Tietokannassa pitää olla samat kohdeluokat kuin koodissa.")))
+
+(deftest hae-mhu-urakka-oidt-test                           ;Full path, sunny day
+  (u "UPDATE urakka SET velho_oid = NULL;")
+  (let [odotettu-urakka-lkm 2
+        odotettu-oidit-vastaus "[\"1.2.246.578.8.1.147502788\", \"1.2.246.578.8.1.147502790\"]"
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          {:status 200 :body odotettu-oidit-vastaus})
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (is (= (json/read-str odotettu-oidit-vastaus) (json/read-str body))
+                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                       {:status 200 :body odotettu-kohteet-vastaus})]
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+       {:url +velho-urakka-oid-url+ :method :get} fake-tunnisteet
+       {:url +velho-urakka-kohde-url+ :method :post} fake-kohteet]
+      (velho-integraatio/hae-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma))))
+  ; Fake HTTP palvelu tokenille
+  ; Fake HTTP palvelu urakka-oid listalle
+  ; Fake HTTP palvelu urakka-kohteiden listalle
+  ; Kutsutaan integraatiota
+  ; Assertoidaan tietokannasta saatujen urakoiden lukumäärä
+  ; Assertoidaan tietokannasta jonkun urakan tietoja
+  )
