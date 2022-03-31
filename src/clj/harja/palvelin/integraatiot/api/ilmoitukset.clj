@@ -157,6 +157,7 @@
                                            (kuuntelun-lopetus-fn)))))))))))))
 
 (defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db parametrit kayttaja]
+  (validointi/tarkista-onko-kayttaja-organisaatiossa db (:ytunnus parametrit) kayttaja)
   (let [;; Varmista, että annettu y-tunnus kuuluu käyttäjälle
         ytunnus-loytyy? (:exists (first (kayttajat-kyselyt/kayttajan-organisaation-ytunnus-loytyy
                                           db {:kayttajanimi (:kayttajanimi kayttaja)
