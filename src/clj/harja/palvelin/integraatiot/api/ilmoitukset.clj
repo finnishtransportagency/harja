@@ -163,6 +163,17 @@
         (kaynnista-ilmoitusten-kuuntelu db integraatioloki request)))
 
     (julkaise-reitti
+      http :hae-ilmoitukset-ytunnuksella
+      (GET "/api/ilmoitukset/:ytunnus/" request
+        (do
+          (println ":hae-ilmoitukset-ytunnuksella :: request" (pr-str request))
+          (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+            json-skeemat/ilmoitusten-haku
+            (fn [parametrit kayttaja db]
+              (hae-kovakoodatut-ilmoitukset-ytunnuksella db parametrit kayttaja))
+            false))))
+
+    (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
            (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
@@ -171,4 +182,5 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
+    (poista-palvelut http :hae-ilmoitukset-ytunnuksella)
     this))
