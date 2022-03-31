@@ -474,8 +474,8 @@
                     ; P3 <==> P1 && P2
                     ; P3 on riittävä ehto, ei tarvita P1 ja P2, Voi toteutua, jos kannassa urakka.urakkanro ei ole
                     ; unique tyyppi IN [hoito, teiden-hoito] joukossa. []
-                    #_(q-toteumat/paivita-urakkanumero db {:urakkanro (-> kohde :ominaisuudet :urakkakohde) (:oid kohde)}))))
-              ))))
+                    #_(q-toteumat/paivita-urakkanumero db {:urakkanro (-> kohde :ominaisuudet :urakkakohde) :foo (:oid kohde)}))))
+              )))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "Urakka OID haku Velhosta epäonnistunut. Virheet: " virheet)
       false)))
@@ -489,7 +489,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "urakoiden-haku" nil
       (fn [konteksti]
-        true)
+        true))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (log/error "MHU urakoiden haku Velhosta epäonnistui. Virheet: " virheet)
-      false))))
+      false)))
