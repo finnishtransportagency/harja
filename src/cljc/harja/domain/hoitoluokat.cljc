@@ -13,7 +13,7 @@ talvihoitoluokat
    {:nimi "Is"  :numero 2 :numero-str "2"}
    {:nimi "I"   :numero 3 :numero-str "3"}
    {:nimi "Ib"  :numero 4 :numero-str "4"}
-   {:nimi "TIb" :numero 5 :numero-str "5"} ; 1.10.2019 alkaen oltava Ic!
+   {:nimi "Ic" :numero 5 :numero-str "5"}
    {:nimi "II"  :numero 6 :numero-str "6"}
    {:nimi "III" :numero 7 :numero-str "7"}
    {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.

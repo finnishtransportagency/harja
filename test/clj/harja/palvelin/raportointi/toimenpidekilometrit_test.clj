@@ -66,7 +66,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -141,7 +141,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -167,7 +167,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -226,7 +226,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -253,7 +253,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -280,7 +280,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -307,7 +307,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -334,7 +334,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -361,7 +361,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -388,7 +388,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -415,7 +415,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
@@ -442,7 +442,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :numero
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "II"
