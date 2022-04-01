@@ -549,6 +549,13 @@ WHERE hanke = (SELECT id
                FROM hanke
                WHERE sampoid = :hanke_sampoid);
 
+-- name: paivita-velho_oid-urakalle!
+-- Päivittää velho_oid avaimen urakalle
+UPDATE urakka
+SET velho_oid = :velho_oid
+WHERE urakkanro = :urakkanro
+  AND tyyppi IN ('hoito', 'teiden-hoito');
+
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä
 SELECT urakka.id

@@ -43,6 +43,8 @@
                                                      :kayttajatunnus "abc-123"
                                                      :salasana "blabla"
                                                      :varuste-api-juuri-url +velho-api-juuri+
+                                                     :varuste-urakka-oid-url +velho-urakka-oid-url+
+                                                     :varuste-urakka-kohteet-url +velho-urakka-kohde-url+
                                                      :varuste-client-id "feffefef"
                                                      :varuste-client-secret "puppua"})
                          [:db :integraatioloki])))
@@ -587,20 +589,21 @@
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
         ;odotettu-urakka-idt #{35,36}
-        ;odotettu-urakka-numerot #{"1238" "1248"}
+        ;odotettu-urakka-numerot #{"1236" "1248"}
         fake-tunnisteet (fn [_ {:keys [body headers url]} _]
-                          {:status 200 :body (json/write-str odotettu-oidit-vastaus)})
+                          {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}})
         fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (println "petrisi1234: " url)
                        (is (= (set odotettu-oidit-vastaus)
                               (set (json/read-str body)))
                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                       {:status 200 :body odotettu-kohteet-vastaus})]
+                       {:status 200 :body odotettu-kohteet-vastaus :headers {:content-type "application/x-ndjson"}})]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +velho-urakka-oid-url+ :method :get} fake-tunnisteet
        {:url +velho-urakka-kohde-url+ :method :post} fake-kohteet]
       (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma)))
     (let [urakat-joilla-on-velho-oid (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL"))
-          odotettu-urakka-lista #{}]
+          odotettu-urakka-lista #{1}]
       (is (= odotettu-urakka-lista urakat-joilla-on-velho-oid)))))
