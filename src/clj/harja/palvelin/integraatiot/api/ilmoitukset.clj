@@ -2,6 +2,7 @@
   "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :refer [with-channel on-close send!]]
+            [clojure.spec.alpha :as s]
             [compojure.core :refer [PUT GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
@@ -18,7 +19,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
+            [harja.pvm :as pvm]
             [clojure.data.json :as json])
+  (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -156,9 +159,17 @@
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
 
-(defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db parametrit kayttaja]
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db (:ytunnus parametrit) kayttaja)
+(def paivamaaramuoto "yyyy-MM-dd'T'HH:mm:ssX")
+;2022-04-01T11:19:22+03
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+
+(defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db {:keys [ytunnus alkuaika loppuaika] :as parametrit} kayttaja]
+  {:pre [(string? ytunnus) (s/valid? ::alkuaika alkuaika)]}
+  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Muodostetaan kovakoodattu vastaus.
+        ;; Hox: Kun haetaan y-tunnuksella, niin alueurakkanumero on lisättävä aineistoon, jotta osataan kohdistaa oikealle urakalle
+        ;; Se ei ole skeemassa pakollinen, mutta vastauksessa on.
         ilmoitukset {:ilmoitukset [{:ilmoitus {:ilmoitusid 123
                                                :tunniste "UV-1509-1a"
                                                :tila "vastaanotettu"
@@ -199,14 +210,12 @@
 
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
-      (GET "/api/ilmoitukset/:ytunnus/" request
-        (do
-          (println ":hae-ilmoitukset-ytunnuksella :: request" (pr-str request))
-          (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
-            json-skeemat/ilmoitusten-haku
-            (fn [parametrit kayttaja db]
-              (hae-kovakoodatut-ilmoitukset-ytunnuksella db parametrit kayttaja))
-            false))))
+      (GET "/api/ilmoitukset/:ytunnus/:alkuaika/" request
+        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+          json-skeemat/ilmoitusten-haku
+          (fn [parametrit kayttaja db]
+            (hae-kovakoodatut-ilmoitukset-ytunnuksella db parametrit kayttaja))
+          false)))
 
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
