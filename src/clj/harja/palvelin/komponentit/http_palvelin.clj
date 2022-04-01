@@ -335,6 +335,7 @@
                                    req)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                             _ (when (some #(= oam-kayttajanimi %) ["destia-harja", "salonen-harja", "pimara-harja", "harja"]) (log/warn "HMAL **** " (:headers req)))
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                              _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))
