@@ -368,7 +368,7 @@ FROM ilmoitus i JOIN urakka u ON u.id = i.urakka
      JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
      JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
-group by i.id, u.urakkanro
+GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
 ORDER BY i."valitetty-urakkaan" ASC;
 
 -- name: hae-id-ilmoitus-idlla
