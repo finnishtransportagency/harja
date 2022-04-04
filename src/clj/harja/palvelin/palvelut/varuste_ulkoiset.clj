@@ -71,16 +71,19 @@
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
+  (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
+       (catch Throwable t
+         (log/error "Virhe Velho-varusteiden haussa: " t)
+         false))
   true)
 
 (defn hae-mhu-urakka-oidt-velhosta
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-toteumat-varusteet user)
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
   (try (velho-komponentti/paivita-mhu-urakka-oidt-velhosta velho)
        (catch Throwable t
-         (log/error "Virhe velho-urakoiden haussa: " t)
+         (log/error "Virhe Velho-urakoiden haussa: " t)
          false)))
 
 (defrecord VarusteVelho []
@@ -109,5 +112,6 @@
   (stop [this]
     (let [http (:http-palvelin this)]
       (poista-palvelut http :hae-ulkoiset-varustetoteumat)
-      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat))
+      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat)
+      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt))
     this))

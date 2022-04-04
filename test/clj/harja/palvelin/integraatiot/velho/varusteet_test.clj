@@ -583,27 +583,52 @@
                                 set)]
     (is (= koodin-kohdeluokat tietokannan-kohdeluokat) "Tietokannassa pitää olla samat kohdeluokat kuin koodissa.")))
 
+(defn fake-tunnisteet [odotettu-oidit-vastaus]
+  (fn [_ {:keys [body headers url]} _]
+                        {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}}))
+
+(defn fake-kohteet [odotettu-oidit-vastaus odotettu-kohteet-vastaus]
+  (fn [_ {:keys [body headers url]} _]
+    (is (= (set odotettu-oidit-vastaus)
+           (set (json/read-str body)))
+        "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+    (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+    {:status 200 :body odotettu-kohteet-vastaus :headers {:content-type "application/x-ndjson"}}))
+
+(defn feikkaa-ja-kutsu [odotettu-oidit-vastaus odotettu-kohteet-vastaus]
+  (with-fake-http
+    [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+     {:url +velho-urakka-oid-url+ :method :get} (fake-tunnisteet odotettu-oidit-vastaus)
+     {:url +velho-urakka-kohde-url+ :method :post} (fake-kohteet odotettu-oidit-vastaus odotettu-kohteet-vastaus)]
+    (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma))))
+
 (deftest hae-mhu-urakka-oidt-test                           ;Full path, sunny day
   (u "UPDATE urakka SET velho_oid = NULL;")
-  (let [odotettu-urakka-lkm 2
+  (let [odotettu-tulosjoukko #{{:id 21
+                                :tyyppi "hoito"
+                                :urakkanro "1236"
+                                :velho_oid "1.2.246.578.8.1.147502788"}
+                               {:id 36
+                                :tyyppi "teiden-hoito"
+                                :urakkanro "1248"
+                                :velho_oid "1.2.246.578.8.1.147502790"}}
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
-        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
-        ;odotettu-urakka-idt #{35,36}
-        ;odotettu-urakka-numerot #{"1236" "1248"}
-        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
-                          {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}})
-        fake-kohteet (fn [_ {:keys [body headers url]} _]
-                       (println "petrisi1234: " url)
-                       (is (= (set odotettu-oidit-vastaus)
-                              (set (json/read-str body)))
-                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
-                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                       {:status 200 :body odotettu-kohteet-vastaus :headers {:content-type "application/x-ndjson"}})]
-    (with-fake-http
-      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-       {:url +velho-urakka-oid-url+ :method :get} fake-tunnisteet
-       {:url +velho-urakka-kohde-url+ :method :post} fake-kohteet]
-      (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma)))
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
+    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
     (let [urakat-joilla-on-velho-oid (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL"))
-          odotettu-urakka-lista #{1}]
+          odotettu-urakka-lista odotettu-tulosjoukko]
       (is (= odotettu-urakka-lista urakat-joilla-on-velho-oid)))))
+
+(deftest velho-palauttaa-kaksi-urakkaa-samalla-velho-oidlla
+  "Lokitus huomaa, jos velho_oid tulosjoukko ei ole uniikki."
+  (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502788"]
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/epaonnistuneet-test/hallintorekisteri_api_v1_kohteet-tupla-velho-oid.jsonl")
+        loki (atom "")
+        tallenna-lokitekstit (fn [alkuperainen-lokitusfunktio viesti]
+                              (swap! loki #(str % "\n" viesti))
+                              (alkuperainen-lokitusfunktio viesti))
+        lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
+    (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
+      (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
+    (is (str/includes? @loki "duplicate jotain jotain")))
+  )

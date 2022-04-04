@@ -12,6 +12,16 @@
   (tuo-uudet-varustetoteumat-velhosta [this])
   (paivita-mhu-urakka-oidt-velhosta [this]))
 
+(defn suorita-ja-kirjaa-alku-loppu-ajat
+  [funktio tunniste]
+  (let [aloitusaika-ms (System/currentTimeMillis)]
+    (log/info tunniste "suoritus alkoi")
+    (try
+      (funktio)
+      (catch Throwable t (log/error "Virhe suoritettaessa" tunniste "Throwable:" t)))
+    (log/info (str tunniste " suoritus päättyi. Kesto: "
+                   (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia"))))
+
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this] this)
@@ -23,12 +33,10 @@
 
   VarustetoteumaHaku
   (tuo-uudet-varustetoteumat-velhosta [this]
-    (let [aloitusaika-ms (System/currentTimeMillis)]
-      (log/info "tuo-uudet-varustetoteumat-velhosta suoritus alkoi")
-      (try
-        (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
-        (catch Throwable t (log/error "Virhe Velho-varustetoteumien haussa: " t)))
-      (log/info (str "tuo-uudet-varustetoteumat-velhosta suoritus päättyi. Kesto: "
-                     (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia"))))
+    (suorita-ja-kirjaa-alku-loppu-ajat
+      #(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
+      "tuo-uudet-varustetoteumat-velhosta"))
   (paivita-mhu-urakka-oidt-velhosta [this]
-    (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)))
+    (suorita-ja-kirjaa-alku-loppu-ajat
+      #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
+      "paivita-mhu-urakka-oidt-velhosta")))
