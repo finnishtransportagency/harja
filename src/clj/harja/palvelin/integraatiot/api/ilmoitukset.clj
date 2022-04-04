@@ -200,63 +200,31 @@
   (let [loppuaika (if loppuaika
                     loppuaika
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
-        ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella db {:ytunnus ytunnus
-                                                                                     :alkuaika alkuaika
-                                                                                     :loppuaika loppuaika})
-        ilmoitukset (->> ilmoitukset
-                      (mapv #(update % :kuittaukset konversio/jsonb->clojuremap))
-                      (mapv #(update % :kuittaukset
-                               (fn [rivit]
-                                 (let [tulos (keep
-                                               (fn [r]
-                                                 ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
-                                                 (when (not (nil? (:f1 r)))
-                                                   (let [r (-> r
-                                                             (clojure.set/rename-keys db-kuittaus->avaimet))]
-                                                     r)))
-                                               rivit)]
-                                   tulos)))))
-        vastaus {:ilmoitukset (mapv (fn [ilmoitus]
-                                      (sanomat/rakenna-ilmoitus
-                                        (konversio/alaviiva->rakenne ilmoitus)))
-                                ilmoitukset)}]
+        ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
+                      db
+                      {:ytunnus ytunnus
+                       :alkuaika alkuaika
+                       :loppuaika loppuaika})
+        ilmoitukset
+        (->> ilmoitukset
+          (mapv #(update % :kuittaukset konversio/jsonb->clojuremap))
+          (mapv #(update % :kuittaukset
+                   (fn [rivit]
+                     (let [tulos (keep
+                                   (fn [r]
+                                     ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
+                                     (when (not (nil? (:f1 r)))
+                                       (let [r (-> r
+                                                 (clojure.set/rename-keys db-kuittaus->avaimet))]
+                                         r)))
+                                   rivit)]
+                       tulos)))))
+        vastaus {:ilmoitukset
+                 (mapv (fn [ilmoitus]
+                         (sanomat/rakenna-ilmoitus
+                           (konversio/alaviiva->rakenne ilmoitus)))
+                   ilmoitukset)}]
     vastaus))
-
-(defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db {:keys [ytunnus alkuaika loppuaika] :as parametrit} kayttaja]
-  {:pre [(string? ytunnus) (s/valid? ::alkuaika alkuaika)]}
-  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-  (let [;; Muodostetaan kovakoodattu vastaus.
-        ;; Hox: Kun haetaan y-tunnuksella, niin alueurakkanumero on lisättävä aineistoon, jotta osataan kohdistaa oikealle urakalle
-        ;; Se ei ole skeemassa pakollinen, mutta vastauksessa on.
-        ilmoitukset {:ilmoitukset [{:ilmoitus {:ilmoitusid 123
-                                               :tunniste "UV-1509-1a"
-                                               :tila "vastaanotettu"
-                                               :ilmoitettu "2015-09-29T14:49:45"
-                                               :valitetty-harjaan "2015-09-29T14:50:45"
-                                               :valitetty-urakkaan "2015-09-29T14:49:45"
-                                               :vastaanotettu-harjaan "2015-09-29T14:49:45"
-                                               :paivitetty-harjaan nil
-                                               :alueurakkanumero 123
-                                               :ilmoitustyyppi "toimenpidepyynto",
-                                               :yhteydenottopyynto true,
-                                               :ilmoittaja {:sukunimi "Porinmatti", :etunimi "Pekka", :matkapuhelin "0502234567", :tyopuhelin "0501234567", :email "tyonvalvonta@example.org"}
-                                               :lahettaja {:etunimi "Ilmari", :sukunimi "Ilmoitus", :matkapuhelin nil, :tyopuhelin nil, :email "ilmari.ilmoitus@example.org"},
-                                               :selitteet [{:selite "tiellaOnEste"}],
-                                               :sijainti {:koordinaatit {:x 430716.0, :y 7200111.0}},
-                                               :tienumero nil,
-                                               :otsikko nil,
-                                               :paikankuvaus "Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.",
-                                               :lisatieto nil,
-                                               :aiheutti-toimenpiteita nil,
-                                               :kuittaukset [{:kuittaus {:kuitattu "2015-09-29T14:49:45"
-                                                                         :kuittaustyyppi "lopetus"
-                                                                         :vakiofraasi "tosivakio"
-                                                                         :vapaateksti "Tämä voi olla vaikka vapaata"
-                                                                         :kuittaaja {:id 1 :etunimi "etunimi" :sukunimi "sukunimi"}
-                                                                         :kuittaajaorganisaatio {:nimi "Apaattinen Yritys Oy" :ytunnus "1234567-8"}
-                                                                         :alkusijainti {:x 430716.0, :y 7200111.0}
-                                                                         :loppusijainti {:x 430716.0, :y 7200111.0}}}]}}]}]
-    ilmoitukset))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -281,6 +249,7 @@
            (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
                          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
+  
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
