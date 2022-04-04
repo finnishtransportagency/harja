@@ -44,19 +44,6 @@
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/organisaatio.schema.json",
       "required": false
-    },
-    "alkusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/alkusijainti",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-      "required": true
-    },
-    "loppusijainti": {
-      "id": "urn:harja/talvihoitotarkastus/loppusijainti",
-      "type": "object",
-      "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
     }
   }
 }
