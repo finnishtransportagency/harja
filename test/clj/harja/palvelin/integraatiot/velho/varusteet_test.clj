@@ -630,4 +630,4 @@
         lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
     (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
       (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
-    (is (str/includes? @loki "duplicate jotain jotain"))))
+    (is (str/includes? @loki "duplicate key value violates unique constraint"))))
