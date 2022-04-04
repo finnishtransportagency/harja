@@ -481,9 +481,17 @@
                   (let [paivitys-fn (fn [kohde]
                                       (let [urakkanro (-> kohde :ominaisuudet :urakkakoodi)
                                             velho-oid (:oid kohde)
-                                            paivitetty (q-urakat/paivita-velho_oid-urakalle! db {:urakkanro urakkanro :velho_oid velho-oid})]
-                                        (when-not (= 1 paivitetty)
-                                          (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE palautti != 1.")))
+                                            paivitetty (try
+                                                          (let [rivien-maara (q-urakat/paivita-velho_oid-urakalle! db {:urakkanro urakkanro :velho_oid velho-oid})]
+                                                            (when-not (= 1 rivien-maara)
+                                                              (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
+                                                                                           "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE palautti != 1.")))
+                                                            rivien-maara)
+                                                          (catch Throwable e
+                                                            (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
+                                                                                         "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE poikkeus: "
+                                                                                         e))
+                                                            0))]
                                         paivitetty))
                         paivitykset (reduce + (map paivitys-fn urakka-kohteet))
                         velho-oid-lkm-urakka-taulussa (q-urakat/hae-velho-oid-lkm db)]
