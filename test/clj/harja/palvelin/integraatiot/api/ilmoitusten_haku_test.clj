@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [clojure.core.async :refer [<!! timeout]]
             [clj-time
              [core :as t]
@@ -11,6 +11,7 @@
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
+            [clojure.string :as str]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.tyokalut.xml :as xml]
@@ -196,21 +197,39 @@
 
 
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu
-  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
-        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+  (let [alkuaika "2014-01-01T00:00:00+03"
+        loppuaika "2014-12-31T21:00:00+03"
         y-tunnus "1565583-5"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/?loppuaika=" loppuaika)]
-                   kayttaja portti)
-        odotettu-vastaus-body  "{\"ilmoitukset\":[{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430716.0,\"y\":7200111.0}},\"ilmoitusid\":123,\"valitetty-harjaan\":\"2015-09-29T14:50:45\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"alueurakkanumero\":123,\"lahettaja\":{\"etunimi\":\"Ilmari\",\"sukunimi\":\"Ilmoitus\",\"email\":\"ilmari.ilmoitus@example.org\"},\"ilmoitettu\":\"2015-09-29T14:49:45\",\"valitetty-urakkaan\":\"2015-09-29T14:49:45\",\"tunniste\":\"UV-1509-1a\",\"vastaanotettu-harjaan\":\"2015-09-29T14:49:45\",\"selitteet\":[{\"selite\":\"tiellaOnEste\"}],\"kuittaukset\":[{\"kuittaus\":{\"kuitattu\":\"2015-09-29T14:49:45\",\"kuittaustyyppi\":\"lopetus\",\"vakiofraasi\":\"tosivakio\",\"vapaateksti\":\"Tämä voi olla vaikka vapaata\",\"kuittaaja\":{\"id\":1,\"etunimi\":\"etunimi\",\"sukunimi\":\"sukunimi\"},\"kuittaajaorganisaatio\":{\"nimi\":\"Apaattinen Yritys Oy\",\"ytunnus\":\"1234567-8\"},\"alkusijainti\":{\"x\":430716.0,\"y\":7200111.0},\"loppusijainti\":{\"x\":430716.0,\"y\":7200111.0}}}],\"paikankuvaus\":\"Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}}]}" ]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                  kayttaja portti)
+        odotettu-vastaus-body "{\"ilmoitukset\":[{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":427898.0,\"y\":7188532.0}},\"ilmoitusid\":12375,\"valitetty-harjaan\":\"2014-10-26T04:06:32Z\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"alueurakkanumero\":1238,\"lahettaja\":{\"etunimi\":\"Mari\",\"sukunimi\":\"Marttala\",\"email\":\"mmarttala@example.org\"},\"ilmoitettu\":\"2014-10-26T04:05:32Z\",\"valitetty-urakkaan\":\"2014-10-26T04:06:32Z\",\"vastaanotettu-harjaan\":\"2014-10-26T06:06:32Z\",\"selitteet\":[{\"selite\":\"auraustarve\"}],\"kuittaukset\":[{\"kuittaus\":{\"vapaateksti\":\"\",\"kuittaustyyppi\":\"vastaanotto\",\"kuittaajaorganisaatio\":{\"nimi\":\"Välittävä Urakoitsija\",\"ytunnus\":\"Y1242334\"},\"kuitattu\":\"2014-10-26T06:10:07\",\"kuittaaja\":{\"etunimi\":\"Mikael\",\"sukunimi\":\"Pöytä\"},\"vakiofraasi\":\"\"}}],\"paikankuvaus\":\"Täysin jäätävä keli, muttei ole suolattu yhtään.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}},{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":427898.0,\"y\":7188532.0}},\"ilmoitusid\":12614,\"valitetty-harjaan\":\"2014-10-26T04:06:32Z\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"alueurakkanumero\":1238,\"lahettaja\":{\"etunimi\":\"Mari\",\"sukunimi\":\"Marttala\",\"email\":\"mmarttala@example.org\"},\"ilmoitettu\":\"2014-10-26T04:05:32Z\",\"valitetty-urakkaan\":\"2014-10-26T04:06:32Z\",\"vastaanotettu-harjaan\":\"2014-10-26T06:06:32Z\",\"selitteet\":[{\"selite\":\"auraustarve\"}],\"kuittaukset\":[{\"kuittaus\":{\"vapaateksti\":\"\",\"kuittaustyyppi\":\"vastaanotto\",\"kuittaajaorganisaatio\":{\"nimi\":\"Välittävä Urakoitsija\",\"ytunnus\":\"Y1242334\"},\"kuitattu\":\"2014-10-26T06:10:07\",\"kuittaaja\":{\"etunimi\":\"Mikael\",\"sukunimi\":\"Pöytä\"},\"vakiofraasi\":\"\"}},{\"kuittaus\":{\"vapaateksti\":\"Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin\",\"kuittaustyyppi\":\"valitys\",\"kuittaajaorganisaatio\":{\"ytunnus\":\"\"},\"kuitattu\":\"2014-10-26T06:51:32\",\"kuittaaja\":{},\"vakiofraasi\":\"\"}}],\"paikankuvaus\":\"Täysin jäätävä keli, muttei ole suolattu yhtään.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}},{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430716.0,\"y\":7200111.0}},\"ilmoitusid\":12374,\"valitetty-harjaan\":\"2014-11-26T04:06:32Z\",\"ilmoitustyyppi\":\"tiedoitus\",\"alueurakkanumero\":1238,\"lahettaja\":{\"etunimi\":\"Mari\",\"sukunimi\":\"Marttala\",\"email\":\"mmarttala@example.org\"},\"ilmoitettu\":\"2014-11-26T04:05:32Z\",\"valitetty-urakkaan\":\"2014-11-26T04:06:32Z\",\"vastaanotettu-harjaan\":\"2014-11-26T06:06:32Z\",\"selitteet\":[{\"selite\":\"tiellaOnEste\"}],\"kuittaukset\":[{\"kuittaus\":{\"vapaateksti\":\"\",\"kuittaustyyppi\":\"vastaanotto\",\"kuittaajaorganisaatio\":{\"nimi\":\"Välittävä Urakoitsija\",\"ytunnus\":\"Y1242334\"},\"kuitattu\":\"2014-11-26T06:10:07\",\"kuittaaja\":{\"etunimi\":\"Mikael\",\"sukunimi\":\"Pöytä\"},\"vakiofraasi\":\"\"}}],\"paikankuvaus\":\"Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}},{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430716.0,\"y\":7200111.0}},\"ilmoitusid\":12613,\"valitetty-harjaan\":\"2014-11-26T04:06:32Z\",\"ilmoitustyyppi\":\"tiedoitus\",\"alueurakkanumero\":1238,\"lahettaja\":{\"etunimi\":\"Mari\",\"sukunimi\":\"Marttala\",\"email\":\"mmarttala@example.org\"},\"ilmoitettu\":\"2014-11-26T04:05:32Z\",\"valitetty-urakkaan\":\"2014-11-26T04:06:32Z\",\"vastaanotettu-harjaan\":\"2014-11-26T06:06:32Z\",\"selitteet\":[{\"selite\":\"tiellaOnEste\"}],\"kuittaukset\":[{\"kuittaus\":{\"vapaateksti\":\"\",\"kuittaustyyppi\":\"vastaanotto\",\"kuittaajaorganisaatio\":{\"nimi\":\"Välittävä Urakoitsija\",\"ytunnus\":\"Y1242334\"},\"kuitattu\":\"2014-11-26T06:10:07\",\"kuittaaja\":{\"etunimi\":\"Mikael\",\"sukunimi\":\"Pöytä\"},\"vakiofraasi\":\"\"}},{\"kuittaus\":{\"vapaateksti\":\"Tähän tulisi viestin raakadata, mutta tää nyt on kirjoitettu käsin\",\"kuittaustyyppi\":\"valitys\",\"kuittaajaorganisaatio\":{\"ytunnus\":\"\"},\"kuitattu\":\"2014-11-26T06:07:02\",\"kuittaaja\":{},\"vakiofraasi\":\"\"}}],\"paikankuvaus\":\"Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}},{\"ilmoitus\":{\"yhteydenottopyynto\":true,\"tila\":\"vastaanotettu\",\"sijainti\":{\"koordinaatit\":{\"x\":430100.0,\"y\":7197493.0}},\"ilmoitusid\":12612,\"valitetty-harjaan\":\"2014-12-26T04:06:32Z\",\"ilmoitustyyppi\":\"toimenpidepyynto\",\"alueurakkanumero\":1238,\"lahettaja\":{\"etunimi\":\"Mari\",\"sukunimi\":\"Marttala\",\"email\":\"mmarttala@example.org\"},\"ilmoitettu\":\"2014-12-26T04:05:32Z\",\"valitetty-urakkaan\":\"2014-12-26T04:06:32Z\",\"vastaanotettu-harjaan\":\"2014-12-26T06:06:32Z\",\"selitteet\":[{\"selite\":\"auraustarve\"}],\"kuittaukset\":[{\"kuittaus\":{\"vapaateksti\":\"\",\"kuittaustyyppi\":\"vastaanotto\",\"kuittaajaorganisaatio\":{\"nimi\":\"Välittävä Urakoitsija\",\"ytunnus\":\"Y1242334\"},\"kuitattu\":\"2014-12-26T06:10:07\",\"kuittaaja\":{\"etunimi\":\"Mikael\",\"sukunimi\":\"Pöytä\"},\"vakiofraasi\":\"\"}}],\"paikankuvaus\":\"Voimakas lumipyry nelostiellä tiet taas auraamatta.\",\"ilmoittaja\":{\"sukunimi\":\"Porinmatti\",\"etunimi\":\"Pekka\",\"matkapuhelin\":\"0502234567\",\"tyopuhelin\":\"0501234567\",\"email\":\"tyonvalvonta@example.org\"}}}]}"]
     (is (= odotettu-vastaus-body (:body vastaus)))))
 
-(deftest hae-ilmoitukset-ytunnuksella-epaonnistuu
+(deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         y-tunnus "1234567-8"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/?loppuaika=" loppuaika)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
                   kayttaja portti)
         odotettu-vastaus-json "{\"virheet\":[{\"virhe\":{\"koodi\":\"kayttajalla-puutteelliset-oikeudet\",\"viesti\":\"Käyttäjällä: yit-rakennus ei ole oikeuksia organisaatioon: 1234567-8\"}}]}"]
     (is (= odotettu-vastaus-json (:body vastaus)))))
+
+(deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-vaarat-hakuparametrit
+  (testing "Alkuaika on väärässä muodossa "
+    (let [alkuaika (.format (SimpleDateFormat. "YY-MM-d'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+          y-tunnus "1565583-5"
+          vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "puutteelliset-parametrit"))))
+  (testing "Loppuaika on väärässä muodossa "
+    (let [alkuaika (.format (SimpleDateFormat. "yyy-MM-d'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "-MM-dd'T'HH:mm:ssX") (Date.))
+          y-tunnus "1565583-5"
+          vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "Loppuaika väärässä muodossa")))))
 
 
