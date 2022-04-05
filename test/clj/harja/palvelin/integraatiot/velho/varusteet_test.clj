@@ -639,7 +639,7 @@
     (is (str/includes? @loki "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
     (is (= odotettu-tulos-joukko (urakat-joilla-on-velho-oid)))))
 
-(deftest velho-urakalle-ei-loydy-harjasta-urakkaa
+(deftest velho-urakalle-ei-loydy-harjasta-urakanroa
   "Kun urakkaa ei löydy, pitää lokittaa virhe.
   Muut (2) urakat tallentuvat oikein."
   (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502791" "1.2.246.578.8.1.147502790"]
@@ -676,5 +676,6 @@
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
     (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))
     (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
     (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))))
