@@ -51,6 +51,21 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
+(defn fake-ei-saa-kutsua [syy-teksti]
+  (fn [_ {:keys [body headers url]} _]
+    (is false (str "Ei saa kutsua: '" syy-teksti "' otsikot: " headers " url: " url))
+    {:status 500 :body ""}))
+
+(defn with-lokita-urakkahakuvirhe-redefs [kutsuttava-fn]
+  (let [loki (atom "")
+        tallentava-fn (fn [alkuperainen-fn viesti]
+                        (swap! loki #(str % "\n" viesti))
+                        (alkuperainen-fn viesti))
+        alkuperainen-fn varusteet/lokita-urakkahakuvirhe]
+    (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallentava-fn alkuperainen-fn)]
+      (kutsuttava-fn))
+    @loki))
+
 (defn kaikki-kohteet []
   (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
 
@@ -61,9 +76,7 @@
   (yhteiset-test/tyhjenna-velho-tokenit-atomi)
   (let [fake-feilava-token (fn [_ {:keys [body headers]} _]
                              "{\"error\":\"invalid_client\"}")
-        kieletty (fn [_ {:keys [body headers url]} _]
-                   (is false (format "Ei saa kutsua jos ei saannut tokenia headers: %s url: %s" headers url))
-                   {:status 500 :body ""})]
+        kieletty (fake-ei-saa-kutsua "Ei ole saanut tokenia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-feilava-token
        {:url +varuste-tunnisteet-regex+ :method :get} kieletty
@@ -75,8 +88,7 @@
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 500 :body "{\n    \"viesti\": \"Sisäinen palvelukutsu epäonnistui: palvelinvirhe\"\n}"})
-        kieletty (fn [_ {:keys [body headers url]} _]
-                   (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
+        kieletty (fake-ei-saa-kutsua "Ei ole oikeita oid-tunnuksia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
@@ -91,8 +103,7 @@
   (let [fake-feilava-tunnisteet (fn [_ {:keys [body headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\",\n"})
-        kieletty (fn [_ {:keys [body headers url]} _]
-                   (is false (format "Ei saa kutsua jos ei oikeita oid-tunnuksia headers: %s url: %s" headers url)))]
+        kieletty (fake-ei-saa-kutsua "Ei ole oikeita oid-tunnuksia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
@@ -585,7 +596,7 @@
 
 (defn fake-tunnisteet [odotettu-oidit-vastaus]
   (fn [_ {:keys [body headers url]} _]
-                        {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}}))
+    {:status 200 :body (json/write-str odotettu-oidit-vastaus) :headers {:content-type "application/json"}}))
 
 (defn fake-kohteet [odotettu-oidit-vastaus odotettu-kohteet-vastaus]
   (fn [_ {:keys [body headers url]} _]
@@ -595,12 +606,16 @@
     (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
     {:status 200 :body odotettu-kohteet-vastaus :headers {:content-type "application/x-ndjson"}}))
 
-(defn feikkaa-ja-kutsu [odotettu-oidit-vastaus odotettu-kohteet-vastaus]
-  (with-fake-http
-    [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-     {:url +velho-urakka-oid-url+ :method :get} (fake-tunnisteet odotettu-oidit-vastaus)
-     {:url +velho-urakka-kohde-url+ :method :post} (fake-kohteet odotettu-oidit-vastaus odotettu-kohteet-vastaus)]
-    (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma))))
+(defn feikkaa-ja-kutsu
+  ([odotettu-oidit-vastaus odotettu-kohteet-vastaus]
+   (feikkaa-ja-kutsu {:fake-oid-fn (fake-tunnisteet odotettu-oidit-vastaus)
+                      :fake-kohteet-fn (fake-kohteet odotettu-oidit-vastaus odotettu-kohteet-vastaus)}))
+  ([{:keys [fake-oid-fn fake-kohteet-fn] :as fake-funktiot}]
+   (with-fake-http
+     [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+      {:url +velho-urakka-oid-url+ :method :get} fake-oid-fn
+      {:url +velho-urakka-kohde-url+ :method :post} fake-kohteet-fn]
+     (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma)))))
 
 (defn urakat-joilla-on-velho-oid []
   (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL")))
@@ -616,9 +631,10 @@
                                 :urakkanro "1248"
                                 :velho_oid "1.2.246.578.8.1.147502790"}}
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
-        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
-    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
-    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))))
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))
+    (is (not (str/includes? lokiteksti "ERROR")))))
 
 (deftest velho-palauttaa-kaksi-urakkaa-samalla-velho-oidlla
   "Lokitus huomaa, jos velho_oid tulosjoukko ei ole uniikki. Yksi kohde tallentuu."
@@ -628,15 +644,9 @@
                                  :tyyppi "hoito"
                                  :urakkanro "1236"
                                  :velho_oid "1.2.246.578.8.1.147502788"}}
-        loki (atom "")
-        tallenna-lokitekstit (fn [alkuperainen-lokitusfunktio viesti]
-                              (swap! loki #(str % "\n" viesti))
-                              (alkuperainen-lokitusfunktio viesti))
-        lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
-    (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
-      (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
-    (is (str/includes? @loki "duplicate key value violates unique constraint"))
-    (is (str/includes? @loki "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (str/includes? lokiteksti "duplicate key value violates unique constraint"))
+    (is (str/includes? lokiteksti "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
     (is (= odotettu-tulos-joukko (urakat-joilla-on-velho-oid)))))
 
 (deftest velho-urakalle-ei-loydy-harjasta-urakanroa
@@ -652,15 +662,10 @@
                                  :tyyppi "teiden-hoito"
                                  :urakkanro "1248"
                                  :velho_oid "1.2.246.578.8.1.147502790"}}
-        loki (atom "")
-        tallenna-lokitekstit (fn [alkuperainen-lokitusfunktio viesti]
-                               (swap! loki #(str % "\n" viesti))
-                               (alkuperainen-lokitusfunktio viesti))
-        lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
-    (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
-      (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
-    (is (str/includes? @loki "Virhe kohdistettaessa Velho urakkaa '1.2.246.578.8.1.147502791'"))
-    (is (str/includes? @loki "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (str/includes? lokiteksti "Virhe kohdistettaessa Velho urakkaa '1.2.246.578.8.1.147502791'"))
+    (is (str/includes? lokiteksti "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+    (is (str/includes? lokiteksti "UPDATE palautti 0"))
     (is (= odotettu-urakka-lista (urakat-joilla-on-velho-oid)))))
 
 (deftest urakka-haku-on-idempotentti
@@ -674,8 +679,48 @@
                                 :urakkanro "1248"
                                 :velho_oid "1.2.246.578.8.1.147502790"}}
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
-        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
-    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")
+        lokiteksti1 (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
+        _ (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))
+        lokiteksti2 (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))
-    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
-    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))))
+    (is (not (str/includes? (str lokiteksti1 lokiteksti2) "ERROR")))))
+
+(deftest velho-palauttaa-500-urakka-oideja-haettaessa
+  (let [fake-oid-fn (fn [_ {:keys [body headers url]} _]
+                      {:status 500 :body "spec spec spec..." :headers {:content-type "text/html"}})
+        kieletty-fn (fake-ei-saa-kutsua "Ei ole saatu oikeita oideja")
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kieletty-fn}))]
+    (is (str/includes? lokiteksti "Ulkoinen järjestelmä palautti statuskoodin: 500 ja virheen: spec spec spec..."))))
+
+(deftest velho-palauttaa-500-urakka-kohteita-haettaessa
+  (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
+        fake-oid-fn (fake-tunnisteet odotettu-oidit-vastaus)
+        fake-kohteet-fn (fn [_ {:keys [body headers url]} _]
+                          {:status 500 :body "spec spec spec..." :headers {:content-type "text/html"}})
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu {:fake-oid-fn fake-oid-fn :fake-kohteet-fn fake-kohteet-fn}))]
+    (is (str/includes? lokiteksti "Ulkoinen järjestelmä palautti statuskoodin: 500 ja virheen: spec spec spec..."))))
+
+(deftest velhon-urakka-json-ei-jasenny-oikein
+  (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/epaonnistuneet-test/hallintorekisteri_api_v1_kohteet-virhe-json.jsonl")
+        odotettu-urakka-lista #{{:id 21
+                                 :tyyppi "hoito"
+                                 :urakkanro "1236"
+                                 :velho_oid "1.2.246.578.8.1.147502788"}
+                                {:id 36
+                                 :tyyppi "teiden-hoito"
+                                 :urakkanro "1248"
+                                 :velho_oid "1.2.246.578.8.1.147502790"}}
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (str/includes? lokiteksti "JSON jäsennys epäonnistui. JSON (alku 200 mki): '{\"ominaisuudet\":{\"urakkakoodi\":\"1248\"},asdsaasdasdasadjkhgsadjkhgsadkjhgsadkjhgsadkjsahgdksajdhgaskjdhgsadkjhsagdkjsahgdsakjhdgsakjdhgsakjdhsagdkjsahgdksajhdgaskjdhgsakjdhgaskjhsagksjadhgdsakjhgasdas'"))
+    (is (str/includes? lokiteksti "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+    (is (not (str/includes? lokiteksti "UPDATE palautti != 1")))
+    (is (= odotettu-urakka-lista (urakat-joilla-on-velho-oid)))))
+
+(deftest velho-urakka-oid-json-on-rikki
+  (let [fake-oid-fn (fn [_ {:keys [body headers url]} _]
+                      {:status 200 :body "[\"1.2.3.4\"," :headers {:content-type "application/json"}})
+        kielletty-fn fake-ei-saa-kutsua
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kielletty-fn}))]
+    (is (str/includes? lokiteksti "JSON error (end-of-file inside array)"))))

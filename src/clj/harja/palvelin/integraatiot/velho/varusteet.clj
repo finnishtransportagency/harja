@@ -248,9 +248,6 @@
           (every? true? tulokset)))
       false)))
 
-(defn oid-lista->json [oidit]
-  (json/write-str oidit))
-
 (defn muodosta-kohteet-url [varuste-api-juuri-url {:keys [palvelu api-versio] :as lahde}]
   (let [historia-osa (if (= "sijaintipalvelu" palvelu)
                        ""
@@ -262,7 +259,7 @@
         token (token-fn)]
     (if token
       (try+
-        (let [pyynto (oid-lista->json oidit)
+        (let [pyynto (json/write-str oidit)
               otsikot {"Content-Type" "application/json; charset=utf-8"
                        "Authorization" (str "Bearer " token)}
               http-asetukset {:metodi :POST
@@ -462,10 +459,16 @@
                       http-asetukset {:metodi :POST
                                       :otsikot otsikot
                                       :url varuste-urakka-kohteet-url}
-                      oid-joukko-json (oid-lista->json oid-joukko)
+                      oid-joukko-json (json/write-str oid-joukko)
                       {vastaus :body
                        _ :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset oid-joukko-json)
-                      urakka-kohteet (map #(json/read-str % :key-fn keyword) (str/split-lines vastaus))
+                      urakka-kohteet (map #(try
+                                             (json/read-str % :key-fn keyword)
+                                             (catch Throwable t (lokita-urakkahakuvirhe
+                                                                  (str "JSON jäsennys epäonnistui. JSON (alku 200 mki): '"
+                                                                       (subs % 0 (min 199 (count %))) "'"))
+                                                                nil))
+                                          (str/split-lines vastaus))
                       urakka-oid-joukko (set (map :oid urakka-kohteet))
                       liikaa (set/difference urakka-oid-joukko oid-joukko)
                       puuttuu (set/difference oid-joukko urakka-oid-joukko)]
@@ -479,27 +482,32 @@
                     (log/info "Tyhjennetty kaikki urakka.velho_oid sarakkeen arvot, tyhjennettyjen lkm:" tyhjennetty-lkm))
                   ;Päivitetään urakka tauluun saadut velho-oid:t löytyneille WHERE urakkanro = kohde.ominaisuudet.urakkakoodi
                   (let [paivitys-fn (fn [kohde]
-                                      (let [urakkanro (-> kohde :ominaisuudet :urakkakoodi)
-                                            velho-oid (:oid kohde)
-                                            paivitetty (try
-                                                          (let [rivien-maara (q-urakat/paivita-velho_oid-urakalle! db {:urakkanro urakkanro :velho_oid velho-oid})]
-                                                            (when-not (= 1 rivien-maara)
-                                                              (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
-                                                                                           "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE palautti != 1.")))
-                                                            rivien-maara)
-                                                          (catch Throwable e
-                                                            (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
-                                                                                         "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE poikkeus: "
-                                                                                         e))
-                                                            0))]
-                                        paivitetty))
+                                      (if kohde             ; Kun JSON jäsennys epäonnistuu => kohde on nil
+                                        (let [urakkanro (-> kohde :ominaisuudet :urakkakoodi)
+                                              velho-oid (:oid kohde)
+                                              paivitetty (try
+                                                           (let [rivien-maara (q-urakat/paivita-velho_oid-urakalle! db {:urakkanro urakkanro :velho_oid velho-oid})]
+                                                             (when (= 0 rivien-maara) ; Vain 0 mahdollinen, jos >1 => Duplicate key violation
+                                                               (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
+                                                                                            "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. SQL UPDATE palautti 0 muuttuneiden rivien lukumääräksi.")))
+                                                             rivien-maara)
+                                                           (catch Throwable e ; Duplicate key violation ja muut SQL virheet täällä
+                                                             (lokita-urakkahakuvirhe (str "Virhe kohdistettaessa Velho urakkaa '" velho-oid
+                                                                                          "' Harjan WHERE urakka.urakkanro = '" urakkanro "'. UPDATE poikkeus: "
+                                                                                          e))
+                                                             0))]
+                                          paivitetty)
+                                        0))
                         paivitykset (reduce + (map paivitys-fn urakka-kohteet))
-                        velho-oid-lkm-urakka-taulussa (q-urakat/hae-velho-oid-lkm db)]
+                        velho-oid-lkm-urakka-taulussa (:lkm (first (q-urakat/hae-velho-oid-lkm db)))]
                     (when-not (= (count urakka-kohteet) velho-oid-lkm-urakka-taulussa)
-                      (lokita-urakkahakuvirhe (str "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää. Kohteita "
-                                 (count urakka-kohteet) " taulussa velho_oideja: "
-                                 velho-oid-lkm-urakka-taulussa)))
+                      (lokita-urakkahakuvirhe (str "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää. Kohteita "
+                                                   (count urakka-kohteet) " taulussa velho_oideja: "
+                                                   velho-oid-lkm-urakka-taulussa " kpl.")))
                     (log/info "Tallennettu" paivitykset " velho_oid tunnistetta urakka-tauluun.")))))))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (lokita-urakkahakuvirhe (str "MHU urakoiden haku Velhosta epäonnistui. Virheet: " virheet))
+      false)
+    (catch Throwable t
+      (lokita-urakkahakuvirhe (str "Poikkeus MHU urakoiden haussa Velhosta. Throwable: " t))
       false)))
