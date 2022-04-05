@@ -402,7 +402,9 @@
             tyomenetelma (or tyomenetelma (::paikkaus/tyomenetelma (first paikkaukset))) ; tarviikohan, en tiedä. jos vanhoilla kohteilla ei ole tuota kenttää?
             levittimella-tehty? (paikkaus/levittimella-tehty? paikkauskohde tyomenetelmat)
             urakoitsija-kayttajana? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+            tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                       (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                       @istunto/kayttaja)
             arvo-kpl (kpl-summa paikkaukset)
             arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
             arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
