@@ -602,8 +602,11 @@
      {:url +velho-urakka-kohde-url+ :method :post} (fake-kohteet odotettu-oidit-vastaus odotettu-kohteet-vastaus)]
     (velho-integraatio/paivita-mhu-urakka-oidt-velhosta (:velho-integraatio jarjestelma))))
 
-(deftest hae-mhu-urakka-oidt-test                           ;Full path, sunny day
-  (u "UPDATE urakka SET velho_oid = NULL;")
+(defn urakat-joilla-on-velho-oid []
+  (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL")))
+
+(deftest hae-mhu-urakka-oidt-test
+  "Aurinkoisen päivän testi koko haku ja tallennus polulle."
   (let [odotettu-tulosjoukko #{{:id 21
                                 :tyyppi "hoito"
                                 :urakkanro "1236"
@@ -615,14 +618,16 @@
         odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
     (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
-    (let [urakat-joilla-on-velho-oid (set (q-map "SELECT id, tyyppi, urakkanro, velho_oid FROM urakka WHERE velho_oid IS NOT NULL"))
-          odotettu-urakka-lista odotettu-tulosjoukko]
-      (is (= odotettu-urakka-lista urakat-joilla-on-velho-oid)))))
+    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))))
 
 (deftest velho-palauttaa-kaksi-urakkaa-samalla-velho-oidlla
-  "Lokitus huomaa, jos velho_oid tulosjoukko ei ole uniikki."
+  "Lokitus huomaa, jos velho_oid tulosjoukko ei ole uniikki. Yksi kohde tallentuu."
   (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502788"]
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/epaonnistuneet-test/hallintorekisteri_api_v1_kohteet-tupla-velho-oid.jsonl")
+        odotettu-tulos-joukko #{{:id 21
+                                 :tyyppi "hoito"
+                                 :urakkanro "1236"
+                                 :velho_oid "1.2.246.578.8.1.147502788"}}
         loki (atom "")
         tallenna-lokitekstit (fn [alkuperainen-lokitusfunktio viesti]
                               (swap! loki #(str % "\n" viesti))
@@ -630,4 +635,46 @@
         lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
     (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
       (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
-    (is (str/includes? @loki "duplicate key value violates unique constraint"))))
+    (is (str/includes? @loki "duplicate key value violates unique constraint"))
+    (is (str/includes? @loki "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+    (is (= odotettu-tulos-joukko (urakat-joilla-on-velho-oid)))))
+
+(deftest velho-urakalle-ei-loydy-harjasta-urakkaa
+  "Kun urakkaa ei löydy, pitää lokittaa virhe.
+  Muut (2) urakat tallentuvat oikein."
+  (let [odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502791" "1.2.246.578.8.1.147502790"]
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/epaonnistuneet-test/hallintorekisteri_api_v1_kohteet-puuttuu-harjasta.jsonl")
+        odotettu-urakka-lista #{{:id 21
+                                 :tyyppi "hoito"
+                                 :urakkanro "1236"
+                                 :velho_oid "1.2.246.578.8.1.147502788"}
+                                {:id 36
+                                 :tyyppi "teiden-hoito"
+                                 :urakkanro "1248"
+                                 :velho_oid "1.2.246.578.8.1.147502790"}}
+        loki (atom "")
+        tallenna-lokitekstit (fn [alkuperainen-lokitusfunktio viesti]
+                               (swap! loki #(str % "\n" viesti))
+                               (alkuperainen-lokitusfunktio viesti))
+        lokita-urakkahakuvirhe-alkuperainen varusteet/lokita-urakkahakuvirhe]
+    (with-redefs [varusteet/lokita-urakkahakuvirhe (partial tallenna-lokitekstit lokita-urakkahakuvirhe-alkuperainen)]
+      (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))
+    (is (str/includes? @loki "Virhe kohdistettaessa Velho urakkaa '1.2.246.578.8.1.147502791'"))
+    (is (str/includes? @loki "Urakka tauluun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
+    (is (= odotettu-urakka-lista (urakat-joilla-on-velho-oid)))))
+
+(deftest urakka-haku-on-idempotentti
+  "Ensisijaisesti urakoiden haun tulee olla idempotentti."
+  (let [odotettu-tulosjoukko #{{:id 21
+                                :tyyppi "hoito"
+                                :urakkanro "1236"
+                                :velho_oid "1.2.246.578.8.1.147502788"}
+                               {:id 36
+                                :tyyppi "teiden-hoito"
+                                :urakkanro "1248"
+                                :velho_oid "1.2.246.578.8.1.147502790"}}
+        odotettu-oidit-vastaus ["1.2.246.578.8.1.147502788" "1.2.246.578.8.1.147502790"]
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/onnistuneet-test/hallintorekisteri_api_v1_kohteet.jsonl")]
+    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+    (feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+    (is (= odotettu-tulosjoukko (urakat-joilla-on-velho-oid)))))
