@@ -162,10 +162,8 @@
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
 
-(def paivamaaramuoto "yyyy-MM-dd'T'HH:mm:ssX")
-;2022-04-01T11:19:22+03
-(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
 (defn- tarkista-ilmoitus-haun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
@@ -176,7 +174,7 @@
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX" (:alkuaika parametrit))}))
-  (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
+  (when (and (not (nil? (:loppuaika parametrit))) (not (s/valid? ::loppuaika (:loppuaika parametrit))))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX" (:loppuaika parametrit))})))
