@@ -12,13 +12,13 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
-(def paivamaaramuoto "yyyy-MM-dd'T'HH:mm:ss")
-(s/def ::alkuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+(s/def ::alkuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::loppuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
 (defn- tarkista-toteumahaun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
