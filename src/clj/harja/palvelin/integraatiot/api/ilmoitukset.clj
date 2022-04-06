@@ -2,11 +2,12 @@
   "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
             [org.httpkit.server :refer [with-channel on-close send!]]
+            [clojure.spec.alpha :as s]
             [compojure.core :refer [PUT GET]]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [kasittele-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
+             [kasittele-kutsu kasittele-get-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
@@ -16,7 +17,11 @@
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik])
+            [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
+            [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
+            [harja.pvm :as pvm]
+            [clojure.data.json :as json])
+  (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
@@ -154,6 +159,47 @@
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
 
+(def paivamaaramuoto "yyyy-MM-dd'T'HH:mm:ssX")
+;2022-04-01T11:19:22+03
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. paivamaaramuoto) %))))
+
+(defn hae-kovakoodatut-ilmoitukset-ytunnuksella [db {:keys [ytunnus alkuaika loppuaika] :as parametrit} kayttaja]
+  {:pre [(string? ytunnus) (s/valid? ::alkuaika alkuaika)]}
+  (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
+  (let [;; Muodostetaan kovakoodattu vastaus.
+        ;; Hox: Kun haetaan y-tunnuksella, niin alueurakkanumero on lisättävä aineistoon, jotta osataan kohdistaa oikealle urakalle
+        ;; Se ei ole skeemassa pakollinen, mutta vastauksessa on.
+        ilmoitukset {:ilmoitukset [{:ilmoitus {:ilmoitusid 123
+                                               :tunniste "UV-1509-1a"
+                                               :tila "vastaanotettu"
+                                               :ilmoitettu "2015-09-29T14:49:45"
+                                               :valitetty-harjaan "2015-09-29T14:50:45"
+                                               :valitetty-urakkaan "2015-09-29T14:49:45"
+                                               :vastaanotettu-harjaan "2015-09-29T14:49:45"
+                                               :paivitetty-harjaan nil
+                                               :alueurakkanumero 123
+                                               :ilmoitustyyppi "toimenpidepyynto",
+                                               :yhteydenottopyynto true,
+                                               :ilmoittaja {:sukunimi "Porinmatti", :etunimi "Pekka", :matkapuhelin "0502234567", :tyopuhelin "0501234567", :email "tyonvalvonta@example.org"}
+                                               :lahettaja {:etunimi "Ilmari", :sukunimi "Ilmoitus", :matkapuhelin nil, :tyopuhelin nil, :email "ilmari.ilmoitus@example.org"},
+                                               :selitteet [{:selite "tiellaOnEste"}],
+                                               :sijainti {:koordinaatit {:x 430716.0, :y 7200111.0}},
+                                               :tienumero nil,
+                                               :otsikko nil,
+                                               :paikankuvaus "Pasku lumipeite nelostiellä Ristisuon kohdalla ja tiet auraamatta.",
+                                               :lisatieto nil,
+                                               :aiheutti-toimenpiteita nil,
+                                               :kuittaukset [{:kuittaus {:kuitattu "2015-09-29T14:49:45"
+                                                                         :kuittaustyyppi "lopetus"
+                                                                         :vakiofraasi "tosivakio"
+                                                                         :vapaateksti "Tämä voi olla vaikka vapaata"
+                                                                         :kuittaaja {:id 1 :etunimi "etunimi" :sukunimi "sukunimi"}
+                                                                         :kuittaajaorganisaatio {:nimi "Apaattinen Yritys Oy" :ytunnus "1234567-8"}
+                                                                         :alkusijainti {:x 430716.0, :y 7200111.0}
+                                                                         :loppusijainti {:x 430716.0, :y 7200111.0}}}]}}]}]
+    ilmoitukset))
+
 (defrecord Ilmoitukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db integraatioloki :integraatioloki tloik :tloik :as this}]
@@ -161,6 +207,15 @@
       http :hae-ilmoitukset
       (GET "/api/urakat/:id/ilmoitukset" request
         (kaynnista-ilmoitusten-kuuntelu db integraatioloki request)))
+
+    (julkaise-reitti
+      http :hae-ilmoitukset-ytunnuksella
+      (GET "/api/ilmoitukset/:ytunnus/:alkuaika/" request
+        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+          json-skeemat/ilmoitusten-haku
+          (fn [parametrit kayttaja db]
+            (hae-kovakoodatut-ilmoitukset-ytunnuksella db parametrit kayttaja))
+          false)))
 
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
@@ -171,4 +226,5 @@
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
+    (poista-palvelut http :hae-ilmoitukset-ytunnuksella)
     this))

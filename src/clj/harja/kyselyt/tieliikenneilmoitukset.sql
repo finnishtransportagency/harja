@@ -551,21 +551,29 @@ WHERE ilmoitusid = :ilmoitusid;
 -- name: hae-ilmoitukset-asiakaspalauteluokittain
 -- Hakee summat kaikille asiakaspalauteluokille jaoteltuina ilmoitustyypeittäin
 SELECT
-  apl.nimi,
-  i.ilmoitustyyppi,
-  (coalesce(SUM(1), 0)) AS numero
+    apl.nimi,
+    i.ilmoitustyyppi,
+    (coalesce(SUM(1), 0)) AS numero
 FROM asiakaspalauteluokka apl
-  JOIN ilmoitus i
-    ON i.selitteet && apl.selitteet AND
-       (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
-       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
-       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT CASE WHEN tyyppi = 'teiden-hoito' THEN 'hoito' ELSE tyyppi END FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
-       (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
-                                                               FROM urakka
-                                                               WHERE hallintayksikko = :hallintayksikko_id)) AND
-       (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
-       (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
-GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
+         JOIN ilmoitus i
+              ON i.selitteet && apl.selitteet AND
+                 (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
+                 (i.urakka IS NULL OR
+                  (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
+                 (:urakkatyyppi::urakkatyyppi IS NULL OR
+                  CASE
+                      WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                      ELSE
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi
+                      END
+                     ) AND
+                 (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
+                                                                         FROM urakka
+                                                                         WHERE hallintayksikko = :hallintayksikko_id)) AND
+                 (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
+                 (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
+GROUP BY CUBE (apl.nimi, i.ilmoitustyyppi);
 
 -- name: hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
 SELECT

@@ -62,7 +62,9 @@
                   ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
                   ;; ei näytetä muokkaustietoa.
                   (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+                       (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                             (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                             @istunto/kayttaja)
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
@@ -162,7 +164,7 @@
                                      kustannukset-kirjattu? (:toteutunut-hinta kohde)
                                      kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
                                      urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
-                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
+                                     tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? kayttajaroolit @istunto/kayttaja)
                                      oikeudet-kustannuksiin? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
@@ -211,7 +213,9 @@
                                       ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                                       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                                       ;; Joten yhteenvetoriville tyhjä column
-                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+                                      (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                                            (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                            @istunto/kayttaja)
                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                       {:teksti ""}
