@@ -54,9 +54,18 @@
 (defn fake-ei-saa-kutsua [syy-teksti]
   (fn [_ {:keys [body headers url]} _]
     (is false (str "Ei saa kutsua: '" syy-teksti "' otsikot: " headers " url: " url))
-    {:status 500 :body ""}))
+    {:status 400 :body ""}))
 
-(defn with-lokita-urakkahakuvirhe-redefs [kutsuttava-fn]
+(defn with-lokita-urakkahakuvirhe-redefs
+  "Kaappaa talteen varusteiden urakka-virhelokitekstit.
+
+   Kutsuu `kutsuttava-fn` funktiota.
+
+   Palauttaa kaikki `varusteet/lokita-urakkahakuvirhe` funktion parametrina saamat
+     tekstit rivinvaihdoilla erotettuna.
+
+   Kutsuu alkuperäistä varusteet/lokita-urakkahakuvirhe funktiota sivuvaikutusten vuoksi."
+  [kutsuttava-fn]
   (let [loki (atom "")
         tallentava-fn (fn [alkuperainen-fn viesti]
                         (swap! loki #(str % "\n" viesti))
@@ -665,7 +674,6 @@
         lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (str/includes? lokiteksti "Virhe kohdistettaessa Velho urakkaa '1.2.246.578.8.1.147502791'"))
     (is (str/includes? lokiteksti "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
-    (is (str/includes? lokiteksti "UPDATE palautti 0"))
     (is (= odotettu-urakka-lista (urakat-joilla-on-velho-oid)))))
 
 (deftest urakka-haku-on-idempotentti
@@ -715,12 +723,19 @@
         lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (str/includes? lokiteksti "JSON jäsennys epäonnistui. JSON (alku 200 mki): '{\"ominaisuudet\":{\"urakkakoodi\":\"1248\"},asdsaasdasdasadjkhgsadjkhgsadkjhgsadkjhgsadkjsahgdksajdhgaskjdhgsadkjhsagdkjsahgdsakjhdgsakjdhgsakjdhsagdkjsahgdksajhdgaskjdhgsakjdhgaskjhsagksjadhgdsakjhgasdas'"))
     (is (str/includes? lokiteksti "Urakka taulun velho_oid rivien lukumäärä ei vastaa Velhosta saatujen kohteiden määrää."))
-    (is (not (str/includes? lokiteksti "UPDATE palautti != 1")))
+    (is (not (str/includes? lokiteksti "SQL UPDATE palautti 0 muuttuneiden rivien lukumääräksi.")))
     (is (= odotettu-urakka-lista (urakat-joilla-on-velho-oid)))))
 
 (deftest velho-urakka-oid-json-on-rikki
   (let [fake-oid-fn (fn [_ {:keys [body headers url]} _]
                       {:status 200 :body "[\"1.2.3.4\"," :headers {:content-type "application/json"}})
-        kielletty-fn fake-ei-saa-kutsua
+        kielletty-fn (fake-ei-saa-kutsua "Rikkinäinen OID lista JSON. Ei saa kutsua kohdehakua.")
         lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kielletty-fn}))]
     (is (str/includes? lokiteksti "JSON error (end-of-file inside array)"))))
+
+(deftest velho-palauttaa-tyhjan-urakka-oid-listan
+  (let [fake-oid-fn (fn [_ {:keys [body headers url]} _]
+                      {:status 200 :body "[]" :headers {:content-type "application/json"}})
+        kielletty-fn (fake-ei-saa-kutsua "Tyhjä OID lista, ei saa kutsua kohdehakua")
+        lokiteksti (with-lokita-urakkahakuvirhe-redefs #(feikkaa-ja-kutsu {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kielletty-fn}))]
+    (is (str/includes? lokiteksti "Velho palautti tyhjän OID listan"))))
