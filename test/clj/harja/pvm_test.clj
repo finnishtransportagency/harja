@@ -269,3 +269,9 @@
         loppupvm (pvm/->pvm "02.01.2020")]
     (is (= (pvm/montako-paivaa-valissa alkupvm loppupvm) 1))
     (is (= (pvm/montako-paivaa-valissa loppupvm alkupvm) -1))))
+
+(deftest hoitokauden-stringin-luonti-alkuvuodesta
+  (let [alkuvuosi 2021]
+    (is (= "01.10.2021-30.09.2022" (pvm/hoitokausi-str-alkuvuodesta alkuvuosi)) "Hoitokauden formatointi onnistuu")
+    (is (= "01.10.2022-30.09.2023" (pvm/hoitokausi-str-alkuvuodesta (inc alkuvuosi))) "Hoitokauden formatointi onnistuu")
+    (is (nil? (pvm/hoitokausi-str-alkuvuodesta nil)) "Nil ei aiheuta poikkeutta")))
