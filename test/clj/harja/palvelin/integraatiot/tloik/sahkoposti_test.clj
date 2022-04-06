@@ -21,7 +21,7 @@
 
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "jvh")
-(def odota-tausta-ajoa 2000)
+(def odota-tausta-ajoa 3000)
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea

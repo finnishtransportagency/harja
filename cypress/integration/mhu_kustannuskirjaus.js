@@ -58,7 +58,7 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
 }
 
-describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
+describe.skip('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
 
     it('Kulujen kirjaus-näkymä aukeaa', () => {
         avaaKulujenKohdistus('Kittilän MHU 2019-2024');
