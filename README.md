@@ -1,4 +1,3 @@
-
 # Väylän Harja-järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
