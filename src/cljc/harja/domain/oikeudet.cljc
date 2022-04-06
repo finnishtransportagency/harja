@@ -272,5 +272,7 @@
                     (kayttajat-kyselyt/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
     (if (nil? on-oikeus)
       (throw+ (roolit/->EiOikeutta
-                (str "Käyttäjällä '" (pr-str kayttaja) "' ei järjestelmäoikeuksia")))
+                (if vaadi-analytiikka-oikeus?
+                  (str "Käyttäjällä '" (pr-str kayttaja) "' ei analytiikka- ja järjestelmäoikeuksia.")
+                  (str "Käyttäjällä '" (pr-str kayttaja) "' ei järjestelmäoikeuksia."))))
       true))))
