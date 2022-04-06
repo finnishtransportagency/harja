@@ -1411,7 +1411,9 @@ SELECT t.id as toteuma_tunniste_id,
        t.luotu as toteuma_muutostiedot_luotu,
        t.luoja as toteuma_muutostiedot_luoja,
        t.muokattu as toteuma_muutostiedot_muokattu,
-       t.muokkaaja as toteuma_muutostiedot_muokkaaja
+       t.muokkaaja as toteuma_muutostiedot_muokkaaja,
+       t.tyokonetyyppi as tyokone_tyokonetyyppi,
+       t.tyokonetunniste as tyokone_tunnus
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
      JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
