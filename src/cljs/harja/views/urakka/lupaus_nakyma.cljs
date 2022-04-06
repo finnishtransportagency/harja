@@ -151,7 +151,9 @@
   (assert (#{:ennuste :toteuma :lupaus} (:tyyppi tiedot)) "Tyypin on oltava ennuste, toteuma tai lupaus")
   (let [oikeus-asettaa-luvatut-pisteet?
         (and
-          (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+          (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+            (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+            @istunto/kayttaja)
           (oikeudet/voi-kirjoittaa? oikeudet/urakat-valitavoitteet
                                     (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
