@@ -232,6 +232,7 @@
       (GET "/api/urakat/:id/ilmoitukset" request
         (kaynnista-ilmoitusten-kuuntelu db integraatioloki request)))
 
+    ;; Loppuaika ei ole pakollinen parametri, joten tehdään kaksi end pointtia saman asian käsittelyyn
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika/:loppuaika" request
@@ -240,6 +241,15 @@
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           false)))
+    (julkaise-reitti
+      http :hae-ilmoitukset-ytunnuksella
+      (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
+        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
+          json-skeemat/ilmoitusten-haku
+          (fn [parametrit kayttaja db]
+            (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
+          false)))
+
 
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
