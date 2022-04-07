@@ -172,11 +172,12 @@
   (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
     (ajastettu-tehtava/ajasta-paivittain
       paivittainen-tarkistusaika
-      (do
-        (log/info "ajasta-paivittain :: paivita-kanavasillat :: Alkaa " (pvm/nyt))
-        (fn [_]
-            (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-              (paivita-kanavasillat integraatioloki db url)))))))
+      (fn [_]
+        (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+          (do
+            (log/info "ajasta-paivittain :: paivita-kanavasillat :: Alkaa " (pvm/nyt))
+            (paivita-kanavasillat integraatioloki db url)
+            (log/info "ajasta-paivittain :: paivita-kanavasillat :: Päättyy " (pvm/nyt))))))))
 
 (defrecord KanavasiltojenGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle

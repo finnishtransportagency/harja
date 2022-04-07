@@ -87,10 +87,11 @@
   "Ajastetaan muistutukset urakan lupauksista ajettavaksi vain kuukauden ensimmäinen päivä."
   (ajastettu-tehtava/ajasta-paivittain
     [10 00 0] ; VHAR-5523: lähetetään virka-aikaan, jotta Destian päivystäjä ei herää turhaan
-    (do
-      (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Alkaa " (pvm/nyt))
-      (fn [_]
-        (muistutustehtava db fim email (pvm/nyt))))))
+    (fn [_]
+      (do
+        (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Alkaa " (pvm/nyt))
+        (muistutustehtava db fim email (pvm/nyt))
+        (log/info "ajasta-paivittain :: muistutus urakan lupauksista :: Loppuu " (pvm/nyt))))))
 
 (defrecord UrakanLupausMuistutukset []
   component/Lifecycle
