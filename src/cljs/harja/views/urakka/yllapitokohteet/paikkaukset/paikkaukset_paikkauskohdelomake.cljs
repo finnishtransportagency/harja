@@ -281,7 +281,9 @@
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata? tyomenetelmat]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                   (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                   @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
         urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
         pot-raportoitava? (= :pot (:toteumatyyppi lomake))
@@ -639,7 +641,9 @@
   Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
   [lomake tyomenetelmat]
   (let [
-        nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        nayta? (and (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                      (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                      @istunto/kayttaja)
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
                     (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
     nayta?))
@@ -947,7 +951,7 @@
         pmr-lomake-auki? (= :paikkauskohteen-muokkaus (:tyyppi pmr-lomake))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
+        tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? kayttajaroolit @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))

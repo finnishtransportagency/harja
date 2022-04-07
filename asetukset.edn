@@ -195,7 +195,9 @@
          :salasana #=(slurp "../.harja/velho-salasana")
          :varuste-api-juuri-url "https://api-v2.stg.velho.vayla.fi"
          :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
-         :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")}
+         :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")
+         :varuste-urakka-oid-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
+         :varuste-urakka-kohteet-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/kohteet"}
 
  :yha-velho {}
 

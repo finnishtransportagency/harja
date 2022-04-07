@@ -970,6 +970,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'"))))
 
+(defn hae-oulun-valaistusurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun valaistuksen palvelusopimus 2013-2050'"))))
+
 (defn hae-lapin-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -1683,3 +1688,8 @@
 (defn hae-ulos-lahtevat-integraatiotapahtumat []
   (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
+
+(defn hae-kaikki-integraatioviestit []
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
+                      osoite, kasitteleva_palvelin
+                 FROM integraatioviesti;")))
