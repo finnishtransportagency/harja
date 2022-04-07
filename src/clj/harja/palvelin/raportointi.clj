@@ -241,7 +241,7 @@
                                            (* 60 180)))))
 
 (defn paivita_raportti_pohjavesialueiden_suolatoteumat! [db]
-  (ajastettu-tehtava/ajasta-paivittain [3 30 0]
+  (ajastettu-tehtava/ajasta-paivittain [4 1 0]
                                        (fn [_]
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
