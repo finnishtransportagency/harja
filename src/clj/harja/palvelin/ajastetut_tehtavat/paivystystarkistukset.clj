@@ -7,6 +7,7 @@
             [harja.palvelin.palvelut.urakat :as urakat]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.pvm :as pvm]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [clj-time.core :as t]
             [harja.kyselyt.konversio :as konv]
@@ -113,16 +114,20 @@
 (defn tee-paivystyksien-tarkistustehtava
   "Tarkistaa, onko urakalle olemassa päivystys tarkistushetkeä seuraavana päivänä.
    Käsittelee vain ne urakat, jotka ovat voimassa annettuna päivänä."
-  [{:keys [db fim sonja-sahkoposti] :as this} paivittainen-aika]
+  [{:keys [db fim api-sahkoposti sonja-sahkoposti] :as this} paivittainen-aika]
   (log/debug "Ajastetaan päivystäjien tarkistus")
   (when paivittainen-aika
     (ajastettu-tehtava/ajasta-paivittain
      paivittainen-aika
-     (fn [_]
-       (lukot/yrita-ajaa-lukon-kanssa
-         db
-         "paivystystarkistukset"
-         #(paivystyksien-tarkistustehtava db fim sonja-sahkoposti (t/plus (t/now) (t/days 1))))))))
+      (do
+        (log/info "ajasta-paivittain :: paivystyksien-tarkistustehtava :: Alkaa " (pvm/nyt))
+        (fn [_]
+            (lukot/yrita-ajaa-lukon-kanssa
+              db
+              "paivystystarkistukset"
+              #(paivystyksien-tarkistustehtava db fim (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                                                        sonja-sahkoposti
+                                                        api-sahkoposti) (t/plus (t/now) (t/days 1)))))))))
 
 (defrecord Paivystystarkistukset [asetukset]
   component/Lifecycle

@@ -5,6 +5,7 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
              :as tarkastukset]
@@ -38,6 +39,7 @@
             [harja.tiedot.kanavat.urakka.toimenpiteet.kan-toimenpiteet-kartalla :as kan-toimenpiteet]
             [harja.tiedot.kanavat.urakka.laadunseuranta.hairiotilanteet-kartalla :as kan-hairiot]
             [harja.tiedot.urakka.paikkaukset-toteumat :as paikkaukset-toteumat]
+            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paallystysilmoitukset :as paikkaukset-paallystysilmoitukset]
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet-kartalle :as paikkaukset-paikkauskohteet-kartalle]
             [harja.tiedot.tieluvat.tieluvat-kartalla :as tieluvat]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla])
@@ -58,6 +60,7 @@
     :yks-hint-toteumat
     :kok-hint-toteumat
     :varusteet
+    :varusteet-ulkoiset
     :varustetoteumat
     :muut-tyot
     :paallystyskohteet
@@ -79,6 +82,7 @@
     :kan-hairiot
     :paikkaukset-toteumat
     :paikkaukset-paikkauskohteet
+    :paikkaukset-paallystysilmoitukset
     :tieluvat
     :maarien-toteumat})
 
@@ -231,6 +235,7 @@
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
    :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
    :varusteet varusteet/varusteet-kartalla
+   :varusteet-ulkoiset varusteet-kartalla/varusteet-kartalla
    :muut-tyot muut-tyot/muut-tyot-kartalla
    :paallystyskohteet paallystys/paallystyskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
@@ -250,6 +255,7 @@
    :suolatoteumat suolatoteumat/suolatoteumat-kartalla
    :paikkaukset-toteumat paikkaukset-toteumat/toteumat-kartalla
    :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/paikkauskohteet-kartalla
+   :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/paallystysilmoitukset-kartalla
    :tieluvat tieluvat/tieluvat-kartalla
    :maarien-toteumat maarien-toteumat-kartalla/toteumat-kartalla})
 
@@ -305,6 +311,7 @@
        :yks-hint-toteumat (taso :yks-hint-toteumat)
        :kok-hint-toteumat (taso :kok-hint-toteumat)
        :varusteet (taso :varusteet)
+       :varusteet-ulkoiset (taso :varusteet-ulkoiset)
        :muut-tyot (taso :muut-tyot)
        :paallystyskohteet (taso :paallystyskohteet)
        :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
@@ -320,6 +327,7 @@
        :suolatoteumat (taso :suolatoteumat)
        :paikkaukset-toteumat (taso :paikkaukset-toteumat)
        :paikkaukset-paikkauskohteet (taso :paikkaukset-paikkauskohteet :paikkaukset-paikkauskohteet 0.7)
+       :paikkaukset-paallystysilmoitukset (taso :paikkaukset-paallystysilmoitukset)
        :maarien-toteumat (taso :maarien-toteumat)
        :tieluvat (taso :tieluvat)
        ;; Yksittäisen näkymän omat mahdolliset geometriat
@@ -347,6 +355,7 @@
    :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
    :kok-hint-toteumat kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
    :varusteet varusteet/karttataso-varustetoteuma
+   :varusteet-ulkoiset varusteet-kartalla/karttataso-nakyvissa?
    :muut-tyot muut-tyot/karttataso-muut-tyot
    :paallystyskohteet paallystys/karttataso-paallystyskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite
@@ -364,6 +373,7 @@
    :suolatoteumat suolatoteumat/karttataso-suolatoteumat
    :paikkaukset-toteumat paikkaukset-toteumat/taso-nakyvissa?
    :paikkaukset-paikkauskohteet paikkaukset-paikkauskohteet-kartalle/karttataso-nakyvissa?
+   :paikkaukset-paallystysilmoitukset paikkaukset-paallystysilmoitukset/karttataso-nakyvissa?
    :maarien-toteumat maarien-toteumat-kartalla/karttataso-nakyvissa?
    :tieluvat tieluvat/karttataso-tieluvat
    :nakyman-geometriat (atom true)

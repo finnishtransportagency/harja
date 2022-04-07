@@ -32,7 +32,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-valitavoitteet +kayttaja-jvh+ (hae-oulun-alueurakan-2014-2019-id))]
 
-    (log/debug vastaus)
+    ;(log/debug vastaus)
     (is (>= (count vastaus) 4)))
 
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -105,7 +105,7 @@
       (is (nil? (:valmis-kommentti vt3))))
 
     ;; Päivitys toimii
-    (let [paivitetty-yllapitokohde (hae-yllapitokohde-oulun-ohitusramppi)
+    (let [paivitetty-yllapitokohde (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
           muokattu-vt (->> vt-lisayksen-jalkeen
                            (filter #(or (= (:nimi %) "testi566")
                                         (= (:nimi %) "testi34554")))

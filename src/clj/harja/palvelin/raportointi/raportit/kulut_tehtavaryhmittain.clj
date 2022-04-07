@@ -3,7 +3,7 @@
     [clojure.string :as cstr]
     [harja.kyselyt
      [urakat :as urakat-q]
-     [laskut :as kulut-q]
+     [kulut :as kulut-q]
      [budjettisuunnittelu :as budjetti-q]]
     [harja.pvm :as pvm]))
 
@@ -84,8 +84,10 @@
           (pvm/nyt)
 
           (pvm/sama-tai-ennen? loppupvm (pvm/nyt))
-          loppupvm)
-
+          (-> loppupvm
+            pvm/vuosi
+            pvm/hoitokauden-loppupvm))
+        
         kaikki-rivit-alusta (group-by :nimi
                                       (concat
                                         (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi

@@ -20,11 +20,12 @@
       false
       true)))
 
-(defn- siirra-kustannukset
+(defn siirra-kustannukset
   "Kustannukset siirretään aina kuukauden ensimmäisenä päivänä, jotta saadaan edellisen kuukauden kaikki
   budjetoidut kustannukset matkaan."
-  [db]
-  (let [nyt (pvm/nyt)
+  [db & args]
+  (let [annettu-nyt (first args)
+        nyt (or annettu-nyt (pvm/nyt))
         nyt-vuosi (pvm/vuosi nyt)
         nyt-kuukausi (pvm/kuukausi nyt)
         nyt-paiva (pvm/paiva nyt)
@@ -47,7 +48,7 @@
     (if (not onko-siirto-tehty?)
       (do
         ;; Siirrä rivit
-        (q/siirra-budjetoidut-tyot-toteutumiin db)
+        (q/siirra-budjetoidut-tyot-toteutumiin db {:pvm nyt})
 
         (println "Siirto valamis!"))
       (log/info "Ei tehdä toista kertaa."))))
@@ -55,11 +56,13 @@
 (defn- ajasta [db]
   (log/info "Ajastetaan kustannusarvoidun_tyon siirto toteutuneet_kustannukset tauluun joka päivä.")
   (ajastettu-tehtava/ajasta-paivittain [1 40 0]
-                                       (fn [_]
-                                         (lukot/yrita-ajaa-lukon-kanssa
-                                           db
-                                           "kustannusarvoidun_tyon_siirto"
-                                           #(siirra-kustannukset db)))))
+    (do
+      (log/info "ajasta-paivittain :: siirra-kustannukset :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "kustannusarvoidun_tyon_siirto"
+            #(siirra-kustannukset db))))))
 
 (defrecord KustannusarvioidenToteumat []
   component/Lifecycle

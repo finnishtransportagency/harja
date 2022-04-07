@@ -1,6 +1,9 @@
 -- Luodaan Liikennevirasto
 INSERT INTO organisaatio (tyyppi, nimi, lyhenne, ytunnus) VALUES ('liikennevirasto','Liikennevirasto','Livi', '1010547-1');
 
+-- Luodaan apufunktiot testidatalle
+\i testidata/apufunktiot.sql
+
 -- Luodaan hallintayksikot (ELY-keskukset)
 \i testidata/elyt.sql
 
@@ -65,6 +68,9 @@ SELECT paivita_pohjavesialueet();
 -- Toteumat
 \i testidata/toteumat.sql
 
+-- Varustetoteumat ulkoisista järjestelmistä
+\i testidata/varustetoteumat_ulkoiset.sql
+
 -- Kustannussuunnitelma
 \i testidata/kustannussuunnittelu.sql
 
@@ -119,6 +125,9 @@ INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoit
 
 -- Lämpötilat
 \i testidata/lampotilat.sql
+
+-- Lupaukset
+\i testidata/lupaus_testidata.sql
 
 -- Välitavoitteet
 \i testidata/valitavoitteet.sql
@@ -180,4 +189,12 @@ SELECT paivita_kaikki_sopimuksen_kaytetty_materiaali();
 -- Välikatselmusten tiedot
 \i testidata/kulut/valikatselmus.sql
 
-SELECT paivita_raportti_cachet();
+-- Tilaajan-konsultti organisaatio
+\i testidata/tilaajan-konsultit.sql
+
+-- Suunnitellut kulut Kittilän urakan 1. vuodelle vuoden päätöstä varten.
+\i testidata/vuodenpaatos.sql
+
+SELECT paivita_raportti_toteutuneet_materiaalit();
+SELECT paivita_raportti_pohjavesialueiden_suolatoteumat();
+SELECT paivita_raportti_toteuma_maarat();

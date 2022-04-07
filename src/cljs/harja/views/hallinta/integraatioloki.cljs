@@ -128,14 +128,14 @@
                                                               [(:pvm (first rivit))
                                                                (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
     [:span.pylvaat
-     [:h5 (str "Vastaanotetut pyynnöt " eka-pvm " - " vika-pvm)]
+     [:h5 (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa)")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))
                             (js/Math.round (* .5 lkm-max))
                             (js/Math.round (* .75 lkm-max))
                             lkm-max])
-           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 10)]
+           nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 100)]
        [vis/bars {:width w
                   :height (min 200 h)
                   :label-fn #(if nayta-labelit?
@@ -211,59 +211,57 @@
             (vec (concat [nil] (sort (:integraatiot @tiedot/valittu-jarjestelma))))]])
 
 
-        (if @tiedot/nayta-uusimmat-tilassa?
-          [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-tapahtumat-eilisen-jalkeen)} "Näytä/hae aikaväliltä"]
-          [:span
-           [valinnat/aikavali tiedot/valittu-aikavali]
-           [:button.nappi-ensisijainen {:on-click #(tiedot/nayta-uusimmat-tapahtumat!)} "Näytä uusimmat"]])
-
+        [valinnat/aikavali tiedot/valittu-aikavali {:tyyppi :pvm-aika}]
+        [lomake/lomake
+         {:otsikko "Vapaaehtoiset tarkemmat hakuehdot"
+          :muokkaa! #(reset! tiedot/hakuehdot %)}
+         [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
+           :valinta-arvo first
+           :valinta-nayta second
+           :valinnat [[:kaikki "Kaikki"]
+                      [:onnistuneet "Onnistuneet"]
+                      [:epaonnistuneet "Epäonnistuneet"]]}
+          {:otsikko "Tapahtuman kesto minuuteissa yli"
+           :nimi :tapahtumien-kesto
+           :tyyppi :positiivinen-numero
+           :kokonaisluku? true}
+          (lomake/ryhma
+            {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
+            {:otsikko "Otsikot"
+             :nimi :otsikot
+             :tyyppi :string}
+            {:otsikko "Parametrit"
+             :nimi :parametrit
+             :tyyppi :string}
+            {:otsikko "Viestin sisältö"
+             :nimi :viestin-sisalto
+             :tyyppi :string})
+          (lomake/rivi
+            {:nimi :hae
+             :tyyppi :komponentti
+             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
+            {:nimi :tyhjenna
+             :tyyppi :komponentti
+             :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
+                                                                            tiedot/hakuehdot
+                                                                            dissoc :otsikot :parametrit :viestin-sisalto)}
+                                   "Tyhjennä"])})]
+         @tiedot/hakuehdot]
 
         (if-not (empty? @tiedot/tapahtumien-maarat)
           [:div.integraatio-tilastoja
            [tapahtumien-maarat-graafi @tiedot/tapahtumien-maarat]
            (when-not @tiedot/valittu-integraatio
              [eniten-kutsutut-integraatiot @tiedot/tapahtumien-maarat])]
-          [:div "Ei pyyntöjä annetuilla parametreillä"])
-
-        (when (not @tiedot/nayta-uusimmat-tilassa?)
-          [lomake/lomake
-           {:otsikko "Hakuehdot"
-            :muokkaa! #(reset! tiedot/hakuehdot %)}
-           [{:otsikko "Tapahtumien tila" :nimi :tapahtumien-tila :tyyppi :valinta
-             :valinta-arvo first
-             :valinta-nayta second
-             :valinnat [[:kaikki "Kaikki"]
-                        [:onnistuneet "Onnistuneet"]
-                        [:epaonnistuneet "Epäonnistuneet"]]}
-            {:otsikko "Tapahtuman kesto minuuteissa yli"
-             :nimi :tapahtumien-kesto
-             :tyyppi :positiivinen-numero
-             :kokonaisluku? true}
-            (lomake/ryhma
-              {:otsikko "Vapaasanahaut (Huom. voivat olla todella hitaita)"}
-              {:otsikko "Otsikot"
-               :nimi :otsikot
-               :tyyppi :string}
-              {:otsikko "Parametrit"
-               :nimi :parametrit
-               :tyyppi :string}
-              {:otsikko "Viestin sisältö"
-               :nimi :viestin-sisalto
-               :tyyppi :string})
-            (lomake/rivi
-              {:nimi :hae
-               :tyyppi :komponentti
-               :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(tiedot/hae-tapahtumat!)} "Hae"])}
-              {:nimi :tyhjenna
-               :tyyppi :komponentti
-               :komponentti (fn [_] [:button.nappi-ensisijainen {:on-click #(swap!
-                                                                              tiedot/hakuehdot
-                                                                              dissoc :otsikot :parametrit :viestin-sisalto)}
-                                     "Tyhjennä"])})]
-           @tiedot/hakuehdot])
+          [:div "Ei saatu tapahtumien määriä haettua, yritä eri ehdoilla uudelleen."])
 
         [grid
-         {:otsikko (if @tiedot/nayta-uusimmat-tilassa? "Uusimmat tapahtumat" "Tapahtumat")
+         {:otsikko (str "Tapahtumat "
+                        (when @tiedot/valittu-integraatio
+                          (str "integraatiossa "
+                               (:jarjestelma @tiedot/valittu-jarjestelma) " / "
+                               @tiedot/valittu-integraatio " välillä "))
+                        (pvm/aikavali-kellonajan-kanssa @tiedot/valittu-aikavali))
           :tyhja (if @tiedot/haetut-tapahtumat "Ei tapahtumia" [ajax-loader "Haetaan tapahtumia"])
           :vetolaatikot (into {}
                               (map (juxt :id (fn [tapahtuma]
@@ -316,13 +314,11 @@
 (defn aloita-tapahtumien-paivitys! []
   (let [paivita? (atom true)]
     (go
-      (when @tiedot/nayta-uusimmat-tilassa?
-        (tiedot/hae-tapahtumat!))
       (<! (timeout 2000))
       (loop []
         (<! (timeout 20000))
         (when @paivita?
-          (when (and @tiedot/hae-automaattisesti? @tiedot/nayta-uusimmat-tilassa?)
+          (when @tiedot/hae-automaattisesti?
             (tiedot/hae-tapahtumat!))
           (recur))))
     #(reset! paivita? false)))                                ;; palautetaan pysäytysfunktio jota komp/ulos kutsuu
@@ -331,8 +327,7 @@
   (komp/luo
     (komp/ulos (aloita-tapahtumien-paivitys!))
     (komp/lippu tiedot/nakymassa?)
-    (komp/sisaan #(when-not (empty? @tiedot/tapahtuma-id)
-                    (tiedot/hae-tapahtumat!)))
+    (komp/sisaan #(tiedot/hae-tapahtumat!))
     (fn []
       (if @tiedot/haetut-tapahtumat
         [:div.integraatioloki

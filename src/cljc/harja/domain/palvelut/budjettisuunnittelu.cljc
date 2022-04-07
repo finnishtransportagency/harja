@@ -4,24 +4,28 @@
 (def tallennettava-asia #{:hoidonjohtopalkkio
                           :toimistokulut
                           :erillishankinnat
-                          :rahavaraus-lupaukseen-1
+
+                          ;; -- Hankintakustannukset --
+                          ;; Toimenpiteen rahavaraukset
                           :kolmansien-osapuolten-aiheuttamat-vahingot
                           :akilliset-hoitotyot
+                          :tunneleiden-hoidot
+                          :rahavaraus-lupaukseen-1
+                          :muut-rahavaraukset
+
+                          ;; Toimenpiteen määrämitattavat työt
                           :toimenpiteen-maaramitattavat-tyot
+                          ;; --
+
+                          ;; Tilaajan varaukset
                           :tilaajan-varaukset})
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
 
-(defn maksukauden-kuukaudet [maksukausi]
-  (case maksukausi
-    :molemmat (vec (range 1 13))
-    :talvi (vec (concat (range 1 5) (range 10 13)))
-    :kesa (vec (range 5 10))
-    (vec (range 1 13))))
-
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 (s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 
+(s/def ::osio keyword?)
 (s/def ::vuosi ::positive-int?)
 (s/def ::kuukausi (s/and integer?
                          #(<= 1 % 12)))
@@ -69,7 +73,8 @@
                                     :ennen-urakkaa (fn [ajat]
                                                      (= 1 (count (distinct ajat)))))))
 
-(s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta ::kattohinta])
+(s/def ::tavoitteet (s/coll-of (s/keys :req-un [::hoitokausi ::tavoitehinta]
+                                 :opt-un [::kattohinta])
                                :kind vector?))
 
 (s/def ::indeksi (s/keys :req-un [::vuosi ::indeksikerroin]))
@@ -84,23 +89,28 @@
 
 (s/def ::ennen-urakkaa? boolean?)
 
+;; TODO: Lisää ::muutos
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
                                                              :opt-un [::toimenkuva-id ::toimenkuva ::maksukausi]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
-(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
+;; TODO: Lisää ::muutos
+(s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::osio ::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
                                                        :opt-un [::summa]))
 (s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
+;; TODO: Lisää ::muutos
 (s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat]
-                                                       :opt-n [::summa]))
+                                                       :opt-un [::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)
 
 (s/def ::tallenna-budjettitavoite-kysely (s/keys :req-un [::urakka-id ::tavoitteet]))
 (s/def ::tallenna-budjettitavoite-vastaus any?)
 
 (s/def ::budjettisuunnittelun-indeksit-kysely (s/keys :req-un [::urakka-id]))
-(s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of ::indeksi :count 5))
+(s/def ::budjettisuunnittelun-indeksit-vastaus (s/coll-of
+                                                 (s/or :nil nil? :indeksi ::indeksi)
+                                                 :count 5))
 
 (s/def ::tallenna-toimenkuva-kysely (s/keys :req-un [::urakka-id ::toimenkuva-id ::toimenkuva]))
 (s/def ::tallenna-toimenkuva-vastaus #(or (contains? % :onnistui?)

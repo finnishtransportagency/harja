@@ -221,6 +221,12 @@
   (when dt
     (java.util.Date. (.getTime dt))))
 
+(defn sql-date->paiva-aika-str
+  "Parsii annetun java.sql.Date:n suomalaiseksi päivämääräksi ja ajaksi."
+  [^java.sql.Date dt]
+  (let [j-date (java-date dt)]
+    (str (pvm/pvm j-date) " " (pvm/aika j-date))))
+
 (defn unix-date->java-date
   "Luo java.util.Date objektin annetusta unix-timestampista (sekunteja)."
   [unix-date]
@@ -244,7 +250,8 @@
   "Sopii json/write-str:n :value-fn käyttöön"
   [key value]
   (if (or (= java.sql.Date (type value))
-          (= java.sql.Timestamp (type value)))
+          (= java.sql.Timestamp (type value))
+          (= java.util.Date (type value)))
     (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
     value))
 

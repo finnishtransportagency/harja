@@ -135,37 +135,36 @@
     (testing "Kustannusarvioidut työt on oikein"
       (let [kustannusarvioidut-tyot-toimenpiteittain (group-by :toimenpide-avain (:kustannusarvioidut-tyot budjetoidut-tyot))]
         (doseq [[toimenpide-avain tehtavat] kustannusarvioidut-tyot-toimenpiteittain
-                :let [ryhmiteltyna (group-by (juxt :tyyppi :haettu-asia) tehtavat)]]
+                :let [ryhmiteltyna (group-by (juxt :haettu-asia :tyyppi) tehtavat)]]
           (case toimenpide-avain
             :paallystepaikkaukset (is (= ryhmiteltyna {}))
             :mhu-yllapito (do
-                            (is (= (keys ryhmiteltyna) [["muut-rahavaraukset" :rahavaraus-lupaukseen-1]]))
+                            (is (= (into #{} (keys ryhmiteltyna))
+                                  #{[:rahavaraus-lupaukseen-1 "muut-rahavaraukset"]
+                                    [:muut-rahavaraukset "muut-rahavaraukset"]}))
                             (testaa-ajat tehtavat toimenpide-avain))
             :talvihoito (do
-                          (is (= (into #{} (keys ryhmiteltyna))
-                                 #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                   ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                          (is (= ryhmiteltyna {}))
                           (doseq [[_ tehtavat] ryhmiteltyna]
                             (testaa-ajat tehtavat toimenpide-avain)))
             :liikenneympariston-hoito (do
                                         (is (= (into #{} (keys ryhmiteltyna))
-                                               #{["laskutettava-tyo" nil] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
-                                                 ["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                                 ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                               #{[nil "laskutettava-tyo"] ;; Tässä testidatassa on siis painettu päälle "Haluan suunnitella myös määrämitattavia töitä toimenpiteelle"
+                                                 [:kolmansien-osapuolten-aiheuttamat-vahingot "vahinkojen-korjaukset"]
+                                                 [:akilliset-hoitotyot "akillinen-hoitotyo"]
+                                                 [:tunneleiden-hoidot "muut-rahavaraukset"]}))
                                         (doseq [[_ tehtavat] ryhmiteltyna]
                                           (testaa-ajat tehtavat toimenpide-avain)))
             :sorateiden-hoito (do
-                                (is (= (into #{} (keys ryhmiteltyna))
-                                       #{["vahinkojen-korjaukset" :kolmansien-osapuolten-aiheuttamat-vahingot]
-                                         ["akillinen-hoitotyo" :akilliset-hoitotyot]}))
+                                (is (= ryhmiteltyna {}))
                                 (doseq [[_ tehtavat] ryhmiteltyna]
                                   (testaa-ajat tehtavat toimenpide-avain)))
             :mhu-korvausinvestointi (is (= ryhmiteltyna {}))
             :mhu-johto (do
                          (is (= (into #{} (keys ryhmiteltyna))
-                                #{["laskutettava-tyo" :erillishankinnat]
-                                  ["laskutettava-tyo" :toimistokulut]
-                                  ["laskutettava-tyo" :hoidonjohtopalkkio]}))
+                                #{[:erillishankinnat "laskutettava-tyo"]
+                                  [:toimistokulut "laskutettava-tyo"]
+                                  [:hoidonjohtopalkkio "laskutettava-tyo"]}))
                          (doseq [[_ tehtavat] ryhmiteltyna]
                            (testaa-ajat tehtavat toimenpide-avain)))))))
     (testing "Johto ja hallintokorvaukset ovat oikein"
@@ -232,17 +231,27 @@
         rovaniemen-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
         ivalon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
         pellon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
-    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")))
+    (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
+
+    ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
+    ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
+    (is (= 1.068 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+
+(deftest indeksikorjauksen-laskenta
+  (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
 
 (deftest tallenna-kiinteahintaiset-tyot
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         tallennettava-data (data-gen/tallenna-kiinteahintaiset-tyot-data urakka-id)
         paivitettava-data (mapv (fn [data]
                                   (-> data
                                       (update :ajat (fn [ajat]
                                                       (drop (int (/ (count ajat) 2)) ajat)))
                                       (assoc :summa (gen/generate (s/gen ::bs-p/summa)))))
-                                tallennettava-data)]
+                            tallennettava-data)]
     (testing "Tallennus onnistuu"
       (doseq [tyo tallennettava-data]
         (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
@@ -259,12 +268,26 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
+              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, luotu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))]
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
                       data-kannassa)
               (str "Summa ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (if (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+                            true)))
+                data-kannassa)
+            (str "Summien indeksikorjaukset eivät tallentuneet oikein toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) ajat))
               (str "Ajat eivät tallentuneet kantaan oikein toimenpiteelle " toimenpide-avain)))))
@@ -284,7 +307,7 @@
                                 :mhu-johto "23151")
               toimenpide-id (ffirst (q (str "SELECT id FROM toimenpidekoodi WHERE taso = 3 AND koodi = '" toimenpidekoodi "';")))
               toimenpideinstanssi (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " AND toimenpide = " toimenpide-id ";")))
-              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
+              data-kannassa (q-map (str "SELECT vuosi, kuukausi, summa, summa_indeksikorjattu, muokattu, toimenpideinstanssi FROM kiinteahintainen_tyo WHERE toimenpideinstanssi=" toimenpideinstanssi ";"))
               [vanha-summa vanhat-ajat] (some (fn [{v-tpa :toimenpide-avain
                                                     summa :summa
                                                     ajat :ajat}]
@@ -308,6 +331,19 @@
                                       vanhat-ajat))
                               data-kannassa))
               (str "Vanhat summat ei pysy kannassa oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (if (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+                            true)))
+                data-kannassa)
+            (str "Summien indeksikorjaukset eivät päivittyneet oikein summman päivityksen jälkeen toimenpiteelle " toimenpide-avain))
           (is (every? #(= (float (:summa %))
                           (float paivitetty-summa))
                       paivitetty-data-kannassa)
@@ -317,6 +353,8 @@
   (let [{urakka-id :id urakan-alkupvm :alkupvm urakan-loppupvm :loppupvm} (first (q-map (str "SELECT id, alkupvm, loppupvm
                                                                                               FROM   urakka
                                                                                               WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         muodosta-ajat (fn [vuosi]
                         (let [ensimmaisen-vuoden-ajat (map (fn [kk]
                                                              {:vuosi vuosi
@@ -329,6 +367,7 @@
                           (into []
                                 (concat ensimmaisen-vuoden-ajat
                                         toisen-vuoden-ajat))))
+        ;; Hox: Avain "tyyppi" tarkoittaa tässä toteumatyyppiä.
         tallennetun-asian-data? (fn [tallennettava-asia {:keys [tyyppi tehtava tehtavaryhma tk_yt tr_yt]}]
                                   (case tallennettava-asia
                                     :hoidonjohtopalkkio (and (= tyyppi "laskutettava-tyo")
@@ -341,20 +380,23 @@
                                                            (= tr_yt mhu/erillishankinnat-tunniste)
                                                            (nil? tehtava))
                                     :rahavaraus-lupaukseen-1 (and (= tyyppi "muut-rahavaraukset")
-                                                                  (= tr_yt mhu/rahavaraus-lupaukseen-1-tunniste)
-                                                                  (nil? tehtava))
+                                                                  (= tk_yt mhu/rahavaraus-lupaukseen-1-mhu-yllapito-tunniste)
+                                                                  (nil? tehtavaryhma))
+                                    :muut-rahavaraukset (and (= tyyppi "muut-rahavaraukset")
+                                                          (= tk_yt mhu/muut-rahavaraukset-mhu-yllapito-tunniste)
+                                                          (nil? tehtavaryhma))
                                     :kolmansien-osapuolten-aiheuttamat-vahingot (and (= tyyppi "vahinkojen-korjaukset")
-                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-sorateiden-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste
-                                                                                                 mhu/kolmansien-osapuolten-vahingot-talvihoito-tunniste}
+                                                                                     (contains? #{mhu/kolmansien-osapuolten-vahingot-liikenneympariston-hoito-tunniste}
                                                                                                 tk_yt)
                                                                                      (nil? tehtavaryhma))
                                     :akilliset-hoitotyot (and (= tyyppi "akillinen-hoitotyo")
-                                                              (contains? #{mhu/akilliset-hoitotyot-sorateiden-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste
-                                                                           mhu/akilliset-hoitotyot-talvihoito-tunniste}
+                                                              (contains? #{mhu/akilliset-hoitotyot-liikenneympariston-hoito-tunniste}
                                                                          tk_yt)
                                                               (nil? tehtavaryhma))
+                                    :tunneleiden-hoidot (and (= tyyppi "muut-rahavaraukset")
+                                                          (contains? #{mhu/tunneleiden-hoito-liikenneympariston-hoito-tunniste}
+                                                            tk_yt)
+                                                          (nil? tehtavaryhma))
                                     :toimenpiteen-maaramitattavat-tyot (and (= tyyppi "laskutettava-tyo")
                                                                             (nil? tehtava)
                                                                             (nil? tehtavaryhma))
@@ -388,18 +430,42 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu, kt.luotu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                 tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                          FROM kustannusarvioitu_tyo kt
                                            LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
                                            LEFT JOIN tehtavaryhma tr ON tr.id = kt.tehtavaryhma
                                          WHERE kt.toimenpideinstanssi=" toimenpideinstanssi ";")))
               tallennetun-asian-data-kannassa (filter #(tallennetun-asian-data? tallennettava-asia %) data-kannassa)]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (every? :luotu data-kannassa) "Luomisaika ei tallennettu")
           (is (every? #(= (float (:summa %))
                           (float summa))
                       tallennetun-asian-data-kannassa)
               (str "Summa ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (cond
+                            ;; Tilaajan varauksille ei koskaan lasketa indeksikorjauksia, joten summa_indeksikorjattu pitäis olla aina nil
+                            (= tallennettava-asia :tilaajan-varaukset)
+                            (= summa_indeksikorjattu nil)
+
+                            ;; Muille toimenpitetyypeille lasketaan indeksikorjaukset, joten summan pitäisi täsmätä,
+                            ;; jos summa ja indeksikerroin on saatavilla hoitovuodelle.
+                            (and summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin summa)) summa_indeksikorjattu)
+
+                            ;; Päästä läpi kaikki muu
+                            :else true)))
+                tallennetun-asian-data-kannassa)
+            (str "Summan indeksikorjaus ei tallentunut oikein toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) tallennetun-asian-data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) (mapcat (fn [{:keys [vuosi]}]
                                                             (muodosta-ajat vuosi))
@@ -425,7 +491,8 @@
                                    (-> data
                                        (update :tk_yt str)
                                        (update :tr_yt str)))
-                                 (q-map (str "SELECT kt.vuosi, kt.kuukausi, kt.summa, kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
+                                 (q-map (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.summa, kt.summa_indeksikorjattu,
+                                                     kt.muokattu, kt.tyyppi, tk.nimi AS tehtava, tr.nimi AS tehtavaryhma,
                                                      tk.yksiloiva_tunniste AS tk_yt, tr.yksiloiva_tunniste AS tr_yt
                                               FROM kustannusarvioitu_tyo kt
                                                 LEFT JOIN toimenpidekoodi tk ON tk.id = kt.tehtava
@@ -450,6 +517,7 @@
               uusi-data-kannassa (remove (fn [{muokattu :muokattu}]
                                            (nil? muokattu))
                                          tallennetun-asian-data-kannassa)]
+          (is (every? (comp #(= "hankintakustannukset" %) :osio) data-kannassa) "Osio ei tallennettu oikein")
           (is (not (empty? uusi-data-kannassa)) "Muokkausaika ei tallennettu")
           (is (kokonaisia-hoitokausia? vanha-data-kannassa) "Vanha data kannassa ei käsitä kokonaisia hoitokausia")
           (is (kokonaisia-hoitokausia? uusi-data-kannassa) "Päivitetty data kannassa ei käsitä kokonaisia hoitokausia")
@@ -457,10 +525,34 @@
                           (float vanha-summa))
                       vanha-data-kannassa)
               (str "Vanha summa ei ole oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
           (is (every? #(= (float (:summa %))
                           (float paivitetty-summa))
                       uusi-data-kannassa)
               (str "Päivitetty summa ei ole oikein päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
+          ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+          (is (every? (fn [{:keys [vuosi kuukausi summa summa_indeksikorjattu]}]
+                        (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                           urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                            vuosi
+                                                            kuukausi 1))
+                              kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                          (cond
+                            ;; Tilaajan varauksille ei koskaan lasketa indeksikorjauksia, joten summa_indeksikorjattu pitäis olla aina nil
+                            (= tallennettava-asia :tilaajan-varaukset)
+                            (= summa_indeksikorjattu nil)
+
+                            ;; Muille toimenpitetyypeille lasketaan indeksikorjaukset, joten summan pitäisi täsmätä,
+                            ;; jos summa ja indeksikerroin on saatavilla hoitovuodelle.
+                            (and paivitetty-summa kerroin)
+                            (= (bigdec (bs/indeksikorjaa kerroin paivitetty-summa)) summa_indeksikorjattu)
+
+                            ;; Päästä läpi kaikki muu
+                            :else true)))
+                uusi-data-kannassa)
+            (str "Summien indeksikorjaukset eivät päivittyneet oikein summien päivityksen jälkeen toimenpiteelle " toimenpide-avain))
+
           (is (= (sort-by (juxt :vuosi :kuukausi) (map #(select-keys % #{:vuosi :kuukausi}) vanha-data-kannassa))
                  (sort-by (juxt :vuosi :kuukausi) (mapcat (fn [{:keys [vuosi]}]
                                                             (muodosta-ajat vuosi))
@@ -474,8 +566,11 @@
 
 (deftest tallenna-johto-ja-hallintokorvaukset
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        urakan-aloitus-vuosi (pvm/vuosi (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id))))
-        paivitys-hoitokaudennumero 3
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        paivitys-hoitokaudennumero 1
         tallennettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)
         paivitettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi {:hoitokaudet (into #{} (range paivitys-hoitokaudennumero 6))
                                                                                                            :ennen-urakkaa-mukaan? false})]
@@ -484,7 +579,7 @@
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
                                                  tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
@@ -524,9 +619,19 @@
                                                               %)
                                                            tallennettu-data-maksukaudelle)]]
             (is (= (-> jhk
-                       (update :tunnit float)
-                       (update :tuntipalkka float))
-                   (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :vuosi :kuukausi :osa-kuukaudesta})))))
+                     (update :tunnit float)
+                     (update :tuntipalkka float)
+                     (assoc :tuntipalkka_indeksikorjattu
+                            ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+                            (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                               urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                                vuosi
+                                                                kuukausi 1))
+                                  kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                              (when (and (:tuntipalkka jhk) kerroin)
+                                (bigdec (bs/indeksikorjaa kerroin (:tuntipalkka jhk)))))))
+                   (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :tuntipalkka_indeksikorjattu
+                                                               :vuosi :kuukausi :osa-kuukaudesta})))))
         (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
         (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))))
     (testing "Päivitys onnistuu"
@@ -534,7 +639,7 @@
         (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
           (is (:onnistui? vastaus) (str "Päivittäminen ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
     (testing "Päivitetty data kannassa on oikein"
-      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.kuukausi, j_h.vuosi,
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
                                                  tk.toimenkuva, j_h.muokattu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
                                           FROM johto_ja_hallintokorvaus j_h
                                             JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
@@ -570,11 +675,21 @@
                                                                    (not ennen-urakkaa?))
                                                           vanha-jhkt))
                                                       tallennettava-data))
-                paivitetyt-tallennettava-jhkt (keep (fn [data]
-                                                      (-> data
-                                                          (update :tunnit float)
-                                                          (update :tuntipalkka float)))
-                                                    jhk-tiedot)
+                paivitetyt-tallennettava-jhkt
+                (keep (fn [data]
+                        (-> data
+                          (update :tunnit float)
+                          (update :tuntipalkka float)
+                          (assoc :tuntipalkka_indeksikorjattu
+                                 ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+                                 (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                    urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                                     (:vuosi data)
+                                                                     (:kuukausi data) 1))
+                                       kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                                   (when (and (:tuntipalkka data) kerroin)
+                                     (bigdec (bs/indeksikorjaa kerroin (:tuntipalkka data))))))))
+                  jhk-tiedot)
                 vanhat-kannassa-jhkt (keep (fn [{:keys [hoitokausi] :as data}]
                                              (when (and (< hoitokausi
                                                            paivitys-hoitokaudennumero)
@@ -598,8 +713,12 @@
             (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-tallennettava-jhkt))
                    (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) vanhat-kannassa-jhkt)))
                 (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))
-            (is (= (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-tallennettava-jhkt))
-                   (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-kannassa-jhkt)))
+            (is (= (sort-by sorttaus-fn (map #(select-keys %
+                                                #{:vuosi :kuukausi :tunnit :tuntipalkka :tuntipalkka_indeksikorjattu :osa-kuukaudesta})
+                                          paivitetyt-tallennettava-jhkt))
+                   (sort-by sorttaus-fn (map #(select-keys %
+                                                #{:vuosi :kuukausi :tunnit :tuntipalkka :tuntipalkka_indeksikorjattu :osa-kuukaudesta})
+                                          paivitetyt-kannassa-jhkt)))
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
 
 (deftest budjettitavoite-haku
@@ -628,6 +747,8 @@
 
 (deftest budjettitavoite-tallennus
   (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
         paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
         kerroin 1.1
@@ -640,31 +761,74 @@
                                                         :paivitys (* kerroin paivitetty-tavoitehinta)}})
                                         (range 1 5))
         pyorista (fn [x] (with-precision 6 (float x)))]
+    (testing "Tallennus epäonnistuu jos kattohinta on pienepmi kuin tavoitehinta"
+      (try (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+             {:urakka-id urakka-id
+              :tavoitteet (mapv (fn [tavoite]
+                                  (-> tavoite
+                                    (assoc :tavoitehinta (+ 10 uusi-tavoitehinta))
+                                    (assoc :kattohinta uusi-tavoitehinta)))
+                            tallennettavat-tavoitteet)})
+           (is false "Budjettitavoitteen tallennus onnistui vaikka tavoitehinta ylitti kattohinnan")
+           (catch IllegalArgumentException e
+             (is (= "Tavoitehinta on suurempi tai yhtäsuuri kuin kattohinta hoitokausilla 1, 2, 3, 4" (ex-message e))))))
+    (testing "Tallennus onnistuu ilman kattohintaa"
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (mapv (fn [tavoite]
+                                           (-> tavoite
+                                             (update :tavoitehinta get :uusi)
+                                             (dissoc :kattohinta)))
+                                     tallennettavat-tavoitteet)})]
+        (is (:onnistui? vastaus) "Budjettitavoitteen tallentaminen ei onnistunut ilman kattohintaa") ))
     (testing "Tallennus onnistuu"
-      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :tavoitteet (mapv (fn [tavoite]
-                                                                                                      (-> tavoite
-                                                                                                          (update :tavoitehinta get :uusi)
-                                                                                                          (update :kattohinta get :uusi)))
-                                                                                                    tallennettavat-tavoitteet)})]
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (mapv (fn [tavoite]
+                                           (-> tavoite
+                                             (update :tavoitehinta get :uusi)
+                                             (update :kattohinta get :uusi)))
+                                     tallennettavat-tavoitteet)})]
         (is (:onnistui? vastaus) "Budjettitavoitteen tallentaminen ei onnistunut")))
     (testing "Data kannassa on oikein"
       (let [data-kannassa (q-map (str "SELECT *
                                        FROM urakka_tavoite
                                        WHERE urakka = " urakka-id ";"))]
         (is (every? :luotu data-kannassa) "Luotu aikaa ei kannassa budjettitavoitteelle")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")))
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista uusi-tavoitehinta) 0.001) data-kannassa) "Tavoitehinta ei tallentunut kantaan oikein")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) data-kannassa) "Kattohinta ei tallentunut kantaan oikein")
+
+        ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+        (is (every? (fn [{:keys [hoitokausi tavoitehinta tavoitehinta_indeksikorjattu]}]
+                      (let [kerroin (bs/indeksikerroin urakan-indeksit hoitokausi)]
+                        (if kerroin
+                          (= (bigdec (bs/indeksikorjaa kerroin tavoitehinta)) tavoitehinta_indeksikorjattu)
+                          true)))
+              data-kannassa)
+          "Tavoitehinnan indeksikorjausta ei tallennettu oikein")
+
+        (is (every? (fn [{:keys [hoitokausi kattohinta kattohinta_indeksikorjattu]}]
+                      (let [kerroin (bs/indeksikerroin urakan-indeksit hoitokausi)]
+                        (if kerroin
+                          (= (bigdec (bs/indeksikorjaa kerroin kattohinta)) kattohinta_indeksikorjattu)
+                          true)))
+              data-kannassa)
+          "Kattohinnan indeksikorjausta ei tallennettu oikein")))
+
     (testing "Päivitys onnistuu"
-      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :tavoitteet (transduce
-                                                                                                (comp (filter (fn [tavoite]
-                                                                                                                (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
-                                                                                                      (map (fn [tavoite]
-                                                                                                             (-> tavoite
-                                                                                                                 (update :tavoitehinta get :paivitys)
-                                                                                                                 (update :kattohinta get :paivitys)))))
-                                                                                                conj [] tallennettavat-tavoitteet)})]
+      (let [vastaus (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :tavoitteet (transduce
+                                     (comp (filter (fn [tavoite]
+                                                     (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain)))
+                                       (map (fn [tavoite]
+                                              (-> tavoite
+
+                                                (update :tavoitehinta get :paivitys)
+                                                (update :kattohinta get :paivitys)))))
+                                     conj [] tallennettavat-tavoitteet)})]
         (is (:onnistui? vastaus) "Budjettitavoitteen päivittäminen ei onnistunut")))
     (testing "Päivitetty data kannassa on oikein"
       (let [data-kannassa (q-map (str "SELECT *
@@ -676,11 +840,232 @@
             uusidata-kannassa (filter (fn [tavoite]
                                         (>= (:hoitokausi tavoite) paivitys-hoitokaudesta-eteenpain))
                                       data-kannassa)]
-        (is (every? :muokattu uusidata-kannassa) "Muokattu aika ei kannassa budjettitavoitteelle")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista uusi-tavoitehinta) 0.001) vanhadata-kannassa) "Tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin uusi-tavoitehinta)) 0.001) vanhadata-kannassa) "Kattohinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %)) (pyorista paivitetty-tavoitehinta) 0.001) uusidata-kannassa) "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
-        (is (every? #(=marginaalissa? (pyorista (:kattohinta %)) (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa) (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: " (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
+        (is (every? :muokattu uusidata-kannassa)
+          "Muokattu aika ei kannassa budjettitavoitteelle")
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista uusi-tavoitehinta) 0.001) vanhadata-kannassa)
+          "Tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin uusi-tavoitehinta)) 0.001) vanhadata-kannassa)
+          "Kattohinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:tavoitehinta %))
+                       (pyorista paivitetty-tavoitehinta) 0.001) uusidata-kannassa)
+          "Päivitetty tavoitehinta ei oikein päivityksen jälkeen")
+        (is (every? #(=marginaalissa? (pyorista (:kattohinta %))
+                       (pyorista (* kerroin paivitetty-tavoitehinta)) 0.001) uusidata-kannassa)
+          (str "Päivitetty kattohinta ei oikein päivityksen jälkeen: "
+            (pyorista (:kattohinta (first uusidata-kannassa))) " == " (pyorista (* kerroin paivitetty-tavoitehinta))))))))
+
+
+(defn- hae-kaikki-vahvistetut-kiinteahintaiset-tyot
+  "NOTE: Kiinteahintaisia töitä tulee vain \"Hankintakustannukset\"-osiosta tällä hetkellä,
+  joten osion tunnistetta ei ole tarpeen hyödyntää haussa."
+  [urakka-id]
+  (q-map (str
+           "SELECT kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+              FROM kiinteahintainen_tyo kt
+              LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+             WHERE
+               tpi.urakka=" urakka-id " AND
+                 kt.indeksikorjaus_vahvistettu IS NOT NULL AND
+                 kt.versio=0;")))
+
+(defn- hae-kaikki-vahvistetut-kustannusarvioidut-tyot [urakka-id osio-kw]
+  (q-map
+    (str "SELECT kt.osio, kt.vuosi, kt.kuukausi, kt.indeksikorjaus_vahvistettu
+            FROM kustannusarvioitu_tyo kt
+            LEFT JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+         WHERE
+           tpi.urakka=" urakka-id " AND
+           kt.osio='" (name osio-kw) "' AND
+           kt.indeksikorjaus_vahvistettu IS NOT NULL AND
+           kt.versio=0;")))
+
+(defn- hae-kaikki-vahvistetut-jh-korvaukset[urakka-id]
+  (q-map
+    (str "SELECT indeksikorjaus_vahvistettu, vuosi, kuukausi
+              FROM johto_ja_hallintokorvaus
+         WHERE
+           \"urakka-id\"=" urakka-id " AND
+           indeksikorjaus_vahvistettu IS NOT NULL AND
+           versio=0;")))
+
+(defn- hae-kaikki-vahvistetut-tavoite-ja-kattohinnat [urakka-id]
+  (q-map
+    (str "SELECT indeksikorjaus_vahvistettu, hoitokausi
+              FROM urakka_tavoite
+         WHERE
+           urakka=" urakka-id " AND
+           indeksikorjaus_vahvistettu IS NOT NULL AND
+           versio=0;")))
+
+(defn- generoi-ja-tallenna-osioon-liittyvaa-dataa [urakka-id osio-kw]
+  (let [taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
+
+    (doseq [taulu taulutyypit]
+      (case taulu
+        ;; NOTE: Kiinteahintaisia töitä tulee vain "Hankintakustannukset"-osiosta tällä hetkellä.
+        :kiinteahintainen-tyo
+        (doseq [tyo (data-gen/tallenna-kiinteahintaiset-tyot-data
+                      urakka-id #{1})]
+          (let [vastaus (bs/tallenna-kiinteahintaiset-tyot (:db jarjestelma) +kayttaja-jvh+ tyo)]
+            (is (:onnistui? vastaus) (str "Kiinteähintaisen työn tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui."))))
+
+        :kustannusarvioitu-tyo
+        (doseq [tyo (data-gen/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
+                      urakka-id osio-kw #{1})]
+          (let [vastaus (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-jvh+ tyo)]
+            (is (:onnistui? vastaus) (str "Kustannusarvioidun työn tallentaminen toimenpiteelle " (:toimenpide-avain tyo) " epäonnistui."))))
+
+        :johto-ja-hallintokorvaus
+        (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+              urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)]
+          (doseq [{:keys [toimenkuva maksukausi] :as parametrit} (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)]
+            (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+              (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+
+        :urakka-tavoite
+        (let [uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
+              paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
+              kerroin 1.1
+              tallennettavat-tavoitteet (mapv (fn [hoitokausi]
+                                                {:hoitokausi hoitokausi
+                                                 :tavoitehinta {:uusi uusi-tavoitehinta
+                                                                :paivitys paivitetty-tavoitehinta}
+                                                 :kattohinta {:uusi (* kerroin uusi-tavoitehinta)
+                                                              :paivitys (* kerroin paivitetty-tavoitehinta)}})
+                                          (range 1 5))]
+
+          (bs/tallenna-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :tavoitteet (mapv (fn [tavoite]
+                                 (-> tavoite
+                                   (update :tavoitehinta get :uusi)
+                                   (update :kattohinta get :uusi)))
+                           tallennettavat-tavoitteet)}))))))
+
+(defn- testaa-osioon-liittyvat-vahvistetut-rivit
+  "Hakee kaikki osioon liittyvät vahvistetut rivit ja varmistaa, että vahvistettuja rivejä on vain annetun hoitovuoden ajalta."
+
+  [urakka-id osio-kw hoitovuoden-nro]
+  (let [urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        taulutyypit (mhu/suunnitelman-osio->taulutyypit osio-kw)]
+    (doseq [taulu taulutyypit]
+      (case taulu
+        :kiinteahintainen-tyo
+        ;; NOTE: Kiinteahintaisia töitä tulee vain "Hankintakustannukset"-osiosta tällä hetkellä.
+        (let [kiinteahintaiset-tyot (hae-kaikki-vahvistetut-kiinteahintaiset-tyot urakka-id)]
+
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                             (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                kiinteahintaiset-tyot)))
+
+        :kustannusarvioitu-tyo
+        (let [ka-tyot (hae-kaikki-vahvistetut-kustannusarvioidut-tyot urakka-id osio-kw)]
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                            (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                ka-tyot)))
+
+
+        :johto-ja-hallintokorvaus
+        (let [jh-korvaukset (hae-kaikki-vahvistetut-jh-korvaukset urakka-id)]
+          ;; Vahvistettuja rivejä tulisi löytyä vain annetulle hoitovuodelle
+          (is (every? (fn [{:keys [vuosi kuukausi]}]
+                        (= hoitovuoden-nro
+                          (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm
+                            (pvm/luo-pvm-dec-kk vuosi kuukausi 1))))
+                jh-korvaukset)))
+
+        :urakka-tavoite
+        (let [tavoite-ja-kattohinnat (hae-kaikki-vahvistetut-tavoite-ja-kattohinnat urakka-id)]
+          ;; Pitäisi löytyä vahvistettu tavoite- ja kattohinta rivi vain annetulle hoitovuodelle.
+          (is (every? (fn [{:keys [hoitokausi]}]
+                           (= hoitovuoden-nro hoitokausi))
+                tavoite-ja-kattohinnat)))))))
+
+(deftest vahvista-suunnitelman-osa-hoitovuodelle
+  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+    (testing "Vahvista hankintakustannukset osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :hankintakustannukset))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :hankintakustannukset})]
+          (is (= {:hankintakustannukset {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hankintakustannukset 1)))
+
+    (testing "Vahvista erillishankinnat osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :erillishankinnat))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :erillishankinnat})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :erillishankinnat 1)))
+
+    (testing "Vahvista Johto- ja hallintokorvaus osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :johto-ja-hallintokorvaus))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :johto-ja-hallintokorvaus})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :johto-ja-hallintokorvaus 1)))
+
+    (testing "Vahvista hoidonjohtopalkkio osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :hoidonjohtopalkkio))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :hoidonjohtopalkkio})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}
+                  :hoidonjohtopalkkio {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :hoidonjohtopalkkio 1)))
+
+    (testing "Vahvista Tavoite- ja kattohinta osio"
+      (testing "Tallenna osioon liittyvää dataa"
+        ;; Tallenna random tavoite- ja kattohintoja
+        (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :tavoite-ja-kattohinta))
+
+      (testing "Vahvista osio hoitovuodelle 1"
+        (let [vastaus (bs/vahvista-suunnitelman-osa-hoitovuodelle
+                        (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id :hoitovuosi 1
+                                                          :tyyppi :tavoite-ja-kattohinta})]
+          (is (= {:erillishankinnat {1 true}
+                  :hankintakustannukset {1 true}
+                  :johto-ja-hallintokorvaus {1 true}
+                  :hoidonjohtopalkkio {1 true}
+                  :tavoite-ja-kattohinta {1 true}} vastaus))))
+
+      (testing "Testaa osion vahvistus"
+        (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :tavoite-ja-kattohinta 1)))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
   (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
@@ -722,8 +1107,36 @@
       (is (= (try+ (bs/tallenna-kustannusarvioitu-tyo (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                    (catch harja.domain.roolit.EiOikeutta eo#
                      :ei-oikeutta-virhe))
-             :ei-oikeutta-virhe)))))
+             :ei-oikeutta-virhe)))
+
+    (testing "vahvista-suunnitelman-osa-hoitovuodelle kutsun oikeustarkistus"
+      (is (= (try+ (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))
+
+    (testing "kumoa-suunnitelman-osan-vahvistus-hoitovuodelle kutsun oikeustarkistus"
+      (is (= (try+ (bs/kumoa-suunnitelman-osan-vahvistus-hoitovuodelle (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
+               (catch harja.domain.roolit.EiOikeutta eo#
+                 :ei-oikeutta-virhe))
+            :ei-oikeutta-virhe)))))
 
 (deftest palvelun-validointi-ja-palvelu-sama
   (is (= (into #{} (keys mhu/toimenpide-avain->toimenpide))
          bs-p/toimenpide-avaimet)))
+
+(deftest kustannusten-vahvistus-ei-vahvista-muita-urakoita
+  (let [urakka-1-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+        urakka-2-id (hae-ivalon-maanteiden-hoitourakan-id)]
+    ;; Testidataa molemmille urakoille
+    (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-1-id :erillishankinnat)
+    (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-2-id :erillishankinnat)
+
+    ;; Vahvistetaan rovaniemen mhu:n 1. vuoden erillishankinnat
+    (bs/vahvista-suunnitelman-osa-hoitovuodelle (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-1-id :hoitovuosi 1
+                                                                                  :tyyppi :erillishankinnat})
+    
+    (let [ka-tyot-1 (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ urakka-1-id)
+          ka-tyot-2 (bs/hae-urakan-kustannusarvoidut-tyot (:db jarjestelma) +kayttaja-jvh+ urakka-2-id)]
+      (is (not (empty? (remove nil? (map :indeksikorjaus-vahvistettu ka-tyot-1)))))
+      (is (empty? (remove nil? (map :indeksikorjaus-vahvistettu ka-tyot-2)))))))

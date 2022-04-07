@@ -1,5 +1,5 @@
 -- name: hae-koodi-harja-koodin-perusteella
-SELECT kkk.koodi
+SELECT kkk.tulos
 FROM koodisto_konversio_koodit kkk
 WHERE kkk.koodisto_konversio_id = :koodisto_id and
-      kkk.harja_koodi = :harja_koodi;
+      kkk.lahde = :lahde;

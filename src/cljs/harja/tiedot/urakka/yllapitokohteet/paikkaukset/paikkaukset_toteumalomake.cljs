@@ -159,30 +159,34 @@
           {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
-          (assoc-in [:toteumalomake ::tila/validoi] validoi)
-          (assoc-in [:toteumalomake ::tila/koske] koske)
+          ;(assoc-in [:toteumalomake ::tila/validoi] validoi)
+          ;(assoc-in [:toteumalomake ::tila/koske] koske)
           (assoc-in [:toteumalomake ::tila/validius] validius)
           (assoc-in [:toteumalomake ::tila/validi?] validi?))))
 
   SuljeToteumaLomake
   (process-event [_ app]
     (dissoc app :toteumalomake))
+
+  ;; Tällä hetkellä tälle ei ole käyttöä, joten palautetaan vain app-state
   KenttaanKoskettu
   (process-event [{:keys [kentan-nimi arvo]} 
                   {{::tila/keys [koske validius]} :toteumalomake :as app}]
-    (let [ignoratut-kentat #{:pituus}
+    #_ (let [ignoratut-kentat #{:pituus}
           validius (if-not (contains? ignoratut-kentat kentan-nimi) 
                      (koske validius [kentan-nimi])
                      validius)]
-      (assoc-in app [:toteumalomake ::tila/validius] validius)))
+      (assoc-in app [:toteumalomake ::tila/validius] validius))
+    app)
+
   PaivitaLomake
   (process-event [{toteumalomake :toteumalomake 
                    {::lomake/keys [viimeksi-muokattu-kentta]} :lomake-tiedot} 
                   {{::tila/keys [validoi koske validius validi?]} :toteumalomake :as app}]
     (let [toteumalomake (t-paikkauskohteet/laske-paikkauskohteen-pituus toteumalomake [:toteumalomake])
-          ;{:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
           _ (reset! lomake-atom toteumalomake)
-          {:keys [validi? validius]} (validoi {:validius validius :validi? validi?} toteumalomake)]
+          {:keys [validoi koske] :as validoinnit} (validoi-lomake toteumalomake)
+          {:keys [validi? validius]} (validoi validoinnit toteumalomake)]
       (-> app
           (assoc :toteumalomake toteumalomake)
           (assoc-in [:toteumalomake ::tila/validius] validius)
@@ -195,11 +199,9 @@
                       (dissoc ::paikkaus/ajourat ::paikkaus/reunat ::paikkaus/ajorata
                               ::paikkaus/keskisaumat ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
       (do
-        (js/console.log "Tallennetaan toteuma" (pr-str toteuma))
         (tallenna-toteuma toteuma
                           ->TallennaToteumaOnnistui
-                          ->TallennaToteumaEpaonnistui
-                          #_[(not (nil? (:id paikkauskohde)))])
+                          ->TallennaToteumaEpaonnistui)
         app)))
 
   TallennaToteumaOnnistui
@@ -217,7 +219,6 @@
   TallennaToteumaEpaonnistui
   (process-event [{muokattu :muokattu toteuma :toteuma} app]
     (do
-      (js/console.log "Toteuman tallennus epäonnistui" (pr-str toteuma))
       (if muokattu
         (viesti/nayta-toast! "Toteuman muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
         (viesti/nayta-toast! "Toteuman tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))

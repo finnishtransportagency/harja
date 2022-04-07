@@ -113,8 +113,8 @@
    [grid/grid {:otsikko "Talvisuolan käyttö"
                :tunniste :rivinumero
                :tallenna (if (oikeudet/voi-kirjoittaa?
-                              oikeudet/urakat-toteumat-suola
-                              (:id @nav/valittu-urakka))
+                               oikeudet/urakat-toteumat-suola
+                               (:id @nav/valittu-urakka))
                            #(go (if-let [tulos (<! (suola/tallenna-toteumat (:id urakka) sopimus-id %))]
                                   (paivita! tiedot/toteumat)))
                            :ei-mahdollinen)
@@ -122,7 +122,7 @@
                :tyhja (if (nil? @tiedot/toteumat)
                         [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                         "Ei suolatoteumia valitulle aikavälille")
-               :uusi-rivi #(assoc % :alkanut (pvm/nyt))
+               :uusi-rivi #(assoc % :pvm (pvm/nyt))
                :voi-poistaa? muokattava?
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
@@ -172,9 +172,9 @@
                               "Piilota kartalta"
                               "Näytä kartalla"))]])))}]
     listaus]
-   (if-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa]
-     [:div ""])])
+   (when-not (empty? @tiedot/toteumat)
+     [:div.bold kaytetty-yhteensa])
+   [yleiset/vihje yleiset/rajapinnan-kautta-lisattyja-ei-voi-muokata]])
 
 (defn pohjavesialueen-suola []
   (komp/luo
@@ -205,8 +205,8 @@
                     :tyhjä (if (nil? @tiedot/urakan-pohjavesialueet)
                              [yleiset/ajax-loader "Pohjavesialueita haetaan..."]
                              "Ei pohjavesialueita")}
-         [{:otsikko "Tunnus" :nimi :tunnus :leveys 10}
-          {:otsikko "Nimi" :nimi :nimi}]
+         [{:otsikko "Tunnus" :nimi :tunnus :leveys 1}
+          {:otsikko "Nimi" :nimi :nimi :leveys 3}]
          alueet]
         (let [toteuma @tiedot/pohjavesialueen-toteuma]
           (when toteuma

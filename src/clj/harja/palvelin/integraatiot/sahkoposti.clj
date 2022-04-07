@@ -18,7 +18,7 @@
   (vastausosoite
    [this]
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
-    tulevat takaisin tälle kuuntelijalle")
+    tulevat takaisin tälle kuuntelijalle tai api rajapinnalle.")
   (laheta-viesti-ja-liite!
     [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä. Sisällön pitäisi sisältää myös liite"))
@@ -61,12 +61,15 @@
   (rekisteroi-kuuntelija! [_ _]
     (log/info "Vain lähetys sähköposti ei tue kuuntelijan rekisteröintiä!"))
   (laheta-viesti! [_ lahettaja vastaanottaja otsikko sisalto]
-    (postal/send-message {:host palvelin}
-                         {:from lahettaja
-                          :to vastaanottaja
-                          :subject (sanitoi-otsikko otsikko)
-                          :body [{:type "text/html; charset=UTF-8"
-                                  :content sisalto}]}))
+    (do
+     (log/info "VainLahetys :: postal - Lähetettiin sähköposti. Tarkista tietokannasta yksityiskohdat.")
+     (log/debug "VainLahetys :: Lähettäjä:" (pr-str lahettaja) "Vastaanottaja:" (pr-str vastaanottaja))
+     (postal/send-message {:host palvelin}
+       {:from lahettaja
+        :to vastaanottaja
+        :subject (sanitoi-otsikko otsikko)
+        :body [{:type "text/html; charset=UTF-8"
+                :content sisalto}]})))
   (vastausosoite [_] vastausosoite)
   (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (laheta-postal-viesti-ja-liite {:palvelin palvelin

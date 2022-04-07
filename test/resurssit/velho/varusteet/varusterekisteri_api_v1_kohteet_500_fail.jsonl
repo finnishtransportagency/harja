@@ -1,0 +1,58 @@
+{
+  "spec": "(spec-tools.core/spec {:spec (clojure.spec.alpha/coll-of (spec-tools.core/spec {:spec (clojure.spec.alpha/keys :req-un [:velho.yleiset.domain.sijainti$sijainnin-hakumuoto/alkuosoite :velho.yleiset.domain.sijainti$sijainnin-hakumuoto/oid] :opt-un [:velho.yleiset.domain.sijainti$sijainnin-hakumuoto/loppuosoite :velho.yleiset.domain.sijainti$sijainnin-hakumuoto/alkuosoite :velho.yleiset.domain.sijainti$sijainnin-hakumuoto/sijaintitarkenne :velho.yleiset.domain.sijainti$sijainnin-hakumuoto/keskilinjageometria :velho.yleiset.domain.sijainti$sijainnin-hakumuoto/keskilinjageometria-wgs84]), :name :spec/3298, :type :map, :leaf? false}) :into []), :type :vector, :leaf? false})",
+  "problems": [
+    {
+      "path": [
+        "sijaintitarkenne",
+        "puoli"
+      ],
+      "pred": "clojure.core/keyword?",
+      "val": [
+        "puoli/p02"
+      ],
+      "via": [
+        "velho.yleiset.domain.sijainti$sijainnin-hakumuoto/sijaintitarkenne",
+        "velho.yleiset.domain.sijainti$sijaintitarkenne/puoli"
+      ],
+      "in": [
+        0,
+        "sijaintitarkenne",
+        "puoli"
+      ]
+    }
+  ],
+  "type": "reitit.coercion/response-coercion",
+  "coercion": "spec",
+  "value": [
+    {
+      "oid": "1.2.246.578.4.1.4.1418860",
+      "voimaantulopvm": "2013-05-17",
+      "lakkautuspvm": null,
+      "alkuosoite": {
+        "osa": 1,
+        "tie": 16213,
+        "etaisyys": 1565,
+        "enkoodattu": 1621300001565
+      },
+      "loppuosoite": {
+        "osa": 1,
+        "tie": 16213,
+        "etaisyys": 1580,
+        "enkoodattu": 1621300001580
+      },
+      "sijaintitarkenne": {
+        "puoli": [
+          "puoli/p02"
+        ],
+        "ajoradat": [
+          "ajorata/ajr0"
+        ],
+        "kaistat": []
+      }
+    }
+  ],
+  "in": [
+    "response",
+    "body"
+  ]
+}

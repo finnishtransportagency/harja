@@ -8,8 +8,7 @@
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [cheshire.core :as cheshire]
             [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.vaylat :as q-vaylat]
-            [harja.pvm :as pvm]))
+            [harja.kyselyt.vaylat :as q-vaylat]))
 
 (def geometriapaivitystunnus "vaylat")
 (defn paivitys-tarvitaan? [db paivitysvali-paivissa]
@@ -71,9 +70,11 @@
   (when (and paivittainen-tarkistusaika paivitysvali-paivissa url)
     (ajastettu-tehtava/ajasta-paivittain
       paivittainen-tarkistusaika
-      (fn [_]
-        (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-          (paivita-vaylat integraatioloki db url))))))
+      (do
+        (log/info "ajasta-paivittain :: väylä geometrian haku :: Alkaa " (pvm/nyt))
+        (fn [_]
+            (when (paivitys-tarvitaan? db paivitysvali-paivissa)
+              (paivita-vaylat integraatioloki db url)))))))
 
 (defrecord VaylienGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle
@@ -89,9 +90,3 @@
     (when-let [lopeta-fn (:vaylien-geometriahaku this)]
       (lopeta-fn))
     this))
-
-;; esim (harja.palvelin.ajastetut-tehtavat.vaylien-geometriat/kutsu-interaktiivisesti "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json")
-
-(defn kutsu-interaktiivisesti [geometria-url]
-  (let [j (deref (ns-resolve 'harja.palvelin.main 'harja-jarjestelma))]
-    (paivita-vaylat (:integraatioloki j) (:db j) geometria-url)))

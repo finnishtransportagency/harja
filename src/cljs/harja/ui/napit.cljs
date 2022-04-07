@@ -16,7 +16,7 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
@@ -185,6 +185,62 @@
               [ikonit/ikoni-ja-teksti ikoni teksti])
             teksti)])))))
 
+(defn harmaa
+  ([toiminto] (harmaa "Unohdit laittaa tekstin" toiminto {}))
+  ([teksti toiminto] (harmaa teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka ikoni valittu?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            (into {}
+                                  (filter second
+                                          {:luokka
+                                           (str
+                                             (when valittu? "valittu ")
+                                             " " luokka)
+                                           :ikoni  ikoni})))]))
+
+(defn kotiin
+  ([toiminto] (kotiin "Kotiin" toiminto {}))
+  ([teksti toiminto] (kotiin teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/harja-icon-navigation-home)})]))
+
+(defn ylos
+  ([toiminto] (ylos "Ylös" toiminto {}))
+  ([teksti toiminto] (ylos teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-toissijainen") " " luokka)
+                             :ikoni  (ikonit/livicon-chevron-up)})]))
+
+(defn alas
+  ([toiminto] (alas "Alas" toiminto {}))
+  ([teksti toiminto] (alas teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka vayla-tyyli? teksti-nappi?] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str
+                                       (cond
+                                         (and vayla-tyyli?
+                                              teksti-nappi?) "button-secondary-text"
+                                         vayla-tyyli? "button-secondary-default"
+                                         :else "nappi-ensisijainen") " " luokka)
+                             :ikoni  (ikonit/livicon-chevron-down)})]))
+
 (defn takaisin
   ([toiminto] (takaisin "Takaisin" toiminto {}))
   ([teksti toiminto] (takaisin teksti toiminto {}))
@@ -277,6 +333,13 @@
                                                  teksti-nappi?) "button-secondary-text"
                                             vayla-tyyli? "button-secondary-default"
                                             :else "nappi-toissijainen") " " luokka)})]))
+
+(defn yleinen-reunaton
+  ([teksti toiminto] (yleinen-reunaton teksti toiminto {}))
+  ([teksti toiminto {:keys [luokka] :as optiot}]
+   [nappi teksti toiminto (merge
+                            optiot
+                            {:luokka (str "nappi-reunaton" " " luokka)})]))
 
 (defn kielteinen
   ([teksti toiminto] (kielteinen teksti toiminto {}))
@@ -404,15 +467,21 @@
 
 ;; POT-lomakkeen ja päällystyskohdeluettelon käyttämiä nappeja
 (defn nappi-hover-vihjeella
-  "Anna tyyppi :lisaa tai :poista"
+  "Anna tyyppi :lisaa, :pilko tai :poista"
   [{:keys [tyyppi disabled? toiminto toiminto-args hover-txt data-attributes]}]
-  (assert (#{:lisaa :poista} tyyppi) "Tyypin oltava :lisaa tai :poista")
+  (assert (#{:lisaa :pilko :poista} tyyppi) "Tyypin oltava :lisaa, :pilko tai :poista")
   [yleiset/wrap-if true
    [yleiset/tooltip {} :% hover-txt]
    [yleinen-ensisijainen ""
     toiminto
-    {:ikoni (if (= tyyppi :lisaa)
+    {:ikoni (case tyyppi
+              :lisaa
               (ikonit/action-add)
+
+              :pilko
+              (ikonit/road-split)
+
+              :poista
               (ikonit/action-delete))
      :disabled? disabled?
      :luokka "napiton-nappi btn-xs"

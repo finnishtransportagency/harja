@@ -148,7 +148,7 @@
                 ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                 (transit-vastaus 403 eo))
               (catch IllegalArgumentException e
-                (log/error e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
+                (log/warn e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
                 (transit-vastaus 400 {:virhe (.getMessage e)}))
               (catch Throwable e
                 (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
@@ -335,6 +335,7 @@
                                    req)
                              ui-kasittelijat (mapv :fn @kasittelijat)
                              oam-kayttajanimi (get (:headers req) "oam_remote_user")
+                             _ (when (some #(= oam-kayttajanimi %) ["destia-harja", "salonen-harja", "pimara-harja", "harja"]) (log/warn "HMAL **** " (:headers req)))
                              random-avain (get (:headers req) "x-csrf-token")
                              csrf-token (when random-avain (index/muodosta-csrf-token random-avain anti-csrf-token-secret-key))
                              _ (when csrf-token (anti-csrf-q/virkista-csrf-sessio-jos-voimassa db oam-kayttajanimi csrf-token (time/now)))

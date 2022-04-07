@@ -27,9 +27,7 @@
                    :hakuehdot hakuehdot}
                   (when aikavali
                     {:alkaen (first aikavali)
-                     ;; loppupvm halutaan seuraavan päivän 00:00:00 aikaan, jotta valitun loppupäivän tapahtumat näkyvät
-                     :paattyen (when (second aikavali)
-                                 (pvm/paivan-alussa (t/plus (second aikavali) (t/days 1))))}))))
+                     :paattyen (second aikavali)}))))
 
 (defn hae-integraatiotapahtuman-viestit [tapahtuma-id]
   (k/post! :hae-integraatiotapahtuman-viestit tapahtuma-id))
@@ -40,36 +38,41 @@
                                                 (when nakymassa?
                                                   (hae-jarjestelmien-integraatiot))))
 
+
+
 (defonce valittu-jarjestelma (atom nil))
 (defonce valittu-integraatio (atom nil))
-(defonce valittu-aikavali (atom nil))
+(defonce valittu-aikavali (atom (pvm/tanaan-aikavali)))
 (defonce hakuehdot (atom {:tapahtumien-tila :kaikki}))
 (defonce nayta-uusimmat-tilassa? (atom true))
 ;; Kun seurataan ulkoista integraatiolokiin linkkaavaa urlia - näitä lokitetaan ja linkin voi avata suoraan slackista
 (defonce tapahtuma-id (atom nil))
 (defonce tultiin-urlin-kautta (atom nil))
 
-(defn eilen-tanaan-aikavali []
-  [(pvm/aikana (time/yesterday) 0 0 0 0)
-   (pvm/aikana (time/today) 23 59 59 999)])
 
 
+(def tapahtumien-maarat (atom []))
 (def haetut-tapahtumat (atom [])) ;; nil jos haku käynnissä, [] jos tyhjä
-(def hae-automaattisesti? (atom true))
+(def hae-automaattisesti? (atom false))
 
 (defn hae-tapahtumat! []
   (let  [valittu-jarjestelma @valittu-jarjestelma
          valittu-integraatio @valittu-integraatio
-         valittu-aikavali (if @nayta-uusimmat-tilassa?
-                            (eilen-tanaan-aikavali)
-                            @valittu-aikavali)
+         valittu-aikavali @valittu-aikavali
          nakymassa? @nakymassa?
          hakuehdot @hakuehdot]
     (when nakymassa?
       (reset! haetut-tapahtumat nil)
+      (reset! tapahtumien-maarat nil)
       ;; Palvelimen päässä on määritelty, että maksimissaan 500 tulosta palautetaan
-      (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))]
+      (go (let [tapahtumat (<! (hae-integraation-tapahtumat valittu-jarjestelma valittu-integraatio valittu-aikavali hakuehdot))
+                maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))
+                maarat-aikavalilla (filter #(pvm/valissa? (:pvm %)
+                                                          (first valittu-aikavali)
+                                                          (second valittu-aikavali))
+                                           maarat)]
             (reset! haetut-tapahtumat tapahtumat)
+            (reset! tapahtumien-maarat maarat-aikavalilla)
             (when @tultiin-urlin-kautta
               (go-loop [aukinainen-vetolaatikko (aget (.getElementsByClassName js/document "vetolaatikko-auki") 0)
                         kertoja-loopattu 0]
@@ -83,29 +86,3 @@
                                   (inc kertoja-loopattu)))))
               (reset! tultiin-urlin-kautta nil))
             tapahtumat)))))
-
-(defonce tapahtumien-maarat
-         (reaction<! [valittu-jarjestelma @valittu-jarjestelma
-                      valittu-integraatio @valittu-integraatio
-                      valittu-aikavali @valittu-aikavali
-                      nakymassa? @nakymassa?]
-                     {:nil-kun-haku-kaynnissa? true}
-                     (when nakymassa?
-                       (go (let [maarat (<! (hae-integraatiotapahtumien-maarat valittu-jarjestelma valittu-integraatio))]
-                          (if valittu-aikavali
-                            (filter #(pvm/valissa? (:pvm %)
-                                                   (first valittu-aikavali)
-                                                   (second valittu-aikavali))
-                                    maarat)
-                            maarat))))))
-
-(defn nayta-tapahtumat-eilisen-jalkeen []
-  (reset! nayta-uusimmat-tilassa? false)
-  (reset! haetut-tapahtumat [])
-  (reset! valittu-aikavali (eilen-tanaan-aikavali)))
-
-(defn nayta-uusimmat-tapahtumat! []
-  (reset! valittu-aikavali nil)
-  (reset! nayta-uusimmat-tilassa? true)
-  (reset! hakuehdot {:tapahtumien-tila :kaikki})
-  (hae-tapahtumat!))

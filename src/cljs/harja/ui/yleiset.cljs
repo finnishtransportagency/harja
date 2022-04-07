@@ -17,6 +17,16 @@
                    [harja.tyokalut.ui :refer [for*]]
                    [reagent.ratom :refer [reaction run!]]))
 
+(defn placeholder
+  "Näyttää helposti huomattavan placeholder elementin, jota voi käyttää sommitteluun"
+  ([teksti]
+   (placeholder teksti {}))
+  ([teksti {:keys [placeholderin-optiot]}]
+   [:div (merge {:style {:background-color "hotpink"
+                         :color "white"}}
+                placeholderin-optiot)
+    [ikonit/exclamation-sign] teksti]))
+
 (def navigaation-min-korkeus 47)
 
 (defn navigaation-korkeus []
@@ -67,6 +77,15 @@
     [:img {:class "ajax-loader-pisteet" :src "images/ajax-loader-pisteet.gif"}]
     (when viesti
       [:div.viesti viesti])]))
+
+(defn himmennys
+  "Annetun elementin päälle piirrettävä himmentävä div, joka estää klikkaamisen.
+  Himmennys-divin keskelle voidaan piirtää annettu sisältö, esim. ajax-loader."
+  [{:keys [himmenna? luokka himmennyksen-sisalto]} himmennettava-elementti]
+  [:div.himmennys-wrapper
+   [:div.himmennys {:class (luokat (when (false? himmenna?) "hidden") luokka)}
+    himmennyksen-sisalto]
+   himmennettava-elementti])
 
 (defn indeksi [kokoelma itemi]
   (first (keep-indexed #(when (= %2 itemi) %1) kokoelma)))
@@ -123,9 +142,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                   (when ikoni ikoni)
                   (if ikoni
                     (str " " otsikko)
-                    otsikko)]] 
-     (if disabloitu? 
-       [:span.disabloitu-linkki 
+                    otsikko)]]
+     (if disabloitu?
+       [:span.disabloitu-linkki
         {:style (merge {:cursor "not-allowed"}
                        (when block? {:display "block"})
                        style)}
@@ -150,21 +169,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        :href url
        :download ""}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
-
-(defn raksiboksi
-  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  [:span.raksiboksi
-   [:div.input-group
-    [harja.ui.kentat/tee-kentta
-     {:tyyppi :checkbox
-      :teksti teksti
-      :disabled? disabled?
-      :valitse! toiminto}
-     checked]
-    (when komponentti
-      komponentti)]
-   (when nayta-infoteksti?
-     info-teksti)])
 
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
@@ -228,6 +232,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:ul (if vayla-tyyli?
          {:style (merge {:padding-top "4px"
                          :z-index "1000"
+                         :position :absolute
                          :display (if @auki?
                                     "block"
                                     "none")}
@@ -255,7 +260,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! vayla-tyyli? elementin-id]} _]
-  (let [auki? (atom false)
+  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+        auki? (atom false)
         term (atom "")
         on-click-fn (fn [vaihtoehdot _]
                       (when-not (empty? vaihtoehdot)
@@ -345,7 +351,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
-            [:div.valittu (or naytettava-arvo (format-fn valinta))]
+            [:div.valittu.overflow-ellipsis (or naytettava-arvo (format-fn valinta))]
             (if @auki?
               ^{:key :auki}
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
@@ -362,11 +368,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   :format-fn format-fn :valitse-fn valitse-fn :vaihtoehdot vaihtoehdot
                                   :pakollinen? pakollinen?
                                   :valittu-arvo valinta
-                                  :auki?     auki?})]])))))
+                                  :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
-  [:div.label-ja-alasveto
-   [:label.alasvedon-otsikko otsikko]
+  [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
+   (if (:vayla-tyyli? optiot)
+     [:label.alasvedon-otsikko-vayla otsikko]
+     [:label.alasvedon-otsikko otsikko])
    [livi-pudotusvalikko optiot valinnat]])
 
 (defn alasveto-toiminnolla
@@ -631,6 +639,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   "Ei sidota indeksiin")
 
 (def +vari-lemon-dark+ "#654D00")
+(def +vari-black-light+ "#5C5C5C")
 
 (defn vihje
   ([teksti] (vihje teksti nil))
@@ -641,17 +650,31 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
 
 (defn toast-viesti
+  "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
   ([teksti] (toast-viesti teksti nil))
   ([teksti luokka]
-   [:div {:class
-          (luokat
-            "yleinen-pikkuvihje"
-            "inline-block"
-            (viesti/+toast-viesti-luokat+ :neutraali)
-            (or luokka ""))}
-    [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                             teksti)]]))
+   (let [ikoni-fn (if (vector? teksti)
+                    ikonit/ikoni-ja-elementti
+                    ikonit/ikoni-ja-teksti)]
+     [:div {:class
+            (luokat
+              "yleinen-pikkuvihje"
+              "inline-block"
+              (viesti/+toast-viesti-luokat+ :neutraali)
+              (or luokka ""))}
+      [:div.vihjeen-sisalto
+       (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
+                 teksti)]])))
+
+(def tietyoilmoitus-siirtynyt-txt
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
+
+(defn tietyoilmoitus-siirtynyt-toast []
+  [:div.tietyoilmoitus-toast
+   [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -670,6 +693,21 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
     [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
     [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
+
+(defn info-laatikko [tyyppi ensisijainen-viesti toissijainen-viesti leveys]
+  (assert (#{:varoitus :onnistunut :neutraali} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut tai neutraali")
+  [:div {:class ["info-laatikko" (name tyyppi)]
+         :style {:width leveys}}
+   [:div.infolaatikon-ikoni
+    (case tyyppi
+      :varoitus (ikonit/livicon-warning-sign)
+      :onnistunut (ikonit/livicon-check)
+      :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+   [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
+    [:div {:style {:padding-left "8px"}}
+     ensisijainen-viesti]
+    [:div {:style {:padding-left "8px" :font-weight 400}}
+     toissijainen-viesti]]])
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -717,14 +755,17 @@ jatkon."
                    (+ (/ (.-width rect) -2)
                       (/ (.-width parent-rect) 2)))))
       (fn [auki? sisalto]
-        [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position  "absolute"
-                                      :min-width 150
-                                      :left      (when-let [x @x]
-                                                   x)}}
-         [:div.tooltip-arrow]
-         [:div.tooltip-inner
-          sisalto]]))))
+        (let [s-pituus (count (str sisalto))]
+          [:div.tooltip.bottom {:class (when auki? "in")
+                                :style {:position "absolute"
+                                        :min-width (if (< 150 s-pituus)
+                                                     300
+                                                     150)
+                                        :left (when-let [x @x]
+                                                x)}}
+           [:div.tooltip-arrow]
+           [:div.tooltip-inner
+            sisalto]])))))
 
 (defn tooltip [opts komponentti tooltipin-sisalto]
   (let [tooltip-nakyy? (atom false)
@@ -732,7 +773,7 @@ jatkon."
     (komp/luo
       (fn [opts komponentti tooltipin-sisalto]
         [:div.inline-block
-         {:style          {:position "relative"}            ;:div.inline-block
+         {:style {:position "relative"}                     ;:div.inline-block
           :on-mouse-enter #(reset! tooltip-nakyy? true)
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti
@@ -799,6 +840,18 @@ jatkon."
   ([korkeus]
    [:div {:style {:margin-top (or korkeus "2rem")}}]))
 
+(defn infolaatikko
+  [ikoni teksti tyyppi]
+  [:span {:class (str "infolaatikko "
+                   (case tyyppi
+                     ::info
+                     "info"
+                     ::ok
+                     "ok"
+                     ::huomio
+                     "huomio"))}
+   [ikoni] teksti])
+
 ;; Toisinaan tarpeen ajaa esim. erilaisia click handlereitä pienellä viiveellä, jos klikin
 ;; lähde-elementti unmountataan
 (defn fn-viiveella
@@ -810,7 +863,7 @@ jatkon."
 
 (def valitse-text "-valitse-")
 
-(defn tila-indikaattori 
+(defn tila-indikaattori
   "fmt-fn annetaan arvo ja se formatoi sen jotenkin
   class-skeema on mappi, josta eri tiloja ja niitä vastaavia luokkia palluralle (ei siis pakko käyttää oletusvärejä tms, vaan voi olla muita)
   luokka määrittäää tekstiosan tyylin"
@@ -819,16 +872,45 @@ jatkon."
   ([tila {:keys [fmt-fn class-skeema luokka]}]
    [:div
     [:div {:class (str "circle "
-                       (if class-skeema 
-                         (or (get class-skeema tila)
-                             "tila-ehdotettu")
-                         (cond
-                           (= "tilattu" tila) "tila-tilattu"
-                           (= "ehdotettu" tila) "tila-ehdotettu"
-                           (= "valmis" tila) "tila-valmis"
-                           (= "hylatty" tila) "tila-hylatty"
-                           :else "tila-ehdotettu")))}]
-    [:span (merge {} (when luokka {:class luokka})) 
-     (if fmt-fn 
+                    (if class-skeema
+                      (or (get class-skeema tila)
+                        "tila-ehdotettu")
+                      (cond
+                        (= "tilattu" tila) "tila-tilattu"
+                        (= "ehdotettu" tila) "tila-ehdotettu"
+                        (= "valmis" tila) "tila-valmis"
+                        (= "hylatty" tila) "tila-hylatty"
+                        :else "tila-ehdotettu")))}]
+    [:span (merge {} (when luokka {:class luokka}))
+     (if fmt-fn
        (fmt-fn tila)
        tila)]]))
+
+(def rajapinnan-kautta-lisattyja-ei-voi-muokata
+  "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
+
+(defn tr-kentan-elementti
+  [{:keys [otsikko valitse-fn luokka arvo] :as optiot}]
+  [:div
+   [:input {:on-change valitse-fn
+            :class (str luokka " form-control ")
+            :placeholder otsikko
+            :value arvo
+            :size 5 :max-length 10}]
+   [:label.ala-otsikko otsikko]])
+
+(defn tr-kentat-flex
+  "Tuck yhteensopiva TR-tierekisterikenttä.
+  (Tämä voisi olla myös valinnat tai tierekisteri namespacessa)"
+  [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+  (let [osio (fn [komponentti otsikko] komponentti)]
+    (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+      [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
+       [:label.otsikko "Tierekisteriosoite"]
+      [:div
+       [:div.varusteet.tr-osoite-flex
+        [osio tie "Tie"]
+        [osio aosa "aosa"]
+        [osio aeta "aet"]
+        [osio losa "losa"]
+        [osio leta "let"]]]])))

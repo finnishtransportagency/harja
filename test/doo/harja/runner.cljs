@@ -4,7 +4,6 @@
             [harja.ui.dom-test]
             [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test]
             [harja.tiedot.urakka.suunnittelu-test]
-            [harja.tiedot.urakka.yhatuonti-test]
             [harja.tiedot.muokkauslukko-test]
             [harja.views.kartta.infopaneeli-test]
             [harja.views.urakka.siltatarkastukset-test]
@@ -33,7 +32,6 @@
             [harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test]
             [harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test]
-            [harja.tiedot.vesivaylat.urakka.turvalaitteet-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test]
             [harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test]
             [harja.tiedot.hallintayksikot-test]
@@ -57,7 +55,6 @@
            'harja.ui.dom-test
            'harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test
            'harja.tiedot.urakka.suunnittelu-test
-           'harja.tiedot.urakka.yhatuonti-test
            'harja.tiedot.muokkauslukko-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test
@@ -86,7 +83,6 @@
            'harja.tiedot.vesivaylat.hallinta.urakoitsijoiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.hankkeiden-luonti-test
            'harja.tiedot.vesivaylat.hallinta.sopimuksien-luonti-test
-           'harja.tiedot.vesivaylat.urakka.turvalaitteet-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.yksikkohintaiset-test
            'harja.tiedot.vesivaylat.urakka.toimenpiteet.kokonaishintaiset-test
            'harja.tiedot.hallintayksikot-test

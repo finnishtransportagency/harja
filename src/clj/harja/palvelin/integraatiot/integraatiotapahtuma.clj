@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as http]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.kyselyt.specql-db :refer [define-tables]]
             [specql.core :refer [fetch]]
             [specql.rel :as rel]
@@ -18,9 +19,9 @@
 
 (defmulti laheta-integraatioviesti (fn [konteksti tyyppi asetukset payload] tyyppi))
 (defmethod laheta-integraatioviesti :http [{:keys [lokittaja tapahtuma-id] :as konteksti} _
-                                           {:keys [metodi url otsikot parametrit] :as asetukset} payload]
+                                           {:keys [metodi url otsikot parametrit lomakedatana?] :as asetukset} payload]
   (let [asetukset (-> asetukset
-                      (dissoc :metodi :url :otsikot :parametrit)
+                      (dissoc :metodi :url :otsikot :parametrit :lomakedatana?)
                       ;; :response-loki on funktio, joka saa argumenttina viestin :sisallon
                       ;; funktion sisältö tallennetaan lokiin
                       ;; hyödyllinen, jos kutsun vastaus on niin iso, että sitä ei kannata säilöä integraatiolokissa.
@@ -28,7 +29,7 @@
         http-piste (http/luo-integraatiopiste lokittaja tapahtuma-id asetukset)]
     (case metodi
       :GET (http/GET http-piste url otsikot parametrit)
-      :POST (http/POST http-piste url otsikot parametrit payload)
+      :POST (http/POST http-piste url otsikot parametrit lomakedatana? payload)
       :HEAD (http/HEAD http-piste url otsikot parametrit)
       :DELETE (http/DELETE http-piste url otsikot parametrit))))
 
@@ -78,7 +79,16 @@
          lisatietoja (when lisatietoja (str/join "\n" @lisatietoja))]
      (try
        (let [vastaus (tyonkulku-fn konteksti)]
-         (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+         ;; Sähköpostin lähetys integraatiossa voidaan suoraa merkitä epäonnistunut, jos vastaus ei ole onnistunut
+         (if (and
+               (or (= integraatio "sahkoposti-lahetys")
+                 (= integraatio "sahkoposti-ja-liite-lahetys"))
+               (= "api" jarjestelma)
+               (or (nil? vastaus)
+                 (false? (:onnistunut vastaus))))
+           (lokittaja :epaonnistunut nil lisatietoja tapahtuma-id ulkoinen-id)
+           (lokittaja :onnistunut nil lisatietoja tapahtuma-id ulkoinen-id))
+
          vastaus)
 
        (catch Throwable t

@@ -66,7 +66,7 @@
            (kasittele-epaonnistunut-lahetys lokittaja tapahtuma-id poikkeus virheviesti parametrit)))
        (catch Object _
          (let [poikkeus (:throwable &throw-context)
-               virheviesti (format "Tapahtui poikkeus lähettäessä JMS-client % :in JMS jonoon: %s epäonnistui." client-nimi jono)
+               virheviesti (format "Tapahtui poikkeus lähettäessä JMS-client %s :in JMS jonoon: %s epäonnistui." client-nimi jono)
                parametrit {:viesti-id viesti-id
                            :jms-client client-nimi}]
            (kasittele-poikkeus-lahetyksessa lokittaja tapahtuma-id poikkeus virheviesti parametrit)))))))

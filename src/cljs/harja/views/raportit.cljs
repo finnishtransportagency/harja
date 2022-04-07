@@ -63,24 +63,33 @@
                   salli-laaja-konteksti? (raportti-domain/nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit?)
 
                   mahdolliset-kontekstit (if salli-laaja-konteksti?
-                                           (into #{"koko maa"}
-                                                 (keep identity [(when v-ur "urakka")
-                                                                 (when v-hal "hallintayksikko")]))
-
+                                           ;; konteksti on "tasopohjainen". 1. taso = "koko maa", 2. "hallintayksikko. 3. "urakka"
+                                           ;; Sitä mukaa, kun käyttäjä valitsee raporttivalintoja, tarkennetaan tätä filtteriä.
+                                           ;; Jos mitään ei ole valittuna tulee "koko maa".
+                                           ;; Jos Ely on valittuna, tulee "hallintayksikkö"
+                                           ;; Jos urakkakin on valittu, tulee pelkästään "urakka"
+                                           (cond
+                                             (when v-ur "urakka") #{"urakka"}
+                                             (when v-hal "hallintayksikko") #{"hallintayksikko"}
+                                             :default #{"koko maa"})
                                            #{"urakka"})
                   urakkatyypin-raportit (filter
                                           #(set/subset? v-urakkatyyppi (:urakkatyyppi %))
-                                          (vals @raporttityypit))]
-
-              (if (and (not salli-laaja-konteksti?) (nil? v-ur))
-                nil
-                (sort-by raportin-sort-avain
-                         (into []
-                               (comp (filter #(some mahdolliset-kontekstit (:konteksti %)))
-                                     (filter #(oikeudet/voi-lukea?
-                                               (oikeudet/raporttioikeudet (:kuvaus %))
-                                               (:id v-ur))))
-                               urakkatyypin-raportit))))))
+                                          (vals @raporttityypit))
+                  kontekstityypin-raportit (filter (fn [ur]
+                                                   (every? (fn [k]
+                                                             (contains? (:konteksti ur) k)) mahdolliset-kontekstit))
+                                             urakkatyypin-raportit)
+                  mahdolliset-raportit (if (and (not salli-laaja-konteksti?) (nil? v-ur))
+                                         nil
+                                         (sort-by raportin-sort-avain
+                                           (into []
+                                             (comp
+                                               (filter #(oikeudet/voi-lukea?
+                                                          (oikeudet/raporttioikeudet (:kuvaus %))
+                                                          (:id v-ur))))
+                                             kontekstityypin-raportit)))]
+              mahdolliset-raportit)))
 
 (def valittu-raporttityyppi
   (reaction (when-let [raporttityypit @raporttityypit]
@@ -287,7 +296,7 @@
 
      (when-not (or vain-hoitokausivalinta? vain-kuukausivalinta?)
        [:div.raportin-valittu-aikavali
-        [yleiset/raksiboksi {:teksti "Valittu aikaväli"
+        [kentat/raksiboksi {:teksti "Valittu aikaväli"
                              :komponentti (when @vapaa-aikavali?
                                             [:div
                                              [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
@@ -350,7 +359,7 @@
   (if @nav/valittu-urakka
     [:span]
     [:div.urakoittain
-     [yleiset/raksiboksi {:teksti (:nimi p)
+     [kentat/raksiboksi {:teksti (:nimi p)
                           :toiminto #(do (swap! urakoittain? not)
                                          (reset! arvo
                                                  {:urakoittain? @urakoittain?}))}
@@ -462,7 +471,7 @@
                               {(or (tyomaakokousraportit (:nimi p))
                                    (:nimi p)) (get-in @muistetut-parametrit [(:nimi @valittu-raporttityyppi) (:nimi p)])}))]
     [:div
-     [yleiset/raksiboksi {:teksti (:nimi p)
+     [kentat/raksiboksi {:teksti (:nimi p)
                           :toiminto paivita!}
       (get-in @muistetut-parametrit avaimet)]]))
 
@@ -484,7 +493,7 @@
                     (for [{:keys [nimi numero]} sarake
                           :let [valittu? (boolean (valitut numero))]]
                       ^{:key numero}
-                      [yleiset/raksiboksi {:teksti nimi
+                      [kentat/raksiboksi {:teksti nimi
                                            :toiminto #(let [uusi-arvo {:hoitoluokat
                                                                        ((if valittu? disj conj) valitut numero)}]
                                                        (reset! arvo uusi-arvo)

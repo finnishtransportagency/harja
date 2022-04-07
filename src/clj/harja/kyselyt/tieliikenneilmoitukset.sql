@@ -398,6 +398,12 @@ SET urakka               = :urakka,
     viestiid = :viestiid
 WHERE id = :id;
 
+-- name: paivita-ilmoituksen-urakka!
+-- Päivittää ilmoitusid:n perusteella urakan. Käytetään, kun on lähetetty ilmoitus ensin väärälle urakalle
+UPDATE ilmoitus
+SET urakka = :urakkaid
+WHERE ilmoitusid = :ilmoitusid;
+
 -- name: paivita-ilmoittaja-ilmoitukselle!
 UPDATE ilmoitus
 SET
@@ -545,21 +551,29 @@ WHERE ilmoitusid = :ilmoitusid;
 -- name: hae-ilmoitukset-asiakaspalauteluokittain
 -- Hakee summat kaikille asiakaspalauteluokille jaoteltuina ilmoitustyypeittäin
 SELECT
-  apl.nimi,
-  i.ilmoitustyyppi,
-  (coalesce(SUM(1), 0)) AS numero
+    apl.nimi,
+    i.ilmoitustyyppi,
+    (coalesce(SUM(1), 0)) AS numero
 FROM asiakaspalauteluokka apl
-  JOIN ilmoitus i
-    ON i.selitteet && apl.selitteet AND
-       (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
-       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
-       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
-       (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
-                                                               FROM urakka
-                                                               WHERE hallintayksikko = :hallintayksikko_id)) AND
-       (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
-       (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
-GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
+         JOIN ilmoitus i
+              ON i.selitteet && apl.selitteet AND
+                 (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
+                 (i.urakka IS NULL OR
+                  (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
+                 (:urakkatyyppi::urakkatyyppi IS NULL OR
+                  CASE
+                      WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                      ELSE
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi
+                      END
+                     ) AND
+                 (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
+                                                                         FROM urakka
+                                                                         WHERE hallintayksikko = :hallintayksikko_id)) AND
+                 (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
+                 (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
+GROUP BY CUBE (apl.nimi, i.ilmoitustyyppi);
 
 -- name: hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
 SELECT
@@ -574,7 +588,14 @@ FROM
 WHERE
   (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
   (ilmoitus.urakka IS NULL OR u.urakkanro IS NOT NULL) AND
-  (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+  (:urakkatyyppi::urakkatyyppi IS NULL OR
+   CASE
+       WHEN :urakkatyyppi = 'hoito' THEN
+           u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+       ELSE
+           u.tyyppi = :urakkatyyppi::urakkatyyppi
+       END)
+  AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
@@ -608,11 +629,11 @@ SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
     muokattu = current_timestamp
 WHERE id = :id;
 
--- name: ilmoitus-loytyy-viesti-idlla
-SELECT exists(SELECT
-              FROM ilmoitus
-              WHERE ilmoitusid = :ilmoitusid AND
-                    viestiid = :viestiid);
+-- name: ilmoitus-loytyy-idlla
+SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
+
+-- name: ilmoitus-on-lahetetty-urakalle
+SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urakka = :urakkaid);
 
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"

@@ -28,7 +28,7 @@
             [harja.views.hallinta :as hallinta]
             [harja.views.about :as about]
             [harja.views.tierekisteri :as tierekisteri]
-            [harja.views.tieluvat.tieluvat :as tieluvat]
+            [harja.views.tieluvat.tielupa-nakyma :as tieluvat]
 
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.oikeudet :as oikeudet]
@@ -168,7 +168,7 @@
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
                         "hairioilmoitin-tyyppi-hairio")]
     [:div.hairioilmoitin {:class tyyppi-luokka}
-     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]
      [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
                 (::hairio/viesti hairiotiedot))]]))
 

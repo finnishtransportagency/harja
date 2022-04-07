@@ -3,8 +3,7 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
         daysToKeepStr: '21',
         numToKeepStr: '14')),
             disableConcurrentBuilds(),
-            disableResume(),
-            pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
+            disableResume()])
 
 node {
     withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
@@ -48,7 +47,7 @@ node {
         // Lisää mvn pathiin
         env.PATH = "${env.JENKINS_HOME}/tools/hudson.tasks.Maven_MavenInstallation/Maven_3.5.4/bin:${env.PATH}"
 
-        if (kaynnistaja.trim().isEmpty() || params.AJA_TUOTANTO) {
+        if (kaynnistaja.trim() == "Timer Trigger" || params.AJA_TUOTANTO) {
             if (params.ARCHIVE_BUILD_NUMBER) {
                 slackSend([color  : '#3232ff',
                            message: 'Käytetään JAR:ia buildista: ' + params.ARCHIVE_BUILD_NUMBER + ' tuotanto deploymentin ajamiseen.'])

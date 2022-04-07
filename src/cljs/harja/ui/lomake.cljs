@@ -1,6 +1,7 @@
 (ns harja.ui.lomake
   "Lomakeapureita"
   (:require [goog.string :as gstring]
+            [clojure.spec.alpha :as s]
             [reagent.core :refer [atom] :as r]
             [harja.ui.validointi :as validointi]
             [harja.ui.yleiset :refer [virheen-ohje]]
@@ -9,7 +10,7 @@
             [harja.ui.komponentti :as komp]
             [taoensso.truss :as truss :refer-macros [have have! have?]]
             [harja.pvm :as pvm]
-            [clojure.string :as str]
+            [clojure.string :as string]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit])
@@ -49,10 +50,22 @@
 (defn palstoja? [x]
   (instance? Palstat x))
 
+(defn- optiot? [m]
+  (contains? m ::rivi-optiot))
+
+(s/def ::rivi-optioilla (s/cat :optiot (s/? optiot?) :skeemat (s/* map?)))
+
+#_(defn rivi
+  "Asettaa annetut skeemat vierekkäin samalle riville"
+   ;; Kommentoitu toistaiseksi pois, koska aiheuttaa joidenkin käyttöliittymäelementtien katoamisen (VHAR-5129)
+  [& skeemat]
+  (let [{{::keys [rivi-optiot]} :optiot skeemat :skeemat} (s/conform ::rivi-optioilla skeemat)]
+    (->Ryhma nil (merge {:rivi? true} rivi-optiot) skeemat)))
+
 (defn rivi
   "Asettaa annetut skeemat vierekkäin samalle riville"
   [& skeemat]
-  (->Ryhma nil {:rivi? true} skeemat))
+    (->Ryhma nil {:rivi? true} skeemat))
 
 (defn ryhma? [x]
   (instance? Ryhma x))
@@ -121,7 +134,7 @@ ja kaikki pakolliset kentät on täytetty"
   [data]
   (validi? data))
 
-(defn lomaketiedot 
+(defn lomaketiedot
   "Lomakkeen ohjaustiedot"
   [data]
   (select-keys data [::muokatut
@@ -187,16 +200,17 @@ ja kaikki pakolliset kentät on täytetty"
           (and (ryhma? s) (:rivi? (:optiot s)))
           ;; Jos kyseessä on ryhmä, joka haluataan samalle riville, lisätään
           ;; ryhmän skeemat suoraan omana rivinään riveihin
-          (recur (vec (concat (if (empty? rivi)
-                                rivit
-                                (conj rivit rivi))
-                              [[(->Otsikko (:otsikko s) (:optiot s))]
-                               (with-meta
-                                 (remove nil? (:skeemat s))
-                                 {:rivi? true})]))
-                 []
-                 0
-                 skeemat)
+          (do
+            (recur (vec (concat (if (empty? rivi)
+                                    rivit
+                                    (conj rivit rivi))
+                                  [[(->Otsikko (:otsikko s) (:optiot s))]
+                                   (with-meta
+                                     (remove nil? (:skeemat s))
+                                     (merge {} (:optiot s) {:rivi? true}))]))
+                     []
+                     0
+                     skeemat))
 
           ;; Jos palstoja, palstat alkavat tyhjältä riviltä, joten lisätään työn alla ollut rivi settiin
           ;; ja luodaan palstat, jotka tulevat omalle rivilleen.
@@ -214,9 +228,9 @@ ja kaikki pakolliset kentät on täytetty"
           ;; Muuten lisätään ryhmän otsikko ja jatketaan rivitystä normaalisti
           (recur rivit rivi palstoja
                  (concat
-                   [(->Otsikko (:otsikko s) (:optiot s))]
-                   (remove nil? (:skeemat s))
-                   skeemat))
+                  [(->Otsikko (:otsikko s) (:optiot s))]
+                  (remove nil? (:skeemat s))
+                  skeemat))
 
           :default
           ;; Rivitä skeema
@@ -348,7 +362,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     (nayta-arvo s arvo)])
 
                                (do (have #(contains? % :tyyppi) s)
-                                   [tee-kentta (merge kentta-opts (assoc s :lomake? true)) arvo]))
+                                   [tee-kentta (merge opts (assoc s :lomake? true)) arvo]))
                              [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
                               (if fmt
                                 (fmt ((or hae #(let [get-fn (if (vector? nimi)
@@ -361,14 +375,24 @@ ja kaikki pakolliset kentät on täytetty"
                       kentta
                       [:span.kentan-yksikko yksikko-kentalle]]
                      kentta)]
-        (if sisallon-leveys?
+        (cond
+          (and sisallon-leveys?
+               (:label-ja-kentta-samalle-riville? opts))
+          [:div.basis256
+           [:div.kentan-leveys kentta]]
+
+          sisallon-leveys?
           [:div.kentan-leveys
            kentta]
+
+          (:label-ja-kentta-samalle-riville? opts)
+          [:div.basis256 kentta]
+          :else
           kentta)))))
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys?
+  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
@@ -391,23 +415,29 @@ ja kaikki pakolliset kentät on täytetty"
    [:div {:class (str
                    (when sisallon-leveys?
                      "sisallon-leveys lomake-kentan-leveys ")
-                   (when kaariva-luokka kaariva-luokka))}
+                   (when kaariva-luokka kaariva-luokka)
+                   (when label-ja-kentta-samalle-riville? "flex-row "))}
     (when-not (or (+piilota-label+ tyyppi)
                   piilota-label?)
-      [:label.control-label {:for nimi}
+      [:label.control-label
+       (merge {:for nimi} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
        [:span
         [:span.kentan-label
          (if tyhja-otsikko?
            (gstring/unescapeEntities "&nbsp;")
            otsikko)]
         (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama? (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)]
+    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
+     (as-> opts opts
+           (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
+           (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+           (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
     (when (and muokattu?
                (not (empty? virheet)))
       [virheen-ohje virheet :virhe virhe-optiot])
     (when (:virheteksti s)
-      [virheen-ohje (if-not (vector? (:virheteksti s)) 
+      [virheen-ohje (if-not (vector? (:virheteksti s))
                       (conj [] (:virheteksti s))
                       (:virheteksti s)) :virhe virhe-optiot])
     (when (and muokattu?
@@ -455,11 +485,19 @@ ja kaikki pakolliset kentät on täytetty"
   [skeemat data muokkaa-kenttaa-fn voi-muokata? nykyinen-fokus aseta-fokus!
    muokatut virheet varoitukset huomautukset muokkaa {:keys [vayla-tyyli? tarkkaile-ulkopuolisia-muutoksia? virhe-optiot on-blur] :as rivi-opts}]
   (let [rivi? (-> skeemat meta :rivi?)
+        {:keys [luokat]} (-> skeemat meta)
         palstoitettu? (-> skeemat meta :palsta?)
         col-luokka (when rivi?
-                     (col-luokat (count skeemat)))]
-    [(if palstoitettu?
+                     (col-luokat (count skeemat)))
+        ]
+    [(cond
+       palstoitettu?
        :div.row.lomakepalstat
+
+       (some? luokat)
+       (keyword (str "div." (string/join "." luokat)))
+
+       :else
        (keyword (str "div.row.lomakerivi" (when (:rivi-luokka (first skeemat))
                                             (str "." (:rivi-luokka (first skeemat)))))))
      (doall
@@ -480,7 +518,7 @@ ja kaikki pakolliset kentät on täytetty"
                             :huomautukset       huomautukset
                             :rivi-opts          rivi-opts})
            ^{:key (str "rivi-kentta-" nimi)}
-           [kentta  
+           [kentta
             (cond-> s
               true (assoc
                     :col-luokka col-luokka
@@ -634,7 +672,7 @@ ja kaikki pakolliset kentät on täytetty"
                                     :virhe-optiot virhe-optiot
                                     :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}
                                    (when (some? blurrissa!) {:on-blur blurrissa!}))]]
-                     (if otsikko ;;pitaisiko olla mieluummin ryhma
+                     (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
@@ -677,13 +715,13 @@ ja kaikki pakolliset kentät on täytetty"
     (if (zero? lkm)
       [:span]
       [:span.puuttuvat-pakolliset-kentat
-       (str/capitalize (numero lkm))
+       (string/capitalize (numero lkm))
        (if (= 1 lkm)
          " pakollinen kenttä "
          " pakollista kenttää ")
        "puuttuu: "
 
-       (str/join ", "
+       (string/join ", "
                  (let [skeema (pura-ryhmat skeema)]
                    (for [puuttuva-nimi puuttuvat
                          :let [{:keys [otsikko] :as s}

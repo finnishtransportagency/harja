@@ -457,20 +457,18 @@
 
 #?(:cljs
    (def desimaali-fmt
-     (into {}
-           (zipmap (range 1 4)
-                   (map #(doto (goog.i18n.NumberFormat.
-                                 (.-DECIMAL goog.i18n.NumberFormat/Format))
-                           (.setShowTrailingZeros false)
-                           (.setMinimumFractionDigits %)
-                           (.setMaximumFractionDigits %))
-                        (range 1 4))))))
+     (memoize (fn [min-desimaalit max-desimaalit]
+                (doto (goog.i18n.NumberFormat.
+                        (.-DECIMAL goog.i18n.NumberFormat/Format))
+                  (.setShowTrailingZeros false)
+                  (.setMinimumFractionDigits min-desimaalit)
+                  (.setMaximumFractionDigits max-desimaalit))))))
 
-#?(:cljs
-   (def desimaali-fmt-ilman-tarkkuutta
-     (doto (goog.i18n.NumberFormat.
-              (.-DECIMAL goog.i18n.NumberFormat/Format))
-        (.setMaximumFractionDigits 10))))
+(def oletus-max-desimaalit
+  "Käytetään maksimitarkkuutena, jos ei määritelty.
+   goog.i18n.NumberFormat oletus on null
+   java.text.DecimalFormat oletus on 3 (ei voida asettaa nulliksi)"
+  10)
 
 #?(:clj (def desimaali-symbolit
           (doto (java.text.DecimalFormatSymbols.)
@@ -479,42 +477,72 @@
 (defn desimaaliluku
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
-  ([luku tarkkuus ryhmitelty?]
-    #?(:cljs
-       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-       (if (= tarkkuus 0)
-         (.toFixed luku 0)
-         (let [formatoitu (.format (if (nil? tarkkuus)
-                                     desimaali-fmt-ilman-tarkkuutta
-                                     (desimaali-fmt tarkkuus))
-                                   luku)]
-           (cond
-             (or
-               (or (nil? luku) (and (string? luku) (empty? luku)))
-               (frontin-formatointivirheviestit formatoitu))
-             (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+  ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
+   "Formatoi desimaaliluku.
+   luku: formatoitava luku
+   min-desimaalit: monenko desimaalin tarkkuudella luku vähintään näytetään (voi olla nil)
+   max-desimaalit: monenko desimaalin tarkkuudella luku korkeintaan näytetään (jos nil, käytetään arvoa oletus-max-desimaalit)
+   ryhmitelty?: ryhmitelläänkö kokonaislukuosa (esim. 123 000 000,00)
 
-             ryhmitelty?
-             formatoitu
+   Esimerkkejä:
+   (desimaaliluku 123 nil nil false)
+   => \"123\"
+   (desimaaliluku 123 2 3 false)
+   => \"123,00\"
+   (desimaaliluku 123.123456789 nil nil false)
+   => \"123,123456789\"
+   (desimaaliluku 123.123456789 nil 7 false)
+   => \"123,1234568\"
 
-             :default
-             (s/replace formatoitu #" " ""))))
-       :clj
-       (.format (doto (java.text.DecimalFormat.)
+   HUOM: ainakin js-puolella formatoidun luvun loppuun tulee virhettä, jos luvussa on riittävästi
+   merkitseviä numeroita.
+   Esim. jos max-desimaalit on 7, niin kokonaislukuosalle voi sallia vain 9 numeroa:
+
+   (desimaaliluku 777777777.1234567 nil 7 false)
+   => \"777777777,1234567\" ; oikein
+   (desimaaliluku 7777777777.1234567 nil 7 false)
+   => \"7777777777,1234576\" ; väärin
+
+   Jos tarvitaan paljon merkitseviä numeroita, niin kannattaa harkita big decimalin käyttämistä."
+   #?(:cljs
+      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+      (if (= max-desimaalit 0)
+        (.toFixed luku 0)
+        (let [max-desimaalit (or max-desimaalit oletus-max-desimaalit)
+              fmt (desimaali-fmt min-desimaalit max-desimaalit)
+              formatoitu (.format fmt luku)]
+          (cond
+            (or
+              (or (nil? luku) (and (string? luku) (empty? luku)))
+              (frontin-formatointivirheviestit formatoitu))
+            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+
+            ryhmitelty?
+            formatoitu
+
+            :default
+            ;; Poista whitespace ja non-breaking space
+            (s/replace formatoitu #"[\s\u00A0]" ""))))
+      :clj
+      (let [max-desimaalit (or max-desimaalit oletus-max-desimaalit)
+            fmt (doto (java.text.DecimalFormat.)
                   (.setDecimalFormatSymbols desimaali-symbolit)
-                  (.setMinimumFractionDigits tarkkuus)
-                  (.setMaximumFractionDigits tarkkuus)
-                  (.setGroupingSize (if ryhmitelty? 3 0)))
-
-                (double luku)))))
+                  (.setGroupingSize (if ryhmitelty? 3 0))
+                  (.setMaximumFractionDigits max-desimaalit))]
+        (when min-desimaalit
+          (.setMinimumFractionDigits fmt min-desimaalit))
+        (.format fmt (double luku))))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
+   (desimaaliluku-opt luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
    (if (or (nil? luku) (and (string? luku) (empty? luku)))
      ""
-     (desimaaliluku luku tarkkuus ryhmitelty?))))
+     (desimaaliluku luku min-desimaalit max-desimaalit ryhmitelty?))))
 
 (defn piste->pilkku [luku]
   (if luku

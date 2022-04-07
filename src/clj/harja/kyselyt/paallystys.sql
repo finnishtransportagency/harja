@@ -1,68 +1,50 @@
 -- name: hae-urakan-paallystysilmoitukset
--- Hakee urakan kaikki päällystysilmoitukset
+-- Hakee urakan päällystysilmoitukset joko päällystysilmoitukset tabille tai paikkauskohteisiin
+-- Paikkauskohteet erotellaan mukaan tai pois paikkauskohteet parametrin kautta. Jos paikkauskohteet
+-- parametri on annettu, niin haetaan vain ne ylläpitokohteet, jotka on linkitetty paikkauskohteisiin.
 SELECT
   ypk.id                        AS "paallystyskohde-id",
   pi.id,
   ypk.tr_numero                 AS "tr-numero",
   pi.tila,
   pi.versio                     AS "versio",
-  nimi,
-  kohdenumero,
-  yhaid,
-  tunnus,
+  ypk.nimi,
+  ypk.kohdenumero,
+  ypk.yhaid,
+  ypk.tunnus,
   pi.paatos_tekninen_osa        AS "paatos-tekninen-osa",
   ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
-  lahetetty,
+  ypk.lahetetty                 AS lahetetty,
   lahetys_onnistunut            AS "lahetys-onnistunut",
-  takuupvm,
+  lahetysvirhe,
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
+  pi.takuupvm                   AS takuupvm,
   pi.muokattu,
-  yha_tr_osoite                 AS "yha-tr-osoite"
+  ypk.yha_tr_osoite             AS "yha-tr-osoite",
+  pktm.nimi                     AS "tyomenetelma",
+  u.hallintayksikko             AS "ely",
+  p.id                          AS "paikkauskohde-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
-                                     AND pi.poistettu IS NOT TRUE
+                                           AND pi.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
 
-WHERE urakka = :urakka
-      AND sopimus = :sopimus
-      AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
-      AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+  LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
+  LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id
+  left join urakka u on u.id = ypk.urakka
+WHERE ypk.urakka = :urakka
+  AND ypk.sopimus = :sopimus
+  AND ypk.yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-      AND ypk.poistettu IS NOT TRUE;
-
--- name: hae-urakan-pot2-paallystysilmoitukset
--- Hakee urakan kaikki päällystysilmoitukset vuodelta 2021 ja siitä eteenpäin (POT2)
-SELECT
-    ypk.id                        AS "paallystyskohde-id",
-    pot2.id,
-    ypk.tr_numero                 AS "tr-numero",
-    pot2.tila,
-    nimi,
-    kohdenumero,
-    yhaid,
-    tunnus,
-    pot2.paatos_tekninen_osa        AS "paatos-tekninen-osa",
-    ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
-    ypkk.arvonvahennykset,
-    ypkk.bitumi_indeksi           AS "bitumi-indeksi",
-    ypkk.kaasuindeksi,
-    lahetetty,
-    lahetys_onnistunut            AS "lahetys-onnistunut",
-    takuupvm,
-    pot2.muokattu
-  FROM yllapitokohde ypk
-           LEFT JOIN pot2 pot2 ON pot2.yllapitokohde = ypk.id
-      AND pot2.poistettu IS NOT TRUE
-           LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
-
- WHERE urakka = :urakka
-   AND sopimus = :sopimus
-   AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
-   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
-     OR vuodet @> ARRAY [:vuosi] :: INT []))
-   AND ypk.poistettu IS NOT TRUE;
+  AND ypk.poistettu IS NOT TRUE
+  AND ((:paikkauskohteet ::TEXT IS NULL)
+   OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
 SELECT id
@@ -75,6 +57,7 @@ SELECT
   pi.id,
   pi.versio                     AS "versio",
   pi.lisatiedot,
+  pi.muokattu,
   tila,
   ypka.kohde_alku               AS "aloituspvm",
   ypka.kohde_valmis             AS "valmispvm-kohde",
@@ -121,6 +104,18 @@ SELECT
   ypk.tr_ajorata                AS "tr-ajorata",
   ypk.tr_kaista                 AS "tr-kaista",
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
+  -- Paikkauskohteen kääntäminen pot lomakkeeksi vaatii muutamia lisäkenttiä
+  p.takuuaika                   AS takuuaika,
+  ypka.paallystys_alku          AS "paallystys-alku",
+  ypka.paallystys_loppu         AS "paallystys-loppu",
+  p.id                          AS "paikkauskohde-id",
+  ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
+  ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
+  ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",
+  ypk.lahetysaika,
+  ypk.lahetetty,
+  ypk.lahetys_onnistunut        AS "lahetys-onnistunut",
+  ypk.lahetysvirhe,
   u.id                          AS "urakka-id"
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = :paallystyskohde
@@ -132,11 +127,12 @@ FROM yllapitokohde ypk
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde p ON p."yllapitokohde-id" = ypk.id
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE
 GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paallystys_loppu,
   ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
-  u.id;
+  u.id, p.takuuaika, ypka.paallystys_alku, ypka.paallystys_loppu, p.id;
 
 -- name: hae-kohdeosan-pot2-paallystekerrokset
 SELECT
@@ -150,7 +146,10 @@ SELECT
   pot2p.kokonaismassamaara,
   pot2p.piennar,
   pot2p.lisatieto,
-  pot2p.jarjestysnro
+  pot2p.jarjestysnro,
+  pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+  pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+  pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila"
 FROM pot2_paallystekerros pot2p
 WHERE pot2_id = :pot2_id AND kohdeosa_id = :kohdeosa_id;
 
@@ -167,31 +166,10 @@ SELECT
     pot2p.piennar,
     pot2p.lisatieto,
     pot2p.jarjestysnro,
-    pot2p.velho_lahetyksen_aika,
-    pot2p.velho_rivi_lahetyksen_tila,
-    pot2p.velho_lahetyksen_vastaus,
+    pot2p.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2p.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
+    pot2p.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
     pot.luotu as "alkaen", -- velhon "alkaen"
-    um.nimen_tarkenne as "nimen-tarkenne",
-    um.tyyppi as "paallystetyyppi",
-    um.max_raekoko as "max-raekoko",
-    um.kuulamyllyluokka,
-    um.litteyslukuluokka,
-    (SELECT massaprosentti FROM pot2_mk_massan_runkoaine asfrouhe WHERE
-            asfrouhe.pot2_massa_id = um.id AND
-            asfrouhe.tyyppi = (SELECT koodi FROM pot2_mk_runkoainetyyppi WHERE nimi = 'Asfalttirouhe')) as "rc%",
-    (SELECT array_to_string(array_agg(asfrouhe.tyyppi), ', ')
-     FROM pot2_mk_massan_runkoaine asfrouhe
-     WHERE asfrouhe.pot2_massa_id = um.id) as "runkoaine-koodit",
-    mr.esiintyma,
-    mr.kuulamyllyarvo as "km-arvo",
-    mr.litteysluku as "muotoarvo",
-    ms.pitoisuus,
-    ms.tyyppi as "sideainetyyppi",
-    (SELECT array_to_string(array_agg(p2ml.nimi||': '||ml.pitoisuus||'%'), ', ')
-     FROM pot2_mk_massan_lisaaine ml
-              JOIN pot2_mk_lisaainetyyppi p2ml on ml.tyyppi = p2ml.koodi
-     WHERE ml.pot2_massa_id = pot2p.materiaali) as "lisaaineet",
-    mla.tyyppi as "lisaaine-koodi",
     ypko.tr_ajorata as "tr-ajorata",
     ypko.tr_kaista as "tr-kaista",
     NULL as "karttapaivamaara",
@@ -200,23 +178,12 @@ SELECT
     ypko.tr_alkuetaisyys as "tr-alkuetaisyys",
     ypko.tr_loppuosa as "tr-loppuosa",
     ypko.tr_loppuetaisyys as "tr-loppuetaisyys",
-    ypko.yllapitokohde as "kohde-id"
+    ypko.yllapitokohde as "kohde-id",
+    mt.*
 FROM pot2_paallystekerros pot2p
-         JOIN pot2_mk_urakan_massa um ON pot2p.materiaali = um.id
+         LEFT JOIN pot2_massan_tiedot mt ON pot2p.materiaali = mt.id
          JOIN yllapitokohdeosa ypko ON pot2p.kohdeosa_id = ypko.id
          JOIN paallystysilmoitus pot ON pot.id = pot2p.pot2_id
-         LEFT JOIN pot2_mk_massan_runkoaine mr ON mr.id = (SELECT p2mmr.id
-                                                           FROM pot2_mk_massan_runkoaine p2mmr
-                                                           WHERE p2mmr.pot2_massa_id = um.id
-                                                           ORDER BY p2mmr.massaprosentti DESC LIMIT 1)
-         LEFT JOIN pot2_mk_massan_lisaaine mla ON mla.id = (SELECT p2mma.id
-                                                            FROM pot2_mk_massan_lisaaine p2mma
-                                                            WHERE p2mma.pot2_massa_id = um.id
-                                                            ORDER BY p2mma.pitoisuus DESC LIMIT 1)
-         LEFT JOIN pot2_mk_massan_sideaine ms ON ms.id = (SELECT p2mms.id
-                                                          FROM pot2_mk_massan_sideaine p2mms
-                                                          WHERE p2mms.pot2_massa_id = um.id AND p2mms."lopputuote?" IS TRUE
-                                                          LIMIT 1)
 WHERE pot2p.pot2_id = :pot2_id;
 
 
@@ -232,9 +199,9 @@ SELECT
     pot2a.tr_ajorata AS "tr-ajorata",
     pot2a.tr_kaista AS "tr-kaista",
     pot2a.toimenpide,
-    pot2a.velho_lahetyksen_aika,
-    pot2a.velho_rivi_lahetyksen_tila,
-    pot2a.velho_lahetyksen_vastaus,
+    pot2a.velho_lahetyksen_aika as "velho-lahetyksen-aika",
+    pot2a.velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus",
+    pot2a.velho_rivi_lahetyksen_tila as "velho-rivi-lahetyksen-tila",
 
     -- toimenpidespesifiset kentät
     pot2a.massa,
@@ -252,9 +219,15 @@ SELECT
     pot2a.sideainepitoisuus,
     pot2a.sideaine2,
     pot.luotu as "alkaen",
-    pot.paallystyskohde
+    pot.paallystyskohde,
+    um.tyyppi as "murske-tyyppi",
+    um.rakeisuus,
+    um.iskunkestavyys,
+    p2mt.*
   FROM pot2_alusta pot2a
   JOIN paallystysilmoitus pot ON pot.id = pot2a.pot2_id AND pot.poistettu IS FALSE
+  LEFT JOIN pot2_mk_urakan_murske um ON um.id = pot2a.murske
+  LEFT JOIN pot2_massan_tiedot p2mt on p2mt.id = pot2a.massa
  WHERE pot2a.pot2_id = :pot2_id
    AND pot2a.poistettu IS FALSE;
 
@@ -664,3 +637,6 @@ SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS ti
            LEFT JOIN urakka u ON ypk.urakka = u.id
  WHERE a.murske = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;
+
+-- name: hae-paikkauskohde-yllapitokohde-idlla
+select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;

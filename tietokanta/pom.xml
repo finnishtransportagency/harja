@@ -24,7 +24,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>4.1.2</version>
+                <version>8.2.0</version>
                 <configuration>
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <allowMixedMigrations>false</allowMixedMigrations>

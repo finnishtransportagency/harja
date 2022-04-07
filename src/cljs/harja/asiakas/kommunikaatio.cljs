@@ -31,11 +31,22 @@
     (swap! yhteyskatkokset conj {:aika (pvm/nyt)
                                  :palvelu palvelu})))
 
+(defn kehitysymparistossa-yhteiset?
+  [host]
+  (or (gstr/startsWith host "10.")
+    (gstr/contains host "googleusercontent")
+    (gstr/contains host "harja-gc")
+    (#{"localhost" "localhost:3000" "localhost:8000" 
+       "harja-test.solitaservices.fi"} host)))
+
+(defn kehitysymparistossa? []
+  "Tarkistaa ollaanko kehitysympäristössä"
+  (let [host (.-host js/location)]
+    (or (kehitysymparistossa-yhteiset? host)
+        (#{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"} host))))
+
 (def +polku+ (let [host (.-host js/location)]
-               (if (or (gstr/startsWith host "10.")
-                       (#{"localhost" "localhost:3000" "localhost:8000"
-                          "harja-test.solitaservices.fi"} host)
-                       (gstr/contains host "googleusercontent"))
+               (if (kehitysymparistossa-yhteiset? host)
                  "/"
                  "/harja/")))
 (defn polku []
@@ -285,7 +296,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (def istunto-vanhentunut? (r/atom false))
 (def pingaus-kaynnissa? (r/atom false))
 (def yhteysvirheiden-lahetys-kaynnissa? (r/atom false))
-(def normaali-pingausvali-millisekunteina (* 1000 20))
+(def normaali-pingausvali-millisekunteina
+  ;; Localhostissta pingi voi tulla 20sek sijasta 200 sek välein.
+  (if kehitysymparistossa?
+    200000
+    20000))
+
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (r/atom normaali-pingausvali-millisekunteina))
 
@@ -364,13 +380,3 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
-
-
-(defn kehitysymparistossa? []
-  "Tarkistaa ollaanko kehitysympäristössä"
-  (let [host (.-host js/location)]
-    (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
-           "harja-test.solitaservices.fi"
-           "testiextranet.vayla.fi"} host)
-        (gstr/contains host "googleusercontent"))))

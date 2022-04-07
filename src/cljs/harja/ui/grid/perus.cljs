@@ -93,7 +93,12 @@
 
              (cond
                (= tyyppi :komponentti) (apply komponentti rivi {:index index
-                                                                :muokataan? true}
+                                                                :muokataan? true
+                                                                 ;; Tuetaan gridin datan päivittämistä myös komponentista. Muista käyttää myös :aseta funktiota
+                                                                :komp-muokkaa-fn (fn [rivi uusi-arvo]
+                                                                                   (when aseta
+                                                                                     (muokkaa! id (fn [rivi]
+                                                                                                    (aseta rivi uusi-arvo)))))}
                                               komponentti-args)
                (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
                                                                                :muokataan? true}]
@@ -208,7 +213,7 @@
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
                            solu-klikattu solun-luokka huomio
-                           pakota-rivitys? reunus]}]
+                           pakota-rivitys? reunus luokka]}]
               (let [haettu-arvo (if hae
                                   (hae rivi)
                                   (get rivi nimi))]
@@ -238,7 +243,10 @@
                                    :oikea "grid-reunus-oikea"
                                    nil)
                                  (when solun-luokka
-                                   (solun-luokka haettu-arvo rivi)))}
+                                   (solun-luokka haettu-arvo rivi))
+                                 (if (fn? luokka)
+                                   (luokka rivi)
+                                   luokka))}
                    ;; Solun sisältö
                    [:span (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
@@ -435,11 +443,14 @@
     [:thead
      (when-let [rivi-ennen (:rivi-ennen opts)]
        [:tr
-        (for [{:keys [teksti sarakkeita tasaa]} rivi-ennen]
-          ^{:key teksti}
-          [:th {:colSpan (or sarakkeita 1)
-                :class (y/tasaus-luokka tasaa)}
-           teksti])])
+        (map-indexed
+          (fn [idx {:keys [teksti sarakkeita tasaa luokka]}]
+            ^{:key idx}
+            [:th {:colSpan (or sarakkeita 1)
+                  :class (y/luokat luokka
+                                   (y/tasaus-luokka tasaa))}
+             teksti])
+          rivi-ennen)])
      [:tr
       (map-indexed
         (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
@@ -498,7 +509,7 @@
          (if (@piilotetut-valiotsikot valiotsikko-id)
            [ikonit/navigation-ympyrassa :right]
            [ikonit/navigation-ympyrassa :down]))
-       [:h5 teksti]]
+       [:div.valiotsikon-teksti teksti]]
       (when (and (:sisalto komponentti-otsikon-sisaan)
                  (:col-span komponentti-otsikon-sisaan))
         [:td {:colSpan (:col-span komponentti-otsikon-sisaan)}
@@ -676,6 +687,8 @@
   :solu-klikattu                        Valinnainen käsittelijä kyseisen solun klikkaamiselle,
                                         saa rivin tiedot parametrina. Jos solulle on annettu
                                         käsittelijä, ei rivi-klikattu käsittelijää kutsuta.
+  :otsikkorivi-klikattu                 Valinnainen käsittelijä kyseisen otsikon klikkaamiselle.
+                                        Saa sarakkeen skeema.
   :komponentti                          Jos sarakkeen tyyppi on :komponentti, tämän avaimen takana tulee olla
                                         komponentin määrittävä funktio.
 
@@ -1036,7 +1049,7 @@
       (fnc [{:keys [otsikko tallenna peruuta voi-poistaa? voi-lisata? rivi-klikattu custom-toiminto
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
-                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti
+                    rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
                     validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
@@ -1072,22 +1085,23 @@
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
-           (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
-                             :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
-                             :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
-                             :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
-                             :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
-                             :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
-                             :tallenna-vain-muokatut tallenna-vain-muokatut
-                             :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
-                             :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
-                             :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
-                             :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                             :tunniste tunniste :ennen-muokkausta ennen-muokkausta
-                             :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
-                             :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
-                            skeema
-                            tiedot)
+           (when-not piilota-muokkaus? 
+             (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
+                               :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
+                               :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
+                               :muokattu? muokattu? :voi-lisata? voi-lisata? :ohjaus ohjaus
+                               :opts opts :muokkaa-aina muokkaa-aina :virheet virheet
+                               :muokatut muokatut :tallennus-kaynnissa tallennus-kaynnissa
+                               :tallenna-vain-muokatut tallenna-vain-muokatut
+                               :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
+                               :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
+                               :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
+                               :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
+                               :tunniste tunniste :ennen-muokkausta ennen-muokkausta
+                               :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
+                               :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
+                              skeema
+                              tiedot))
            [:div.panel-body 
             {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
             (when @kiinnita-otsikkorivi?

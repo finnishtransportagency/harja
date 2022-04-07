@@ -49,7 +49,7 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)
         materiaalien-lkm (ffirst (q
                                    (str "SELECT count(*) FROM materiaalikoodi")))]
-    (log/debug "Urakan haku id:llä: " encoodattu-body)
+    ;(log/debug "Urakan haku id:llä: " encoodattu-body)
     (is (= 200 (:status vastaus)))
     (is (not (nil? (:urakka encoodattu-body))))
     (is (= (get-in encoodattu-body [:urakka :tiedot :id]) urakka))
@@ -72,10 +72,10 @@
   (let [ytunnus "1565583-5"
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/" ytunnus] kayttaja portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
-    (log/debug "Urakan haku ytunnuksella löytyi " (count (:urakat encoodattu-body)) " urakkaa: " (:body vastaus))
+    ;(log/debug "Urakan haku ytunnuksella löytyi " (count (:urakat encoodattu-body)) " urakkaa: " (:body vastaus))
     (is (= 200 (:status vastaus)))
     (is (>= (count (:urakat encoodattu-body)) 2))
-    (log/debug "Urakka: " (first (:urakat encoodattu-body)))
+    ;(log/debug "Urakka: " (first (:urakat encoodattu-body)))
     (is (= (get-in (first (:urakat encoodattu-body)) [:urakka :tiedot :urakoitsija :ytunnus]) ytunnus))))
 
 (deftest urakan-haku-ytunnuksella-ei-toimi-ilman-oikeuksia

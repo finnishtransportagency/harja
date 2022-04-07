@@ -1,0 +1,437 @@
+@ympyran-halkaisija: 82px;
+@vari-ennuste: @blue-light;
+@vari-lupaus: @black-light;
+@border-color: #D6D6D6;
+
+.lupaukset-sivu {
+    .otsikko-ja-hoitokausi {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 12px;
+    }
+    > h2 {
+        margin-bottom: 20px;
+    }
+}
+
+.lupausten-yhteenveto {
+    display: flex;
+    justify-content: space-between;
+}
+
+.lupauspisteet {
+
+}
+
+/* Header ja lupausympyrä */
+.lupauspisteen-muokkaus-container {
+    display: inline-block;
+    .otsikko {
+        color: @blue-dark;
+        text-align: center;
+    }
+    button.lupauspisteet-valmis {
+        display: block;
+        margin: 16px auto 0;
+    }
+}
+
+.lupausympyra-container {
+    position: relative;
+    &:first-child {
+        margin-right: 24px;
+    }
+    > div div.pisteluku {
+        font-size: 1.75rem;
+        padding-top: 2px;
+    }
+
+    > div div.edit-ikoni > img {
+        height: 16px;
+        width: 16px;
+        position: absolute;
+        top: 56px;
+        right: 34px;
+    }
+}
+
+.lupausympyra {
+    border-radius: 50%;
+    width: @ympyran-halkaisija;
+    height: @ympyran-halkaisija;
+    padding: 16px;
+    background: white;
+    color: @vari-lupaus;
+    border: 3px solid @vari-lupaus;
+    text-align: center;
+    &.ennuste {
+        border: 3px dashed @vari-ennuste;
+        color: @vari-ennuste;
+        > h3 {
+            color: @vari-ennuste;
+        }
+    }
+    &.lupaus  {
+        > h3 {
+            margin-bottom: 0;
+        }
+        > img {
+            width: 12px;
+            height: 12px;
+        }
+    }
+}
+
+input.lupaus-sitoutumis-pisteet {
+    margin-top: 3px;
+    text-align: center;
+}
+
+input.kuukausipisteet {
+    margin-top: 3px;
+    text-align: center;
+    padding: 4px;
+    margin-bottom: 4px;
+}
+
+
+.lupausryhma-rivi {
+    /*padding: 24px 0px 16px 0px;*/
+    height: 80px;
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+
+    > .lupausryhma-nimi {
+        height: 100%;
+        padding-top: 5px;
+        > div div.navikaatio-ikonit {
+            float: left;
+            flex-grow: 1;
+            font-size: 0.74375rem;
+            line-height: 1.42857143;
+        }
+    }
+
+    .kannanotto {
+        display: inline-block;
+        height: 100%;
+        padding-top: 5px;
+    }
+}
+
+
+
+.lupausympyran-tyyppi {
+    text-align: center;
+}
+.lupausten-ennuste {
+    background-color: @blue-lighter;
+    margin-top: 8px;
+    padding: 24px;
+    margin-bottom: 16px;
+
+    &.neutraali {
+        background-color: @white-dark;
+    }
+    &.bonusta {
+        background-color: @green-lighter;
+    }
+    &.sanktiota {
+        background-color: @lemon-light;
+    }
+}
+.lupausryhman-yhteenveto {
+    border: 1px solid @black-default;
+    box-sizing: border-box;
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 4px 0;
+    max-width: 800px;
+    h3 {
+        margin: 0;
+    }
+    .lupausryhman-otsikko-ja-pisteet {
+        display: flex;
+        justify-content: space-between;
+        margin-right: 50px;
+        .lupausryhman-pisteet {
+            display: flex;
+            justify-content: space-between;
+            > div {
+                text-align: center;
+                > .pisteet {
+                    .fontti-20();
+                }
+                > .teksti {
+                    .fontti-12();
+                }
+            }
+        }
+    }
+}
+.pisteet-container {
+    text-align: center;
+    border-top: 1px solid @border-color;
+    height: 100%;
+}
+
+.lupausryhman-ennuste, .lupausryhman-toteuma {
+    > .pisteet {
+        font-weight: 600;
+    }
+    > .teksti {
+        .fontti-12();
+    }
+}
+
+.vasen-reuna-mixin(@leveys, @vari) {
+    &:after {
+        width: @leveys;
+        background: @vari;
+        content: "";
+        position: absolute;
+        bottom: 20%;
+        left: 0;
+        height: 60%;
+    }
+}
+
+.vasen-reuna {
+    .vasen-reuna-mixin(1px, @border-color);
+}
+
+.reunat-mixin(@reuna-leveys, @reuna-vari) {
+    .vasen-reuna-mixin(@reuna-leveys, @reuna-vari);
+    + * {
+        .vasen-reuna-mixin(@reuna-leveys, @reuna-vari);
+    }
+}
+
+.toteuma-pisteet-positiivnen {
+    .reunat-mixin(2px, @green-dark);
+    .pisteet {
+        color: @green-dark;
+    }
+}
+
+.toteuma-pisteet-nolla {
+    .reunat-mixin(2px, @red-default);
+    .pisteet {
+        color: @red-default;
+    }
+}
+
+.ennuste-pisteet {
+    .reunat-mixin(1px, @border-color);
+    .pisteet {
+        color: @blue-default;
+    }
+}
+
+.lupausryhman-max {
+    > .pisteet {
+        font-weight: normal;
+    }
+    > .teksti {
+        .fontti-12();
+    }
+}
+
+.kannanotto-ja-nuoli {
+    display: flex;
+    justify-content: space-between;
+    .kannanotto {
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+}
+
+.kk-tilanne {
+    display: flex;
+    font-weight: 600;
+    font-size: 16px;
+    height: 100%;
+
+    > .vastaus-kolumni {
+        padding: 12px 8px 0 8px;
+        border-top: 1px solid @border-color;
+        height: 100%;
+    }
+}
+
+.lupaus-jarjestys-ja-kuvaus {
+    margin-left: 0.5rem;
+    padding-left: 0.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid @border-color;
+    border-left: 3px solid @blue-default;
+    height: 100%;
+}
+
+.lupaus-jarjestys {
+    font-size: 14px;
+    line-height: 20px;
+    margin-bottom: 3px;
+}
+
+.lupaus-kuvaus {
+    font-size: 12px;
+    line-height: 16px;
+}
+
+.kk-nimi {
+    font-size: 0.625rem;
+    text-transform: uppercase;
+    overflow: hidden;
+    &.himmennetty {
+        color: @black-light;
+        opacity: 0.3;
+    }
+}
+
+.vastausrivi-pisteet {
+  border-top: 1px solid @border-color;
+  text-align: center;
+  padding: 13px 8px 0px 8px;
+}
+
+.pallo-ja-kk {
+    text-align: center;
+    float: left;
+    padding: 4px;
+    &.paatoskuukausi {
+        background-color: @blue-lighter;
+        box-shadow:inset 0 0 0 1px @blue-lighter;
+    }
+    &.vastaus-kk {
+        box-shadow:inset 0 0 0 1px @blue-default;
+    }
+    .vastaus-olemassa {
+        color: @green-dark;
+    }
+    .kuukausi-pisteet {
+        color: @blue-dark;
+    }
+    &.voi-valita {
+        cursor: pointer;
+      &:hover {
+        box-shadow:inset 0 0 0 1px @blue-default;
+      }
+    }
+}
+.kk-on-kommentteja {
+    color: @blue-dark;
+    font-size: 0.625rem;
+    position: absolute;
+    top: 42px;
+    left: 18px;
+}
+
+.circle-16 {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    margin: 4px 8px 0 0;
+    &.keltainen {
+        background-color: @lemon-default;
+    }
+    &.vihrea {
+        background-color: @green-default;
+    }
+}
+
+.kommentti-rivi {
+    margin-top: 1rem;
+    .luomistiedot {
+        font-size: 12px;
+    }
+    .luotu {
+        font-weight: 600;
+    }
+    .luoja {
+        margin-left: 0.25rem;
+    }
+    .kommentti-laatikko {
+        background-color: #F0F0F0;
+        padding: 1rem;
+    }
+    .kommentti-teksti {
+        white-space: pre-wrap;
+        &.poistettu {
+            font-style: italic;
+        }
+    }
+}
+
+
+
+.lisaa-kommentti {
+    margin-top: 1rem;
+}
+
+/* Yläosan ennuste-opaste*/
+.ennuste-opaste {
+    > div {
+        > .otsikko {
+            margin-top: 0px;
+            position: relative;
+            top: -2px;
+        }
+    }
+}
+
+/* Vastauslomake */
+#vastauslomake-sisalto {
+
+  span.lupausryhma-otsikko {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  p.sisalto {
+    font-size: 16px;
+  }
+}
+
+.vastauslomake-lupaus-jarjestys, .vastauslomake-lupaus-pisteet {
+    margin-bottom: 0.5rem;
+}
+
+.vastauslomake-lupaus-kuvaus {
+    margin-bottom: 1rem;
+}
+
+.sivupalkki-sisalto {
+    overflow: auto;
+    padding: 32px;
+    &.kylla-ei {
+        max-height: ~"calc(100vh - 50px)";
+    }
+    &.monivalinta {
+        max-height: ~"calc(100vh - 270px)";
+    }
+}
+
+/* sivupalkki footer */
+.sivupalkki-footer {
+    position: fixed;
+    right: 0;
+    width: 632px;
+    bottom: 0;
+    background-color: @white-default;
+    padding: 0.5rem;
+
+    &.kylla-ei {
+        height: 50px;
+    }
+    &.monivalinta {
+        height: 270px;
+    }
+
+    -webkit-box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);
+    -moz-box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);
+    box-shadow: 0px -2px 3px rgba(50, 50, 50, 0.75);
+}

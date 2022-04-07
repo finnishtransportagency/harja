@@ -33,7 +33,7 @@
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
-    h6 {
+    h2, h6 {
       display: inline;
     }
     // anna padding top ja bottom tulla BS:stä
@@ -61,6 +61,10 @@
   table:not(.pvm-valinta) {
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
+    th {
+      font-size: @fontin-koko-taulukko-th;
+      font-weight: 600;
+    }
     td {
       vertical-align: top;
       input:not([type="checkbox"]), select {
@@ -86,13 +90,13 @@
         word-break: break-word;
       }
       .varoitus {
-        .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
+        .virhe-tai-varoitus-grid(@varoitus, @white-default);
       }
       .virhe {
-        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara, @white-default);
       }
       .huomautus {
-        .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
+        .virhe-tai-varoitus-grid(@huomautus, @white-default);
       }
     }
     .gridin-collapsoitava-valiotsikko > td {
@@ -104,7 +108,7 @@
       word-break: normal;
     }
     tbody {
-      > tr {
+      > tr:not(.valiotsikko) {
         border-bottom: 1px solid @harmaa-vaalea;
       }
     }
@@ -151,9 +155,31 @@
   tr.vetolaatikko-kiinni {
     display: none;
   }
-  td.vetolaatikon-tila {
-    text-align: center;
+  // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
+  // käytetään ns. general sibling selectoria (~)
+  tr.gridin-collapsoitava-valiotsikko ~ tr {
+    td.vetolaatikon-tila {
+      text-align: center;
+      .vetolaatikon-sailio {
+        display: flex;
+        height: 100%;
+        .vetolaatikon-pylvas {
+          position: relative;
+          width: 3px;
+          left: 9px;
+          top: 0px;
+          bottom: 0px;
+          background: @blue-default;
+        }
+        > .navigation-ympyrassa {
+          position: relative;
+          top: 0;
+          left: 16px;
+        }
+      }
+    }
   }
+
   tr, td, th {
     padding: @livi-taulukon-padding;
     &.tiivis {
@@ -247,7 +273,7 @@
     position: relative;
   }
   tr.rivi-valittu {
-    color: @valkoinen;
+    color: @white-default;
     background-color: @harmaa7;
   }
   tr.yhteenveto {
@@ -268,6 +294,11 @@
   }
   .ei-arvoa {
     color: @varoitus;
+  }
+
+  tr.valiotsikko {
+      background-color: @harmaa13;
+      border-bottom: none;
   }
 
   tr.muokataan {
@@ -297,11 +328,11 @@
       > td.muokattava {
         background-color: transparent;
         .valinnan-vierusnappi {
-          background-color: @valkoinen;
+          background-color: @white-default;
         }
        .alasveto-gridin-kentta > button.nappi-alasveto {
           padding-top: 2px;
-          border-bottom: 1px solid @valkoinen;
+          border-bottom: 1px solid @white-default;
           height: 26px;
         }
       }
@@ -333,7 +364,7 @@
       }
     }
     td {
-      background-color: @valkoinen;
+      background-color: @white-default;
       &.ei-muokattava {
         background-color: @harmaa15;
         padding: @livi-taulukon-padding;
@@ -382,8 +413,8 @@
         border: none;
       }
       > span.grid-kentta-wrapper input {
-        border-top: 4px solid @valkoinen;
-        border-bottom: 5px solid @valkoinen;
+        border-top: 4px solid @white-default;
+        border-bottom: 5px solid @white-default;
         border-left: none;
         border-right: none;
       }
@@ -419,6 +450,10 @@
       margin-top: 3px;
       margin-bottom: 3px;
     }
+  }
+
+  tr.tyhja {
+    text-align: center;
   }
   // Tämä on sitä varten, että grid laitetaan toisen gridin sisälle
   tr:not(.vetolaatikko) .livi-grid {
@@ -557,11 +592,20 @@
 // Gridin väliotsikkotyyli
 tr.otsikko {
   background-color: @harmaa5;
-  color: @valkoinen;
+  color: @white-default;
 
   &.gridin-collapsoitava-valiotsikko {
-    background-color: @gray200;
-    color: @gray25;
+    background-color: @harjan-taustavari;
+    color: @blue-dark;
+    .valiotsikon-teksti {
+      position: relative;
+      top: -9px;
+      .fontti-16();
+      color: @blue-dark;
+      margin-left: @valistys-32;
+      margin-top: @valistys-4;
+      margin-bottom: @valistys-4;
+    }
   }
   td {
     position: relative;
@@ -582,7 +626,7 @@ tr.otsikko {
   > td {
     > .navigation-ympyrassa {
       position: relative;
-      top: 27px;
+      top: 15px;
       right: 4px;
       text-align: center;
     }
@@ -710,7 +754,7 @@ span.ajax-loader-pisteet {
     border: none;
   }
   &.valittu-sort {
-    border: 1px solid @black;
+    border: 1px solid @black-default;
   }
   padding: 0;
   margin-left: 8px;

@@ -17,7 +17,7 @@
         > tr {
             > th {
                 background-color: @raportin-tehostevari;
-                border-color: @valkoinen;
+                border-color: @white-default;
                 color: @black-default;
                 font-weight: 600;
                 font-size: 12px;
@@ -68,7 +68,7 @@
     }
 }
 .tyomaakokous {
-    border-bottom: 1px solid @primaari-sininen;
+    border-bottom: 1px solid @blue-default;
 }
 .raportin-asetukset {
      margin-top: 1em;
@@ -112,6 +112,12 @@
     margin-bottom: 1px;
     > * {
      margin-bottom: 0;
+    }
+    .label-ja-aikavali-lyhyt {
+        > label {
+            line-height: 1rem;
+            margin-top: 0;
+        }
     }
 }
 .raportti-alasveto {

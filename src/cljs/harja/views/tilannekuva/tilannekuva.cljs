@@ -5,7 +5,7 @@
             [harja.tiedot.tilannekuva.tilannekuva-kartalla :as tilannekuva-kartalla]
             [harja.views.tilannekuva.tienakyma :as tienakyma]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot]
-            [harja.views.tieluvat.tieluvat :as tielupa-view]
+            [harja.views.tieluvat.tielupa-lomake :as tielupa-lomake]
             [harja.views.kartta :as kartta]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.loki :refer [log tarkkaile!]]
@@ -345,8 +345,8 @@ suodatinryhmat
   {:paallystys
    {:toiminto (fn [yllapitokohdeosa]
                 (yllapito-yhteyshenkilot/nayta-yhteyshenkilot-modal!
-                  (:yllapitokohde-id yllapitokohdeosa)
-                  :paallystys))
+                  {:yllapitokohde-id (:yllapitokohde-id yllapitokohdeosa)
+                   :urakkatyyppi :paallystys}))
     :teksti "Näytä yhteyshenkilöt"}
 
    :varustetoteuma
@@ -366,7 +366,7 @@ suodatinryhmat
                 (modal/nayta!
                  {:otsikko (str (tielupa/tyyppi-fmt (::tielupa/tyyppi lupa)) " " (::tielupa/paatoksen-diaarinumero lupa))
                   :luokka "tilannekuva-tielupa-modal"}
-                 [tielupa-view/tielupalomake (constantly lupa) {:valittu-tielupa lupa}]))
+                 [tielupa-lomake/tielupalomake (constantly lupa) {:valittu-tielupa lupa}]))
     :teksti "Näytä tarkemmat tiedot"}})
 
 (defn tilannekuva []

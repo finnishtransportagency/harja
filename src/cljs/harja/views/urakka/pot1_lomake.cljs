@@ -613,7 +613,7 @@
                       (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                       (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))
       (fn [e! {:keys [ilmoitustiedot kirjoitusoikeus? yllapitokohdetyyppi perustiedot tr-osien-pituudet historia
-                      ohjauskahvat validoi-lomake?] :as lomakedata-nyt}
+                      ohjauskahvat validoi-lomake? tallennus-kaynnissa?] :as lomakedata-nyt}
            lukko urakka kayttaja]
         (when validoi-lomake?
           (when-let [ohjauskahva (:tierekisteriosoitteet ohjauskahvat)]
@@ -705,7 +705,7 @@
              [lomake/lomake-lukittu-huomautus lukko])
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
            [:hr]
-           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset]
+           [dom/lataus-komponentille {:viesti "Perustietoja ladataan..."} pot-yhteinen/paallystysilmoitus-perustiedot e! perustiedot-app urakka lukittu? muokkaa! validoinnit huomautukset nil]
            [:hr]
            [:div {:style {:float "right"}}
             [kumoa e! historia ohjauskahvat]]
@@ -717,6 +717,7 @@
            [:hr]
            [pot-yhteinen/tallenna e! tallennus-tiedot {:kayttaja kayttaja
                                                        :urakka-id (:id urakka)
-                                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+                                                       :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                       :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]
            [debug virheet]])))))

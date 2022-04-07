@@ -29,7 +29,7 @@
 
 (defn tallenna
   [e! {:keys [tekninen-osa tila versio]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond
@@ -47,22 +47,24 @@
        [:div {:style {:margin-bottom "24px"}}
         [yleiset/vihje huomautusteksti]])
 
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
+      #(do
+         (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
          (if (= 2 versio)
            (e! (pot2-tiedot/->TallennaPot2Tiedot))
            (e! (paallystys/->TallennaPaallystysilmoitus))))
       {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
+       :data-attributes {:data-cy "pot-tallenna"}
        :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
+       :disabled (or tallennus-kaynnissa?
+                   (false? valmis-tallennettavaksi?)
+                   (not (oikeudet/voi-kirjoittaa?
+                          oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                          urakka-id kayttaja)))
+       :ikoni (ikonit/tallenna)}]
+     (when tallennus-kaynnissa?
+       [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
 
 (defn paallystyskohteen-fmt
   [{:keys [kohdenumero tunnus kohdenimi]}]
@@ -96,6 +98,20 @@
     (when (= :lukittu tila)
       [poista-lukitus e! urakka])]])
 
+(defn lahetys-virhe-teksti [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus
+                                    velho-lahetyksen-tila velho-rivi-lahetyksen-tila
+                                    lahetysaika lahetetty lahetys-onnistunut lahetysvirhe] :as lahetyksen-tila}]
+  (let [pre-tyyli {:style {:background-color "inherit" :padding-bottom "16px" ;; padding bottom tarpeen koska horizontal scroll bar muuten peittää
+                           :max-height "100px" :overflow-y "auto" :border-style "none"}}]
+    (when (or (contains? #{"epaonnistunut" "osittain-onnistunut"} velho-lahetyksen-tila)
+              (contains? #{"epaonnistunut"} velho-rivi-lahetyksen-tila)
+              (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
+      [:div
+       (when (some? lahetysvirhe)
+         [:pre pre-tyyli lahetysvirhe])
+       (when (some? velho-lahetyksen-vastaus)
+         [:pre pre-tyyli velho-lahetyksen-vastaus])])))
+
 (defn tarkista-takuu-pvm [_ {valmispvm-paallystys :valmispvm-paallystys takuupvm :takuupvm}]
   (when (and valmispvm-paallystys
              takuupvm
@@ -105,7 +121,8 @@
 (defn tr-kentta [{:keys [muokkaa-lomaketta data]} e!
                  {{:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                           yha-tr-osoite] :as perustiedot} :perustiedot
-                  ohjauskahvat :ohjauskahvat}]
+                  ohjauskahvat :ohjauskahvat
+                  {:keys [vayla-tyyli?]} :optiot}]
   (let [osoite-sama-kuin-yhasta-tuodessa? (tr/sama-tr-osoite? perustiedot yha-tr-osoite)
         muuta!  (fn [kentta]
                   #(do
@@ -143,30 +160,30 @@
         [:th "Losa"]
         [:th "Let"]]]
       [:tbody
-       [:tr
+       [:tr (merge {} (when vayla-tyyli? {:class "solujen-valistys-8"}))
         [:td
          [kentat/tr-kentan-elementti true muuta! nil
           "Tie" tr-numero :tr-numero true ""]]
         (when tr-ajorata
           [:td
            [kentat/tr-kentan-elementti true muuta! nil
-            "Ajorata" tr-ajorata :tr-ajorata false ""]])
+            "Ajorata" tr-ajorata :tr-ajorata false (or vayla-tyyli? false)]])
         (when tr-kaista
           [:td
            [kentat/tr-kentan-elementti true muuta! nil
-            "Kaista" tr-kaista :tr-kaista false ""]])
+            "Kaista" tr-kaista :tr-kaista false (or vayla-tyyli? false)]])
         [:td
          [kentat/tr-kentan-elementti true muuta! nil
-          "Aosa" tr-alkuosa :tr-alkuosa false ""]]
+          "Aosa" tr-alkuosa :tr-alkuosa false (or vayla-tyyli? false)]]
         [:td
          [kentat/tr-kentan-elementti true muuta! nil
-          "Aet" tr-alkuetaisyys :tr-alkuetaisyys false ""]]
+          "Aet" tr-alkuetaisyys :tr-alkuetaisyys false (or vayla-tyyli? false)]]
         [:td
          [kentat/tr-kentan-elementti true muuta! nil
-          "Losa" tr-loppuosa :tr-loppuosa false ""]]
+          "Losa" tr-loppuosa :tr-loppuosa false (or vayla-tyyli? false)]]
         [:td
          [kentat/tr-kentan-elementti true muuta! nil
-          "Let" tr-loppuetaisyys :tr-loppuetaisyys false ""]]]]]
+          "Let" tr-loppuetaisyys :tr-loppuetaisyys false (or vayla-tyyli? false)]]]]]
      (when-not osoite-sama-kuin-yhasta-tuodessa?
        [:div {:style {:margin-top "4px"}}
         [:label.kentan-label "Alkuperäinen suunniteltu TR-osoite:"]
@@ -253,7 +270,7 @@
         :tyyppi :pvm ::lomake/col-luokka "col-sm-6"
         :huomauta kasittelyaika}
        {:otsikko "Päätös"
-        :nimi :paatos :kaariva-luokka "paatos"
+        :nimi :paatos
         :tyyppi :valinta ::lomake/col-luokka "col-sm-6"
         :valinnat [:hyvaksytty :hylatty]
         :huomauta paatos
@@ -268,45 +285,49 @@
       tekninen-osa]]))
 
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
-                                      muokkaa! validoinnit huomautukset]
+                                      muokkaa! validoinnit huomautukset paikkauskohteet?]
   (let [false-fn (constantly false)
-        muokkaa-fn (fn [uusi]
+        muokkaa-fn (fn [uusi ohjauskahva]
                      (log "[PÄÄLLYSTYS] Muokataan kohteen tietoja: " (pr-str uusi))
                      (muokkaa! update :perustiedot (fn [vanha]
-                                                     (merge vanha uusi))))
+                                                     (merge vanha uusi)))
+                     ;; päällystekerroksen (alikohteiden) validointi tehtävä uudestaan kun pääkohde muuttuu
+                     (when ohjauskahva
+                       (grid/validoi-grid ohjauskahva)))
         toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                      takuupvm versio valmispvm-kohde] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
-         lukittu? muokkaa! validoinnit huomautukset]
+         lukittu? muokkaa! validoinnit huomautukset paikkauskohteet?]
       (let [pot2? (= 2 versio)
             muokattava? (boolean (and (not= :lukittu tila)
                                       (false? lukittu?)
-                                      kirjoitusoikeus?))
-            takuupvm (or takuupvm paallystys/oletus-takuupvm)
-            perustiedot-nyt (assoc perustiedot-nyt :takuupvm takuupvm)]
+                                      kirjoitusoikeus?))]
         [:div.row.pot-perustiedot
          [:div.col-sm-12.col-md-6
           [:h5 "Perustiedot"]
           [lomake/lomake {:voi-muokata? muokattava?
-                          :muokkaa! muokkaa-fn
+                          :muokkaa! #(muokkaa-fn % (:paallystekerros ohjauskahvat))
                           :kutsu-muokkaa-renderissa? true
                           :validoi-alussa? true
                           :data-cy "paallystysilmoitus-perustiedot"}
-           [{:otsikko "Kohde" :nimi :kohde
-             :hae paallystyskohteen-fmt
-             :muokattava? false-fn
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"}
+           [(when-not paikkauskohteet?
+              {:otsikko "Kohde" :nimi :kohde
+               :hae paallystyskohteen-fmt
+               :muokattava? false-fn
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (merge
               {:nimi :tr-osoite
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-12 col-lg-6"}
+              (when paikkauskohteet?
+                {:label-ja-kentta-samalle-riville? true})
               (if muokattava?
                 {:tyyppi :reagent-komponentti
                  :otsikko "Tierekisteriosoite"
                  :komponentti tr-kentta
-                 :komponentti-args [e! paallystysilmoituksen-osa]
+                 :komponentti-args [e! (merge paallystysilmoituksen-osa (when paikkauskohteet? {:optiot {:vayla-tyyli? true}}))]
                  :validoi (get-in validoinnit [:perustiedot :tr-osoite])
                  :sisallon-leveys? true}
                 {:otsikko "Tierekisteriosoite"
@@ -320,30 +341,67 @@
             (when (or tr-ajorata tr-kaista)
               {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :string
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
-            {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn}
-            (when valmispvm-kohde
+            (when-not paikkauskohteet?
+              {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? (constantly muokattava?)})
+            (when-not paikkauskohteet?
               {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-               :tyyppi :pvm :muokattava? false-fn})
-            {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
-             :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
-             :valinta-nayta (fn [valinta]
-                              (if muokattava?
-                                (:fmt valinta)
-                                (pvm/pvm (:pvm valinta))))
-             :valinta-arvo :pvm
-             :tarkenne (fn [valinta]
-                         (when valinta
-                           [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
-             ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-             :varoita [tarkista-takuu-pvm]}
+               :tyyppi :pvm :muokattava? (constantly muokattava?)
+               :pakollinen? true})
+            (when-not paikkauskohteet?
+              {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
+              :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
+              :valinta-nayta (fn [valinta]
+                               (if muokattava?
+                                 (:fmt valinta)
+                                 (pvm/pvm (:pvm valinta))))
+              :valinta-arvo :pvm
+              :tarkenne (fn [valinta]
+                          (when valinta
+                            [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
+              ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+              :varoita [tarkista-takuu-pvm]})
             (when-not pot2?
               {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
                :hae toteuman-kokonaishinta-hae-fn
                :fmt fmt/euro-opt :tyyppi :numero
                :muokattava? false-fn
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})]
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
+            (when paikkauskohteet?
+              {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku :label-ja-kentta-samalle-riville? true
+               :ikoni-sisaan? true :vayla-tyyli? true :pakollinen? true
+               ::lomake/col-luokka "col-xs-12"})
+            (when paikkauskohteet?
+              {:otsikko "Työ päättyi"
+               :tyyppi :pvm
+               :nimi :paallystys-loppu
+               :label-ja-kentta-samalle-riville? true
+               :ikoni-sisaan? true
+               :vayla-tyyli? true
+               :pakollinen? true
+               :validoi [[:pvm-kentan-jalkeen :paallystys-alku "Päättyminen pitää tapahtua alkamisen jälkeen"]]
+               ::lomake/col-luokka "col-xs-12"})
+            (when paikkauskohteet?
+              {:otsikko "Valmistumispvm"
+               :tyyppi :pvm
+               :nimi :valmispvm-kohde
+               :label-ja-kentta-samalle-riville? true
+               :ikoni-sisaan? true
+               :vayla-tyyli? true
+               :validoi [[:pvm-kentan-jalkeen :paallystys-loppu "Valmistuminen pitää tapahtua työn päättymisen jälkeen"]]
+               ::lomake/col-luokka "col-xs-12"})
+            (when paikkauskohteet?
+              {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika :label-ja-kentta-samalle-riville? true
+               :valinnat {0 "Ei takuuaikaa"
+                          1 "1 vuosi"
+                          2 "2 vuotta"
+                          3 "3 vuotta"}
+               :valinta-arvo first
+               :valinta-nayta second
+               :vayla-tyyli? true
+               :pakollinen? true
+               ::lomake/col-luokka "col-xs-12"})]
            perustiedot-nyt]]]))))
 
 (defn kasittely [e! {:keys [perustiedot] :as app} urakka lukittu?
@@ -366,7 +424,7 @@
          [:span.asiatarkastus-checkbox
           (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
             [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Täytä asiatarkastuskin"} tee-asiatarkastus?])
+                                :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
           [:div.pot-kasittely
            [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
            [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))

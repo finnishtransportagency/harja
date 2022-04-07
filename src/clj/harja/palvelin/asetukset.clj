@@ -22,7 +22,9 @@
                    :url s/Str
                    (s/optional-key :threads) s/Int
                    (s/optional-key :max-body-size) s/Int
-                   (s/optional-key :anti-csrf-token) s/Str}
+                   (s/optional-key :anti-csrf-token) s/Str
+                   (s/optional-key :salli-oletuskayttaja?) s/Bool
+                   (s/optional-key :dev-resources-path) s/Str}
    :kehitysmoodi Boolean
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
@@ -56,14 +58,14 @@
                             :salasana s/Str
                             (s/optional-key :tyyppi) s/Keyword
                             :julkaise-tila? s/Bool}
-   (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
-                                       (s/optional-key :suora?) s/Bool
-                                       (s/optional-key :palvelin) s/Str
-                                       :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
+   (s/optional-key :api-sahkoposti) {:vastausosoite s/Str
+                                     :suora? s/Bool
+                                     :sahkoposti-lahetys-url s/Str
+                                     :sahkoposti-ja-liite-lahetys-url s/Str
+                                     :palvelin s/Str
+                                     :kayttajatunnus s/Str
+                                     :salasana s/Str}
+
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -141,7 +143,14 @@
                           :salasana s/Str}
 
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
-                            :autorisaatio s/Str}
+                            :token-url s/Str
+                            :kayttajatunnus s/Str
+                            :salasana s/Str
+                            :varuste-api-juuri-url s/Str
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str}
+
+   (s/optional-key :yha-velho) {}
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
@@ -157,9 +166,6 @@
                                           (s/optional-key :url) s/Str
                                           (s/optional-key :kayttajatunnus) s/Str
                                           (s/optional-key :salasana) s/Str}
-
-   (s/optional-key :sonja-jms-yhteysvarmistus) {(s/optional-key :ajovali-minuutteina) s/Int
-                                                (s/optional-key :jono) s/Str}
 
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
@@ -186,16 +192,8 @@
 
    (s/optional-key :reimari) {:url s/Str
                               :kayttajatunnus s/Str
-                              :salasana s/Str
-                              (s/optional-key :toimenpidehakuvali) s/Int
-                              (s/optional-key :komponenttityyppihakuvali) s/Int
-                              (s/optional-key :turvalaitekomponenttihakuvali) s/Int
-                              (s/optional-key :vikahakuvali) s/Int
-                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
+                              :salasana s/Str}
 
-
-   (s/optional-key :ais-data) {:url s/Str
-                               :sekunnin-valein s/Int}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}

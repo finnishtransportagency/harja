@@ -125,7 +125,13 @@
                                              paivystajat nil)
           ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
                                                             db urakka-id ilmoitus)
-          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
+          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
+          ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
+          ;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
+          ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
+          _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+              (ilmoitukset-q/paivita-ilmoituksen-urakka db ilmoitus-id urakka-id))
+
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
           ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
           kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu
@@ -145,10 +151,13 @@
       (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
       (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-        (when (not uudelleen-lahetys?)
+        ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
+        ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
+        (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?)))
           (laheta-ilmoitus-paivystajille db
-                                         (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                                         paivystajat urakka-id ilmoitusasetukset)))
+            (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+            paivystajat urakka-id ilmoitusasetukset)
+          (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin.")))
       (laheta-kuittaus itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
 
 (defn kasittele-tuntematon-urakka [itmf lokittaja kuittausjono viesti-id ilmoitus-id

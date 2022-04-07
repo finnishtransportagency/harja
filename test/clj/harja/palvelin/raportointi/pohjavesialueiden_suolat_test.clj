@@ -28,7 +28,7 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])))))
-  (raportit-q/paivita_raportti_cachet (:db jarjestelma))
+  (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat (:db jarjestelma))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -77,7 +77,7 @@
 
       (is (= vastaus
              [:raportti
-              {:nimi (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta "str-p"."str-kk".2020 - "str-p"."str-kk".2022")
+              {:nimi (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))
                :orientaatio :landscape}
               [:taulukko
                {:otsikko "11244001-Kempeleenharju"
@@ -110,30 +110,30 @@
                 {:fmt :numero
                  :leveys 5
                  :otsikko "Käyttö­raja (t/km)"}]
-               [["846"
-                 "1"
-                 "0"
-                 "1"
-                 "1016"
-                 "1389,3"
-                 "3,0"
-                 "2,2"
-                 ""]
-                ["18637"
-                 "1"
-                 "0"
-                 "1"
-                 "8953"
-                 "9324,4"
-                 "5,0"
-                 "0,5"
-                 ""]
+               [[846
+                 1
+                 0
+                 1
+                 1016
+                 1389.2576055387608
+                 3.0M
+                 2.1594267240571163
+                 nil]
+                [18637
+                 1
+                 0
+                 1
+                 8953
+                 9324.379134279012
+                 5.0M
+                 0.5362287320148329
+                 nil]
                 ["Yhteensä"
-                 ""
-                 ""
-                 ""
-                 ""
-                 ""
-                 "8,0"
-                 ""
-                 ""]]]])))))
+                 nil
+                 nil
+                 nil
+                 nil
+                 nil
+                 8.0M
+                 nil
+                 nil]]]])))))

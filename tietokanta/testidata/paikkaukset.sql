@@ -374,12 +374,19 @@ insert into paikkauskohde (nimi, luotu, "luoja-id", "urakka-id", alkupvm, loppup
  ROW (926, 9, 3364, 12, 3964, 0, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu,
  400, 400, 'jm', 'Keskustelujen jälkeen päädyttiin siihen, että tätä kohtaa ei tarvitse paikata.');
 
+-- Lisätään UREM kohde ja sille yksi toteuma
 insert into paikkauskohde ("ulkoinen-id", nimi, luotu, "luoja-id", "urakka-id",
                            alkupvm, loppupvm, tyomenetelma, tierekisteriosoite_laajennettu,
                            "paikkauskohteen-tila", "suunniteltu-maara", "suunniteltu-hinta", yksikko, lisatiedot)  VALUES
-(999888777, 'Muokattava testikohde', current_timestamp, 3, 36, '2021-01-01', '2021-01-02', 8,
- ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'ehdotettu',
+(999888777, 'Muokattava testikohde', current_timestamp, 3, (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'), '2021-01-01', '2021-01-02', 8,
+ ROW(926, 9, 3364, 12, 3964, 1, NULL, NULL, NULL, NULL)::tr_osoite_laajennettu, 'tilattu',
  1000, 1000, 'jm', 'muokattava testikohde');
+
+INSERT INTO paikkaus ("urakka-id", "paikkauskohde-id", "ulkoinen-id", alkuaika, loppuaika, tierekisteriosoite,
+                      tyomenetelma, massatyyppi, leveys, raekoko, kuulamylly, massamaara)
+VALUES (36,(select id from paikkauskohde where nimi = 'Muokattava testikohde'),1113, '2021-01-01 00:00:00',
+        '2021-01-01 01:00:00', ROW(926, 9, 3364, 12, 3964, NULL)::tr_osoite, 8, 'AB, Asfalttibetoni', 7.1, 5, 'AN5', 1234);
+
 
 
 -- Koska todella monessa paikkauksessa ei alunperin lisätty paikkauskohteelle paikkauskohde-tila arvoa eikä työmenetelmää

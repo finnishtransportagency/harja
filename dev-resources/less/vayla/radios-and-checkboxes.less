@@ -104,6 +104,7 @@ label.radio- {
 
     &:before {
       border: 2px solid @white-darker;
+      background-color: @white-darker;
     }
   }
 
@@ -133,8 +134,11 @@ label.radio- {
 
     &:before {
       content: '';
-      margin-right: 0px;
+      // nollamarginilla pallon ja labelin välissä on 5px,
+      // Lisätään vielä kolme, jotta täsmää ui-speksiin.
+      margin-right: 3px;
       display: inline-block;
+      min-width: 32px;
       width: 32px;
       height: 32px;
       background: transparent;
@@ -143,6 +147,16 @@ label.radio- {
       border-radius: 20px;
     }
   }
+
+  &.tiivis + label {
+    &:before {
+      margin-right: 5px;
+      width: 20px;
+      min-width: 20px;
+      height: 20px;
+      border: 1px solid transparent;
+      box-shadow: inset 0 0 0 1px @gray25;
+    }}
 
   &:hover, &:focus {
     + label:before {
@@ -156,6 +170,12 @@ label.radio- {
     }
   }
 
+  &.tiivis:hover, &.tiivis:focus {
+    + label:before {
+      box-shadow: inset 0 0 0 1px @blue-dark;
+    }
+  }
+
   &:checked {
     + label {
       &:before {
@@ -164,12 +184,27 @@ label.radio- {
       &:after {
         content: '';
         width: 12px;
+        min-width: 12px;
         height: 12px;
         background: @focus-color;
 
         border-radius: 6px;
         position: absolute;
         left: 10px;
+      }
+    }
+  }
+
+  &.tiivis:checked {
+    + label {
+      &:before {
+        box-shadow: inset 0 0 0 1px @focus-color;
+      }
+      &:after {
+        width: 8px;
+        min-width: 8px;
+        height: 8px;
+        left: 6px;
       }
     }
   }
@@ -197,4 +232,24 @@ label.radio- {
       }
     }
   }
+
+  &.tiivis:disabled {
+    + label {
+      &:before {
+        box-shadow: inset 0 0 0 1px @gray200;
+      }
+    }
+    &:checked {
+      + label {
+        &:before {
+          box-shadow: inset 0 0 0 1px @gray200;
+        }
+      }
+    }
+  }
+
+  &-lapsi {
+    margin-left: @valistys-32;
+  }
 }
+

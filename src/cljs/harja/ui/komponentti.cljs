@@ -229,6 +229,18 @@
                                (dom/sisalla? this (:tapahtuma tapahtuma)))
                      (ulkopuolella-fn)))))))
 
+(defn klikattu-luokan-ulkopuolelle
+  "Kutsuu annettua funktiota, kun klikataan annettujen luokkien ulkopuolelle.
+  Esimerkiksi lupaukset-sivupaneeli suljetaan, kun klikataan minne tahansa paitsi sivupaneeliin,
+  kuukauden valintaan tai varmistusmodaaliin.
+  Luokkaa etsitään klikatusta DOM-nodesta ja siitä ylöspäin (node -> parentNode -> parentNode ...).
+  Jos nodella on joku annetuista luokista, ei kutsuta funktiota."
+  ([{:keys [ulkopuolella-fn luokat]}]
+   (kuuntelija :body-klikkaus
+               (fn [_this tapahtuma]
+                 (when-not (some-> tapahtuma :tapahtuma .-target (dom/luokka-polulla? luokat))
+                   (ulkopuolella-fn {:tapahtuma tapahtuma}))))))
+
 (defn ulos
   "Mixin, joka kutsuu annettua funktiota komponentin poistuessa."
   [funktio]

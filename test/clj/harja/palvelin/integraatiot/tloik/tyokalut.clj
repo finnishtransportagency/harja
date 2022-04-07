@@ -230,6 +230,45 @@
     </harja:ilmoitus>
     ")))
 
+(defn testi-valaistusilmoitus-sanoma-eri-sijaintiin [viesti-id ilmoitus-id ilmoitettu valitetty tienumero x-koordinaatti y-koordinaatti]
+  (str
+    "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+     <viestiId>"viesti-id"</viestiId>
+     <lahetysaika>" valitetty "</lahetysaika>
+      <ilmoitusId>"ilmoitus-id"</ilmoitusId>
+      <tunniste>UV-1509-1a</tunniste>
+      <versionumero>1</versionumero>
+      <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+      <ilmoitettu>" ilmoitettu "</ilmoitettu>
+    <urakkatyyppi>valaistus</urakkatyyppi>
+    <otsikko>Valot pimeänä</otsikko>
+    <paikanKuvaus>Hailuodossa</paikanKuvaus>
+    <lisatieto>Valot ovat pimeänä.</lisatieto>
+    <yhteydenottopyynto>false</yhteydenottopyynto>
+    <sijainti>
+    <tienumero>"tienumero"</tienumero>
+    <x>"x-koordinaatti"</x>
+    <y>"y-koordinaatti"</y>
+    </sijainti>
+    <ilmoittaja>
+    <etunimi>Matti</etunimi>
+    <sukunimi>Meikäläinen</sukunimi>
+    <matkapuhelin>08023394852</matkapuhelin>
+    <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+    <tyyppi>tienkayttaja</tyyppi>
+    </ilmoittaja>
+    <lahettaja>
+    <etunimi>Pekka</etunimi>
+    <sukunimi>Päivystäjä</sukunimi>
+    <matkapuhelin>929304449282</matkapuhelin>
+    <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+    </lahettaja>
+    <seliteet>
+    <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+    </seliteet>
+    </harja:ilmoitus>
+    "))
+
 (def +testi-paallystysilmoitus-sanoma+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
@@ -336,6 +375,24 @@
                   (q-map "select * from ilmoitus where ilmoitusid = 123456789;"))]
     vastaus))
 
+(defn hae-ilmoitus-ilmoitusidlla-tietokannasta [ilmoitus-id]
+  (let [vastaus (first (mapv
+                         #(-> %
+                            (konv/array->set :selitteet)
+                            (set/rename-keys {:ilmoitusid :ilmoitus-id}))
+                         (q-map (str "select * from ilmoitus where ilmoitusid = " ilmoitus-id ";"))))]
+    vastaus))
+
+(defn hae-ilmoitustoimenpiteet-ilmoitusidlla [ilmoitus-id]
+  (let [vastaus (q-map (str "select id, ilmoitus, ilmoitusid, kuitattu, tila, lahetetty, lahetysid,
+                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id ";"))]
+    vastaus))
+
+(defn hae-ilmoitustoimenpide-ilmoitusidlla [ilmoitus-id]
+  (let [vastaus (first (q-map (str "select id, ilmoitus, ilmoitusid, kuitattu, tila, lahetetty, lahetysid,
+                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id ";")))]
+    vastaus))
+
 (defn hae-valaistusilmoitus []
   (q "select * from ilmoitus where ilmoitusid = 987654321;"))
 
@@ -353,10 +410,10 @@ WHERE ilmoitus = (SELECT id FROM ilmoitus WHERE ilmoitusid = 123456789)"))
     VALUES (now() - interval '1' day, now() + interval '1' day, %s, %s, false, true)" urakka-id (first yhteyshenkilo)))
     yhteyshenkilo))
 
-(defn poista-ilmoitus []
-  (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
-  (u "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = 123456789);")
-  (u "delete from ilmoitus where ilmoitusid = 123456789;"))
+(defn poista-ilmoitus [ilmoitus-id] ; 123456789
+  (u (str "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = "ilmoitus-id");"))
+  (u (str "delete from ilmoitustoimenpide where ilmoitus = (select id from ilmoitus where ilmoitusid = "ilmoitus-id");"))
+  (u (str"delete from ilmoitus where ilmoitusid = "ilmoitus-id";")))
 
 (defn poista-valaistusilmoitus []
   (u "delete from paivystajatekstiviesti where ilmoitus = (select id from ilmoitus where ilmoitusid = 987654321);")

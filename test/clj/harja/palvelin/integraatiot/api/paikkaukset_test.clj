@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.api.paikkaukset-test
   (:require [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
+            [clojure.data.json :as json]
+            [clojure.string :as str]
             [harja.testi :refer :all]
             [specql.op :as op]
             [slingshot.slingshot :refer [throw+]]
@@ -8,10 +10,12 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
+            [harja.kyselyt.konversio :as konv]
             [harja.domain.paikkaus :as paikkaus]
             [harja.tyokalut.paikkaus-test :refer :all]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
+            [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as palvelu-paikkaukset]
             [harja.domain.tierekisteri :as tierekisteri]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
@@ -55,7 +59,7 @@
                                                           ::tierekisteri/losa 5}
                            ::paikkaus/massatyyppi "AB, Asfalttibetoni"
                            ::paikkaus/kuulamylly "AN5"
-                           ::paikkaus/massamenekki 12
+                           ::paikkaus/massamenekki 12M
                            ::paikkaus/lahde "harja-api"}
         odotettu-materiaali {::paikkaus/materiaalit [{::paikkaus/esiintyma "testi"
                                                       ::paikkaus/kuulamylly-arvo "testi"
@@ -69,8 +73,10 @@
                                                     ::paikkaus/ajouravalit [5 7]
                                                     ::paikkaus/reunat [1]}]}
         odotettu-paikkauskohde {::paikkaus/paikkauskohde {::paikkaus/ulkoinen-id 1231234
+                                                          ::paikkaus/paikkauskohteen-tila "tilattu"
                                                           ::paikkaus/nimi "Testipaikkauskohde"}}
         odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
+                                               :paikkauskohteen-tila "tilattu"
                                                :ulkoinen-id 1231234
                                                :urakka-id 4}
         paikkaus (first (paikkaus-q/hae-paikkaukset db {::paikkaus/ulkoinen-id paikkaustunniste}))
@@ -124,6 +130,7 @@
                                     :harja.domain.paikkaus/tyyppi "kokonaishintainen"}]
         odotettu-kohde #:harja.domain.paikkaus{:nimi "Testipaikkauskohde"
                                                :ulkoinen-id 466645
+                                               :paikkauskohteen-tila "tilattu"
                                                :urakka-id 4}]
 
     (is (false? poistettu-ennen) "Ei ole alussa poistettu")
@@ -141,6 +148,111 @@
                             ::muokkaustiedot/muokattu)))
     ;; palauttaa 500, koska yha-paikkauskomponenttia ei ole mockattu. No biggie.
     (is (= 500 (:status poisto-vastaus)) "Poistokutsu epäonnistui")))
+
+;; Paikkaukset yleisimmin kirjataan tieoisoitteelle tyyliin tie: 1, aosa 1, losa: 2. aet:1 let: 1, josta voi tulla
+;; pituudeksi esim 1000m
+;; Mutta kirjauksen voi tehdä myös toisen päin, eli tie: 1, aosa 2, losa: 1. aet:1 let: 1, josta voi tulla esim 1000m,
+;; jos pituus osataan laskea oikein.
+(deftest kirjaa-paikkaus-pienenevalla-tieosoitteella
+
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        aikavali [#inst "2022-01-05T00:00:00.000-00:00"
+                  #inst "2022-01-05T20:59:59.000-00:00"]
+        paikkaustunniste 200
+        kohdetunniste 1231234
+        ;; Lähetettävän paikkaustoteuman tieosoitteen pituus on 12 605 m
+        oletettu-pituus 12605
+        json (->
+               (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+               (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+               (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+               (.replace "<AOSA>" (str 5))
+               (.replace "<LOSA>" (str 3)))
+        json-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
+        paikkaukset (palvelu-paikkaukset/hae-urakan-paikkaukset db +kayttaja-jvh+
+                      {:urakka-id urakka
+                       :aikavali aikavali
+                       :tyomenetelmat #{"Kaikki"}
+                       ;:tr nil
+                       :nayta false})
+        luotu-paikkaus (first (keep (fn [p]
+                                      (when (= kohdetunniste (::paikkaus/ulkoinen-id p))
+                                        p))
+                                paikkaukset))]
+    (is (= oletettu-pituus (:suirun-pituus (first (::paikkaus/paikkaukset luotu-paikkaus)))))
+    (is (= 200 (:status json-vastaus)))))
+
+(deftest kirjaa-paikkaus-pienenevalla-tieosoitteella-varmistus
+
+  (let [db (luo-testitietokanta)
+        urakka (hae-oulun-alueurakan-2014-2019-id)
+        aikavali [#inst "2022-01-05T00:00:00.000-00:00"
+                  #inst "2022-01-05T20:59:59.000-00:00"]
+        paikkaustunniste 200
+        kohdetunniste 1231234
+        ;; Lähetettävän paikkaustoteuman tieosoitteen pituus on 500 m
+        oletettu-pituus 500
+        json (->
+               (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+               (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+               (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+               (.replace "<AOSA>" (str 3))
+               (.replace "<LOSA>" (str 3)))
+        json-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
+        paikkaukset (palvelu-paikkaukset/hae-urakan-paikkaukset db +kayttaja-jvh+
+                      {:urakka-id urakka
+                       :aikavali aikavali
+                       :tyomenetelmat #{"Kaikki"}
+                       ;:tr nil
+                       :nayta false})
+        luotu-paikkaus (first (keep (fn [p]
+                                      (when (= kohdetunniste (::paikkaus/ulkoinen-id p))
+                                        p))
+                                paikkaukset))]
+    (is (= oletettu-pituus (:suirun-pituus (first (::paikkaus/paikkaukset luotu-paikkaus)))))
+    (is (= 200 (:status json-vastaus)))))
+
+(defn- trosoite-obj->map
+  "Konvertoi paikkaustoteuman tierekisterosoitteen tietokannan objsta clojuremapiksi konvertterin avulla."
+  [p]
+  (konv/pgobject->map
+    (:tierekisteriosoite p)
+    :tie :string
+    :aosa :string
+    :aet :string
+    :losa :string
+    :let :string
+    :ajorata :string))
+
+(deftest kirjaa-paikkaus-ja-muokkaa-onnistuneesti
+  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
+        paikkaustunniste 200
+        paikkaustunniste2 201
+        kohdetunniste 1231234
+        json1 (->
+                (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
+                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+                (.replace "<AOSA>" (str 3))
+                (.replace "<LOSA>" (str 4)))
+        json2 (->
+                (slurp "test/resurssit/api/paikkausten-kirjaus-tieosoite-toisin-pain.json")
+                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste2))
+                (.replace "<KOHDETUNNISTE>" (str kohdetunniste))
+                (.replace "<AOSA>" (str 3))
+                (.replace "<LOSA>" (str 22))
+                )
+        json1-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json1)
+        let-3000 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste ";")))
+        json2-vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json2)
+        losa-22 (trosoite-obj->map (first (q-map "SELECT * FROM paikkaus WHERE \"ulkoinen-id\" = " paikkaustunniste2 ";")))]
+    (is (= 200 (:status json1-vastaus)))
+    (is (= 200 (:status json2-vastaus)))
+    ;; Ensimmäisessä toteumassa loppuosa on 5000m
+    (is (= "3000" (:let let-3000)))
+    ;; Muokatussa toteumassa loppuosa on 6000m
+    (is (= "22" (:losa losa-22)))))
 
 ;; TODO: Rakenna testiaineisto yit-käyttäjälle. Ja testaa poistoja.
 

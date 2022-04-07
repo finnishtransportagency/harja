@@ -159,7 +159,7 @@
                                   :epaonnistui ->LaskePituusEpaonnistui
                                   :paasta-virhe-lapi? true})))]
     lomake))
-;;	926 - 9/3364 - 12/3964
+
 (defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   (let [alkupvm (pvm/->pvm (str "1.1." valittu-vuosi))
         loppupvm (pvm/->pvm (str "31.12." valittu-vuosi))]
@@ -180,7 +180,10 @@
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn tallenna-tilamuutos! [paikkauskohde]
-  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
+  (let [paikkauskohde (-> paikkauskohde
+                        (assoc :valmistumispvm (or (:valiaika-valmistumispvm paikkauskohde) (:valmistumispvm paikkauskohde)))
+                        (assoc :takuuaika (or (:valiaika-takuuaika paikkauskohde) (:takuuaika paikkauskohde))))
+        paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
              paikkauskohde)))
 
@@ -201,53 +204,94 @@
 ;; Joten siirrytään käyttämään atomia, jossa on ajantasainen toteumalomake
 (def lomake-atom (atom {}))
 (defn validoinnit [avain]
-  (avain {:nimi [tila/ei-nil tila/ei-tyhja]
-          :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
-          :tyomenetelma [tila/ei-nil tila/ei-tyhja]
-          :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
-          :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
-                (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
-                                  (fn [arvo]
-                                    ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                    (cond
-                                      ;; Jos alkuosa ja loppuosa on sama
-                                      ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
-                                      (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
-                                      arvo
-                                      ;; Alkuetäisyys on suurempi kuin loppuetäisyys
-                                      (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
-                                      nil
-                                      :else arvo)))]
-          :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
-          :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
-                     (tila/silloin-kun #(not (nil? (:alkupvm @lomake-atom)))
-                                       (fn [arvo]
-                                         ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                         (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
-                                                   (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                           arvo)))]
-          :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
-          :yksikko [tila/ei-nil tila/ei-tyhja]
-          :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
-          }))
+  (avain
+    (merge
+      {:nimi [tila/ei-nil tila/ei-tyhja]
+       :ulkoinen-id [tila/ei-nil tila/ei-tyhja tila/numero]
+       :tyomenetelma [tila/ei-nil tila/ei-tyhja]
+       :tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+       :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
+             (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
+                               (fn [arvo]
+                                 ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                 (cond
+                                   ;; Jos alkuosa ja loppuosa on sama
+                                   ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
+                                   arvo
+                                   ;; Alkuetäisyys on suurempi kuin loppuetäisyys
+                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
+                                   nil
+                                   :else arvo)))]
+       :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+       :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                  (tila/silloin-kun #(not (nil? (:alkupvm @lomake-atom)))
+                                    (fn [arvo]
+                                      ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                      (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
+                                                (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                        arvo)))]
+       :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
+       :yksikko [tila/ei-nil tila/ei-tyhja]
+       :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
+       }
+      ;; Pot raportoitavalla lomakkeella on lisäksi vielä pari kenttää
+      (when (= :pot (:toteumatyyppi @lomake-atom))
+        {:pot-tyo-alkoi [tila/ei-nil tila/ei-tyhja tila/paivamaara]
+         :pot-tyo-paattyi [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                           (tila/silloin-kun #(not (nil? (:pot-tyo-alkoi @lomake-atom)))
+                             (fn [arvo]
+                               ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                               (when (or (pvm/sama-pvm? (:pot-tyo-alkoi @lomake-atom) arvo) ;; Joko sama päivä
+                                       (pvm/ennen? (:pot-tyo-alkoi @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                                 arvo)))]
+         :pot-valmistumispvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
+                              (tila/silloin-kun #(and (not (nil? (:pot-valmistumispvm @lomake-atom))) (not (nil? (:pot-tyo-paattyi @lomake-atom))))
+                                (fn [arvo]
+                                  ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                                  (when (or (pvm/sama-pvm? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Joko sama päivä
+                                          (pvm/ennen? (:pot-tyo-paattyi @lomake-atom) arvo) ;; Tai alkupäivämäärä tulee ennen valmistumista
+                                          (nil? arvo)) ;; Nil on ihan ok vaihtoehto tässä vaiheessa
+                                    arvo)))]})
+      )))
 
 (defn- validoi-lomake [lomake]
-  (apply tila/luo-validius-tarkistukset [[:nimi] (validoinnit :nimi)
-                                         [:ulkoinen-id] (validoinnit :ulkoinen-id)
-                                         [:tyomenetelma] (validoinnit :tyomenetelma)
-                                         [:tie] (validoinnit :tie)
-                                         [:aosa] (validoinnit :aosa)
-                                         [:losa] (validoinnit :losa)
-                                         [:aet] (validoinnit :aet)
-                                         [:let] (validoinnit :let )
-                                         [:alkupvm] (validoinnit :alkupvm)
-                                         [:loppupvm] (validoinnit :loppupvm)
-                                         [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
-                                         [:yksikko] (validoinnit :yksikko)
-                                         [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]))
+  (apply tila/luo-validius-tarkistukset
+         (if-not (= :pot (:toteumatyyppi @lomake-atom))
+           [[:nimi] (validoinnit :nimi)
+            [:ulkoinen-id] (validoinnit :ulkoinen-id)
+            [:tyomenetelma] (validoinnit :tyomenetelma)
+            [:tie] (validoinnit :tie)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkupvm] (validoinnit :alkupvm)
+            [:loppupvm] (validoinnit :loppupvm)
+            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+            [:yksikko] (validoinnit :yksikko)
+            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]
+           ;; Pot raportoitavalla on erilaiset  validoinnit
+           [[:nimi] (validoinnit :nimi)
+            [:ulkoinen-id] (validoinnit :ulkoinen-id)
+            [:tyomenetelma] (validoinnit :tyomenetelma)
+            [:tie] (validoinnit :tie)
+            [:aosa] (validoinnit :aosa)
+            [:losa] (validoinnit :losa)
+            [:aet] (validoinnit :aet)
+            [:let] (validoinnit :let)
+            [:alkupvm] (validoinnit :alkupvm)
+            [:loppupvm] (validoinnit :loppupvm)
+            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+            [:yksikko] (validoinnit :yksikko)
+            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)
+            [:pot-tyo-alkoi] (validoinnit :pot-tyo-alkoi)
+            [:pot-tyo-paattyi] (validoinnit :pot-tyo-paattyi)
+            [:pot-valmistumispvm] (validoinnit :pot-valmistumispvm)]
+           )))
 
 (defn- validoi-tiemerkintamodal-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:tiemerkinta-urakka] (validoinnit :tiemerkinta-urakakka)
@@ -313,8 +357,7 @@
 
   MerkitsePaikkauskohdeValmiiksiEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (let [_ (js/console.log "MerkitseValmiiksiEpaonnistui :: vastaus" (pr-str vastaus))
-          app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
+    (let [app (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)
           _ (modal/piilota!)]
       (viesti/nayta-toast! (str "Kohteen " (paikkauskohde-id->nimi app (:paikkauskohde-id vastaus)) " valmiiksi merkitsemisessä tapahtui virhe!")
                            :varoitus viesti/viestin-nayttoaika-aareton)
@@ -498,7 +541,6 @@
   HaePaikkauskohteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "Haku epäonnistui, vastaus " (pr-str vastaus))
       (viesti/nayta-toast! "Paikkauskohteiden haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
       (dissoc app :haku-kaynnissa?)))
 
@@ -543,19 +585,25 @@
   (process-event [{muokattu :muokattu paikkauskohde :paikkauskohde} app]
     (let [;; Otetaan virhe talteen
           virhe (get-in paikkauskohde [:response :virhe])
+          virheteksti (get-in paikkauskohde [:parse-error :original-text])
           ulkoinen-id-virhe (when (and virhe (str/includes? virhe "ulkoinen-id"))
-                              "Tarkista numero. Mahdollinen duplikaatti.")]
+                              "Tarkista numero. Mahdollinen duplikaatti.")
+          tierekisteri-virhe (when (and virheteksti (str/includes? virheteksti "Tierekisteriosoitteessa"))
+                               "Tierekisteriosoitteessa virhe")]
       (do
-        (js/console.log "Paikkauskohteen tallennus epäonnistui" (pr-str paikkauskohde))
         (if muokattu
           (viesti/nayta-toast! "Paikkauskohteen muokkaus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
           (viesti/nayta-toast! "Paikkauskohteen tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton))
-        (-> app
-            (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
-            (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
-                       #(merge %
-                               {:validi? false
-                                :virheteksti ulkoinen-id-virhe}))))))
+        (cond-> app
+                true (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
+                ulkoinen-id-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:ulkoinen-id]]
+                                             #(merge %
+                                                     {:validi? false
+                                                      :virheteksti ulkoinen-id-virhe}))
+                tierekisteri-virhe (update-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]]
+                                #(merge %
+                                        {:validi? false
+                                         :virheteksti tierekisteri-virhe}))))))
 
   TallennaPaikkauskohdeRaportointitilassa
   (process-event [{paikkauskohde :paikkauskohde} app]
@@ -713,36 +761,22 @@
                             "Kelikeskus"
                             "Paivystaja"}]
     ;; Annetut roolit set voi olla kokonaan tyhjä
-    (if (empty? urakkaroolit)
+    (cond
+      ;; Jos urakoitsija, niin urakoitsija
+      (= :urakoitsija (roolit/osapuoli @istunto/kayttaja))
+      true
+
       ;; Jos tyhjä, ei ole urakoitsija
+      (empty? urakkaroolit)
       false
+
       ;; Jos rooli on annettu, tarkista onko urakoitsija
       (some (fn [rooli]
               (true?
                 (some #(= rooli %) urakoitsijaroolit)))
-            urakkaroolit))))
-
-(defn kayttaja-on-tilaaja? [roolit]
-  (let [roolit (if (set? roolit)
-                 roolit
-                 #{roolit})
-        tilaajaroolit #{"Jarjestelmavastaava"
-                        "Tilaajan_Asiantuntija"
-                        "Tilaajan_Kayttaja"
-                        "Tilaajan_Urakanvalvoja"
-                        "Tilaajan_laadunvalvoja"
-                        "Tilaajan_turvallisuusvastaava"
-                        "Tilaajan_Rakennuttajakonsultti"}]
-    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
-    ;; myös aina tilaaja
-    (if (or
-          (roolit/jvh? @istunto/kayttaja)
-          (= :tilaaja (roolit/osapuoli @istunto/kayttaja)))
+            urakkaroolit)
       true
-      (some (fn [rooli]
-              (true?
-                (some #(= rooli %) tilaajaroolit)))
-            roolit))))
+      :else false)))
 
 (defn nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
   (fn [] (modal/nayta!

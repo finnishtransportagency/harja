@@ -12,7 +12,8 @@
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
             [harja.domain.tierekisteri :as tr]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -65,6 +66,11 @@
         (or viesti
             (ei-hoitokaudella-str (pvm/pvm hoitokausi-alku) (pvm/pvm hoitokausi-loppu)))))))
 
+(defmethod validoi-saanto :manuaalinen-kattohinta [_ _ data rivi _ & [tavoitehinta viesti]]
+  ;; Manuaalisen kattohinnan gridin datasta löytyy tieto, onko rivi indeksikorjattu vai ei.
+  (when (and (= (:rivi rivi) :kattohinta) (<= data tavoitehinta))
+    (or viesti (str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " (fmt/euro-opt tavoitehinta)))))
+
 (defmethod validoi-saanto :valitun-kkn-aikana-urakan-hoitokaudella [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
         alkupvm (:alkupvm urakka)
@@ -116,6 +122,12 @@
   [_ _ data rivi _ & [toinen-avain viesti]]
   (when (and (str-clj/blank? data)
              (not (toinen-avain rivi)))
+    (or viesti "Anna arvo")))
+
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-ei-joukossa
+  [_ _ data rivi _ & [toinen-avain arvot-jotka-sallivat-tyhja viesti]]
+  (when (and (str-clj/blank? data)
+             (not (contains? (set arvot-jotka-sallivat-tyhja) (toinen-avain rivi))))
     (or viesti "Anna arvo")))
 
 (defmethod validoi-saanto :ei-tulevaisuudessa [_ _ data _ _ & [viesti]]

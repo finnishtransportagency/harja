@@ -106,16 +106,16 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :integraatioloki :sonja :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
-    :muut-tyot :laskut :aliurakoitsijat :toteumat :yllapitototeumat :paallystys :maaramuutokset
+    :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -139,7 +139,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
@@ -159,23 +158,26 @@
     :komponenttien-tila
     :itmf
     :paikkauskohteet
-    :valikatselmukset})
+    :valikatselmukset
+    :lupaukset
+    :urakan-lupausmuistutukset
+    :api-analytiikka})
 
 (def ei-statusta
   #{:metriikka
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja-sahkoposti :solita-sahkoposti :fim :sampo :tierekisteri :labyrintti
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
-    :muut-tyot :laskut :aliurakoitsijat :toteumat :yllapitototeumat :paallystys :maaramuutokset
+    :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :velho :tr-haku
-    :geometriapaivitykset :api-yhteysvarmistus #_:sonja-jms-yhteysvarmistus :tilannekuva
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
@@ -199,7 +201,6 @@
     :vkm
     :vv-turvalaitteet
     :hairioilmoitukset
-    :ais-data
     :vv-alukset
     :kan-kohteet
     :kan-liikennetapahtumat
@@ -218,7 +219,10 @@
     :pot2
     :kustannusten-seuranta
     :paikkauskohteet
-    :valikatselmukset})
+    :valikatselmukset
+    :lupaukset
+    :urakan-lupausmuistutukset
+    :api-analytiikka})
 
 (def hidas-ok-status #{:sonja :itmf})
 

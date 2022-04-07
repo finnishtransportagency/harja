@@ -68,16 +68,18 @@
   ([urakka-id
     {:keys [toimenpide-avaimet hoitokaudet]
      :or {toimenpide-avaimet :kaikki
-          hoitokaudet :kaikki}}]
+          hoitokaudet :kaikki}
+     :as filtterit}]
    (transduce
      (comp
        (filter (fn [toimenpide-avain]
                  (or (= toimenpide-avaimet :kaikki)
                      (contains? toimenpide-avaimet toimenpide-avain))))
        (map (fn [toimenpide-avain]
-              (dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
-                                                                                                            #{1 2 3 4 5}
-                                                                                                            hoitokaudet)))))
+              (dg-tallenna-kiinteahintaiset-tyo-data-juuri-alkaneelle-urakalle
+                urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
+                                             #{1 2 3 4 5}
+                                             hoitokaudet)))))
      conj []
      [:paallystepaikkaukset
       :mhu-yllapito
@@ -144,7 +146,8 @@
   ([urakka-id
     urakan-aloitusvuosi
     {:keys [toimenkuvat maksukaudet hoitokaudet ennen-urakkaa-mukaan?]
-     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}}]
+     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}
+     :as filtterit}]
    {:pre [(s/valid? ::toimenkuvat-arg toimenkuvat)
           (s/valid? ::maksukaudet-arg maksukaudet)
           (s/valid? ::hoitokaudet-arg hoitokaudet)]}
@@ -220,16 +223,14 @@
   (case toimenpide-avain
     :paallystepaikkaukset #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-yllapito #{:rahavaraus-lupaukseen-1
+                    :muut-rahavaraukset
                     :toimenpiteen-maaramitattavat-tyot}
-    :talvihoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
-                  :akilliset-hoitotyot
-                  :toimenpiteen-maaramitattavat-tyot}
+    :talvihoito #{:toimenpiteen-maaramitattavat-tyot}
     :liikenneympariston-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
                                 :akilliset-hoitotyot
+                                :tunneleiden-hoidot
                                 :toimenpiteen-maaramitattavat-tyot}
-    :sorateiden-hoito #{:kolmansien-osapuolten-aiheuttamat-vahingot
-                        :akilliset-hoitotyot
-                        :toimenpiteen-maaramitattavat-tyot}
+    :sorateiden-hoito #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-korvausinvestointi #{:toimenpiteen-maaramitattavat-tyot}
     :mhu-johto #{:hoidonjohtopalkkio
                  :toimistokulut
@@ -242,7 +243,7 @@
               :cljs (js/Error (str "Toimenpide avaimella " toimenpide-avain " ei ole kaikkia seuraavista tallennettavista asioita: " tallennettavat-asiat))))))
 
 (defn dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
-  [urakka-id toimenpide-avain hoitokaudet]
+  [urakka-id osio-kw toimenpide-avain hoitokaudet]
   (loop [[tallennettava-asia & loput-asiat] (toimenpiteen-tallennettavat-asiat toimenpide-avain)
          data []]
     (if (nil? tallennettava-asia)
@@ -250,6 +251,7 @@
       (recur loput-asiat
              (conj data
                    {:urakka-id urakka-id
+                    :osio osio-kw
                     :tallennettava-asia tallennettava-asia
                     :toimenpide-avain toimenpide-avain
                     ;; Ajoille tämmöinen hirvitys, että saadaan generoitua random dataa, mutta siten,
@@ -261,19 +263,21 @@
                     :summa (gen/generate (s/gen ::bs-p/summa))})))))
 
 (defn tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle
-  ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id {}))
-  ([urakka-id
+  ([urakka-id] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id :hankintakustannukset {}))
+  ([urakka-id osio-kw] (tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id osio-kw {}))
+  ([urakka-id osio-kw
     {:keys [toimenpide-avaimet tallennettavat-asiat hoitokaudet]
      :or {toimenpide-avaimet :kaikki
           tallennettavat-asiat :kaikki
-          hoitokaudet :kaikki}}]
+          hoitokaudet :kaikki}
+     :as filtterit}]
    (transduce
      (comp
        (filter (fn [toimenpide-avain]
                  (or (= toimenpide-avaimet :kaikki)
                      (contains? toimenpide-avaimet toimenpide-avain))))
        (mapcat (fn [toimenpide-avain]
-                 (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id toimenpide-avain (if (= :kaikki hoitokaudet)
+                 (dg-tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id osio-kw toimenpide-avain (if (= :kaikki hoitokaudet)
                                                                                                                 #{1 2 3 4 5}
                                                                                                                 hoitokaudet))))
        (filter (fn [{tallennettava-asia :tallennettava-asia

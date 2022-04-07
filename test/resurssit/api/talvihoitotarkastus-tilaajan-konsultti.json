@@ -1,0 +1,47 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "testi",
+      "organisaatio": {
+        "nimi": "Esimerkkillinen Konsultti Oy",
+        "ytunnus": "1759662-9"
+      }
+    },
+    "viestintunniste": {
+      "id": 33333
+    },
+    "lahetysaika": "__PVM__"
+  },
+  "tarkastukset": [
+    {
+      "tarkastus": {
+        "tunniste": {
+          "id": __ID__
+        },
+        "aika": "2022-01-02T15:01:00Z",
+        "alkusijainti": {
+          "x": 441895,
+          "y": 7199136
+        },
+        "loppusijainti": {
+          "x": 442131,
+          "y": 7198982
+        },
+        "tarkastaja": {
+          "id": 123,
+          "etunimi": "Taneli",
+          "sukunimi": "Tarkastaja"
+        },
+        "havainnot": "jotain talvisen outoa"
+      },
+      "mittaus": {
+        "hoitoluokka": 1,
+        "lumimaara": 15,
+        "tasaisuus": 5,
+        "kitka": 3.2,
+        "lampotilaIlma": -10,
+        "lampotilaTie": -6
+      }
+    }
+  ]
+}

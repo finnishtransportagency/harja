@@ -75,7 +75,7 @@
                      {:alkupvm  "2019-01-01T02:00:00.0",
                       :loppupvm "2019-09-30T00:00:00.0",
                       :summa    0}])]
-    (log/debug segmentit)
+
     (is (= 6 (count segmentit)) "Segmentit on jaoteltu 3 vuodelle")
 
     (let [segmentti (second (second segmentit))]

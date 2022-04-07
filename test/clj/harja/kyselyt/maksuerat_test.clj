@@ -67,12 +67,15 @@
                ; Päällyste	20100	49
                ; MHU Ylläpito	20190	50
                ; MHU Korvausinvestointi	14300	51
-               odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4207.8269412251655629246831000M}
-                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6258.4035471854304635809971M}
+               ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
+               ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
+               odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4192.42343000M}
+                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6251.48763M}
                          {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2745.94354304635761589082M}
+                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 3697.454M}
                          {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
                          {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
                          {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]
-               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
-              (is (= odotettu vastaus))))
+               vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))
+               _ (println " vastaus" vastaus)]
+              (is (= vastaus odotettu))))

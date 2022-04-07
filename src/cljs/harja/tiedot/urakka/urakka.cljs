@@ -9,7 +9,8 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [harja.tiedot.urakka :as u]))
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
@@ -60,6 +61,12 @@
     (number? (-> arvo js/parseFloat))
     arvo))
 
+(defn negatiivinen-numero [arvo]
+  (when
+    (and (number? (-> arvo js/parseFloat))
+      (not (pos? arvo)))
+    arvo))
+
 (defn maksimiarvo [maksimi arvo]
   (when (< arvo maksimi)
     arvo))
@@ -73,6 +80,7 @@
   (when (re-matches #"\d{7}-\d" (str arvo)) arvo))
 
 (def validoinnit {:kulut/summa                 [ei-nil numero]
+                  :kulut/negatiivinen-summa    [ei-nil negatiivinen-numero]
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
@@ -304,35 +312,43 @@
                                                                                          ::t/ei-sijaintia       true
                                                                                          ::t/toteuma-tehtava-id nil
                                                                                          ::t/lisatieto          nil
-                                                                                         ::t/maara              nil}]}}})
+                                                                                         ::t/maara              nil}]}}
+                             :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
+                                                          :hoitokauden-kuukausi nil
+                                                          :kuntoluokat nil
+                                                          :varustetyypit nil
+                                                          :toteuma nil}
+                                               :varusteet []}})
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
                                                :valitut-elyt #{0}
+                                               :paikkauskohteet? true
+                                               :pot-jarjestys :tila
+                                               :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}
                                                }
-                             :paikkaustoteumat {:valinnat {:aikavali [(pvm/hoitokauden-alkupvm (dec (pvm/vuosi (pvm/nyt))))
-                                                                      (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))]
+                             :paikkaustoteumat {:valinnat {:aikavali (pvm/paivamaaran-hoitokausi (pvm/nyt))
                                                            :valitut-tyomenetelmat #{"Kaikki"}}
                                                 :itemit-avain :paikkaukset
                                                 :aikavali-otsikko "Tilauspäivämäärä"
                                                 :voi-valita-trn-kartalta? false
                                                 :palvelukutsu :hae-urakan-paikkaukset
-                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
-                             :paallystysilmoitukset {:pot-jarjestys :tila
-                                                     :valitut-elyt #{0}
-                                                     :valittu-vuosi (pvm/vuosi (pvm/nyt))
-                                                     :valitut-tilat #{"Kaikki"}}})
+                                                :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}})
 
 (def kustannusten-seuranta-default-arvot {:kustannukset
                                           {:hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                                                                                  (pvm/vuosi (pvm/nyt))
-                                                                                  (dec (pvm/vuosi (pvm/nyt))))
-                                           :valittu-kuukausi "Kaikki"}})
+                                                                    (pvm/vuosi (pvm/nyt))
+                                                                    (dec (pvm/vuosi (pvm/nyt))))
+                                           :kattohinta {:grid {}
+                                                        :virheet {}}
+                                           :valittu-kuukausi "Kaikki"
+                                           :tavoitehinnan-oikaisut {}
+                                           :valikatselmus-auki? false
+                                           :valittu-urakka @nav/valittu-urakka-id}})
 
 (defonce toteumanakyma (atom toteumat-default-arvot))
 (def kustannusten-seuranta-nakymassa? (atom false))
-
 
 (def kulut-default {:parametrit  {:haetaan 0
                                   :haun-kuukausi (pvm/kuukauden-aikavali (pvm/nyt))}
@@ -342,19 +358,28 @@
                     :syottomoodi false})
 
 (def laskutus-default {:kohdistetut-kulut kulut-default})
-
+(def lupaukset-default {})
+(def laatupoikkeamat-default {:listaus-tyyppi :kaikki
+                              :hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
+                              :valittu-hoitokausi [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                   (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]
+                              :valittu-aikavali [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
+                                                 (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]})
 (def pot2-default-arvot {:massat nil
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
 
 (defonce tila (atom {:yleiset     {:urakka {}}
+                     :laatupoikkeamat laatupoikkeamat-default
                      :laskutus    laskutus-default
+                     :lupaukset lupaukset-default
                      :pot2 pot2-default-arvot
                      :suunnittelu suunnittelu-default-arvot
                      :toteumat    toteumat-default-arvot
                      :paikkaukset paikkaus-default-arvot
                      :kustannusten-seuranta kustannusten-seuranta-default-arvot}))
 
+(defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
 (defonce paikkauspaallystykset (cursor tila [:paikkaukset :paallystysilmoitukset]))
@@ -363,14 +388,20 @@
 
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
+(defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
+
+(defonce lupaukset (cursor tila [:lupaukset]))
 
 (defonce yleiset (cursor tila [:yleiset]))
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
+(defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
+
+(defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
 (defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
                                                              :toteutuneet-maarat    nil
@@ -388,6 +419,8 @@
                                                                                      :loppupvm           (pvm/nyt)}
                                                              :syottomoodi           false}}))
 
+;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
+;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.
 (add-watch nav/valittu-urakka :urakan-id-watch
            (fn [_ _ _ uusi-urakka]
              (doseq [f! @urakan-vaihto-triggerit]
@@ -397,6 +430,9 @@
              (swap! tila (fn [tila]
                            (-> tila
                                (assoc-in [:yleiset :urakka] (dissoc uusi-urakka :alue))
-                               (assoc :suunnittelu suunnittelu-default-arvot))))
+                             ;; NOTE: Disabloitu, koska VHAR-4909. Tämä resetoi kustannussuunnitelman tilan ennen kuin un-mount on ehtinyt suorittua
+                             ;;       ja kustannussuunnitelman gridit jäävät täten siivoamatta.
+                               #_(assoc :suunnittelu suunnittelu-default-arvot))))
              ;dereffataan kursorit, koska ne on laiskoja
-             @suunnittelu-kustannussuunnitelma))
+             ;; NOTE: Disabloitu, koska VHAR-4909
+             #_@suunnittelu-kustannussuunnitelma))

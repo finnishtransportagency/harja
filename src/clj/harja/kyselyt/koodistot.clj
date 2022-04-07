@@ -6,8 +6,8 @@
 (defqueries "harja/kyselyt/koodistot.sql"
             {:positional? false})
 
-(defn konversio [db koodisto-id harja-koodi]
-  (let [rivi (first (hae-koodi-harja-koodin-perusteella db {:koodisto_id koodisto-id :harja_koodi harja-koodi}))
-        koodi (:koodi rivi)]
-    (assert (some? koodi) (str "Harja koodi " harja-koodi " ei voi konvertoida taulukossa " koodisto-id))
-    koodi))
+(defn konversio [db koodisto-id lahde]
+  (let [rivi (first (hae-koodi-harja-koodin-perusteella db {:koodisto_id koodisto-id :lahde (str lahde)}))
+        tulos (:tulos rivi)]
+    (assert (some? tulos) (str "Harja koodi '" lahde "' ei voi konvertoida taulukossa " koodisto-id))
+    tulos))

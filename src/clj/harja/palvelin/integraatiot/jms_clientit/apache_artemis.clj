@@ -13,6 +13,9 @@
 (defn konfiguroi-activemq-jms-artemis-connection-factory [connection-factory url]
   (doto connection-factory
     (.setInitialConnectAttempts 5)
+    (.setReconnectAttempts -1)
+    (.setRetryIntervalMultiplier (double 2))
+    (.setMaxRetryInterval 300000)
     (.setCallFailoverTimeout 60000)
     (.setCallTimeout 6000)))
 
@@ -30,10 +33,12 @@
                                    (async/put! jms-connection-tila "FAILED"))))
         (.setFailoverListener (reify FailoverEventListener
                                 (failoverEvent [this eventType]
-                                  (case eventType
-                                    FailoverEventType/FAILOVER_COMPLETED (async/put! jms-connection-tila "ACTIVE")
-                                    FailoverEventType/FAILOVER_FAILED (async/put! jms-connection-tila "FAILED")
-                                    FailoverEventType/FAILURE_DETECTED (async/put! jms-connection-tila "RECONNECTING"))))))
+                                  (log/warn "JMS yhteydestä saatiin failoverEvent:" eventType)
+
+                                  (case (str eventType)
+                                    "FAILOVER_COMPLETED" (async/put! jms-connection-tila "ACTIVE")
+                                    "FAILOVER_FAILED" (async/put! jms-connection-tila "FAILED")
+                                    "FAILURE_DETECTED" (async/put! jms-connection-tila "RECONNECTING"))))))
       yhteys)
     (catch JMSException e
       (log/warn (format "Ei saatu yhteyttä JMS-brokeriin. Yritetään uudestaan %s millisekunnin päästä. " aika) e)

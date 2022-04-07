@@ -11,7 +11,7 @@
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
             [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
@@ -95,7 +95,7 @@
   (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (jdbc/with-db-transaction [db db]
     (let [vastaus (try (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
-                       (catch RuntimeException e
+                       (catch Throwable e
                          {:virheet [{:selite (.getMessage e)}]
                           :sanoman-lukuvirhe? true}))
           virheet (:virheet vastaus)
@@ -279,9 +279,15 @@
             (throw+
               {:type +virhe-kohteen-lahetyksessa+
                :virheet {:virhe virhe}}))))
-      {:virhekasittelija (fn [_ _]
+      {:virhekasittelija (fn [konteksti e]
                            (doseq [kohde-id kohde-idt]
-                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})
+                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                             (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+                               db
+                               {:lahetetty (pvm/nyt)
+                                :onnistunut false
+                                :lahetysvirhe (pr-str (.getMessage e))
+                                :kohdeid kohde-id})))})
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 

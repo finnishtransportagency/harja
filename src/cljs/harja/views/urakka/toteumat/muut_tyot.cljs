@@ -302,7 +302,10 @@
                 :palstoja 1}
 
 
-               {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+               {:otsikko "Määrä" :nimi :maara
+                :tyyppi :positiivinen-numero
+                :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
                 :pakollinen? (= :yksikkohinta (:hinnoittelu @muokattu))
                 :hae #(get-in % [:tehtava :maara])
 
@@ -318,11 +321,16 @@
                   :yksikko "€"
                   :aseta (fn [rivi arvo] (assoc-in rivi [:tehtava :paivanhinta] arvo))
                   :tyyppi :positiivinen-numero
+                  :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                  :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
                   :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :palstoja 1})
                (when (= (:hinnoittelu @muokattu) :yksikkohinta)
                  {:otsikko "Sopimus\u00ADhinta" :nimi :yksikkohinta
-                  :tyyppi :numero :validoi [[:ei-tyhja "Anna rahamäärä"]]
+                  :tyyppi :numero
+                  :max-desimaalit 7 ; VHAR-5310 / VHAR-5290: salli 7 desimaalia
+                  :kokonaisosan-maara 9 ; Laskettu 10->9 koska esim. 9999999999.1234567 ei formatoidu oikein
+                  :validoi [[:ei-tyhja "Anna rahamäärä"]]
                   :muokattava? #(not (:yksikkohinta-suunniteltu? %))
                   :yksikko (str "€ / " (:yksikko @muokattu))
                   :palstoja 1})

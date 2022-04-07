@@ -11,6 +11,7 @@
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.roolit :as roolit]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -18,6 +19,9 @@
             [harja.fmt :as fmt]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
@@ -32,12 +36,6 @@
   (if (and (not (nil? alku)) (not (nil? loppu)) (.after alku loppu))
     (conj validointivirheet "Loppuaika tulee ennen alkuaikaa.")
     validointivirheet))
-
-(defn validit-tr_osat? [validointivirheet tie alkuosa loppuosa alkuetaisyys loppuetaisyys]
-  (if (and tie alkuosa alkuetaisyys loppuosa loppuetaisyys
-           (>= loppuosa alkuosa))
-    validointivirheet
-    (conj validointivirheet "Tierekisteriosoitteessa virhe.")))
 
 (defn- sallittu-tilamuutos? [uusi vanha rooli]
   (let [uusi-tila (:paikkauskohteen-tila uusi)
@@ -134,7 +132,7 @@
                                          (s/valid? ::loppupvm (:loppupvm kohde)))
                                   (validi-pvm-vali? virheet (:alkupvm kohde) (:loppupvm kohde))
                                   virheet)
-                                (validit-tr_osat? virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
+                                (tr-validointi/validoi-tieosoite virheet (:tie kohde) (:aosa kohde) (:losa kohde) (:aet kohde) (:let kohde))
                                 (validi-paikkauskohteen-tilamuutos? virheet kohde vanha-kohde rooli))]
     validointivirheet))
 
@@ -175,11 +173,11 @@
                                                             :aet (:aet tiedot)
                                                             :losa (:losa tiedot)
                                                             :let (:let tiedot)})
-        otsikko (str "Kohteen " (:paikkauskohde-nimi tiedot) " paikkaustyö on valmistunut")
+        otsikko (str "Kohteen " (:nimi tiedot) " paikkaustyö on valmistunut")
         viesti (html
                  [:div
                   [:p otsikko]
-                  (html-tyokalut/tietoja [["Kohde: " (:paikkauskohde-nimi tiedot)]
+                  (html-tyokalut/tietoja [["Kohde: " (:nimi tiedot)]
                                           ["Sijainti: " (str (:tie tiedot) " " (:aosa tiedot) "/" (:aet tiedot) " - " (:losa tiedot) "/" (:let tiedot))]
                                           ["Pituus: " (str (:pituus pituus) " m")]
                                           ["Valmis tiemerkintään: " (if (:valmistumispvm tiedot)
@@ -223,7 +221,7 @@
                [:p "Tämä on automaattinen viesti HARJA -järjestelmästä, älä vastaa tähän viestiin."]])))
 
 (defn tarkista-tilamuutoksen-vaikutukset
-  "Kun paikkauskohteen tila muuttuu, niin on mahdollisuus urakoitsijalle tai tilaajalle lähetetään sähköpostia.
+  "Kun paikkauskohteen tila muuttuu, niin on mahdollisuus että urakoitsijalle tai tilaajalle lähetetään sähköpostia.
   Esimerkiksi tilan vaihtuessa:
   1. Ehdotettu -> Tilattu, lähetetään urakoitsijalle sähköpostitse ilmoitus tilauksesta.
   2. Tilattu -> Peruttu, lähetetään urakoitsijalle sähköpostitse ilmoitus peruutuksesta.
@@ -242,17 +240,27 @@
                               :id)
         tilasiirtyma (keyword (str vanha-tila "->" uusi-tila))
         kohde (cond-> kohde
-                ;; Asetetaan tilauspäivämäärä, kun tilataan
-                (and
-                    (= "ehdotettu" vanha-tila)
-                    (= "tilattu" uusi-tila))
-                (assoc :tilattupvm (pvm/nyt))
+                      ;; Asetetaan tilauspäivämäärä, kun tilataan
+                      (and
+                        (= "ehdotettu" vanha-tila)
+                        (= "tilattu" uusi-tila))
+                      (assoc :tilattupvm (pvm/nyt))
 
-                ;; Poistetaan tilauspäivämäärä, kun perutaan
-                (and
-                    (= "tilattu" vanha-tila)
-                    (= "hylatty" uusi-tila))
-                (assoc :tilattupvm nil))
+                      ;; Poistetaan tilauspäivämäärä, kun perutaan
+                      (and
+                        (= "tilattu" vanha-tila)
+                        (= "hylatty" uusi-tila))
+                      (assoc :tilattupvm nil)
+
+                      ;; Valmiiksi merkitty kohde muutetaan tilatuksi - poistetaan valmistumispäivämäärä ja tiemerkintä tiedot
+                      (and
+                        (= "valmis" vanha-tila)
+                        (= "tilattu" uusi-tila))
+                      (assoc :valmistumispvm nil
+                             :pot-valmistumispvm nil
+                             :tiemerkintapvm nil
+                             :tiemerkintaa-tuhoutunut? nil)
+                      )
 
         otsikko (case tilasiirtyma
                   :ehdotettu->tilattu "Paikkauskohde tilattu"
@@ -265,11 +273,14 @@
                  :tilattu->valmis #{"ely urakanvalvoja"}
                  #{"urakan vastuuhenkilö"})
         ;; Testausta varten jätetään mahdollisuus, että fimiä ei ole asennettu
-        vastaanottajat (when fim
-                         (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+        vastaanottajat (try
+                         (when fim
+                              (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
+                         (catch Exception e
+                           (log/error e "Fimiin ei saatu yhteyttä.")))
         vastaanottaja (if (= (count vastaanottajat) 1)
                         (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
-                        "")
+                        nil)
         viesti (muodosta-viesti 
                 tilasiirtyma 
                 {:kohteen-nimi (:nimi kohde)
@@ -279,22 +290,25 @@
                                               :urakka-id (:urakka-id kohde)
                                               :vastaanottajan-nimi vastaanottaja
                                               :tierekisteriosoite (select-keys kohde [:tie :aosa :aet :let :losa]) })
-        _ (case tilasiirtyma
-            ;; Lähetään tilauksesta sähköpostia urakoitsijalle
-            (:ehdotettu->tilattu 
-             :tilattu->ehdotettu 
-             :ehdotettu->hylatty 
-             :hylatty->ehdotettu 
-             :tilattu->valmis)
-            (laheta-sahkoposti fim email sampo-id
-                               roolit 
-                               otsikko
-                               viesti)
+        _ (if vastaanottaja
+            (case tilasiirtyma
+              ;; Lähetään tilauksesta sähköpostia urakoitsijalle
+              (:ehdotettu->tilattu
+                :tilattu->ehdotettu
+                :ehdotettu->hylatty
+                :hylatty->ehdotettu
+                :tilattu->valmis)
+              (laheta-sahkoposti fim email sampo-id
+                                 roolit
+                                 otsikko
+                                 viesti)
 
-            (log/debug (str "Paikkauskohteen: " (:id kohde) " tila ei muuttunut. Sähköposteja ei lähetetä.")))
+              (log/debug (str "Paikkauskohteen: " (:id kohde) " / " (:nimi kohde) "  tila ei muuttunut. Sähköposteja ei lähetetä.")))
+            (log/debug (str "Paikkauskohteelle: " (:id kohde) " / " (:nimi kohde) " ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä.")))
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
-        _ (when (:tiemerkintaa-tuhoutunut? kohde)
+        _ (when (and (nil? (:tiemerkintapvm vanha-kohde))
+                     (:tiemerkintaa-tuhoutunut? kohde))
             (ilmoita-tiemerkintaan db fim email user kohde))
         ]
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
@@ -302,6 +316,89 @@
 
 (defn tyomenetelma-str->id [db nimi]
   (::paikkaus/tyomenetelma-id (first (paikkaus-q/hae-tyomenetelman-id db nimi))))
+
+(defn tarkista-pot-raportointi
+  "Mikäli paikkauskohteelle on merkattu :pot? true, tehdään paikkauskohteesta pot ilmoitus.
+  POT vaatii lisäyksen yllapitokohde -tauluun sekä ylläapitokohteen_aikataulu -tauluun."
+  [db uusi-kohde vanha-kohde kayttaja-id]
+  (let [muodosta-yllapitokohde? (if (and (:pot? uusi-kohde) (not (:yllapitokohde-id vanha-kohde)))
+                                  true
+                                  false)
+        sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db (:urakka-id uusi-kohde))))
+        ;; Jos paikkauskohteen tietoja muutetaan tieosoitteen osalta, myös ylläpitokohteen tietojen pitää muuttua, joten arvoidaan
+        ;; onko paikkauskohteen tieosoite vaihtunut
+        muokkaa-yllapitokohdetta? (and
+                                    ;; Uudella ja vanhalla kohteella on olemassa ylläpitokohde
+                                    (:yllapitokohde-id uusi-kohde) (:yllapitokohde-id vanha-kohde)
+                                    ;; Uuden ja vanhan kohteen tierekisteriosoite on muuttunut
+                                    (not=
+                                      (hash (str (:tie uusi-kohde) (:aosa uusi-kohde) (:aet uusi-kohde) (:losa uusi-kohde) (:let uusi-kohde) ) )
+                                      (hash (str (:tie vanha-kohde) (:aosa vanha-kohde) (:aet vanha-kohde) (:losa vanha-kohde) (:let vanha-kohde) ) )))
+        yllapitokohde (when muodosta-yllapitokohde?
+                        (yllapitokohteet-q/luo-yllapitokohde<! db
+                                                               {:urakka (:urakka-id uusi-kohde)
+                                                                :sopimus sopimus-id
+                                                                :kohdenumero (:ulkoinen-id uusi-kohde)
+                                                                :nimi (:nimi uusi-kohde)
+                                                                :tr_numero (:tie uusi-kohde)
+                                                                :tr_alkuosa (:aosa uusi-kohde)
+                                                                :tr_alkuetaisyys (:aet uusi-kohde)
+                                                                :tr_loppuosa (:losa uusi-kohde)
+                                                                :tr_loppuetaisyys (:let uusi-kohde)
+                                                                ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
+                                                                :tr_ajorata nil
+                                                                :tr_kaista nil
+                                                                :keskimaarainen_vuorokausiliikenne nil
+                                                                :yllapitoluokka nil
+                                                                :yllapitokohdetyyppi "paallyste"
+                                                                :yllapitokohdetyotyyppi "paallystys"
+                                                                :vuodet (konversio/seq->array [(pvm/vuosi (pvm/nyt))]) ;; En tiedä mitä tänne pitäisi laittaa
+                                                                }))
+        yllapitokohde (if muokkaa-yllapitokohdetta?
+                        (yllapitokohteet-q/paivita-yllapitokohde<! db
+                          {:kohdenumero (:ulkoinen-id uusi-kohde)
+                           :nimi (:nimi uusi-kohde)
+                           :tunnus nil
+                           :tr_numero (:tie uusi-kohde)
+                           :tr_alkuosa (:aosa uusi-kohde)
+                           :tr_alkuetaisyys (:aet uusi-kohde)
+                           :tr_loppuosa (:losa uusi-kohde)
+                           :tr_loppuetaisyys (:let uusi-kohde)
+                           ;; Riippumatta siitä, mitä paikkauskohteelle on valittu ajorataa ei merkitä ylläpitokohteelle
+                           :tr_ajorata nil
+                           :tr_kaista nil
+                           :keskimaarainen_vuorokausiliikenne nil
+                           :yllapitoluokka nil})
+                        yllapitokohde)
+        yllapitokohde-id (:id yllapitokohde)
+        ;; Luodaan ensin tyhjä ylläpitikohteen aikataulu
+        _ (when muodosta-yllapitokohde?
+            (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde yllapitokohde-id}))
+        ;; Merkitään sitten tiedossaolevat aikataulut
+        _ (when muodosta-yllapitokohde?
+            (yllapitokohteet-q/paivita-yllapitokohteen-paallystysaikataulu! db {:id yllapitokohde-id
+                                                                                :kohde_alku (:alkupvm uusi-kohde)
+                                                                                :muokkaaja kayttaja-id
+                                                                                :paallystys_alku (:alkupvm uusi-kohde)
+                                                                                :paallystys_loppu (:loppupvm uusi-kohde)
+                                                                                :kohde_valmis nil
+                                                                                :valmis_tiemerkintaan nil}))
+        uusi-kohde (if muodosta-yllapitokohde?
+                     (assoc uusi-kohde :yllapitokohde-id yllapitokohde-id)
+                     uusi-kohde)
+        ;; Jos päivitetään paikkauskohdetta, jolle on jo yllapitokohteen aikataulut luotu, niin koitetaan päivittää niitä
+        ypka (when (:yllapitokohde-id vanha-kohde)
+               (first (yllapitokohteet-q/hae-yllapitokohteen-aikataulu db {:id (:yllapitokohde-id vanha-kohde)})))
+        _ (when (:yllapitokohde-id vanha-kohde)
+            (yllapitokohteet-q/paivita-yllapitokohteen-paallystysaikataulu! db {:id (:yllapitokohde-id vanha-kohde)
+                                                                                :kohde_alku (:kohde-alku ypka)
+                                                                                :muokkaaja kayttaja-id
+                                                                                :paallystys_alku (:pot-tyo-alkoi uusi-kohde)
+                                                                                :paallystys_loppu (:pot-tyo-paattyi uusi-kohde)
+                                                                                :kohde_valmis (or (:pot-valmistumispvm uusi-kohde) (:kohde-valmis ypka))
+                                                                                :valmis_tiemerkintaan (:valmis-tiemerkintaan ypka)}))
+        ]
+    uusi-kohde))
 
 (defn tallenna-paikkauskohde! [db fim email user kohde kehitysmoodi?]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset user (:urakka-id kohde))
@@ -320,10 +417,11 @@
         urakka-sampo-id (urakat-q/hae-urakan-sampo-id db (:urakka-id kohde))
         ;; Tarkista pakolliset tiedot ja tietojen oikeellisuus
         validointivirheet (paikkauskohde-validi? kohde vanha-kohde kayttajarooli) ;;rooli on null?
-        ;; Sähköpostin lähetykset vain kehitysservereillä tässä vaiheessa
-        kohde 
-        (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
-
+        kohde (tarkista-tilamuutoksen-vaikutukset db fim email user kohde vanha-kohde urakka-sampo-id)
+        ;; Mikäli paikkauskohde halutaan raportoida pot lomakkeella, tehdään samalla yllapitokohde tauluun merkintä
+        kohde (tarkista-pot-raportointi db kohde vanha-kohde (:id user))
+        ;; Kohteen valmistumispäivä kaivellaan pot raportoitavalla vähä eri tavalla
+        valmistumispvm (or (and (:pot? kohde) (:pot-valmistumispvm kohde)) (:valmistumispvm kohde) nil)
         tr-osoite {::paikkaus/tierekisteriosoite_laajennettu
                    {:harja.domain.tielupa/tie (konversio/konvertoi->int (:tie kohde))
                     :harja.domain.tielupa/aosa (konversio/konvertoi->int (:aosa kohde))
@@ -356,13 +454,14 @@
                                                         (bigdec (:suunniteltu-maara kohde)))
                          ::paikkaus/yksikko (:yksikko kohde)
                          ::paikkaus/lisatiedot (or (:lisatiedot kohde) nil)
-                         ::paikkaus/valmistumispvm (or (:valmistumispvm kohde) nil)
+                         ::paikkaus/valmistumispvm valmistumispvm
                          ::paikkaus/tilattupvm (or (:tilattupvm kohde) nil)
                          ::paikkaus/toteutunut-hinta (when (:toteutunut-hinta kohde)
                                                        (bigdec (:toteutunut-hinta kohde)))
                          ::paikkaus/tiemerkintaa-tuhoutunut? (or (:tiemerkintaa-tuhoutunut? kohde) nil)
                          ::paikkaus/takuuaika (when (:takuuaika kohde) (bigdec (:takuuaika kohde)))
-                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))}
+                         ::paikkaus/tiemerkintapvm (when (:tiemerkintaa-tuhoutunut? kohde) (pvm/nyt))
+                         ::paikkaus/yllapitokohde-id (:yllapitokohde-id kohde)}
                         (when on-kustannusoikeudet?
                           {::paikkaus/suunniteltu-hinta (bigdec (or (:suunniteltu-hinta kohde) 0))})
                         (when kohde-id
@@ -466,17 +565,43 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
+;; Korjataan tuotannossa oleva virhetilanne, jossa pot?=true merkinnän saaneet paikkauskohteet
+;; eivät ole saaneet ylläpitokohdetta. Joten varmistetaan, että kaikilla pot-raportoitavilla on olemassa
+;; ylläpitokohde
+(defn- hae-paikkauskohteet [db user tiedot]
+  (let [paikkauskohteet (paikkaus-q/paikkauskohteet db user tiedot)
+        ;; Alustetaan mahdollisuus merkitä paikkauskohteet likaiseksi
+        oli-puuttuva-yllapitokohde (atom false)
+        _ (doall (for [kohde paikkauskohteet]
+                   (let [uusi-kohde (when (and (:pot? kohde) (nil? (:yllapitokohde-id kohde)))
+                                      ;; Löydettiin paikkauskohde, joka on pot raportoitava, mutta sille ei ole tehty ylläpitokohdetta
+                                      (reset! oli-puuttuva-yllapitokohde true)
+                                      (tarkista-pot-raportointi db kohde
+                                                                ;; Feikataan kohteesta sellainen, että ikäänkuin pot raportointi olisi
+                                                                ;; juuri nyt lyöty päälle
+                                                                (assoc kohde :pot? false) (:id user)))
+                         ;; Tallennetaan kohde uudestaan, koska se on saanut yllapitokohde-id:n
+                         _ (when uusi-kohde
+                             (tallenna-paikkauskohde! db nil nil user uusi-kohde false))])))]
+    (if @oli-puuttuva-yllapitokohde
+      ;; Jos puuttuvia tietoja oli, haetaan paikkauskohteet uudestaan
+      (paikkaus-q/paikkauskohteet db user tiedot)
+      ;; Normitilanteessa palautetaan jo löydetyt kohteet
+      paikkauskohteet)))
+
 (defrecord Paikkauskohteet [kehitysmoodi?]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle
                         (fn [user tiedot]
-                          (paikkaus-q/paikkauskohteet db user tiedot)))
+                          (hae-paikkauskohteet db user tiedot)))
       (julkaise-palvelu http :tallenna-paikkauskohde-urakalle
                         (fn [user kohde]
                           (tallenna-paikkauskohde! db fim email user kohde kehitysmoodi?)))

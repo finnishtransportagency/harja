@@ -833,7 +833,7 @@ VALUES (10006, (SELECT id
 -- Utajärven päällystysurakka
 ----------------------------
 
--- Päällystyskohteet 2020 (vielä pot1)
+-- Päällystyskohteita, sekä pot1 että pot2 aikakaudelta
 INSERT INTO yllapitokohde
 (urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
  yha_tr_osoite,
@@ -887,7 +887,7 @@ VALUES
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
    NULL,
-   837, 2, 0, 2, 1000, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
+   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'), (SELECT ARRAY[date_part('year', now())]), FALSE),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -899,7 +899,7 @@ VALUES
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
     NULL,
-    22, 13, 0, 13, 3888, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), FALSE),
+    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022') , (SELECT ARRAY[date_part('year', now())]), FALSE),
   -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
       FROM urakka
@@ -912,7 +912,10 @@ VALUES
    116, 'L42', 'Tärkeä kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527523069,
    ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
-   20, 1, 1066, 1, 3827, NULL, NULL, NULL, '{2021}', FALSE),
+   20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
+                                        FROM urakka
+                                       WHERE nimi =
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -936,7 +939,22 @@ VALUES
    116, 'L62', '0-ajoratainen testikohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527823070,
    ROW(4, 226, 60, 226, 197, NULL)::tr_osoite,
-   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE);
+   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE),
+  ((SELECT id
+      FROM urakka
+     WHERE nimi = 'Utajärven päällystysurakka'),
+   (SELECT id
+      FROM sopimus
+     WHERE urakka = (SELECT id
+                       FROM urakka
+                      WHERE nimi = 'Utajärven päällystysurakka') AND paasopimus IS NULL),
+   116, 'L42', 'Tärkeä kohde mt20 2022', 'paallyste' :: yllapitokohdetyyppi,
+   'paallystys' ::yllapitokohdetyotyyppi, 547523069,
+   ROW(20, 1, 1066, 1, 3827, NULL)::tr_osoite,
+   20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
+                                        FROM urakka
+                                       WHERE nimi =
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2022}', FALSE);
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -965,16 +983,14 @@ VALUES
     WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT), 6, 19),
-   make_date((SELECT date_part('year', now())::INT), 6, 19), make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 6, 22),
-   make_date((SELECT date_part('year', now())::INT), 6, 23),
-   make_date((SELECT date_part('year', now())::INT), 6, 24), (SELECT id
+    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT), 6, 14),
+   make_date((SELECT date_part('year', now())::INT), 6, 19), make_date((SELECT date_part('year', now())::INT), 6, 21), NULL, NULL, NULL, (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date((SELECT date_part('year', now())::INT), 6, 21), make_date((SELECT date_part('year', now())::INT), 7, 04)),
+   make_date((SELECT date_part('year', now())::INT), 3, 3), NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT), 5, 19),
+    WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT), 5, 16),
                               make_date((SELECT date_part('year', now())::INT), 5, 19), make_date((SELECT date_part('year', now())::INT), 5, 21), make_date((SELECT date_part('year', now())::INT), 5, 22),
                               make_date((SELECT date_part('year', now())::INT), 5, 23),
                               make_date((SELECT date_part('year', now())::INT), 5, 24), (SELECT id
@@ -1008,7 +1024,27 @@ VALUES
    (SELECT id
       FROM kayttaja
      WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date(2021, 5, 21), make_date(2021, 6, 4));
+   make_date(2021, 5, 21), make_date(2021, 6, 4)),
+  ((SELECT id
+      FROM yllapitokohde
+     WHERE nimi = 'Tärkeä kohde mt20 2022'), make_date(2022, 4, 19),
+   make_date(2022, 4, 19), make_date(2022, 4, 21), make_date(2022, 4, 22),
+   make_date(2022, 4, 23),
+   NULL,
+   (SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'jvh'), NOW(),
+   NULL, NULL);
+
+-- Tiemerkintäurakan merkintää ja jyrsintää
+UPDATE yllapitokohteen_aikataulu
+   SET merkinta = 'massa', jyrsinta = 'keski'
+ WHERE yllapitokohde IN (SELECT id FROM yllapitokohde WHERE nimi IN ('Ouluntie 2', 'Tärkeä kohde mt20 2022'));
+
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id

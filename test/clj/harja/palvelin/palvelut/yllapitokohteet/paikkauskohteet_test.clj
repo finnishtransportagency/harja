@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [clojure.set :as set]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
@@ -343,6 +344,8 @@
                         {:osa 4 :pituus 100})
         keksitty-kohde1 {:tie 1 :aosa 1 :aet 0 :losa 2 :let 10}
         laskettu1 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde1)
+        keksitty-kohde11 {:tie 1 :aosa 1 :aet 0 :losa 5 :let 100}
+        laskettu11 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde11)
 
         keksitty-kohde2 {:tie 1 :aosa 1 :aet 0 :losa 3 :let 50}
         laskettu2 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde2)
@@ -350,11 +353,14 @@
         keksitty-kohde3 {:tie 1 :aosa 2 :aet 20 :losa 2 :let 80}
         laskettu3 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde3)
 
-        keksitty-kohde4 {:tie 1 :aosa 20 :aet 20 :losa 2 :let 80}
+        keksitty-kohde4 {:tie 1 :aosa 2 :aet 10 :losa 1 :let 0}
         laskettu4 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
+        keksitty-kohde41 {:tie 1 :aosa 4 :aet 100 :losa 1 :let 0}
+        laskettu41 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde41)
         ]
     ;; Perus case, otetaan osasta 1 loput ja osan 2 alku
     (is (= 110 (:pituus laskettu1)))
+    (is (= 400 (:pituus laskettu11)))
 
     ;; Perus case 2, otetaan osasta 1 loput ja osan 2 alku
     (is (= 250 (:pituus laskettu2)))
@@ -363,9 +369,10 @@
     ;; Esim jos osa 2 on 100m pitkä ja otetaan kohdasta 20 kohtaan 80 tulee 60m
     (is (= 60 (:pituus laskettu3)))
 
-    ;; Vielä härömpi tapaus, missä alkuosa alkaa myöhemmin kuin loppuosa.
+    ;; Erikoistapaus, jossa tierekisterin osat merkataan eri järjestyksessä. Eli loppuosa on pienempi, kuin alkuosa
     ;; Nyt tuloksena pitäisi olla nil
-    (is (= nil (:pituus laskettu4)))))
+    (is (= 110 (:pituus laskettu4)))
+    (is (= 400 (:pituus laskettu41)))))
 
 ;; Testataan käsin lisätyn paikkauksen toimintaa
 (defn testipaikkaus [paikkauskohde-id urakka-id kayttaja-id]
@@ -378,7 +385,9 @@
    :aosa 1
    :aet 1
    :losa 1
-   :let 100})
+   :let 100
+   :ajorata 1})
+
 ;;
 ;;Happycase
 (deftest tallenna-paikkaussoiro-kasin-test
@@ -386,7 +395,7 @@
         kohde (merge {:urakka-id urakka-id}
                      default-paikkauskohde)
         tyomenetelmat @paikkauskohde-tyomenetelmat
-
+        kayttaja-id (:id +kayttaja-jvh+)
         paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :tallenna-paikkauskohde-urakalle
                                       +kayttaja-jvh+
@@ -396,8 +405,16 @@
                                              :tallenna-kasinsyotetty-paikkaus
                                              +kayttaja-jvh+
                                              paikkaus)
-        ; _ (println "tallennettu-paikkaus" (pr-str tallennettu-paikkaus))
-        ]
+        vertailtava-paikkaus (dissoc tallennettu-paikkaus ::paikkaus/id ::paikkaus/alkuaika ::paikkaus/sijainti ::paikkaus/loppuaika)
+        odotettu-paikkaus {:harja.domain.paikkaus/tyomenetelma 5,
+                           :harja.domain.paikkaus/ulkoinen-id 0,
+                           :harja.domain.paikkaus/paikkauskohde-id (:id paikkauskohde)
+                           :harja.domain.muokkaustiedot/luoja-id kayttaja-id,
+                           :harja.domain.paikkaus/lahde "harja-ui",
+                           :harja.domain.paikkaus/urakka-id 37,
+                           :harja.domain.paikkaus/tierekisteriosoite #:harja.domain.tierekisteri{:tie 20, :aosa 1, :aet 1, :losa 1, :let 100 :ajorata 1},
+                           :harja.domain.paikkaus/massatyyppi ""}]
+    (is (= vertailtava-paikkaus odotettu-paikkaus))
     (is (= 5 (::paikkaus/tyomenetelma tallennettu-paikkaus) ;; Konetiivistetty reikävaluasfalttipaikkaus (REPA)
            #_(hae-tyomenetelman-arvo :nimi :id (::paikkaus/tyomenetelma tallennettu-paikkaus))))
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
@@ -418,9 +435,9 @@
    :let 100
    :ajorata 1
    :kaista 2
-   :massamaara 3
+   :massamaara 3.3
    :pinta-ala 3
-   :massamenekki 3
+   :massamenekki 3.33
    :kuulamylly "3"
    :raekoko 5,
    :massatyyppi "SMA, Kivimastiksiasfaltti"
@@ -447,8 +464,28 @@
                                                    tyomenetelmat)
         ]
     (is (= 1 (::paikkaus/tyomenetelma tallennettu-paikkaus))) ;; AB-paikkaus levittimellä
-    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))
-    ))
+    (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
+
+(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-epaonnistuu-test
+
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                     default-paikkauskohde)
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-paikkauskohde-urakalle
+                                      +kayttaja-jvh+
+                                      (assoc kohde :paikkauskohteen-tila "tilattu"))
+        paikkaus (testipaikkauslevittimella (:id paikkauskohde) urakka-id (:id +kayttaja-jvh+))
+        ;; Muutetaan alkuosa liian suureksi.
+        paikkaus (assoc paikkaus :aosa 99999999999999
+                                 :aet 100
+                                 :losa 1
+                                 :let 99)]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :tallenna-kasinsyotetty-paikkaus
+                                           +kayttaja-jvh+
+                                           paikkaus))
+        "Poikkeusta ei heitetty, vaikka tierekisteriosoite ei ole validi")))
 
 
 (defn hae-paikkaukset [urakka-id paikkauskohde-id]

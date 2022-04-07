@@ -9,6 +9,19 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
+Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa sijaita sellaisen kansion alla, jonka nimessä on - -merkki. 
+Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä. 
+Esimerkiksi näin:
+```
+~/work ❯❯❯ tree -aL 1 harjaroot
+harjaroot
+├── .harja
+├── harja
+├── harja-infra
+├── harja-jenkins
+└── harja-testidata
+```
+
 Harja repon hakemistorakenne:
 
 - README                    (yleinen readme)
@@ -50,7 +63,7 @@ Harja repon hakemistorakenne:
     `sh devdb_up.sh`
 
 4. Asenna tarvittavat työkalut `npm install`
-5. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
     `lein do clean, compile, repl`
@@ -92,6 +105,8 @@ Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä fron
 piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
 luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
+Lisätietoa käyttäjärooleista ohjelmistokehittäjän näkökulmasta löytyy Knowledgesta otsikolla Autentikointi ja autorisointi
+
 Seuraavat headerit tuettuna:
 
 * OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
@@ -127,6 +142,8 @@ sh devdb_down.sh
 Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
 Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
 ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
+
+Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
 * ActiveMQ: `docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
@@ -180,12 +197,55 @@ Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1
 
 Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
 
+#### Tietokantataulujen nimeäminen
+Sovittiin tiimin kesken, että uusien isompien kokonaisuuksien osalta nimetään osa-alueen taulut yhteisellä etuliitteellä. Esimerkiksi pot2_, pot2_mk_ sekä lupaus_. Näin on helppo löytää kaikki tiettyyn osa-alueeseen liittyvät taulut.
+
 ### Namespacet
 Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Olemassa olon syy?
 - Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
+
+### Tiedostojen nimeäminen
+Tiimin päätös 9/2021:
+- Alkuosa: ominaisuuden nimi, mielellään yksikössä
+- Loppuosa: kerroksen nimi
+
+esim.
+
+```
+lupaus_palvelu.clj
+lupaus_kyselyt.clj
+lupaus_domain.cljc
+
+lupaus_palvelu_test.clj
+lupaus_domain_test.clj
+
+lupaus_kyselyt.sql
+lupaus_testidata.sql
+
+lupaus_tiedot.cljs
+lupaus_nakyma.cljs
+lupaus_tyylit.less
+
+valikatselmus_palvelu.clj
+...
+```
+
+#### Miksi?
+
+Uniikit nimet helpottavat tiedostojen etsimistä.
+
+Nimeä voi käyttää sellaisenaan require-aliaksena ilman törmäyksiä:
+```
+(:require
+  [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
+  [harja.domain.lupaus-domain :as lupaus-domain]
+  [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+```
+Ehdotan, että uudet ominaisuudet nimetään tällä tavalla.
+Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan toiminnallisuuteen.
 
 ## Testaus
 
@@ -198,7 +258,7 @@ Fronttitestit ajetaan komennolla: `lein doo phantom test`
 Taikka näin:  `lein with-profile +test doo phantom test once`
 
 Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
-phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew cask install phantomjs` 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
 
 Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
 Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
@@ -222,10 +282,12 @@ tapauksen ja mielellään myös virheellisen kutsun.
 
 Pyritään testaamaan kaikki CRUD operaatiot.
 
-Oikeustarkistuksien olemassaolo varmistetaan automaattisesti palvelukutsuissa,
-mutta eri käyttäjien pääsy tiettyyn palveluun on syytä testata sen palvelun testeissä.
+Oikeustarkistuksien olemassaolo varmistetaan palvelukutsuissa, ja puuttuva oikeustarkistus lokitetaan varoitustasolla.
+Kehitystiimin linja on, että jokaisen HTTP-palvelun tulee vaatia joko luku- tai kirjoitusoikeus käyttäjältä.
+
+Eri käyttäjien pääsy tiettyyn palveluun on syytä testata myös sen palvelun testeissä.
 Testaa palvelukutsuja ainakin kahdella käyttäjällä: sellaisella joka pääsee ja sellaisella
-joka ei.
+joka ei pääse.
 
 ### End-to-end testit
 
@@ -235,6 +297,27 @@ oikein eikä harja räsähdä.
 
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
+
+### Tievelho
+
+Jos halutaan kokeilla toimiiko varusteiden noutaminen Tievelhosta pitää paikallisessa kehitysympäsitössä
+asettaa urakka, jolle kaikki mahdolliset saapuvat varusteet osuvat. Tämän voi tehdä muuttamalla Oulun MHU 2019-2024 
+urakkaa kattamaan koko Suomi ja muuttamalla sen aikaväliä kattamaan kaikkien varusteiden kirjauspäivät.
+
+```
+UPDATE urakka
+SET alkupvm='2017-10-01' 
+    alue = st_makepolygon(st_geometryfromtext('LINESTRING(5744 7821230, 879959 7821230, 879959 6536352, 5744 6536352, 5744 7821230)'))
+WHERE id = 35;
+```
+
+Testiajon voi toistaiseksi suorittaa kutsumalla POST palvelua osoitteessa: 
+   http://localhost:3000/_/petrisi-manuaalinen-testirajapinta-varustetoteumat
+
+## Debug lokituksen näyttäminen
+
+Muokkaa asetukset.edn:aa ja muuta rivillä: 
+
 
 ## Tietokanta
 
@@ -343,7 +426,14 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61617:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9
+`docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
+Jos container on jo käytössä/tehty, niin käynnistä se:
+`docker start harja_activemq`
+Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
+`docker rm harja_activemq`
+
+Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
+`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
 
 URL konsoliin:
 localhost:8162/admin/queues.jsp (admin/admin)
@@ -392,10 +482,11 @@ kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
 salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
-* Tee muuttoksia `.harja` hakemistoon, `harja-testidata` repossa DEUS:ssa
-* Päivittää `harja-app` hakemisto, `harja-docker` repossa DEUS:ssa. Siellä löytyvät ohjeet. Muista buildata
+* Tee muutoksia `.harja` hakemistoon, `harja-testidata` Internal [*1](#*1) repossa
+* Päivitä `harja-app` hakemisto, `harja-docker` OnPrem [*1](#*1) repossa. Sieltä löytyvät ohjeet. Muista buildata
   "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
 * Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
   mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
   ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
-  
+
+<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)

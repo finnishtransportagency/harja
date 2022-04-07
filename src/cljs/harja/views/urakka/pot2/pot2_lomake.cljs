@@ -25,7 +25,9 @@
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
     [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
-    [harja.tiedot.muokkauslukko :as lukko])
+    [harja.tiedot.muokkauslukko :as lukko]
+    [harja.ui.grid :as grid]
+    [harja.pvm :as pvm])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -57,7 +59,7 @@
                                 :tr-alkuetaisyys :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuosa
                                 :tr-loppuetaisyys :tr-loppuetaisyys}}]
-            :taulukko [{:fn #(println "todo") ;Mietitään myöhemmin, otetaanko taulukkovalidointia tässä käyttöön. POT1:ssä se aiheutti valtavaa hitautta, backend validointi ehkä riittää niihin ja hyvä vikaviestin raportointi
+            :taulukko [{:fn (constantly :default) ;; no-op
                         :sarakkeet {:tr-numero :tr-numero
                                     :tr-ajorata :tr-ajorata
                                     :tr-kaista :tr-kaista
@@ -103,6 +105,50 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+(def yha-ja-velho-lahetys-onnistunut-leveys "320px")
+
+(defn- yha-ja-velho-lahetyksen-tila
+  "Komponentti näyttää YHA- ja myöhemmin Velho-lähetyksen tilan päällystysilmoituksella."
+  [{:keys [lahetys-onnistunut lahetetty] :as lahetyksen-tila}
+   {:keys [tila muokattu]}]
+  (let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)
+        muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
+                                               (> muokattu lahetetty))]
+    [:span.yha-ja-velho-lahetyksen-tila
+     (cond
+       ;; näytetään lähetyksen virheet
+       virhe-teksti
+       [yleiset/info-laatikko :varoitus
+        "YHA-lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
+        virhe-teksti nil]
+
+       ;; näytetään jos lähetys on onnistunut
+       (and lahetys-onnistunut lahetetty)
+       [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
+                                :neutraali
+                                :onnistunut)
+        (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
+        (when muokattu-yhaan-lahettamisen-jalkeen?
+          (str "Ilmoitusta on muokattu YHA:an lähettämisen jälkeen "
+               (pvm/pvm-aika-opt muokattu)
+               ". Voit tarvittaessa lähettää ilmoituksen uudelleen listausnäkymästä."))
+        (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-ja-velho-lahetys-onnistunut-leveys)]
+
+       ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
+       (and (nil? lahetetty) (false? lahetys-onnistunut)
+            (#{:valmis :lukittu} tila))
+       [yleiset/info-laatikko :neutraali
+        (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
+
+       :else
+       nil)]))
+
+(defn- perustiedot-ilman-lomaketietoja
+  [perustiedot]
+  (assoc (lomake/ilman-lomaketietoja perustiedot)
+    :asiatarkastus (lomake/ilman-lomaketietoja (:asiatarkastus perustiedot))
+    :tekninen-osa (lomake/ilman-lomaketietoja (:tekninen-osa perustiedot))))
+
 (defn pot2-lomake
   [e! {paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata
        :as              app}
@@ -111,14 +157,18 @@
   (let [muokkaa! (fn [f & args]
                    (e! (pot2-tiedot/->PaivitaTila [:paallystysilmoitus-lomakedata] (fn [vanha-arvo]
                                                                                      (apply f vanha-arvo args)))))
-        perustiedot-hash-avatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+        perustiedot-hash-avatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+        ohjauskahva-paallystekerros (grid/grid-ohjaus)
+        ohjauskahva-alusta (grid/grid-ohjaus)
         {:keys [tr-numero tr-alkuosa tr-loppuosa]} (get-in paallystysilmoitus-lomakedata [:perustiedot :tr-osoite])]
     (komp/luo
       (komp/lippu pot2-tiedot/pot2-nakymassa?)
       (komp/sisaan (fn [this]
-                     (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
+                     (e! (paallystys/->HaeTrOsienPituudet tr-numero nil nil))
                      (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))
                      (e! (mk-tiedot/->HaePot2MassatJaMurskeet))
+                     (reset! pot2-tiedot/kohdeosat-virheet-atom nil)
+                     (reset! pot2-tiedot/alustarivit-virheet-atom nil)
                      (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
                      (reset! pot2-tiedot/kohdeosat-atom
                              (-> (:paallystekerros paallystysilmoitus-lomakedata)
@@ -132,27 +182,32 @@
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
                      (nav/vaihda-kartan-koko! :S)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
-                      pot2-massa-lomake pot2-murske-lomake] :as app}]
+                      pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
-              perustiedot (:perustiedot paallystysilmoitus-lomakedata)
+              {:keys [perustiedot lahetyksen-tila tallennus-kaynnissa? muokattu?]} paallystysilmoitus-lomakedata
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
-              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet})
-              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet})
+              alusta-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :alusta :alustalomake :tr-osien-pituudet :ohjauskahvat})
+              paallystekerros-app (select-keys paallystysilmoitus-lomakedata #{:kirjoitusoikeus? :perustiedot :paallystekerros :tr-osien-pituudet :ohjauskahvat})
               tallenna-app (select-keys (get-in app [:paallystysilmoitus-lomakedata :perustiedot])
                                         #{:tekninen-osa :tila :versio})
               {:keys [tila]} perustiedot
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
-              virheet (conj []
-                            (-> perustiedot ::lomake/virheet))
+              virheet (conj [] (-> perustiedot ::lomake/virheet))
+              puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
               valmis-tallennettavaksi? (and
                                          (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet))))
-              perustiedot-hash-rendatessa (hash (lomake/ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
+                                         (empty? (flatten (keep vals virheet)))
+                                         (empty? puuttuvat-pakolliset-kentat)
+                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
+              perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
-                                  (:muokattu? paallystysilmoitus-lomakedata))]
+                                  muokattu?)]
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystekerros] ohjauskahva-paallystekerros))
+          (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :alusta] ohjauskahva-alusta))
           [:div.pot2-lomake
            [napit/takaisin
             "Takaisin ilmoitusluetteloon"
@@ -166,18 +221,21 @@
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
+           [yha-ja-velho-lahetyksen-tila lahetyksen-tila perustiedot]
            [pot-yhteinen/paallystysilmoitus-perustiedot
-            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset]
+            e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]
            [materiaalit e! massat murskeet]
            [yleiset/valitys-vertical]
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
-                                                                    :validointi (:paallystekerros pot2-validoinnit)} pot2-tiedot/kohdeosat-atom]
+                                                                    :validointi (:paallystekerros pot2-validoinnit)
+                                                                    :virheet-atom pot2-tiedot/kohdeosat-virheet-atom} pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
-                                         :validointi (:alusta pot2-validoinnit)}
+                                         :validointi (:alusta pot2-validoinnit)
+                                         :virheet-atom pot2-tiedot/alustarivit-virheet-atom}
             pot2-tiedot/alustarivit-atom]
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
@@ -197,5 +255,6 @@
               [:hr]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
-                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                   :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

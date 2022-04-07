@@ -3,10 +3,10 @@
   (:require [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.debug :as debug]
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.views.urakka.valinnat :as valinnat]
@@ -113,8 +113,8 @@
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
                                         ;(log "PV " tunnus)
-                              (let [tie (first (clojure.string/split tunnus " "))
-                                      tunnus-pohjavesialue (clojure.string/join " " (rest (clojure.string/split tunnus " "))) ;; tie tunnus
+                              (let [tie (first (str/split tunnus " "))
+                                      tunnus-pohjavesialue (str/join " " (rest (str/split tunnus " "))) ;; tie tunnus
                                     paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
                                                                                          (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
                                                                                               (= tie (:tie pv-raja))
@@ -214,7 +214,7 @@
             :varoita [tarkista-sakko-ja-bonus]
             :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
 
-           (when (urakka/indeksi-kaytossa?)
+           (when (urakka/indeksi-kaytossa-sakoissa?)
              {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
               :muokattava? (constantly saa-muokata?)
               :valinta-nayta #(if (not saa-muokata?)

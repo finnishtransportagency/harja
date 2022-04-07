@@ -69,7 +69,7 @@
                       [:span.nappiwrappi
                        [napit/palvelinkutsu-nappi
                         "Tallenna sanktio"
-                        #(tiedot/tallenna-sanktio @muokattu urakka-id)
+                        #(tiedot/tallenna-sanktio (lomake/ilman-lomaketietoja @muokattu) urakka-id)
                         {:luokka "nappi-ensisijainen"
                          :ikoni (ikonit/tallenna)
                          :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
@@ -90,7 +90,7 @@
                                 :hyvaksy "Poista"
                                 :toiminto-fn #(do
                                                 (let [res (tiedot/tallenna-sanktio
-                                                            (assoc @muokattu
+                                                            (assoc (lomake/ilman-lomaketietoja @muokattu)
                                                               :poistettu true)
                                                             urakka-id)]
                                                   (do (viesti/nayta! "Sanktio poistettu")
@@ -213,7 +213,6 @@
                               :B "Ryhmä B"
                               :C "Ryhmä C"
                               :muistutus "Muistutus"
-                              :lupaussanktio "Lupaussanktio"
                               :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                               :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                               :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
@@ -252,7 +251,7 @@
             :pakollinen? true :uusi-rivi? true :yksikko "€"
             :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa?))
+         (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa-sakoissa?))
            {:otsikko "Indeksi" :nimi :indeksi :leveys 2
             :tyyppi :valinta
             :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))

@@ -73,7 +73,7 @@
 
 (defn poista-tp-taulusta
   [kuvaus]
-  (log/debug "Poistetaan testi-turpo")
+  ;(log/debug "Poistetaan testi-turpo")
   (let [id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus='" kuvaus "'")))]
     (u (str "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama=" id))
     (u (str "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama=" id))

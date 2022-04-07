@@ -69,6 +69,19 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-yha-velho-lahetyksen-tila
+SELECT id as "kohde-id",
+       lahetys_onnistunut as "lahetys-onnistunut",
+       lahetysaika,
+       lahetetty,
+       lahetysvirhe,
+       velho_lahetyksen_aika as "velho-lahetyksen-aika",
+       velho_lahetyksen_tila as "velho-lahetyksen-tila",
+       velho_lahetyksen_vastaus as "velho-lahetyksen-vastaus"
+FROM yllapitokohde
+WHERE id = :kohde-id;
+
+
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id
@@ -660,8 +673,12 @@ SELECT
   ypka.paallystys_alku      AS "aikataulu-paallystys-alku",
   ypka.paallystys_loppu     AS "aikataulu-paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "aikataulu-tiemerkinta-takaraja",
+  ypka.tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin",
   ypka.tiemerkinta_alku     AS "aikataulu-tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  ypka.tiemerkinta_lisatieto AS "aikataulu-tiemerkinta-lisatieto",
+  ypka.merkinta             AS "aikataulu-tiemerkinta-merkinta",
+  ypka.jyrsinta             AS "aikataulu-tiemerkinta-jyrsinta",
   ypka.kohde_valmis         AS "aikataulu-kohde-valmis",
   ypka.muokattu             AS "aikataulu-muokattu",
   ypka.muokkaaja            AS "aikataulu-muokkaaja",
@@ -708,6 +725,8 @@ SELECT
   ypka.paallystys_alku      AS "paallystys-alku",
   ypka.paallystys_loppu     AS "paallystys-loppu",
   ypka.tiemerkinta_takaraja AS "tiemerkinta-takaraja",
+  ypka.merkinta             AS "aikataulu-tiemerkinta-merkinta",
+  ypka.jyrsinta             AS "aikataulu-tiemerkinta-jyrsinta",
   ypka.tiemerkinta_alku     AS "tiemerkinta-alku",
   ypka.tiemerkinta_loppu    AS "tiemerkinta-loppu",
   ypka.kohde_valmis         AS "kohde-valmis",
@@ -755,6 +774,18 @@ WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
            WHERE id = :id) = :urakka;
+
+-- name: tallenna-paallystyskohteen-aloitus-ja-lopetus!
+UPDATE yllapitokohteen_aikataulu
+   SET
+       kohde_alku       = :aikataulu_kohde_alku,
+       kohde_valmis     = :aikataulu_kohde_valmis,
+       muokattu         = NOW(),
+       muokkaaja        = :aikataulu_muokkaaja
+ WHERE yllapitokohde = :id
+   AND (SELECT urakka
+          FROM yllapitokohde
+         WHERE id = :id) = :urakka;
 
 -- name: tallenna-yllapitokohteen-kustannukset!
 -- Tallentaa ylläpitokohteen kustannukset
@@ -804,17 +835,25 @@ WHERE yllapitokohde = :id
 -- Tallentaa ylläpitokohteen valmis viimeistään -sarakkeen tiedon
 UPDATE yllapitokohteen_aikataulu
 SET
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja,
+  tiemerkinta_takaraja_kasin = :aikataulu_tiemerkinta_takaraja_kasin
 WHERE yllapitokohde = :id
       AND (SELECT suorittava_tiemerkintaurakka
            FROM yllapitokohde
            WHERE id = :id) = :suorittava_tiemerkintaurakka;
 
+-- name: hae-kohteen-merkinta-ja-jyrsintatiedot
+SELECT merkinta AS "aikataulu-tiemerkinta-merkinta",
+       jyrsinta AS "aikataulu-tiemerkinta-jyrsinta",
+       tiemerkinta_takaraja_kasin AS "aikataulu-tiemerkinta-takaraja-kasin"
+  FROM yllapitokohteen_aikataulu
+ WHERE yllapitokohde = :yllapitokohde;
+
 -- name: merkitse-kohde-valmiiksi-tiemerkintaan<!
 UPDATE yllapitokohteen_aikataulu
 SET
   valmis_tiemerkintaan = :valmis_tiemerkintaan,
-  tiemerkinta_takaraja = :aikataulu_tiemerkinta_takaraja
+  tiemerkinta_takaraja = :laskettu_takaraja
 WHERE yllapitokohde = :id
       AND (SELECT urakka
            FROM yllapitokohde
@@ -830,6 +869,29 @@ SELECT
   ypk.tr_loppuosa           AS "tr-loppuosa",
   ypk.tr_loppuetaisyys      AS "tr-loppuetaisyys",
   ypka.tiemerkinta_loppu    AS "aikataulu-tiemerkinta-loppu",
+  -- ajorata- ja kaistatiedot haetaan alikohteista, jokainen kaista max yhteen kertaan
+  (SELECT string_agg(DISTINCT (tr_ajorata::TEXT), ', ')
+     FROM yllapitokohdeosa o
+    WHERE ypk.id = o.yllapitokohde AND o.poistettu IS FALSE) AS ajoradat,
+  (SELECT string_agg(DISTINCT (tr_kaista::TEXT), ', ')
+     FROM yllapitokohdeosa o
+    WHERE ypk.id = o.yllapitokohde AND o.poistettu IS FALSE) AS kaistat,
+  (SELECT string_agg(DISTINCT (
+      SELECT tp.lyhenne from pot2_mk_paallystekerros_toimenpide tp
+      WHERE paall.toimenpide = tp.koodi AND
+            -- varmistetaan ettei alikohdetta ole poistettu
+            EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
+     FROM pot2_paallystekerros paall
+    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS toimenpiteet,
+  (SELECT string_agg(DISTINCT (
+      select t.lyhenne || m.max_raekoko || ', ' || m.kuulamyllyluokka
+      FROM pot2_mk_urakan_massa m
+               JOIN pot2_mk_massatyyppi t ON t.koodi = m.tyyppi
+       WHERE m.id = paall.materiaali AND
+         -- varmistetaan ettei alikohdetta ole poistettu
+           EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
+    FROM pot2_paallystekerros paall
+   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS paallysteet,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",
@@ -868,6 +930,9 @@ UPDATE yllapitokohteen_aikataulu
 SET
   tiemerkinta_alku  = :aikataulu_tiemerkinta_alku,
   tiemerkinta_loppu = :aikataulu_tiemerkinta_loppu,
+  tiemerkinta_lisatieto = :aikataulu_tiemerkinta_lisatieto,
+  merkinta          = :aikataulu_tiemerkinta_merkinta::tiemerkinta_merkinta,
+  jyrsinta          = :aikataulu_tiemerkinta_jyrsinta::tiemerkinta_jyrsinta,
   muokattu          = NOW(),
   muokkaaja         = :aikataulu_muokkaaja
 WHERE yllapitokohde = :id

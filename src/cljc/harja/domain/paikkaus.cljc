@@ -4,6 +4,7 @@
     [clojure.string :as str]
     [harja.domain.muokkaustiedot :as muokkaustiedot]
     [harja.kyselyt.specql :as harja-specql]
+    [harja.domain.tierekisteri :as tr]
     [harja.pvm :as pvm]
 
     #?@(:clj  [
@@ -17,6 +18,7 @@
 
 (define-tables
   ["tr_osoite_laajennettu" ::tr-osoite-laajennettu]
+  ["tr_osoite" ::tr/tr-osoite]
   ["paikkauskohde" ::paikkauskohde
    {"luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
@@ -152,12 +154,13 @@
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
-;; FIXME: keksitty lista. Hommaa YHA-jengiltä oikea lista
-(def tyomenetelmat-jotka-lahetetaan-yhaan
-  #{"massapintaus" "remix-pintaus"})
+;; VHAR-1384, huom. nämä lyhenteitä
+(def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
+  #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
 
-(defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
-  (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))
+(defn
+  pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelman-lyhenne]
+  (boolean (paikkaustyomenetelmat-jotka-kiinnostaa-yhaa tyomenetelman-lyhenne)))
 
 (defn fmt-tila [tila]
   (let [tila (if (= tila "hylatty") "hylätty" tila)]
@@ -167,7 +170,11 @@
   #{"m2" "t" "kpl" "jm"})
 
 (defn id->tyomenetelma [id tyomenetelmat]
-  (first (filter #(= id (::tyomenetelma-id %)) tyomenetelmat)))
+  (first (filter (fn [t]
+                   (and (not (nil? t)) ;; Varmistetaan, että annettu työmenetelmä ei ole nil
+                              (= id (::tyomenetelma-id t))))
+                 tyomenetelmat)))
+
 
 (defn tyomenetelma-id->nimi [id tyomenetelmat]
   (::tyomenetelma-nimi (id->tyomenetelma id tyomenetelmat)))

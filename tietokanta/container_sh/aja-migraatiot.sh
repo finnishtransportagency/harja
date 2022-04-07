@@ -11,5 +11,22 @@ else
 fi
 
 cd harja/tietokanta/
-echo "Ajetaan migraatiot"
-mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" flyway:migrate
+echo "Ajetaan kaikki migraatiot."
+## Vanha tapa ajaa migraatio siten, että jatketaan viimeksi ajetusta migraatiosta.
+##mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" flyway:migrate
+
+## -- Aja kaikki migraatiot uusiksi --
+
+psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest_template;"
+psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest;"
+
+## Puhdista kanta
+mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
+ flyway:clean
+
+## Aja migraatiot alusta
+mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
+-DbaselineVersion="0" -DbaseLineOnMigrate="true" \
+ flyway:migrate
+
+echo "Migraatio ajettu."

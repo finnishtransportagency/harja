@@ -12,7 +12,7 @@
     (fn []
       [:span.kohdeluettelo
        [bs/tabs {:style :tabs :classes "tabs-taso2"
-                 :active (nav/valittu-valilehti-atom :integraatioloki)}
+                 :active (nav/valittu-valilehti-atom :integraatiotilanne)}
 
         "Integraatioloki"
         :integraatioloki
@@ -20,8 +20,8 @@
           ^{:key "integraatioloki"}
           [integraatioloki/integraatioloki])
 
-        "Sonjajonot"
-        :sonjajonot
+        "JMS-jonot"
+        :jms-jonot
         (when (oikeudet/hallinta-integraatiotilanne-sonjajonot)
-          ^{:key "sonjajonot"}
+          ^{:key "jms-jonot"}
           [jms-jonot/jms-jonot])]])))
