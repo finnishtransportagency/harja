@@ -551,9 +551,11 @@
 
 (defn kokonaisluku-opt
   [luku]
-  (assert (number? luku) "Luvun on oltava numerotyyppinen.")
   (if luku
-    (int luku)
+    (if (number? luku)
+      (int luku)
+      #?(:cljs (js/parseInt luku)
+         :clj  (Integer/parseInt luku)))
     ""))
 
 (defn pyorista-ehka-kolmeen [arvo]

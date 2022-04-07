@@ -22,21 +22,15 @@
   (vec (concat tulos [{:tie "Yhteensä" :yhteensa (reduce + (map :yhteensa tulos))}])))
 
 (defn rivi-xf [rivi]
-  [(str (:tie rivi))
-   (str (:alkuosa rivi))
-   (str (:alkuet rivi))
-   (str (:loppuosa rivi))
-   (str (:loppuet rivi))
-   (if (:pituus rivi)
-     (format "%.1f" (:pituus rivi))
-     "")
-   (format "%.1f" (:yhteensa rivi))
-   (if (:maara_t_per_km rivi)
-     (format "%.1f" (:maara_t_per_km rivi))
-     "")
-   (if (:kayttoraja rivi)
-     (:kayttoraja rivi)
-     "")])
+  [(:tie rivi)
+   (:alkuosa rivi)
+   (:alkuet rivi)
+   (:loppuosa rivi)
+   (:loppuet rivi)
+   (:pituus rivi)
+   (:yhteensa rivi)
+   (:maara_t_per_km rivi)
+   (:kayttoraja rivi)])
 
 (defn sarakkeet []
   [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
