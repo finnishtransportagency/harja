@@ -44,10 +44,10 @@
           {:style {:width        "220px"
                    :margin-right "15px"}}
           [:label.alasvedon-otsikko "Hoitokausi"]
-          [yleiset/livi-pudotusvalikko {:valinta      hoitokausi
-                                        :valitse-fn   #(e! (t/->HaeMaarat {:hoitokausi %}))
-                                        :format-fn    #(str "1.10." % "-30.9." (inc %))
-                                        :disabled     (disabloitu-alasveto? hoitokaudet)
+          [yleiset/livi-pudotusvalikko {:valinta hoitokausi
+                                        :valitse-fn #(e! (t/->HaeMaarat {:hoitokausi %}))
+                                        :format-fn pvm/hoitokausi-str-alkuvuodesta
+                                        :disabled (disabloitu-alasveto? hoitokaudet)
                                         :vayla-tyyli? true}
            hoitokaudet]]
          [:div
