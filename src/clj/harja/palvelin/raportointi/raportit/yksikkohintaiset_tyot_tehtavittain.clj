@@ -56,7 +56,8 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        urakkatyyppi [(name urakkatyyppi)]
+        urakkatyyppi (when urakkatyyppi
+                       [(name urakkatyyppi)])
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         naytettavat-rivit (case konteksti
