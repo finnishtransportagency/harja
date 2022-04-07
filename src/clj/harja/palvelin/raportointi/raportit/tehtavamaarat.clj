@@ -185,7 +185,7 @@
                                 (hae-tehtavamaarat db kysely-fn))
         ;; Varmistetaan vielä, että kaikki tehtävät ovat oikeassa järjestyksessä
         suunnitellut-ryhmissa (into [] (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
-        kaikki (if urakka-id [{:nimi (-> urakan-tiedot first :nimi)}] [])
+        kaikki (if (and urakka-id (not (empty? suunnitellut-ryhmissa))) [{:nimi (-> urakan-tiedot first :nimi)}] [])
         suunnitellut-valiotsikoineen (loop [rivit suunnitellut-ryhmissa
                                             toimenpiteet #{}
                                             hallintayksikot #{}
