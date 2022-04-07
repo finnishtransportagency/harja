@@ -227,7 +227,7 @@
                                                               (into [] 
                                                                 valitason-toimenpiteet 
                                                                 tehtavat)))
-                             :hoitokausi (pvm/vuosi (pvm/nyt))
+                             :hoitokausi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
                              :toimenpide toimenpide)))))
   MaaraHakuOnnistui
   (process-event
