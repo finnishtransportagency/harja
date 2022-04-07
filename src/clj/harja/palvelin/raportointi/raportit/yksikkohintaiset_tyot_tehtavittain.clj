@@ -56,10 +56,7 @@
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
-        urakkatyyppi (when urakkatyyppi
-                        (case urakkatyyppi
-                          :hoito ["hoito" "teiden-hoito"]
-                          [(name urakkatyyppi)]))
+        urakkatyyppi [(name urakkatyyppi)]
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         naytettavat-rivit (case konteksti
