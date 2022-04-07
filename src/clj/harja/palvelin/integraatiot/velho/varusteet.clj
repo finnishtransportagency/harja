@@ -88,7 +88,14 @@
          _ (println hakuvirhe)]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
-(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
+(defn- urakka-muutoksen-lahteen-avulla
+  [db muutoksen-lahde-oid]
+  (-> (q-urakat/hae-urakka-velho-oidlla db {:velho_oid muutoksen-lahde-oid})
+      first
+      :id))
+
+(defn- urakka-sijainnin-avulla
+  [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
         alkupvm (or (:alku version-voimassaolo)
                     alkaen)                                 ; Sijaintipalvelu ei palauta versioita
@@ -102,6 +109,11 @@
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     urakka-id))
+
+(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
+  (or
+    (urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid) ;TODO Sitten kun Velhosta oikeasti saadaan muutoksen-lahde-oid, poistetaan sijaintihaku
+    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
