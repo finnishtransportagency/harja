@@ -149,8 +149,7 @@
   (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
         virheet (atom {})]
     (fn [e! {:keys [tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
-      (let [oikaisut-atom (reagent.core/cursor tila/tavoitehinnan-oikaisut [(:hoitokauden-alkuvuosi app)])
-            paatoksia? (not (empty? (:urakan-paatokset app)))
+      (let [paatoksia? (seq (:urakan-paatokset app))
             hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
             nykyhetki (pvm/nyt)
             ;; Joskus valittua hoitokautta ei ole asetettu
@@ -169,7 +168,7 @@
                                  poikkeusvuosi?
                                  (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
             kattohinnan-oikaisu-mahdollinen? (and
-                                               (seq @oikaisut-atom)
+                                               (seq hoitokauden-oikaisut)
                                                voi-muokata?
                                                (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
         [:div
@@ -238,7 +237,9 @@
             :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
             :validoi [[:ei-tyhja "Täytä arvo"]]
             :leveys 2}]
-          oikaisut-atom]
+          (r/wrap hoitokauden-oikaisut
+            (fn [uusi]
+              (e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut hoitokauden-alkuvuosi uusi))))]
 
          (when (and paatoksia? voi-muokata?)
            [:div.oikaisu-paatos-varoitus
