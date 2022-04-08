@@ -16,7 +16,8 @@
             [clojure.data.json :as json]
             [clojure.set :as set]
             [clojure.string :as str]
-            [org.httpkit.client :as http])
+            [org.httpkit.client :as http]
+            [clojure.core.memoize :as memo])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
@@ -109,9 +110,10 @@
     urakka-id))
 
 (defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
-  (or
-    (urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid)
-    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
+  (let [memo-urakka-muutoksen-lahteen-avulla (memo/ttl urakka-muutoksen-lahteen-avulla :ttl/threshold 600000)]
+    (or
+      (memo-urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid)
+      (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen)))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
@@ -376,7 +378,7 @@
 
 (defn- jasenna-ja-tarkasta-varustetoteuma
   [db {:keys [kohdeluokka] :as kohde} lahteen-kohdeluokka]
-  (let [urakka-id-kohteelle-fn (memoize (partial urakka-id-kohteelle db))
+  (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db) ; tässä vielä toistaikseksi parametrinä kohde, joten memoize on syvemmällä
         sijainti-kohteelle-fn (partial sijainti-kohteelle db) ; sijaintiavaruus on liian suuri memoizelle
         konversio-fn (memoize (partial koodistot/konversio db))]
     (assert (= lahteen-kohdeluokka kohdeluokka)
