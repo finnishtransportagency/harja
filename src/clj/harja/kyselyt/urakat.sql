@@ -548,6 +548,7 @@ FROM urakka
 WHERE velho_oid IS NOT NULL;
 
 --name: hae-urakka-velho-oidlla
+--single?: true
 -- Palauttaa sen urakan urakka-id:n, jonka velho_oid vastaa annettua
 SELECT id
 FROM urakka
