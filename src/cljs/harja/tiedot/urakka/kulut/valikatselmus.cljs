@@ -108,6 +108,7 @@
   TallennaOikaisu
   (process-event [{oikaisu :oikaisu id :id} app]
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
+                          ;;TODO: Ota hoitokauden alkuvuosi parametrina
                           :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          oikaisu)]
       (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
