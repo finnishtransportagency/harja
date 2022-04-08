@@ -90,7 +90,7 @@
 
 (defn- urakka-muutoksen-lahteen-avulla
   [db muutoksen-lahde-oid]
-  (:id (q-urakat/hae-urakka-velho-oidlla db {:velho_oid muutoksen-lahde-oid})))
+  (q-urakat/hae-urakka-velho-oidlla db {:velho_oid muutoksen-lahde-oid}))
 
 (defn- urakka-sijainnin-avulla
   [db sijainti alkusijainti version-voimassaolo alkaen]
