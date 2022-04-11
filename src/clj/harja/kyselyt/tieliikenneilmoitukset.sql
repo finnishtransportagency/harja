@@ -367,7 +367,9 @@ SELECT
 FROM ilmoitus i JOIN urakka u ON u.id = i.urakka
      JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
      JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
-WHERE i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+WHERE (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+      OR
+       it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
 ORDER BY i."valitetty-urakkaan" ASC;
 
