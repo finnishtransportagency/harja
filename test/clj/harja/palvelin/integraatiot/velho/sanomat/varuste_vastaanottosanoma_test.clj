@@ -205,6 +205,13 @@
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
 
+(deftest varusteen-toimenpiteet-konvertoituu-oikein-test
+  "Toimenpiteet joukko on konvertoitu niin että pitämme vain tutut toimenpiteet."
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
+        odotetut-toimenpiteet #{"korjaus" "puhdistus"}
+        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+    (is (= odotetut-toimenpiteet (set (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde))))))
+
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi

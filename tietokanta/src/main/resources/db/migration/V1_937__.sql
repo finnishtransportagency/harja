@@ -1,7 +1,8 @@
 ALTER TABLE varustetoteuma_ulkoiset ALTER COLUMN toteuma TYPE varustetoteuma_tyyppi[] USING ARRAY [toteuma];
 
 INSERT INTO koodisto_konversio (id, nimi, kuvaus)
-VALUES ('v/vtp', 'velho/varustetoimenpide', 'Varustetoteumien varustetoimenpide nimikkeistöarvojen konversio varustetoteuma_tyyppi muotoon');
+VALUES ('v/vtp', 'velho/varustetoimenpide',
+        'Varustetoteumien varustetoimenpide nimikkeistöarvojen konversio varustetoteuma_tyyppi muotoon');
 
 INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, lahde, tulos)
 VALUES ('v/vtp', 'varustetoimenpide/vtp01', 'tarkastus'),
@@ -25,4 +26,4 @@ VALUES ('v/vtp', 'varustetoimenpide/vtp01', 'tarkastus'),
        ('v/vtp', 'varustetoimenpide/vtp20', ''),
        ('v/vtp', 'varustetoimenpide/vtp21', ''),
        ('v/vtp', 'varustetoimenpide/vtp22', ''),
-       ('v/vtp', 'varustetoimenpide/vtp23', '')
+       ('v/vtp', 'varustetoimenpide/vtp23', '');
