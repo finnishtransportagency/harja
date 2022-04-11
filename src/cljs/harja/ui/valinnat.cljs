@@ -353,19 +353,21 @@
    (vuosi {}
           ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom
           #(reset! valittu-vuosi-atom %)))
-  ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta?] :as optiot}
+  ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta? vayla-tyyli?] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
    [:span.label-ja-aikavali-lyhyt
-    [:label.alasvedon-otsikko "Vuosi"]
-    [livi-pudotusvalikko {:valinta @valittu-vuosi-atom
-                          :disabled disabled
-                          :valitse-fn valitse-fn
-                          :format-fn #(if % (if (= % :kaikki)
-                                              "Kaikki"
-                                              (str %))
+    [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} "Vuosi"]
+    [livi-pudotusvalikko (merge 
+                           {:valinta @valittu-vuosi-atom
+                            :disabled disabled
+                            :valitse-fn valitse-fn
+                            :format-fn #(if % (if (= % :kaikki)
+                                                "Kaikki"
+                                                (str %))
                                             "Valitse")
-                          :class "alasveto-vuosi"
-                          :data-cy "valinnat-vuosi"}
+                            :class "alasveto-vuosi"
+                            :data-cy "valinnat-vuosi"}
+                           (when vayla-tyyli? {:vayla-tyyli? vayla-tyyli?}))
      (let [vuodet (range ensimmainen-vuosi (inc viimeinen-vuosi))
            vuodet (if kaanteinen-jarjestys?
                     (reverse vuodet)
