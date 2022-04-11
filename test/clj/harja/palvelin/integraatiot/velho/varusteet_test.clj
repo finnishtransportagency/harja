@@ -487,22 +487,29 @@
   (let [kohde-virheet (fn [] (kaikki-virheet))
         db (:db jarjestelma)
         oid "1.2.3.4.5"
+        ii-oid "1.2.3.4.5.6"
+        ii-muutoksen-lahde-oid "1.2.3.4.1234"               ; Urakka Velhossa
         a {:tie 22 :osa 5 :etaisyys 4355}
         b {:tie 22 :osa 5 :etaisyys 4555}
         tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
         varuste-oulussa-sijainti {:sijainti a}
         kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}
+        varuste-iissa-sijainti {:sijainti a}              ; Sijainti ei saa vaikuttaa, kun Iissa varusteella on muutoksen-lahde-oid
         ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
+        aktiivinen-ii-urakka-alkupvm "2021-10-01T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
         expected-oulu-MHU-urakka-id 35
-        lisaa-pakolliset (fn [s o m] (-> s
-                                         (assoc :oid o :muokattu m)
-                                         (assoc-in [:version-voimassaolo :alku] (first (str/split m #"T")))
-                                         ))]
+        expected-ii-MHU-urakka-id 36
+        lisaa-muutoksen-lahde (fn [kohde muutoksen-lahde-oid]
+                                (assoc kohde :muutoksen-lahde-oid muutoksen-lahde-oid))
+        lisaa-pakolliset (fn [kohde oid muokattu] (-> kohde
+                                                      (assoc :oid oid :muokattu muokattu)
+                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))]
+    (is (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " expected-ii-MHU-urakka-id)))
     (is (nil?
           (varusteet/urakka-id-kohteelle
             db
@@ -536,7 +543,14 @@
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
-             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))))
+             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
+    (is (= expected-ii-MHU-urakka-id
+           (varusteet/urakka-id-kohteelle
+             db
+             (-> varuste-iissa-sijainti
+                 (lisaa-pakolliset ii-oid aktiivinen-ii-urakka-alkupvm)
+                 (lisaa-muutoksen-lahde ii-muutoksen-lahde-oid))))
+        "muutoksen-lahde-oid on enemmän merkitsevä kuin sijanti")))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)
