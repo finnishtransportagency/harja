@@ -26,16 +26,16 @@
       (log/debug "Ajastetaan integraatiolokin puhdistus ajettavaksi joka päivä kello: " paivittainen-puhdistusaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-puhdistusaika
-        (do
-          (log/info "ajasta-paivittain :: integraatiolokin puhdistus :: Alkaa " (pvm/nyt))
-          (fn [_]
-              (let [aikarajaus-api (konversio/sql-timestamp (.toDate (-> 2 weeks ago)))
-                    aikarajaus-muut (konversio/sql-timestamp (.toDate (-> 3 months ago)))]
-                (log/debug "Poistetaan API:n integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-api)
-                (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
+        (fn [_]
+          (let [aikarajaus-api (konversio/sql-timestamp (.toDate (-> 2 weeks ago)))
+                aikarajaus-muut (konversio/sql-timestamp (.toDate (-> 3 months ago)))]
+            (log/info "ajasta-paivittain :: integraatiolokin puhdistus :: Alkaa " (pvm/nyt))
+            (log/debug "Poistetaan API:n integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-api)
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
 
-                (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
-                (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut nil))))))
+            (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
+            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut nil)
+            (log/info "ajasta-paivittain :: integraatiolokin puhdistus :: Loppuu " (pvm/nyt))))))
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko jono]
