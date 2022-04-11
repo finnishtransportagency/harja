@@ -109,8 +109,10 @@
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     urakka-id))
 
+(def +urakka-memoize-ttl+ (* 10 60 1000))
+
 (defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
-  (let [memo-urakka-muutoksen-lahteen-avulla (memo/ttl urakka-muutoksen-lahteen-avulla :ttl/threshold 600000)]
+  (let [memo-urakka-muutoksen-lahteen-avulla (memo/ttl urakka-muutoksen-lahteen-avulla :ttl/threshold +urakka-memoize-ttl+)]
     (or
       (memo-urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid)
       (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen)))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
