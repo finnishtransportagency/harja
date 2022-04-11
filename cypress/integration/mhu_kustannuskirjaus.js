@@ -42,8 +42,9 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.contains('Kulujen kohdistus')
 
     cy.get('.pvm-kentta > input').eq(0).type('{selectall}30.09.2020')
-    cy.get('.pvm-kentta > input').eq(1).type('{selectall}30.09.2020{enter}')
-    cy.contains('Haku käynnissä, odota hetki').should('not.exist');
+    cy.get('.pvm-kentta > input').eq(1).type('{selectall}30.09.2020')
+    cy.get('.pvm-kentta > input').eq(1).should('have.value', "30.09.2020").type('{enter}');
+
 
     if (Array.isArray(kuluTaiKulut)) {
         cy.get('table.grid tr.klikattava').eq(0).click();
@@ -58,7 +59,7 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
 }
 
-describe.skip('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
+describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
 
     it('Kulujen kirjaus-näkymä aukeaa', () => {
         avaaKulujenKohdistus('Kittilän MHU 2019-2024');
