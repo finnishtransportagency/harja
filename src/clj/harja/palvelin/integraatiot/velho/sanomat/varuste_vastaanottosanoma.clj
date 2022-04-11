@@ -180,15 +180,19 @@
       (konversio-fn "v/vtykl" kuntoluokka)
       "Puuttuu")))
 
-(defn varusteen-toteuma [{:keys [version-voimassaolo alkaen paattyen uusin-versio] :as kohde}]
+(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio toimenpiteet] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
-        version-loppu (:loppu version-voimassaolo)]
-    (cond (nil? version-voimassaolo) (if paattyen
-                                       "poistettu"
-                                       "lisatty")           ;Sijaintipalvelu ei palauta versioita
-          (= alkaen version-alku) "lisatty"
-          (and uusin-versio (some? version-loppu)) "poistettu"
-          :else "paivitetty")))
+        version-loppu (:loppu version-voimassaolo)
+        toimenpidelista (->> toimenpiteet
+                             (map #(konversio-fn "v/vtp" %))
+                             (keep not-empty))]
+    (if (seq toimenpidelista)                               ; Jos toimenpiteitä ei löydy, toimenpide lasketaan päivämääristä
+      toimenpidelista
+      (cond (and (nil? version-voimassaolo) paattyen) ["poistettu"] ;Sijaintipalvelu ei palauta versioita
+            (and (nil? version-voimassaolo) (not paattyen)) ["lisatty"]
+            (= alkaen version-alku) ["lisatty"]             ; varusteen syntymäpäivä, onnea!
+            (and uusin-versio (some? version-loppu)) ["poistettu"] ; uusimmalla versiolla on loppu
+            :else ["paivitetty"]))))
 
 (defn varustetoteuma-velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma muotoon.
@@ -214,21 +218,21 @@
                      velho-aika->aika
                      aika->sql)
         varustetoteuma {:ulkoinen_oid (:oid kohde)
-                         :urakka_id (urakka-id-kohteelle-fn kohde)
-                         :tr_numero (:tie alkusijainti)
-                         :tr_alkuosa (:osa alkusijainti)
-                         :tr_alkuetaisyys (:etaisyys alkusijainti)
-                         :tr_loppuosa (:osa loppusijainti)
-                         :tr_loppuetaisyys (:etaisyys loppusijainti)
-                         :sijainti (sijainti-kohteelle-fn kohde)
-                         :tietolaji tietolaji
-                         :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
-                         :toteuma (varusteen-toteuma kohde)
-                         :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
-                         :alkupvm alkupvm
-                         :loppupvm loppupvm
-                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
-                         :muokattu muokattu}
+                        :urakka_id (urakka-id-kohteelle-fn kohde)
+                        :tr_numero (:tie alkusijainti)
+                        :tr_alkuosa (:osa alkusijainti)
+                        :tr_alkuetaisyys (:etaisyys alkusijainti)
+                        :tr_loppuosa (:osa loppusijainti)
+                        :tr_loppuetaisyys (:etaisyys loppusijainti)
+                        :sijainti (sijainti-kohteelle-fn kohde)
+                        :tietolaji tietolaji
+                        :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
+                        :toteuma (varusteen-toteuma konversio-fn kohde)
+                        :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm
+                        :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
+                        :muokattu muokattu}
         puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (if (empty? puuttuvat-pakolliset-avaimet)
       {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}
