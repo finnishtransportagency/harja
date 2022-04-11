@@ -76,7 +76,7 @@
     @loki))
 
 (defn kaikki-kohteet []
-  (q-map (str "SELECT * FROM varustetoteuma_ulkoiset")))
+  (q-map "SELECT * FROM varustetoteuma_ulkoiset"))
 
 (defn kaikki-virheet []
   (q-map "SELECT * FROM varustetoteuma_ulkoiset_virhe"))
@@ -401,27 +401,7 @@
     ; TARKASTA
     (is (= (+ 1 @annettu-tyhja-oid-vastaus) @saatu-tyhja-oid-vastaus))))
 
-(deftest varuste-toteuma-paivittyy-uusin-voittaa-test
-  "On mahdollista, että Velhosta tulee uudelleen vanha toteuma samalla `velho_oid` ja `muokattu` tiedoilla.
-  Historiaa saatetaan muokata.
-  Silloin tallennetaan tiedot siltä varalta, että jos ne ovat kuitenkin muuttuneet. Uusin tieto voitaa.
-  Lisäksi kirjoitetaan warning lokiin.
-
-  #ext-urpo 28.10.2021 11:39:
-  Petri Sirkkala
-  Miten Varusteiden \"version-voimassaolo\" on tarkoitus tulkita. Merkataanko varusteen poisto kirjaamalla versio,
-  jossa voimassaolo on päättynyt?
-  Onko tosiaan niin, että \"version-voimassaolo\" on tyyppiä päivämäärä? Eikö samana päivänä voi olla kuin yksi versio kohteesta?
-  Kimmo Rantala  11:53
-  version-voimassaolo on tosiaan päivämääräväli. Samalla kohteella ei voi olla päällekkäisiä versioita.
-  null tarkoittaa avointa. Eli jos version voimassaolon loppu on null, niin se versio on voimassa (toistaiseksi)
-  Jos kohdetta päivitetään, niin sille tulee uusi versio uusilla tiedoilla ja vanha merkitään päättyneeksi
-  alku on inklusiivinen, loppu eksklusiivinen
-  Jos kohteen kaikki versiot ovat päättyneet, niin silloin kohdetta ei enää ole (poistunut/lakannut/vanhentunut tms)
-  itseasiassa version voimassaolon loppu (tai miksei alkukin) voi olla myös tulevaisuudessa. Hauissa voi antaa
-  tilannepäivän parametrina jolloin saadaan sinä päivänä voimassaollut versio kohteesta. Oletuksena annetaan kuluvan päivän versio.
-  Päivämäärätaso tosiaan riittää version voimassaololle. Ei noi oikeat tiekohteet montaa kertaa päivässä muutu.
-  Jos on jokin virheellinen tieto versiolla niin versioita voi myös muuttaa jälkikäteen (eli korjata historiaa)"
+(deftest varustetoteuma-paivittyy-uusin-voittaa-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "uusin-voittaa-test"
@@ -481,28 +461,93 @@
         (let [kohde (first kaikki-varustetoteumat)]
           (is (= (:muokkaaja kohde) "uusi muokkaaja") "Odotettiin uusimman tiedon korvanneen vanhan."))))))
 
+(deftest varustetoteuma-skipataan-jos-ei-ole-urakkaa
+  (u "DELETE FROM varustetoteuma_ulkoiset")
+  (let [testitunniste "skipataan-jos-ei-urakkaa"
+        odotettu-syotetiedostoparien-maara 1                ;Tämä varmistaa, ettei testisyötteitä jää käyttämättä
+        odotettu-kohteet-vastaus (atom {})
+        odotettu-oidit-vastaus (atom {})
+        odotettu-ei-tyhja-oid-vastaus (atom 0)
+        saatu-ei-tyhja-oid-vastaus (atom 0)
+        odotettu-tyhja-oid-vastaus (atom 0)
+        saatu-tyhja-oid-vastaus (atom 0)
+        laske-oid-vastaukset (fn [raportoi-oid-haku-fn oidit url]
+                               (if (= 0 (count oidit))
+                                 (swap! saatu-tyhja-oid-vastaus inc)
+                                 (swap! saatu-ei-tyhja-oid-vastaus inc))
+                               (raportoi-oid-haku-fn oidit url))
+        fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          (let [lahde (lahde-oid-urlista url)]
+                            (if (olemassa-testi-tiedostot? lahde testitunniste)
+                              (let [oidit-vastaus (slurp (testi-tiedosto-oideille lahde testitunniste))
+                                    kohteet-vastaus (slurp (testi-tiedosto-kohteille lahde testitunniste))]
+                                (reset! odotettu-oidit-vastaus oidit-vastaus)
+                                (reset! odotettu-kohteet-vastaus kohteet-vastaus)
+                                (swap! odotettu-ei-tyhja-oid-vastaus inc)
+                                {:status 200 :body @odotettu-oidit-vastaus})
+                              (do (reset! odotettu-oidit-vastaus nil)
+                                  (reset! odotettu-kohteet-vastaus nil)
+                                  (swap! odotettu-tyhja-oid-vastaus inc)
+                                  {:status 200 :body "[]"}))))
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (is (= (json/read-str @odotettu-oidit-vastaus) (json/read-str body))
+                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                       {:status 200 :body @odotettu-kohteet-vastaus})]
+    ; SUORITA
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
+      (let [raportoi-oid-haku-fn varusteet/lokita-oid-haku]
+        (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
+                      varusteet/lokita-oid-haku (partial laske-oid-vastaukset raportoi-oid-haku-fn)]
+          (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma))))
+      )
+    ; TARKASTA
+    (is (= @odotettu-ei-tyhja-oid-vastaus @saatu-ei-tyhja-oid-vastaus) "Odotettiin samaa määrää ei-tyhjiä oid-listoja, kuin fake-velho palautti.")
+    (is (= odotettu-syotetiedostoparien-maara @saatu-ei-tyhja-oid-vastaus)
+        "Testitiedostoja on eri määrä kuin fake-tunnisteissa on haettu. Kaikki testitiedostot on käytettävä testissä.")
+
+    (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
+
+    (let [kaikki-varustetoteumat (kaikki-kohteet) ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
+          expected-varustetoteuma-maara 1]
+      (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+          (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen"))
+      (when (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
+        (is (= (:ulkoinen_oid (first kaikki-varustetoteumat)) "1.2.246.578.4.3.1.501.52039770") "Odotettiin ainoastaan kohteen 1.2.246.578.4.3.1.501.52039770 tallentuvan.")))))
+
 (deftest urakka-id-kohteelle-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   (u "DELETE FROM varustetoteuma_ulkoiset_virhe")
   (let [kohde-virheet (fn [] (kaikki-virheet))
         db (:db jarjestelma)
         oid "1.2.3.4.5"
+        ii-oid "1.2.3.4.5.6"
+        ii-muutoksen-lahde-oid "1.2.3.4.1234"               ; Urakka Velhossa
         a {:tie 22 :osa 5 :etaisyys 4355}
         b {:tie 22 :osa 5 :etaisyys 4555}
         tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
         varuste-oulussa-sijainti {:sijainti a}
         kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}
+        varuste-iissa-sijainti {:sijainti a}              ; Sijainti ei saa vaikuttaa, kun Iissa varusteella on muutoksen-lahde-oid
         ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
+        aktiivinen-ii-urakka-alkupvm "2021-10-01T00:00:00Z"
         expected-aktiivinen-oulu-urakka-id 26
         expected-oulu-MHU-urakka-id 35
-        lisaa-pakolliset (fn [s o m] (-> s
-                                         (assoc :oid o :muokattu m)
-                                         (assoc-in [:version-voimassaolo :alku] (first (str/split m #"T")))
-                                         ))]
+        expected-ii-MHU-urakka-id 36
+        lisaa-muutoksen-lahde (fn [kohde muutoksen-lahde-oid]
+                                (assoc kohde :muutoksen-lahde-oid muutoksen-lahde-oid))
+        lisaa-pakolliset (fn [kohde oid muokattu] (-> kohde
+                                                      (assoc :oid oid :muokattu muokattu)
+                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))]
+    (is (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " expected-ii-MHU-urakka-id)))
     (is (nil?
           (varusteet/urakka-id-kohteelle
             db
@@ -536,7 +581,14 @@
     (is (= expected-aktiivinen-oulu-urakka-id
            (varusteet/urakka-id-kohteelle
              db
-             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))))
+             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
+    (is (= expected-ii-MHU-urakka-id
+           (varusteet/urakka-id-kohteelle
+             db
+             (-> varuste-iissa-sijainti
+                 (lisaa-pakolliset ii-oid aktiivinen-ii-urakka-alkupvm)
+                 (lisaa-muutoksen-lahde ii-muutoksen-lahde-oid))))
+        "muutoksen-lahde-oid on enemmän merkitsevä kuin sijanti")))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)

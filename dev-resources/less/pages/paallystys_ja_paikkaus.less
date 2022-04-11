@@ -35,11 +35,33 @@
     }
 }
 .aikataulu-valinnat {
+    background-color: @gray240;
+    padding: @valistys-16;
+    > .upotettu-raporttitallennus {
+        margin-top:0;
+        align-items:center;
+        form { margin-left: 6px; margin-right: 8px; }
+    }
+    > .label-ja-alasveto, .label-ja-kentta-puolikas, .label-ja-aikavali-lyhyt, .label-ja-kentta {
+        label {
+            margin-top: 0;
+        }
+        input:not([type=checkbox]) {
+            height:36px;
+        }
+        .nappi-toissijainen {
+            padding:0.375rem 0.75rem;
+        }
+    }
     > .label-ja-alasveto {
         width: 180px;
         .livi-alasvetolista {
             min-width: 180px;
         }
+    }
+    > .upotettu-raporttitallennus {
+        display:flex;
+        flex-direction:row;
     }
 }
 .asiatarkastus-checkbox > div {
