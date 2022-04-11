@@ -158,8 +158,8 @@
       (= 0 (count tl-keys)) nil
       :else (name (first tl-keys)))))
 
-(defn puuttuvat-pakolliset-avaimet [varustetoteuma2]
-  (let [pakolliset (dissoc varustetoteuma2 :tr_loppuosa :tr_loppuetaisyys :lisatieto :loppupvm)
+(defn puuttuvat-pakolliset-avaimet [varustetoteuma]
+  (let [pakolliset (dissoc varustetoteuma :tr_loppuosa :tr_loppuetaisyys :lisatieto :loppupvm)
         puuttuvat-avaimet (->> pakolliset
                                (filter #(nil? (val %)))
                                (map first)
@@ -190,8 +190,11 @@
           (and uusin-versio (some? version-loppu)) "poistettu"
           :else "paivitetty")))
 
-(defn velho->harja
-  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma2 muotoon."
+(defn varustetoteuma-velho->harja
+  "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma muotoon.
+
+  Palauttaa {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}, jos onnistuu,
+  {:tulos nil :tietolaji tietolaji :virheviesti (str \"validointivirhe: \" (validointi-viesti puuttuvat-pakolliset-avaimet))} muulloin."
   [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
   (let [velho-pvm->sql (fn [teksti] (-> teksti
                                         velho-pvm->pvm
@@ -210,7 +213,7 @@
                      :muokattu
                      velho-aika->aika
                      aika->sql)
-        varustetoteuma2 {:ulkoinen_oid (:oid kohde)
+        varustetoteuma {:ulkoinen_oid (:oid kohde)
                          :urakka_id (urakka-id-kohteelle-fn kohde)
                          :tr_numero (:tie alkusijainti)
                          :tr_alkuosa (:osa alkusijainti)
@@ -226,7 +229,7 @@
                          :loppupvm loppupvm
                          :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
                          :muokattu muokattu}
-        puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma2)]
+        puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (if (empty? puuttuvat-pakolliset-avaimet)
-      {:tulos varustetoteuma2 :tietolaji tietolaji :virheviesti nil}
+      {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}
       {:tulos nil :tietolaji tietolaji :virheviesti (str "validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))
