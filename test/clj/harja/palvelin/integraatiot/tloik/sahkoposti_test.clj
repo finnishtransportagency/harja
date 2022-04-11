@@ -21,7 +21,7 @@
 
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "jvh")
-(def odota-tausta-ajoa 3000)
+(def odota-tausta-ajoa 1000)
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -224,6 +224,8 @@
                   uusi-valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 eri-x y)
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ uusi-valaistusilmoitus)
                   _ (async/<!! (async/timeout odota-tausta-ajoa))
+                  ;; Koska jenkinssillä saattaa kestää hetki, ennenkuin kaikki taustaprosessit on simuloitu, niin odotellaan vielä hetki
+                  _ (Thread/sleep 5000)
                   integraatioviestit (hae-kaikki-integraatioviestit)
                   ;; Varmistetaan, että ilmoitus löytyy tietokannasta, ja tarkistetaan sen urakka
                   uusi-ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))]
