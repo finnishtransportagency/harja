@@ -17,8 +17,8 @@
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
-(s/def ::alkuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 15) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
 (defn- tarkista-toteumahaun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
@@ -28,11 +28,11 @@
   (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss" (:alkuaika parametrit))}))
+       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
   (when (not (s/valid? ::loppuaika (:loppuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss" (:loppuaika parametrit))})))
+       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ss 2005-01-02T00:00:00+03" (:loppuaika parametrit))})))
 
 (def db-tehtavat->avaimet
   {:f1 :id

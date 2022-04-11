@@ -64,3 +64,13 @@
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
         nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))]
     (is (thrown? Exception (cheshire/decode (:body (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" kuukausi-sitten "/" nyt)] kayttaja-yit portti)))))))
+
+(deftest hae-toteumat-test-vaara-paivamaaraformaatti
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+        alkuaika "2005-01-01T00:00:00"
+        loppuaika "2005-12-31T21:00:00+03"
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
+    (is (= 400 (:status @vastaus)))
+    (is (str/includes? (:body @vastaus) "Alkuaika väärässä muodossa"))))
