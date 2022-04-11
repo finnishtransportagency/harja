@@ -62,8 +62,12 @@
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
-        nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))]
-    (is (thrown? Exception (cheshire/decode (:body (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" kuukausi-sitten "/" nyt)] kayttaja-yit portti)))))))
+        nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" kuukausi-sitten "/" nyt)] kayttaja-yit portti)]
+    (is (= 403 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "virheet"))
+    (is (str/includes? (:body vastaus) "koodi"))
+    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
 
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
