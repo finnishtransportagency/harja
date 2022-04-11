@@ -206,7 +206,7 @@
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
 
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
-  "Toimenpiteet joukko on konvertoitu niin että pitämme vain tutut toimenpiteet."
+  "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
         odotetut-toimenpiteet #{"korjaus" "puhdistus"}
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
