@@ -541,6 +541,19 @@ SET urakkanro = :urakkanro,
     muokkaaja = :kayttaja
 WHERE id = :urakka;
 
+--name: hae-velho-oid-lkm
+-- Palauttaa velho_oid NOT NULL rivien lukumäärän
+SELECT count(*) as lkm
+FROM urakka
+WHERE velho_oid IS NOT NULL;
+
+--name: hae-urakka-velho-oidlla
+--single?: true
+-- Palauttaa sen urakan urakka-id:n, jonka velho_oid vastaa annettua
+SELECT id
+FROM urakka
+WHERE velho_oid = :velho_oid;
+
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille
 UPDATE urakka
@@ -555,12 +568,6 @@ UPDATE urakka
 SET velho_oid = NULL
 WHERE velho_oid IS NOT NULL
   AND tyyppi IN ('hoito', 'teiden-hoito');
-
---name: hae-velho-oid-lkm
--- Palauttaa velho_oid NOT NULL rivien lukumäärän
-SELECT count(*) as lkm
-FROM urakka
-WHERE velho_oid IS NOT NULL;
 
 -- name: paivita-velho_oid-urakalle!
 -- Päivittää velho_oid avaimen urakalle

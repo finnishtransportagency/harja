@@ -88,7 +88,12 @@
          _ (println hakuvirhe)]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
-(defn urakka-id-kohteelle [db {:keys [sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
+(defn- urakka-muutoksen-lahteen-avulla
+  [db muutoksen-lahde-oid]
+  (q-urakat/hae-urakka-velho-oidlla db {:velho_oid muutoksen-lahde-oid}))
+
+(defn- urakka-sijainnin-avulla
+  [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
         alkupvm (or (:alku version-voimassaolo)
                     alkaen)                                 ; Sijaintipalvelu ei palauta versioita
@@ -102,6 +107,11 @@
     (assert (some? s) "`sijainti` tai `alkusijainti` on pakollinen")
     (assert (some? alkupvm) "`alkupvm` on pakollinen")
     urakka-id))
+
+(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
+  (or
+    (urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid)
+    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
@@ -366,9 +376,9 @@
 
 (defn- jasenna-ja-tarkasta-varustetoteuma
   [db {:keys [kohdeluokka] :as kohde} lahteen-kohdeluokka]
-  (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db)
-        sijainti-kohteelle-fn (partial sijainti-kohteelle db)
-        konversio-fn (partial koodistot/konversio db)]
+  (let [urakka-id-kohteelle-fn (memoize (partial urakka-id-kohteelle db))
+        sijainti-kohteelle-fn (partial sijainti-kohteelle db) ; sijaintiavaruus on liian suuri memoizelle
+        konversio-fn (memoize (partial koodistot/konversio db))]
     (assert (= lahteen-kohdeluokka kohdeluokka)
             (format "Kohdeluokka ei vastaa odotettua. Tietolähteen kohdeluokka: %s varustetoteuman kohdeluokka: %s"
                     lahteen-kohdeluokka kohdeluokka))
