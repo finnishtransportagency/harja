@@ -826,7 +826,7 @@
                   "Valmistuminen ei voi olla ennen aloitusta."]
                  [:ei-tyhja-jos-toinen-arvo-annettu :aikataulu-tiemerkinta-alku
                   "Anna tiemerkinnän valmistumisen aika tai aika-arvio."]]}
-      (when (= (:nakyma optiot) :paallystys) 
+      (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
          :otsikkorivi-luokka "paallystys-tausta-tumma"
          :fmt #(pvm/pvm-ilman-samaa-vuotta % vuosi)
