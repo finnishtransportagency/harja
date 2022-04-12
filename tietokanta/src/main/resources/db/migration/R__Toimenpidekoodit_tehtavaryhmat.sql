@@ -507,6 +507,13 @@ INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), current_timestamp,
             (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE) ON CONFLICT DO NOTHING;
 
+INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
+VALUES ('Lisätyö (mhu ylläpito)',
+        (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 992, NULL,
+        (SELECT id FROM toimenpidekoodi WHERE koodi = '20190'), current_timestamp,
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE) ON CONFLICT DO NOTHING;
+
+
 -- MHU - äkillset hoitotyöt kuuluvat tehtäväryhmän T1 alle (3 toimenpidekohtaista tehtäväryhmää)
 -- Päivitetään äkillisen hoitotyön tehtävät:
 -- Talvihoitoon ja Sorateiden hoitoon ei voi enää kustannussuunnitelmassa suunnitella Äkillisten hoitotöiden kustannuksia, mutta toteuma- ja kulupuolella kirjaus on silti mahdollinen
@@ -1209,3 +1216,57 @@ UPDATE toimenpidekoodi SET suunnitteluyksikko = 'tonni' WHERE suunnitteluyksikko
 -- Poistetaan isolla kirjoitettu, ylimääräinen versio (Puhtaanapito). Kantaan jää pienellä kirjoitettu.
 DELETE from tehtavaryhma where nimi like ('%Tie-, levähdys- ja liitännäisalueiden Puhtaanapito ja kalusteiden hoito%');
 
+
+
+-- TAKAN NUOHOUS
+
+-- Korjaa yksiköt
+UPDATE toimenpidekoodi SET yksikko = 'm3' WHERE nimi = 'Maakivien (>1m3) poisto';
+UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
+UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi = 'Is rampit';
+
+-- Päivitä tehtävät joihin ei kirjata käsin.
+-- Lista ei sisällä tehtäviä, jotka oltiin ajateltun piilotettavaksi mutta joihin on jo ehditty kirjata käsin.
+UPDATE toimenpidekoodi
+SET kasin_lisattava_maara = FALSE, "raportoi-tehtava?" = FALSE
+WHERE nimi IN ('Sorateiden pinnan hoito, hoitoluokka II',
+       'Sorateiden pinnan hoito, hoitoluokka III',
+       'Sorapintaisten kävely- ja pyöräilyväylienhoito',
+       'Sorastus km',
+       'Vesakonraivaus N1',
+       'Reunapaalujen uusiminen',
+       'Nurmetuksen hoito / niitto N2',
+       'Nurmetuksen hoito / niitto N3',
+       'Nurmetuksen hoito / niitto N1',
+       'Katupölynsidonta',
+       'Reunapaalujen kp (uusien)',
+       'Meluesteiden pesu',
+       'Ic 2-ajorat',
+       'Kävely- ja pyöräilyväylien laatukäytävät',
+       'K1',
+       'K2',
+       'Linjahiekoitus',
+       'Pistehiekoitus',
+       'TIb',
+       'II ohituskaistat',
+       'Ib rampit',
+       'Ic 1-ajorat',
+       'Ic ohituskaistat',
+       'Ic rampit',
+       'II',
+
+
+       'III',
+       'Talvihoidon kohotettu laatu',
+       'Ib ohituskaistat',
+       'Ise 2-ajorat.',
+       'Ise 1-ajorat.',
+       'Ise ohituskaistat',
+       'Ise rampit',
+       'Is 2-ajorat.',
+       'Is 1-ajorat.',
+       'Is ohituskaistat',
+       'Is rampit',
+       'Ib 2-ajorat.',
+       'Ib 1-ajorat.');
+*/
