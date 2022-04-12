@@ -233,7 +233,7 @@
                     (if (and vahennys? (pos? arvo))
                       (assoc rivi ::valikatselmus/summa (- arvo))
                       (assoc rivi ::valikatselmus/summa arvo))))
-         :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
+         :fmt #(str (Math/abs %))
          :validoi [[:ei-tyhja "Täytä arvo"]]
          :leveys 2}]
        (r/wrap hoitokauden-oikaisut
