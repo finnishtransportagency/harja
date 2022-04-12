@@ -207,32 +207,40 @@
             (into [(grid/otsikko "Aloittamatta olevat kohteet")]
                   aloittamatta))))
 
-(defn valinnat [ur]
+(defn valinnat [ur paallystys?]
   (let [{jarjestys :jarjestys} @tiedot/valinnat]
-    [:span.aikataulu-valinnat
-     [valinnat/urakan-vuosi ur]
-     [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-     [valinnat/tienumero yllapito-tiedot/tienumero]
+    [:span.aikataulu-valinnat.flex-row.alkuun.venyta
+     [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
+     [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
+                                                                            :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+     [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
+                                                                            :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
 
      [yleiset/pudotusvalikko
       "Järjestä kohteet"
       {:valinta jarjestys
+       :vayla-tyyli? true
        :valitse-fn tiedot/jarjesta-kohteet!
-       :format-fn {:aika "Päällystyksen aloitus"
-                   :paallystyksen-loppu "Päällystyksen lopetus"
-                   :tiemerkinnan-alku "Tiemerkinnän aloitus"
-                   :tiemerkinnan-loppu "Tiemerkinnän lopetus"
-                   :tiemerkinnan-valmius "Tiemerkintävalmius"
-                   :tiemerkinnan-takaraja "Tiemerkinnän takaraja"
-                   :kohdenumero "Kohdenumero"
-                   :tr "Tieosoite"}}
-      [:aika :paallystyksen-loppu :tiemerkinnan-alku :tiemerkinnan-loppu
-       :tiemerkinnan-valmius :tiemerkinnan-takaraja :kohdenumero :tr]]
+       :format-fn {:aika "Päällystyksen aloitusajan mukaan"
+                   :paallystyksen-loppu "Päällystyksen lopetusajan mukaan"
+                   :tiemerkinnan-voidaan-aloittaa "Tiemerkinnän voidaan aloittaa -ajan mukaan"
+                   :tiemerkinnan-alku "Tiemerkinnän aloitusajan mukaan"
+                   :tiemerkinnan-loppu "Tiemerkinnän lopetusajan mukaan"
+                   :tiemerkinnan-valmis-viimeistaan "Tiemerkinnän valmis viimeistään ajan mukaan"
+                   :paallystyskohde-valmis "Päällystyskohde valmis ajan mukaan"
+                   :kohdenumero "Kohdenumeron mukaan"
+                   :tr "Tieosoitteen mukaan"}}
+      (into [] (keep identity) 
+        [:aika :paallystyksen-loppu :tiemerkinnan-voidaan-aloittaa :tiemerkinnan-alku 
+         :tiemerkinnan-loppu :tiemerkinnan-valmis-viimeistaan (when paallystys? :paallystyskohde-valmis) 
+         :kohdenumero :tr])]
 
      [kentat/tee-otsikollinen-kentta
       {:otsikko "Aikajana"
+       :otsikon-luokka "alasvedon-otsikko-vayla"
        :luokka "label-ja-kentta-puolikas"
        :kentta-params {:tyyppi :toggle
+                       :vayla-tyyli? true
                        :paalle-teksti "Näytä aikajana"
                        :pois-teksti "Piilota aikajana"
                        :toggle! tiedot/toggle-nayta-aikajana!}
@@ -240,6 +248,7 @@
      [kentat/tee-otsikko-ja-kentat
       {:otsikko "Aikajanan asetukset"
        :luokka "label-ja-kentta"
+       :otsikon-luokka "alasvedon-otsikko-vayla"
        :kentat [{:kentta-params {:tyyppi :checkbox
                                  :teksti "Näytä tarkka aikataulu"}
                  :arvo-atom tiedot/nayta-tarkka-aikajana?}
@@ -255,17 +264,17 @@
                          :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?
                          :vuosi @u/valittu-urakan-vuosi})] 
        [upotettu-raportti/raportin-vientimuodot 
+        (assoc parametrit 
+          :otsikko "Lataa PDF"
+          :kasittelija :pdf)
+        (assoc parametrit
+          :otsikko "Lataa Excel"
+          :kasittelija :excel)
         (-> parametrit 
           (assoc       
-            :otsikko "Tallenna alikohteiden Excel"
+            :otsikko "Lataa alikohteiden Excel"
             :kasittelija :excel)
-          (assoc-in [:parametrit :alikohderaportti?] true))
-        (assoc parametrit
-          :otsikko "Tallenna Excel"
-          :kasittelija :excel)
-        (assoc parametrit 
-          :otsikko "Tallenna PDF"
-          :kasittelija :pdf)])]))
+          (assoc-in [:parametrit :alikohderaportti?] true))])]))
 
 (defn- nayta-yhteystiedot?
   [rivi nakyma]
@@ -855,9 +864,10 @@
             voi-muokata-tiemerkinta? (fn [rivi] (boolean (and (= (:nakyma optiot) :tiemerkinta)
                                                               saa-merkita-valmiiksi?
                                                               (:valmis-tiemerkintaan rivi))))
-            aikajana? (:nayta-aikajana? @tiedot/valinnat)]
+            aikajana? (:nayta-aikajana? @tiedot/valinnat)
+            paallystys? (= (:nakyma optiot) :paallystys)]
         [:div.aikataulu
-         [valinnat ur]
+         [valinnat ur paallystys?]
          [visuaalinen-aikataulu {:urakka-id urakka-id
                                  :aikajana? aikajana?
                                  :sopimus-id sopimus-id
