@@ -1415,8 +1415,8 @@ SELECT t.id as toteuma_tunniste_id,
        t.tyokonetyyppi as tyokone_tyokonetyyppi,
        t.tyokonetunniste as tyokone_tunnus
 FROM toteuma t
-     JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
-     JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
+     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
+     LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
      LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id AND tm.poistettu = FALSE
      LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
      LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
@@ -1426,3 +1426,5 @@ WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 GROUP BY t.id, t.alkanut
 ORDER BY t.alkanut ASC;
 
+
+select * from ma
