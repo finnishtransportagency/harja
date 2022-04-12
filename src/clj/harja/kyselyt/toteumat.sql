@@ -1425,6 +1425,3 @@ WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
        AND t.poistettu = FALSE
 GROUP BY t.id, t.alkanut
 ORDER BY t.alkanut ASC;
-
-
-select * from ma
