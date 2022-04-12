@@ -134,50 +134,50 @@
                       :otsikko "Oulun MHU 2019-2024, Erilliskustannusten raportti ajalta 01.10.2019 - 01.10.2022"
                       :sheet-nimi "Erilliskustannusten raportti"
                       :viimeinen-rivi-yhteenveto? true}
-                     (quote ({:leveys 7
-                              :otsikko "Pvm"}
-                             {:leveys 7
-                              :otsikko "Sop. nro"}
-                             {:leveys 12
-                              :otsikko "Toimenpide"}
-                             {:leveys 7
-                              :otsikko "Tyyppi"}
-                             {:fmt :raha
-                              :leveys 6
-                              :otsikko "Summa"}
-                             {:fmt :raha
-                              :leveys 6
-                              :otsikko "Ind.korotus"}))
-                     (quote (["15.03.2020"
-                              "666-TES"
-                              "Oulu MHU Hallinnolliset toimenpiteet TP"
-                              "Alihankinta­bonus"
-                              500M
-                              56.18231046931407942000M]
-                             ["15.03.2020"
-                              "666-TES"
-                              "Oulu MHU Hallinnolliset toimenpiteet TP"
-                              "Lupaus­bonus"
-                              500M
-                              56.18231046931407942000M]
-                             ["15.10.2019"
-                              "666-TES"
-                              "Oulu MHU Hallinnolliset toimenpiteet TP"
-                              "Alihankinta­bonus"
-                              1000M
-                              90.55354993983152828000M]
-                             ["15.10.2019"
-                              "666-TES"
-                              "Oulu MHU Hallinnolliset toimenpiteet TP"
-                              "Lupaus­bonus"
-                              1000M
-                              90.55354993983152828000M]
-                             ("Yhteensä"
-                               ""
-                               ""
-                               ""
-                               3000M
-                               293.47172081829121540000M)))]]))))
+                     '({:leveys 7
+                        :otsikko "Pvm"}
+                       {:leveys 7
+                        :otsikko "Sop. nro"}
+                       {:leveys 12
+                        :otsikko "Toimenpide"}
+                       {:leveys 7
+                        :otsikko "Tyyppi"}
+                       {:fmt :raha
+                        :leveys 6
+                        :otsikko "Summa"}
+                       {:fmt :raha
+                        :leveys 6
+                        :otsikko "Ind.korotus"})
+                     '(["15.03.2020"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Lupaus­bonus"
+                        500M
+                        56.18231046931407942000M]
+                       ["15.03.2020"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Alihankinta­bonus"
+                        500M
+                        56.18231046931407942000M]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Lupaus­bonus"
+                        1000M
+                        90.55354993983152828000M]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Alihankinta­bonus"
+                        1000M
+                        90.55354993983152828000M]
+                       ("Yhteensä"
+                         ""
+                         ""
+                         ""
+                         3000M
+                         293.47172081829121540000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
