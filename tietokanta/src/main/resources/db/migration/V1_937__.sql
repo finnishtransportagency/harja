@@ -1,5 +1,3 @@
-ALTER TABLE varustetoteuma_ulkoiset ALTER COLUMN toteuma TYPE varustetoteuma_tyyppi[] USING ARRAY [toteuma];
-
 INSERT INTO koodisto_konversio (id, nimi, kuvaus)
 VALUES ('v/vtp', 'velho/varustetoimenpide',
         'Varustetoteumien varustetoimenpide nimikkeistöarvojen konversio varustetoteuma_tyyppi muotoon');

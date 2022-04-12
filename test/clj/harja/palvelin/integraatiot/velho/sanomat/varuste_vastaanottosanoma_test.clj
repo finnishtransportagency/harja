@@ -146,7 +146,7 @@
         muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
                   :alkupvm alkupvm, :ulkoinen_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
-                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma ["lisatty"]}
+                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
@@ -174,7 +174,7 @@
                           :loppupvm nil
                           :muokkaaja "migraatio"
                           :tietolaji "tl514"
-                          :toteuma ["lisatty"]
+                          :toteuma "lisatty"
                           :tr_alkuetaisyys 4549
                           :tr_alkuosa 5
                           :tr_loppuetaisyys 4629
@@ -208,9 +208,9 @@
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
   "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
-        odotetut-toimenpiteet #{"korjaus" "puhdistus"}
+        odotetut-toimenpiteet "korjaus"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
-    (is (= odotetut-toimenpiteet (set (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde))))))
+    (is (= odotetut-toimenpiteet (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde)))))
 
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
@@ -218,9 +218,9 @@
         muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2010-07-01")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
         poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
-        kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi ["lisatty"]}
-                                  {:kohde muokattu-kohde :odotettu-toteumatyyppi ["paivitetty"]}
-                                  {:kohde poistettu-kohde :odotettu-toteumatyyppi ["poistettu"]}]
+        kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
+                                  {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty"}
+                                  {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)

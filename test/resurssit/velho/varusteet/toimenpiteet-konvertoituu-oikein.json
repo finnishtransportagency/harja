@@ -52,7 +52,7 @@
       "korkeusasema": null
     }
   },
-  "toimenpiteet": ["varustetoimenpide/vtp07", "varustetoimenpide/vtp08", "varustetoimenpide/vtp02"],
+  "toimenpiteet": ["varustetoimenpide/vtp08", "varustetoimenpide/vtp07", "varustetoimenpide/vtp02"],
   "luotu": "2020-05-08T12:20:15Z",
   "lahdejarjestelman-id": "506.283640192",
   "paattyen": null,

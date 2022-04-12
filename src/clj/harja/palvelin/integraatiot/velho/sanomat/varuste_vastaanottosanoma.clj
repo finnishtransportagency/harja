@@ -186,13 +186,25 @@
         toimenpidelista (->> toimenpiteet
                              (map #(konversio-fn "v/vtp" %))
                              (keep not-empty))]
-    (if (seq toimenpidelista)                               ; Jos toimenpiteitä ei löydy, toimenpide lasketaan päivämääristä
-      toimenpidelista
-      (cond (and (nil? version-voimassaolo) paattyen) ["poistettu"] ;Sijaintipalvelu ei palauta versioita
-            (and (nil? version-voimassaolo) (not paattyen)) ["lisatty"]
-            (= alkaen version-alku) ["lisatty"]             ; varusteen syntymäpäivä, onnea!
-            (and uusin-versio (some? version-loppu)) ["poistettu"] ; uusimmalla versiolla on loppu
-            :else ["paivitetty"]))))
+    (cond (< 1 (count toimenpidelista))
+          (do
+            ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
+            ; varusteen versiossa on monta toimenpidettä
+            (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): " toimenpidelista
+                           " Otimme vain 1. toimenpiteen talteen."))
+            (first toimenpidelista))
+
+          (= 1 (count toimenpidelista))
+          (first toimenpidelista)
+
+          (= 0 (count toimenpidelista))
+          ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
+          (cond (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
+                (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
+                (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!
+                (and uusin-versio (some? version-loppu)) "poistettu" ; uusimmalla versiolla on loppu
+                :else "paivitetty"))))
 
 (defn varustetoteuma-velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma muotoon.
