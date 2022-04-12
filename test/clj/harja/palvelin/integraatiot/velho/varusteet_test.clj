@@ -527,62 +527,51 @@
         oid "1.2.3.4.5"
         ii-oid "1.2.3.4.5.6"
         ii-muutoksen-lahde-oid "1.2.3.4.1234"               ; Urakka Velhossa
+        rovaniemi-muutoksen-lahde-oid "1.2.3.4.321"
         a {:tie 22 :osa 5 :etaisyys 4355}
         b {:tie 22 :osa 5 :etaisyys 4555}
         tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
         varuste-oulussa-sijainti {:sijainti a}
         kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}
-        varuste-iissa-sijainti {:sijainti a}              ; Sijainti ei saa vaikuttaa, kun Iissa varusteella on muutoksen-lahde-oid
+        varuste-iissa-sijainti {:sijainti a}                ; Sijainti ei saa vaikuttaa, kun Iissa varusteella on muutoksen-lahde-oid
         ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
         oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         aktiivinen-ii-urakka-alkupvm "2021-10-01T00:00:00Z"
-        expected-aktiivinen-oulu-urakka-id 26
-        expected-oulu-MHU-urakka-id 35
-        expected-ii-MHU-urakka-id 36
+        odotettu-aktiivinen-oulu-urakka-id 26
+        odotettu-oulu-MHU-urakka-id 35
+        odotettu-ii-MHU-urakka-id 36
+        rovaniemi-MHU-id 31
         lisaa-muutoksen-lahde (fn [kohde muutoksen-lahde-oid]
                                 (assoc kohde :muutoksen-lahde-oid muutoksen-lahde-oid))
         lisaa-pakolliset (fn [kohde oid muokattu] (-> kohde
                                                       (assoc :oid oid :muokattu muokattu)
-                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))]
-    (is (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " expected-ii-MHU-urakka-id)))
-    (is (nil?
-          (varusteet/urakka-id-kohteelle
-            db
-            (lisaa-pakolliset tuntematon-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm))
-          )
+                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))
+        suoritettava-fn (fn [sijainti alkupvm] (varusteet/urakka-id-kohteelle db
+                                        (lisaa-pakolliset sijainti oid alkupvm)))]
+    ; Setuppia. Laitetaan kahdelle urakalle velho_oid. Iin urakkaa testataan, rovaniemi on painolastina.
+    (is (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " odotettu-ii-MHU-urakka-id)))
+    (is (= 1 (u "UPDATE urakka SET velho_oid = '" rovaniemi-muutoksen-lahde-oid "' WHERE id = " rovaniemi-MHU-id)))
+
+    (is (nil? (suoritettava-fn tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
-    (is (nil?
-          (varusteet/urakka-id-kohteelle
-            db
-            (lisaa-pakolliset varuste-oulussa-sijainti oid ennen-urakoiden-alkuja-pvm)))
+    (is (nil? (suoritettava-fn varuste-oulussa-sijainti ennen-urakoiden-alkuja-pvm))
         "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
-    (is (= expected-oulu-MHU-urakka-id
-           (varusteet/urakka-id-kohteelle
-             db
-             (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-alkupvm)))
-        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= expected-oulu-MHU-urakka-id
-           (varusteet/urakka-id-kohteelle
-             db
-             (lisaa-pakolliset varuste-oulussa-sijainti oid oulun-MHU-urakka-2019-2024-loppupvm)))
-        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= expected-oulu-MHU-urakka-id
-           (varusteet/urakka-id-kohteelle
-             db
-             (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-alkupvm)))
-        (str "Odotettiin Oulun MHU urakka id: " expected-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= expected-aktiivinen-oulu-urakka-id
-           (varusteet/urakka-id-kohteelle
-             db
-             (lisaa-pakolliset varuste-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= expected-aktiivinen-oulu-urakka-id
-           (varusteet/urakka-id-kohteelle
-             db
-             (lisaa-pakolliset kaide-oulussa-sijainti oid aktiivinen-oulu-urakka-loppupvm))))
-    (is (= expected-ii-MHU-urakka-id
+    (is (= odotettu-oulu-MHU-urakka-id (suoritettava-fn varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
+        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
+    (is (= odotettu-oulu-MHU-urakka-id
+           (suoritettava-fn varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-loppupvm))
+        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
+    (is (= odotettu-oulu-MHU-urakka-id
+           (suoritettava-fn varuste-oulussa-sijainti aktiivinen-oulu-urakka-alkupvm))
+        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
+    (is (= odotettu-aktiivinen-oulu-urakka-id (suoritettava-fn varuste-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))
+        (str "Odotettiin aktiivinen oulu urakka, koska Oulun MHU on tässä ajankohdassa jo loppunut. Muuten olisi suosittu MHU:ta."))
+    (is (= odotettu-aktiivinen-oulu-urakka-id (suoritettava-fn kaide-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))
+        (str "Odotettiin aktiivinen oulu urakka, koska Oulun MHU on tässä ajankohdassa jo loppunut. Muuten olisi suosittu MHU:ta."))
+    (is (= odotettu-ii-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (-> varuste-iissa-sijainti
