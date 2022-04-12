@@ -1418,7 +1418,7 @@ FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
      JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
      LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id AND tm.poistettu = FALSE
-     JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
+     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
      LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
      LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
 WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
