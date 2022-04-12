@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
-
+            [harja.ui.napit :as napit]
             [cljs.core.async :refer [<!]]
             [harja.transit :as t]
             [harja.ui.ikonit :as ikonit])
@@ -14,34 +14,29 @@
   parametreilla, usealla hash-mapilla napeilla on omat parametrit ja lisänä avaimet 
   :kasittelija :pdf/:excel ja :otsikko, joka on napin teksti"
   ([parametrit & loput-parametrit]
-   [:span  
-    (for [p (concat [parametrit] loput-parametrit)]
-      (let [{:keys [kasittelija otsikko]} p]
-        ^{:key (str "raportti-" otsikko)}
-        [:form {:style {:float "right"} :target "_blank" :method "POST"
-                :action ((if (= kasittelija :excel) 
-                           k/excel-url 
-                           k/pdf-url) :raportointi)}
-         [:input {:type "hidden" :name "parametrit"
-                  :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]
-         [:button.nappi-ensisijainen {:type "submit"}
-          (ikonit/print)
-          (str " " otsikko)]]))])
+   [:span.upotettu-raporttitallennus  
+    (doall 
+      (for [p (concat [parametrit] loput-parametrit)]
+        (let [{:keys [kasittelija otsikko]} p]
+          ^{:key (str "raportti-" otsikko)}
+          [:form {:target "_blank" :method "POST"
+                  :action ((if (= kasittelija :excel) 
+                             k/excel-url 
+                             k/pdf-url) :raportointi)}
+           [:input {:type "hidden" :name "parametrit"
+                    :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]
+           [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true}]])))])
   ([parametrit]
-   [:span
+   [:span.upotettu-raporttitallennus
     ^{:key "raporttixls"}
-    [:form {:style {:float "right"} :target "_blank" :method "POST"
+    [:form {:target "_blank" :method "POST"
             :action (k/excel-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
               :value (t/clj->transit parametrit)}]
-     [:button.nappi-ensisijainen {:type "submit"}
-      (ikonit/print)
-      " Tallenna Excel"]]
+     [napit/tallenna "Tallenna Excel" (constantly true) {:type "submit" :ikoni (ikonit/download-alt)  :vayla-tyyli? true}]]
     ^{:key "raporttipdf"}
-    [:form {:style {:float "right"} :target "_blank" :method "POST"
+    [:form {:target "_blank" :method "POST"
             :action (k/pdf-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
               :value (t/clj->transit parametrit)}]
-     [:button.nappi-ensisijainen {:type "submit"}
-      (ikonit/print)
-      " Tallenna PDF"]]]))
+     [napit/tallenna "Tallenna PDF" (constantly true) {:type "submit" :ikoni (ikonit/download-alt)  :vayla-tyyli? true}]]]))

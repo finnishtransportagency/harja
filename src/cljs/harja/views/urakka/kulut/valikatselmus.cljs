@@ -39,8 +39,8 @@
     (cond
       ;; Alkaa samana vuonna, mutta ei olla vielä syksyssä tarpeeksi pitkällä
       (and
-          (= hoitokauden-alkuvuosi nykyvuosi)
-          (< nykykuukausi 10))
+        (= hoitokauden-alkuvuosi nykyvuosi)
+        (< nykykuukausi 10))
       true
       ;; On alkanut aiempana vuonna
       (< hoitokauden-alkuvuosi nykyvuosi)
@@ -75,9 +75,9 @@
         urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
         ;; Joskus valittua hoitokautta ei ole asetettu
         valittu-hoitokausi (if (:valittu-hoitokausi app)
-                            (:valittu-hoitokausi app)
-                            [(pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi)
-                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc valittu-hoitokauden-alkuvuosi)))])
+                             (:valittu-hoitokausi app)
+                             [(pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi)
+                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc valittu-hoitokauden-alkuvuosi)))])
         hoitokausi-str (pvm/paivamaaran-hoitokausi-str (pvm/hoitokauden-alkupvm valittu-hoitokauden-alkuvuosi))
         nykyhetki (pvm/nyt)
         hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki)
@@ -95,8 +95,8 @@
         [:span "Hoitovuodelle ei voi tässä vaiheessa tehdä välikatselmusta."]])
      (when (and hoitokausi-menneisyydessa? (not jvh?))
        [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
-           [ikonit/harja-icon-status-alert]
-           [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
+        [ikonit/harja-icon-status-alert]
+        [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
 
 (defn kattohinnan-oikaisu [e! app]
   (let [oikaistu-kattohinta (some->
@@ -145,108 +145,42 @@
          "Poista kattohinnan oikaisu"
          #(e! (valikatselmus-tiedot/->PoistaKattohinnanOikaisu))])]]))
 
-(defn tavoitehinnan-oikaisut [_ app]
-  (let [tallennettu-tila (atom (get-in app [:tavoitehinnan-oikaisut (:hoitokauden-alkuvuosi app)]))
-        virheet (atom {})]
-    (fn [e! {:keys [tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
-      (let [oikaisut-atom (reagent.core/cursor tila/tavoitehinnan-oikaisut [(:hoitokauden-alkuvuosi app)])
-            paatoksia? (not (empty? (:urakan-paatokset app)))
-            hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
-            nykyhetki (pvm/nyt)
-            ;; Joskus valittua hoitokautta ei ole asetettu
-            valittu-hoitokausi (if (:valittu-hoitokausi app)
-                                 (:valittu-hoitokausi app)
-                                 [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                                  (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
-            urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
-            poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
-            ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
-            voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
-                             (and
-                               (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-                               (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
-                               (or
-                                 poikkeusvuosi?
-                                 (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
-            kattohinnan-oikaisu-mahdollinen? (and
-                                               (seq @oikaisut-atom)
-                                               voi-muokata?
-                                               (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
-        [:div
-         [grid/muokkaus-grid
-          {:otsikko "Tavoitehinnan oikaisut"
-           :tyhja "Ei oikaisuja"
-           :voi-kumota? false
-           :voi-muokata? voi-muokata?
-           :toimintonappi-fn (when voi-muokata?
-                               (fn [rivi _muokkaa! id]
-                                 [napit/poista ""
-                                  #(do
-                                     (e! (valikatselmus-tiedot/->PoistaOikaisu rivi id))
-                                     (reset! tallennettu-tila hoitokauden-oikaisut))
-                                  {:luokka "napiton-nappi"}]))
-           :uusi-rivi-nappi-luokka "nappi-reunaton"
-           :lisaa-rivi "Lisää oikaisu"
-           :validoi-uusi-rivi? false
-           :on-rivi-blur (fn [oikaisu i]
-                           (when-not (or (= @tallennettu-tila hoitokauden-oikaisut)
-                                         (seq (get @virheet i))
-                                         (:koskematon (get hoitokauden-oikaisut i)))
-                             (e! (valikatselmus-tiedot/->TallennaOikaisu oikaisu i))
-                             (reset! tallennettu-tila hoitokauden-oikaisut)))
-           :uusi-id (if (empty? (keys hoitokauden-oikaisut))
-                      0
-                      (inc (apply max (keys hoitokauden-oikaisut))))
-           :virheet virheet
-           :nayta-virheikoni? false}
-          [{:otsikko "Luokka"
-            :nimi ::valikatselmus/otsikko
-            :tyyppi :valinta
-            :valinnat valikatselmus/luokat ;; TODO: Älä näytä "Alleviivatun fontin vaikutus tavoitehintaan" muissa kuin 19-20 alkaneissa.
-            :validoi [[:ei-tyhja "Valitse arvo"]]
-            :leveys 2}
-           {:otsikko "Selite"
-            :nimi ::valikatselmus/selite
-            :tyyppi :string
-            :validoi [[:ei-tyhja "Täytä arvo"]]
-            :leveys 3}
-           {:otsikko "Lisäys / Vähennys"
-            :nimi :lisays-tai-vahennys
-            :hae #(if (neg? (::valikatselmus/summa %)) :vahennys :lisays)
-            :aseta (fn [rivi arvo]
-                     ;; Käännetään summa, jos valittu arvo ei täsmää arvon merkkisyyteen.
-                     (let [maksu (js/parseFloat (::valikatselmus/summa rivi))
-                           rivi (assoc rivi :lisays-tai-vahennys arvo)]
-                       (if (or (and (neg? maksu) (= :lisays arvo)) (and (pos? maksu) (= :vahennys arvo)))
-                         (update rivi ::valikatselmus/summa -)
-                         rivi)))
-            :tyyppi :valinta
-            :valinnat [:lisays :vahennys]
-            :valinta-arvo identity
-            :valinta-nayta {:lisays "Lisäys" ;; TODO: Korjaa lukumoodissa
-                            :vahennys "Vähennys"}
-            :leveys 2}
-           {:otsikko "Summa"
-            :nimi ::valikatselmus/summa
-            :tyyppi :numero
-            :tasaa :oikea
-            :aseta (fn [rivi arvo]
-                     (let [vahennys? (= :vahennys (:lisays-tai-vahennys rivi))]
-                       (if (and vahennys? (pos? arvo))
-                         (assoc rivi ::valikatselmus/summa (- arvo))
-                         (assoc rivi ::valikatselmus/summa arvo))))
-            :fmt #(if (neg? (js/parseFloat %)) (str (- (js/parseFloat %))) (str %))
-            :validoi [[:ei-tyhja "Täytä arvo"]]
-            :leveys 2}]
-          oikaisut-atom]
+(defn tavoitehinnan-oikaisut [e! {:keys [urakan-paatokset valittu-hoitokausi tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
+  (let [paatoksia? (seq urakan-paatokset)
+        hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
+        nykyhetki (pvm/nyt)
+        ;; Joskus valittua hoitokautta ei ole asetettu
+        valittu-hoitokausi (or
+                             valittu-hoitokausi
+                             [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])
+        urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
+        poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
+        ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
+        voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
+                       (and
+                         (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+                         (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
+                         (or
+                           poikkeusvuosi?
+                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
+        kattohinnan-oikaisu-mahdollinen? (and
+                                           (seq hoitokauden-oikaisut)
+                                           voi-muokata?
+                                           (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
+    [:div
+     [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut
+      {:voi-muokata voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+       :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
+       :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
+       :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
+     (when (and paatoksia? voi-muokata?)
+       [:div.oikaisu-paatos-varoitus
+        [ikonit/harja-icon-status-alert]
+        [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
 
-         (when (and paatoksia? voi-muokata?)
-           [:div.oikaisu-paatos-varoitus
-            [ikonit/harja-icon-status-alert]
-            [:span "Hinnan oikaisun jälkeen joudut tallentamaan päätökset uudestaan"]])
-
-         (when kattohinnan-oikaisu-mahdollinen?
-           [kattohinnan-oikaisu e! app])]))))
+     (when kattohinnan-oikaisu-mahdollinen?
+       [kattohinnan-oikaisu e! app])]))
 
 (defn urakalla-ei-tavoitehintaa-varoitus []
   [:div.tavoitehinta-tyhja-varoitus.margin-top-16
@@ -258,7 +192,7 @@
     [:p "Täytä tavoitehinta suunnitteluosiossa valitulle hoitokaudelle"]]])
 
 (defn tavoitehinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
-                                                   oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?]
+                                   oikaistu-tavoitehinta oikaistu-kattohinta voi-muokata?]
   (let [ylityksen-maara (if (> toteuma oikaistu-kattohinta)
                           (- oikaistu-kattohinta oikaistu-tavoitehinta)
                           (- toteuma oikaistu-tavoitehinta))
@@ -307,7 +241,7 @@
   )
 
 (defn tavoitehinnan-alitus-lomake [e! {:keys [hoitokauden-alkuvuosi urakan-paatokset]} toteuma
-                                                 oikaistu-tavoitehinta tavoitehinta voi-muokata?]
+                                   oikaistu-tavoitehinta tavoitehinta voi-muokata?]
   (let [alituksen-maara (- oikaistu-tavoitehinta toteuma)
         urakoitsijan-osuus (* valikatselmus/+tavoitepalkkio-kerroin+ alituksen-maara) ;; 30% alituksesta
         viimeinen-hoitokausi? (>= hoitokauden-alkuvuosi (dec (pvm/vuosi (:loppupvm @nav/valittu-urakka))))
@@ -404,7 +338,7 @@
                                                     :vayla-tyyli? true
                                                     :yksikko "€"}
                                     :arvo-atom (r/wrap siirto
-                                                       #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
+                                                 #(e! (valikatselmus-tiedot/->PaivitaPaatosLomake (assoc kattohinnan-ylitys-lomake :siirto %) :kattohinnan-ylitys-lomake)))}]])
 
 (defn kattohinnan-ylitys-lomake [e! {:keys [hoitokauden-alkuvuosi kattohinnan-ylitys-lomake] :as app} toteuma oikaistu-kattohinta tavoitehinta voi-muokata?]
   (let [ylityksen-maara (- toteuma oikaistu-kattohinta)
@@ -432,8 +366,8 @@
                                  ::valikatselmus/urakoitsijan-maksu maksettava-summa
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto siirto}
-                                (when (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
-                                  {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)}))]
+                           (when (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)
+                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys-lomake)}))]
     [:<>
      [:div.paatos
       [:div
@@ -492,7 +426,7 @@
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
-        luvatut-pisteet (get-in app [:lupaus-sitoutuminen	:pisteet])
+        luvatut-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         toteutuneet-pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         tavoitehinta (get-in app [:yhteenveto :tavoitehinta])
         lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
@@ -522,8 +456,8 @@
                                  ::valikatselmus/lupaus-tavoitehinta oikaistu-tavoitehinta
                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                  ::valikatselmus/siirto nil}
-                                (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
-                                  {::valikatselmus/paatoksen-id paatos-id}))
+                           (when (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
+                             {::valikatselmus/paatoksen-id paatos-id}))
         on-oikeudet? (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         muokattava? (or (get-in app [lomake-avain :muokataan?]) false)]
     [:div
@@ -624,12 +558,12 @@
         poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
         ;; Muokkaaminen on järjestelmävalvojalle aina sallittua, mutta muut on rajoitettu myös ajan perusteella
         voi-muokata? (or (roolit/jvh? @istunto/kayttaja)
-                         (and
-                           (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-                           (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
-                           (or
-                             poikkeusvuosi?
-                             (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
+                       (and
+                         (onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+                         (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
+                         (or
+                           poikkeusvuosi?
+                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
     (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
