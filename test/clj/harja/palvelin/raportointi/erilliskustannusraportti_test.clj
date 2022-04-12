@@ -11,7 +11,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi.raportit.erilliskustannukset :as ek-raportti]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -112,6 +113,71 @@
                           ""
                           4000M
                           30.81098339719026360000M))]]))))
+
+(deftest raportin-suoritus-mhu-urakalle-toimii
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :suorita-raportti
+                                +kayttaja-jvh+
+                                {:nimi :erilliskustannukset
+                                 :konteksti "urakka"
+                                 :urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                                 :parametrit {:toimenpide-id nil
+                                              :urakkatyyppi "teiden-hoito"
+                                              :alkupvm (c/to-date (t/local-date 2019 10 1))
+                                              :loppupvm (c/to-date (t/local-date 2022 10 1))}})]
+    (is (vector? vastaus))
+    (is (= vastaus [:raportti
+                    {:nimi "Erilliskustannusten raportti"}
+                    [:taulukko
+                     {:oikealle-tasattavat-kentat #{4
+                                                    5}
+                      :otsikko "Oulun MHU 2019-2024, Erilliskustannusten raportti ajalta 01.10.2019 - 01.10.2022"
+                      :sheet-nimi "Erilliskustannusten raportti"
+                      :viimeinen-rivi-yhteenveto? true}
+                     '({:leveys 7
+                        :otsikko "Pvm"}
+                       {:leveys 7
+                        :otsikko "Sop. nro"}
+                       {:leveys 12
+                        :otsikko "Toimenpide"}
+                       {:leveys 7
+                        :otsikko "Tyyppi"}
+                       {:fmt :raha
+                        :leveys 6
+                        :otsikko "Summa"}
+                       {:fmt :raha
+                        :leveys 6
+                        :otsikko "Ind.korotus"})
+                     '(["15.03.2020"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Alihankinta­bonus"
+                        500M
+                        56.18231046931407942000M]
+                       ["15.03.2020"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Lupaus­bonus"
+                        500M
+                        56.18231046931407942000M]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Alihankinta­bonus"
+                        1000M
+                        90.55354993983152828000M]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Lupaus­bonus"
+                        1000M
+                        90.55354993983152828000M]
+                       ("Yhteensä"
+                         ""
+                         ""
+                         ""
+                         3000M
+                         293.47172081829121540000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -453,3 +519,11 @@
                   ""
                   16000M
                   -250.83601146530018569000M))]]))))
+
+(deftest erilliskustannusten-tyypit
+  (is (= (ek-raportti/erilliskustannuksen-nimi "alihankintabonus") "Alihankinta\u00ADbonus"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "asiakastyytyvaisyysbonus") "As.tyyt.\u00ADbonus"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "lupausbonus") "Lupaus\u00ADbonus"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "muu") "Muu"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "tavoitepalkkio") "Tavoite\u00ADpalkkio"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "kissajakameli") "Tuntematon kustannustyyppi")))
