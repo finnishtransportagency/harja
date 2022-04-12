@@ -13,23 +13,29 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero
-  ([tienumero-atom] (tienumero tienumero-atom nil))
-  ([tienumero-atom toiminta-f]
+  ([tienumero-atom] (tienumero tienumero-atom nil {}))
+  ([tienumero-atom toiminta-f] (tienumero tienumero-atom toiminta-f {}))
+  ([tienumero-atom toiminta-f {:keys [kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Tienumero"
-     :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f}
-     :arvo-atom tienumero-atom
-     :luokka "label-ja-kentta-puolikas"}
-    "Tienumero"]))
+    (merge 
+      {:otsikko "Tienumero"
+       :kentta-params (merge {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom tienumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn yllapitokohteen-kohdenumero
-  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil))
-  ([kohdenumero-atom toiminta-f]
+  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil {}))
+  ([kohdenumero-atom toiminta-f] (yllapitokohteen-kohdenumero kohdenumero-atom toiminta-f {}))
+  ([kohdenumero-atom toiminta-f {:keys [kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Kohdenumero"
-     :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f}
-     :arvo-atom kohdenumero-atom
-     :luokka "label-ja-kentta-puolikas"}]))
+    (merge
+      {:otsikko "Kohdenumero"
+       :otsikon-luokka "alasvedon-otsikko-vayla"
+       :kentta-params (merge {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom kohdenumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
