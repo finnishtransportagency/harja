@@ -109,7 +109,7 @@
 
 (defn velho-oid->urakka [db]
   ; [{:velho_oid "1.2.3" :id 36} {...} ... ]
-  ; [["1.2.3" 36]["1.2.4" 38]...]
+  ; (["1.2.3" 36]["1.2.4" 38]...)
   ; {"1.2.3" 36 "1.2.4" 38}
   (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
        (map (fn [x] [(:velho_oid x) (:id x)]))
