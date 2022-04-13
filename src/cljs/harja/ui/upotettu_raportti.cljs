@@ -24,8 +24,8 @@
                              k/excel-url 
                              k/pdf-url) :raportointi)}
            [:input {:type "hidden" :name "parametrit"
-                    :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]
-           [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true}]])))])
+                    :value (t/clj->transit (dissoc p :otsikko :kasittelija))}]  
+           [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true :esta-prevent-default? true}]])))])
   ([parametrit]
    [:span.upotettu-raporttitallennus
     ^{:key "raporttixls"}
@@ -33,10 +33,10 @@
             :action (k/excel-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
               :value (t/clj->transit parametrit)}]
-     [napit/tallenna "Tallenna Excel" (constantly true) {:type "submit" :ikoni (ikonit/download-alt)  :vayla-tyyli? true}]]
+     [napit/tallenna "Tallenna Excel" (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true :esta-prevent-default? true}]]
     ^{:key "raporttipdf"}
     [:form {:target "_blank" :method "POST"
             :action (k/pdf-url :raportointi)}
      [:input {:type "hidden" :name "parametrit"
               :value (t/clj->transit parametrit)}]
-     [napit/tallenna "Tallenna PDF" (constantly true) {:type "submit" :ikoni (ikonit/download-alt)  :vayla-tyyli? true}]]]))
+     [napit/tallenna "Tallenna PDF" (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true :esta-prevent-default? true}]]]))
