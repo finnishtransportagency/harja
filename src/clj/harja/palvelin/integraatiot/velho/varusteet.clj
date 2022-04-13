@@ -89,10 +89,6 @@
          _ (println hakuvirhe)]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
-(defn- urakka-muutoksen-lahteen-avulla
-  [db muutoksen-lahde-oid]
-  (q-urakat/hae-urakka-velho-oidlla db {:velho_oid muutoksen-lahde-oid}))
-
 (defn- urakka-sijainnin-avulla
   [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
@@ -111,11 +107,24 @@
 
 (def +urakka-memoize-ttl+ (* 10 60 1000))
 
+(defn velho-oid->urakka [db]
+  ; [{:velho_oid "1.2.3" :id 36} {...} ... ]
+  ; (["1.2.3" 36]["1.2.4" 38]...)
+  ; {"1.2.3" 36 "1.2.4" 38}
+  (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
+       (map (fn [x] [(:velho_oid x) (:id x)]))
+       (into {})))
+
+(def memo-velho-oid->urakka
+  (memo/ttl velho-oid->urakka :ttl/threshold +urakka-memoize-ttl+))
+
+(defn urakka-velho-oidlla [db muutoksen-lahde-oid]
+  (get (memo-velho-oid->urakka db) muutoksen-lahde-oid))
+
 (defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
-  (let [memo-urakka-muutoksen-lahteen-avulla (memo/ttl urakka-muutoksen-lahteen-avulla :ttl/threshold +urakka-memoize-ttl+)]
-    (or
-      (memo-urakka-muutoksen-lahteen-avulla db muutoksen-lahde-oid)
-      (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen)))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
+  (or
+    (urakka-velho-oidlla db muutoksen-lahde-oid)
+    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))

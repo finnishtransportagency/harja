@@ -140,7 +140,7 @@
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
-(deftest velho->harja-test
+(deftest varustetoteuma-velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
         alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
         muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
@@ -204,6 +204,13 @@
         odotettu-kuntoluokka "Hyvä"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
+
+(deftest varusteen-toimenpiteet-konvertoituu-oikein-test
+  "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
+        odotetut-toimenpiteet "korjaus"
+        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+    (is (= odotetut-toimenpiteet (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde)))))
 
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
