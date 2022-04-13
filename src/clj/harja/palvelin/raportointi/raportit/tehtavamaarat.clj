@@ -8,6 +8,9 @@
             [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
 
+(def vemtr-elementit 5)
+(def tm-elementit 4)
+
 (defn- sama-tehtava-ja-ely?
   [e t]
   (and (= (:nimi e) (:nimi t))
@@ -138,13 +141,13 @@
       (some #(= (first m) %) hyt))
     {:rivi (concat (vec m)
              (mapv (fn [_] "") ; luodaan tyhjiä soluja
-               (take (if vemtr? 5 6)
+               (take (if vemtr? vemtr-elementit tm-elementit)
                  (range)))) :korosta? true :lihavoi? true}
 
     (= 1 (count (keys m)))
     {:rivi (concat (vec m)
              (mapv (fn [_] "")
-               (take (if vemtr? 5 6)
+               (take (if vemtr? vemtr-elementit tm-elementit)
                  (range)))) :korosta-hennosti? true :lihavoi? true}
 
     :else (vec m)))
@@ -227,7 +230,9 @@
     {:rivit rivit
      :debug suunnitellut-ryhmissa
      :urakkatiedot (when urakka-id (-> urakan-tiedot first))
-     :otsikot (take (if vemtr? 6 5)
+     :otsikot (take (if vemtr? 
+                      vemtr-elementit 
+                      tm-elementit)
                 [{:otsikko "Tehtävä" :leveys 6}
                  {:otsikko (str "Suunniteltu 1.10." (-> hoitokaudet first)
                              " - 30.9." (-> hoitokaudet last inc))
