@@ -5,7 +5,7 @@
 - Versionumero 1.0.56 Julkaistu 14.4.2022
       - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
       - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
-      - Poistettu varusterajapintaan liittyvä dokumentaatio.
+      - Poistettu varusterajapinta käytöstä.
 - Versionumero 1.0.55 Julkaistu 24.2.2022
       - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
 - Versionumero 1.0.54 Julkaistu 26.1.2022
