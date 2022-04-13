@@ -173,11 +173,11 @@
   (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX" (:alkuaika parametrit))}))
+       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
   (when (and (not (nil? (:loppuaika parametrit))) (not (s/valid? ::loppuaika (:loppuaika parametrit))))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX" (:loppuaika parametrit))})))
+       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))})))
 
 (def db-kuittaus->avaimet
   {:f1 :kuitattu
