@@ -540,10 +540,10 @@
         aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
         aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         aktiivinen-ii-urakka-alkupvm "2021-10-01T00:00:00Z"
-        odotettu-aktiivinen-oulu-urakka-id 26
-        odotettu-oulu-MHU-urakka-id 35
-        odotettu-ii-MHU-urakka-id 36
-        rovaniemi-MHU-id 31
+        odotettu-aktiivinen-oulu-urakka-id (hae-aktiivinen-oulu-testi-id)
+        odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        odotettu-ii-MHU-urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        rovaniemi-MHU-id (hae-rovaniemen-maanteiden-hoitourakan-id)
         lisaa-muutoksen-lahde (fn [kohde muutoksen-lahde-oid]
                                 (assoc kohde :muutoksen-lahde-oid muutoksen-lahde-oid))
         lisaa-pakolliset (fn [kohde oid muokattu] (-> kohde
@@ -552,8 +552,8 @@
         suoritettava-fn (fn [sijainti alkupvm] (varusteet/urakka-id-kohteelle db
                                         (lisaa-pakolliset sijainti oid alkupvm)))]
     ; Setuppia. Laitetaan kahdelle urakalle velho_oid. Iin urakkaa testataan, rovaniemi on painolastina.
-    (is (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " odotettu-ii-MHU-urakka-id)))
-    (is (= 1 (u "UPDATE urakka SET velho_oid = '" rovaniemi-muutoksen-lahde-oid "' WHERE id = " rovaniemi-MHU-id)))
+    (assert (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " odotettu-ii-MHU-urakka-id)))
+    (assert (= 1 (u "UPDATE urakka SET velho_oid = '" rovaniemi-muutoksen-lahde-oid "' WHERE id = " rovaniemi-MHU-id)))
 
     (is (nil? (suoritettava-fn tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
@@ -672,11 +672,11 @@
 
 (deftest hae-mhu-urakka-oidt-test
   "Aurinkoisen päivän testi koko haku ja tallennus polulle."
-  (let [odotettu-tulosjoukko #{{:id 21
+  (let [odotettu-tulosjoukko #{{:id (hae-kajaanin-alueurakan-2014-2019-id)
                                 :tyyppi "hoito"
                                 :urakkanro "1236"
                                 :velho_oid "1.2.246.578.8.1.147502788"}
-                               {:id 36
+                               {:id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
                                 :tyyppi "teiden-hoito"
                                 :urakkanro "1248"
                                 :velho_oid "1.2.246.578.8.1.147502790"}}

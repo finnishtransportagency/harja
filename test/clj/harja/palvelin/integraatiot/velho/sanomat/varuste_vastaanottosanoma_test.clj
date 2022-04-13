@@ -260,6 +260,3 @@
         saatu-pvm (varuste-vastaanottosanoma/velho-pvm->pvm joku-pvm)]
     (is (instance? DateTime saatu-pvm))
     (is (= odotettu-pvm saatu-pvm))))
-
-(deftest velho-palauttaa-pistemaisen-varustetoimenpide-listan ;TODO
-  )
