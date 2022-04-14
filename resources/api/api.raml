@@ -630,26 +630,28 @@ documentation:
                application/json:
                  example: !include examples/virhe-response.json
                  schema: virhe-response
-      /{ytunnus}/{alkuaika}/{loppuaika}:
-          get:
-            is: [secured]
-            description: Palauttaa urakoitsijan annetun aikahaarukan välillä päivittyneet ilmoitukset toimenpidekuittauksineen. Ilmoitus katsotaan päivittyneeksi, kun se saapuu urakkaan, kun siihen saadaan Tieliikennekeskuksesta päivitys ja kun siihen tehdään toimenpidekuittaus. Esim. ilmoitukset/123456-7/2022-01-02T00:01:00+03/2022-01-02T00:02:00+03. <br>Ilmoitettu = Ilmoitus tehty Tieliikennekeskukseen.<br>Valitetty-harjaan = Tieliikennekeskuksen järjestelmän lähetysaikaleima.<br>Vastaanotettu-harjaan = Ilmoitus tallennettu Harjaan ensimmäisen kerran.<br>Valitetty-urakkaan = Ilmoitus saatettu urakan tietoon.<br>Paivitetty-harjaan = Ilmoituksen viimeisin päivitysajankohta. Päivitys on Tieliikennekeskuksesta saapunut päivitys.
-            responses:
-              200:
-                body:
-                  application/json:
-                    example: !include examples/ilmoitusten-ja-toimenpidekuittausten-haku-response.json
-                    schema: ilmoitusten-haku-response
-              400:
-                 body:
-                   application/json:
-                    example: !include examples/virhe-response.json
-                    schema: virhe-response
-              500:
-                 body:
-                   application/json:
-                    example: !include examples/virhe-response.json
-                    schema: virhe-response
+      /{ytunnus}:
+        /{alkuaika}:
+          /{loppuaika}:
+              get:
+                is: [secured]
+                description: Palauttaa urakoitsijan annetun aikahaarukan välillä päivittyneet ilmoitukset toimenpidekuittauksineen. Ilmoitus katsotaan päivittyneeksi, kun se saapuu urakkaan, kun siihen saadaan Tieliikennekeskuksesta päivitys ja kun siihen tehdään toimenpidekuittaus. Esim. ilmoitukset/123456-7/2022-01-02T00:01:00+03/2022-01-02T00:02:00+03. <br>Ilmoitettu = Ilmoitus tehty Tieliikennekeskukseen.<br>Valitetty-harjaan = Tieliikennekeskuksen järjestelmän lähetysaikaleima.<br>Vastaanotettu-harjaan = Ilmoitus tallennettu Harjaan ensimmäisen kerran.<br>Valitetty-urakkaan = Ilmoitus saatettu urakan tietoon.<br>Paivitetty-harjaan = Ilmoituksen viimeisin päivitysajankohta. Päivitys on Tieliikennekeskuksesta saapunut päivitys.
+                responses:
+                  200:
+                    body:
+                      application/json:
+                        example: !include examples/ilmoitusten-ja-toimenpidekuittausten-haku-response.json
+                        schema: ilmoitusten-haku-response
+                  400:
+                     body:
+                       application/json:
+                        example: !include examples/virhe-response.json
+                        schema: virhe-response
+                  500:
+                     body:
+                       application/json:
+                        example: !include examples/virhe-response.json
+                        schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
