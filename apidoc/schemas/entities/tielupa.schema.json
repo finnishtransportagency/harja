@@ -875,6 +875,10 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                  "liikennemerkki": {
+                    "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/liikennemerkki",
+                    "type": "string"
+                  },
                   "alkuperainen-nopeusrajoitus": {
                     "id": "urn:/harja/tielupa/tilapaiset-liikennemerkkijarjestelyt/jarjestelyt/0/jarjestely/alkuperainen-nopeusrajoitus",
                     "type": "string"

@@ -70,49 +70,10 @@
               },
               "suoritettavatTehtavat": {
                 "id": "urn:harja/havainnot/0/tyokonetehtava",
-                "type": "array",
+                "type": "object",
                 "maxItems": 10,
-                "items": {
-                  "enum": [
-                    "asfaltointi",
-                    "auraus ja sohjonpoisto",
-                    "aurausviitoitus ja kinostimet",
-                    "harjaus",
-                    "jyrays",
-                    "kelintarkastus",
-                    "koneellinen niitto",
-                    "koneellinen vesakonraivaus",
-                    "kuumennus",
-                    "l- ja p-alueiden puhdistus",
-                    "liikennemerkkien puhdistus",
-                    "liik. opast. ja ohjausl. hoito seka reunapaalujen kun.pito",
-                    "linjahiekoitus",
-                    "lumensiirto",
-                    "lumivallien madaltaminen",
-                    "muu",
-                    "ojitus",
-                    "paallysteiden juotostyot",
-                    "paallysteiden paikkaus",
-                    "paannejaan poisto",
-                    "palteen poisto",
-                    "pinnan tasaus",
-                    "pistehiekoitus",
-                    "paallystetyn tien sorapientareen taytto",
-                    "sekoitus tai stabilointi",
-                    "siltojen puhdistus",
-                    "sorastus",
-                    "sorapientareen taytto",
-                    "sorateiden muokkaushoylays",
-                    "sorateiden polynsidonta",
-                    "sorateiden tasaus",
-                    "sulamisveden haittojen torjunta",
-                    "suolaus",
-                    "tiemerkinta",
-                    "tiestotarkastus",
-                    "tilaajan laadunvalvonta",
-                    "turvalaite"
-                  ]
-                }
+                "additionalProperties": false,
+                "$ref": "file:resources/api/schemas/entities/suoritettavat-tehtavat.schema.json"
               }
             }
           }

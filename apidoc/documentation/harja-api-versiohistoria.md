@@ -1,7 +1,15 @@
-<b>Nykyinen versio: 1.0.53</b>
-<b>Julkaistu: 24.2.2021</b>
+<b>Nykyinen versio: 1.0.56</b>
+<b>Julkaistu: 14.4.2022</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.56 Julkaistu 14.4.2022
+      - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
+      - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
+      - Poistettu varusterajapinta käytöstä.
+- Versionumero 1.0.55 Julkaistu 24.2.2022
+      - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
+- Versionumero 1.0.54 Julkaistu 26.1.2022
+      - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
 - Versionumero 1.0.53 Julkaistu 24.2.2021
       - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
 - Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020
