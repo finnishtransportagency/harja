@@ -792,6 +792,7 @@
   Tierekisteri tarvitaan parametrina muuntamaan varusteiden arvot. "
   ([] (varustetoteuma-xf nil))
   ([tierekisteri]
+   (println "petrisi1023: " tierekisteri)
    (comp
      (map #(assoc % :tyyppi-kartalla :varustetoteuma))
      (map #(konv/string->keyword % :toimenpide))
