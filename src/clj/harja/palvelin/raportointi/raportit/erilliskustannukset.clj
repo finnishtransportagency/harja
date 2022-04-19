@@ -79,8 +79,11 @@
                                                #{4 5})
                  :otsikko otsikko
                  :viimeinen-rivi-yhteenveto? true
-                 :sheet-nimi raportin-nimi}
-      (keep identity [(when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
+                 :sheet-nimi raportin-nimi
+                 :vetolaatikot {"raportti_rivi_0" ["666"]
+                                "raportti_rivi_1" ["667"]}}
+      (keep identity [{:leveys 3 :tyyppi :vetolaatikon-tila}
+                      (when-not (= konteksti :urakka) {:leveys 10 :otsikko "Urakka"})
                       {:leveys 7 :otsikko "Pvm"}
                       {:leveys 7 :otsikko "Sop. nro"}
                       {:leveys 12 :otsikko "Toimenpide"}
@@ -89,7 +92,8 @@
                       {:leveys 6 :otsikko "Ind.korotus" :fmt :raha}])
 
       (keep identity
-            (conj (mapv #(rivi (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
+            (conj (mapv #(rivi
+                           (when-not (= konteksti :urakka) (get-in % [:urakka :nimi]))
                                (pvm/pvm (:pvm %))
                                (get-in % [:sopimus :sampoid])
                                (:tpinimi %)

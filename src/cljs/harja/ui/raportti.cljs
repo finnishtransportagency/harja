@@ -78,18 +78,25 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
+(defn nihkea-vetolaatikko [data]
+  [:div (first data)])
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat]}
+                                               oikealle-tasattavat-kentat vetolaatikot]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
-    [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           (fn [rivi] (str "raportti_rivi_"
-                                                    (or (::rivin-indeksi rivi)
-                                                        (hash rivi))))
+    (println "jere testaa::" data sarakkeet)
+    [grid/grid {:otsikko (or otsikko "")
+                :tunniste (fn [rivi]
+                            (do (println "rivi" rivi) (str "raportti_rivi_"
+                                                        (or (::rivin-indeksi rivi)
+                                                          (hash rivi)))))
                 :rivi-ennen rivi-ennen
+                :vetolaatikot (into {} (map (fn [[id data]]
+                                              {id [nihkea-vetolaatikko data]}) vetolaatikot))
                 :piilota-toiminnot? true}
      (into []
            (map-indexed
@@ -111,9 +118,10 @@
                    :nimi (str "sarake" i)
                    :fmt format-fn
                    ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                   :tyyppi (if raporttielementteja?
-                             :komponentti
-                             :string)
+                   :tyyppi (cond
+                             (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
+                             raporttielementteja? :komponentti
+                             :else :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
                                   (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
