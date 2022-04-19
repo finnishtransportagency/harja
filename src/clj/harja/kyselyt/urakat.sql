@@ -547,12 +547,10 @@ SELECT count(*) as lkm
 FROM urakka
 WHERE velho_oid IS NOT NULL;
 
---name: hae-urakka-velho-oidlla
---single?: true
--- Palauttaa sen urakan urakka-id:n, jonka velho_oid vastaa annettua
-SELECT id
+--name: hae-kaikki-urakka-velho-oid
+SELECT velho_oid, id
 FROM urakka
-WHERE velho_oid = :velho_oid;
+WHERE velho_oid IS NOT NULL;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille

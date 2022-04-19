@@ -1,21 +1,27 @@
--- Luodaan raporttia varten uusi materiaalikoodi - Hox päivitä tämä
-ALTER TYPE materiaalityyppi ADD VALUE 'erityisalue';
-ALTER TYPE materiaalityyppi ADD VALUE 'formiaatti';
-ALTER TYPE materiaalityyppi ADD VALUE 'kesasuola';
-ALTER TYPE materiaalityyppi ADD VALUE 'hiekoitushiekka';
-ALTER TYPE materiaalityyppi ADD VALUE 'murske';
+INSERT INTO koodisto_konversio (id, nimi, kuvaus)
+VALUES ('v/vtp', 'velho/varustetoimenpide',
+        'Varustetoteumien varustetoimenpide nimikkeistöarvojen konversio varustetoteuma_tyyppi muotoon');
 
-UPDATE materiaalikoodi SET materiaalityyppi  = 'erityisalue'::materiaalityyppi WHERE nimi = 'Erityisalueet CaCl2-liuos';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'erityisalue'::materiaalityyppi WHERE nimi = 'Erityisalueet NaCl';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'erityisalue'::materiaalityyppi WHERE nimi = 'Erityisalueet NaCl-liuos';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'talvisuola'::materiaalityyppi WHERE nimi = 'Hiekoitushiekan suola';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'formiaatti'::materiaalityyppi WHERE nimi = 'Kaliumformiaatti';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'formiaatti'::materiaalityyppi WHERE nimi = 'Natriumformiaatti';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'formiaatti'::materiaalityyppi WHERE nimi = 'Natriumformiaattiliuos';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'kesasuola'::materiaalityyppi WHERE nimi = 'Kesäsuola (pölynsidonta)';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'kesasuola'::materiaalityyppi WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'hiekoitushiekka'::materiaalityyppi WHERE nimi = 'Hiekoitushiekka';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'muu'::materiaalityyppi WHERE nimi = 'Jätteet kaatopaikalle';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'murske'::materiaalityyppi WHERE nimi = 'Murskeet';
-UPDATE materiaalikoodi SET materiaalityyppi  = 'muu'::materiaalityyppi WHERE nimi = 'Rikkaruohojen torjunta-aineet';
-
+INSERT INTO koodisto_konversio_koodit (koodisto_konversio_id, lahde, tulos)
+VALUES ('v/vtp', 'varustetoimenpide/vtp01', 'tarkastus'),
+       ('v/vtp', 'varustetoimenpide/vtp02', 'puhdistus'),
+       ('v/vtp', 'varustetoimenpide/vtp03', ''),
+       ('v/vtp', 'varustetoimenpide/vtp04', ''),
+       ('v/vtp', 'varustetoimenpide/vtp05', ''),
+       ('v/vtp', 'varustetoimenpide/vtp06', ''),
+       ('v/vtp', 'varustetoimenpide/vtp07', 'korjaus'),
+       ('v/vtp', 'varustetoimenpide/vtp08', ''),
+       ('v/vtp', 'varustetoimenpide/vtp09', ''),
+       ('v/vtp', 'varustetoimenpide/vtp10', ''),
+       ('v/vtp', 'varustetoimenpide/vtp11', ''),
+       ('v/vtp', 'varustetoimenpide/vtp12', ''),
+       ('v/vtp', 'varustetoimenpide/vtp13', ''),
+       ('v/vtp', 'varustetoimenpide/vtp14', ''),
+       ('v/vtp', 'varustetoimenpide/vtp16', ''),
+       ('v/vtp', 'varustetoimenpide/vtp17', ''),
+       ('v/vtp', 'varustetoimenpide/vtp18', ''),
+       ('v/vtp', 'varustetoimenpide/vtp19', ''),
+       ('v/vtp', 'varustetoimenpide/vtp20', ''),
+       ('v/vtp', 'varustetoimenpide/vtp21', ''),
+       ('v/vtp', 'varustetoimenpide/vtp22', ''),
+       ('v/vtp', 'varustetoimenpide/vtp23', '');

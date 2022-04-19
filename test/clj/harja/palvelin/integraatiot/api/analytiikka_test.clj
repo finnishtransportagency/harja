@@ -4,6 +4,7 @@
             [clj-time
              [core :as t]
              [format :as df]]
+            [harja.pvm :as pvm]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [harja.testi :refer :all]
@@ -13,7 +14,10 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.analytiikka :as api-analytiikka]
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [clojure.string :as str])
+  (:import (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")
@@ -27,21 +31,50 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-(deftest hae-toteumat-test-onnistuu
+(defn sisaltaa-perustiedot [vastaus]
+  (is (str/includes? vastaus "tyokone"))
+  (is (str/includes? vastaus "materiaalit"))
+  (is (str/includes? vastaus "reittipiste"))
+  (is (str/includes? vastaus "yksikko"))
+  (is (str/includes? vastaus "tehtava"))
+  (is (str/includes? vastaus "muutostiedot")))
+
+(deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
           ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
-        alkuaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                   (t/minus (t/now) (t/months 1)))
-        loppuaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki")) (t/now))
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
-        vastausdata (cheshire/decode (:body @vastaus))
-        odotettu-vastaus (json/read-str (slurp (io/resource "api/examples/analytiikka-reittitoteumat-response.json")))]
-    (is (= vastausdata odotettu-vastaus))))
+        ;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
+        alkuaika "2004-01-01T00:00:00+03"
+        loppuaika "2004-12-31T21:00:00+03"
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
+    (is (= 200 (:status @vastaus)))
+    (sisaltaa-perustiedot (:body @vastaus))))
 
+(deftest hae-toteumat-test-reitillinen-onnistuu
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+        alkuaika "2005-01-01T00:00:00+03"
+        loppuaika "2005-12-31T21:00:00+03"
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
+    (is (= 200 (:status @vastaus)))
+    (sisaltaa-perustiedot (:body @vastaus))))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
-  (let [alkuaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                   (t/minus (t/now) (t/months 1)))
-        loppuaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki")) (t/now))]
-    (is (thrown? Exception (cheshire/decode (:body (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-yit portti)))))))
+  (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
+        nyt (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" kuukausi-sitten "/" nyt)] kayttaja-yit portti)]
+    (is (= 403 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "virheet"))
+    (is (str/includes? (:body vastaus) "koodi"))
+    (is (str/includes? (:body vastaus) "tuntematon-kayttaja"))))
+
+(deftest hae-toteumat-test-vaara-paivamaaraformaatti
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+        alkuaika "2005-01-01T00:00:00"
+        loppuaika "2005-12-31T21:00:00+03"
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
+    (is (= 400 (:status @vastaus)))
+    (is (str/includes? (:body @vastaus) "Alkuaika väärässä muodossa"))))

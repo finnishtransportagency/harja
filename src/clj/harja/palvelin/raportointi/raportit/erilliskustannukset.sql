@@ -36,4 +36,5 @@ WHERE (:urakka_annettu IS FALSE OR e.sopimus in
            u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko))
       AND (:toimenpide::INTEGER IS NULL OR (tpi.toimenpide = :toimenpide AND e.urakka = tpi.urakka))
       AND e.pvm :: DATE BETWEEN :alku AND :loppu
-      AND e.poistettu IS NOT TRUE;
+      AND e.poistettu IS NOT TRUE
+ORDER BY e.pvm, e.tyyppi;
