@@ -112,7 +112,7 @@
   ; (["1.2.3" 36]["1.2.4" 38]...)
   ; {"1.2.3" 36 "1.2.4" 38}
   (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
-       (map (fn [x] [(:velho_oid x) (:id x)]))
+       (map (juxt :velho_oid :id))
        (into {})))
 
 (def memo-velho-oid->urakka
@@ -391,7 +391,7 @@
   [db {:keys [kohdeluokka] :as kohde} lahteen-kohdeluokka]
   (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db) ; tässä vielä toistaikseksi parametrinä kohde, joten memoize on syvemmällä
         sijainti-kohteelle-fn (partial sijainti-kohteelle db) ; sijaintiavaruus on liian suuri memoizelle
-        konversio-fn (memoize (partial koodistot/konversio db))]
+        konversio-fn (partial koodistot/konversio db)]
     (assert (= lahteen-kohdeluokka kohdeluokka)
             (format "Kohdeluokka ei vastaa odotettua. Tietolähteen kohdeluokka: %s varustetoteuman kohdeluokka: %s"
                     lahteen-kohdeluokka kohdeluokka))
