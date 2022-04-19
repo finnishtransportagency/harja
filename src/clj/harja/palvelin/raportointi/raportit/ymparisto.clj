@@ -53,7 +53,6 @@
 (defn hae-raportti* [db hakuasetukset]
   (let [urakoittain? (:urakoittain? hakuasetukset)
         rivit (hae-raportin-tiedot db hakuasetukset)
-        _ (println "****************** rivit suoraa tietokannasta: " rivit)
         materiaali-rivit (hae-materiaalit db)
         urakat (into #{} (map :urakka rivit))
         materiaali-avaimet (if urakoittain?
@@ -179,7 +178,10 @@
        [{:otsikko "Määrä yhteensä" :leveys "7%" :fmt :numero :jos-tyhja "-"
          :excel [:summa-vasen (if urakoittain? 2 1)]}
         {:otsikko "Tot-%" :leveys "6%" :fmt :prosentti :jos-tyhja "-"}
-        {:otsikko "Suunniteltu määrä / talvisuolan max-määrä" :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
+        {:otsikko (if (= otsikko "Talvisuola")
+                    "Suunniteltu määrä / talvisuolan max-määrä"
+                    "Suunniteltu (t)")
+         :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
 
    (mapcat
      (fn [[{:keys [urakka materiaali]} rivit]]
@@ -262,18 +264,13 @@
 (defn summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan [urakoittain? materiaalit-kannasta materiaalityyppi]
   (let [ryhmittely-fn (if urakoittain? (juxt :kk :urakka) :kk)
         materiaalit (apply concat (map second materiaalit-kannasta))
-        _ (println "summaa-ja-ryhmittele-materiaalityypin-mukaan :: materiaalit" materiaalit)
         valitut-materiaalit (filter
                               (fn [rivi]
-                                (do
-                                  (println "summaa-ja-ryhmittele-materiaalityypin-mukaan :: " materiaalityyppi "==" (str (get-in rivi [:materiaali :tyyppi])) " :: rivi:" rivi)
-                                  (and
-                                      ;; summataan vain toteumat eli kun luokka on nil
-                                      (nil? (:luokka rivi))
-                                      (= (str materiaalityyppi) (str (get-in rivi [:materiaali :tyyppi]))))))
-                              materiaalit)
-
-        _ (println "summaa-ja-ryhmittele-materiaalityypin-mukaan :: valitut-materiaalit" valitut-materiaalit)]
+                                (and
+                                  ;; summataan vain toteumat eli kun luokka on nil
+                                  (nil? (:luokka rivi))
+                                  (= (str materiaalityyppi) (str (get-in rivi [:materiaali :tyyppi])))))
+                              materiaalit)]
     (group-by ryhmittely-fn valitut-materiaalit)))
 
 (defn materiaalit-summattuna-ja-ryhmiteltyna [urakoittain? materiaalityyppi-ryhmiteltyna]
@@ -340,32 +337,43 @@
                                      :urakka urakka}
                                     rivit])
                              talvisuola-toteumat-ryhmiteltyna-ja-summattuna)
-        _ (println "talvisuolatoteumat: " talvisuolatoteumat)
+
         kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
           (apply concat (map vals kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)))
-        formiaattitoteumat (mapv (fn [[urakka rivit]]
-                                               [{:materiaali materiaali-kaikki-formiaatit-yhteensa
-                                                 :urakka urakka}
-                                                rivit])
-                                        kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)
+        formiaatit-yhteensa-rivi (if-not (empty? kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)
+                                   (mapv (fn [[urakka rivit]]
+                                           [{:materiaali materiaali-kaikki-formiaatit-yhteensa
+                                             :urakka urakka}
+                                            rivit])
+                                     kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)
+                                   (list [{:maara 0
+                                           :luokka nil :kk nil :urakka nil
+                                           :materiaali materiaali-kaikki-formiaatit-yhteensa}]))
+
         kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
           (apply concat (map vals kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)))
-        kesasuolatoteumat (mapv (fn [[urakka rivit]]
-                                   [{:materiaali materiaali-kaikki-kesasuolat-yhteensa
-                                     :urakka urakka}
-                                    rivit])
-                             kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)
-        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
-        (group-by :urakka
-          (apply concat (map vals kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)))
-        mursketoteumat (mapv (fn [[urakka rivit]]
-                                  [{:materiaali materiaali-kaikki-kesasuolat-yhteensa
-                                    :urakka urakka}
-                                   rivit])
-                            kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)
-
+        kesasuola-yhteensa-rivi (if-not (empty? kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)
+                                  (mapv (fn [[urakka rivit]]
+                                          [{:materiaali materiaali-kaikki-kesasuolat-yhteensa
+                                            :urakka urakka}
+                                           rivit])
+                                    kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)
+                                  (list [{:maara 0
+                                          :luokka nil :kk nil :urakka nil
+                                          :materiaali materiaali-kaikki-kesasuolat-yhteensa}]))
+        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna (group-by :urakka
+                                                              (apply concat (map vals kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)))
+        murske-yhteensa-rivi (if-not (empty? kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)
+                               (mapv (fn [[urakka rivit]]
+                                       [{:materiaali materiaali-kaikki-murskeet-yhteensa
+                                         :urakka urakka}
+                                        rivit])
+                                 kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)
+                               (list [{:maara 0
+                                       :luokka nil :kk nil :urakka nil
+                                       :materiaali materiaali-kaikki-murskeet-yhteensa}]))
 
         kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
 
@@ -379,7 +387,7 @@
                                             {:urakka_idt kontekstin-urakka-idt
                                              :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
 
-        _ (println "******* talvisuolan-maxmaarat" talvisuolan-maxmaarat)
+
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
                                     (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
@@ -390,37 +398,8 @@
                                     (list [{:maara 0
                                             :luokka nil :kk nil :urakka nil
                                             :materiaali materiaali-kaikki-talvisuola-yhteensa}]))
-        _ (println "******* talvisuolat-yhteensa-rivi" talvisuolat-yhteensa-rivi)
-        formiaatit-yhteensa-rivi (if-not (empty? formiaattitoteumat)
-                                  (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
-                                         [avain rivit])
-                                    formiaattitoteumat)
-                                  (list [{:maara 0
-                                          :luokka nil :kk nil :urakka nil
-                                          :materiaali materiaali-kaikki-formiaatit-yhteensa}]))
-        _ (println "******* formiaatit-yhteensa-rivi" formiaatit-yhteensa-rivi)
-
-        kesasuola-yhteensa-rivi (if-not (empty? kesasuolatoteumat)
-                                   (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
-                                          [avain rivit])
-                                     kesasuolatoteumat)
-                                   (list [{:maara 0
-                                           :luokka nil :kk nil :urakka nil
-                                           :materiaali materiaali-kaikki-kesasuolat-yhteensa}]))
-        _ (println "******* kesasuola-yhteensa-rivi" kesasuola-yhteensa-rivi)
-
-        murske-yhteensa-rivi (if-not (empty? mursketoteumat)
-                                  (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
-                                         [avain rivit])
-                                    mursketoteumat)
-                                  (list [{:maara 0
-                                          :luokka nil :kk nil :urakka nil
-                                          :materiaali materiaali-kaikki-murskeet-yhteensa}]))
-        _ (println "******* murske-yhteensa-rivi" murske-yhteensa-rivi)
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
-
-        _ (println "******* materiaalit" materiaalit)
 
         talvisuolan-toteutunut-maara (some->> materiaalit
                                               (filter (fn [[materiaali _]]
@@ -431,18 +410,12 @@
                                               (filter #(nil? (:luokka %))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
                                               (map :maara)
                                               (reduce +))
-        listan-ensimmaisen-urakan-id (get-in (ffirst materiaalit) [:urakka :id])
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
-
         materiaalit-tyypin-mukaan (fn [materiaalityyppi]
-                                (keep (fn [rivi]
-                                        (do
-                                          ;(println "***** rivi" rivi)
-                                          (when (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi]))
-                                            rivi)))
-                                  materiaalit))
-        _ (println "********* talvisuolamateriaalit" (materiaalit-tyypin-mukaan "talvisuola"))
-        _ (println " talvisuolan-toteutunut-maara" talvisuolan-toteutunut-maara)]
+                                    (keep (fn [rivi]
+                                            (when (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi]))
+                                              rivi))
+                                      materiaalit))]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -450,17 +423,17 @@
                    (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
                    "t")]
 
-     (koosta-taulukko "Talvisuola" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Talvisuola" konteksti kuukaudet "Talvisuolat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "talvisuola") nil)
-     (koosta-taulukko "Formiaatit" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Formiaatit" konteksti kuukaudet "Formiaatit" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "formiaatti") nil)
-     (koosta-taulukko "Kesäsuola" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Kesäsuola" konteksti kuukaudet "Kesäsuolat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "kesasuola") nil)
-     (koosta-taulukko "Hiekoitushiekka" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Hiekoitushiekka" konteksti kuukaudet "Hiekoitushiekat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "hiekoitushiekka") nil)
-     (koosta-taulukko "Murskeet" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Murskeet" konteksti kuukaudet "Murskeet" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "murske") nil)
-     (koosta-taulukko "Muut materiaalit" konteksti kuukaudet raportin-nimi urakoittain? kk-lev
+     (koosta-taulukko "Muut materiaalit" konteksti kuukaudet "Muut materiaalit" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "muut") nil)
 
      (when-not (empty? materiaalit)
