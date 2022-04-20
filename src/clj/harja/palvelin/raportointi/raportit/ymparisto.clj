@@ -178,7 +178,7 @@
        [{:otsikko "Määrä yhteensä" :leveys "7%" :fmt :numero :jos-tyhja "-"
          :excel [:summa-vasen (if urakoittain? 2 1)]}
         {:otsikko "Tot-%" :leveys "6%" :fmt :prosentti :jos-tyhja "-"}
-        {:otsikko (if (= otsikko "Talvisuola")
+        {:otsikko (if (= otsikko "Talvisuolat")
                     "Suunniteltu määrä / talvisuolan max-määrä"
                     "Suunniteltu (t)")
          :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
@@ -417,13 +417,13 @@
                                               rivi))
                                       materiaalit))]
 
-    [:raportti {:nimi raportin-nimi
+    [:raportti {:nimi otsikko
                 :orientaatio :landscape}
      [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
                    (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
                    "t")]
 
-     (koosta-taulukko "Talvisuola" konteksti kuukaudet "Talvisuolat" urakoittain? kk-lev
+     (koosta-taulukko "Talvisuolat" konteksti kuukaudet "Talvisuolat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "talvisuola") nil)
      (koosta-taulukko "Formiaatit" konteksti kuukaudet "Formiaatit" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "formiaatti") nil)
