@@ -161,7 +161,7 @@
       tulos
       [tulos])))
 
-(defn kohteet-historia-ndjson->kohteet [ndjson]
+(defn kohteet-historia-ndjson->kohteet
   "Jäsentää `ndjson` listan kohteita flatten listaksi kohde objekteja
   Jos syötteenä on merkkojonossa kohteiden versioita JSON muodossa,
   palauttaa listan, jossa on kohteiden versioita.
@@ -175,6 +175,7 @@
   Jäsennys merkkaa jokaisen kohteen uusimman elementin konversiota varten.
   Konversion täytyy tietää uusin elementti, koska sen voimassa-olo määrää
   varustetapahtuman tapahtumalajin silloin, kun kyseessä on poisto."
+  [ndjson]
   (let [rivit (clojure.string/split-lines ndjson)
         merkitse-vektorin-viimeinen (fn [v] (concat (butlast v) [(assoc (last v) :uusin-versio true)]))]
     (->> rivit
@@ -182,12 +183,10 @@
          (map merkitse-vektorin-viimeinen)
          flatten)))
 
-(defn nayte10 [c]
-  (str "(" (min (count c) 10) "/" (count c) "): " (vec (take 10 c))))
-
-(defn hae-viimeisin-hakuaika-lahteelle [db kohdeluokka]
+(defn hae-viimeisin-hakuaika-lahteelle
   "Hakee tietokannasta kohdeluokan viimeisimmän hakuajan, jolloin kyseistä kohdeluokkaa on haettu Velhosta.
   Jos kohdeluokkaa ei ole koskaan vielä haettu, palautetaan 2000-01-01T00:00:00Z ja insertoidaan se tietokantaan."
+  [db kohdeluokka]
   (let [kohdeluokka-haettu-viimeksi (->> (q-toteumat/varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle db kohdeluokka)
                                          first
                                          :viimeisin_hakuaika)]
@@ -204,7 +203,7 @@
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
 
-(defn tallenna-kohde [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn]
+(defn tallenna-kohde
   "Kohdetietojen hakeminen ja tallentaminen on kaksivaiheinen toimenpide.
 
   Aiemmin on Velhosta haettu lista tunnisteita (OID), joille on Velhossa kohdentunut muutoksia annetun pvm jälkeen.
@@ -235,6 +234,7 @@
    Osittain onnistuminen on mahdollista, vaikka kaikkia kohteita ei saada jäsennettyä ja muunnettua.
    Siitä kuitenkin seuraa, ettei inkrementaalisen hakemisen seuraavan hakukerran päivämäärää kasvateta,
    vaan ensikerralla kohteita haetaan uudelleen samasta päivästä alkaen. "
+  [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn]
   (let [haetut-oidit (set haetut-oidit)
         {saadut-kohteet :kohteet
          jasennys-onnistui? :onnistui} (try
