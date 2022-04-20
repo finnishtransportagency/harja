@@ -1399,9 +1399,9 @@ SELECT t.id as toteuma_tunniste_id,
        t.suorittajan_nimi as toteuma_suorittaja_nimi,
        t.tyyppi as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
        t.lisatieto as toteuma_lisatieto,
-       jsonb_agg(row_to_json(row(tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
-       jsonb_agg(row_to_json(row(mk.nimi, tm.maara, mk.yksikko))) AS toteumamateriaalit,
-       jsonb_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
+       json_agg(row_to_json(row(tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
+       json_agg(row_to_json(row(mk.nimi, tm.maara, mk.yksikko))) AS toteumamateriaalit,
+       json_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
        --Selvitä, mistä saadaan tien nimi as toteuma_tiesijainti_nimi,
        t.tr_numero as toteuma_tiesijainti_numero,
        t.tr_alkuosa as toteuma_tiesijainti_aosa,
@@ -1415,13 +1415,12 @@ SELECT t.id as toteuma_tunniste_id,
        t.tyokonetyyppi as tyokone_tyokonetyyppi,
        t.tyokonetunniste as tyokone_tunnus
 FROM toteuma t
-     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
+     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
      LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
-     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id AND tm.poistettu = FALSE
+     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
      LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
      LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
      LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
 WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-       AND t.poistettu = FALSE
 GROUP BY t.id, t.alkanut
 ORDER BY t.alkanut ASC;
