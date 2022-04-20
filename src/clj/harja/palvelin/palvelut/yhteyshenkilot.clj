@@ -241,8 +241,8 @@
 
       ;; Haetaan lopuksi uuden päivystäjät
       (hae-urakan-paivystajat c user urakka-id))
-    (catch Exception e
-      (log/warn e "Virhe IllegalArgumentException palvelussa pyynnössä  " (pr-str e))
+    (catch IllegalArgumentException e
+      (log/warn e "IllegalArgumentException pyynnössä tallenna-urakan-paivystajat " (pr-str e))
       (transit-vastaus 400 {:virhe (.getMessage e)}))))
 
 (defn hae-urakan-vastuuhenkilot [db user urakka-id]
