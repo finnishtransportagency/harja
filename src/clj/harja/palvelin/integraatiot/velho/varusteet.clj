@@ -421,7 +421,6 @@
                       tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                       tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                       tallenna-toteuma-fn (fn [{:keys [kohdeluokka] :as kohde}]
-                                            (println "petrisi1455: odotettu kohdeluokka:" tietolahteen-kohdeluokka "kohdeluokka:" kohdeluokka)
                                             (if (= tietolahteen-kohdeluokka kohdeluokka)
                                               (do
                                                 (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " (:oid kohde)
