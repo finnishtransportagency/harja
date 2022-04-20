@@ -1415,13 +1415,12 @@ SELECT t.id as toteuma_tunniste_id,
        t.tyokonetyyppi as tyokone_tyokonetyyppi,
        t.tyokonetunniste as tyokone_tunnus
 FROM toteuma t
-     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.poistettu = FALSE
+     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
      LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
-     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id AND tm.poistettu = FALSE
+     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
      LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
      LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
      LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
 WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-       AND t.poistettu = FALSE
 GROUP BY t.id, t.alkanut
 ORDER BY t.alkanut ASC;
