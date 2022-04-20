@@ -697,7 +697,7 @@
 
       :api-analytiikka (component/using
                   (analytiikka/->Analytiikka)
-                  [:http-palvelin :db  :integraatioloki])
+                  [:http-palvelin :db-replica  :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
