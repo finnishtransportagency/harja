@@ -459,7 +459,9 @@
   [rivi arvo]
   (assoc rivi :aikataulu-tiemerkinta-lisatieto arvo))
 
-(def ohje-syota-ensin-merkinta-ja-jyrsinta "Syötä ensin Merkintä ja Jyrsintä, jotta Valmis viimeistään -päivämäärä voidaan laskea automaattisesti tallennuksen yhteydessä.\n\nTiemerkintäajan laskenta alkaa seuraavasta arkipäivästä, ja on maalivaatimustien ja jyrsinnän tapauksessa 21vrk, massavaatimustiellä 14vrk.")
+(def ohje-syota-ensin-merkinta-ja-jyrsinta "Syötä ensin Merkintä ja Jyrsintä, jotta Valmis viimeistään -päivämäärä voidaan laskea automaattisesti tallennuksen yhteydessä.\n\n")
+
+(def tarkat-kestot-merkinta-ja-jyrsinat "Massavaatimusteillä uusien päällysteiden tiemerkinnät tulee olla tehtynä 2 viikon kuluessa yksittäisen päällystyskohteen työn ilmoitetusta valmistumisesta seuraavasta arkipäivästä.\n\nTäristävien merkintöjen jyrsintäkohteiden merkinnät tulee olla tehtynä 3 viikon kuluessa yksittäisen päällystyskohteen työn ilmoitetusta valmistumisesta seuraavasta arkipäivästä. Jyrsinnät tulee olla tehtynä ennen kunkin kohteen merkintöjen tekemistä.\n\nMaalivaatimusteillä uusien päällysteiden tiemerkinnät tulee olla tehtynä 3 viikon kuluessa yksittäisen päällystyskohteen työn ilmoitetusta valmistumisesta seuraavasta arkipäivästä.")
 
 (def ohje-tm-takaraja-kasin "Tiemerkinnän takaraja on laskettu automaattisesti merkintä- ja jyrsintätiedon perusteella. Sitä on kuitenkin mahdollista muokata myös käsin.")
 (def ohje-tm-takaraja-muokattu-kasin "Takarajaa on jo muokattu käsin. Voit muokata uudestaaankin.")
@@ -501,7 +503,8 @@
         [:div
          [:span "?"]
          [yleiset/wrap-if true
-          [yleiset/tooltip {} :% ohje-syota-ensin-merkinta-ja-jyrsinta]
+          [yleiset/tooltip {} :% (str ohje-syota-ensin-merkinta-ja-jyrsinta
+                                      tarkat-kestot-merkinta-ja-jyrsinat)]
           [napit/nappi ""
            #(println "on click")
            {:luokka "napiton-nappi tm-takaraja-info-btn"

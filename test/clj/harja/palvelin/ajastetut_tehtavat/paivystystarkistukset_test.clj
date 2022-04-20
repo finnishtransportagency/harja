@@ -99,13 +99,16 @@
         testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
-    ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
+    ;; Muhoksen ja Oulun urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                   #(= (:nimi %) "Muhoksen päällystysurakka")
                   urakat-ilman-paivystysta))))
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
 
 (deftest oulun-urakan-paivystys-loytyy
   (let [pvm (t/local-date 2015 11 2)

@@ -268,6 +268,20 @@
                  :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
 
+
+(defn vaadi-jarjestelmaoikeudet [db kayttaja vaadi-analytiikka-oikeus?]
+  (let [on-oikeus (if vaadi-analytiikka-oikeus?
+                    (kayttajat/onko-jarjestelma-ja-analytiikka? db {:kayttajanimi (:kayttajanimi kayttaja)})
+                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
+    (if (nil? on-oikeus)
+      (do
+        (log/error "Käyttäjällä ei ole järjestelmäoikeuksia: " (:kayttajanimi kayttaja))
+        (throw+ {:type virheet/+tuntematon-kayttaja+
+                 :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
+                            :viesti (str "Tuntematon käyttäjätunnus: " (:kayttajanimi kayttaja))}]}))
+      true)))
+
+
 (defn aja-virhekasittelyn-kanssa [resurssi kutsu parametrit ajo]
   (try+
     (ajo)
@@ -367,9 +381,6 @@
   käsittelyvirhe."
 
   [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadi-analytiikka-oikeus?]
-  (oikeudet/vaadi-jarjestelmaoikeudet db (hae-kayttaja db
-                                            (get (:headers request) "oam_remote_user"))
-    vaadi-analytiikka-oikeus?)
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
      :headers {"Content-Type" "text/plain"}
@@ -384,7 +395,9 @@
                     nil
                     parametrit
                     #(let
-                       [vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
+                       [_ (vaadi-jarjestelmaoikeudet db
+                            (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
+                        vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
                        (tee-vastaus 200 vastauksen-skeema vastauksen-data xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))

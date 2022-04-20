@@ -804,6 +804,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Kemin päällystysurakka'"))))
 
+(defn hae-aktiivinen-oulu-testi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Testi'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -813,10 +818,12 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Iin MHU 2021-2026'"))))
+
 (defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
   (ffirst (q (str "SELECT id
                    FROM   lupaus_sitoutuminen
                    WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -826,6 +833,7 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))))
+
 (defn hae-ivalon-maanteiden-hoitourakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
