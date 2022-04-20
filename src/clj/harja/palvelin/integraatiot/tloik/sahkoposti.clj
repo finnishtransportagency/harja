@@ -200,11 +200,13 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
-  [jms-lahettaja db {:keys [lahettaja otsikko sisalto]}]
+  [jms-lahettaja db {:keys [lahettaja otsikko sisalto] :as viesti}]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
   (let [v (lue-kuittausviesti otsikko sisalto)]
     (if (:ilmoitus-id v)
       (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
         (tallenna-toimenpiteiden-aloitus jms-lahettaja db lahettaja v)
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
-      +virheellinen-toimenpide-viesti+)))
+      (do
+        (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v))
+        +virheellinen-toimenpide-viesti+))))
