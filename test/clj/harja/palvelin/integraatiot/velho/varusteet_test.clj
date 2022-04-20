@@ -631,6 +631,44 @@
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
       (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
 
+(defn with-lokita-ja-tallenna-hakuvirhe-redefs
+  [testattava-funktio]
+  (let [loki (atom "")
+        tallentava-fn (fn [alkuperainen-fn db kohde viesti]
+                        (swap! loki #(str % "\n" viesti))
+                        (alkuperainen-fn db kohde viesti))
+        vanha-funktio varusteet/lokita-ja-tallenna-hakuvirhe]
+    (with-redefs [varusteet/+tietolajien-lahteet+ [varusteet/+tl501+]
+                  varusteet/lokita-ja-tallenna-hakuvirhe (partial tallentava-fn vanha-funktio)]
+      (testattava-funktio))
+    @loki))
+
+(defn feikkaa-ja-kutsu-varusteintegraatiota
+  [oidit-vastaus kohteet-vastaus]
+  (let [fake-tunnisteet (fn [_ {:keys [body headers url]} _]
+                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                          {:status 200 :body oidit-vastaus})
+        fake-kohteet (fn [_ {:keys [body headers url]} _]
+                       (is (= (json/read-str oidit-vastaus) (json/read-str body))
+                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                       {:status 200 :body kohteet-vastaus})]
+    (with-fake-http
+      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
+       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
+       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
+      (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
+
+(deftest varuste-velho-palauttaa-vaaran-kohdeluokan-varusteen
+  (u "DELETE FROM varustetoteuma_ulkoiset")
+  (let [odotettu-oidit-vastaus "[\"1.2.246.578.8.501.147502788\", \"1.2.246.578.8.506.147502790\"]"
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/epaonnistuneet-test/hallintorekisteri_api_v1_kohteet-vaara-kohdeluokka.jsonl")
+        odotettu-oid-lista #{}
+        lokiteksti (with-lokita-ja-tallenna-hakuvirhe-redefs #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (str/includes? lokiteksti "kohdeluokkaasdasdsadasd"))
+    (is (= odotettu-oid-lista nil))))
+
+
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
   (let [tietokannan-kohdeluokat (->> "SELECT enumlabel
                                       FROM pg_type pt
