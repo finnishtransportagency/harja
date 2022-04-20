@@ -150,7 +150,7 @@
 
 (defrecord Analytiikka []
   component/Lifecycle
-  (start [{http :http-palvelin db :db integraatioloki :integraatioloki :as this}]
+  (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
       http :analytiikka-toteumat
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika" request
