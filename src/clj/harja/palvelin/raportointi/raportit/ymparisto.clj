@@ -188,9 +188,7 @@
                            (reduce + suunnitellut))
              luokitellut (filter :luokka rivit)
              kk-arvot (kk-arvot (kk-rivit rivit) materiaali)
-             lihavoi? (and
-                        (seq rivit)
-                        (every? (comp :yht-rivi :materiaali) rivit))
+             lihavoi? (:yht-rivi materiaali)
              yhteensa-kentta (fn [arvot nayta-aina?]
                                (let [yht (yhteensa-arvo arvot)]
                                  (when (or (> yht 0) nayta-aina?)
@@ -209,7 +207,7 @@
                [{:otsikko "Muut materiaalit"}])
 
            ;; Normaali materiaalikohtainen rivi
-           [{:lihavoi? true
+           [{:lihavoi? lihavoi?
              :rivi (into []
                      (concat
 
