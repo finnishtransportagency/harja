@@ -297,7 +297,7 @@
         materiaalit-kannasta (if urakoittain?
                       (hae-raportti-urakoittain db alkupvm loppupvm hallintayksikko-id urakkatyyppi urakoittain?)
                       (hae-raportti db alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi urakoittain?))
-        kk-lev (if urakoittain?
+        kk-lev nil #_(if urakoittain?
                  "4%" ; tehdään yksittäisestä kk:sta pienempi, jotta urakan nimi mahtuu
                  "5.5%")
         raportin-nimi "Ympäristöraportti"
@@ -439,4 +439,3 @@
      (when-not (empty? materiaalit)
        [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
      [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]]))
-

@@ -1,3 +1,4 @@
+@import "../yleiset";
 /**********************************
  *            Yleiset
  **********************************/
@@ -185,6 +186,38 @@
     & tr > td:nth-child(12) {
         border-left: none;
         border-right: @reunaviivan-paksuus solid @reunaviivan-vari;
+    }
+}
+
+.ymparistoraportti {
+    .livi-grid {
+        .panel-body {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            // Ei haluta pakottaa koko ruudun levyiseksi, vaan skrollataan.
+            min-width: 100%;
+            width: auto;
+
+            tr, td {
+                // Ei rikota tekstiä kahdelle riville taulukossa.
+                white-space: pre;
+
+                th:first-child {
+                    position: sticky;
+                    left: 0;
+                    z-index: 1;
+                }
+
+                td:first-child {
+                    position: sticky;
+                    left: 0;
+                    background-color: @harjan-taustavari;
+                }
+            }
+        }
     }
 }
 
