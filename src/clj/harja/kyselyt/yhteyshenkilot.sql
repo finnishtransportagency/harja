@@ -383,3 +383,9 @@ SELECT exists(SELECT p.id
                 urakka = :urakkaid AND
                 ((now() BETWEEN p.alku AND p.loppu) OR
                  (now() <= p.alku AND loppu IS NULL)));
+
+-- name: hae-paivystyksen-alkupvm-idlla
+-- single?: true
+SELECT alku
+  FROM paivystys
+ WHERE id = :id;
