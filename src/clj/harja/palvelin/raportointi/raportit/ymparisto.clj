@@ -177,11 +177,9 @@
 
        [{:otsikko "Määrä yhteensä" :leveys "7%" :fmt :numero :jos-tyhja "-"
          :excel [:summa-vasen (if urakoittain? 2 1)]}
-        {:otsikko "Tot-%" :leveys "6%" :fmt :prosentti :jos-tyhja "-"}
-        {:otsikko (if (= otsikko "Talvisuolat")
-                    "Suunniteltu määrä / talvisuolan max-määrä"
-                    "Suunniteltu (t)")
-         :leveys "8%" :fmt :numero :jos-tyhja "-"}]))
+        {:otsikko "Suunniteltu (t)"
+         :leveys "8%" :fmt :numero :jos-tyhja "-"}
+        {:otsikko "Tot-%" :leveys "6%" :fmt :prosentti :jos-tyhja "-"}]))
 
    (mapcat
      (fn [[{:keys [urakka materiaali]} rivit]]
@@ -190,6 +188,9 @@
                            (reduce + suunnitellut))
              luokitellut (filter :luokka rivit)
              kk-arvot (kk-arvot (kk-rivit rivit) materiaali)
+             lihavoi? (and
+                        (seq rivit)
+                        (every? (comp :yht-rivi :materiaali) rivit))
              yhteensa-kentta (fn [arvot nayta-aina?]
                                (let [yht (yhteensa-arvo arvot)]
                                  (when (or (> yht 0) nayta-aina?)
@@ -224,11 +225,11 @@
 
                        ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                        [(yhteensa-kentta (vals kk-arvot) false)
-                        (when suunniteltu [:arvo-ja-yksikko {:arvo (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu)
-                                                             :yksikko "%"
-                                                             :desimaalien-maara 2}])
                         (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
                                                              :yksikko (:yksikko materiaali)
+                                                             :desimaalien-maara 2}])
+                        (when suunniteltu [:arvo-ja-yksikko {:arvo (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu)
+                                                             :yksikko "%"
                                                              :desimaalien-maara 2}])]))}]
 
            ;; Mahdolliset hoitoluokkakohtaiset rivit
