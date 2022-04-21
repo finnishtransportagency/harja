@@ -46,6 +46,9 @@
 (defrecord HaePot2MassatJaMurskeet [])
 (defrecord HaePot2MassatJaMurskeetOnnistui [vastaus])
 (defrecord HaePot2MassatJaMurskeetEpaonnistui [vastaus])
+(defrecord HaeMuidenUrakoidenMateriaalit [])
+(defrecord HaeMuidenUrakoidenMateriaalitOnnistui [vastaus])
+(defrecord HaeMuidenUrakoidenMateriaalitEpaonnistui [vastaus])
 
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
@@ -204,6 +207,13 @@
       [materiaalin-nimen-komp params]
       (materiaalin-nimen-komp params))))
 
+(defn- hae-muut-urakat-joissa-materiaaleja [app]
+  (tuck-apurit/post! app
+                     :hae-muut-urakat-joissa-materiaaleja
+                     {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                     {:onnistui ->HaeMuidenUrakoidenMateriaalitOnnistui
+                      :epaonnistui ->HaeMuidenUrakoidenMateriaalitEpaonnistui}))
+
 (extend-protocol tuck/Event
 
   AlustaTila
@@ -238,6 +248,20 @@
   HaePot2MassatJaMurskeetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Massojen haku epäonnistui!" :danger)
+    app)
+
+  HaeMuidenUrakoidenMateriaalit
+  (process-event [_ app]
+    (-> app
+        (hae-muut-urakat-joissa-materiaaleja)))
+
+  HaeMuidenUrakoidenMateriaalitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :muut-urakat-joissa-materiaaleja vastaus))
+
+  HaeMuidenUrakoidenMateriaalitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Muiden urakoiden haku materiaalien tuontia varten epäonnistui!" :danger)
     app)
 
   HaeKoodistot

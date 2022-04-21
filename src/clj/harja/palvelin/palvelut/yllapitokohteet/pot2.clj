@@ -268,16 +268,10 @@
                                                 ::pot2-domain/kuulamyllyluokka
                                                 ::pot2-domain/litteyslukuluokka
                                                 ::pot2-domain/dop-nro])))
-          _ (println "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
           massa-id (::pot2-domain/massa-id massa)
           runkoaineet-kannasta (tallenna-runkoaineet db runkoaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet-kannasta" (pr-str runkoaineet-kannasta))
-
           sideaineet-kannasta (tallenna-sideaineet db sideaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: sideaineet-kannasta" (pr-str sideaineet-kannasta))
-
-          lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))]
+          lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)]
       (assoc massa :harja.domain.pot2/runkoaineet runkoaineet
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
@@ -323,6 +317,17 @@
           _ (println "tallenna-urakan-paallystysmurske onnistui, palautetaan:" (pr-str murske))]
       murske)))
 
+(defn hae-muut-urakat-joissa-materiaaleja
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (let [organisaatiot-jossa-rooleja (keys (:organisaatioroolit user))
+        urakat-jossa-rooleja (keys (:urakkaroolit user))
+        jarjestelmavastaava? (contains? (:roolit user) "Jarjestelmavastaava")]
+    (paallystys-q/muut-urakat-joissa-materiaaleja db {:valittu_urakka urakka-id
+                                                      :urakat urakat-jossa-rooleja
+                                                      :organisaatiot organisaatiot-jossa-rooleja
+                                                      :jarjestelmavastaava jarjestelmavastaava?})))
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -345,6 +350,9 @@
       (julkaise-palvelu http :tallenna-urakan-murske
                         (fn [user tiedot]
                           (tallenna-urakan-murske db user tiedot)))
+      (julkaise-palvelu http :hae-muut-urakat-joissa-materiaaleja
+                        (fn [user tiedot]
+                          (hae-muut-urakat-joissa-materiaaleja db user tiedot)))
       ;; POT2 liittyviä palveluita myös harja.palvelin.palvelut.yllapitokohteet.paallystys ns:ssä
       this))
 
@@ -354,5 +362,6 @@
       :hae-urakan-massat-ja-murskeet
       :hae-pot2-koodistot
       :tallenna-urakan-massa
-      :tallenna-urakan-murske)
+      :tallenna-urakan-murske
+      :hae-muut-urakat-joissa-materiaaleja)
     this))

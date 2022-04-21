@@ -799,7 +799,7 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
-(defn hae-kemin-alueurakan-2019-2023-id []
+(defn hae-kemin-paallystysurakan-2019-2023-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Kemin päällystysurakka'"))))
@@ -972,6 +972,11 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Utajärven päällystysurakka'"))))
+
+(defn hae-oulun-paallystysurakan-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Päällystys Testi'"))))
 
 (defn hae-oulun-tiemerkintaurakan-id []
   (ffirst (q (str "SELECT id
@@ -1198,6 +1203,8 @@
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
 
+(def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"}))
+
 (def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
@@ -1233,7 +1240,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
-  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-alueurakan-2019-2023-id))
+  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-paallystysurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))

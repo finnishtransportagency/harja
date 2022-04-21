@@ -16,7 +16,8 @@
             [harja.views.urakka.pot2.massat-taulukko :as massat-taulukko]
             [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
             [harja.views.urakka.pot2.murskeet-taulukko :as murskeet-taulukko]
-            [harja.loki :refer [log logt tarkkaile!]])
+            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.ui.ikonit :as ikonit])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -31,6 +32,17 @@
    [napit/sulje "Sulje kirjasto"
     #(swap! mk-tiedot/nayta-materiaalikirjasto? not)]])
 
+(def tuo-materiaalit-tooltip "Välttääksesi ylimääräistä työtä, voit tuoda massoja ja murskeita muista omista urakoistasi.")
+
+(defn tuo-materiaalit-nappi [e!]
+  [yleiset/wrap-if true
+   [yleiset/tooltip {} :% tuo-materiaalit-tooltip]
+   [napit/nappi "Tuo materiaalit toisesta urakasta"
+    #(e! (mk-tiedot/->HaeMuidenUrakoidenMateriaalit))
+    {:ikoni (ikonit/action-copy)
+     :luokka "nappi-toissijainen tuo-materiaalit"
+     :style {:margin-left "0"}}]])
+
 (defn materiaalikirjasto [e! app]
   (komp/luo
     (komp/lippu mk-tiedot/materiaalikirjastossa?)
@@ -39,6 +51,8 @@
                       (e! (mk-tiedot/->HaePot2MassatJaMurskeet))))
     (fn [e! app]
       [:div
+       [tuo-materiaalit-nappi e!]
+
        (cond
          (and (:pot2-massa-lomake app) (not (get-in app [:pot2-massa-lomake :sivulle?])))
          [massa-lomake/massa-lomake e! app]

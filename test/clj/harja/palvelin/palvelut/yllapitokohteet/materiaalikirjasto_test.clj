@@ -389,30 +389,30 @@
                                                            :sideaine/tyyppi 5})
                            :harja.domain.pot2/tyyppi 14
                            ::pot2-domain/massa-id 2}
-                          {:harja.domain.pot2/dop-nro "12345abc"
-                           ::pot2-domain/kaytossa ()
-                           :harja.domain.pot2/kuulamyllyluokka "AN5"
-                           :harja.domain.pot2/lisaaineet ({:lisaaine/id 3
-                                                           :lisaaine/pitoisuus 1.5M
-                                                           :lisaaine/tyyppi 1
-                                                           ::pot2-domain/massa-id 3})
-                           :harja.domain.pot2/litteyslukuluokka "FI15"
-                           :harja.domain.pot2/max-raekoko 5
-                           :harja.domain.pot2/nimen-tarkenne "Tarkenne"
-                           :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 3
-                                                            :runkoaine/esiintyma "Zatelliitti"
-                                                            :runkoaine/id 5
-                                                            :runkoaine/kuulamyllyarvo 12.1M
-                                                            :runkoaine/litteysluku 4.1M
-                                                            :runkoaine/massaprosentti 34.0M
-                                                            :runkoaine/tyyppi 1}]
-                           :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 3
-                                                           :sideaine/id 3
-                                                           :sideaine/lopputuote? true
-                                                           :sideaine/pitoisuus 10.6M
-                                                           :sideaine/tyyppi 1})
-                           :harja.domain.pot2/tyyppi 1
-                           ::pot2-domain/massa-id 3})
+                          #:harja.domain.pot2{:dop-nro "12345abc"
+                                              :kaytossa ()
+                                              :kuulamyllyluokka "AN5"
+                                              :lisaaineet ({:harja.domain.pot2/massa-id 5
+                                                            :lisaaine/id 5
+                                                            :lisaaine/pitoisuus 1.5M
+                                                            :lisaaine/tyyppi 1})
+                                              :litteyslukuluokka "FI15"
+                                              :massa-id 5
+                                              :max-raekoko 5
+                                              :nimen-tarkenne "Tarkenne"
+                                              :runkoaineet [{:harja.domain.pot2/massa-id 5
+                                                             :runkoaine/esiintyma "Zatelliitti"
+                                                             :runkoaine/id 7
+                                                             :runkoaine/kuulamyllyarvo 12.1M
+                                                             :runkoaine/litteysluku 4.1M
+                                                             :runkoaine/massaprosentti 34.0M
+                                                             :runkoaine/tyyppi 1}]
+                                              :sideaineet ({:harja.domain.pot2/massa-id 5
+                                                            :sideaine/id 5
+                                                            :sideaine/lopputuote? true
+                                                            :sideaine/pitoisuus 10.6M
+                                                            :sideaine/tyyppi 1})
+                                              :tyyppi 1})
         oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
                                                                                                                                                                                                              :kohteiden-lkm 1
                                                                                                                                                                                                              :nimi "Tärkeä kohde mt20"
@@ -463,6 +463,61 @@
     (is (= (count (:verkon-sijainnit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_sijainti"))))
     (is (= (count (:verkon-tarkoitukset vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tarkoitus"))))
     (is (= (count (:verkon-tyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tyyppi"))))
-    )
+    ))
 
-  )
+(deftest hae-vastuuhenkilon-muut-urakat-joissa-materiaaleja
+  (let [muut-urakat
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id (hae-muhoksen-paallystysurakan-id)})
+        oletetut (list {:id (hae-utajarven-paallystysurakan-id)
+                        :nimi "Utajärven päällystysurakka"})]
+    (is (= muut-urakat oletetut) "Muut urakat oikein")))
+
+
+(deftest hae-paakayttajan-muut-urakat-joissa-materiaaleja
+  (let [muut-urakat
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-paakayttaja-skanska+ {:urakka-id (hae-muhoksen-paallystysurakan-id)})
+        oletetut (list {:id (hae-utajarven-paallystysurakan-id)
+                        :nimi "Utajärven päällystysurakka"})
+        muut-urakat-paikkausurakasta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-muut-urakat-joissa-materiaaleja
+                                                     +kayttaja-paakayttaja-skanska+ {:urakka-id (hae-muhoksen-paikkausurakan-id)})
+        oletetut-paikkausurakasta (list {:id (hae-muhoksen-paallystysurakan-id)
+                                         :nimi "Muhoksen päällystysurakka"}
+                                        {:id (hae-utajarven-paallystysurakan-id)
+                                         :nimi "Utajärven päällystysurakka"})]
+    (is (= muut-urakat oletetut) "Muut urakat oikein")
+    (is (= muut-urakat-paikkausurakasta oletetut-paikkausurakasta)) "Muut urakat oikein"))
+
+(deftest laadunvalvojalla-ei-lukuoikeutta
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-muut-urakat-joissa-materiaaleja
+                                         +kayttaja-laadunvalvoja-kemi+ {:urakka-id (hae-muhoksen-paallystysurakan-id)}))))
+
+
+;; JVH näkee kaikki urakat, mutta vain sen urakoitsijan materiaalit mikä urakka on valittuna.
+;; Tämä on tärkeää, jotta missään tilanteessa kukaan käyttäjä ei pysty viemään eri urakoitsijan materiaalia toiselle urakoitsijalle
+(deftest jvh-nakee-kaikista-muista-urakoista
+  (let [muut-urakat-kemi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-muut-urakat-joissa-materiaaleja
+                                         +kayttaja-jvh+ {:urakka-id (hae-kemin-paallystysurakan-2019-2023-id)})
+        muut-urakat-muhos (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-jvh+ {:urakka-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)})
+        muut-urakat-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-jvh+ {:urakka-id (hae-oulun-alueurakan-2014-2019-id)})
+        oletetut-kemin-urakoitsija (list) ;; Tällä urakoitsijalla ei materiaaleja
+        oletetut-skanska (list {:id (hae-muhoksen-paallystysurakan-id)
+                                :nimi "Muhoksen päällystysurakka"}
+                               {:id (hae-utajarven-paallystysurakan-id)
+                                :nimi "Utajärven päällystysurakka"}
+                               )
+        oletetut-yit (list {:id (hae-oulun-paallystysurakan-id)
+                            :nimi "Aktiivinen Oulu Päällystys Testi"})]
+    (is (= muut-urakat-kemi oletetut-kemin-urakoitsija) "Muut urakat oikein")
+    (is (= muut-urakat-muhos oletetut-skanska) "Muut urakat oikein")
+    (is (= muut-urakat-oulu oletetut-yit) "Muut urakat oikein")))

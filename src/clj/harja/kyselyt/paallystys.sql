@@ -638,5 +638,18 @@ SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS ti
  WHERE a.murske = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;
 
+-- name: muut-urakat-joissa-materiaaleja
+SELECT id, nimi FROM urakka u
+        WHERE (u.id IN (:urakat) OR
+               u.urakoitsija IN (:organisaatiot) OR
+               :jarjestelmavastaava IS TRUE)
+          -- ei sallita missään tilanteessa eri urakoitsijan urakoihin näkyvyyttä
+          AND u.urakoitsija = (SELECT urakoitsija FROM urakka WHERE id = :valittu_urakka)
+          AND u.id != :valittu_urakka
+          AND
+            (exists(SELECT id FROM pot2_mk_urakan_massa ma WHERE ma.urakka_id = u.id AND ma.poistettu IS FALSE) OR
+             exists(SELECT id FROM pot2_mk_urakan_murske mu WHERE mu.urakka_id = u.id AND mu.poistettu IS FALSE))
+ORDER BY u.nimi;
+
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;
