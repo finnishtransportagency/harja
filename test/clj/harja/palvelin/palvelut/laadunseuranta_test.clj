@@ -470,7 +470,7 @@
 (deftest vaadi-sanktio-kuuluu-urakkaan-testit
   (let [kohde-urakka 4
         kuuluva-sanktio 1
-        kuulumaton-sanktio 9
+        kuulumaton-sanktio 10
         kutsu (partial ls/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
     (testing "Olemattomat id:t"
       (is (nil? (kutsu -1)) "Uutta sanktiota ei pitäisi validoida")
