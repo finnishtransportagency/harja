@@ -118,7 +118,7 @@
       > .virheet,
       > .huomautukset {
           display: block;
-	  
+
 	  > .varoitus,
 	  > .virhe,
 	  > .huomautus {
@@ -181,11 +181,15 @@
   }
 
   tr, td, th {
-    padding: @livi-taulukon-padding;
-    &.tiivis {
+    // Huomio: rivien solut on kääritty diveihin, joille on annettu padding.
+    // Jos tämä rikkoo jotain, reverttaa tämä commit.
+    div {
+      padding: @livi-taulukon-padding;
+    }
+    &.tiivis div {
       padding: @livi-taulukon-padding-tiivis;
     }
-    &.melko-tiivis {
+    &.melko-tiivis div {
       padding: @livi-taulukon-padding-melko-tiivis;
     }
     .pvm-aika-kentta td {

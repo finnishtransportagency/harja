@@ -248,7 +248,7 @@
                                    (luokka rivi)
                                    luokka))}
                    ;; Solun sisältö
-                   [:span (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
+                   [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
@@ -449,7 +449,7 @@
             [:th {:colSpan (or sarakkeita 1)
                   :class (y/luokat luokka
                                    (y/tasaus-luokka tasaa))}
-             teksti])
+             [:div teksti]])
           rivi-ennen)])
      [:tr
       (map-indexed
@@ -460,7 +460,7 @@
                                  (grid-yleiset/tiivis-tyyli skeema))
                 :width (or leveys "5%")
                 :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
-           otsikko]) skeema)
+           [:div otsikko]]) skeema)
       (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
                      tallenna))
