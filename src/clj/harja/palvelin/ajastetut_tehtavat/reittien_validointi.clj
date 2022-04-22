@@ -60,7 +60,8 @@
         (log/info "ajasta-paivittain :: paivita-reittipisteelliset-toteumat :: Alkaa " (pvm/nyt))
         (fn [_]
             (paivita-reittipisteelliset-toteumat db)
-            (paivita-osoitteelliset-toteumat db))))))
+            (paivita-osoitteelliset-toteumat db))
+        (log/info "ajasta-paivittain :: paivita-reittipisteelliset-toteumat :: Loppuu " (pvm/nyt))))))
 
 (defrecord Reittitarkistukset [asetukset]
   component/Lifecycle

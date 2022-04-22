@@ -74,7 +74,8 @@
         (log/info "ajasta-paivittain :: väylä geometrian haku :: Alkaa " (pvm/nyt))
         (fn [_]
             (when (paivitys-tarvitaan? db paivitysvali-paivissa)
-              (paivita-vaylat integraatioloki db url)))))))
+              (paivita-vaylat integraatioloki db url)))
+        (log/info "ajasta-paivittain :: väylä geometrian haku :: Loppuu " (pvm/nyt))))))
 
 (defrecord VaylienGeometriahaku [url paivittainen-tarkistusaika paivitysvali-paivissa]
   component/Lifecycle

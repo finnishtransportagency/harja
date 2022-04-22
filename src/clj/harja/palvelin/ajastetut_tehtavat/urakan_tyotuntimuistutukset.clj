@@ -70,7 +70,8 @@
                tunnittomat-urakat
                vuosi
                kolmannes
-               kuluvan-kolmanneksen-paattymispaiva))))))))
+               kuluvan-kolmanneksen-paattymispaiva)))))
+      (log/info "ajasta-paivittain :: muistutus urakan työtunneista :: Loppuu " (pvm/nyt)))))
 
 (defrecord UrakanTyotuntiMuistutukset [paivittainen-ajoaika]
   component/Lifecycle

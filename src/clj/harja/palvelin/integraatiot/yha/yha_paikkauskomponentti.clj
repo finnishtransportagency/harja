@@ -137,7 +137,8 @@
       (fn [_]
           (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
           (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
-          (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset)))))
+          (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset))
+      (log/info "ajasta-paivittain :: YHA uudelleenlähetykset :: Loppuu " (pvm/nyt)))))
 
 
 (defrecord YhaPaikkaukset [asetukset]

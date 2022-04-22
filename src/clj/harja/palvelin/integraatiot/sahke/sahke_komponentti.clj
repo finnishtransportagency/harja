@@ -47,7 +47,8 @@
         uudelleenlahetysaika
         (do
           (log/info "ajasta-paivittain :: Sähkeeseen epäonnistuneet urakat uudestaan :: Alkaa " (pvm/nyt))
-          (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja integraatioloki db lahetysjono)))))
+          (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja integraatioloki db lahetysjono))
+          (log/info "ajasta-paivittain :: Sähkeeseen epäonnistuneet urakat uudestaan :: Loppuu " (pvm/nyt)))))
     (fn [])))
 
 (defrecord Sahke [lahetysjono uudelleenlahetysaika]

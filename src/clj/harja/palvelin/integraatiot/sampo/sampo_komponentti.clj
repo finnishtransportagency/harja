@@ -37,7 +37,8 @@
         paivittainen-lahetysaika
         (do
           (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Alkaa " (pvm/nyt))
-          (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos)))))
+          (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos))
+          (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Loppuu " (pvm/nyt)))))
     (constantly nil)))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]

@@ -177,7 +177,8 @@
               "turi-paivittainen-lahetys"
               #(do
                  (laheta-turvallisuuspoikkeamat-turiin this)
-                 (laheta-tyotunnit-turin this)))))))
+                 (laheta-tyotunnit-turin this))))
+          (log/info "ajasta-paivittain :: turvallisuuspoikkeamien ja työtuntien lähettäminen :: Loppuu " (pvm/nyt)))))
     (fn [])))
 
 (defrecord Turi [asetukset]

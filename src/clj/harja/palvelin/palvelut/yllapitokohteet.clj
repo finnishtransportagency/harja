@@ -744,7 +744,8 @@
                       :db db
                       :email email
                       :valmistuneet-kohteet (into [] (q/yllapitokohteiden-tiedot-sahkopostilahetykseen
-                                                       db (map :id mailattavat-kohteet)))})))))))
+                                                       db (map :id mailattavat-kohteet)))}))))
+          (log/info "ajasta-paivittain :: ylläpitokohteiden sähköpostin lähetys :: Loppuu " (pvm/nyt)))))
     (constantly nil)))
 
 (defrecord Yllapitokohteet [asetukset]
