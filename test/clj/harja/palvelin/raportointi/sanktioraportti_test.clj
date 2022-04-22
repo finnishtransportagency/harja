@@ -129,87 +129,92 @@
                                           {:otsikko "14 Lappi"}
                                           {:otsikko "Yh\u00ADteen\u00ADsä"}))))
 
-(deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii
+(defn suorita-sanktioraportti
+  [konteksti [alkuvuosi alkukk alkupv] [loppuvuosi loppukk loppupv]]
+  (kutsu-palvelua (:http-palvelin jarjestelma)
+    :suorita-raportti
+    +kayttaja-jvh+
+    (merge 
+      {:nimi       :sanktioraportti
+       :konteksti  konteksti
+       :parametrit {:alkupvm  (c/to-date (t/local-date alkuvuosi alkukk alkupv))
+                    :loppupvm (c/to-date (t/local-date loppuvuosi loppukk loppupv))}}
+      (cond
+        (= konteksti "urakka")
+        {:urakka-id  (hae-oulun-alueurakan-2014-2019-id)}
+
+        (= konteksti "hallintayksikko")
+        {:hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)}))))
+
+(defn tarkista-rivi-summalle
+  [summa]
+  (fn [rivi]
+    (if (and (vector? rivi)
+          (= (first rivi) "Ryhmä C, sakot yht."))
+      (= (second rivi) summa)
+      true)))
+
+(deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii-urakalle
   (let [urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
-        (kutsu-palvelua (:http-palvelin jarjestelma)
-          :suorita-raportti
-          +kayttaja-jvh+
-          {:nimi       :sanktioraportti
-           :konteksti  "urakka"
-           :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
-           :parametrit {:alkupvm  (c/to-date (t/local-date 2018 10 1))
-                        :loppupvm (c/to-date (t/local-date 2019 9 30))}})
-        
-        urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
-        (kutsu-palvelua (:http-palvelin jarjestelma)
-          :suorita-raportti
-          +kayttaja-jvh+
-          {:nimi       :sanktioraportti
-           :konteksti  "urakka"
-           :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
-           :parametrit {:alkupvm  (c/to-date (t/local-date 2018 9 1))
-                        :loppupvm (c/to-date (t/local-date 2019 8 1))}})
-        
-        elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
-        (kutsu-palvelua (:http-palvelin jarjestelma)
-          :suorita-raportti
-          +kayttaja-jvh+
-          {:nimi               :sanktioraportti
-           :konteksti          "hallintayksikko"
-           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-           :parametrit         {:alkupvm      (c/to-date (t/local-date 2018 10 1))
-                                :loppupvm     (c/to-date (t/local-date 2019 9 30))
-                                :urakkatyyppi :hoito}})
-        
-        elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
-        (kutsu-palvelua (:http-palvelin jarjestelma)
-          :suorita-raportti
-          +kayttaja-jvh+
-          {:nimi               :sanktioraportti
-           :konteksti          "hallintayksikko"
-           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-           :parametrit         {:alkupvm      (c/to-date (t/local-date 2019 10 1))
-                                :loppupvm     (c/to-date (t/local-date 2020 9 30))
-                                :urakkatyyppi :hoito}})]
-    (is (some? (some
-                 #(when
-                      (and
-                        (vector? %)
-                        (= (first %) "Ryhmä C, sakot yht."))
-                    (= (second %) 777M))
-                 (as-> urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella u
-                   (nth u 2)
-                   (nth u 3)))) "Urakan jälkeen tullut sanktio näkyy, kun viimeisen hoitokauden viimeinen kuukausi mukana")
-    (is (nil? (some
-                 #(when
-                      (and
-                        (vector? %)
-                        (= (first %) "Ryhmä C, sakot yht."))
-                    (not (= (second %) 0)))
-                 (as-> urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella u
-                   (nth u 2)
-                   (nth u 3)))) "Urakan jälkeen tullut sanktio ei näy, jos viimeinen kuukausi ei mukana")
-    (is (some?
-          (some
-                #(when
-                     (and
-                       (vector? %)
-                       (= (first %) "Ryhmä C, sakot yht."))
-                   (= 777M (some
-                             (fn [arvo] 
-                               (when-not (zero? arvo)
-                                 arvo))
-                             (filter number? %))))
-                (as-> elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi u
-                  (nth u 2)
-                  (nth u 3)))) "Elyllä haettassa jos haussa mukana jonkun urakan viimeinen kuukausi, sen jälkeen tulleet sanktiot lasketaan mukaan")
-    (is (nil? (some
-                 #(when
-                      (and
-                        (vector? %)
-                        (= (first %) "Ryhmä C, sakot yht."))
-                    (not (every? zero?
-                           (filter number? %))))
-                 (as-> elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi u
-                   (nth u 2)
-                   (nth u 3)))) "Edellisen vastapari, ei viimeisiä kuukausia, ei sen jälkeen tulleita sanktioita vaikka jonkin perintäpvm tällä jaksolla")))
+        (suorita-sanktioraportti "urakka" [2018 10 1] [2019 9 30])
+        taulukko (apurit/taulukko-otsikolla
+                   urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
+                   "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2018 - 30.09.2019")
+        tarkistus-fn (tarkista-rivi-summalle 777M)]
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      tarkistus-fn)))
+
+(deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-laskee-sanktiot-vain-jos-viimeinen-kuukausi-on-mukana
+  (let [urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
+        (suorita-sanktioraportti "urakka" [2018 9 1] [2019 8 1])
+        taulukko (apurit/taulukko-otsikolla
+                   urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
+                   "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.09.2018 - 01.08.2019")
+        tarkistus-fn (tarkista-rivi-summalle 0)]
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      tarkistus-fn)))
+
+(defn tarkista-ely-rivit
+  [tarkistus-fn]
+  (fn [rivi]
+    (if (and (vector? rivi)
+          (= (first rivi) "Ryhmä C, sakot yht."))
+      (tarkistus-fn rivi)
+      true)))
+
+(defn sanktio-loytyy-elyriveissa
+  [rivi]
+  (= 777M (some
+            (fn [arvo] 
+              (when-not (zero? arvo)
+                arvo))
+            (filter number? rivi))))
+
+(defn ei-sanktiota-elyriveissa
+  [rivi]
+  (every? zero?
+    (filter number? rivi)))
+
+(deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii-elylle
+  (let [elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
+        (suorita-sanktioraportti "hallintayksikko" [2018 10 1] [2019 9 30])
+        taulukko (apurit/taulukko-otsikolla
+                   elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
+                   "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2018 - 30.09.2019")
+        tarkista-fn (tarkista-ely-rivit sanktio-loytyy-elyriveissa)]
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      tarkista-fn)))
+
+(deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii
+  (let [elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
+        (suorita-sanktioraportti "hallintayksikko" [2019 10 1] [2020 9 30])
+        taulukko (apurit/taulukko-otsikolla
+                   elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
+                   "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2019 - 30.09.2020")
+        tarkista-fn (tarkista-ely-rivit ei-sanktiota-elyriveissa)]
+    (apurit/tarkista-taulukko-kaikki-rivit
+      taulukko
+      tarkista-fn)))
