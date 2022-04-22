@@ -95,10 +95,10 @@ kohteiden-sahkopostitiedot (atom nil))
                                :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
                                :tiemerkinnan-alku (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-alku)
                                :tiemerkinnan-loppu (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-loppu)
-                               :tiemerkinnan-valmius (aikataulun-sort-fn-kentan-mukaan :valmis-tiemerkintaan)
-                               :tiemerkinnan-takaraja (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-takaraja)
+                               :tiemerkinnan-voidaan-aloittaa (aikataulun-sort-fn-kentan-mukaan :valmis-tiemerkintaan)
+                               :tiemerkinnan-valmis-viimeistaan (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-takaraja)
                                :aika (aikataulun-sort-fn-kentan-mukaan :aikataulu-paallystys-alku)
-
+                               :paallystyskohde-valmis (aikataulun-sort-fn-kentan-mukaan :aikataulu-kohde-valmis)
                                :paallystyksen-loppu (aikataulun-sort-fn-kentan-mukaan :aikataulu-paallystys-loppu)
 
                                ;; defaultiksi päällystyksen alku. Älä poista default-arvoa, koska valinnat ovat käyttäjien selaimen local storagessa, ja siellä voi olla vanhoja arvoja, joista voi aiheutua no matching clause.
