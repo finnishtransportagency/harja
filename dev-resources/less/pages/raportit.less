@@ -205,16 +205,25 @@
                 // Ei rikota tekstiä kahdelle riville taulukossa.
                 white-space: pre;
 
-                th:first-child {
+                .sticky(@taustavari: initial) {
                     position: sticky;
                     left: 0;
                     z-index: 1;
+                    background-color: @taustavari;
+                }
+
+                th:first-child {
+                    .sticky();
                 }
 
                 td:first-child {
-                    position: sticky;
-                    left: 0;
-                    background-color: @harjan-taustavari;
+                    .sticky(@harjan-taustavari);
+                }
+
+                // Yhteenlaskurivien ensimmäisen sarakkeen taustaväri myös siniseksi.
+                &.tausta-blue-lighter td:nth-last-child(n+3),
+                .tausta-blue-lighter {
+                    background-color: @blue-lighter;
                 }
             }
         }

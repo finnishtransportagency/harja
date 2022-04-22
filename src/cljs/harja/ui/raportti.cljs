@@ -107,6 +107,7 @@
                                               :keskita " grid-header-keskita"
                                               :oikea " grid-header-oikea"
                                               ""))
+                   :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn
                    ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
@@ -145,6 +146,7 @@
                                       lihavoi? (:lihavoi? optiot)
                                       korosta? (:korosta? optiot)
                                       korosta-hennosti? (:korosta-hennosti? optiot)
+                                      rivin-luokka (:rivin-luokka optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                         rivi)
@@ -161,7 +163,10 @@
                                           (assoc :korosta true)
 
                                           lihavoi?
-                                          (assoc :lihavoi true))))))
+                                          (assoc :lihavoi true)
+
+                                          rivin-luokka
+                                          (assoc :rivin-luokka rivin-luokka))))))
                data)))]))
 
 

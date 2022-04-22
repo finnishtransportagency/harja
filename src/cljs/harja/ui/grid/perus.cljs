@@ -625,7 +625,8 @@
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
                                                       (when rivin-luokka
-                                                        (rivin-luokka rivi)))
+                                                        (rivin-luokka rivi))
+                                                      (:rivin-luokka rivi))
                                          :rivi-klikattu rivi-klikattu
                                          :rivin-infolaatikko rivin-infolaatikko
                                          :rivi-valinta-peruttu rivi-valinta-peruttu
@@ -755,11 +756,11 @@
   :raporttiparametrit                   Mäpissä raporttiparametrit, usein esim. nimi ja aikaväli ja urakkatyyppi"
 
   [{:keys [tallenna-vain-muokatut tunniste salli-valiotsikoiden-piilotus?
-           esta-poistaminen? esta-poistaminen-tooltip muokkaa-aina muutos 
+           esta-poistaminen? esta-poistaminen-tooltip muokkaa-aina muutos
            infolaatikon-tila-muuttui prosessoi-muutos aloita-muokkaus-fn
-           uusi-rivi luokat max-rivimaara sivuta valiotsikoiden-alkutila 
+           uusi-rivi luokat max-rivimaara sivuta valiotsikoiden-alkutila
            ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
-           nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip 
+           nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
            taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
@@ -1075,7 +1076,7 @@
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
-              luokat (if @infolaatikko-nakyvissa? 
+              luokat (if @infolaatikko-nakyvissa?
                        (conj luokat "livi-grid-infolaatikolla")
                        luokat)
               muokattu? (not (empty? @historia))]
@@ -1085,7 +1086,7 @@
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])
-           (when-not piilota-muokkaus? 
+           (when-not piilota-muokkaus?
              (muokkauspaneeli {:nayta-otsikko? true :muokataan muokataan :tallenna tallenna
                                :tiedot tiedot :muuta-gridia-muokataan? muuta-gridia-muokataan?
                                :tallennus-ei-mahdollinen-tooltip tallennus-ei-mahdollinen-tooltip
@@ -1102,7 +1103,7 @@
                                :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
                               skeema
                               tiedot))
-           [:div.panel-body 
+           [:div.panel-body
             {:class (str (when reunaviiva? "livi-grid-reunaviiva"))}
             (when @kiinnita-otsikkorivi?
               ^{:key "kiinnitettyotsikko"}

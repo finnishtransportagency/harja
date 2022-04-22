@@ -176,7 +176,8 @@
                :fmt :numero}) kuukaudet)
 
        [{:otsikko "Määrä yhteensä" :leveys "7%" :fmt :numero :jos-tyhja "-"
-         :excel [:summa-vasen (if urakoittain? 2 1)]}
+         :excel [:summa-vasen (if urakoittain? 2 1)]
+         :sarakkeen-luokka "tausta-blue-lighter"}
         {:otsikko "Suunniteltu (t)"
          :leveys "8%" :fmt :numero :jos-tyhja "-"}
         {:otsikko "Tot-%" :leveys "6%" :fmt :prosentti :jos-tyhja "-"}]))
@@ -188,7 +189,7 @@
                            (reduce + suunnitellut))
              luokitellut (filter :luokka rivit)
              kk-arvot (kk-arvot (kk-rivit rivit) materiaali)
-             lihavoi? (:yht-rivi materiaali)
+             yhteenvetorivi? (:yht-rivi materiaali)
              yhteensa-kentta (fn [arvot nayta-aina?]
                                (let [yht (yhteensa-arvo arvot)]
                                  (when (or (> yht 0) nayta-aina?)
@@ -207,7 +208,8 @@
                [{:otsikko "Muut materiaalit"}])
 
            ;; Normaali materiaalikohtainen rivi
-           [{:lihavoi? lihavoi?
+           [{:lihavoi? yhteenvetorivi?
+             :rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
              :rivi (into []
                      (concat
 
