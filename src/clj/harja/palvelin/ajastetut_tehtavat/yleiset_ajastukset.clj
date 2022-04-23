@@ -9,7 +9,7 @@
 
 (defn- siivoa-tapahtuman-tiedot [db]
   (let [poistetut (first (tapahtumat-kyselyt/poista-viimeisimmat-tapahtumat db))]
-    (log/info (format "tapahtuma-tiedot taulusta poistettiin %s riviä (%s)" (:maara poistetut)))))
+    (log/info (format "tapahtuma-tiedot taulusta poistettiin %s riviä" (:maara poistetut)))))
 
 (defn- ajasta-siivoa-tapahtuman-tiedot [db]
   (log/info "Ajastetaan siivoa tapahtuman tiedot - ajetaan joka tunti.")
