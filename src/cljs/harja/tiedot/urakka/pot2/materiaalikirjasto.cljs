@@ -15,6 +15,7 @@
 
 (def materiaalikirjastossa? (atom false))
 (def nayta-materiaalikirjasto? (atom false))
+(def tuontiin-valittu-urakka (atom nil))
 
 (defrecord AlustaTila [])
 (defrecord UusiMassa [])
@@ -49,6 +50,7 @@
 (defrecord HaeMuidenUrakoidenMateriaalit [])
 (defrecord HaeMuidenUrakoidenMateriaalitOnnistui [vastaus])
 (defrecord HaeMuidenUrakoidenMateriaalitEpaonnistui [vastaus])
+(defrecord SuljeMuistaUrakoistaTuonti [])
 
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
@@ -257,12 +259,18 @@
 
   HaeMuidenUrakoidenMateriaalitOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :muut-urakat-joissa-materiaaleja vastaus))
+    (assoc app :muut-urakat-joissa-materiaaleja vastaus
+               :nayta-muista-urakoista-tuonti? true))
 
   HaeMuidenUrakoidenMateriaalitEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Muiden urakoiden haku materiaalien tuontia varten epäonnistui!" :danger)
+    (viesti/nayta! (str "Muiden urakoiden haku materiaalien tuontia varten epäonnistui!"
+                        vastaus) :danger)
     app)
+
+  SuljeMuistaUrakoistaTuonti
+  (process-event [_ app]
+    (assoc app :nayta-muista-urakoista-tuonti? false))
 
   HaeKoodistot
   (process-event [_ app]
