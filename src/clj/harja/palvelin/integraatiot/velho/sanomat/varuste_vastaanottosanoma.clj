@@ -1,6 +1,8 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma
   (:require [taoensso.timbre :as log]
-            [clj-time.format :as df])
+            [clj-time.format :as df]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :as yleiset])
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)))
 
@@ -166,8 +168,66 @@
                                vec)]
     puuttuvat-avaimet))
 
-(defn validointi-viesti [puuttuvat-pakolliset-avaimet]
-  (str "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
+(defn aikavalit-leikkaavat [{a-alku :alkupvm a-loppu :loppupvm :as vali1} {b-alku :alkupvm b-loppu :loppupvm :as vali2}]
+  (let [minus-infinity (pvm/->pvm "1.1.1900")
+        plus-infinity (pvm/->pvm "1.1.2200")
+        a-alku* (or a-alku minus-infinity)
+        a-loppu* (or a-loppu plus-infinity)
+        b-alku* (or b-alku minus-infinity)
+        b-loppu* (or b-loppu plus-infinity)]
+    (pvm/aikavalit-leikkaavat? a-alku* a-loppu* b-alku* b-loppu*)))
+
+(defn tarkista-varustetoteuma
+  "Tarkistaa varusteversion oikeellisuuden ja palauttaa toimintavaihtoehdot:
+  :tallenna, :skippaa, :varoita
+
+  Tarkistukset:
+  1. pakolliset kentät
+  2. muutoksen-lahde-oid pitää olla Hallintorekisterin maanteiden-hoitourakka, jonka urakkakoodi vastaa VHAR-6045 mukaisesti Harjassa olevaan hoito
+     tai teiden-hoito tyyppisen voimassaolevan urakan tunnisteeseen (URAKKA.urakkanro)
+  3. version-voimassaolon alkupvm ja loppupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
+  4. Varusteen tietolajin pitää sisältyä VHAR-5109 kommentissa mainittuihin tietolajeihin
+  5. Varusteversion toimenpiteen pitää olla jokin seuraavista: lisäys, päivitys, poisto, tarkastus, korjaus ja puhdistus
+  6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
+     (meillä lisätieto-tekstiä)
+  7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
+
+  Tulos:
+  2. 4. 6. ja 7. -> :skippaa
+  3. ja 5. -> :varoita (ja skippaa).
+
+  Varoitus aiheuttaa uudelleenyrityksen kaikille saman lähteen tiedoille samasta alkupäivämäärästä lähtien."
+  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-pvmt-idlla-fn]
+  (let [urakan-kestotiedot nil
+        varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
+        urakka-olemassaolo (urakka-pvmt-idlla-fn urakka_id)
+        puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
+    (cond
+
+      ; 2.
+      (nil? (:urakka_id varustetoteuma))
+      {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta."}
+
+      ; 5.
+
+      ; 4.
+      ; 6.
+      ; 7.
+
+      ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin vaikka vajaammilla tiedoilla ettei tule turhia virheilmoituksia
+      ; sellaisista, jotka eivät Harjaan kuulu
+
+      ; 1.
+      (seq puuttuvat-pakolliset)
+      {:toiminto :varoita :viesti (str "puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
+
+      ; 3.
+      (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
+      {:toiminto :varoita :viesti
+       (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
+
+      :else                                                 ; Jos kaikki on ok, päätetään tallentaa varuste.
+      {:toiminto :tallenna :viesti nil})))
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
   (when (= "tl506" tietolaji)
@@ -211,7 +271,7 @@
 
   Palauttaa {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}, jos onnistuu,
   {:tulos nil :tietolaji tietolaji :virheviesti (str \"validointivirhe: \" (validointi-viesti puuttuvat-pakolliset-avaimet))} muulloin."
-  [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
+  [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakka-pvmt-idlla-fn kohde]
   (let [velho-pvm->sql (fn [teksti] (-> teksti
                                         velho-pvm->pvm
                                         aika->sql))
@@ -245,7 +305,14 @@
                         :loppupvm loppupvm
                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
                         :muokattu muokattu}
-        puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma)]
-    (if (empty? puuttuvat-pakolliset-avaimet)
-      {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}
-      {:tulos nil :tietolaji tietolaji :virheviesti (str "validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))
+        {toiminto :toiminto
+         viesti :viesti} (tarkista-varustetoteuma varustetoteuma urakka-pvmt-idlla-fn)]
+    (cond
+      (= :tallenna toiminto)                                ; <3
+      {:tulos varustetoteuma :virheviesti nil}
+
+      (= :skippaa toiminto)                                 ; :|
+      {:tulos nil :virheviesti nil}
+
+      (= :varoita toiminto)                                 ; :(
+      {:tulos nil :virheviesti viesti})))

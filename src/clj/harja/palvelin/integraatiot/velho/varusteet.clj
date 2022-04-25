@@ -108,30 +108,53 @@
 
 (def +urakka-memoize-ttl+ (* 10 60 1000))
 
-(defn velho-oid->urakka
+(defn hae-id->urakka-pvm-map
+  "Hakee urakan päivämäärätietoja sellaisille urakoille, joille on olemassa velho_oid (ovat siis velhosta löytyviä MHU urakoita).
+  Palauttaa:
+  {\"36\" {:alkupvm <clj-date> :loppupvm <clj-date>} \"38\" {:alkupvm <> :loppupvm <> ...  }}"
+  [db]
+  ; [{:id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
+  ; (["36" {:alkupvm <clj-date> :loppupvm <clj-date>}] ["38" {...}])
+  ; {"36" {:alkupvm <clj-date> :loppupvm <clj-date>} "38" {...}}
+  (->> (q-urakat/hae-kaikki-urakat-pvm db)
+       (map
+         (fn [{:keys [id alkupvm loppupvm] :as urakka}]
+           [id {:alkupvm alkupvm :loppupvm loppupvm}]))
+       (into {})))
+
+(defn hae-velho-oid->urakka-id-map
   "Palauttaa:
   {\"1.2.3\" {:id 36 :alkupvm <clj-date> :loppupvm <clj-date>} \"1.2.4\" { :id 38...  }}"
   [db]
   ; [{:velho_oid "1.2.3" :id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
-  ; (["1.2.3" {:id 36 :alkupvm <clj-date> :loppupvm <clj-date>}]["1.2.4" {:id 38...}])
-  ; {"1.2.3" {:id 36 :alkupvm <clj-date> :loppupvm <clj-date>} "1.2.4" { :id 38...  }}
+  ; (["1.2.3" 36]["1.2.4" 38 ]...)
+  ; {"1.2.3" 36 "1.2.4" 38}
   (->> (q-urakat/hae-kaikki-urakka-velho-oid db)
        (map
-         (fn [{:keys [velho_oid id alkupvm loppupvm] :as urakka}]
-           [velho_oid {:id id :alkupvm alkupvm :loppupvm loppupvm}]))
+         (fn [{:keys [velho_oid id] :as urakka}]
+           [velho_oid id]))
        (into {})))
 
-(def memo-velho-oid->urakka
-  (memo/ttl velho-oid->urakka :ttl/threshold +urakka-memoize-ttl+))
+(def memo-id->urakka-pvm-map
+  (memo/ttl hae-id->urakka-pvm-map :ttl/threshold +urakka-memoize-ttl+))
 
-(defn urakka-velho-oidlla
-  "Paluttaa {:id xx :alkupvm <> :loppupvm <>}"
+(def memo-velho-oid->urakka-map
+  (memo/ttl hae-velho-oid->urakka-id-map :ttl/threshold +urakka-memoize-ttl+))
+
+(defn urakka-pvmt-idlla
+  "Paluttaa {:alkupvm <> :loppupvm <>} kysytylle urakalle `id`."
+  [db id]
+  (get (memo-id->urakka-pvm-map db) id))
+
+(defn hae-urakka-velho-oidlla
+  "Paluttaa sen urakan id:n jolla on annettu Velhon muutoksen lähde:
+  [Urakka] -> Maanteiden hoitourakka -> Yhteiset ominaisuudet -> Urakoiden yhteiset ominaisuudet -> Ominaisuudet -> Urakkakoodi"
   [db muutoksen-lahde-oid]
-  (get (memo-velho-oid->urakka db) muutoksen-lahde-oid))
+  (get (memo-velho-oid->urakka-map db) muutoksen-lahde-oid))
 
 (defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
   (or
-    (:id (urakka-velho-oidlla db muutoksen-lahde-oid))
+    (hae-urakka-velho-oidlla db muutoksen-lahde-oid)
     (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
 
 (defn alku-500 [s]
@@ -402,11 +425,14 @@
 (defn- jasenna-ja-tarkasta-varustetoteuma
   [db kohde]
   (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db) ; tässä vielä toistaikseksi parametrinä kohde, joten memoize on syvemmällä
+        urakka-pvmt-idlla-fn (partial urakka-pvmt-idlla db)
         sijainti-kohteelle-fn (partial sijainti-kohteelle db) ; sijaintiavaruus on liian suuri memoizelle
         konversio-fn (partial koodistot/konversio db)]
     (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-kohteelle-fn
                                                            sijainti-kohteelle-fn
-                                                           konversio-fn kohde)))
+                                                           konversio-fn
+                                                           urakka-pvmt-idlla-fn
+                                                           kohde)))
 
 (defn tuo-uudet-varustetoteumat-velhosta
   [integraatioloki

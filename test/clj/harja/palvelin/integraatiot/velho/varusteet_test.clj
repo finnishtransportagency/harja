@@ -556,10 +556,6 @@
                                                       (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))
         suoritettava-fn (fn [sijainti alkupvm] (varusteet/urakka-id-kohteelle db
                                         (lisaa-pakolliset sijainti oid alkupvm)))]
-    ; Setuppia. Laitetaan kahdelle urakalle velho_oid. Iin urakkaa testataan, rovaniemi on painolastina.
-    (assert (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " odotettu-ii-MHU-urakka-id)))
-    (assert (= 1 (u "UPDATE urakka SET velho_oid = '" rovaniemi-muutoksen-lahde-oid "' WHERE id = " rovaniemi-MHU-id)))
-
     (is (nil? (suoritettava-fn tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
         "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
     (is (nil? (suoritettava-fn varuste-oulussa-sijainti ennen-urakoiden-alkuja-pvm))
@@ -666,10 +662,7 @@
 
 (deftest varuste-velho-palauttaa-vaaran-kohdeluokan-varusteen
   (u "DELETE FROM varustetoteuma_ulkoiset")
-  (let [ii-muutoksen-lahde-oid "1.2.3.4.1234"
-        odotettu-ii-MHU-urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        _ (assert (= 1 (u "UPDATE urakka SET velho_oid = '" ii-muutoksen-lahde-oid "' WHERE id = " odotettu-ii-MHU-urakka-id)))
-        odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.125998655\", \"1.2.246.578.4.3.15.506.283640192\"]"
+  (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.125998655\", \"1.2.246.578.4.3.15.506.283640192\"]"
         odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/varusterekisteri_api_v1_historia_kohteet-vaara-kohdeluokka.jsonl")
         odotettu-oid-lista #{"1.2.246.578.4.3.1.501.125998655"}
         lokiteksti (with-lokita-ja-tallenna-hakuvirhe-redefs #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
