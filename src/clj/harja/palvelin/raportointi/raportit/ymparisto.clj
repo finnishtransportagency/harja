@@ -424,10 +424,11 @@
 
     [:raportti {:nimi otsikko
                 :orientaatio :landscape}
-     [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
-                   (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
-                   "t")]
-
+     
+     (when-not (empty? materiaalit)
+       [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
+     [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]
+     
      (koosta-taulukko "Talvisuolat" konteksti kuukaudet "Talvisuolat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "talvisuola") nil)
      (koosta-taulukko "Formiaatit" konteksti kuukaudet "Formiaatit" urakoittain? kk-lev
@@ -439,8 +440,4 @@
      (koosta-taulukko "Murskeet" konteksti kuukaudet "Murskeet" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "murske") nil)
      (koosta-taulukko "Muut materiaalit" konteksti kuukaudet "Muut materiaalit" urakoittain? kk-lev
-       (materiaalit-tyypin-mukaan "muut") nil)
-
-     (when-not (empty? materiaalit)
-       [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
-     [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]]))
+       (materiaalit-tyypin-mukaan "muut") nil)]))
