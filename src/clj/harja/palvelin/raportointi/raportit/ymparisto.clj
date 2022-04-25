@@ -160,7 +160,8 @@
 (defn koosta-taulukko [otsikko konteksti kuukaudet raportin-nimi urakoittain? kk-lev osamateriaalit yht-rivi]
   [:taulukko {:otsikko otsikko
               :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
-              :sheet-nimi raportin-nimi}
+              :sheet-nimi raportin-nimi
+              :esta-tiivis-grid? true}
    (into []
 
      (concat
@@ -195,7 +196,9 @@
                                  (when (or (> yht 0) nayta-aina?)
                                    [:arvo-ja-yksikko {:arvo yht
                                                       :yksikko (:yksikko materiaali)
-                                                      :desimaalien-maara 2}])))]
+                                                      :desimaalien-maara 2}])))
+             toteuma-prosentti (when (and kk-arvot (not (zero? (or suunniteltu 0))))
+                                 (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))]
          (concat
            ;; Talvisuolat-väliotsikko
            #_(when (and (= listan-ensimmaisen-urakan-id (:id urakka))
@@ -228,9 +231,10 @@
                         (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
                                                              :yksikko (:yksikko materiaali)
                                                              :desimaalien-maara 2}])
-                        (when suunniteltu [:arvo-ja-yksikko {:arvo (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu)
+                        (when suunniteltu [:arvo-ja-yksikko {:arvo toteuma-prosentti
                                                              :yksikko "%"
-                                                             :desimaalien-maara 2}])]))}]
+                                                             :desimaalien-maara 2
+                                                             :varoitus? (< 100 (or toteuma-prosentti 0))}])]))}]
 
            ;; Mahdolliset hoitoluokkakohtaiset rivit
            (map (fn [[luokka rivit]]

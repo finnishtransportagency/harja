@@ -82,7 +82,7 @@
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat]}
+                                               oikealle-tasattavat-kentat esta-tiivis-grid?]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko            (or otsikko "")
@@ -90,7 +90,8 @@
                                                     (or (::rivin-indeksi rivi)
                                                         (hash rivi))))
                 :rivi-ennen rivi-ennen
-                :piilota-toiminnot? true}
+                :piilota-toiminnot? true
+                :esta-tiivis-grid? esta-tiivis-grid?}
      (into []
            (map-indexed
             (fn [i sarake]
@@ -103,10 +104,16 @@
                    :reunus (:reunus sarake)
                    :pakota-rivitys? (:pakota-rivitys? sarake)
                    :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                            (case (:tasaa-otsikko sarake)
-                                              :keskita " grid-header-keskita"
-                                              :oikea " grid-header-oikea"
-                                              ""))
+                                         (case (:tasaa-otsikko sarake)
+                                           :keskita " grid-header-keskita"
+                                           :oikea " grid-header-oikea"
+                                           ""))
+                   :solun-luokka (fn [arvo _rivi]
+                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti
+                                   ;; rivin optioissa voi olla avain :varoitus?, jolloin piirretään solu punaisella
+                                   ;; taustalla ja tekstillä.
+                                   (when (:varoitus? (second arvo))
+                                     "solu-varoitus"))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn
@@ -115,7 +122,7 @@
                              :komponentti
                              :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                  (raportti-domain/numero-fmt? (:fmt sarake)))
+                                (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
                             (:tasaa sarake))}
                  (when raporttielementteja?

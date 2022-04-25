@@ -67,6 +67,13 @@
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
     }
+    
+    td, th {
+       &.solu-varoitus {
+           background-color: @red-lighter;
+           color: @red-dark;
+       } 
+    }
 }
 .tyomaakokous {
     border-bottom: 1px solid @blue-default;
