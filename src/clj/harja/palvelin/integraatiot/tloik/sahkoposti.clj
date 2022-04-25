@@ -208,5 +208,12 @@ kuittauksen lähettäjälle."
         (tallenna-toimenpiteiden-aloitus jms-lahettaja db lahettaja v)
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       (do
-        (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v))
-        +virheellinen-toimenpide-viesti+))))
+        ;; Logitetaan virhe, jos urakka-id tai ilmoitus-id puuttuu
+        (if (or (str/includes? (:virhe v) "Urakka-id puuttuu") (str/includes? (:virhe v) "Ilmoitus-id puuttuu"))
+          (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v))
+          ;; Muuten riittää pelkkä varoitus, että ei sotketa logia turhilla erroreilla
+          (log/warn (format "Varoitus: Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v)))
+
+        ;; Palautetaan kutsujalle virheviesti ja tarkennus virheestä
+        (assoc +virheellinen-toimenpide-viesti+
+          :sisalto (str (:sisalto +virheellinen-toimenpide-viesti+) " Virhe: " (:virhe v)))))))
