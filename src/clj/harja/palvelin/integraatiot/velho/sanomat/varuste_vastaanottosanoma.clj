@@ -192,14 +192,14 @@
      (meillä lisätieto-tekstiä)
   7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
 
-  Tulos:
+  Tulokset:
   2. 4. 6. ja 7. -> :skippaa
-  3. ja 5. -> :varoita (ja skippaa).
+  3. ja 5. -> :varoita (ja skippaa, ja jätä tietoluokan viimeisen ajokerran päiväys päivittämättä)
+  muuten :tallenna.
 
-  Varoitus aiheuttaa uudelleenyrityksen kaikille saman lähteen tiedoille samasta alkupäivämäärästä lähtien."
+  Varoitus aiheuttaa kaikille saman lähteen tiedoille latauksen samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
   [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-pvmt-idlla-fn]
-  (let [urakan-kestotiedot nil
-        varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
+  (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
         urakka-olemassaolo (urakka-pvmt-idlla-fn urakka_id)
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
@@ -209,6 +209,8 @@
       {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta."}
 
       ; 5.
+      (nil? (:toteuma varustetoteuma))
+      {:toiminto :skippaa :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
 
       ; 4.
       ; 6.
@@ -219,7 +221,7 @@
 
       ; 1.
       (seq puuttuvat-pakolliset)
-      {:toiminto :varoita :viesti (str "puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
+      {:toiminto :varoita :viesti (str "Puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
 
       ; 3.
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))

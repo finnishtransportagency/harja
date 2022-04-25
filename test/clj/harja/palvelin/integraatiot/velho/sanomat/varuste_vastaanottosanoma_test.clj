@@ -7,7 +7,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.kyselyt.koodistot :as koodistot]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :as yleiset])
   (:import (java.nio.file FileSystems)
            (org.joda.time DateTime)))
 
@@ -279,16 +280,35 @@
         odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
-        pakolliset (fn [kohde] (-> kohde
-                                   (assoc :oid " 1.2.3.4.5 " :muokattu (:alkupvm kohde) :urakka_id odotettu-oulu-MHU-urakka-id)
-                                   (assoc :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
-        varustetoteuma-tapaus3 (pakolliset {:alkupvm (pvm/->pvm " 29.9.2019 ") :loppupvm (pvm/->pvm " 30.9.2019 ")})]
+        alku-ja-loppupvm (fn [kohde] (-> kohde
+                                         (assoc :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil)))
+        oid-muokattu-urakka-ja-sijainti (fn [kohde] (-> kohde
+                                                        (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde) :urakka_id odotettu-oulu-MHU-urakka-id)
+                                                        (assoc :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
+        toimenpide (fn [kohde] (-> kohde
+                                          (assoc :toteuma "lisays")))
+        perus-setti (comp oid-muokattu-urakka-ja-sijainti toimenpide alku-ja-loppupvm)
+        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkista-varustetoteuma kohde urakka-pvmt-idlla-fn))
+        juuri-ennen-oulun-MHU-alkua {:alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")}
+        tapaus1 (-> {} perus-setti
+                    (yleiset/prettydenty "petrisi2256: ")
+                    (assoc :sijainti nil))
+        tapaus3 (-> juuri-ennen-oulun-MHU-alkua
+                    toimenpide
+                    oid-muokattu-urakka-ja-sijainti)
+        tapaus5 (-> {} alku-ja-loppupvm
+                    oid-muokattu-urakka-ja-sijainti)]
+    ;1 -> varoitus
+    (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
+           (kutsu tapaus1)))
+
     ;3 -> varoitus
     (is (= {:toiminto :varoita :viesti
             (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa "
                  "alkupvm: Sun Sep 29 00:00:00 EEST 2019 loppupvm: Mon Sep 30 00:00:00 EEST 2019")}
-           (varuste-vastaanottosanoma/tarkista-varustetoteuma varustetoteuma-tapaus3 urakka-pvmt-idlla-fn)))
+           (kutsu tapaus3)))
+    ;
 
-    ;5 -> varoitus
-
-    ))
+    ;5 -> skippaa
+    (is (= {:toiminto :skippaa :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+           (kutsu tapaus5)))))
