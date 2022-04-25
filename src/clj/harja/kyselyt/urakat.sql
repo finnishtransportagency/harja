@@ -537,9 +537,20 @@ WHERE tunnus::text IN (:turvalaiteryhma);
 -- alueurakka-tauluun.
 UPDATE urakka
 SET urakkanro = :urakkanro,
-  muokattu    = NOW(),
-  muokkaaja   = :kayttaja
-  WHERE id = :urakka;
+    muokattu  = NOW(),
+    muokkaaja = :kayttaja
+WHERE id = :urakka;
+
+--name: hae-velho-oid-lkm
+-- Palauttaa velho_oid NOT NULL rivien lukumäärän
+SELECT count(*) as lkm
+FROM urakka
+WHERE velho_oid IS NOT NULL;
+
+--name: hae-kaikki-urakka-velho-oid
+SELECT velho_oid, id
+FROM urakka
+WHERE velho_oid IS NOT NULL;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille
@@ -548,6 +559,20 @@ SET tyyppi = :urakkatyyppi :: urakkatyyppi
 WHERE hanke = (SELECT id
                FROM hanke
                WHERE sampoid = :hanke_sampoid);
+
+-- name: paivita-velho_oid-null-kaikille!
+-- Tyhjentää velho_oid tiedon kaikilta urakoilta
+UPDATE urakka
+SET velho_oid = NULL
+WHERE velho_oid IS NOT NULL
+  AND tyyppi IN ('hoito', 'teiden-hoito');
+
+-- name: paivita-velho_oid-urakalle!
+-- Päivittää velho_oid avaimen urakalle
+UPDATE urakka
+SET velho_oid = :velho_oid
+WHERE urakkanro = :urakkanro
+  AND tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä

@@ -86,7 +86,7 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 2))))
 
 (deftest hae-tulevat-paivystajatiedot-urakan-idlla
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -96,7 +96,7 @@
         encoodattu-body (cheshire/decode (:body vastaus) true)]
     (is (= 200 (:status vastaus)))
     (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
+    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 2))))
 
 (deftest testaa-puhelinnumeron-trimmaus
   (is (= (fmt/trimmaa-puhelinnumero "0400123123") (fmt/trimmaa-puhelinnumero "+358400123123")))

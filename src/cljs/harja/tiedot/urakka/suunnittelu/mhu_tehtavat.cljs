@@ -472,6 +472,7 @@
                                                               (into [] 
                                                                 valitason-toimenpiteet 
                                                                 tehtavat)))
+                             :hoitokausi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
                              :toimenpide toimenpide)))))
 
   HaeTehtavat

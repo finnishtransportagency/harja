@@ -19,6 +19,7 @@
 (defrecord PoistaOikaisu [oikaisu id])
 (defrecord PoistaOikaisuOnnistui [vastaus id])
 (defrecord PoistaOikaisuEpaonnistui [vastaus])
+(defrecord PaivitaTavoitehinnanOikaisut [hoitokauden-alkuvuosi uusi])
 
 ;; Kattohinnan oikaisut
 (defrecord KattohinnanOikaisuaMuokattu [kattohinta])
@@ -173,6 +174,10 @@
     (js/console.warn "PoistaOikaisuEpaonnistui" vastaus)
     (viesti/nayta-toast! "Oikaisun poistamisessa tapahtui virhe" :varoitus)
     app)
+
+  PaivitaTavoitehinnanOikaisut
+  (process-event [{hoitokauden-alkuvuosi :hoitokauden-alkuvuosi uusi :uusi} app]
+    (assoc-in app [:tavoitehinnan-oikaisut hoitokauden-alkuvuosi] uusi))
 
   ;; Kattohinnan oikaisut
 

@@ -67,14 +67,24 @@
   (let [toteumat (toteumat-q/hae-urakan-varustetoteuma-ulkoiset db {:urakka urakka-id :ulkoinen_oid ulkoinen-oid})]
     {:urakka-id urakka-id :toteumat toteumat}))
 
-
-
 (defn tuo-uudet-varustetoteumat-velhosta
   "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
   [velho user]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
-  (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
+  (try (velho-komponentti/tuo-uudet-varustetoteumat-velhosta velho)
+       (catch Throwable t
+         (log/error "Virhe Velho-varusteiden haussa: " t)
+         false))
   true)
+
+(defn hae-mhu-urakka-oidt-velhosta
+  "Integraation kutsu selaimen avulla. Tämä on olemassa vain testausta varten."
+  [velho user]
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user)
+  (try (velho-komponentti/paivita-mhu-urakka-oidt-velhosta velho)
+       (catch Throwable t
+         (log/error "Virhe Velho-urakoiden haussa: " t)
+         false)))
 
 (defrecord VarusteVelho []
   component/Lifecycle
@@ -94,9 +104,14 @@
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat
                         (fn [user data]
                           (tuo-uudet-varustetoteumat-velhosta velho user)))
+
+      (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt
+                        (fn [user data]
+                          (hae-mhu-urakka-oidt-velhosta velho user)))
     this))
   (stop [this]
     (let [http (:http-palvelin this)]
       (poista-palvelut http :hae-ulkoiset-varustetoteumat)
-      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat))
+      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-varustetoteumat)
+      (poista-palvelut http :petrisi-manuaalinen-testirajapinta-hae-velhosta-mhu-urakka-oidt))
     this))

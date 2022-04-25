@@ -50,7 +50,7 @@
           [:label.alasvedon-otsikko "Hoitokausi"]
           [yleiset/livi-pudotusvalikko {:valinta      hoitokausi
                                         :valitse-fn   #(e! (t/->ValitseTaso % :hoitokausi))
-                                        :format-fn    #(str "1.10." % "-30.9." (inc %))
+                                        :format-fn pvm/hoitokausi-str-alkuvuodesta
                                         :disabled     (or
                                                         (not sopimukset-syotetty?)
                                                         (disabloitu-alasveto? hoitokaudet))

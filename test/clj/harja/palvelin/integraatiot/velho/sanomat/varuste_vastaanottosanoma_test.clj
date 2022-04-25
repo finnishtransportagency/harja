@@ -140,7 +140,7 @@
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
-(deftest velho->harja-test
+(deftest varustetoteuma-velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
         alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
         muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
@@ -151,7 +151,7 @@
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (fn [& _] "dummy")
         konversio-fn (partial koodistot/konversio db)
-        {tulos :tulos} (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
+        {tulos :tulos} (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
@@ -163,7 +163,7 @@
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
           sijainti-fn (partial varusteet/sijainti-kohteelle db)
           konversio-fn (partial koodistot/konversio db)]
-      (is (= odotettu (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn puuttuu-oid))))))
+      (is (= odotettu (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn puuttuu-oid))))))
 
 (deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json") :key-fn keyword)
@@ -187,7 +187,7 @@
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)
-        konvertoitu-kohde (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn kohde)]
+        konvertoitu-kohde (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn kohde)]
     (is (= odotettu (update-in konvertoitu-kohde [:tulos] dissoc :sijainti :muokattu)))))
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
@@ -205,6 +205,13 @@
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
 
+(deftest varusteen-toimenpiteet-konvertoituu-oikein-test
+  "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
+        odotetut-toimenpiteet "korjaus"
+        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+    (is (= odotetut-toimenpiteet (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde)))))
+
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
@@ -220,7 +227,7 @@
         konversio-fn (partial koodistot/konversio db)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
       (let [{konvertoitu-kohde :tulos tietolaji :tietolaji virheviesti :virheviesti}
-            (varuste-vastaanottosanoma/velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+            (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
         (is (nil? virheviesti))
         (is (= "tl506" tietolaji))
         (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))
