@@ -51,6 +51,9 @@
 (defrecord HaeMuidenUrakoidenMateriaalitOnnistui [vastaus])
 (defrecord HaeMuidenUrakoidenMateriaalitEpaonnistui [vastaus])
 (defrecord SuljeMuistaUrakoistaTuonti [])
+(defrecord HaeMateriaalitToisestaUrakasta [urakka-id])
+(defrecord HaeMateriaalitToisestaUrakastaOnnistui [vastaus])
+(defrecord HaeMateriaalitToisestaUrakastaEpaonnistui [vastaus])
 
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
@@ -270,7 +273,27 @@
 
   SuljeMuistaUrakoistaTuonti
   (process-event [_ app]
+    (reset! tuontiin-valittu-urakka nil)
     (assoc app :nayta-muista-urakoista-tuonti? false))
+
+  HaeMateriaalitToisestaUrakasta
+  (process-event [{urakka-id :urakka-id} app]
+    (-> app
+        (tuck-apurit/post! :hae-urakan-massat-ja-murskeet
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeMateriaalitToisestaUrakastaOnnistui
+                            :epaonnistui ->HaeMateriaalitToisestaUrakastaEpaonnistui})))
+
+
+  HaeMateriaalitToisestaUrakastaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :tuodut-materiaalit vastaus))
+
+  HaeMateriaalitToisestaUrakastaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Materiaalien haku toisesta urakasta epäonnistui!" :danger)
+    app)
+
 
   HaeKoodistot
   (process-event [_ app]

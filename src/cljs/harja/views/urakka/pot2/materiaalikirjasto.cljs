@@ -55,11 +55,12 @@
                                                          :valinta-nayta :nimi :valinta-arvo :id
                                                          :valinnat muut-urakat-joissa-materiaaleja}}]
         [:div.tuo-materiaalit-napit
-         [napit/yleinen-ensisijainen "Tuo materiaalit" sulje-fn
+         [napit/yleinen-ensisijainen "Tuo materiaalit"
+          #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta @mk-tiedot/tuontiin-valittu-urakka))
           {:ikoni (ikonit/harja-icon-action-copy)
-           :luokka "tuo-materiaalit"}]
-         [napit/yleinen-toissijainen "Kumoa" sulje-fn {:luokka "pull-right"}]
-         ]])]))
+           :luokka "tuo-materiaalit"
+           :disabled? (not @mk-tiedot/tuontiin-valittu-urakka)}]
+         [napit/yleinen-toissijainen "Kumoa" sulje-fn {:luokka "pull-right"}]]])]))
 
 (defn- urakan-materiaalit [e! app]
   [:span
