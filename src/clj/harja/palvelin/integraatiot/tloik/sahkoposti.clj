@@ -197,6 +197,26 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                              :urakka-id urakka
                              :ilmoitustyyppi ilmoitustyyppi}))))))
 
+(defn- lokita-sahkopostikuittauksen-virhe [kuittaus {:keys [sisalto] :as viesti}]
+  "Annetaan errori kolmessa tilanteessa:
+   Urakka-id puuttuu
+   Ilmoitus-id puuttuu
+   Urakka-id on ja ilmoitus-id on, mutta sisältö on täysin tyhjä.
+
+  Varoitus annetaan, jos urakka-id löytyy ja ilmoitus-id löytyy ja sisältö löytyy, mutta se ei sisällä kuittaustyyppiä."
+  (cond
+    (or
+      (str/includes? (:virhe kuittaus) "Urakka-id puuttuu")
+      (str/includes? (:virhe kuittaus) "Ilmoitus-id puuttuu"))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    (or (nil? sisalto) (empty? sisalto))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    ;; Muuten riittää pelkkä varoitus, että ei sotketa logia turhilla erroreilla
+    :else
+    (log/warn (format "Varoitus: Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))))
+
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
@@ -209,10 +229,7 @@ kuittauksen lähettäjälle."
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       (do
         ;; Logitetaan virhe, jos urakka-id tai ilmoitus-id puuttuu
-        (if (or (str/includes? (:virhe v) "Urakka-id puuttuu") (str/includes? (:virhe v) "Ilmoitus-id puuttuu"))
-          (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v))
-          ;; Muuten riittää pelkkä varoitus, että ei sotketa logia turhilla erroreilla
-          (log/warn (format "Varoitus: Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v)))
+        (lokita-sahkopostikuittauksen-virhe v viesti)
 
         ;; Palautetaan kutsujalle virheviesti ja tarkennus virheestä
         (assoc +virheellinen-toimenpide-viesti+
