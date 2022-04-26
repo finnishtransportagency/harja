@@ -6,6 +6,10 @@
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)))
 
+
+(def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
+                           :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
 ; HUOMIO Mikään ei erota melurakenteiden kaiteita tavallisista kaiteista.
@@ -206,27 +210,31 @@
 
       ; 2.
       (nil? (:urakka_id varustetoteuma))
-      {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta."}
-
-      ; 5.
-      (nil? (:toteuma varustetoteuma))
-      {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+      {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta. Skipataan varustetoteuma."}
 
       ; 4.
+      (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
+      {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
+
       ; 6.
       ; 7.
 
       ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin vaikka vajaammilla tiedoilla ettei tule turhia virheilmoituksia
       ; sellaisista, jotka eivät Harjaan kuulu
 
-      ; 1.
-      (seq puuttuvat-pakolliset)
-      {:toiminto :varoita :viesti (str "Puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
-
       ; 3.
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
       {:toiminto :varoita :viesti
        (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
+
+      ; 5.
+      (nil? (:toteuma varustetoteuma))
+      {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+
+      ; 1.
+      (seq puuttuvat-pakolliset)
+      {:toiminto :varoita :viesti (str "Puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
+
 
       :else                                                 ; Jos kaikki on ok, päätetään tallentaa varuste.
       {:toiminto :tallenna :viesti nil})))

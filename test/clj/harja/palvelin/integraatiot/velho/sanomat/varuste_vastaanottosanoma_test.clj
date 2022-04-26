@@ -26,9 +26,6 @@
          (mapv #(.getPath %))
          )))
 
-(def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
-                           :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
-
 (defn json->kohde [json-lahde lahdetiedosto]
   (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
         json (second json-lahde)]
@@ -64,7 +61,7 @@
     (let [odotettu-tietolaji-oidista (poimi-tietolaji-oidista (:oid kohde))
           tietolaji-poikkeus-map (or tietolaji-poikkeus-map {"tl514" "tl501"}) ; Melukaiteet ovat kaiteita nyt! tl514 -> tl501
           mapatty-tietolaji (get tietolaji-poikkeus-map odotettu-tietolaji-oidista odotettu-tietolaji-oidista)
-          odotettu-tietolaji (if (contains? +kaikki-tietolajit+ (keyword mapatty-tietolaji)) mapatty-tietolaji)]
+          odotettu-tietolaji (if (contains? varuste-vastaanottosanoma/+kaikki-tietolajit+ (keyword mapatty-tietolaji)) mapatty-tietolaji)]
       (let [paatelty-tietolaji (varuste-vastaanottosanoma/varusteen-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
             (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ≠ päätelty tietolaji: %s"
@@ -196,7 +193,7 @@
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
   (let [kohde nil
-        tietolajit (disj +kaikki-tietolajit+ :tl506)
+        tietolajit (disj varuste-vastaanottosanoma/+kaikki-tietolajit+ :tl506)
         db (:db jarjestelma)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [tl tietolajit]
@@ -280,14 +277,17 @@
         odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
+        tuntematon-tietolaji "tl123"
         alku-ja-loppupvm (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil))
-        oid-muokattu-urakka-ja-sijainti (fn [kohde] (-> kohde
-                                                        (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde) :urakka_id odotettu-oulu-MHU-urakka-id)
-                                                        (assoc :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
+        oid-muokattu-urakka-tietolaji-sijainti (fn [kohde] (-> kohde
+                                                        (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde)
+                                                               :urakka_id odotettu-oulu-MHU-urakka-id
+                                                               :tietolaji "tl506"
+                                                               :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
         toimenpide (fn [kohde] (assoc kohde :toteuma "lisays"))
         muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
         sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
-        perus-setti (comp oid-muokattu-urakka-ja-sijainti toimenpide alku-ja-loppupvm)
+        perus-setti (comp oid-muokattu-urakka-tietolaji-sijainti toimenpide alku-ja-loppupvm)
         kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkista-varustetoteuma kohde urakka-pvmt-idlla-fn))
         juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
     ; 1 -> varoita
@@ -303,10 +303,13 @@
     ; 5 -> varoita
     (is (= {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
            (kutsu (-> {} alku-ja-loppupvm
-                      oid-muokattu-urakka-ja-sijainti))))
+                      oid-muokattu-urakka-tietolaji-sijainti))))
     ; 2 -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta."}
+    (is (= {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta. Skipataan varustetoteuma."}
            (kutsu (-> {} perus-setti
                       sijainti-ei-MHU-testidatassa
                       muutoksen-lahde-tuntematon-oid
-                      (assoc :urakka_id nil)))))))
+                      (assoc :urakka_id nil)))))
+    (is (= {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :tietolaji tuntematon-tietolaji)))))))
