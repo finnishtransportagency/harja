@@ -231,11 +231,11 @@
                        ;; Materiaalin nimi
                        [(materiaalin-nimi (:nimi materiaali))]
 
-                       ;; Kuukausittaiset määrät
-                       (map kk-arvot kuukaudet)
+                       ;; Kuukausittaiset määrät, viiva jos tyhjä.
+                       (map #(or (kk-arvot %) "–") kuukaudet)
 
                        ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                       [(yhteensa-kentta (vals kk-arvot) false)
+                       [(yhteensa-kentta (vals kk-arvot) true)
                         (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
                                                              :yksikko (:yksikko materiaali)
                                                              :desimaalien-maara 2}])
@@ -266,9 +266,10 @@
                         [(str " - "
                            (hoitoluokat/talvihoitoluokan-nimi luokka))]
 
-                        (map kk-arvot kuukaudet)
+                        ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
+                        (map #(or (kk-arvot %) "-") kuukaudet)
 
-                        [(yhteensa-kentta (vals kk-arvot) false)
+                        [(yhteensa-kentta (vals kk-arvot) true)
                          nil nil]))))
              (sort-by first (group-by :luokka luokitellut)))
            (when yht-rivi yht-rivi))))
