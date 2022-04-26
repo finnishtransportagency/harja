@@ -92,15 +92,28 @@
     rivi))
 
 (defn tallenna! 
-  [e! sopimukset-syotetty? rivi]   
-  (let [tuck-event (if sopimukset-syotetty?
+  [e! sopimukset-syotetty? alueet-vai-maarat rivi]   
+  (let [tuck-event (cond
+                     (and (= :alueet alueet-vai-maarat)
+                       sopimukset-syotetty?)
+                     t/->TallennaMuuttunutAluemaara
+                     
+                     (and (= :maarat alueet-vai-maarat)
+                       sopimukset-syotetty?)
                      t/->TallennaTehtavamaara
+
+                     (and (= :alueet alueet-vai-maarat)
+                       (not sopimukset-syotetty?))
+                     t/->TallennaSopimuksenAluemaara
+                     
+                     (and (= :maarat alueet-vai-maarat)
+                       (not sopimukset-syotetty?))
                      t/->TallennaSopimuksenTehtavamaara)] 
     (e! (tuck-event rivi))))
 
 (defn vetolaatikko-komponentti-
   [_ _ {:keys [vanhempi id yksikko nimi] :as _rivi}]
-  (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [vanhempi id :joka-vuosi-erikseen?])]
+  (let [joka-vuosi-erikseen? (r/cursor t/taulukko-tila [:maarat vanhempi id :joka-vuosi-erikseen?])]
     (fn [e! app {:keys [vanhempi id] :as rivi}]
       [:div.tehtavat-maarat-vetolaatikko 
        [:div.vetolaatikko-ruksi 
@@ -109,7 +122,7 @@
                             :valitse!
                             (fn [v]
                               (let [ruksittu? (.. v -target -checked)]
-                                (swap! t/taulukko-tila assoc-in [vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
+                                (swap! t/taulukko-tila assoc-in [:maarat vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
          joka-vuosi-erikseen?]]
        [:div.flex-row.tasaa-alas.loppuun
         (doall 
@@ -133,8 +146,9 @@
                                              (assoc rivi 
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimuksen-tehtavamaara (.. % -target -value) 
-                                               :hoitokausi vuosi))}
-              (r/cursor t/taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
+                                               :hoitokausi vuosi)
+                                             :maarat)}
+              (r/cursor t/taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
         [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
 
 (defn vetolaatikko-komponentti
@@ -152,51 +166,82 @@
 
 (defn- itse-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
-  (let [{:keys [nimi sisainen-id]} toimenpiteen-tiedot
-        tila (r/cursor t/taulukko-tila [sisainen-id])]
-    [grid/muokkaus-grid
-     (merge 
-       {:otsikko nimi
-        :id (keyword (str "tehtavat-maarat-" nimi))
-        :tyhja "Ladataan tietoja"
-        :voi-poistaa? (constantly false)
-        :jarjesta :jarjestys 
-        :ulkoinen-validointi? true
-        :voi-muokata? true
-        :voi-lisata? false
-        :disabloi-autocomplete? true
-        :voi-kumota? false
-        :virheet t/taulukko-virheet
-        :piilota-toiminnot? true
-        :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty?)}
-       (when (not sopimukset-syotetty?) 
-         {:vetolaatikot
-          (into {}
-            (map (juxt :id (r/partial vetolaatikko-komponentti e! app)))
-            taso-4-tehtavat)
-          :vetolaatikot-auki t/taulukko-avatut-vetolaatikot
-          :vetolaatikko-optiot {:ei-paddingia true}}))
-     [(when (not sopimukset-syotetty?) 
-        {:tyyppi :vetolaatikon-tila :leveys "5%"})
-      {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
-       (if sopimukset-syotetty? 
-         "60%"
-         "70%")}
-      ;; ennen urakkaa -moodi
-      (when (not sopimukset-syotetty?)
-        {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
-         :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
-      ;; urakan ajan suunnittelu -moodi
-      (when sopimukset-syotetty? 
-        {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa 
-         :tyyppi :numero :muokattava? (constantly false) :leveys "160px"})
-      (when sopimukset-syotetty? 
-        {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
-         :muokattava? (constantly false) :leveys "160px" })
-      (when sopimukset-syotetty? 
-        {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
-      {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
-     tila]))
+  (let [{:keys [nimi sisainen-id alue-tehtavia]} toimenpiteen-tiedot
+        aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
+        maarat-tila (r/cursor t/taulukko-tila [:maarat sisainen-id])]
+    [:<>
+     [:h2 nimi]
+     (when (> alue-tehtavia 0)
+       [grid/muokkaus-grid
+        (merge 
+          {:otsikko "Alueet"
+           :id (keyword (str "tehtavat-maarat-" nimi))
+           :tyhja "Ladataan tietoja"
+           :voi-poistaa? (constantly false)
+           :jarjesta :jarjestys 
+           :ulkoinen-validointi? true
+           :voi-muokata? true
+           :voi-lisata? false
+           :disabloi-autocomplete? true
+           :voi-kumota? false
+           :virheet t/taulukko-virheet
+           :piilota-toiminnot? true
+           :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)})
+        [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+          (if sopimukset-syotetty? 
+            "60%"
+            "70%")}
+         ;; ennen urakkaa -moodi         
+         {:otsikko "Tarjouksen määrä" :nimi :sopimuksen-aluetieto-maara :tyyppi :numero :leveys "180px"
+          :muokattava? (constantly (if sopimukset-syotetty? false true))}
+         ;; urakan ajan suunnittelu -moodi         
+         (when sopimukset-syotetty? 
+           {:otsikko "Muuttunut määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+         {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
+        aluetiedot-tila])
+     [grid/muokkaus-grid
+      (merge 
+        {:otsikko "Määrät"
+         :id (keyword (str "tehtavat-maarat-" nimi))
+         :tyhja "Ladataan tietoja"
+         :voi-poistaa? (constantly false)
+         :jarjesta :jarjestys 
+         :ulkoinen-validointi? true
+         :voi-muokata? true
+         :voi-lisata? false
+         :disabloi-autocomplete? true
+         :voi-kumota? false
+         :virheet t/taulukko-virheet
+         :piilota-toiminnot? true
+         :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :maarat)}
+        (when (not sopimukset-syotetty?) 
+          {:vetolaatikot
+           (into {}
+             (map (juxt :id (r/partial vetolaatikko-komponentti e! app)))
+             taso-4-tehtavat)
+           :vetolaatikot-auki t/taulukko-avatut-vetolaatikot
+           :vetolaatikko-optiot {:ei-paddingia true}}))
+      [(when (not sopimukset-syotetty?) 
+         {:tyyppi :vetolaatikon-tila :leveys "5%"})
+       {:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+        (if sopimukset-syotetty? 
+          "60%"
+          "70%")}
+       ;; ennen urakkaa -moodi
+       (when (not sopimukset-syotetty?)
+         {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
+          :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
+       ;; urakan ajan suunnittelu -moodi
+       (when sopimukset-syotetty? 
+         {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa 
+          :tyyppi :numero :muokattava? (constantly false) :leveys "160px"})
+       (when sopimukset-syotetty? 
+         {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
+          :muokattava? (constantly false) :leveys "160px" })
+       (when sopimukset-syotetty? 
+         {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+       {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
+      maarat-tila]]))
 
 (defn tehtava-maarat-taulukko
   [e! {:keys [valinnat taulukko] :as app}]
