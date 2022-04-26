@@ -68,20 +68,24 @@
 
 (defn ryhmittele-tehtavat-valitasojen-perusteella 
   [idt]
-  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaarat urakka tehtava otsikko yksikko samat-maarat-vuosittain? jarjestys maarat] :as rivi}]
+  (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaarat urakka tehtava otsikko yksikko samat-maarat-vuosittain? sopimuksen-aluetieto-maara jarjestys maarat aluetieto] :as rivi}]
     (let [valitaso-id (luo-id-fn otsikko idt)] 
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
-                (update taso :tehtavat conj {:id        tehtava-id
-                                             :nimi      tehtava
-                                             :vanhempi  valitaso-id
-                                             :jarjestys jarjestys
-                                             :maarat maarat
-                                             :urakka urakka
-                                             :samat-maarat-vuosittain? samat-maarat-vuosittain?
-                                             :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat
-                                             :yksikko   yksikko
-                                             :taso      4})
+                (update taso :tehtavat conj (merge
+                                              {:id        tehtava-id
+                                               :nimi      tehtava
+                                               :vanhempi  valitaso-id
+                                               :jarjestys jarjestys
+                                               :aluetieto? aluetieto
+                                               :maarat maarat
+                                               :urakka urakka                                               
+                                               :yksikko   yksikko
+                                               :taso      4}
+                                              (if aluetieto
+                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
+                                                {:samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                                 :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
                 taso)) 
         tasot))))
 
@@ -151,8 +155,10 @@
   (into {} 
     (map
       (fn [[id vuodet]]
-        [id (reduce (fn [kaikki {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi}]
-                      (assoc-in kaikki [hoitovuosi] rivin-maara))
+        [id (reduce (fn [kaikki {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi aluetieto? :aluetieto}]
+                      (if aluetieto?
+                        rivin-maara
+                        (assoc-in kaikki [hoitovuosi] rivin-maara)))
               {}
               vuodet)]))
     (group-by :tehtava tehtavat)))
@@ -170,12 +176,13 @@
       true)))
 
 (defn yhdista-sopimusmaarat
-  [tehtavat rivi]
-  (let [sopimusmaarat (get-in tehtavat [(:tehtava-id rivi)])
-        samat? (onko-samat-summat? sopimusmaarat)]
-    (-> rivi
-      (assoc :sopimuksen-tehtavamaarat sopimusmaarat)
-      (assoc :samat-maarat-vuosittain? samat?))))
+  [tehtavat {:keys [tehtava-id aluetieto] :as rivi}]
+  (let [sopimusmaarat (get-in tehtavat [tehtava-id])
+        samat? (when-not (:aluetieto rivi) (onko-samat-summat? sopimusmaarat))]
+    (cond-> rivi
+      aluetieto (assoc :sopimuksen-aluetieto-maara sopimusmaarat)
+      (not aluetieto) (assoc :sopimuksen-tehtavamaarat sopimusmaarat)
+      true (assoc :samat-maarat-vuosittain? samat?))))
 
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
