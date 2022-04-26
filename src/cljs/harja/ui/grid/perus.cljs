@@ -757,7 +757,12 @@
                                         riveille yhteinen sääntö milloin rivejä saa muokata
   :raporttivienti                       Setti mitä raporttivientejä gridistä mahdollistetaan. Tuetut: :pdf ja :excel
   :raporttiparametrit                   Mäpissä raporttiparametrit, usein esim. nimi ja aikaväli ja urakkatyyppi
-  :esta-tiivis-grid?                    Boolean, jolla voi estää tiiviin gridin tyylittelyn"
+  :esta-tiivis-grid?                    Boolean, jolla voi estää tiiviin gridin tyylittelyn
+  :sivuttain-rullattava?                Boolean, jolla mahdollistetaan gridin sivuttain rullaus, jos grid ei mahdu
+                                        näytölle. Estää myös solujen rivittymisen.
+  :ensimmainen-sarake-sticky?           Boolean, jolla voidaan laittaa ensimmäiselle sarakkeelle luokaksi sticky,
+                                        jolloin se näkyy vaikka rullataan sivulle. Toimii vain jos
+                                        :sivuttain-rullattava? on true"
 
   [{:keys [tallenna-vain-muokatut tunniste salli-valiotsikoiden-piilotus?
            esta-poistaminen? esta-poistaminen-tooltip muokkaa-aina muutos
@@ -1055,7 +1060,8 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva? esta-tiivis-grid?] :as opts}
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva? 
+                    esta-tiivis-grid? ensimmainen-sarake-sticky?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1080,13 +1086,14 @@
               tiedot (if (and sivuta (>= (count tiedot) sivuta))
                        (nth (partition-all sivuta tiedot) @nykyinen-sivu-index)
                        tiedot)
-              luokat (if @infolaatikko-nakyvissa?
-                       (conj luokat "livi-grid-infolaatikolla")
-                       luokat)
+              luokat (cond-> luokat
+                       @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
+                       esta-tiivis-grid? (conj "skrollattava")
+                       ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid (merge
                                                 {:id (:id opts)
-                                                 :class (clojure.string/join " " luokat)}
+                                                 :class luokat}
                                                 (when data-cy
                                                   {:data-cy data-cy}))
            (when sivuta [sivutuskontrollit alkup-tiedot sivuta @nykyinen-sivu-index vaihda-nykyinen-sivu!])

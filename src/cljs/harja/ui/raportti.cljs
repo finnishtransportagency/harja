@@ -91,6 +91,8 @@
                                                         (hash rivi))))
                 :rivi-ennen rivi-ennen
                 :piilota-toiminnot? true
+                :sivuttain-rullattava? true
+                :ensimmainen-sarake-sticky? true
                 :esta-tiivis-grid? esta-tiivis-grid?}
      (into []
            (map-indexed

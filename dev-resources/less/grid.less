@@ -471,6 +471,41 @@
       border: none;
     }
   }
+
+  &.skrollattava {
+    .panel-body {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      // Ei haluta pakottaa koko ruudun levyiseksi, vaan skrollataan.
+      min-width: 100%;
+      width: auto;
+
+      tr, td {
+        // Ei rikota tekstiä useammalle riville taulukossa.
+        white-space: pre;
+      }
+    }
+
+    .sticky(@taustavari: initial) {
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      background-color: @taustavari;
+    }
+
+    &.ensimmainen-sarake-sticky {
+      th:first-child {
+        .sticky(@harmaa13);
+      }
+
+      td:first-child {
+        .sticky(@harjan-taustavari);
+      }
+    }
+  }
 }
 
 .livi-grid-infolaatikolla {
