@@ -19,6 +19,7 @@
 (defrecord TehtavaTallennusOnnistui [vastaus])
 (defrecord TehtavaTallennusEpaonnistui [vastaus])
 (defrecord TallennaTehtavamaara [tehtava])
+(defrecord TallennaMuuttunutAluemaara [tehtava])
 (defrecord SamatTulevilleMoodi [samat?])
 (defrecord SopimuksenHakuOnnistui [tulos])
 (defrecord TallennaSopimus [tallennettu])
@@ -29,6 +30,7 @@
 (defrecord SopimuksenTilaEiHaettu [vastaus])
 (defrecord SopimuksenTehtavaTallennusOnnistui [vastaus])
 (defrecord SopimuksenTehtavaTallennusEpaonnistui [vastaus])
+(defrecord TallennaSopimuksenAluemaara [tehtava])
 (defrecord TallennaSopimuksenTehtavamaara [tehtava])
 (defrecord AsetaOletusHoitokausi [])
 
@@ -391,6 +393,16 @@
           virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
       (reset! taulukko-virheet virheet))      
     (dissoc app :tallennettava))
+
+  TallennaMuuttunutAluemaara
+  (process-event
+    [{:keys [tehtava]} app]
+    app)
+
+  TallennaSopimuksenAluemaara
+  (process-event
+    [{:keys [tehtava]} app]
+    app)
 
   TallennaSopimuksenTehtavamaara
   (process-event 
