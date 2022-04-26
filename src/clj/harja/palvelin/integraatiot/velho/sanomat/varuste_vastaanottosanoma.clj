@@ -250,7 +250,7 @@
       (konversio-fn "v/vtykl" kuntoluokka)
       "Puuttuu")))
 
-(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio toimenpiteet] :as kohde}]
+(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio toimenpiteet tekninen-tapahtuma] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
         toimenpidelista (->> toimenpiteet
@@ -270,7 +270,9 @@
 
           (= 0 (count toimenpidelista))
           ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
-          (cond (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
+          (cond (= "tt01" tekninen-tapahtuma) "tt01"        ; Tieosoitemuutos
+                (= "tt02" tekninen-tapahtuma) "tt02"        ; Muu tekninen toimenpide
+                (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
                 (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
                 (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!
                 (and uusin-versio (some? version-loppu)) "poistettu" ; uusimmalla versiolla on loppu
