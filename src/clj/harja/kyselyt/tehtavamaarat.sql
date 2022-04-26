@@ -159,8 +159,11 @@ ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 -- Hakee ne
 select st.maara as "sopimuksen-tehtavamaara",
        st.tehtava as "tehtava",
-       st.hoitovuosi as "hoitovuosi"
-       from sopimus_tehtavamaara st where st.urakka = :urakka;
+       st.hoitovuosi as "hoitovuosi",
+       tpk.aluetieto as "aluetieto"
+       from sopimus_tehtavamaara st
+       join toimenpidekoodi tpk on st.tehtava = tpk.id
+       where st.urakka = :urakka;
 
 -- name: hae-tehtavahierarkia-maarineen
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
@@ -186,6 +189,7 @@ SELECT ut.urakka                   as "urakka",
        tpk4.ensisijainen           as "Ensisijainen",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
+       tpk4.aluetieto as "aluetieto",
        sp.tallennettu as "sopimus-tallennettu"  
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
