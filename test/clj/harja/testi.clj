@@ -35,7 +35,9 @@
            (java.util Locale)
            (java.lang Boolean Exception)
            (java.util.concurrent TimeoutException)
-           (java.sql Statement)))
+           (java.sql Statement)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def jarjestelma nil)
 
@@ -1708,3 +1710,14 @@
   (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
                       osoite, kasitteleva_palvelin
                  FROM integraatioviesti;")))
+
+(defn nykyhetki-iso8061-formaatissa-menneisyyteen
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 86400 1000)))))
+
+(defn nykyhetki-iso8061-formaatissa-tulevaisuuteen
+  "Anna määrä parametriin, että montako päivää siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
+

@@ -193,6 +193,7 @@
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
   on mahdollista eritellä."
   [db {:keys [ytunnus alkuaika loppuaika] :as parametrit} kayttaja]
+  (log/info "Hae ilmoitukset ytunnuksella :: parametrit:" parametrit)
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [loppuaika (if loppuaika
