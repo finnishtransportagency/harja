@@ -255,23 +255,30 @@
   [vuosi sopimuksen-tehtavamaara])
 
 (defn paivita-vuosien-maarat 
-  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]}]
-  (if-not joka-vuosi-erikseen? 
-    (let [urakan-vuodet 
-          (range 
-            (-> @tiedot/yleiset
-              :urakka
-              :alkupvm
-              pvm/vuosi)
-            (-> @tiedot/yleiset
-              :urakka
-              :loppupvm
-              pvm/vuosi))]
-      (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat]
-        (into {} 
-          (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
-          urakan-vuodet)))
-    (assoc-in taulukko-tila [vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)))
+  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]} alueet-vai-maarat]
+  (let [alueet? (= :alueet alueet-vai-maarat)]
+    (cond
+      alueet?
+      taulukko-tila    
+          
+      joka-vuosi-erikseen?                  
+      (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)
+
+      :else
+      (let [urakan-vuodet 
+            (range 
+              (-> @tiedot/yleiset
+                :urakka
+                :alkupvm
+                pvm/vuosi)
+              (-> @tiedot/yleiset
+                :urakka
+                :loppupvm
+                pvm/vuosi))]
+        (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat]
+          (into {} 
+            (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
+            urakan-vuodet))))))
 
 (defn laske-tehtavalle-sopimusmaarat 
   [[id tehtava]] 
@@ -402,7 +409,18 @@
   TallennaSopimuksenAluemaara
   (process-event
     [{:keys [tehtava]} app]
-    app)
+    (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]
+      (swap! taulukko-tila paivita-vuosien-maarat tehtava :alueet)
+      (-> app                             
+        (assoc :tallennettava tehtava)
+        (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
+          {:urakka-id (-> @tiedot/yleiset :urakka :id)
+           :tehtava-id id
+           :hoitovuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)
+           :samat-maarat-vuosittain? false
+           :maara sopimuksen-aluetieto-maara}
+          {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+           :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}))))
 
   TallennaSopimuksenTehtavamaara
   (process-event 
