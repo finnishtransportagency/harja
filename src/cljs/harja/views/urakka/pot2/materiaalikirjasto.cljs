@@ -3,6 +3,7 @@
   (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
             [reagent.core :refer [atom] :as r]
+            [harja.domain.pot2 :as pot2-domain]
             [harja.ui.debug :refer [debug]]
             [harja.ui.komponentti :as komp]
             [harja.ui.modal :as modal]
@@ -18,7 +19,8 @@
             [harja.views.urakka.pot2.murskeet-taulukko :as murskeet-taulukko]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.grid :as grid])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -29,8 +31,48 @@
 (def ei-tuotavia-materiaaleja "Ei tuotavia massoja tai materiaaleja")
 (def ei-tuotavia-materiaaleja-tarkennus "Yhdessäkään urakassasi ei ole massoja tai murskeita tuontia varten")
 
+(defn- tuotavat-massat
+  [e! {:keys [materiaalit-toisesta-urakasta materiaalikoodistot] :as app}]
+  (let [{massat :massat} materiaalit-toisesta-urakasta]
+    [grid/grid
+     {:otsikko "Massat"
+      :tyhja "Ei massoja."
+      :tunniste :harja.domain.pot2/massa-id}
+     [{:otsikko "Massan nimi" :nimi ::pot2-domain/massan-nimi :leveys 5
+       :tyyppi :string}
+      {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :leveys 5
+       :tyyppi :komponentti
+       :komponentti (fn [rivi]
+                      [pot2-domain/massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}]
+     massat]))
+
+(defn- tuotavat-murskeet
+  [e! {:keys [materiaalit-toisesta-urakasta materiaalikoodistot] :as app}]
+  (println "Jarno tuotavat murskeet " (:murskeet materiaalit-toisesta-urakasta))
+  (let [{murskeet :murskeet} materiaalit-toisesta-urakasta]
+    [grid/grid
+     {:otsikko "Murkseet"
+      :tyhja "Ei murskeita."
+      :tunniste ::pot2-domain/murske-id}
+     [{:otsikko "Murskeen nimi" :nimi ::pot2-domain/murskeen-nimi :leveys 5
+       :tyyppi :string}
+      {:otsikko "Tyyppi" :nimi ::pot2-domain/tyyppi :leveys 5 :tyyppi :string
+       :hae (fn [rivi]
+              (or
+                (::pot2-domain/tyyppi-tarkenne rivi)
+                (pot2-domain/ainetyypin-koodi->nimi (:mursketyypit materiaalikoodistot)
+                                                    (::pot2-domain/tyyppi rivi))))}]
+     murskeet]))
+
+(defn- tuotavat-materiaalit [e! app]
+  [:span
+   [:h4 "Valitse tuotavat massat ja murskeet"]
+   [tuotavat-massat e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]
+   [tuotavat-murskeet e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]])
+
 (defn tuo-materiaalit-modal [e! {:keys [nayta-muista-urakoista-tuonti?
-                                        muut-urakat-joissa-materiaaleja] :as app}]
+                                        muut-urakat-joissa-materiaaleja
+                                        materiaalit-toisesta-urakasta] :as app}]
   (let [sulje-fn #(e! (mk-tiedot/->SuljeMuistaUrakoistaTuonti))
         ei-loytynyt? (empty? muut-urakat-joissa-materiaaleja)]
     [modal/modal
@@ -55,11 +97,14 @@
                                                          :valinta-nayta :nimi :valinta-arvo :id
                                                          :valinnat muut-urakat-joissa-materiaaleja}}]
         [:div.tuo-materiaalit-napit
+         (when materiaalit-toisesta-urakasta
+           [tuotavat-materiaalit e! app])
+
          [napit/yleinen-ensisijainen "Tuo materiaalit"
           #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta @mk-tiedot/tuontiin-valittu-urakka))
           {:ikoni (ikonit/harja-icon-action-copy)
            :luokka "tuo-materiaalit"
-           :disabled? (not @mk-tiedot/tuontiin-valittu-urakka)}]
+           :disabled (not @mk-tiedot/tuontiin-valittu-urakka)}]
          [napit/yleinen-toissijainen "Kumoa" sulje-fn {:luokka "pull-right"}]]])]))
 
 (defn- urakan-materiaalit [e! app]

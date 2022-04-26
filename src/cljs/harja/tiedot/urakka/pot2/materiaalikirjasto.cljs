@@ -219,6 +219,19 @@
                      {:onnistui ->HaeMuidenUrakoidenMateriaalitOnnistui
                       :epaonnistui ->HaeMuidenUrakoidenMateriaalitEpaonnistui}))
 
+(defn- rikasta-materiaalien-nimi
+  [app massat murskeet]
+  (let [massat (map #(assoc % ::pot2-domain/massan-nimi
+                              (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
+                                                            :materiaali %}))
+                    massat)
+        murskeet  (map #(assoc % ::pot2-domain/murskeen-nimi
+                                 (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
+                                                               :materiaali %}))
+                       murskeet)]
+    {:massat massat
+     :murskeet murskeet}))
+
 (extend-protocol tuck/Event
 
   AlustaTila
@@ -239,14 +252,8 @@
   HaePot2MassatJaMurskeetOnnistui
   (process-event [{{massat :massat
                     murskeet :murskeet} :vastaus} app]
-    (let [massat (map #(assoc % ::pot2-domain/massan-nimi
-                                (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
-                                                              :materiaali %}))
-                      massat)
-          murskeet  (map #(assoc % ::pot2-domain/murskeen-nimi
-                                   (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
-                                                                 :materiaali %}))
-                         murskeet)]
+    (let [{massat :massat
+           murskeet :murskeet} (rikasta-materiaalien-nimi app massat murskeet)]
       (assoc app :massat massat
                  :murskeet murskeet)))
 
@@ -274,7 +281,8 @@
   SuljeMuistaUrakoistaTuonti
   (process-event [_ app]
     (reset! tuontiin-valittu-urakka nil)
-    (assoc app :nayta-muista-urakoista-tuonti? false))
+    (assoc app :nayta-muista-urakoista-tuonti? false
+               :materiaalit-toisesta-urakasta nil))
 
   HaeMateriaalitToisestaUrakasta
   (process-event [{urakka-id :urakka-id} app]
@@ -287,7 +295,9 @@
 
   HaeMateriaalitToisestaUrakastaOnnistui
   (process-event [{vastaus :vastaus} app]
-    (assoc app :tuodut-materiaalit vastaus))
+    (let [{massat :massat
+           murskeet :murskeet} vastaus]
+      (assoc app :materiaalit-toisesta-urakasta (rikasta-materiaalien-nimi app massat murskeet))))
 
   HaeMateriaalitToisestaUrakastaEpaonnistui
   (process-event [{vastaus :vastaus} app]

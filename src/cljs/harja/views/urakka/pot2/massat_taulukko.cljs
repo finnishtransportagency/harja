@@ -29,17 +29,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn- massan-runkoaineet
-  [rivi ainetyypit]
-  [:div
-   (str/join "; " (map (fn [aine]
-                         (str (pot2-domain/ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
-                              (when (:runkoaine/massaprosentti aine)
-                                (str " (" (fmt/piste->pilkku (:runkoaine/massaprosentti aine)) "%)"))))
-                       (reverse
-                         (sort-by :runkoaine/massaprosentti
-                                  (:harja.domain.pot2/runkoaineet rivi)))))])
-
 (defn- massan-side-tai-lisa-aineet [rivi ainetyypit tyyppi]
   (let [aineet-key (if (= tyyppi :lisaaineet)
                      :harja.domain.pot2/lisaaineet
@@ -90,7 +79,7 @@
             (pot2-domain/massan-rc-pitoisuus massa))}
     {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :fmt #(or % "-") :tyyppi :komponentti :leveys 6
      :komponentti (fn [rivi]
-                    [massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
+                    [pot2-domain/massan-runkoaineet rivi (:runkoainetyypit materiaalikoodistot)])}
     {:otsikko "Sideaineet" :nimi ::pot2-domain/sideaineet :fmt  #(or % "-") :tyyppi :komponentti :leveys 5
      :komponentti (fn [rivi]
                     [massan-side-tai-lisa-aineet rivi (:sideainetyypit materiaalikoodistot) :sideaineet])}
