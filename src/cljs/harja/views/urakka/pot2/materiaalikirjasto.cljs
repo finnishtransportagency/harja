@@ -37,8 +37,19 @@
     [grid/grid
      {:otsikko "Massat"
       :tyhja "Ei massoja."
+      :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/massa-id %) :massat))
       :tunniste :harja.domain.pot2/massa-id}
-     [{:otsikko "Massan nimi" :nimi ::pot2-domain/massan-nimi :leveys 5
+     [{:otsikko-komp (fn []
+                       [kentat/raksiboksi {:disabled false
+                                           :toiminto #(e! (mk-tiedot/->ValitseKaikkiMassatTaiMurskeet :massat))}
+                        (mk-tiedot/materiaalien-ruksin-tila (:massat materiaalit-toisesta-urakasta))])
+       :tyyppi :komponentti
+       :komponentti (fn [rivi]
+                      [kentat/raksiboksi {:disabled false
+                                          :toiminto #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/massa-id rivi) :massat))}
+                       (:valittu? rivi)])
+       :leveys 2}
+      {:otsikko "Massan nimi" :nimi ::pot2-domain/massan-nimi :leveys 5
        :tyyppi :string}
       {:otsikko "Runkoaineet" :nimi ::pot2-domain/runkoaineet :leveys 5
        :tyyppi :komponentti
@@ -48,13 +59,23 @@
 
 (defn- tuotavat-murskeet
   [e! {:keys [materiaalit-toisesta-urakasta materiaalikoodistot] :as app}]
-  (println "Jarno tuotavat murskeet " (:murskeet materiaalit-toisesta-urakasta))
   (let [{murskeet :murskeet} materiaalit-toisesta-urakasta]
     [grid/grid
      {:otsikko "Murkseet"
       :tyhja "Ei murskeita."
+      :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id %) :murskeet))
       :tunniste ::pot2-domain/murske-id}
-     [{:otsikko "Murskeen nimi" :nimi ::pot2-domain/murskeen-nimi :leveys 5
+     [{:otsikko-komp (fn []
+                       [kentat/raksiboksi {:disabled false
+                                           :toiminto #(e! (mk-tiedot/->ValitseKaikkiMassatTaiMurskeet :murskeet))}
+                        (mk-tiedot/materiaalien-ruksin-tila (:murskeet materiaalit-toisesta-urakasta))])
+       :tyyppi :komponentti
+       :komponentti (fn [rivi]
+                      [kentat/raksiboksi {:disabled false
+                                          :toiminto #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id rivi) :murskeet))}
+                       (:valittu? rivi)])
+       :leveys 2}
+      {:otsikko "Murskeen nimi" :nimi ::pot2-domain/murskeen-nimi :leveys 5
        :tyyppi :string}
       {:otsikko "Tyyppi" :nimi ::pot2-domain/tyyppi :leveys 5 :tyyppi :string
        :hae (fn [rivi]
@@ -66,7 +87,7 @@
 
 (defn- tuotavat-materiaalit [e! app]
   [:span
-   [:h4 "Valitse tuotavat massat ja murskeet"]
+   [:h5 "Valitse tuotavat massat ja murskeet"]
    [tuotavat-massat e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]
    [tuotavat-murskeet e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]])
 
@@ -96,7 +117,7 @@
                                          :kentta-params {:tyyppi :valinta
                                                          :valinta-nayta :nimi :valinta-arvo :id
                                                          :valinnat muut-urakat-joissa-materiaaleja}}]
-        [:div.tuo-materiaalit-napit
+        [:div.tuo-materiaalit-sisalto
          (when materiaalit-toisesta-urakasta
            [tuotavat-materiaalit e! app])
 
@@ -122,7 +143,7 @@
   [yleiset/wrap-if true
    [yleiset/tooltip {} :% tuo-materiaalit-tooltip]
    [napit/nappi "Tuo materiaalit toisesta urakasta"
-    #(e! (mk-tiedot/->HaeMuidenUrakoidenMateriaalit))
+    #(e! (mk-tiedot/->HaeMuutUrakatJoissaMateriaaleja))
     {:ikoni (ikonit/harja-icon-action-copy)
      :luokka "nappi-toissijainen tuo-materiaalit"
      :style {:margin-left "0"}}]])
@@ -176,9 +197,9 @@
                             (e! (mk-tiedot/->SuljeMurskeLomake))
 
                             :else
-                            (swap! mk-tiedot/nayta-materiaalikirjasto? not))
+                            (e! (mk-tiedot/->SuljeMateriaaliModal)))
       :sulje-fn #(when-not lomake-auki?
-                   (swap! mk-tiedot/nayta-materiaalikirjasto? not))}
+                   (e! (mk-tiedot/->SuljeMateriaaliModal)))}
      [:div
       [materiaalikirjasto e! app]]]))
 
