@@ -275,6 +275,7 @@
       [:div#vayla
        [:h1 "Tehtävät ja määrät"]
        [debug/debug app]
+       [debug/debug @t/taulukko-tila]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)
