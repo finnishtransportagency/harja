@@ -198,21 +198,20 @@
 
   Tulokset:
   2. 4. 6. ja 7. -> :skippaa
-  3. ja 5. -> :varoita (ja skippaa, ja jätä tietoluokan viimeisen ajokerran päiväys päivittämättä)
+  1. 3. ja 5. -> :varoita
   muuten :tallenna.
 
-  Varoitus aiheuttaa kaikille saman lähteen tiedoille latauksen samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
+  Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
+  Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
   [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-pvmt-idlla-fn]
   (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
         urakka-olemassaolo (urakka-pvmt-idlla-fn urakka_id)
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
-
-      ; 2.
+      ; 2
       (nil? (:urakka_id varustetoteuma))
       {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta. Skipataan varustetoteuma."}
-
-      ; 4.
+      ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
       {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
 
@@ -221,20 +220,16 @@
 
       ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin vaikka vajaammilla tiedoilla ettei tule turhia virheilmoituksia
       ; sellaisista, jotka eivät Harjaan kuulu
-
-      ; 3.
+      ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
       {:toiminto :varoita :viesti
        (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
-
-      ; 5.
+      ; 5
       (nil? (:toteuma varustetoteuma))
       {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
-
-      ; 1.
+      ; 1
       (seq puuttuvat-pakolliset)
       {:toiminto :varoita :viesti (str "Puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
-
 
       :else                                                 ; Jos kaikki on ok, päätetään tallentaa varuste.
       {:toiminto :tallenna :viesti nil})))

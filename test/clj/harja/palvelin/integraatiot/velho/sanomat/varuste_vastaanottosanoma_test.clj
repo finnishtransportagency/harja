@@ -310,6 +310,7 @@
                       sijainti-ei-MHU-testidatassa
                       muutoksen-lahde-tuntematon-oid
                       (assoc :urakka_id nil)))))
+    ; 4 -> skippaa
     (is (= {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
            (kutsu (-> {} perus-setti
                       (assoc :tietolaji tuntematon-tietolaji)))))))
