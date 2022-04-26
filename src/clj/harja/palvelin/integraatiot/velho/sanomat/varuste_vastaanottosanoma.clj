@@ -2,7 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clj-time.format :as df]
             [harja.pvm :as pvm]
-            [harja.tyokalut.yleiset :as yleiset])
+            [clojure.string :as str])
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)))
 
@@ -214,11 +214,16 @@
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
       {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
-
-      ; 6.
-      ; 7.
-
-      ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin vaikka vajaammilla tiedoilla ettei tule turhia virheilmoituksia
+      ; 6
+      (and (= "tl506" (:tietolaji varustetoteuma)) (str/blank? (:lisatieto varustetoteuma)))
+      {:toiminto :skippaa :viesti "Liikennemerkin lisätieto puuttuu. Skipataan varustetoteuma."}
+      ; 7a
+      (= "tt01" (:toteuma varustetoteuma))
+      {:toiminto :skippaa :viesti "Tekninen toteuma: Tieosoitemuutos. Skipataan varustetoteuma."}
+      ; 7b
+      (= "tt02" (:toteuma varustetoteuma))
+      {:toiminto :skippaa :viesti "Tekninen toteuma: Muu tekninen toimenpide. Skipataan varustetoteuma."}
+      ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin ettei tule virheilmoituksia
       ; sellaisista, jotka eivät Harjaan kuulu
       ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))

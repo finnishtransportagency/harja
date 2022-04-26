@@ -278,12 +278,13 @@
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         tuntematon-tietolaji "tl123"
+        liikennemerkki "tl506"
         alku-ja-loppupvm (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil))
         oid-muokattu-urakka-tietolaji-sijainti (fn [kohde] (-> kohde
-                                                        (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde)
-                                                               :urakka_id odotettu-oulu-MHU-urakka-id
-                                                               :tietolaji "tl506"
-                                                               :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
+                                                               (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde)
+                                                                      :urakka_id odotettu-oulu-MHU-urakka-id
+                                                                      :tietolaji "tl501"
+                                                                      :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
         toimenpide (fn [kohde] (assoc kohde :toteuma "lisays"))
         muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
         sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
@@ -313,4 +314,19 @@
     ; 4 -> skippaa
     (is (= {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
            (kutsu (-> {} perus-setti
-                      (assoc :tietolaji tuntematon-tietolaji)))))))
+                      (assoc :tietolaji tuntematon-tietolaji)))))
+    ; 6 -> skippaa
+    (is (= {:toiminto :skippaa :viesti "Liikennemerkin lisätieto puuttuu. Skipataan varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :tietolaji liikennemerkki)))))
+    ; 7a -> skippaa
+    (is (= {:toiminto :skippaa :viesti "Tekninen toteuma: Tieosoitemuutos. Skipataan varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :toteuma "tt01")))))
+    ; 7b -> skippaa
+    (is (= {:toiminto :skippaa :viesti "Tekninen toteuma: Muu tekninen toimenpide. Skipataan varustetoteuma."}
+                                                         (kutsu (-> {} perus-setti
+                                                                    (assoc :toteuma "tt02")))))
+    ; else -> tallenna
+    (is (= {:toiminto :tallenna :viesti nil}
+           (kutsu (-> {} perus-setti))))))
