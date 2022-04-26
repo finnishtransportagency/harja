@@ -208,7 +208,7 @@ FROM tehtavaryhma tr1
                                                                                    ) or tpk4.yksiloiva_tunniste is null)
        JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
        LEFT OUTER JOIN urakka_tehtavamaara ut
-                       ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+                       ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE) 
        LEFT OUTER JOIN urakka u ON ut.urakka = u.id
        LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka
 WHERE tr1.emo is null
