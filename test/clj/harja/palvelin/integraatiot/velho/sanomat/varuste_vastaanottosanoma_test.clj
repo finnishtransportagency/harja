@@ -280,35 +280,33 @@
         odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
-        alku-ja-loppupvm (fn [kohde] (-> kohde
-                                         (assoc :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil)))
+        alku-ja-loppupvm (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil))
         oid-muokattu-urakka-ja-sijainti (fn [kohde] (-> kohde
                                                         (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde) :urakka_id odotettu-oulu-MHU-urakka-id)
                                                         (assoc :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
-        toimenpide (fn [kohde] (-> kohde
-                                          (assoc :toteuma "lisays")))
+        toimenpide (fn [kohde] (assoc kohde :toteuma "lisays"))
+        muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
+        sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
         perus-setti (comp oid-muokattu-urakka-ja-sijainti toimenpide alku-ja-loppupvm)
         kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkista-varustetoteuma kohde urakka-pvmt-idlla-fn))
-        juuri-ennen-oulun-MHU-alkua {:alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")}
-        tapaus1 (-> {} perus-setti
-                    (yleiset/prettydenty "petrisi2256: ")
-                    (assoc :sijainti nil))
-        tapaus3 (-> juuri-ennen-oulun-MHU-alkua
-                    toimenpide
-                    oid-muokattu-urakka-ja-sijainti)
-        tapaus5 (-> {} alku-ja-loppupvm
-                    oid-muokattu-urakka-ja-sijainti)]
-    ;1 -> varoitus
+        juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
+    ; 1 -> varoita
     (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
-           (kutsu tapaus1)))
-
-    ;3 -> varoitus
+           (kutsu (-> {} perus-setti
+                      (assoc :sijainti nil)))))
+    ; 3 -> varoita
     (is (= {:toiminto :varoita :viesti
             (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa "
                  "alkupvm: Sun Sep 29 00:00:00 EEST 2019 loppupvm: Mon Sep 30 00:00:00 EEST 2019")}
-           (kutsu tapaus3)))
-    ;
-
-    ;5 -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
-           (kutsu tapaus5)))))
+           (kutsu (-> {} perus-setti
+                      juuri-ennen-oulun-MHU-alkua))))
+    ; 5 -> varoita
+    (is (= {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+           (kutsu (-> {} alku-ja-loppupvm
+                      oid-muokattu-urakka-ja-sijainti))))
+    ; 2 -> skippaa
+    (is (= {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta."}
+           (kutsu (-> {} perus-setti
+                      sijainti-ei-MHU-testidatassa
+                      muutoksen-lahde-tuntematon-oid
+                      (assoc :urakka_id nil)))))))

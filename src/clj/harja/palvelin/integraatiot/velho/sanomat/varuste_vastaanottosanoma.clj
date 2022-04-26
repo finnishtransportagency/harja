@@ -210,7 +210,7 @@
 
       ; 5.
       (nil? (:toteuma varustetoteuma))
-      {:toiminto :skippaa :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+      {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
 
       ; 4.
       ; 6.

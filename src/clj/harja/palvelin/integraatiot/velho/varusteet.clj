@@ -234,7 +234,7 @@
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
 
 
-(defn tallenna-kohde
+(defn tallenna-kohteet
   "Kohdetietojen hakeminen ja tallentaminen on kaksivaiheinen toimenpide.
 
   Aiemmin on Velhosta haettu lista tunnisteita (OID), joille on Velhossa kohdentunut muutoksia annetun pvm jälkeen.
@@ -320,7 +320,7 @@
                               :url url
                               :otsikot otsikot}
               {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
-              onnistunut? (tallenna-kohde sisalto oidit url tallenna-fn tallenna-virhe-fn)]
+              onnistunut? (tallenna-kohteet sisalto oidit url tallenna-fn tallenna-virhe-fn)]
           onnistunut?)
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
           (tallenna-virhe-fn nil (str "Ulkoinen käsittelyvirhe. Haku Velhosta epäonnistui. url: " url " virheet: " virheet))
