@@ -121,17 +121,31 @@
       (= :kaikki valittu-toimenpide) 
       (= sisainen-id valittu-toimenpide))))
 
+(defn erottele-alueet-ja-maaralliset
+  [kaikki [id rivi]]
+  (let [luokka (if (:aluetieto? rivi) :alueet :maarat)]
+    (assoc-in kaikki [luokka id] rivi)))
+
+(defn paivita-alueet-ja-maarat
+  [{:keys [alueet maarat]} vanhempi ttila]
+  (-> ttila
+    (assoc-in [:alueet vanhempi] alueet)
+    (assoc-in [:maarat vanhempi] maarat)))
+
 (defn luo-taulukon-rakenne-ja-liita-tiedot
   [{:keys [hoitokausi]} {:keys [nimi id tehtavat]}]
   (let [taulukkorakenne (into 
                           {} 
                           (map (r/partial map->id-map-maaralla hoitokausi)) 
-                          tehtavat)] 
+                          tehtavat)
+        taulukkorakenne-alueet-ja-maarat-eroteltuna (reduce erottele-alueet-ja-maaralliset {} taulukkorakenne)]
     (swap! taulukko-tila 
-      assoc id taulukkorakenne)                                 
+      (r/partial paivita-alueet-ja-maarat
+        taulukkorakenne-alueet-ja-maarat-eroteltuna id))
     {:nimi nimi 
      :sisainen-id id
-     :taulukko taulukkorakenne
+     :alue-tehtavia (count (:alueet taulukkorakenne-alueet-ja-maarat-eroteltuna))
+     ;:taulukko taulukkorakenne-alueet-ja-maarat-eroteltuna
      :nayta-toimenpide? true}))
 
 (defn paivita-tehtavien-maarat-hoitokaudelle 
