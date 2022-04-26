@@ -109,10 +109,9 @@
                                            :oikea " grid-header-oikea"
                                            ""))
                    :solun-luokka (fn [arvo _rivi]
-                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti
-                                   ;; rivin optioissa voi olla avain :varoitus?, jolloin piirretään solu punaisella
-                                   ;; taustalla ja tekstillä.
-                                   (when (:varoitus? (second arvo))
+                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi 
+                                   ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
+                                   (when (:varoitus? (and (vector? arvo) (second arvo)))
                                      "solu-varoitus"))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
