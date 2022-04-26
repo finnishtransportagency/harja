@@ -16,11 +16,13 @@
   [funktio tunniste]
   (let [aloitusaika-ms (System/currentTimeMillis)]
     (log/info tunniste "suoritus alkoi")
-    (try
-      (funktio)
-      (catch Throwable t (log/error "Virhe suoritettaessa" tunniste "Throwable:" t)))
-    (log/info (str tunniste " suoritus päättyi. Kesto: "
-                   (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia"))))
+    (let [onnistui? (try
+                      (funktio)
+                      (catch Throwable t (log/error "Virhe suoritettaessa" tunniste "Throwable:" t) false))]
+      (log/info (str tunniste " suoritus päättyi "
+                     (when-not onnistui? "epäonnistuneesti") ; Suoritus voi onnistua kokonaan, osittain tai ei ollenkaan.
+                     ". Kesto: "
+                     (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
 
 (defrecord Velho [asetukset]
   component/Lifecycle

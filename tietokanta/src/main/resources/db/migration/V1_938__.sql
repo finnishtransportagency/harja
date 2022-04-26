@@ -1,6 +1,5 @@
--- Luodaan raporttia varten uusi materiaalikoodi - Hox päivitä tämä
-ALTER TYPE materiaalityyppi ADD VALUE 'erityisalue';
-ALTER TYPE materiaalityyppi ADD VALUE 'formiaatti';
-ALTER TYPE materiaalityyppi ADD VALUE 'kesasuola';
-ALTER TYPE materiaalityyppi ADD VALUE 'hiekoitushiekka';
-ALTER TYPE materiaalityyppi ADD VALUE 'murske';
+-- Poistetaan tapahtuma_tiedot tauluun liittyvät triggerit, jotka hallinnoivat taulun sisältöä.
+-- tapahtuma_tiedot taulun sisältö siivotaan tunnin välein ajastetulla tehtävällä ihan koodista
+
+DROP TRIGGER tg_poista_vanhat_tapahtumat ON tapahtuman_tiedot;
+DROP TRIGGER tg_esta_tapahtumien_muokkaus_ja_poisto ON tapahtuman_tiedot;

@@ -1423,4 +1423,5 @@ FROM toteuma t
      LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
 WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 GROUP BY t.id, t.alkanut
-ORDER BY t.alkanut ASC;
+ORDER BY t.alkanut ASC
+LIMIT 100000;
