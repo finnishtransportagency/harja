@@ -13,6 +13,8 @@ INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id F
 INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_uuvh'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'urakoitsijan urakan vastuuhenkilo');
 INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='antero'), (SELECT id FROM urakka WHERE nimi='Muhoksen päällystysurakka'), 'vastuuhenkilo'),
                                                                    ((SELECT id FROM kayttaja WHERE kayttajanimi='antero'), (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'vastuuhenkilo');
+INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='veeti'), (SELECT id FROM urakka WHERE nimi='Porvoon päällystysurakka'), 'vastuuhenkilo'),
+                                                                   ((SELECT id FROM kayttaja WHERE kayttajanimi='veeti'), (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'), 'vastuuhenkilo');
 INSERT INTO kayttaja_urakka_rooli (kayttaja, urakka, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='yit_uuvh'), (SELECT id FROM urakka WHERE nimi='Iin MHU 2021-2026'), 'vastuuhenkilo');
 
 INSERT INTO kayttaja_organisaatio_rooli (kayttaja, organisaatio, rooli) VALUES ((SELECT id FROM kayttaja WHERE kayttajanimi='ulle'), (SELECT organisaatio FROM kayttaja WHERE kayttajanimi='ulle'), 'Kayttaja');

@@ -585,3 +585,90 @@
                         +kayttaja-jvh+ {:urakka-id (hae-oulun-paallystysurakan-id)})]
     (is (= oletetut-massat-oulun-paallystysurakassa massat) "Oletetut massat Oulun urakasta")
     (is (= oletetut-murskeet-oulun-paallystysurakassa murskeet) "Oletetut murskeet Oulun urakasta")))
+
+(deftest tuo-materiaalit-utajarvi->porvoo
+  (let [{massat :massat murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
+        urakka-id (hae-urakan-id-nimella "Porvoon päällystysurakka")
+        massa-idt (map ::pot2-domain/massa-id massat)
+        murske-idt (map ::pot2-domain/murske-id murskeet)
+        runkoaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_runkoaine;"))
+        sideaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_sideaine;"))
+        lisaaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_lisaaine;"))
+        {tuodut-massat :massat tuodut-murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt massa-idt
+                                                     :murske-idt murske-idt})
+        alkuperainen-massa-dop-1234567 (first (filter #(= "1234567" (::pot2-domain/dop-nro %)) massat))
+        alkuperaisen-runkoaineet (::pot2-domain/runkoaineet alkuperainen-massa-dop-1234567)
+        alkuperaisen-sideaineet (::pot2-domain/sideaineet alkuperainen-massa-dop-1234567)
+        alkuperaisen-lisaaineet (::pot2-domain/lisaaineet alkuperainen-massa-dop-1234567)
+        monistettu-dop-1234567 (first (filter #(= "1234567" (::pot2-domain/dop-nro %)) tuodut-massat))
+        monistettu-dop-1234567-massa-id (::pot2-domain/massa-id monistettu-dop-1234567)
+        monistettu-1234567-dop-murske (first (filter #(= "1234567-dop" (::pot2-domain/dop-nro %)) tuodut-murskeet))
+        ;; koska luodaan runkoaineista kopio, niiden id:t saavat sekvenssistä max:ia seuraavan arvon
+        odotetut-runkoaineet (map #(-> %
+                                       (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                       (assoc :runkoaine/id (+ 1 runkoaine-max-id)))
+                                  alkuperaisen-runkoaineet)
+        odotetut-sideaineet (map #(-> %
+                                      (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                      (assoc :sideaine/id (+ 1 sideaine-max-id)))
+                                 alkuperaisen-sideaineet)
+        odotetut-lisaaineet (map #(-> %
+                                      (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                      (assoc :lisaaine/id (+ 1 lisaaine-max-id)))
+                                 alkuperaisen-lisaaineet)]
+
+
+
+    ;; vertaillaan alkuperäiseen massaan, siten että id:t korvataan monistetun massan id:illä
+    ;; assertoidaan ensin massan perustiedot, myöhemmin erillisesti runko-, side- ja lisäaineet
+    (is (= (-> alkuperainen-massa-dop-1234567
+               (assoc ::pot2-domain/kaytossa (list)
+                      ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+               (dissoc ::pot2-domain/runkoaineet
+                       ::pot2-domain/sideaineet
+                       ::pot2-domain/lisaaineet))
+           ;; assertoidaan runko-, side- ja lisäaineet erikseen
+           (dissoc monistettu-dop-1234567 ::pot2-domain/runkoaineet
+                   ::pot2-domain/sideaineet
+                   ::pot2-domain/lisaaineet)) "Tuodut massat")
+
+    (is (= odotetut-runkoaineet (::pot2-domain/runkoaineet monistettu-dop-1234567)) "Runkoaineet monistettu oikein")
+    (is (= odotetut-sideaineet (::pot2-domain/sideaineet monistettu-dop-1234567)) "Sideaineet monistettu oikein")
+    (is (= odotetut-lisaaineet (::pot2-domain/lisaaineet monistettu-dop-1234567)) "Lisäaineet monistettu oikein")
+    (is (= (-> (first murskeet)
+               (assoc ::pot2-domain/kaytossa (list)
+                      ::pot2-domain/murske-id (::pot2-domain/murske-id monistettu-1234567-dop-murske)))
+           monistettu-1234567-dop-murske) "Murskeet monistettu oikein")))
+
+
+(deftest hae-materiaalit-utajarvi->oulun-alueurakka-epaonnistuu
+  ;; Oulun urakan vastuuhenkilö (yit uuvh) koettaa hakea Utajärven materiaaleja eikä saa onnistua
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakan-massat-ja-murskeet
+                               +kayttaja-yit_uuvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)}))))
+
+(deftest tuo-materiaalit-utajarvi->oulun-alueurakka-epaonnistuu
+  (let [{massat :massat murskeet :murskeet}
+        ;; tässä teeskennellään että ensin jostain syystä (JVH:n avulla) saataisiin materiaalit haettua...
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        massa-idt (map ::pot2-domain/massa-id massat)
+        murske-idt (map ::pot2-domain/murske-id murskeet)]
+    (is (thrown? Exception
+                 ;; ... jolloin vasta tämän palvelukutsun oikeustarkistus pääsee ajoon asti ja feilaa
+                 ;; eli ei pidäkään voida hakea materiaaleja toisen urakoitsijan urakasta
+                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tuo-materiaalit-toisesta-urakasta
+                                +kayttaja-yit_uuvh+ {:urakka-id urakka-id
+                                                      :massa-idt massa-idt
+                                                      :murske-idt murske-idt})))))

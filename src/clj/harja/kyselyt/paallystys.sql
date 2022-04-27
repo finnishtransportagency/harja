@@ -651,5 +651,104 @@ SELECT id, nimi FROM urakka u
              exists(SELECT id FROM pot2_mk_urakan_murske mu WHERE mu.urakka_id = u.id AND mu.poistettu IS FALSE))
 ORDER BY u.nimi;
 
+-- name: monista-massa<!
+INSERT INTO pot2_mk_urakan_massa (urakka_id,
+                                  tyyppi,
+                                  nimen_tarkenne,
+                                  max_raekoko,
+                                  kuulamyllyluokka,
+                                  dop_nro,
+                                  poistettu,
+                                  muokkaaja,
+                                  muokattu,
+                                  luoja,
+                                  luotu,
+                                  litteyslukuluokka)
+SELECT :urakka_id,
+        tyyppi,
+        nimen_tarkenne,
+        max_raekoko,
+        kuulamyllyluokka::kuulamyllyluokka,
+        dop_nro,
+        FALSE,
+        NULL,
+        NULL,
+        :kayttaja,
+        NOW(),
+        litteyslukuluokka::litteyslukuluokka
+  FROM pot2_mk_urakan_massa
+ WHERE id = :id;
+
+-- name: monista-massan-runkoaineet<!
+INSERT INTO pot2_mk_massan_runkoaine (pot2_massa_id,
+                                      tyyppi,
+                                      esiintyma,
+                                      fillerityyppi,
+                                      kuvaus,
+                                      kuulamyllyarvo,
+                                      litteysluku,
+                                      massaprosentti)
+SELECT :uusi_pot2_massa_id,
+       tyyppi,
+       esiintyma,
+       fillerityyppi,
+       kuvaus,
+       kuulamyllyarvo,
+       litteysluku,
+       massaprosentti
+  FROM pot2_mk_massan_runkoaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-massan-sideaineet<!
+INSERT INTO pot2_mk_massan_sideaine (pot2_massa_id,
+                                     "lopputuote?",
+                                     tyyppi,
+                                     pitoisuus)
+SELECT :uusi_pot2_massa_id,
+       "lopputuote?",
+       tyyppi,
+       pitoisuus
+  FROM pot2_mk_massan_sideaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-massan-lisaaineet<!
+INSERT INTO pot2_mk_massan_lisaaine (pot2_massa_id,
+                                     tyyppi,
+                                     pitoisuus)
+SELECT :uusi_pot2_massa_id,
+       tyyppi,
+       pitoisuus
+  FROM pot2_mk_massan_lisaaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-murske<!
+INSERT INTO pot2_mk_urakan_murske (urakka_id,
+                                   nimen_tarkenne,
+                                   tyyppi,
+                                   esiintyma,
+                                   rakeisuus,
+                                   iskunkestavyys,
+                                   dop_nro,
+                                   poistettu,
+                                   muokkaaja,
+                                   muokattu,
+                                   luoja,
+                                   luotu,
+                                   rakeisuus_tarkenne,
+                                   tyyppi_tarkenne,
+                                   lahde)
+SELECT :urakka_id,
+       nimen_tarkenne,
+       tyyppi,
+       esiintyma,
+       rakeisuus,
+       iskunkestavyys,
+       dop_nro,
+       FALSE,
+       NULL,
+       NULL,
+       :kayttaja,
+       NOW(),
+       rakeisuus_tarkenne,
+       tyyppi_tarkenne,
+       lahde FROM pot2_mk_urakan_murske WHERE id = :id;
+
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;

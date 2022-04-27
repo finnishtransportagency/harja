@@ -122,7 +122,9 @@
            [tuotavat-materiaalit e! app])
 
          [napit/yleinen-ensisijainen "Tuo materiaalit"
-          #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta @mk-tiedot/tuontiin-valittu-urakka))
+          (if materiaalit-toisesta-urakasta
+            #(e! (mk-tiedot/->TuoMateriaalitToisestaUrakasta))
+            #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta @mk-tiedot/tuontiin-valittu-urakka)))
           {:ikoni (ikonit/harja-icon-action-copy)
            :luokka "tuo-materiaalit"
            :disabled (not @mk-tiedot/tuontiin-valittu-urakka)}]

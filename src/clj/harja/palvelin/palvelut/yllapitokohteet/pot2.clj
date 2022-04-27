@@ -328,6 +328,32 @@
                                                       :organisaatiot organisaatiot-jossa-rooleja
                                                       :jarjestelmavastaava jarjestelmavastaava?})))
 
+(defn tuo-materiaalit-toisesta-urakasta
+  "Monistaa valitut massat ja murskeet toisesta käyttäjän urakasta."
+  [db user {:keys [urakka-id massa-idt murske-idt]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (jdbc/with-db-transaction
+    [db db]
+
+    (doseq [massa-id massa-idt
+            :let [uusi-massa (paallystys-q/monista-massa<! db {:id massa-id
+                                                               :kayttaja (:id user)
+                                                               :urakka_id urakka-id})]]
+      (paallystys-q/monista-massan-runkoaineet<! db {:vanha_pot2_massa_id massa-id
+                                                     :uusi_pot2_massa_id (:id uusi-massa)})
+      (paallystys-q/monista-massan-sideaineet<! db {:vanha_pot2_massa_id massa-id
+                                                    :uusi_pot2_massa_id (:id uusi-massa)})
+      (paallystys-q/monista-massan-lisaaineet<! db {:vanha_pot2_massa_id massa-id
+                                                    :uusi_pot2_massa_id (:id uusi-massa)}))
+
+    (doseq [murske-id murske-idt]
+      (paallystys-q/monista-murske<! db {:id murske-id
+                                         :kayttaja (:id user)
+                                         :urakka_id urakka-id}))
+
+    ;; Palautetaan käyttäjälle tuoreet materiaalit kannasta monistamisen jälkeen
+    (hae-urakan-massat-ja-murskeet db user {:urakka-id urakka-id})))
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -353,6 +379,9 @@
       (julkaise-palvelu http :hae-muut-urakat-joissa-materiaaleja
                         (fn [user tiedot]
                           (hae-muut-urakat-joissa-materiaaleja db user tiedot)))
+      (julkaise-palvelu http :tuo-materiaalit-toisesta-urakasta
+                        (fn [user tiedot]
+                          (tuo-materiaalit-toisesta-urakasta db user tiedot)))
       ;; POT2 liittyviä palveluita myös harja.palvelin.palvelut.yllapitokohteet.paallystys ns:ssä
       this))
 
@@ -363,5 +392,6 @@
       :hae-pot2-koodistot
       :tallenna-urakan-massa
       :tallenna-urakan-murske
-      :hae-muut-urakat-joissa-materiaaleja)
+      :hae-muut-urakat-joissa-materiaaleja
+      :tuo-materiaalit-toisesta-urakasta)
     this))

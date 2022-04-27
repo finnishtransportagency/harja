@@ -1009,6 +1009,12 @@
   (ffirst (q (str "SELECT id        x
                    FROM   urakka
                    WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
+
+(defn hae-urakan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = '" nimi "';"))))
+
 (defn hae-pudasjarven-alueurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null)"))))
@@ -1204,6 +1210,7 @@
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
+(def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"}))
 
 (def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"}))
 

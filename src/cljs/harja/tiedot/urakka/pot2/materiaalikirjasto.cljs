@@ -57,6 +57,9 @@
 (defrecord HaeMateriaalitToisestaUrakasta [urakka-id])
 (defrecord HaeMateriaalitToisestaUrakastaOnnistui [vastaus])
 (defrecord HaeMateriaalitToisestaUrakastaEpaonnistui [vastaus])
+(defrecord TuoMateriaalitToisestaUrakasta [])
+(defrecord TuoMateriaalitToisestaUrakastaOnnistui [vastaus])
+(defrecord TuoMateriaalitToisestaUrakastaEpaonnistui [vastaus])
 
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
@@ -319,6 +322,33 @@
     (viesti/nayta! "Materiaalien haku toisesta urakasta epäonnistui!" :danger)
     app)
 
+  TuoMateriaalitToisestaUrakasta
+  (process-event [_ app]
+    (let [massa-idt (filter #(when (true? (:valittu? %))
+                               (::pot2-domain/massa-id %))
+                            (get-in app [:materiaalit-toisesta-urakasta :massat]))
+          murske-idt (filter #(when (true? (:valittu? %))
+                                (::pot2-domain/murske-id %))
+                            (get-in app [:materiaalit-toisesta-urakasta :murskeet]))]
+      (-> app
+          (tuck-apurit/post! :tuo-materiaalit-toisesta-urakasta
+                             {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                              :massa-idt massa-idt
+                              :murske-idt murske-idt}
+                             {:onnistui ->TuoMateriaalitToisestaUrakastaOnnistui
+                              :epaonnistui ->TuoMateriaalitToisestaUrakastaEpaonnistui}))))
+
+
+  TuoMateriaalitToisestaUrakastaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [{massat :massat
+           murskeet :murskeet} vastaus]
+      (assoc app :materiaalit-toisesta-urakasta (rikasta-materiaalien-nimi app massat murskeet))))
+
+  TuoMateriaalitToisestaUrakastaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Materiaalien tuonti toisesta urakasta epäonnistui!" :danger)
+    app)
 
   HaeKoodistot
   (process-event [_ app]
