@@ -158,7 +158,7 @@
   (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
     (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
           puuttuu-oid (dissoc syote :oid)
-          odotettu {:tulos nil :virheviesti "puuttuu pakollisia kenttiä: [:ulkoinen_oid]"}
+          odotettu {:tulos nil :virheviesti "Puuttuu pakollisia kenttiä: [:ulkoinen_oid]"}
           db (:db jarjestelma)
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
           urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
