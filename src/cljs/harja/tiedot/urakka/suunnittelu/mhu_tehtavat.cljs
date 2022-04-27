@@ -162,7 +162,8 @@
 
 (defn toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla
   [taulukon-tila hoitokausi]
-  (into {} (map (r/partial paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle hoitokausi) taulukon-tila)))
+  (update taulukon-tila :maarat
+    #(into {} (map (r/partial paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle hoitokausi) %))))
 
 (defn muodosta-taulukko 
   [tehtavat-ja-toimenpiteet valinnat]
@@ -227,6 +228,7 @@
         kaikki-maarat-fn (r/partial kaikki-sopimusmaarat 
                            sopimuksen-tehtavamaarat
                            hoitokaudet)
+        virheviesti ["Syötä 0 tai luku"]
         syotetty? (cond-> false
                     (or (nil? yksikko)
                       (= "" yksikko)
@@ -247,12 +249,12 @@
       (and
         (not syotetty?)
         (not aluetieto?))
-      (assoc-in virheet-kaikki [id :sopimuksen-tehtavamaara] ["Syötä 0 tai luku"])
+      (assoc-in virheet-kaikki [id :sopimuksen-tehtavamaara] virheviesti)
 
       (and
         (not syotetty?)
         aluetieto?)
-      (assoc-in virheet-kaikki [id :sopimuksen-aluetieto-maara] ["Syötä 0 tai luku"])
+      (assoc-in virheet-kaikki [id :sopimuksen-aluetieto-maara] virheviesti)
       
       :else
       virheet-kaikki)))
@@ -293,7 +295,7 @@
           urakan-vuodet)))))
 
 (defn laske-tehtavalle-sopimusmaarat 
-  [[id tehtava]] 
+  [[id tehtava]]
   [id (laske-sopimusmaarat tehtava)])
 
 (defn laske-toimenpiteen-sopimusmaarat 
@@ -305,10 +307,11 @@
      toimenpiteen-tehtavat)])
 
 (defn laske-kaikki-sopimusmaarat 
-  [taulukon-tila]
-  (into {} 
-    (map laske-toimenpiteen-sopimusmaarat) 
-    taulukon-tila))
+  [taulukon-tila]  
+  (update taulukon-tila :maarat
+    #(into {} 
+       (map laske-toimenpiteen-sopimusmaarat) 
+       %)))
 
 (defn paivita-kaikki-maarat
   [taulukon-tila valinnat]
