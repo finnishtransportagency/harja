@@ -130,9 +130,9 @@
 
 (defn paivita-alueet-ja-maarat
   [{:keys [alueet maarat]} vanhempi ttila]
-  (-> ttila
-    (assoc-in [:alueet vanhempi] alueet)
-    (assoc-in [:maarat vanhempi] maarat)))
+  (cond-> ttila
+    (some? alueet) (assoc-in [:alueet vanhempi] alueet)
+    (some? maarat) (assoc-in [:maarat vanhempi] maarat)))
 
 (defn luo-taulukon-rakenne-ja-liita-tiedot
   [{:keys [hoitokausi]} {:keys [nimi id tehtavat]}]
@@ -219,7 +219,7 @@
 
 (defn sopimus-maara-syotetty 
   [virheet-kaikki r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimuksen-tehtavamaara]} (second r)
+  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimuksen-tehtavamaara sopimuksen-aluetieto-maara aluetieto?]} (second r)
         hoitokaudet (range 
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
@@ -231,12 +231,30 @@
                     (or (nil? yksikko)
                       (= "" yksikko)
                       (= "-" yksikko)) ((constantly true)) 
+
+                    (and
+                      aluetieto?
+                      (some? sopimuksen-aluetieto-maara)) ((constantly true))
                     
-                    (some? sopimuksen-tehtavamaara) ((constantly true))
-                    
-                    (some? sopimuksen-tehtavamaarat) kaikki-maarat-fn)] 
-    (if-not syotetty?
+                    (and
+                      (not aluetieto?)
+                      (some? sopimuksen-tehtavamaara)) ((constantly true))
+
+                    (and
+                      (not aluetieto?)
+                      (some? sopimuksen-tehtavamaarat)) kaikki-maarat-fn)] 
+    (cond
+      (and
+        (not syotetty?)
+        (not aluetieto?))
       (assoc-in virheet-kaikki [id :sopimuksen-tehtavamaara] ["Syötä 0 tai luku"])
+
+      (and
+        (not syotetty?)
+        aluetieto?)
+      (assoc-in virheet-kaikki [id :sopimuksen-aluetieto-maara] ["Syötä 0 tai luku"])
+      
+      :else
       virheet-kaikki)))
 
 (defn toimenpiteet-sopimuksen-tehtavamaarat-syotetty
@@ -245,7 +263,8 @@
 
 (defn tarkista-sovitut-maarat
   [taulukko]
-  (reduce toimenpiteet-sopimuksen-tehtavamaarat-syotetty {} taulukko))
+  (let [alueet-ja-maarat (merge-with merge (:alueet taulukko) (:maarat taulukko))]
+    (reduce toimenpiteet-sopimuksen-tehtavamaarat-syotetty {} alueet-ja-maarat)))
 
 (defn syotetty-maara-tuleville-vuosille 
   [tehtava hoitokausi]
@@ -255,30 +274,23 @@
   [vuosi sopimuksen-tehtavamaara])
 
 (defn paivita-vuosien-maarat 
-  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]} alueet-vai-maarat]
-  (let [alueet? (= :alueet alueet-vai-maarat)]
-    (cond
-      alueet?
-      taulukko-tila    
-          
-      joka-vuosi-erikseen?                  
-      (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)
-
-      :else
-      (let [urakan-vuodet 
-            (range 
-              (-> @tiedot/yleiset
-                :urakka
-                :alkupvm
-                pvm/vuosi)
-              (-> @tiedot/yleiset
-                :urakka
-                :loppupvm
-                pvm/vuosi))]
-        (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat]
-          (into {} 
-            (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
-            urakan-vuodet))))))
+  [taulukko-tila {:keys [id vanhempi sopimuksen-tehtavamaara joka-vuosi-erikseen? hoitokausi]}]
+  (if joka-vuosi-erikseen?                  
+    (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat hoitokausi] sopimuksen-tehtavamaara)
+    (let [urakan-vuodet 
+          (range 
+            (-> @tiedot/yleiset
+              :urakka
+              :alkupvm
+              pvm/vuosi)
+            (-> @tiedot/yleiset
+              :urakka
+              :loppupvm
+              pvm/vuosi))]
+      (assoc-in taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat]
+        (into {} 
+          (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
+          urakan-vuodet)))))
 
 (defn laske-tehtavalle-sopimusmaarat 
   [[id tehtava]] 
@@ -403,14 +415,27 @@
 
   TallennaMuuttunutAluemaara
   (process-event
-    [{:keys [tehtava]} app]
-    app)
+    [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
+    (let [{:keys [id muuttunut-aluetieto-maara]} tehtava
+          urakka-id (-> @tiedot/yleiset :urakka :id)]        
+      (tuck-apurit/post! :tallenna-tehtavamaarat
+        {:urakka-id             urakka-id
+         :hoitokauden-alkuvuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)
+         :tehtavamaarat         [{:tehtava-id id
+                                  :maara      muuttunut-aluetieto-maara}]}
+        {:onnistui           ->TehtavaTallennusOnnistui
+         :epaonnistui        ->TehtavaTallennusEpaonnistui
+         :paasta-virhe-lapi? true})     
+      (update app :valinnat 
+        assoc 
+        :virhe-tallennettaessa false
+        :tallennetaan true)))
 
   TallennaSopimuksenAluemaara
   (process-event
     [{:keys [tehtava]} app]
     (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]
-      (swap! taulukko-tila paivita-vuosien-maarat tehtava :alueet)
+      (swap! taulukko-tila paivita-vuosien-maarat tehtava)
       (-> app                             
         (assoc :tallennettava tehtava)
         (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
@@ -484,6 +509,7 @@
         assoc 
         :virhe-tallennettaessa false
         :tallennetaan true)))
+  
   HakuEpaonnistui
   (process-event
     [_ app]

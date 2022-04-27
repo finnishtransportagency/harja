@@ -175,7 +175,7 @@
        [grid/muokkaus-grid
         (merge 
           {:otsikko "Alueet"
-           :id (keyword (str "tehtavat-maarat-" nimi))
+           :id (keyword (str "tehtavat-alueet-" nimi))
            :tyhja "Ladataan tietoja"
            :voi-poistaa? (constantly false)
            :jarjesta :jarjestys 
@@ -196,7 +196,7 @@
           :muokattava? (constantly (if sopimukset-syotetty? false true))}
          ;; urakan ajan suunnittelu -moodi         
          (when sopimukset-syotetty? 
-           {:otsikko "Muuttunut määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+           {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
         aluetiedot-tila])
      [grid/muokkaus-grid
@@ -276,6 +276,7 @@
        [:h1 "Tehtävät ja määrät"]
        [debug/debug app]
        [debug/debug @t/taulukko-tila]
+       [debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)
