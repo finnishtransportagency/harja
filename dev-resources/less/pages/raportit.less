@@ -22,12 +22,6 @@
                 color: @black-default;
                 font-weight: 600;
                 font-size: 12px;
-                &:first-child {
-                    border-left: 1px solid @raportin-tehostevari;
-                }
-                &:last-child {
-                    border-right: 1px solid @raportin-tehostevari;
-                }
             }
         }
         > tr:first-child {
@@ -66,6 +60,13 @@
         border-bottom: 2px solid @raportin-tehostevari;
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
+    }
+    
+    td, th {
+       &.solu-varoitus {
+           background-color: @red-lighter;
+           color: @red-dark;
+       } 
     }
 }
 .tyomaakokous {
@@ -189,43 +190,12 @@
     }
 }
 
-.ymparistoraportti {
-    .livi-grid {
-        .panel-body {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table {
-            // Ei haluta pakottaa koko ruudun levyiseksi, vaan skrollataan.
-            min-width: 100%;
-            width: auto;
-
-            tr, td {
-                // Ei rikota tekstiä kahdelle riville taulukossa.
-                white-space: pre;
-
-                .sticky(@taustavari: initial) {
-                    position: sticky;
-                    left: 0;
-                    z-index: 1;
-                    background-color: @taustavari;
-                }
-
-                th:first-child {
-                    .sticky();
-                }
-
-                td:first-child {
-                    .sticky(@harjan-taustavari);
-                }
-
-                // Yhteenlaskurivien ensimmäisen sarakkeen taustaväri myös siniseksi.
-                &.tausta-blue-lighter td:nth-last-child(n+3),
-                .tausta-blue-lighter {
-                    background-color: @blue-lighter;
-                }
-            }
+.ymparistoraportti .livi-grid table {
+    tr, td {
+        // Yhteenlaskurivien ensimmäisen sarakkeen taustaväri myös siniseksi.
+        &.tausta-blue-lighter td:nth-last-child(n+3),
+        .tausta-blue-lighter {
+            background-color: @blue-lighter;
         }
     }
 }

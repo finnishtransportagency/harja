@@ -23,7 +23,7 @@ DECLARE
     pohjavesialue_tunnus VARCHAR;
 BEGIN
     SELECT array_agg(id) FROM materiaalikoodi
-                              -- Muuttunut koodi
+    -- Muuttunut koodi
     WHERE materiaalityyppi IN ('talvisuola','erityisalue') INTO suolamateriaalikoodit;
     -- Muuttunut koodi päättyy
 
@@ -44,4 +44,3 @@ BEGIN
     RETURN NULL;
 END;
 $$ LANGUAGE plpgsql;
-

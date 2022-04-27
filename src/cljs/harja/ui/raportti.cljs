@@ -85,6 +85,7 @@
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
+                                               oikealle-tasattavat-kentat esta-tiivis-grid?]}
                                                oikealle-tasattavat-kentat vetolaatikot]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
@@ -97,7 +98,10 @@
                 :rivi-ennen rivi-ennen
                 :vetolaatikot (into {} (map (fn [[id data]]
                                               {id [nihkea-vetolaatikko data]}) vetolaatikot))
-                :piilota-toiminnot? true}
+                :piilota-toiminnot? true
+                :sivuttain-rullattava? true
+                :ensimmainen-sarake-sticky? true
+                :esta-tiivis-grid? esta-tiivis-grid?}
      (into []
            (map-indexed
             (fn [i sarake]
@@ -110,10 +114,15 @@
                    :reunus (:reunus sarake)
                    :pakota-rivitys? (:pakota-rivitys? sarake)
                    :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                            (case (:tasaa-otsikko sarake)
-                                              :keskita " grid-header-keskita"
-                                              :oikea " grid-header-oikea"
-                                              ""))
+                                         (case (:tasaa-otsikko sarake)
+                                           :keskita " grid-header-keskita"
+                                           :oikea " grid-header-oikea"
+                                           ""))
+                   :solun-luokka (fn [arvo _rivi]
+                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
+                                   ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
+                                   (when (:varoitus? (and (vector? arvo) (second arvo)))
+                                     "solu-varoitus"))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn
@@ -123,7 +132,7 @@
                              raporttielementteja? :komponentti
                              :else :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                  (raportti-domain/numero-fmt? (:fmt sarake)))
+                                (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
                             (:tasaa sarake))}
                  (when raporttielementteja?
