@@ -272,7 +272,6 @@
   ; 6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
   ;    (meillä lisätieto-tekstiä)
   ; 7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
-
   (let [db (:db jarjestelma)
         odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
@@ -289,7 +288,7 @@
         muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
         sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
         perus-setti (comp oid-muokattu-urakka-tietolaji-sijainti toimenpide alku-ja-loppupvm)
-        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkista-varustetoteuma kohde urakka-pvmt-idlla-fn))
+        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkasta-varustetoteuma kohde urakka-pvmt-idlla-fn))
         juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
     ; 1 -> varoita
     (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
@@ -305,26 +304,26 @@
     (is (= {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
            (kutsu (-> {} alku-ja-loppupvm
                       oid-muokattu-urakka-tietolaji-sijainti))))
-    ; 2 -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta. Skipataan varustetoteuma."}
+    ; 2 -> ohita
+    (is (= {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       sijainti-ei-MHU-testidatassa
                       muutoksen-lahde-tuntematon-oid
                       (assoc :urakka_id nil)))))
-    ; 4 -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
+    ; 4 -> ohita
+    (is (= {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       (assoc :tietolaji tuntematon-tietolaji)))))
-    ; 6 -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Liikennemerkin lisätieto puuttuu. Skipataan varustetoteuma."}
+    ; 6 -> ohita
+    (is (= {:toiminto :ohita :viesti "Liikennemerkin lisätieto puuttuu. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       (assoc :tietolaji liikennemerkki)))))
-    ; 7a -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Tekninen toteuma: Tieosoitemuutos. Skipataan varustetoteuma."}
+    ; 7a -> ohita
+    (is (= {:toiminto :ohita :viesti "Tekninen toteuma: Tieosoitemuutos. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       (assoc :toteuma "tt01")))))
-    ; 7b -> skippaa
-    (is (= {:toiminto :skippaa :viesti "Tekninen toteuma: Muu tekninen toimenpide. Skipataan varustetoteuma."}
+    ; 7b -> ohita
+    (is (= {:toiminto :ohita :viesti "Tekninen toteuma: Muu tekninen toimenpide. Ohita varustetoteuma."}
                                                          (kutsu (-> {} perus-setti
                                                                     (assoc :toteuma "tt02")))))
     ; else -> tallenna

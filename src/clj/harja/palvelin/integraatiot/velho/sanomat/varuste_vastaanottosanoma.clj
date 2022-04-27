@@ -181,9 +181,9 @@
         b-loppu* (or b-loppu plus-infinity)]
     (pvm/aikavalit-leikkaavat? a-alku* a-loppu* b-alku* b-loppu*)))
 
-(defn tarkista-varustetoteuma
+(defn tarkasta-varustetoteuma
   "Tarkistaa varusteversion oikeellisuuden ja palauttaa toimintavaihtoehdot:
-  :tallenna, :skippaa, :varoita
+  :tallenna, :ohita, :varoita
 
   Tarkistukset:
   1. pakolliset kentät
@@ -197,7 +197,7 @@
   7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
 
   Tulokset:
-  2. 4. 6. ja 7. -> :skippaa
+  2. 4. 6. ja 7. -> :ohita
   1. 3. ja 5. -> :varoita
   muuten :tallenna.
 
@@ -210,20 +210,20 @@
     (cond
       ; 2
       (nil? (:urakka_id varustetoteuma))
-      {:toiminto :skippaa :viesti "Urakka ei löydy Harjasta. Skipataan varustetoteuma."}
+      {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
-      {:toiminto :skippaa :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Skipataan varustetoteuma."}
+      {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
       ; 6
       (and (= "tl506" (:tietolaji varustetoteuma)) (str/blank? (:lisatieto varustetoteuma)))
-      {:toiminto :skippaa :viesti "Liikennemerkin lisätieto puuttuu. Skipataan varustetoteuma."}
+      {:toiminto :ohita :viesti "Liikennemerkin lisätieto puuttuu. Ohita varustetoteuma."}
       ; 7a
       (= "tt01" (:toteuma varustetoteuma))
-      {:toiminto :skippaa :viesti "Tekninen toteuma: Tieosoitemuutos. Skipataan varustetoteuma."}
+      {:toiminto :ohita :viesti "Tekninen toteuma: Tieosoitemuutos. Ohita varustetoteuma."}
       ; 7b
       (= "tt02" (:toteuma varustetoteuma))
-      {:toiminto :skippaa :viesti "Tekninen toteuma: Muu tekninen toimenpide. Skipataan varustetoteuma."}
-      ; Pakollisuudet viimeisenä, koska skippaaminen pitää tehdä ensin ettei tule virheilmoituksia
+      {:toiminto :ohita :viesti "Tekninen toteuma: Muu tekninen toimenpide. Ohita varustetoteuma."}
+      ; Pakollisuudet viimeisenä, koska ohitaminen pitää tehdä ensin ettei tule virheilmoituksia
       ; sellaisista, jotka eivät Harjaan kuulu
       ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
@@ -318,12 +318,12 @@
                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
                         :muokattu muokattu}
         {toiminto :toiminto
-         viesti :viesti} (tarkista-varustetoteuma varustetoteuma urakka-pvmt-idlla-fn)]
+         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-pvmt-idlla-fn)]
     (cond
       (= :tallenna toiminto)                                ; <3
       {:tulos varustetoteuma :virheviesti nil}
 
-      (= :skippaa toiminto)                                 ; :|
+      (= :ohita toiminto)                                 ; :|
       {:tulos nil :virheviesti nil}
 
       (= :varoita toiminto)                                 ; :(
