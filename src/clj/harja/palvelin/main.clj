@@ -148,6 +148,7 @@
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
+    [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
@@ -749,7 +750,13 @@
       :urakan-lupausmuistutukset
       (component/using
         (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
-        [:db :api-sahkoposti :sonja-sahkoposti :fim]))))
+        [:db :api-sahkoposti :sonja-sahkoposti :fim])
+
+      :yleiset-ajastukset
+      (component/using
+        (yleiset-ajastukset/->YleisetAjastuket)
+        [:db])
+      )))
 
 (defonce harja-jarjestelma nil)
 
