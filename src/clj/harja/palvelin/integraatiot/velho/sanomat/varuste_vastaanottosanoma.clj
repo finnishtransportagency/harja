@@ -270,8 +270,8 @@
 
           (= 0 (count toimenpidelista))
           ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
-          (cond (= "tt01" tekninen-tapahtuma) "tt01"        ; Tieosoitemuutos
-                (= "tt02" tekninen-tapahtuma) "tt02"        ; Muu tekninen toimenpide
+          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "tt01"        ; Tieosoitemuutos
+                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "tt02"        ; Muu tekninen toimenpide
                 (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
                 (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
                 (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!

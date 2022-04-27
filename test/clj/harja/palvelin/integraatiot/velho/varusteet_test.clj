@@ -11,7 +11,8 @@
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.integraatiot.velho.yhteiset-test :as yhteiset-test]
             [harja.pvm :as pvm]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.tyokalut.yleiset :as yleiset])
   (:import (org.postgis PGgeometry)))
 
 (def kayttaja "jvh")
@@ -667,6 +668,15 @@
         odotettu-oid-lista #{"1.2.246.578.4.3.1.501.125998655"}
         lokiteksti (with-lokita-ja-tallenna-hakuvirhe-redefs #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (str/includes? lokiteksti "odotettu kohdeluokka: varusteet/kaiteet saatu kohdeluokka: varusteet/liikennemerkit"))
+    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
+
+(deftest velho-palauttaa-teknisen-tapahtuman
+  (u "DELETE FROM varustetoteuma_ulkoiset")
+  (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.158276054\"]"
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/varusterekisteri_api_v1_historia_kohteet-tekninen-tapahtuma.jsonl")
+        odotettu-oid-lista #{}
+        lokiteksti (with-lokita-ja-tallenna-hakuvirhe-redefs #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
+    (is (not (str/includes? lokiteksti "ERROR")))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
