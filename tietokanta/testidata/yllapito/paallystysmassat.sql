@@ -58,7 +58,7 @@ VALUES ((SELECT id FROM pot2_mk_urakan_massa WHERE dop_nro = '1234567' AND urakk
        ((SELECT id FROM pot2_mk_urakan_massa WHERE dop_nro = '987654331-2' AND urakka_id = utajarven_urakan_id),
         TRUE, (SELECT koodi FROM pot2_mk_sideainetyyppi where nimi = 'Bitumi, 100/150'), 5.5),
        ((SELECT id FROM pot2_mk_urakan_massa WHERE dop_nro = '764567-dop' AND urakka_id = muhoksen_urakan_id),
-        TRUE, (SELECT koodi FROM pot2_mk_sideainetyyppi where nimi = 'Bitumi, 160/220'), 2.8),
+        TRUE, (SELECT koodi FROM pot2_mk_sideainetyyppi where nimi = 'Bitumi, 330/430'), 2.8),
        ((SELECT id FROM pot2_mk_urakan_massa WHERE dop_nro = '34567' AND urakka_id = oulu_paallystysurakka_id),
         TRUE, (SELECT koodi FROM pot2_mk_sideainetyyppi where nimi = 'Bitumi, 160/220'), 3.8);
 
@@ -76,8 +76,8 @@ VALUES ((SELECT id FROM pot2_mk_urakan_massa WHERE dop_nro = '1234567' AND urakk
 INSERT INTO pot2_mk_urakan_murske(urakka_id, nimen_tarkenne, tyyppi, esiintyma,
                                   rakeisuus, iskunkestavyys, dop_nro, luoja, luotu)
 VALUES (utajarven_urakan_id, 'LJYR', (SELECT koodi FROM pot2_mk_mursketyyppi WHERE nimi = 'Kalliomurske'), 'Kankkulan Kaivo', '0/40', 'LA30', '1234567-dop', kayttaja_id, NOW()),
-       (muhoksen_urakan_id, 'Brenkku', (SELECT koodi FROM pot2_mk_mursketyyppi WHERE nimi = 'Kalliomurske'), 'Brenkkulan Kaivo', '0/40', 'LA30', '1234567-dop', kayttaja_id, NOW()),
-       (muhoksen_urakan_id, 'Bemi 1', (SELECT koodi FROM pot2_mk_mursketyyppi WHERE nimi = '(UUSIO) Betonimurske I'), 'Brenkkulan Kaivo', '0/40', 'LA40', '1234567-dop', kayttaja_id, NOW());
+       (muhoksen_urakan_id, 'Brenkku', (SELECT koodi FROM pot2_mk_mursketyyppi WHERE nimi = 'Kalliomurske'), 'Brenkkulan Kaivo', '0/40', 'LA30', '3524534-dop', kayttaja_id, NOW()),
+       (muhoksen_urakan_id, 'Bemi 1', (SELECT koodi FROM pot2_mk_mursketyyppi WHERE nimi = '(UUSIO) Betonimurske I'), 'Brenkkulan Kaivo', '0/45', 'LA40', 'ETR-444', kayttaja_id, NOW());
 
 END;
 $$ LANGUAGE plpgsql;

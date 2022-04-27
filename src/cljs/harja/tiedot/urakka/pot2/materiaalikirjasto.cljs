@@ -300,6 +300,7 @@
   (process-event [_ app]
     (reset! tuontiin-valittu-urakka nil)
     (assoc app :nayta-muista-urakoista-tuonti? false
+               :muut-urakat-joissa-materiaaleja nil
                :materiaalit-toisesta-urakasta nil))
 
   HaeMateriaalitToisestaUrakasta
@@ -324,10 +325,10 @@
 
   TuoMateriaalitToisestaUrakasta
   (process-event [_ app]
-    (let [massa-idt (filter #(when (true? (:valittu? %))
-                               (::pot2-domain/massa-id %))
-                            (get-in app [:materiaalit-toisesta-urakasta :massat]))
-          murske-idt (filter #(when (true? (:valittu? %))
+    (let [massa-idt (keep #(when (true? (:valittu? %))
+                             (::pot2-domain/massa-id %))
+                          (get-in app [:materiaalit-toisesta-urakasta :massat]))
+          murske-idt (keep #(when (true? (:valittu? %))
                                 (::pot2-domain/murske-id %))
                             (get-in app [:materiaalit-toisesta-urakasta :murskeet]))]
       (-> app
@@ -335,15 +336,22 @@
                              {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                               :massa-idt massa-idt
                               :murske-idt murske-idt}
-                             {:onnistui ->TuoMateriaalitToisestaUrakastaOnnistui
+                             {:onnistui ->TuoMateriaalitToisestaUrakastaOnnistui ;; sama paluuarvo eri kutsussa, joten sama käsittelijä
                               :epaonnistui ->TuoMateriaalitToisestaUrakastaEpaonnistui}))))
 
 
   TuoMateriaalitToisestaUrakastaOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [{{massat :massat
+                    murskeet :murskeet} :vastaus} app]
     (let [{massat :massat
-           murskeet :murskeet} vastaus]
-      (assoc app :materiaalit-toisesta-urakasta (rikasta-materiaalien-nimi app massat murskeet))))
+           murskeet :murskeet} (rikasta-materiaalien-nimi app massat murskeet)]
+      (reset! tuontiin-valittu-urakka nil)
+      (viesti/nayta-toast! "Materiaalien tuonti toisesta urakasta onnistui")
+      (assoc app :massat massat
+                 :murskeet murskeet
+                 :materiaalit-toisesta-urakasta nil
+                 :muut-urakat-joissa-materiaaleja nil
+                 :nayta-muista-urakoista-tuonti? false)))
 
   TuoMateriaalitToisestaUrakastaEpaonnistui
   (process-event [{vastaus :vastaus} app]
