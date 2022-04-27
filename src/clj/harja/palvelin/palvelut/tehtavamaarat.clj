@@ -78,13 +78,14 @@
                                                :vanhempi  valitaso-id
                                                :jarjestys jarjestys
                                                :aluetieto? aluetieto
-                                               :maarat maarat
                                                :urakka urakka                                               
                                                :yksikko   yksikko
                                                :taso      4}
                                               (if aluetieto
-                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
+                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara
+                                                 :aluemaara (get maarat (first (keys maarat)))}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
+                                                 :maarat maarat
                                                  :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
                 taso)) 
         tasot))))
