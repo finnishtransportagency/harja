@@ -191,7 +191,7 @@
 
 (defn paivita-sovitut-jaljella-sarake
   [taulukon-tila {:keys [vanhempi id] :as tehtava}]
-  (update-in taulukon-tila [vanhempi id] paivita-maarat-ja-laske-sovitut tehtava))
+  (update-in taulukon-tila [:maarat vanhempi id] paivita-maarat-ja-laske-sovitut tehtava))
 
 (defn vain-taso-3 
   [data]
