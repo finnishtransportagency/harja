@@ -117,3 +117,6 @@ $$ language plpgsql;
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'Ise ohituskaistat') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'K2') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
+
+-- tämä pois, kun tiedetään, mitkä on aluetietoja ja mitkä ei
+update toimenpidekoodi set aluetieto = true where yksikko like '%km%';
