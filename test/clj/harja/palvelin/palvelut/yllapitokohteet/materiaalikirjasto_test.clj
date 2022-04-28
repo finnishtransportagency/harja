@@ -672,3 +672,93 @@
                                 +kayttaja-yit_uuvh+ {:urakka-id urakka-id
                                                       :massa-idt massa-idt
                                                       :murske-idt murske-idt})))))
+
+(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '1234567';")))]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-vastuuhlo-muhos+ {:id massan-id})))))
+
+(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
+  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '1234567-dop';")))]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})))))
+
+(deftest massan-poisto-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        {massat-ennen :massat murskeet-ennen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id urakka-id})
+
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '764567-dop';")))
+        {massat-jalkeen :massat murskeet-jalkeen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :poista-urakan-massa
+                        +kayttaja-vastuuhlo-muhos+ {:id massan-id})]
+    (is (not (empty? massat-ennen)))
+    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Mmurskeisiin ei koskettu")
+    (is (not-empty (filter #(= massan-id (::pot2-domain/massa-id %))
+                           massat-ennen)))
+    (is (empty? (filter #(= massan-id (::pot2-domain/massa-id %))
+                        massat-jalkeen)))
+    (is (empty? massat-jalkeen))))
+
+(deftest murskeen-poisto-toimii
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        {massat-ennen :massat murskeet-ennen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id urakka-id})
+
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '3524534-dop';")))
+        {massat-jalkeen :massat murskeet-jalkeen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :poista-urakan-murske
+                        +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})]
+    (is (= 1 (count massat-ennen) (count massat-jalkeen)) "Massoihin ei koskettu")
+    (is (= 2 (count murskeet-ennen)))
+    (is (not-empty (filter #(= murskeen-id (::pot2-domain/murske-id %))
+                        murskeet-ennen)))
+    (is (= 1 (count murskeet-jalkeen)))
+    (is (empty? (filter #(= murskeen-id (::pot2-domain/murske-id %))
+                 murskeet-jalkeen)))))
+
+(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
+  (is (thrown? AssertionError
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :poista-urakan-massa
+                               +kayttaja-vastuuhlo-muhos+ {:id 4231234234}))))
+
+(deftest eri-urakoitsija-ei-saa-poistaa-massaa
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '764567-dop';")))]
+    (is (thrown? Throwable
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-yit_uuvh+ {:id massan-id})))))
+
+(deftest eri-urakoitsija-ei-saa-poistaa-mursketta
+  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                    urakka-id
+                                    " AND dop_nro = '3524534-dop';")))]
+    (is (thrown? Throwable
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-murske
+                                 +kayttaja-yit_uuvh+ {:id murskeen-id})))))

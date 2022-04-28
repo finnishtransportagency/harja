@@ -354,6 +354,34 @@
     ;; Palautetaan käyttäjälle tuoreet materiaalit kannasta monistamisen jälkeen
     (hae-urakan-massat-ja-murskeet db user {:urakka-id urakka-id})))
 
+(defn poista-urakan-massa
+  [db user {:keys [id]}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [massan-urakka-id (paallystys-q/hae-massan-urakka-id db {:id id})
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user massan-urakka-id)
+          kaytossa? (paallystys-q/massan-kayttotiedot db {:id id})]
+      (if-not (empty? kaytossa?)
+        (throw (SecurityException. (str "Et voi poistaa käytössäolevaa massaa, massan id: " id)))
+        (paallystys-q/poista-urakan-massa<! db {:id id
+                                               :urakka_id massan-urakka-id}))
+
+      (hae-urakan-massat-ja-murskeet db user {:urakka-id massan-urakka-id}))))
+
+(defn poista-urakan-murske
+  [db user {:keys [id]}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [murskeen-urakka-id (paallystys-q/hae-murskeen-urakka-id db {:id id})
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user murskeen-urakka-id)
+          kaytossa? (paallystys-q/murskeen-kayttotiedot db {:id id})]
+      (if-not (empty? kaytossa?)
+        (throw (SecurityException. (str "Et voi poistaa käytössäolevaa mursketta, murskeen id: " id)))
+        (paallystys-q/poista-urakan-murske<! db {:id id
+                                                 :urakka_id murskeen-urakka-id}))
+
+      (hae-urakan-massat-ja-murskeet db user {:urakka-id murskeen-urakka-id}))))
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
@@ -382,6 +410,12 @@
       (julkaise-palvelu http :tuo-materiaalit-toisesta-urakasta
                         (fn [user tiedot]
                           (tuo-materiaalit-toisesta-urakasta db user tiedot)))
+      (julkaise-palvelu http :poista-urakan-massa
+                        (fn [user tiedot]
+                          (poista-urakan-massa db user tiedot)))
+      (julkaise-palvelu http :poista-urakan-murske
+                        (fn [user tiedot]
+                          (poista-urakan-murske db user tiedot)))
       ;; POT2 liittyviä palveluita myös harja.palvelin.palvelut.yllapitokohteet.paallystys ns:ssä
       this))
 
@@ -393,5 +427,7 @@
       :tallenna-urakan-massa
       :tallenna-urakan-murske
       :hae-muut-urakat-joissa-materiaaleja
-      :tuo-materiaalit-toisesta-urakasta)
+      :tuo-materiaalit-toisesta-urakasta
+      :poista-urakan-massa
+      :poista-urakan-murske)
     this))

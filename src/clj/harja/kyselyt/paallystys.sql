@@ -750,5 +750,27 @@ SELECT :urakka_id,
        tyyppi_tarkenne,
        lahde FROM pot2_mk_urakan_murske WHERE id = :id;
 
+-- name: hae-massan-urakka-id
+-- single?: true
+SELECT urakka_id
+  FROM pot2_mk_urakan_massa
+ WHERE id = :id;
+
+-- name: hae-murskeen-urakka-id
+-- single?: true
+SELECT urakka_id
+  FROM pot2_mk_urakan_murske
+ WHERE id = :id;
+
+-- name: poista-urakan-massa<!
+UPDATE pot2_mk_urakan_massa
+   SET poistettu = true
+ WHERE id = :id and urakka_id = :urakka_id;
+
+-- name: poista-urakan-murske<!
+UPDATE pot2_mk_urakan_murske
+   SET poistettu = true
+ WHERE id = :id and urakka_id = :urakka_id;
+
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;

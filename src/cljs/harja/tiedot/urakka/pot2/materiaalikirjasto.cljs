@@ -29,6 +29,9 @@
 (defrecord TallennaLomake [data])
 (defrecord TallennaMassaOnnistui [vastaus])
 (defrecord TallennaMassaEpaonnistui [vastaus])
+(defrecord PoistaMassa [id])
+(defrecord PoistaMassaOnnistui [vastaus])
+(defrecord PoistaMassaEpaonnistui [vastaus])
 (defrecord TyhjennaLomake [])
 (defrecord PaivitaMassaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
@@ -41,6 +44,9 @@
 (defrecord TallennaMurskeLomake [data])
 (defrecord TallennaMurskeOnnistui [vastaus])
 (defrecord TallennaMurskeEpaonnistui [vastaus])
+(defrecord PoistaMurske [id])
+(defrecord PoistaMurskeOnnistui [vastaus])
+(defrecord PoistaMurskeEpaonnistui [vastaus])
 (defrecord SuljeMurskeLomake [])
 (defrecord SuljeMateriaaliModal [])
 (defrecord PaivitaMurskeLomake [data])
@@ -483,6 +489,29 @@
     (viesti/nayta-toast! "Massan tallennus epäonnistui!" :varoitus)
     app)
 
+  PoistaMassa
+  (process-event [{id :id} app]
+    (tuck-apurit/post! :poista-urakan-massa
+                       {:id id}
+                       {:onnistui ->PoistaMassaOnnistui
+                        :epaonnistui ->PoistaMassaEpaonnistui
+                        :paasta-virhe-lapi? true})
+    app)
+
+  PoistaMassaOnnistui
+  (process-event [{massat :massat
+                   murskeet :murskeet} app]
+    (viesti/nayta-toast! "Massa poistettu onnistuneesti")
+    (hae-massat-ja-murskeet app)
+    app)
+
+  PoistaMassaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Massan poistaminen epäonnistui!\n"
+                              (get-in vastaus [:response :virhe]))
+                         :varoitus)
+    app)
+
   TyhjennaLomake
   (process-event [_ app]
     (-> app
@@ -505,7 +534,8 @@
                                     poistettu?)
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))
                          {:onnistui ->TallennaMurskeOnnistui
-                          :epaonnistui ->TallennaMurskeEpaonnistui}))
+                          :epaonnistui ->TallennaMurskeEpaonnistui
+                          :paasta-virhe-lapi? true}))
     app)
 
   TallennaMurskeOnnistui
@@ -519,6 +549,29 @@
   TallennaMurskeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Murskeen tallennus epäonnistui!" :danger)
+    app)
+
+  PoistaMurske
+  (process-event [{id :id} app]
+    (tuck-apurit/post! :poista-urakan-murske
+                       {:id id}
+                       {:onnistui ->PoistaMurskeOnnistui
+                        :epaonnistui ->PoistaMurskeEpaonnistui
+                        :paasta-virhe-lapi? true})
+    app)
+
+  PoistaMurskeOnnistui
+  (process-event [{massat :massat
+                   murskeet :murskeet} app]
+    (viesti/nayta-toast! "Murske poistettu onnistuneesti")
+    (hae-massat-ja-murskeet app)
+    app)
+
+  PoistaMurskeEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Murskeen poistaminen epäonnistui!\n"
+                              (get-in vastaus [:response :virhe]))
+                         :varoitus)
     app)
 
   SuljeMurskeLomake
