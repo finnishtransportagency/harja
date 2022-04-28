@@ -113,14 +113,11 @@
   Palauttaa:
   {\"36\" {:alkupvm <clj-date> :loppupvm <clj-date>} \"38\" {:alkupvm <> :loppupvm <> ...  }}"
   [db]
-  ; [{:id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
-  ; (["36" {:alkupvm <clj-date> :loppupvm <clj-date>}] ["38" {...}])
-  ; {"36" {:alkupvm <clj-date> :loppupvm <clj-date>} "38" {...}}
-  (->> (q-urakat/hae-kaikki-urakat-pvm db)
+  (->> (q-urakat/hae-kaikki-urakat-pvm db)                  ; [{:id 36 :alkupvm <sql-date> :loppupvm <sql-date>} {...} ... ]
        (map
          (fn [{:keys [id alkupvm loppupvm] :as urakka}]
-           [id {:alkupvm alkupvm :loppupvm loppupvm}]))
-       (into {})))
+           [id {:alkupvm alkupvm :loppupvm loppupvm}]))     ; ([36 {:alkupvm <sql-date> :loppupvm <sql-date>}] [38 {...}])
+       (into {})))                                          ; {36 {:alkupvm <sql-date> :loppupvm <sql-date>} 38 {...}}
 
 (defn hae-velho-oid->urakka-id-map
   "Palauttaa:
@@ -142,7 +139,7 @@
   (memo/ttl hae-velho-oid->urakka-id-map :ttl/threshold +urakka-memoize-ttl+))
 
 (defn urakka-pvmt-idlla
-  "Paluttaa {:alkupvm <> :loppupvm <>} kysytylle urakalle `id`."
+  "Paluttaa {:alkupvm <sql-date> :loppupvm <sql-date>} kysytylle urakalle `id`."
   [db id]
   (get (memo-id->urakka-pvm-map db) id))
 
@@ -366,10 +363,9 @@
                                     +kohde-haku-maksimi-koko+
                                     nil
                                     oidit)
-                  osajoukon-haku-fn (fn [oidit-alijoukko]
-                                      (hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
-                                                                         oidit-alijoukko tallenna-fn tallenna-virhe-fn))
-                  kaikki-onnistunut (every? osajoukon-haku-fn oidit-alijoukot)]
+                  kaikki-onnistunut (every? #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
+                                                                               % tallenna-fn tallenna-virhe-fn)
+                                            oidit-alijoukot)]
               (if kaikki-onnistunut
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
@@ -471,7 +467,7 @@
                                                                (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
 
                                                         :else
-                                                        :skip)))
+                                                        :ohita)))
                                               (lokita-ja-tallenna-hakuvirhe
                                                 db kohde
                                                 (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei ole oikeasta kohdeluokasta "

@@ -277,7 +277,7 @@
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         tuntematon-tietolaji "tl123"
-        liikennemerkki "tl506"
+        liikennemerkki (name varuste-vastaanottosanoma/+liikennemerkki-tietolaji+)
         alku-ja-loppupvm (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil))
         oid-muokattu-urakka-tietolaji-sijainti (fn [kohde] (-> kohde
                                                                (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde)
@@ -288,7 +288,7 @@
         muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
         sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
         perus-setti (comp oid-muokattu-urakka-tietolaji-sijainti toimenpide alku-ja-loppupvm)
-        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkasta-varustetoteuma kohde urakka-pvmt-idlla-fn))
+        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkasta-varustetoteuma kohde (urakka-pvmt-idlla-fn (:urakka_id kohde))))
         juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
     ; 1 -> varoita
     (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
@@ -319,11 +319,11 @@
            (kutsu (-> {} perus-setti
                       (assoc :tietolaji liikennemerkki)))))
     ; 7a -> ohita
-    (is (= {:toiminto :ohita :viesti "Tekninen toteuma: Tieosoitemuutos. Ohita varustetoteuma."}
+    (is (= {:toiminto :ohita :viesti "Tekninen toimenpide: Tieosoitemuutos. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       (assoc :toteuma "tt01")))))
     ; 7b -> ohita
-    (is (= {:toiminto :ohita :viesti "Tekninen toteuma: Muu tekninen toimenpide. Ohita varustetoteuma."}
+    (is (= {:toiminto :ohita :viesti "Tekninen toimenpide: Muu tekninen toimenpide. Ohita varustetoteuma."}
                                                          (kutsu (-> {} perus-setti
                                                                     (assoc :toteuma "tt02")))))
     ; else -> tallenna

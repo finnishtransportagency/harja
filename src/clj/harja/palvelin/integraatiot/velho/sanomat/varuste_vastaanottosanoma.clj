@@ -9,6 +9,10 @@
 
 (def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
                            :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+(def +liikennemerkki-tietolaji+ :tl506)
+
+(def +tieosoitemuutos-nimikkeistoarvo+ :tt01)
+(def +muu-tekinen-toimenpide-nimikkeistoarvo+ :tt02)
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
@@ -133,7 +137,7 @@
                             (= +wc+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl505 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl506 (= kohdeluokka "varusteet/liikennemerkit")
+                +liikennemerkki-tietolaji+ (= kohdeluokka "varusteet/liikennemerkit")
                 :tl507 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (contains? +tl507-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl508 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
@@ -203,9 +207,8 @@
 
   Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
   Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
-  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-pvmt-idlla-fn]
+  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo]
   (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
-        urakka-olemassaolo (urakka-pvmt-idlla-fn urakka_id)
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
       ; 2
@@ -215,14 +218,14 @@
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
       {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
       ; 6
-      (and (= "tl506" (:tietolaji varustetoteuma)) (str/blank? (:lisatieto varustetoteuma)))
+      (and (= (name +liikennemerkki-tietolaji+) (:tietolaji varustetoteuma)) (str/blank? (:lisatieto varustetoteuma)))
       {:toiminto :ohita :viesti "Liikennemerkin lisätieto puuttuu. Ohita varustetoteuma."}
       ; 7a
-      (= "tt01" (:toteuma varustetoteuma))
-      {:toiminto :ohita :viesti "Tekninen toteuma: Tieosoitemuutos. Ohita varustetoteuma."}
+      (= (name +tieosoitemuutos-nimikkeistoarvo+) (:toteuma varustetoteuma))
+      {:toiminto :ohita :viesti "Tekninen toimenpide: Tieosoitemuutos. Ohita varustetoteuma."}
       ; 7b
-      (= "tt02" (:toteuma varustetoteuma))
-      {:toiminto :ohita :viesti "Tekninen toteuma: Muu tekninen toimenpide. Ohita varustetoteuma."}
+      (= (name +muu-tekinen-toimenpide-nimikkeistoarvo+) (:toteuma varustetoteuma))
+      {:toiminto :ohita :viesti "Tekninen toimenpide: Muu tekninen toimenpide. Ohita varustetoteuma."}
       ; Pakollisuudet viimeisenä, koska ohitaminen pitää tehdä ensin ettei tule virheilmoituksia
       ; sellaisista, jotka eivät Harjaan kuulu
       ; 3
@@ -240,7 +243,7 @@
       {:toiminto :tallenna :viesti nil})))
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
-  (when (= "tl506" tietolaji)
+  (when (= (name +liikennemerkki-tietolaji+) tietolaji)
     (konversio-fn
       "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
 
@@ -317,8 +320,9 @@
                         :loppupvm loppupvm
                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
                         :muokattu muokattu}
+        urakka-olemassaolo (urakka-pvmt-idlla-fn (:urakka_id varustetoteuma))
         {toiminto :toiminto
-         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-pvmt-idlla-fn)]
+         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo)]
     (cond
       (= :tallenna toiminto)                                ; <3
       {:tulos varustetoteuma :virheviesti nil}
