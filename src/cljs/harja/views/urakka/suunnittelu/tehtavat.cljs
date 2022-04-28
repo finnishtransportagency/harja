@@ -165,40 +165,47 @@
     ""))
 
 (defn- itse-taulukko 
-  [e! {:keys [sopimukset-syotetty? taso-4-tehtavat] :as app} toimenpiteen-tiedot]
+  [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id alue-tehtavia]} toimenpiteen-tiedot
         aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
         maarat-tila (r/cursor t/taulukko-tila [:maarat sisainen-id])]
     [:<>
-     [:h2 nimi]
+     (when (= :kaikki (-> valinnat :toimenpide :id))
+       [:h2 nimi])
      (when (> alue-tehtavia 0)
-       [grid/muokkaus-grid
-        (merge 
-          {:otsikko "Alueet"
-           :id (keyword (str "tehtavat-alueet-" nimi))
-           :tyhja "Ladataan tietoja"
-           :voi-poistaa? (constantly false)
-           :jarjesta :jarjestys 
-           :ulkoinen-validointi? true
-           :voi-muokata? true
-           :voi-lisata? false
-           :disabloi-autocomplete? true
-           :voi-kumota? false
-           :virheet t/taulukko-virheet
-           :piilota-toiminnot? true
-           :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)})
-        [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
-          (if sopimukset-syotetty? 
-            "60%"
-            "70%")}
-         ;; ennen urakkaa -moodi         
-         {:otsikko "Tarjouksen määrä" :nimi :sopimuksen-aluetieto-maara :tyyppi :numero :leveys "180px"
-          :muokattava? (constantly (if sopimukset-syotetty? false true))}
-         ;; urakan ajan suunnittelu -moodi         
-         (when sopimukset-syotetty? 
-           {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
-         {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
-        aluetiedot-tila])
+       [:<>
+        (when sopimukset-syotetty?
+          [:<>
+           [:h3 "Urakka-alueen tiedot"]
+           [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"]])
+        [grid/muokkaus-grid
+         (merge 
+           {:id (keyword (str "tehtavat-alueet-" nimi))
+            :tyhja "Ladataan tietoja"
+            :voi-poistaa? (constantly false)
+            :jarjesta :jarjestys 
+            :ulkoinen-validointi? true
+            :voi-muokata? true
+            :voi-lisata? false
+            :disabloi-autocomplete? true
+            :voi-kumota? false
+            :virheet t/taulukko-virheet
+            :piilota-toiminnot? true
+            :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)}
+           (when (not sopimukset-syotetty?)
+             {:otsikko "Urakka-alueen tiedot"}))
+         [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
+           (if sopimukset-syotetty? 
+             "60%"
+             "70%")}
+          ;; ennen urakkaa -moodi         
+          {:otsikko "Tarjouksen määrä" :nimi :sopimuksen-aluetieto-maara :tyyppi :numero :leveys "180px"
+           :muokattava? (constantly (if sopimukset-syotetty? false true))}
+          ;; urakan ajan suunnittelu -moodi         
+          (when sopimukset-syotetty? 
+            {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+          {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
+         aluetiedot-tila]])
      [grid/muokkaus-grid
       (merge 
         {:otsikko "Määrät"
@@ -281,10 +288,11 @@
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
        [yleiset/info-laatikko :varoitus "Alueiden ja suunniteltavien määrien jako on testitarkoituksiin mielivaltainen, eikä välttämättä vastaa totuutta" "" "100%" {:luokka "ala-margin-16"}]
        (when (not sopimukset-syotetty?)
-         [yleiset/keltainen-vihjelaatikko 
-
-"Urakan aluksi syötä tehtäville  tarjouksen tehtävä- ja määräluettelosta määrät. Määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”. Tarjouksien määriä käytetään apuna urakan määrien suunniteluun ja seurantaan."
-          #_"Urakan aluksi syötä sopimuksen tehtävä- ja määräluettelosta sovitut määrät kerrottuna koko urakalle yhteensä. Tätä tietoa voidaan käyttää määrien suunnitteluun ja seurantaan." :info])
+         [yleiset/keltainen-vihjelaatikko    
+          [:<>
+           [:div "Urakan aluksi syötä tehtäville  tarjouksen tehtävä- ja määräluettelosta määrät. “Aluetiedot” syötetään sellaisenaan tarjouksesta. Määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
+           [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’.  Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
+          :info])
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
        [valitaso-filtteri e! app]
