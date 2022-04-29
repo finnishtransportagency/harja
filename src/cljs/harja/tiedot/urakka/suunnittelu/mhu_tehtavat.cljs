@@ -203,6 +203,13 @@
   [data]
   (= 4 (:taso data)))
 
+(defn vain-yksikolliset
+  [{:keys [yksikko]}]
+  (not
+    (or (nil? yksikko)
+      (= "" yksikko)
+      (= "-" yksikko))))
+
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
@@ -440,7 +447,7 @@
   (process-event
     [{:keys [tehtava]} app]
     (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]
-      (swap! taulukko-tila paivita-vuosien-maarat tehtava)
+      #_(swap! taulukko-tila paivita-vuosien-maarat tehtava)
       (-> app                             
         (assoc :tallennettava tehtava)
         (tuck-apurit/post! :tallenna-sopimuksen-tehtavamaara
@@ -536,7 +543,8 @@
         (assoc :taulukko taulukko)
         (assoc :taso-4-tehtavat (into #{} (comp 
                                             (mapcat :tehtavat)
-                                            (filter vain-taso-4))
+                                            (filter vain-taso-4)
+                                            (filter vain-yksikolliset))
                                   tehtavat))
         (assoc :vetolaatikot-auki vetolaatikot-auki)
         (update :valinnat #(assoc % 
