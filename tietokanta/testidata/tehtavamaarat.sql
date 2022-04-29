@@ -93,6 +93,11 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, h
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1500, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2023);
 
+
+-- tämä pois, kun tiedetään, mitkä on aluetietoja ja mitkä ei
+update toimenpidekoodi set aluetieto = true where yksikko like '%km%';
+
+
 DO
 $$
 declare 
@@ -117,6 +122,3 @@ $$ language plpgsql;
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'Ise ohituskaistat') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'Ennalta arvaamattomien kuljetusten avustaminen') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
 delete from sopimus_tehtavamaara where tehtava = (select id from toimenpidekoodi where nimi = 'Opastustaulun/-viitan uusiminen') and urakka = (select id from urakka where nimi = 'Pellon MHU testiurakka (3. hoitovuosi)');
-
--- tämä pois, kun tiedetään, mitkä on aluetietoja ja mitkä ei
-update toimenpidekoodi set aluetieto = true where yksikko like '%km%';
