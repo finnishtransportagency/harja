@@ -85,7 +85,7 @@
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat esta-tiivis-grid?]}
+                                               oikealle-tasattavat-kentat esta-tiivis-grid?
                                                oikealle-tasattavat-kentat vetolaatikot]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
