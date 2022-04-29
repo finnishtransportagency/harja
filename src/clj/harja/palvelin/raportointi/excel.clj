@@ -137,9 +137,18 @@
       (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
                                                               (str " - " alkupvm "-" loppupvm))))
       (excel/set-cell-style! solu tyyli)
+      ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
+      ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.
+      (.addMergedRegion sheet (CellRangeAddress. nolla nolla 0 20))
       sheet)
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
+
+(defn- tee-taulukon-nimiotsikko [sheet nolla nimi raportin-tiedot-tyyli]
+  (let [rivi (.createRow sheet (dec nolla))
+        solu (.createCell rivi 0)]
+    (excel/set-cell! solu nimi)
+    (excel/set-cell-style! solu raportin-tiedot-tyyli)))
 
 (defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
   (try
@@ -148,9 +157,10 @@
           viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
+          samalle-sheetille? (:samalle-sheetille? optiot)
           [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
-                                 (nil? nimi)
-                                 aiempi-sheet)
+                              (or samalle-sheetille? (nil? nimi))
+                              aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
@@ -182,10 +192,17 @@
                                                                            :size 14
                                                                            :name "Arial"
                                                                            :bold true}})
+          ;; Ei tehdä uutta otsikkoriviä, jos taulukko tulee samalle sheetille.
+          tee-raporttitiedot-rivi? (= nolla 0) 
 
           ;; Luodaan raportin tiedot sisältävä rivi sheetin alkuun tähän indeksiin myöhemmässä vaiheessa. Voisi varmaan käyttää nollaakin suoraan ie. 0 
           raportin-tiedot-rivi nolla
           nolla (+ 2 nolla)
+          
+          ;; Tehdään vähän väliä raporttirivien ja taulukon otsikolle, kun on useampi taulukko samalla sheetillä
+          nolla (if (and samalle-sheetille? tee-raporttitiedot-rivi?)
+                  (+ 2 nolla)
+                  nolla)
 
           rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
@@ -216,6 +233,10 @@
                                                                  (+ sarake-nro sarakkeita -1))))
                     (+ sarake-nro sarakkeita)))
                 0 rivi-ennen))
+
+      ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
+      (when samalle-sheetille?
+        (tee-taulukon-nimiotsikko sheet nolla nimi raportin-tiedot-tyyli))
 
       ;; Luodaan otsikot saraketyylillä
       (taulukko-otsikkorivi otsikko-rivi sarakkeet sarake-tyyli)
@@ -305,7 +326,9 @@
         (.autoSizeColumn sheet i))
       
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
-      (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
+      ;; Ja tehdään tämä vain kerran, koska ei haluta montaa tietoriviä, jos useampi taulukko on samalla sheetillä.
+      (when tee-raporttitiedot-rivi?
+        (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli))))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 

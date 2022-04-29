@@ -160,7 +160,7 @@
 (defn koosta-taulukko [otsikko konteksti kuukaudet raportin-nimi urakoittain? kk-lev osamateriaalit yht-rivi]
   [:taulukko {:otsikko otsikko
               :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
-              :sheet-nimi raportin-nimi}
+              :samalle-sheetille? true}
    (into []
 
      (concat
