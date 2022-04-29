@@ -167,7 +167,8 @@
   [:taulukko {:otsikko otsikko
               :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
               :sheet-nimi raportin-nimi
-              :esta-tiivis-grid? true}
+              :esta-tiivis-grid? true
+              :samalle-sheetille? true}
    (into []
 
      (concat
@@ -434,11 +435,11 @@
 
     [:raportti {:nimi otsikko
                 :orientaatio :landscape}
-     
+
      (when-not (empty? materiaalit)
        [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
      [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]
-     
+
      (koosta-taulukko "Talvisuolat" konteksti kuukaudet "Talvisuolat" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "talvisuola") nil false)
      (koosta-taulukko "Formiaatit" konteksti kuukaudet "Formiaatit" urakoittain? kk-lev
