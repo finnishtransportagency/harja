@@ -166,8 +166,8 @@
                        yksikot-soluissa?]
   [:taulukko {:otsikko otsikko
               :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
-              :sheet-nimi raportin-nimi
-              :esta-tiivis-grid? true}
+              :esta-tiivis-grid? true
+              :samalle-sheetille? true}
    (into []
 
      (concat

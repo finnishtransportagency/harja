@@ -547,6 +547,11 @@ SELECT count(*) as lkm
 FROM urakka
 WHERE velho_oid IS NOT NULL;
 
+--name: hae-kaikki-urakat-pvm
+SELECT id, alkupvm, loppupvm
+FROM urakka
+WHERE velho_oid IS NOT NULL;
+
 --name: hae-kaikki-urakka-velho-oid
 SELECT velho_oid, id
 FROM urakka
