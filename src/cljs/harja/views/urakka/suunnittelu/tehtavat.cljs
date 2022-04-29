@@ -1,6 +1,7 @@
 (ns harja.views.urakka.suunnittelu.tehtavat
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
+            [clojure.string :as str]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
             [harja.tiedot.urakka.urakka :as tila]
@@ -139,15 +140,15 @@
             [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
-                                 :elementin-id (str "vetolaatikko-input-" nimi "-" vuosi)
+                                 :elementin-id (str "vetolaatikko-input-" (str/replace (str/lower-case nimi) " " "-") "-" vuosi)
                                  :disabled? (not @joka-vuosi-erikseen?)                            
                                  :on-blur #(tallenna! e! 
-                                             (:sopimukset-syotetty? app) 
+                                             (:sopimukset-syotetty? app)
+                                             :maarat
                                              (assoc rivi 
                                                :joka-vuosi-erikseen? @joka-vuosi-erikseen?
                                                :sopimuksen-tehtavamaara (.. % -target -value) 
-                                               :hoitokausi vuosi)
-                                             :maarat)}
+                                               :hoitokausi vuosi))}
               (r/cursor t/taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])]]))
         [:div.vetolaatikko-kentat [:span (str yksikko)]]]])))
 
