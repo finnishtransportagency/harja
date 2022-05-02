@@ -73,7 +73,7 @@
    {:tehtava-id id-yksityisten-rumpujen :maara 666}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id id-ib-rampit :maara 6.66}
+  [{:tehtava-id id-portaiden-talvihuolto :maara 6.66}
    {:tehtava-id id-opastustaulut :maara 999}])
 
 (def virheellinen-tehtava
@@ -200,14 +200,19 @@
 
     ;; hoitokauden tietojen lisäys
     (is (= (count tehtavamaarat-lisayksen-jalkeen) 19) "Uudet rivit lisättiin, vanhat säilyivät.")
+
+    ;; määrätieto lisättiin
+    (let [tehtava (hae-tehtava id-portaiden-talvihuolto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)]
+      (is (= (get-in tehtava [:maarat 2020]) 88.8M) "Lisäys lisäsi määrän."))
     
-    (let [tehtava (hae-tehtava id-ise-rampit @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)] 
-      (is (= (get-in tehtava [:maarat 2020]) 666M) "Lisäys lisäsi määrän."))
+    ;; aluetieto muuttui
+    (let [tehtava (hae-tehtava id-ise-rampit @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)]
+      (is (= (get tehtava :aluemaara) 666M) "Lisäys lisäsi muuttuneen aluemaaran."))
 
     ;; uuden hoitokauden lisäys
     #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (let [tehtava (hae-tehtava id-ib-rampit @oulun-maanteiden-hoitourakan-2019-2024-id hoitokausi-2022-lisaa) ]                           
+    (let [tehtava (hae-tehtava id-portaiden-talvihuolto @oulun-maanteiden-hoitourakan-2019-2024-id hoitokausi-2022-lisaa) ]
       (is (and 
             (contains? (:maarat tehtava) 2022)
             (= 
@@ -313,8 +318,7 @@
                   ::toimenpidekoodi/id id-suolaus
                   ::tehtavamaarat/maara 9001M
                   ::tehtavamaarat/hoitovuosi 2022
-                  ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}
-        _ []]
+                  ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
           (dissoc muokattu ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
           odotettu))
@@ -358,17 +362,19 @@
         loydetyt-tehtavat (set 
                             (map :id 
                               (filter 
-                                (comp not nil? :sopimuksen-tehtavamaarat) 
+                                #(or (not (nil? (:sopimuksen-tehtavamaarat %)))
+                                   (not (nil? (:sopimuksen-aluetieto-maara %)))) 
                                 (mapcat :tehtavat vastaus))))
         hae-tehtavan-maara-fn (fn [tehtava vuosi]
-                                (get  
-                                  (:sopimuksen-tehtavamaarat
-                                       (first 
-                                         (filter 
-                                           (fn [r] 
-                                             (= tehtava (:id r))) 
-                                           (mapcat :tehtavat vastaus))))
-                                  vuosi))]
+                                (let [oikea-tehtava
+                                      (first 
+                                        (filter 
+                                          (fn [r]
+                                            (= tehtava (:id r))) 
+                                          (mapcat :tehtavat vastaus)))]
+                                  (if (:aluetieto? oikea-tehtava)
+                                    (:sopimuksen-aluetieto-maara oikea-tehtava)
+                                    (get (:sopimuksen-tehtavamaarat oikea-tehtava) vuosi))))]
     (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
     (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut 2019)))
     (is (= 1000M (hae-tehtavan-maara-fn id-K2 2019)))))
