@@ -183,13 +183,13 @@
   tr, td, th {
     // Huomio: rivien solut on kääritty diveihin, joille on annettu padding.
     // Jos tämä rikkoo jotain, reverttaa tämä commit.
-    div {
+    & > div {
       padding: @livi-taulukon-padding;
     }
-    &.tiivis div {
+    & > &.tiivis div {
       padding: @livi-taulukon-padding-tiivis;
     }
-    &.melko-tiivis div {
+    & > &.melko-tiivis div {
       padding: @livi-taulukon-padding-melko-tiivis;
     }
     .pvm-aika-kentta td {
@@ -489,20 +489,27 @@
       }
     }
 
-    .sticky(@taustavari: initial) {
+    .sticky(@taustavari: initial, @vasemmalta: 0) {
       position: sticky;
-      left: 0;
+      left: @vasemmalta;
       z-index: 1;
       background-color: @taustavari;
+
     }
 
     &.ensimmainen-sarake-sticky {
       th:first-child {
         .sticky(@harmaa13);
       }
+      th:nth-child(2) {
+        .sticky(@harmaa13, 52px);
+      }
 
       td:first-child {
         .sticky(@harjan-taustavari);
+      }
+      td:nth-child(2) {
+        .sticky(@harjan-taustavari, 52px);
       }
     }
   }
