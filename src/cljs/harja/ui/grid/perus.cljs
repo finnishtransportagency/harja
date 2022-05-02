@@ -152,13 +152,13 @@
      [:td.toiminnot
       (when (or (nil? voi-poistaa?) (voi-poistaa? rivi))
         (if (and esta-poistaminen? (esta-poistaminen? rivi))
-          [:span (ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
+          [:span (ui-ikonit/livicon-trash-disabled (esta-poistaminen-tooltip rivi))]
           [:span.klikattava {:on-click #(do (.preventDefault %)
                                             (muokkaa! id assoc :poistettu true))}
-           (ikonit/livicon-trash)]))
+           (ui-ikonit/livicon-trash)]))
       (when-not (empty? rivin-virheet)
         [:span.rivilla-virheita
-         (ikonit/livicon-warning-sign)])])])
+         (ui-ikonit/livicon-warning-sign)])])])
 
 (defn- rivin-infolaatikko* [sisalto rivi data]
   [:div.livi-grid-infolaatikko
@@ -288,8 +288,8 @@
                     (when huomio
                       (when-let [huomion-tiedot (huomio rivi)]
                         (let [ikoni (case (:tyyppi huomion-tiedot)
-                                      :varoitus (ikonit/livicon-warning-sign)
-                                      (ikonit/livicon-info))
+                                      :varoitus (ui-ikonit/livicon-warning-sign)
+                                      (ui-ikonit/livicon-info))
                               teksti (:teksti huomion-tiedot)]
                           [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
                                                                   (name (:tyyppi huomion-tiedot)))}
@@ -381,7 +381,7 @@
                                            (when ennen-muokkausta (ennen-muokkausta))
                                            (aloita-muokkaus! tiedot))}
                            [:span.grid-muokkaa
-                            [ikonit/ikoni-ja-teksti [ikonit/muokkaa] "Muokkaa"]]]]
+                            [ui-ikonit/ikoni-ja-teksti [ui-ikonit/muokkaa] "Muokkaa"]]]]
         (if custom-toiminto
           [napit/nappi (:teksti custom-toiminto)
            (:toiminto custom-toiminto)
@@ -398,12 +398,12 @@
           :on-click #(do (.stopPropagation %)
                          (.preventDefault %)
                          (peru!))}
-         [ikonit/ikoni-ja-teksti [ikonit/kumoa] " Kumoa"]])
+         [ui-ikonit/ikoni-ja-teksti [ui-ikonit/kumoa] " Kumoa"]])
 
       (when-not (= false voi-lisata?)
         [:button.nappi-toissijainen.grid-lisaa {:on-click #(do (.preventDefault %)
                                                                (lisaa-rivi! ohjaus {}))}
-         [ikonit/ikoni-ja-teksti [ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
+         [ui-ikonit/ikoni-ja-teksti [ui-ikonit/livicon-plus] (or (:lisaa-rivi opts) "Lisää rivi")]])
 
       (when-not muokkaa-aina
         (let [validointivirhe (when validoi-fn
@@ -437,7 +437,7 @@
                                        (if (nollaa-muokkaustiedot-tallennuksen-jalkeen? vastaus)
                                          (nollaa-muokkaustiedot!)
                                          (reset! tallennus-kaynnissa false))))))))}
-             [ikonit/ikoni-ja-teksti (ikonit/tallenna) "Tallenna"]])))
+             [ui-ikonit/ikoni-ja-teksti (ui-ikonit/tallenna) "Tallenna"]])))
 
       (when-not muokkaa-aina
         [:button.nappi-kielteinen.grid-peru
@@ -446,7 +446,7 @@
                        (nollaa-muokkaustiedot!)
                        (when peruuta (peruuta))
                        nil)}
-         [ikonit/ikoni-ja-teksti (ikonit/livicon-ban) "Peruuta"]])])
+         [ui-ikonit/ikoni-ja-teksti (ui-ikonit/livicon-ban) "Peruuta"]])])
    (when nayta-otsikko? [:h6.panel-title otsikko])
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])])
 
@@ -519,8 +519,8 @@
                        (- colspan (:col-span komponentti-otsikon-sisaan)))}
        (when salli-valiotsikoiden-piilotus?
          (if (@piilotetut-valiotsikot valiotsikko-id)
-           [ikonit/navigation-ympyrassa :right]
-           [ikonit/navigation-ympyrassa :down]))
+           [ui-ikonit/navigation-ympyrassa :right]
+           [ui-ikonit/navigation-ympyrassa :down]))
        [:div.valiotsikon-teksti teksti]]
       (when (and (:sisalto komponentti-otsikon-sisaan)
                  (:col-span komponentti-otsikon-sisaan))
@@ -1287,7 +1287,7 @@
         [:span.arvo-ja-nappi-arvo
          arvo]
         [napit/yleinen-toissijainen
-         (or arvo-ja-nappi-napin-teksti (ikonit/muokkaa))
+         (or arvo-ja-nappi-napin-teksti (ui-ikonit/muokkaa))
          arvo-ja-nappi-toiminto-fn
          (merge {:ikoninappi? ikoninappi?
                  :luokka (str "btn-xs arvo-ja-nappi-nappi")}
@@ -1332,8 +1332,8 @@
                   (otsikko-valittu-fn false)
                   (otsikko-valittu-fn true))
                {:ikoni (if (kaikki-valittu?-fn)
-                         (ikonit/livicon-square)
-                         (ikonit/livicon-check))
+                         (ui-ikonit/livicon-square)
+                         (ui-ikonit/livicon-check))
                 :ikoninappi? true}]
               (or otsikko "Valitse"))
    :nimi :valinta
