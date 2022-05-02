@@ -74,6 +74,10 @@
                  :else arvo)]
    [:fo:inline (str "\u00A0" yksikko)]])
 
+(defmethod muodosta-pdf :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:fo:inline
+   [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
+
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
    [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
