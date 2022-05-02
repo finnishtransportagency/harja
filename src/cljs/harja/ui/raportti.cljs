@@ -23,7 +23,8 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -78,26 +79,20 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defn nihkea-vetolaatikko [data]
-  [:div (first data)])
-
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat esta-tiivis-grid?
-                                               oikealle-tasattavat-kentat vetolaatikot]}
+                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid? avattavat-rivit]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
-    (println "jere testaa::" data sarakkeet)
     [grid/grid {:otsikko (or otsikko "")
                 :tunniste (fn [rivi]
-                            (do (println "rivi" rivi) (str "raportti_rivi_"
-                                                        (or (::rivin-indeksi rivi)
-                                                          (hash rivi)))))
+                            (str "raportti_rivi_"
+                              (or (::rivin-indeksi rivi)
+                                (hash rivi))))
                 :rivi-ennen rivi-ennen
-                :vetolaatikot (into {} (map (fn [[id data]]
-                                              {id [nihkea-vetolaatikko data]}) vetolaatikot))
+                :avattavat-rivit avattavat-rivit
                 :piilota-toiminnot? true
                 :sivuttain-rullattava? true
                 :ensimmainen-sarake-sticky? true
@@ -129,6 +124,7 @@
                    ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
                    :tyyppi (cond
                              (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
+                             (= (:tyyppi sarake) :avattava-rivi) :avattava-rivi
                              raporttielementteja? :komponentti
                              :else :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
@@ -160,6 +156,7 @@
                                       (if (map? rivi)
                                         [(:rivi rivi) rivi]
                                         [rivi {}])
+                                      isanta-rivin-id (:isanta-rivin-id optiot)
                                       lihavoi? (:lihavoi? optiot)
                                       korosta? (:korosta? optiot)
                                       korosta-hennosti? (:korosta-hennosti? optiot)
@@ -183,7 +180,10 @@
                                           (assoc :lihavoi true)
 
                                           rivin-luokka
-                                          (assoc :rivin-luokka rivin-luokka))))))
+                                          (assoc :rivin-luokka rivin-luokka)
+
+                                          isanta-rivin-id
+                                          (assoc :isanta-rivin-id isanta-rivin-id))))))
                data)))]))
 
 
