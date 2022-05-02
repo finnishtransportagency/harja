@@ -174,27 +174,23 @@
      (when (= :kaikki (-> valinnat :toimenpide :id))
        [:h2 nimi])
      (when (> alue-tehtavia 0)
-       [:<>
+       [:<>        
+        [:div.tm-otsikko {:class (str (when sopimukset-syotetty? "marginilla"))} "Urakka-alueen tiedot"]
         (when sopimukset-syotetty?
-          [:<>
-           [:h3 "Urakka-alueen tiedot"]
-           [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"]])
+          [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"])
         [grid/muokkaus-grid
-         (merge 
-           {:id (keyword (str "tehtavat-alueet-" nimi))
-            :tyhja "Ladataan tietoja"
-            :voi-poistaa? (constantly false)
-            :jarjesta :jarjestys 
-            :ulkoinen-validointi? true
-            :voi-muokata? true
-            :voi-lisata? false
-            :disabloi-autocomplete? true
-            :voi-kumota? false
-            :virheet t/taulukko-virheet
-            :piilota-toiminnot? true
-            :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)}
-           (when (not sopimukset-syotetty?)
-             {:otsikko "Urakka-alueen tiedot"}))
+         {:id (keyword (str "tehtavat-alueet-" nimi))
+          :tyhja "Ladataan tietoja"
+          :voi-poistaa? (constantly false)
+          :jarjesta :jarjestys 
+          :ulkoinen-validointi? true
+          :voi-muokata? true
+          :voi-lisata? false
+          :disabloi-autocomplete? true
+          :voi-kumota? false
+          :virheet t/taulukko-virheet
+          :piilota-toiminnot? true
+          :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :alueet)}
          [{:otsikko "Tehtävä" :nimi :nimi :tyyppi :string :muokattava? (constantly false) :leveys 
            (if sopimukset-syotetty? 
              "60%"
@@ -207,10 +203,10 @@
             {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"  :veda-oikealle? true})
           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
          aluetiedot-tila]])
+     [:div.tm-otsikko "Määrät"]
      [grid/muokkaus-grid
       (merge 
-        {:otsikko "Määrät"
-         :id (keyword (str "tehtavat-maarat-" nimi))
+        {:id (keyword (str "tehtavat-maarat-" nimi))
          :tyhja "Ladataan tietoja"
          :voi-poistaa? (constantly false)
          :jarjesta :jarjestys 
