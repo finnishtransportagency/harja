@@ -51,6 +51,11 @@
                  :else arvo)]
    [:span.yksikko (str "\u00A0" yksikko)]])
 
+(defmethod muodosta-html :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo arvo]
+   [:div.selite.caption selite]])
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,

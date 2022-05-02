@@ -84,6 +84,9 @@
                         nil
                         [:kustomi desimaalien-maara]))])
 
+(defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
+  [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
+
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
   [arvo
    (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))

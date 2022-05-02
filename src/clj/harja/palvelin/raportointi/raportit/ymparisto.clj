@@ -27,25 +27,25 @@
         (hae-ymparistoraportti-tiedot db parametrit)))
 
 (def materiaali-kaikki-talvisuola-yhteensa
-  {:nimi "Talvisuolat yhteensä (100%) kuivatonnia"
+  {:nimi "Talvisuolat yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "talvisuola"})
 
 (def materiaali-kaikki-formiaatit-yhteensa
-  {:nimi "Formiaatit yhteensä (50 % liuostonnia)"
+  {:nimi "Formiaatit yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "formiaatti"})
 
 (def materiaali-kaikki-kesasuolat-yhteensa
-  {:nimi "Kesäsuola yhteensä (t)"
+  {:nimi "Kesäsuola yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "kesasuola"})
 
 (def materiaali-kaikki-murskeet-yhteensa
-  {:nimi "Murskeet yhteensä (t)"
+  {:nimi "Murskeet yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "murske"})
@@ -96,6 +96,38 @@
     ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
     "Talvisuola, NaCl"))
 
+(defn- materiaalin-nimi-ja-selite [nimi]
+  (case nimi
+    "Talvisuola"
+    {:arvo "Talvisuola, rakeinen"
+     :selite "NaCl"}
+    "Talvisuolaliuos CaCl2"
+    {:arvo "Talvisuolaliuos"
+     :selite "CaCl2"}
+    "Talvisuolaliuos NaCl"
+    {:arvo "Talvisuolaliuos"
+     :selite "NaCl"}
+    "Talvisuolat yhteensä"
+    {:arvo "Talvisuolat yhteensä"
+     :selite "100% kuivatonnia"}
+    "Formiaatit yhteensä"
+    {:arvo "Formiaatit yhteensä"
+     :selite "50% kuivatonnia"}
+    "Kesäsuola (pölynsidonta)"
+    {:arvo "Kesäsuola"
+     :selite "pölynsidonta"}
+    "Kesäsuola (sorateiden kevätkunnostus)"
+    {:arvo "Kesäsuola"
+     :selite "sorateiden kevätkunnostus"}
+    "Kesäsuola yhteensä"
+    {:arvo "Kesäsuola yhteensä"
+     :selite "100% kuivatonnia"}
+    "Murskeet yhteensä"
+    {:arvo "Murskeet yhteensä"
+     :selite "tonnia"}
+    
+    ;; default
+    {:arvo nimi}))
 
 
 (defn- materiaalien-jarjestys-ymparistoraportilla
@@ -229,7 +261,7 @@
                          [(:nimi urakka)])
 
                        ;; Materiaalin nimi
-                       [(materiaalin-nimi (:nimi materiaali))]
+                       [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
 
                        ;; Kuukausittaiset määrät, viiva jos tyhjä.
                        (map #(or (kk-arvot %) "–") kuukaudet)

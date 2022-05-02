@@ -183,13 +183,13 @@
   tr, td, th {
     // Huomio: rivien solut on kääritty diveihin, joille on annettu padding.
     // Jos tämä rikkoo jotain, reverttaa tämä commit.
-    div {
+    > div {
       padding: @livi-taulukon-padding;
     }
-    &.tiivis div {
+    > &.tiivis div {
       padding: @livi-taulukon-padding-tiivis;
     }
-    &.melko-tiivis div {
+    > &.melko-tiivis div {
       padding: @livi-taulukon-padding-melko-tiivis;
     }
     .pvm-aika-kentta td {
