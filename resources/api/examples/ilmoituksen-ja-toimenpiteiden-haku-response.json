@@ -1,0 +1,151 @@
+{
+  "ilmoitukset": [
+    {
+      "ilmoitus": {
+        "yhteydenottopyynto": true,
+        "tila": "aloitettu",
+        "sijainti": {
+          "koordinaatit": {
+            "x": 293612.517639,
+            "y": 6730812.861522
+          }
+        },
+        "ilmoitusid": 3123123,
+        "valitetty-harjaan": "2022-04-12T00:04:58Z",
+        "ilmoitustyyppi": "tiedoitus",
+        "alueurakkanumero": 146,
+        "lahettaja": {
+          "etunimi": "Anne",
+          "sukunimi": "Liikennekeskus",
+          "email": "tampere.liikennekeskus@fintraffic.fi"
+        },
+        "ilmoitettu": "2022-04-12T00:01:15Z",
+        "otsikko": "Urakoitsijaviesti",
+        "valitetty-urakkaan": "2022-04-12T00:05:03Z",
+        "tunniste": "UV-312-3ia2",
+        "vastaanotettu-harjaan": "2022-04-12T00:05:03Z",
+        "lisatieto": "Ilmoitukseen liittyvä lisätieto.",
+        "selitteet": [
+          {
+            "selite": "vettaTiella"
+          }
+        ],
+        "kuittaukset": [
+          {
+            "kuittaus": {
+              "vapaateksti": "",
+              "kuittaustyyppi": "aloitus",
+              "kuittaajaorganisaatio": {
+                "nimi": "Urakoitsija Oy",
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:07:57.549279",
+              "kuittaaja": {
+                "etunimi": "Matti",
+                "sukunimi": "Kuittaaja"
+              },
+              "vakiofraasi": "Selvitetään toimenpidetarve"
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "",
+              "kuittaustyyppi": "vastaanotto",
+              "kuittaajaorganisaatio": {
+                "nimi": "Urakoitsija Oy",
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:07:47.649352",
+              "kuittaaja": {
+                "etunimi": "Matti",
+                "sukunimi": "Kuittaaja"
+              },
+              "vakiofraasi": ""
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "Kuittauksen vapaateksti.",
+              "kuittaustyyppi": "valitys",
+              "kuittaajaorganisaatio": {
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:05:03.093456",
+              "kuittaaja": {
+                "etunimi": "Raili",
+                "sukunimi": "Urakoitsija"
+              },
+              "vakiofraasi": ""
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "Kuittauksen vapaateksti.",
+              "kuittaustyyppi": "valitys",
+              "kuittaajaorganisaatio": {
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:05:03.093456",
+              "kuittaaja": {
+                "etunimi": "Matti",
+                "sukunimi": "Kuittaaja"
+              },
+              "vakiofraasi": ""
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "Kuittauksen vapaateksti.",
+              "kuittaustyyppi": "valitys",
+              "kuittaajaorganisaatio": {
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:05:03.093456",
+              "kuittaaja": {
+                "etunimi": "Jussi",
+                "sukunimi": "Urakoitsija"
+              },
+              "vakiofraasi": ""
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "Kuittauksen vapaateksti.",
+              "kuittaustyyppi": "valitys",
+              "kuittaajaorganisaatio": {
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:05:03.093456",
+              "kuittaaja": {
+                "etunimi": "Helsinki",
+                "sukunimi": "Kelikeskus"
+              },
+              "vakiofraasi": ""
+            }
+          },
+          {
+            "kuittaus": {
+              "vapaateksti": "Kuittauksen vapaateksti.",
+              "kuittaustyyppi": "valitys",
+              "kuittaajaorganisaatio": {
+                "ytunnus": ""
+              },
+              "kuitattu": "2022-04-12T03:05:03.093456",
+              "kuittaaja": {
+                "etunimi": "Elsa",
+                "sukunimi": "Vastuuhenkilö"
+              },
+              "vakiofraasi": ""
+            }
+          }
+        ],
+        "paikankuvaus": "Tie 1234, eli Kotijoentie, Kotikylä. Tarkempi paikka: Paikasta Viljamäki 3,7 km, suuntaan Kotijoentie. ",
+        "ilmoittaja": {
+          "sukunimi": "Tienkäyttäjä",
+          "etunimi": "Tiina",
+          "matkapuhelin": "0401234567"
+        }
+      }
+    }
+  ]
+}

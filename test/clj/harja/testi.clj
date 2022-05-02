@@ -35,7 +35,9 @@
            (java.util Locale)
            (java.lang Boolean Exception)
            (java.util.concurrent TimeoutException)
-           (java.sql Statement)))
+           (java.sql Statement)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def jarjestelma nil)
 
@@ -804,6 +806,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Kemin päällystysurakka'"))))
 
+(defn hae-aktiivinen-oulu-testi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Testi'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -813,10 +820,12 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Iin MHU 2021-2026'"))))
+
 (defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
   (ffirst (q (str "SELECT id
                    FROM   lupaus_sitoutuminen
                    WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -826,6 +835,7 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))))
+
 (defn hae-ivalon-maanteiden-hoitourakan-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -1693,3 +1703,14 @@
   (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
                       osoite, kasitteleva_palvelin
                  FROM integraatioviesti;")))
+
+(defn nykyhetki-iso8061-formaatissa-menneisyyteen
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 86400 1000)))))
+
+(defn nykyhetki-iso8061-formaatissa-tulevaisuuteen
+  "Anna määrä parametriin, että montako päivää siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
+

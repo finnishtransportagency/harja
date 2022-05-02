@@ -1,8 +1,18 @@
 (ns harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma
   (:require [taoensso.timbre :as log]
-            [clj-time.format :as df])
+            [clj-time.format :as df]
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)))
+
+
+(def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
+                           :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+(def +liikennemerkki-tietolaji+ :tl506)
+
+(def +tieosoitemuutos-nimikkeistoarvo+ :tt01)
+(def +muu-tekinen-toimenpide-nimikkeistoarvo+ :tt02)
 
 ; Varusteiden nimikkeistö
 ; TL 501 Kaiteet
@@ -127,7 +137,7 @@
                             (= +wc+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl505 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (contains? +tl505-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
-                :tl506 (= kohdeluokka "varusteet/liikennemerkit")
+                +liikennemerkki-tietolaji+ (= kohdeluokka "varusteet/liikennemerkit")
                 :tl507 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
                             (contains? +tl507-ominaisuustyyppi-arvot+ (:tyyppi rakenteelliset-ominaisuudet)))
                 :tl508 (and (= kohdeluokka "varusteet/tienvarsikalusteet")
@@ -166,11 +176,74 @@
                                vec)]
     puuttuvat-avaimet))
 
-(defn validointi-viesti [puuttuvat-pakolliset-avaimet]
-  (str "Puuttuu pakollisia avaimia: " puuttuvat-pakolliset-avaimet))
+(defn aikavalit-leikkaavat [{a-alku :alkupvm a-loppu :loppupvm :as vali1} {b-alku :alkupvm b-loppu :loppupvm :as vali2}]
+  (let [minus-infinity (pvm/->pvm "1.1.1900")
+        plus-infinity (pvm/->pvm "1.1.2200")
+        a-alku* (or a-alku minus-infinity)
+        a-loppu* (or a-loppu plus-infinity)
+        b-alku* (or b-alku minus-infinity)
+        b-loppu* (or b-loppu plus-infinity)]
+    (pvm/aikavalit-leikkaavat? a-alku* a-loppu* b-alku* b-loppu*)))
+
+(defn tarkasta-varustetoteuma
+  "Tarkistaa varusteversion oikeellisuuden ja palauttaa toimintavaihtoehdot:
+  :tallenna, :ohita, :varoita
+
+  Tarkistukset:
+  1. pakolliset kentät
+  2. muutoksen-lahde-oid pitää olla Hallintorekisterin maanteiden-hoitourakka, jonka urakkakoodi vastaa VHAR-6045 mukaisesti Harjassa olevaan hoito
+     tai teiden-hoito tyyppisen voimassaolevan urakan tunnisteeseen (URAKKA.urakkanro)
+  3. version-voimassaolon alkupvm ja loppupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
+  4. Varusteen tietolajin pitää sisältyä VHAR-5109 kommentissa mainittuihin tietolajeihin
+  5. Varusteversion toimenpiteen pitää olla jokin seuraavista: lisäys, päivitys, poisto, tarkastus, korjaus ja puhdistus
+  6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
+     (meillä lisätieto-tekstiä)
+  7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
+
+  Tulokset:
+  2. 4. 6. ja 7. -> :ohita
+  1. 3. ja 5. -> :varoita
+  muuten :tallenna.
+
+  Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
+  Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
+  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo]
+  (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
+        puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
+    (cond
+      ; 2
+      (nil? (:urakka_id varustetoteuma))
+      {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
+      ; 4
+      (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
+      {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
+      ; 6
+      (and (= (name +liikennemerkki-tietolaji+) (:tietolaji varustetoteuma)) (str/blank? (:lisatieto varustetoteuma)))
+      {:toiminto :ohita :viesti "Liikennemerkin lisätieto puuttuu. Ohita varustetoteuma."}
+      ; 7a
+      (= (name +tieosoitemuutos-nimikkeistoarvo+) (:toteuma varustetoteuma))
+      {:toiminto :ohita :viesti "Tekninen toimenpide: Tieosoitemuutos. Ohita varustetoteuma."}
+      ; 7b
+      (= (name +muu-tekinen-toimenpide-nimikkeistoarvo+) (:toteuma varustetoteuma))
+      {:toiminto :ohita :viesti "Tekninen toimenpide: Muu tekninen toimenpide. Ohita varustetoteuma."}
+      ; Pakollisuudet viimeisenä, koska ohitaminen pitää tehdä ensin ettei tule virheilmoituksia
+      ; sellaisista, jotka eivät Harjaan kuulu
+      ; 3
+      (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
+      {:toiminto :varoita :viesti
+       (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
+      ; 5
+      (nil? (:toteuma varustetoteuma))
+      {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+      ; 1
+      (seq puuttuvat-pakolliset)
+      {:toiminto :varoita :viesti (str "Puuttuu pakollisia kenttiä: " puuttuvat-pakolliset)}
+
+      :else                                                 ; Jos kaikki on ok, päätetään tallentaa varuste.
+      {:toiminto :tallenna :viesti nil})))
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
-  (when (= "tl506" tietolaji)
+  (when (= (name +liikennemerkki-tietolaji+) tietolaji)
     (konversio-fn
       "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
 
@@ -180,22 +253,40 @@
       (konversio-fn "v/vtykl" kuntoluokka)
       "Puuttuu")))
 
-(defn varusteen-toteuma [{:keys [version-voimassaolo alkaen paattyen uusin-versio] :as kohde}]
+(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio toimenpiteet tekninen-tapahtuma] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
-        version-loppu (:loppu version-voimassaolo)]
-    (cond (nil? version-voimassaolo) (if paattyen
-                                       "poistettu"
-                                       "lisatty")           ;Sijaintipalvelu ei palauta versioita
-          (= alkaen version-alku) "lisatty"
-          (and uusin-versio (some? version-loppu)) "poistettu"
-          :else "paivitetty")))
+        version-loppu (:loppu version-voimassaolo)
+        toimenpidelista (->> toimenpiteet
+                             (map #(konversio-fn "v/vtp" %))
+                             (keep not-empty))]
+    (cond (< 1 (count toimenpidelista))
+          (do
+            ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
+            ; varusteen versiossa on monta toimenpidettä
+            (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): " toimenpidelista
+                           " Otimme vain 1. toimenpiteen talteen."))
+            (first toimenpidelista))
+
+          (= 1 (count toimenpidelista))
+          (first toimenpidelista)
+
+          (= 0 (count toimenpidelista))
+          ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
+          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "tt01"        ; Tieosoitemuutos
+                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "tt02"        ; Muu tekninen toimenpide
+                (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
+                (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
+                (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!
+                (and uusin-versio (some? version-loppu)) "poistettu" ; uusimmalla versiolla on loppu
+                :else "paivitetty"))))
 
 (defn varustetoteuma-velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma muotoon.
 
   Palauttaa {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}, jos onnistuu,
   {:tulos nil :tietolaji tietolaji :virheviesti (str \"validointivirhe: \" (validointi-viesti puuttuvat-pakolliset-avaimet))} muulloin."
-  [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn kohde]
+  [urakka-id-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakka-pvmt-idlla-fn kohde]
   (let [velho-pvm->sql (fn [teksti] (-> teksti
                                         velho-pvm->pvm
                                         aika->sql))
@@ -214,22 +305,30 @@
                      velho-aika->aika
                      aika->sql)
         varustetoteuma {:ulkoinen_oid (:oid kohde)
-                         :urakka_id (urakka-id-kohteelle-fn kohde)
-                         :tr_numero (:tie alkusijainti)
-                         :tr_alkuosa (:osa alkusijainti)
-                         :tr_alkuetaisyys (:etaisyys alkusijainti)
-                         :tr_loppuosa (:osa loppusijainti)
-                         :tr_loppuetaisyys (:etaisyys loppusijainti)
-                         :sijainti (sijainti-kohteelle-fn kohde)
-                         :tietolaji tietolaji
-                         :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
-                         :toteuma (varusteen-toteuma kohde)
-                         :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
-                         :alkupvm alkupvm
-                         :loppupvm loppupvm
-                         :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
-                         :muokattu muokattu}
-        puuttuvat-pakolliset-avaimet (puuttuvat-pakolliset-avaimet varustetoteuma)]
-    (if (empty? puuttuvat-pakolliset-avaimet)
-      {:tulos varustetoteuma :tietolaji tietolaji :virheviesti nil}
-      {:tulos nil :tietolaji tietolaji :virheviesti (str "validointivirhe: " (validointi-viesti puuttuvat-pakolliset-avaimet))})))
+                        :urakka_id (urakka-id-kohteelle-fn kohde)
+                        :tr_numero (:tie alkusijainti)
+                        :tr_alkuosa (:osa alkusijainti)
+                        :tr_alkuetaisyys (:etaisyys alkusijainti)
+                        :tr_loppuosa (:osa loppusijainti)
+                        :tr_loppuetaisyys (:etaisyys loppusijainti)
+                        :sijainti (sijainti-kohteelle-fn kohde)
+                        :tietolaji tietolaji
+                        :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
+                        :toteuma (varusteen-toteuma konversio-fn kohde)
+                        :kuntoluokka (varusteen-kuntoluokka konversio-fn kohde)
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm
+                        :muokkaaja (get-in kohde [:muokkaaja :kayttajanimi])
+                        :muokattu muokattu}
+        urakka-olemassaolo (urakka-pvmt-idlla-fn (:urakka_id varustetoteuma))
+        {toiminto :toiminto
+         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo)]
+    (cond
+      (= :tallenna toiminto)                                ; <3
+      {:tulos varustetoteuma :virheviesti nil}
+
+      (= :ohita toiminto)                                 ; :|
+      {:tulos nil :virheviesti nil}
+
+      (= :varoita toiminto)                                 ; :(
+      {:tulos nil :virheviesti viesti})))

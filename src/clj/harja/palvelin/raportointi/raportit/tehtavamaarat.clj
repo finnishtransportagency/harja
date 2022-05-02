@@ -8,17 +8,20 @@
             [taoensso.timbre :as log])
   (:import (java.math RoundingMode)))
 
+(def vemtr-elementit 5)
+(def tm-elementit 4)
+
 (defn- sama-tehtava-ja-ely?
   [e t]
   (and (= (:nimi e) (:nimi t))
-       (= (:hallintayksikko e) (:hallintayksikko t))))
+    (= (:hallintayksikko e) (:hallintayksikko t))))
 
 (defn laske-yhteen
   [e t]
   (assoc e :suunniteltu (+ (or (:suunniteltu e) 0) (or (:suunniteltu t) 0))
-           :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
-           :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e 0) 0)
-                                          (or (:toteutunut-materiaalimaara t 0) 0))))
+    :toteuma (+ (or (:toteuma e) 0) (or (:toteuma t) 0))
+    :toteutunut-materiaalimaara (+ (or (:toteutunut-materiaalimaara e 0) 0)
+                                  (or (:toteutunut-materiaalimaara t 0) 0))))
 
 (defn kombota-samat-tehtavat
   ([rivit]
@@ -28,15 +31,15 @@
           kombottu []]
      (let [r (first rivit)
            tarkista (or tarkistus-fn
-                        sama-tehtava-ja-ely?)]
+                      sama-tehtava-ja-ely?)]
        (if (not r)
          kombottu
          (let [r (or (some #(when (tarkista % r)
                               (laske-yhteen % r))
-                           kombottu)
-                     r)
+                       kombottu)
+                   r)
                kombottu (filter #(not (tarkista % r))
-                                kombottu)
+                          kombottu)
                kombottu (apply conj kombottu (keep identity [r]))]
            (recur (rest rivit) kombottu)))))))
 
@@ -71,8 +74,8 @@
   [rivi]
   (let [[_ _ suunniteltu toteuma toteutunut-materiaalimaara] rivi
         tehtava-rivi? (-> rivi
-                          count
-                          (> 1))
+                        count
+                        (> 1))
         toteuma-% (when tehtava-rivi?
                     (cond
                       (zero? toteuma) ""
@@ -81,7 +84,7 @@
         suunniteltu (pyorista-kahteen-decimaaliin suunniteltu)
         toteuma (pyorista-kahteen-decimaaliin toteuma)
         rivi-toteumaprosentilla (filter some?
-                                        (conj (into [] (take 2 rivi)) suunniteltu toteuma toteuma-% toteutunut-materiaalimaara))]
+                                  (conj (into [] (take 2 rivi)) suunniteltu toteuma toteuma-% toteutunut-materiaalimaara))]
 
     rivi-toteumaprosentilla))
 
@@ -92,17 +95,17 @@
         rivi-yksikoilla (if-not tehtava-rivi?
                           rivi
                           (filter some?
-                                 (vec
-                                   [tehtava
-                                    (when suunniteltu [:arvo-ja-yksikko
-                                                       {:arvo suunniteltu
-                                                        :yksikko yksikko
-                                                        :fmt :numero}])
-                                    (when toteuma [:arvo-ja-yksikko
-                                                   {:arvo toteuma
-                                                    :yksikko yksikko
-                                                    :fmt :numero}])
-                                    toteuma-% toteutunut-materiaalimaara])))]
+                            (vec
+                              [tehtava
+                               (when suunniteltu [:arvo-ja-yksikko
+                                                  {:arvo suunniteltu
+                                                   :yksikko yksikko
+                                                   :fmt :numero}])
+                               (when toteuma [:arvo-ja-yksikko
+                                              {:arvo toteuma
+                                               :yksikko yksikko
+                                               :fmt :numero}])
+                               toteuma-% toteutunut-materiaalimaara])))]
 
     rivi-yksikoilla))
 
@@ -128,48 +131,31 @@
   [m]
   (let [arvot (vals
                 (select-keys m
-                             [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara]))]
+                  [:nimi :yksikko :suunniteltu :toteuma :toteutunut-materiaalimaara]))]
     arvot))
 
 (defn- muodosta-otsikot
   [vemtr? hyt m]
   (cond
     (and (= 1 (count (keys m)))
-         (some #(= (first m) %) hyt))
+      (some #(= (first m) %) hyt))
     {:rivi (concat (vec m)
-                   (mapv (fn [_] "")
-                         (take (if vemtr? 5 6)
-                               (range)))) :korosta? true :lihavoi? true}
+             (mapv (fn [_] "") ; luodaan tyhjiä soluja
+               (take (if vemtr? vemtr-elementit tm-elementit)
+                 (range)))) :korosta? true :lihavoi? true}
 
     (= 1 (count (keys m)))
     {:rivi (concat (vec m)
-                   (mapv (fn [_] "")
-                         (take (if vemtr? 5 6)
-                               (range)))) :korosta-hennosti? true :lihavoi? true}
+             (mapv (fn [_] "")
+               (take (if vemtr? vemtr-elementit tm-elementit)
+                 (range)))) :korosta-hennosti? true :lihavoi? true}
 
     :else (vec m)))
-
-(defn taustatiedot ; härveli :D
-  [db params & haut]
-  (let [haut-muunnoksilla (mapv #(fn [db params acc]
-                                   (let [db-fn (first %)
-                                         muunnos-fn (second %)
-                                         parametrit (muunnos-fn params acc)]
-                                     (if parametrit
-                                       (db-fn db parametrit)
-                                       (db-fn db))))
-                                haut)
-        haku-fn (fn [db params] (reduce (fn [acc h]
-                                          (let [haku (h db params acc)]
-                                            (concat acc haku)))
-                                        []
-                                        haut-muunnoksilla))]
-    (haku-fn db params)))
 
 (defn- vemtrille-puuttuvat-tyhjat-sarakkeet
   [vemtr? r]
   (if (and vemtr?
-           (> (count r) 1))
+        (> (count r) 1))
     (concat r [0])
     r))
 
@@ -180,55 +166,55 @@
   ;; (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         vemtr? (not= kysely-fn db-haku-fn)
-        raportin-taustatiedot (apply taustatiedot
-                                     db
-                                     parametrit
-                                     (keep identity (vector
-                                                      (when urakka-id
-                                                        [urakat-q/urakan-hallintayksikko
-                                                         (fn [ps _] {:id (get ps :urakka-id)})])
-                                                      (when urakka-id
-                                                        [urakat-q/hae-urakka
-                                                         (fn [ps _] {:id (get ps :urakka-id)})])
-                                                      (when urakka-id
-                                                        [hallinta-q/hae-organisaatio
-                                                         (fn [_ acc] {:id (get (first acc) :hallintayksikko-id)})])
-                                                      (when hallintayksikko-id
-                                                        [hallinta-q/hae-organisaatio
-                                                         (fn [ps _] {:id (get ps :hallintayksikko-id)})])
-                                                      (when (not (or urakka-id hallintayksikko-id))
-                                                        [hallinta-q/hallintayksikot-ilman-geometriaa
-                                                         (fn [_ _] nil)]))))
+        urakan-hallintayksikko-tiedot (when urakka-id 
+                                        (urakat-q/urakan-hallintayksikko db {:id urakka-id}))
+        urakan-tiedot (when urakka-id 
+                        (urakat-q/hae-urakka db {:id urakka-id}))
+        hallintayksikko-tiedot (cond 
+                              urakka-id 
+                              (hallinta-q/hae-organisaatio db {:id (-> urakan-hallintayksikko-tiedot first :hallintayksikko-id)})
+                              
+                              (not (or urakka-id hallintayksikko-id))
+                              (hallinta-q/hallintayksikot-ilman-geometriaa db)
+                                  
+                              hallintayksikko-id
+                              (hallinta-q/hae-organisaatio db {:id hallintayksikko-id}))
+        raportin-taustatiedot (into [] (keep identity) 
+                                (mapcat identity 
+                                  [urakan-hallintayksikko-tiedot
+                                   urakan-tiedot
+                                   hallintayksikko-tiedot]))
         suunnitellut-ryhmissa (->> parametrit
-                                   (hae-tehtavamaarat db kysely-fn))
+                                (hae-tehtavamaarat db kysely-fn))
         ;; Varmistetaan vielä, että kaikki tehtävät ovat oikeassa järjestyksessä
         suunnitellut-ryhmissa (into [] (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
+        kaikki (if (and urakka-id (not (empty? suunnitellut-ryhmissa))) [{:nimi (-> urakan-tiedot first :nimi)}] [])
         suunnitellut-valiotsikoineen (loop [rivit suunnitellut-ryhmissa
                                             toimenpiteet #{}
                                             hallintayksikot #{}
-                                            kaikki []]
+                                            kaikki kaikki]
                                        (if (empty? rivit)
                                          kaikki
                                          (let [rivi (first rivit)
                                                uusi-toimenpide? (not (contains? toimenpiteet
-                                                                                (str (:toimenpide rivi) (:hallintayksikko rivi))))
-
+                                                                       (str (:toimenpide rivi) (:hallintayksikko rivi))))
                                                uusi-hallintayksikko? (not (contains? hallintayksikot (:hallintayksikko rivi)))
                                                hallintayksikko (:hallintayksikko rivi)
                                                toimenpide (:toimenpide rivi)
-                                               kaikki-rivit (if uusi-hallintayksikko?
+                                               ; luodaan väliotsikkoelementti
+                                               kaikki-rivit (if (and (not urakka-id) uusi-hallintayksikko?) ; turha tieto jos urakalle haetaan
                                                               (conj kaikki
-                                                                    {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) raportin-taustatiedot)})
+                                                                {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) hallintayksikko-tiedot)})
                                                               kaikki)
                                                kaikki-rivit (if uusi-toimenpide?
                                                               (conj kaikki-rivit
-                                                                    {:nimi toimenpide})
+                                                                {:nimi toimenpide}) 
                                                               kaikki-rivit)
                                                kaikki-rivit (conj kaikki-rivit rivi)]
                                            (recur (rest rivit) ;; loput suunnitellut-ryhmissä
-                                                  (conj toimenpiteet (str (:toimenpide rivi) (:hallintayksikko rivi))) ;; Toimenpide set
-                                                  (conj hallintayksikot hallintayksikko) ;; Hallintayksikkö set
-                                                  kaikki-rivit)))) ;; Pidetään kirjaa kaikista riveistä, joita raporttiin laitetaan
+                                             (conj toimenpiteet (str (:toimenpide rivi) (:hallintayksikko rivi))) ;; Toimenpide set
+                                             (conj hallintayksikot hallintayksikko) ;; Hallintayksikkö set
+                                             kaikki-rivit)))) ;; Pidetään kirjaa kaikista riveistä, joita raporttiin laitetaan
         muodosta-rivi (comp
                         (map nayta-suunniteltu-jos-sama-yksikko-kuin-toteumalla)
                         (map null-arvot-nollaksi-rivilla)
@@ -236,21 +222,24 @@
                         (map laske-toteuma-%)
                         (map yksikko-lukujen-peraan)
                         (map (partial vemtrille-puuttuvat-tyhjat-sarakkeet
-                                      vemtr?))
+                               vemtr?))
                         (map (partial muodosta-otsikot
-                                      vemtr?
-                                      (map :nimi raportin-taustatiedot))))
+                               vemtr?
+                               (map :nimi raportin-taustatiedot))))
         rivit (into [] muodosta-rivi suunnitellut-valiotsikoineen)]
     {:rivit rivit
      :debug suunnitellut-ryhmissa
-     :otsikot (take (if vemtr? 6 5)
-                    [{:otsikko "Tehtävä" :leveys 6}
-                     {:otsikko (str "Suunniteltu 1.10." (-> hoitokaudet first)
-                                    " - 30.9." (-> hoitokaudet last inc))
-                      :leveys 1 :fmt :numero}
-                     {:otsikko "Toteuma" :leveys 1 :fmt :numero}
-                     {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
-                     {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
+     :urakkatiedot (when urakka-id (-> urakan-tiedot first))
+     :otsikot (take (if vemtr? 
+                      vemtr-elementit 
+                      tm-elementit)
+                [{:otsikko "Tehtävä" :leveys 6}
+                 {:otsikko (str "Suunniteltu 1.10." (-> hoitokaudet first)
+                             " - 30.9." (-> hoitokaudet last inc))
+                  :leveys 1 :fmt :numero}
+                 {:otsikko "Toteuma" :leveys 1 :fmt :numero}
+                 {:otsikko "Toteuma-%" :leveys 1 :fmt :prosentti-0desim}
+                 {:otsikko "Toteutunut materiaali\u00ADmäärä" :leveys 1 :fmt :numero}])}))
 
 (defn db-haku-fn
   [db params]
@@ -259,12 +248,12 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
-  (let [{:keys [otsikot rivit debug]} (muodosta-taulukko db user db-haku-fn params)]
+  (let [{:keys [otsikot rivit debug urakkatiedot]} (muodosta-taulukko db user db-haku-fn params)]
     [:raportti
-     {:nimi (str "Tehtävämäärät" (when testiversio? " - TESTIVERSIO"))}
+     {:nimi (str "Tehtävämäärät " (:nimi urakkatiedot) (when testiversio? " - TESTIVERSIO"))}
      [:taulukko
-      {:otsikko (str "Tehtävämäärät ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
-       :sheet-nimi (str "Tehtävämäärät " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
+      {:otsikko (str "Tehtävämäärät " (:nimi urakkatiedot) " ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
+       :sheet-nimi (str "Tehtävämäärät " (:nimi urakkatiedot) " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]
      [:teksti (str "Mikäli suunnitellun määrän yksikkö on eri kuin saman tehtävän toteutuneen määrän yksikkö, näytetään tällä raportilla toteutunut määrä, mutta ei suunniteltua määrää. Tällaisia tehtäviä ovat esimerkiksi monet liukkaudentorjuntaan liittyvät työt, joihin Tehtävä- ja määräluettelossa suunnitellaan materiaalimääriä.")]

@@ -328,6 +328,54 @@ FROM ilmoitus
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
 
+-- name: hae-ilmoitukset-ytunnuksella
+SELECT
+    i.ilmoitusid,
+    i.tunniste,
+    i.tila,
+    i.ilmoitettu,
+    i.valitetty as "valitetty-harjaan",
+    i."valitetty-urakkaan",
+    i."vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+    CASE
+        WHEN (i."vastaanotettu-alunperin" = i.vastaanotettu) THEN NULL
+        ELSE
+            i.vastaanotettu
+        END as "paivitetty-harjaan",
+    u.urakkanro AS alueurakkanumero,
+    i.ilmoitustyyppi,
+    i.yhteydenottopyynto,
+    i.paikankuvaus,
+    i.lisatieto,
+    i.otsikko,
+    i.selitteet,
+    i.sijainti,
+    i.tr_numero as tienumero,
+    i.ilmoittaja_etunimi,
+    i.ilmoittaja_sukunimi,
+    i.ilmoittaja_tyopuhelin,
+    i.ilmoittaja_matkapuhelin,
+    i.ilmoittaja_sahkoposti,
+    i.lahettaja_etunimi,
+    i.lahettaja_sukunimi,
+    i.lahettaja_puhelinnumero,
+    i.lahettaja_sahkoposti,
+    i."aiheutti-toimenpiteita",
+    json_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
+        it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
+        coalesce(it.kuittaaja_organisaatio_ytunnus, '')))) AS kuittaukset
+FROM ilmoitus i
+    JOIN urakka u ON u.id = i.urakka
+                         -- Haetaan vain käynnissäolevista urakoista
+                         AND ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR (u.loppupvm IS NULL AND u.alkupvm <= NOW()))
+    JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
+    JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+WHERE (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+      OR
+       it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
+ORDER BY i."valitetty-urakkaan" ASC
+LIMIT 10000;
 
 -- name: hae-id-ilmoitus-idlla
 -- Hakee id:n ilmoitus-id:llä

@@ -118,7 +118,7 @@
                   :kayttajatunnus "harja"
                   :salasana #=(slurp "../.harja/api-sahkoposti-salasana")}
 
- :tierekisteri {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
+ :tierekisteri {:url ""
                 :uudelleenlahetys-aikavali-minuutteina 60}
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}

@@ -6,7 +6,9 @@
             [harja.palvelin.integraatiot.velho.sanomat.varuste-vastaanottosanoma :as varuste-vastaanottosanoma]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.kyselyt.koodistot :as koodistot])
+            [harja.kyselyt.koodistot :as koodistot]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :as yleiset])
   (:import (java.nio.file FileSystems)
            (org.joda.time DateTime)))
 
@@ -62,7 +64,7 @@
     (let [odotettu-tietolaji-oidista (poimi-tietolaji-oidista (:oid kohde))
           tietolaji-poikkeus-map (or tietolaji-poikkeus-map {"tl514" "tl501"}) ; Melukaiteet ovat kaiteita nyt! tl514 -> tl501
           mapatty-tietolaji (get tietolaji-poikkeus-map odotettu-tietolaji-oidista odotettu-tietolaji-oidista)
-          odotettu-tietolaji (if (contains? +kaikki-tietolajit+ (keyword mapatty-tietolaji)) mapatty-tietolaji)]
+          odotettu-tietolaji (if (contains? varuste-vastaanottosanoma/+kaikki-tietolajit+ (keyword mapatty-tietolaji)) mapatty-tietolaji)]
       (let [paatelty-tietolaji (varuste-vastaanottosanoma/varusteen-tietolaji kohde)]
         (is (= odotettu-tietolaji paatelty-tietolaji)
             (format "Testitiedoston: %s rivillä: %s (oid: %s) odotettu tietolaji: %s ≠ päätelty tietolaji: %s"
@@ -140,7 +142,7 @@
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
-(deftest velho->harja-test
+(deftest varustetoteuma-velho->harja-test
   (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
         alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
         muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
@@ -149,26 +151,27 @@
                   :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (fn [& _] "dummy")
         konversio-fn (partial koodistot/konversio db)
-        {tulos :tulos} (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn syote)]
+        {tulos :tulos} (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn syote)]
     (is (= odotettu tulos))))
 
 (deftest velho->harja-puuttuvia-arvoja-test
   (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
     (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
           puuttuu-oid (dissoc syote :oid)
-          odotettu {:tulos nil :tietolaji "tl506" :virheviesti "validointivirhe: Puuttuu pakollisia avaimia: [:ulkoinen_oid]"}
+          odotettu {:tulos nil :virheviesti "Puuttuu pakollisia kenttiä: [:ulkoinen_oid]"}
           db (:db jarjestelma)
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+          urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
           sijainti-fn (partial varusteet/sijainti-kohteelle db)
           konversio-fn (partial koodistot/konversio db)]
-      (is (= odotettu (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn puuttuu-oid))))))
+      (is (= odotettu (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn puuttuu-oid))))))
 
 (deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json") :key-fn keyword)
-        odotettu {:tietolaji "tl514"
-                  :tulos {:alkupvm #inst "2016-08-09T00:00:00.000000000-00:00"
+        odotettu {:tulos {:alkupvm #inst "2016-08-09T00:00:00.000-00:00"
                           :kuntoluokka "Tyydyttävä"
                           :lisatieto nil
                           :loppupvm nil
@@ -185,14 +188,15 @@
                   :virheviesti nil}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)
-        konvertoitu-kohde (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn kohde)]
+        konvertoitu-kohde (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn kohde)]
     (is (= odotettu (update-in konvertoitu-kohde [:tulos] dissoc :sijainti :muokattu)))))
 
 (deftest varusteen-lisatieto-palauttaa-null-muille-kuin-liikennemerkeille-test
   (let [kohde nil
-        tietolajit (disj +kaikki-tietolajit+ :tl506)
+        tietolajit (disj varuste-vastaanottosanoma/+kaikki-tietolajit+ :tl506)
         db (:db jarjestelma)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [tl tietolajit]
@@ -205,6 +209,13 @@
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (varuste-vastaanottosanoma/varusteen-kuntoluokka konversio-fn kohde)))))
 
+(deftest varusteen-toimenpiteet-konvertoituu-oikein-test
+  "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
+  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
+        odotetut-toimenpiteet "korjaus"
+        konversio-fn (partial koodistot/konversio (:db jarjestelma))]
+    (is (= odotetut-toimenpiteet (varuste-vastaanottosanoma/varusteen-toteuma konversio-fn kohde)))))
+
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
@@ -216,13 +227,13 @@
                                   {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
+        urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
         sijainti-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [kohde-toteuma kohteet-ja-toteumatyypit]
-      (let [{konvertoitu-kohde :tulos tietolaji :tietolaji virheviesti :virheviesti}
-            (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn (:kohde kohde-toteuma))]
+      (let [{konvertoitu-kohde :tulos virheviesti :virheviesti}
+            (varuste-vastaanottosanoma/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn (:kohde kohde-toteuma))]
         (is (nil? virheviesti))
-        (is (= "tl506" tietolaji))
         (is (= (:odotettu-toteumatyyppi kohde-toteuma) (:toteuma konvertoitu-kohde)))))))
 
 (deftest aika->velho-aika-nil-test
@@ -248,8 +259,76 @@
 
 (def joku-pvm "2021-12-02")
 
-(deftest velho-pvm->pvm
+(deftest velho-pvm->pvm-test
   (let [odotettu-pvm (df/parse (:date df/formatters) joku-pvm)
         saatu-pvm (varuste-vastaanottosanoma/velho-pvm->pvm joku-pvm)]
     (is (instance? DateTime saatu-pvm))
     (is (= odotettu-pvm saatu-pvm))))
+
+(deftest tarkista-varustetoteuma-test
+  ; 1. pakolliset kentät
+  ; 2. muutoksen-lahde-oid pitää olla Hallintorekisterin maanteiden-hoitourakka, jonka urakkakoodi vastaa VHAR-6045 mukaisesti Harjassa olevaan hoito
+  ;    tai teiden-hoito tyyppisen voimassaolevan urakan tunnisteeseen (URAKKA.urakkanro)
+  ; 3. version-voimassaolon alkupvm ja loppupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
+  ; 4. Varusteen tietolajin pitää sisältyä VHAR-5109 kommentissa mainittuihin tietolajeihin
+  ; 5. Varusteversion toimenpiteen pitää olla jokin seuraavista: lisäys, päivitys, poisto, tarkastus, korjaus ja puhdistus
+  ; 6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
+  ;    (meillä lisätieto-tekstiä)
+  ; 7. Varusteversion versioitu.tekninen-tapatuma tulee olla tyhjä
+  (let [db (:db jarjestelma)
+        odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
+        urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
+        tuntematon-tietolaji "tl123"
+        liikennemerkki (name varuste-vastaanottosanoma/+liikennemerkki-tietolaji+)
+        alku-ja-loppupvm (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "1.10.2019") :loppupvm nil))
+        oid-muokattu-urakka-tietolaji-sijainti (fn [kohde] (-> kohde
+                                                               (assoc :oid "1.2.3.4.5" :muokattu (:alkupvm kohde)
+                                                                      :urakka_id odotettu-oulu-MHU-urakka-id
+                                                                      :tietolaji "tl501"
+                                                                      :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 5 :tie 22 :etaisyys 4355}}))))
+        toimenpide (fn [kohde] (assoc kohde :toteuma "lisays"))
+        muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
+        sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
+        perus-setti (comp oid-muokattu-urakka-tietolaji-sijainti toimenpide alku-ja-loppupvm)
+        kutsu (fn [kohde] (varuste-vastaanottosanoma/tarkasta-varustetoteuma kohde (urakka-pvmt-idlla-fn (:urakka_id kohde))))
+        juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
+    ; 1 -> varoita
+    (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
+           (kutsu (-> {} perus-setti
+                      (assoc :sijainti nil)))))
+    ; 3 -> varoita
+    (is (= {:toiminto :varoita :viesti
+            (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa "
+                 "alkupvm: Sun Sep 29 00:00:00 EEST 2019 loppupvm: Mon Sep 30 00:00:00 EEST 2019")}
+           (kutsu (-> {} perus-setti
+                      juuri-ennen-oulun-MHU-alkua))))
+    ; 5 -> varoita
+    (is (= {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
+           (kutsu (-> {} alku-ja-loppupvm
+                      oid-muokattu-urakka-tietolaji-sijainti))))
+    ; 2 -> ohita
+    (is (= {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      sijainti-ei-MHU-testidatassa
+                      muutoksen-lahde-tuntematon-oid
+                      (assoc :urakka_id nil)))))
+    ; 4 -> ohita
+    (is (= {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :tietolaji tuntematon-tietolaji)))))
+    ; 6 -> ohita
+    (is (= {:toiminto :ohita :viesti "Liikennemerkin lisätieto puuttuu. Ohita varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :tietolaji liikennemerkki)))))
+    ; 7a -> ohita
+    (is (= {:toiminto :ohita :viesti "Tekninen toimenpide: Tieosoitemuutos. Ohita varustetoteuma."}
+           (kutsu (-> {} perus-setti
+                      (assoc :toteuma "tt01")))))
+    ; 7b -> ohita
+    (is (= {:toiminto :ohita :viesti "Tekninen toimenpide: Muu tekninen toimenpide. Ohita varustetoteuma."}
+                                                         (kutsu (-> {} perus-setti
+                                                                    (assoc :toteuma "tt02")))))
+    ; else -> tallenna
+    (is (= {:toiminto :tallenna :viesti nil}
+           (kutsu (-> {} perus-setti))))))
