@@ -201,10 +201,10 @@
              "70%")}
           ;; ennen urakkaa -moodi         
           {:otsikko "Tarjouksen määrä" :nimi :sopimuksen-aluetieto-maara :tyyppi :numero :leveys "180px"
-           :muokattava? (constantly (if sopimukset-syotetty? false true))}
+           :muokattava? (constantly (if sopimukset-syotetty? false true)) :veda-oikealle? true}
           ;; urakan ajan suunnittelu -moodi         
           (when sopimukset-syotetty? 
-            {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+            {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"  :veda-oikealle? true})
           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
          aluetiedot-tila]])
      [grid/muokkaus-grid
@@ -238,16 +238,17 @@
        ;; ennen urakkaa -moodi
        (when (not sopimukset-syotetty?)
          {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
-          :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo})
+          :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
+           :veda-oikealle? true})
        ;; urakan ajan suunnittelu -moodi
        (when sopimukset-syotetty? 
          {:otsikko "Koko urakka-ajan määrä tarjouksessa" :nimi :sopimuksen-tehtavamaarat-yhteensa 
-          :tyyppi :numero :muokattava? (constantly false) :leveys "160px"})
+          :tyyppi :numero :muokattava? (constantly false) :leveys "160px"  :veda-oikealle? true})
        (when sopimukset-syotetty? 
          {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
-          :muokattava? (constantly false) :leveys "160px" })
+          :muokattava? (constantly false) :leveys "160px"  :veda-oikealle? true})
        (when sopimukset-syotetty? 
-         {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px"})
+         {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
        {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
       maarat-tila]]))
 
