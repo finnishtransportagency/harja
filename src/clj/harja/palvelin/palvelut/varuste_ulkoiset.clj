@@ -1,17 +1,18 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset
   "Varustetoteumien backend"
-  (:require [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [try+]]
-            [harja.geo :as geo]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
-            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.kyselyt.konversio :as konv]
+  (:require [clj-time.core :as t]
+            [com.stuartsierra.component :as component]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]))
+            [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as vt]
+            [slingshot.slingshot :refer [try+]]
+            [taoensso.timbre :as log]))
 
 (defn luo-pvm-oikein [vuosi kuukausi paiva]
   (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
@@ -57,7 +58,8 @@
                                                                              :leta leta
                                                                              :tietolajit (or tietolajit [])
                                                                              :kuntoluokat (or kuntoluokat [])
-                                                                             :toteuma toteuma})]
+                                                                             :toteuma toteuma
+                                                                             :tuloksen_maksimikoko vt/+max-toteumat+})]
     {:urakka-id urakka-id :toteumat (map muunna-sijainti toteumat)}))
 
 (defn hae-varustetoteumat-ulkoiset

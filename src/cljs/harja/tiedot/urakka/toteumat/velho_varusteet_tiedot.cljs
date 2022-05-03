@@ -16,7 +16,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-
+(def +max-toteumat+ 1000)                                   ; Maksimi määrä toimenpiteitä, jotka palautetaan haun tuloksena.
 
 (defn hoitokausi-rajat [alkuvuosi]
   [(pvm/hoitokauden-alkupvm alkuvuosi)
@@ -82,8 +82,6 @@
   (if tr-loppuosa
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys "/" tr-loppuosa "/" tr-loppuetaisyys)
     (str tr-numero "/" tr-alkuosa "/" tr-alkuetaisyys)))
-
-(def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
 (defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
