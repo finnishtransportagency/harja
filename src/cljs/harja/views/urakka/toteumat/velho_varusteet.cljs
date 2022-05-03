@@ -264,6 +264,8 @@
          [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
                                                 v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
           nil "100%"])
+       [suodatuslomake e! app]
+       [kartta/kartan-paikka]
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]
