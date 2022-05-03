@@ -260,7 +260,7 @@
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
        (when (= 0 (count (:varusteet app)))
          [yleiset/info-laatikko :neutraali "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä."])
-       (when (>= (count (:varusteet app)) varusteet/+max-toteumat+)
+       (when (>= (count (:varusteet app)) v/+max-toteumat+)
          [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
                                                 v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
           nil "100%"])
