@@ -783,17 +783,36 @@
                         +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
                                                      :massa-idt [tuotavan-massan-id]
                                                      :murske-idt tuotavan-murskeen-id})
+        {tuodut-massat-kolmas :massat tuodut-murskeet-kolmas :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt [tuotavan-massan-id]
+                                                     :murske-idt tuotavan-murskeen-id})
         toinen-kopioimalla-luotu-massa (first (filter #(not= (::pot2-domain/massa-id  %)
                                                              (-> tuodut-massat-eka first ::pot2-domain/massa-id))
                                                       tuodut-massat-toka))
         toinen-kopioimalla-luotu-murske (first (filter #(not= (::pot2-domain/murske-id  %)
                                                              (-> tuodut-murskeet-eka first ::pot2-domain/murske-id))
-                                                      tuodut-murskeet-toka))]
+                                                      tuodut-murskeet-toka))
+        kolmas-kopioimalla-luotu-massa (first (filter #(not-any? (fn [toiset-massat]
+                                                                   (= (::pot2-domain/massa-id %)
+                                                                      (::pot2-domain/massa-id toiset-massat)))
+                                                                 tuodut-massat-toka)
+                                                      tuodut-massat-kolmas))
+        kolmas-kopioimalla-luotu-murske (first (filter #(not-any? (fn [toiset-murskeet]
+                                                                    (= (::pot2-domain/murske-id %)
+                                                                       (::pot2-domain/murske-id toiset-murskeet)))
+                                                                  tuodut-murskeet-toka)
+                                                       tuodut-murskeet-kolmas))]
+    ; (println "Jarno kolmas-kopioimalla-luotu-murske " kolmas-kopioimalla-luotu-murske)
     (is (nil? (::pot2-domain/nimen-tarkenne (first tuodut-massat-eka))) "Ensi tuonnin jälkeen massan nimi")
-    (is (= " 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-massa)) "Ensi tuonnin jälkeen massan nimi")
+    (is (= " 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-massa)) "Toisen tuonnin jälkeen massan nimi")
+    (is (= " 3" (::pot2-domain/nimen-tarkenne kolmas-kopioimalla-luotu-massa)) "Kolmannen tuonnin jälkeen massan nimi")
 
     (is (= "LJYR" (::pot2-domain/nimen-tarkenne (first tuodut-murskeet-eka))) "Ensi tuonnin jälkeen murskeen nimi")
-    (is (= "LJYR 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-murske)) "Ensi tuonnin jälkeen murskeen nimi")))
+    (is (= "LJYR 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-murske)) "Toisen tuonnin jälkeen murskeen nimi")
+    (is (= "LJYR 3" (::pot2-domain/nimen-tarkenne kolmas-kopioimalla-luotu-murske)) "Kolmannen tuonnin jälkeen murskeen nimi")))
 
 (deftest tarkenne-kayttaa-juoksevaa-numerointia-jos-sama-nimi
   (is (= (pot2/paivita-tarkennetta nil) " 2"))

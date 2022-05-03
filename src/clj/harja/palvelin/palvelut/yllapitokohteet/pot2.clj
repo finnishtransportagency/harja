@@ -361,9 +361,15 @@
                                                                                                   :urakka_id urakka-id
                                                                                                   :id (:id uusi-massa)})]]
       (when-not (empty? samannimiset-massat-urakassa)
-        (paallystys-q/paivita-massan-nimen-tarkennetta<! db {:id (:id uusi-massa)
-                                                             :urakka_id urakka-id
-                                                             :nimen_tarkenne (paivita-tarkennetta (:nimen_tarkenne uusi-massa))}))
+        ;; etsitään kannassaolevista samannimisistä massoista se, jonka tarkenne on "viimeisin" juoksevassa numeroinnissa
+        (let [viimeisin-tarkenne (paallystys-q/hae-samannimisten-massojen-viimeisin-tarkenne db {:tyyppi (:tyyppi uusi-massa)
+                                                                                                      :max_raekoko (:max_raekoko uusi-massa)
+                                                                                                      :dop_nro (:dop_nro uusi-massa)
+                                                                                                      :urakka_id urakka-id
+                                                                                                      :id (:id uusi-massa)})]
+(paallystys-q/paivita-massan-nimen-tarkennetta<! db {:id (:id uusi-massa)
+                                                               :urakka_id urakka-id
+                                                               :nimen_tarkenne (paivita-tarkennetta viimeisin-tarkenne)})))
       ;; jos löytyi samannimisiä massoja urakassa, niin lisätään tarkenteeseen juoksevalla numeroinnilla 2, 3, 4, ...
       ;; jotta käyttäjä voi erottaa ne helpommin käyttöliittmässä. Tilanne voi syntyä jos käyttäjä tuo saman materiaalin kahteen
       ;; kertaan
@@ -384,9 +390,14 @@
                                                                                                       :urakka_id urakka-id
                                                                                                       :id (:id uusi-murske)})]]
       (when-not (empty? samannimiset-murskeet-urakassa)
-        (paallystys-q/paivita-murskeen-nimen-tarkennetta<! db {:id (:id uusi-murske)
-                                                               :urakka_id urakka-id
-                                                               :nimen_tarkenne (paivita-tarkennetta (:nimen_tarkenne uusi-murske))})))
+        ;; etsitään kannassaolevista samannimisistä massoista se, jonka tarkenne on "viimeisin" juoksevassa numeroinnissa
+        (let [viimeisin-tarkenne (paallystys-q/hae-samannimisten-murskeiden-viimeisin-tarkenne db {:tyyppi (:tyyppi uusi-murske)
+                                                                                                 :dop_nro (:dop_nro uusi-murske)
+                                                                                                 :urakka_id urakka-id
+                                                                                                 :id (:id uusi-murske)})]
+          (paallystys-q/paivita-murskeen-nimen-tarkennetta<! db {:id (:id uusi-murske)
+                                                                 :urakka_id urakka-id
+                                                                 :nimen_tarkenne (paivita-tarkennetta viimeisin-tarkenne)}))))
 
     ;; Palautetaan käyttäjälle tuoreet materiaalit kannasta monistamisen jälkeen
     (hae-urakan-massat-ja-murskeet db user {:urakka-id urakka-id})))

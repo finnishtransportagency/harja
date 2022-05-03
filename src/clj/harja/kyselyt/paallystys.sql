@@ -782,14 +782,36 @@ SELECT *
          urakka_id = :urakka_id AND
          id != :id;
 
+-- name: hae-samannimisten-massojen-viimeisin-tarkenne
+-- single?: true
+SELECT nimen_tarkenne
+  FROM pot2_mk_urakan_massa
+ WHERE tyyppi = :tyyppi AND
+         max_raekoko = :max_raekoko AND
+         dop_nro = :dop_nro AND
+         urakka_id = :urakka_id AND
+         id != :id AND nimen_tarkenne IS NOT NULL
+ORDER BY nimen_tarkenne DESC;
+
 -- name: hae-samannimiset-murskeet-urakasta
 SELECT *
   FROM pot2_mk_urakan_murske
  WHERE tyyppi = :tyyppi AND
      (nimen_tarkenne = :nimen_tarkenne OR nimen_tarkenne IS NULL) AND
-         dop_nro = :dop_nro AND
+     (dop_nro = :dop_nro OR dop_nro IS NULL) AND
          urakka_id = :urakka_id AND
          id != :id;
+
+-- name: hae-samannimisten-murskeiden-viimeisin-tarkenne
+-- single?: true
+SELECT nimen_tarkenne
+  FROM pot2_mk_urakan_murske
+ WHERE tyyppi = :tyyppi AND
+     (dop_nro = :dop_nro OR dop_nro IS NULL) AND
+         urakka_id = :urakka_id AND
+         id != :id AND
+     nimen_tarkenne IS NOT NULL
+ ORDER BY nimen_tarkenne DESC;
 
 -- name: paivita-massan-nimen-tarkennetta<!
 UPDATE pot2_mk_urakan_massa
