@@ -142,9 +142,9 @@
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        toteumat]]
      [:div.row
-      [napit/yleinen-ensisijainen "Hae varusteita" #(do
-                                                      (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                      (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
+      [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
+                                                                (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
+                                                                (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
                                                                                 :disabled false
                                                                                 :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
@@ -154,7 +154,7 @@
 
 (defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid
-   {:otsikko (str "Varusteet (" (let [m (count varusteet)]
+   {:otsikko (str "Varustetoimenpiteet (" (let [m (count varusteet)]
                                   (if (> m v/+max-toteumat+)
                                     (str v/+max-toteumat+ "*")
                                     m)) ")")
