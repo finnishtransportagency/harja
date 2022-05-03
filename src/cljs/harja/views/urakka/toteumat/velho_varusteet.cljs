@@ -258,9 +258,9 @@
       [:div
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
-       [suodatuslomake e! app]
-       [kartta/kartan-paikka]
-       (when (> (count (:varusteet app)) v/+max-toteumat+)
+       (when (= 0 (count (:varusteet app)))
+         [yleiset/info-laatikko :neutraali "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä."])
+       (when (>= (count (:varusteet app)) varusteet/+max-toteumat+)
          [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
                                                 v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
           nil "100%"])
