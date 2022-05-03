@@ -174,14 +174,14 @@
      :fmt pvm/fmt-p-k-v-lyhyt}
     {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
      :hae v/muodosta-tr-osoite}
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
+     :fmt v/toteuma->toimenpide}
     {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
      :fmt v/tietolaji->varustetyyppi}
     {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
     {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt v/toteuma->toimenpide}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    varusteet])
 
