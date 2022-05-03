@@ -44,6 +44,17 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
+;; Tavallisesti raportin solujen tyylit tulevat rivitasolta ja HTML raporteissa yksittäisen solun tyyli annetaan luokka
+;; määritteessä (:sarakkeen-luokka). Niinpä tämän elementin ainoa olemassaolon syy on se, että tätä vaaditaan PDF ja Excelraportoissa.
+;; Tämä on siis identtinen :arvo-ja-yksikkö elementin kanssa, mutta sallii raportin toiminnan.
+(defmethod muodosta-html :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 fmt (fmt arvo)
+                 :else arvo)]
+   [:span.yksikko (str "\u00A0" yksikko)]])
+
 (defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo (cond
@@ -51,6 +62,11 @@
                  fmt (fmt arvo)
                  :else arvo)]
    [:span.yksikko (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-html :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo arvo]
+   [:div.selite.caption selite]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään

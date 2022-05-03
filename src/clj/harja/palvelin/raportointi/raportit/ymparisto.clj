@@ -27,25 +27,25 @@
         (hae-ymparistoraportti-tiedot db parametrit)))
 
 (def materiaali-kaikki-talvisuola-yhteensa
-  {:nimi "Talvisuolat yhteensä (100%) kuivatonnia"
+  {:nimi "Talvisuolat yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "talvisuola"})
 
 (def materiaali-kaikki-formiaatit-yhteensa
-  {:nimi "Formiaatit yhteensä (50 % liuostonnia)"
+  {:nimi "Formiaatit yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "formiaatti"})
 
 (def materiaali-kaikki-kesasuolat-yhteensa
-  {:nimi "Kesäsuola yhteensä (t)"
+  {:nimi "Kesäsuola yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "kesasuola"})
 
 (def materiaali-kaikki-murskeet-yhteensa
-  {:nimi "Murskeet yhteensä (t)"
+  {:nimi "Murskeet yhteensä"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "murske"})
@@ -95,6 +95,40 @@
     ;; Osa käyttäjistä on sekoittanut Talvisuola nimen tarkoittavan kaikkea käytettyä
     ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
     "Talvisuola, NaCl"))
+
+(defn- materiaalin-nimi-ja-selite [nimi]
+  (case nimi
+    "Talvisuola"
+    {:arvo "Talvisuola, rakeinen"
+     :selite "NaCl"}
+    "Talvisuolaliuos CaCl2"
+    {:arvo "Talvisuolaliuos"
+     :selite "CaCl2"}
+    "Talvisuolaliuos NaCl"
+    {:arvo "Talvisuolaliuos"
+     :selite "NaCl"}
+    "Talvisuolat yhteensä"
+    {:arvo "Talvisuolat yhteensä"
+     :selite "100% kuivatonnia"}
+    "Formiaatit yhteensä"
+    {:arvo "Formiaatit yhteensä"
+     :selite "50% kuivatonnia"}
+    "Kesäsuola (pölynsidonta)"
+    {:arvo "Kesäsuola"
+     :selite "pölynsidonta"}
+    "Kesäsuola (sorateiden kevätkunnostus)"
+    {:arvo "Kesäsuola"
+     :selite "sorateiden kevätkunnostus"}
+    "Kesäsuola yhteensä"
+    {:arvo "Kesäsuola yhteensä"
+     :selite "100% kuivatonnia"}
+    "Murskeet yhteensä"
+    {:arvo "Murskeet yhteensä"
+     :selite "tonnia"}
+    
+    ;; default
+    {:arvo nimi}))
+
 
 (defn- materiaalien-jarjestys-ymparistoraportilla
   [materiaalinimi]
@@ -174,7 +208,6 @@
         _ (reset! isantarivi-indeksi -1)]
     [:taulukko {:otsikko otsikko
                 :oikealle-tasattavat-kentat (into #{} (range 1 (+ 5 (count kuukaudet))))
-                :sheet-nimi raportin-nimi
                 :esta-tiivis-grid? true
                 :samalle-sheetille? true
                 :avattavat-rivit avattavat-rivit}
@@ -213,31 +246,38 @@
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
                                      (if yksikot-soluissa?
-                                       [:arvo-ja-yksikko {:arvo yht
-                                                          :yksikko (:yksikko materiaali)
-                                                          :desimaalien-maara 2}]
-                                       yht))))
+                                       [:arvo-ja-yksikko-korostettu {:arvo yht
+                                                                     :korosta-hennosti? true
+                                                                     :yksikko (:yksikko materiaali)
+                                                                     :desimaalien-maara 2}]
+                                       [:arvo-ja-yksikko-korostettu {:arvo yht
+                                                                     :korosta-hennosti? true
+                                                                     :desimaalien-maara 2}]))))
                toteuma-prosentti (when (and kk-arvot (not (zero? (or suunniteltu 0))))
                                    (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))]
            (concat
              ;; Normaali materiaalikohtainen rivi
-             [{:lihavoi? yhteenvetorivi?
-               :rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
-               :rivi (into []
-                       (concat
+             [(merge
+                (when yhteenvetorivi?
+                  {:korosta-hennosti? true
+                   :lihavoi? true})
+                  {:lihavoi? yhteenvetorivi?
+                   :rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
+                   :rivi (into []
+                           (concat
 
-                         ;; Vetolaatikkojuttuja
-                         [" "]
+                             ;; Vetolaatikkojuttuja
+                             [" "]
 
-                         ;; Urakan nimi, jos urakoittain jaottelu päällä
-                         (when urakoittain?
-                           [(:nimi urakka)])
+                             ;; Urakan nimi, jos urakoittain jaottelu päällä
+                             (when urakoittain?
+                               [(:nimi urakka)])
 
-                         ;; Materiaalin nimi
-                         [(materiaalin-nimi (:nimi materiaali))]
+                             ;; Materiaalin nimi
+                             [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
 
-                         ;; Kuukausittaiset määrät, viiva jos tyhjä.
-                         (map #(or (kk-arvot %) "–") kuukaudet)
+                             ;; Kuukausittaiset määrät, viiva jos tyhjä.
+                             (map #(or (kk-arvot %) "–") kuukaudet)
 
                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                          [(yhteensa-kentta (vals kk-arvot) true)
@@ -247,7 +287,7 @@
                           (when suunniteltu [:arvo-ja-yksikko {:arvo toteuma-prosentti
                                                                :yksikko "%"
                                                                :desimaalien-maara 2
-                                                               :varoitus? (< 100 (or toteuma-prosentti 0))}])]))}]
+                                                               :varoitus? (< 100 (or toteuma-prosentti 0))}])]))})]
 
              ;; Mahdolliset hoitoluokkakohtaiset rivit
              (mapv (fn [[luokka rivit]]

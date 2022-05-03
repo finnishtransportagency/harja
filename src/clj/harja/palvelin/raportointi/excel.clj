@@ -84,6 +84,22 @@
                         nil
                         [:kustomi desimaalien-maara]))])
 
+;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
+;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
+(defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
+                                                                 korosta-hennosti?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)]
+    [arvo (if-not (empty? solun-tyyli)
+            solun-tyyli
+            oletustyyli)
+     (when desimaalien-maara
+       (if (= yksikko "%")
+         nil
+         [:kustomi desimaalien-maara]))]))
+
+(defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
+  [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
+
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
   [arvo
    (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
