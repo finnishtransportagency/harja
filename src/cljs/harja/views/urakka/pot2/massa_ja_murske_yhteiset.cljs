@@ -87,7 +87,6 @@
       :disabled (or disabled lukittu?)}]))
 
 (defn poistamisen-varmistus-dialogi-fn [materiaalin-str massa-str toiminto-fn]
-  (println "Jarno toiminto fn poistamisen-varmistus-dialogi-fn " toiminto-fn)
   (varmista-kayttajalta/varmista-kayttajalta
     {:otsikko (str materiaalin-str " poistaminen")
      :sisalto

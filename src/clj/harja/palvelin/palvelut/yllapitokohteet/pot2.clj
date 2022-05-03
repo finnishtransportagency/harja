@@ -328,6 +328,21 @@
                                                       :organisaatiot organisaatiot-jossa-rooleja
                                                       :jarjestelmavastaava jarjestelmavastaava?})))
 
+(defn paivita-tarkennetta
+  "Päivittää massan/murskeen tarkennetta, käyttämällä tarkenteen perässä juoksevaa numerointia."
+  [tarkenne]
+  (if (empty? tarkenne)
+    " 2"
+    (let [tarkenteen-viimeinen-merkki (subs tarkenne (- (count tarkenne) 1))
+          uusi-viimeinen-merkki (try
+                                  ;; korvataan viimeisin merkki (numero) yhden isommalla numerolla
+                                  (str (subs tarkenne 0 (- (count tarkenne) 1))
+                                       (+ 1 (Integer/parseInt tarkenteen-viimeinen-merkki)))
+                                  (catch Exception e
+                                    ;; viimeisin ei ollut numero, joten lisätään tarkenteeseen 2
+                                    (str tarkenne " 2")))]
+      uusi-viimeinen-merkki)))
+
 (defn tuo-materiaalit-toisesta-urakasta
   "Monistaa valitut massat ja murskeet toisesta käyttäjän urakasta."
   [db user {:keys [urakka-id massa-idt murske-idt]}]
@@ -338,7 +353,20 @@
     (doseq [massa-id massa-idt
             :let [uusi-massa (paallystys-q/monista-massa<! db {:id massa-id
                                                                :kayttaja (:id user)
-                                                               :urakka_id urakka-id})]]
+                                                               :urakka_id urakka-id})
+                  samannimiset-massat-urakassa (paallystys-q/hae-samannimiset-massat-urakasta db {:tyyppi (:tyyppi uusi-massa)
+                                                                                                  :max_raekoko (:max_raekoko uusi-massa)
+                                                                                                  :nimen_tarkenne (:nimen_tarkenne uusi-massa)
+                                                                                                  :dop_nro (:dop_nro uusi-massa)
+                                                                                                  :urakka_id urakka-id
+                                                                                                  :id (:id uusi-massa)})]]
+      (when-not (empty? samannimiset-massat-urakassa)
+        (paallystys-q/paivita-massan-nimen-tarkennetta<! db {:id (:id uusi-massa)
+                                                             :urakka_id urakka-id
+                                                             :nimen_tarkenne (paivita-tarkennetta (:nimen_tarkenne uusi-massa))}))
+      ;; jos löytyi samannimisiä massoja urakassa, niin lisätään tarkenteeseen juoksevalla numeroinnilla 2, 3, 4, ...
+      ;; jotta käyttäjä voi erottaa ne helpommin käyttöliittmässä. Tilanne voi syntyä jos käyttäjä tuo saman materiaalin kahteen
+      ;; kertaan
       (paallystys-q/monista-massan-runkoaineet<! db {:vanha_pot2_massa_id massa-id
                                                      :uusi_pot2_massa_id (:id uusi-massa)})
       (paallystys-q/monista-massan-sideaineet<! db {:vanha_pot2_massa_id massa-id
@@ -346,10 +374,19 @@
       (paallystys-q/monista-massan-lisaaineet<! db {:vanha_pot2_massa_id massa-id
                                                     :uusi_pot2_massa_id (:id uusi-massa)}))
 
-    (doseq [murske-id murske-idt]
-      (paallystys-q/monista-murske<! db {:id murske-id
-                                         :kayttaja (:id user)
-                                         :urakka_id urakka-id}))
+    (doseq [murske-id murske-idt
+            :let [uusi-murske (paallystys-q/monista-murske<! db {:id murske-id
+                                                                 :kayttaja (:id user)
+                                                                 :urakka_id urakka-id})
+                  samannimiset-murskeet-urakassa (paallystys-q/hae-samannimiset-murskeet-urakasta db {:tyyppi (:tyyppi uusi-murske)
+                                                                                                      :nimen_tarkenne (:nimen_tarkenne uusi-murske)
+                                                                                                      :dop_nro (:dop_nro uusi-murske)
+                                                                                                      :urakka_id urakka-id
+                                                                                                      :id (:id uusi-murske)})]]
+      (when-not (empty? samannimiset-murskeet-urakassa)
+        (paallystys-q/paivita-murskeen-nimen-tarkennetta<! db {:id (:id uusi-murske)
+                                                               :urakka_id urakka-id
+                                                               :nimen_tarkenne (paivita-tarkennetta (:nimen_tarkenne uusi-murske))})))
 
     ;; Palautetaan käyttäjälle tuoreet materiaalit kannasta monistamisen jälkeen
     (hae-urakan-massat-ja-murskeet db user {:urakka-id urakka-id})))

@@ -772,5 +772,34 @@ UPDATE pot2_mk_urakan_murske
    SET poistettu = true
  WHERE id = :id and urakka_id = :urakka_id;
 
+-- name: hae-samannimiset-massat-urakasta
+SELECT *
+  FROM pot2_mk_urakan_massa
+ WHERE tyyppi = :tyyppi AND
+         max_raekoko = :max_raekoko AND
+         (nimen_tarkenne = :nimen_tarkenne OR nimen_tarkenne IS NULL) AND
+         dop_nro = :dop_nro AND
+         urakka_id = :urakka_id AND
+         id != :id;
+
+-- name: hae-samannimiset-murskeet-urakasta
+SELECT *
+  FROM pot2_mk_urakan_murske
+ WHERE tyyppi = :tyyppi AND
+     (nimen_tarkenne = :nimen_tarkenne OR nimen_tarkenne IS NULL) AND
+         dop_nro = :dop_nro AND
+         urakka_id = :urakka_id AND
+         id != :id;
+
+-- name: paivita-massan-nimen-tarkennetta<!
+UPDATE pot2_mk_urakan_massa
+   SET nimen_tarkenne = :nimen_tarkenne
+ WHERE id = :id AND urakka_id = :urakka_id;
+
+-- name: paivita-murskeen-nimen-tarkennetta<!
+UPDATE pot2_mk_urakan_murske
+   SET nimen_tarkenne = :nimen_tarkenne
+ WHERE id = :id AND urakka_id = :urakka_id;
+
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;
