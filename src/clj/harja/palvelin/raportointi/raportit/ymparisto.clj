@@ -233,10 +233,13 @@
                                (let [yht (yhteensa-arvo arvot)]
                                  (when (or (> yht 0) nayta-aina?)
                                    (if yksikot-soluissa?
-                                     [:arvo-ja-yksikko {:arvo yht
-                                                        :yksikko (:yksikko materiaali)
-                                                        :desimaalien-maara 2}]
-                                     yht))))
+                                     [:arvo-ja-yksikko-korostettu {:arvo yht
+                                                                   :korosta-hennosti? true
+                                                                   :yksikko (:yksikko materiaali)
+                                                                   :desimaalien-maara 2}]
+                                     [:arvo-ja-yksikko-korostettu {:arvo yht
+                                                                   :korosta-hennosti? true
+                                                                   :desimaalien-maara 2}]))))
              toteuma-prosentti (when (and kk-arvot (not (zero? (or suunniteltu 0))))
                                  (/ (* 100.0 (yhteensa-arvo (vals kk-arvot))) suunniteltu))]
          (concat
@@ -251,33 +254,36 @@
                [{:otsikko "Muut materiaalit"}])
 
            ;; Normaali materiaalikohtainen rivi
-           [{:lihavoi? yhteenvetorivi?
-             :rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
-             :rivi (into []
-                     (concat
+           [(merge
+              (when yhteenvetorivi?
+                {:korosta-hennosti? true
+                 :lihavoi? true})
+              {:rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
+               :rivi (into []
+                       (concat
 
-                       ;; Urakan nimi, jos urakoittain jaottelu päällä
-                       (when urakoittain?
-                         [(:nimi urakka)])
+                         ;; Urakan nimi, jos urakoittain jaottelu päällä
+                         (when urakoittain?
+                           [(:nimi urakka)])
 
-                       ;; Materiaalin nimi
-                       [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
+                         ;; Materiaalin nimi
+                         [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
 
-                       ;; Kuukausittaiset määrät, viiva jos tyhjä.
-                       (map #(or (kk-arvot %) "–") kuukaudet)
+                         ;; Kuukausittaiset määrät, viiva jos tyhjä.
+                         (map #(or (kk-arvot %) "–") kuukaudet)
 
-                       ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                       [(yhteensa-kentta (vals kk-arvot) true)
-                        (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
-                                                             :yksikko (:yksikko materiaali)
-                                                             :desimaalien-maara 2}])
-                        (when suunniteltu [:arvo-ja-yksikko {:arvo toteuma-prosentti
-                                                             :yksikko "%"
-                                                             :desimaalien-maara 2
-                                                             :varoitus? (< 100 (or toteuma-prosentti 0))}])]))}]
+                         ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
+                         [(yhteensa-kentta (vals kk-arvot) true)
+                          (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
+                                                               :yksikko (:yksikko materiaali)
+                                                               :desimaalien-maara 2}])
+                          (when suunniteltu [:arvo-ja-yksikko {:arvo toteuma-prosentti
+                                                               :yksikko "%"
+                                                               :desimaalien-maara 2
+                                                               :varoitus? (< 100 (or toteuma-prosentti 0))}])]))})]
 
            ;; Mahdolliset hoitoluokkakohtaiset rivit
-           (map (fn [[luokka rivit]]
+           (mapv (fn [[luokka rivit]]
                   (let [rivit (if (or urakoittain? (= konteksti :urakka))
                                 rivit
                                 ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
@@ -291,18 +297,19 @@
                                                                         :desimaalien-maara 2}]
                                                      (:maara %))))
                                    rivit)]
-                    (into []
-                      (concat
-                        (when urakoittain?
-                          [(:nimi urakka)])
-                        [(str " - "
-                           (hoitoluokat/talvihoitoluokan-nimi luokka))]
+                    {:lihavoi? false
+                     :rivi (into []
+                             (concat
+                               (when urakoittain?
+                                 [(:nimi urakka)])
+                               [(str " - "
+                                  (hoitoluokat/talvihoitoluokan-nimi luokka))]
 
-                        ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
-                        (map #(or (kk-arvot %) "-") kuukaudet)
+                               ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
+                               (map #(or (kk-arvot %) "-") kuukaudet)
 
-                        [(yhteensa-kentta (vals kk-arvot) true)
-                         nil nil]))))
+                               [(yhteensa-kentta (vals kk-arvot) true)
+                                nil nil]))}))
              (sort-by first (group-by :luokka luokitellut)))
            (when yht-rivi yht-rivi))))
 
