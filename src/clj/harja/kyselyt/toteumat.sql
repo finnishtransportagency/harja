@@ -831,7 +831,7 @@ SELECT v.id,
 FROM x
     INNER JOIN varustetoteuma_ulkoiset AS v ON v.ulkoinen_oid = x.ulkoinen_oid AND v.alkupvm = x.maxalkupvm
 ORDER BY v.alkupvm
-LIMIT :tuloksen_maksimikoko;
+LIMIT 1001;
 
 -- name: hae-urakan-varustetoteuma-ulkoiset
 SELECT v.id,
