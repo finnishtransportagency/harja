@@ -1,11 +1,11 @@
 (ns harja.views.urakka.toteumat.velho-varusteet
-  "Urakan 'Toteumat' välilehden 'Varusteet' osio
+  "Urakan 'TOTEUMAT' välilehden 'Varusteet2' osio
 
-  Näyttä Harjan kautta kirjatut varustetoteumat sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
+  Näyttää Harjan kautta kirjatut varustetoimenpiteet sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
   kautta.
 
-  Harjaan tallennettu varustetoteuma sisältää tiedot varsinaisesta työstä. Varusteiden tekniset tiedot päivitetään
-  aina Tierekisteriin"
+  Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
+  Tarkemmat tiedot löytyvät Tievelhosta."
   (:require [cljs.core.async :refer [<! >! chan timeout]]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as kommunikaatio]
@@ -22,6 +22,7 @@
             [harja.tiedot.tierekisteri.varusteet :as tv]
             [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as v]
             [harja.tiedot.urakka.urakka :as urakka-tila]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -35,7 +36,6 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -67,8 +67,8 @@
                                                (contains? (get valinnat avain) nimi)
                                                (nil? (get valinnat avain)))}))
         varustetyypit-ja-suosikit (map-indexed (fn [idx itm] {:id idx :nimi itm})
-                                        (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
-                                              (sort (vals v/tietolaji->varustetyyppi-map))))
+                                               (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
+                                                     (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
