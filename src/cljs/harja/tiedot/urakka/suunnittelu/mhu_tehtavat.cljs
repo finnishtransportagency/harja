@@ -26,6 +26,7 @@
 (defrecord SopimuksenTallennusOnnistui [vastaus])
 (defrecord SopimuksenTallennusEpaonnistui [vastaus])
 (defrecord HaeSopimuksenTila [])
+(defrecord JokaVuosiErikseenKlikattu [ruksittu? vanhempi id])
 (defrecord SopimuksenTilaHaettu [vastaus])
 (defrecord SopimuksenTilaEiHaettu [vastaus])
 (defrecord SopimuksenTehtavaTallennusOnnistui [vastaus])
@@ -84,15 +85,14 @@
         syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
     (assoc rivi
       :sopimuksen-tehtavamaarat (get rivi :sopimuksen-tehtavamaarat)
-      :sopimuksen-tehtavamaara (when samat-maarat-vuosittain? 
-                                 (get-in 
-                                   rivi 
-                                   [:sopimuksen-tehtavamaarat
-                                    (-> rivi
-                                      :sopimuksen-tehtavamaarat
-                                      (dissoc :samat-maarat-vuosittain?)
-                                      keys
-                                      first)]))
+      :sopimuksen-tehtavamaara (get-in 
+                                 rivi 
+                                 [:sopimuksen-tehtavamaarat
+                                  (-> rivi
+                                    :sopimuksen-tehtavamaarat
+                                    (dissoc :samat-maarat-vuosittain?)
+                                    keys
+                                    first)])
                                         ; nämä käytössä suunniteltavien määrien syöttönäkymässä
       :sopimuksen-tehtavamaarat-yhteensa sovitut-maarat
       :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))))
@@ -103,10 +103,10 @@
     [(:id rivi)
      (cond-> rivi
        true (assoc  
-         :hoitokausi hoitokausi
-         :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
-                                 (not samat-maarat-vuosittain?)
-                                 false))
+              :hoitokausi hoitokausi
+              :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
+                                      (not samat-maarat-vuosittain?)
+                                      false))
        (not aluetieto?) (assoc :maara
                           (get-in rivi [:maarat hoitokausi]))
        aluetieto? (assoc :muuttunut-aluetieto-maara aluemaara)
@@ -115,7 +115,7 @@
 (defn liita-sopimusten-tiedot 
   [sopimusten-maarat rivi]
   (let [{:keys [maara]} (get sopimusten-maarat (:id rivi))]
-       (assoc rivi :sopimuksen-maara maara)))
+    (assoc rivi :sopimuksen-maara maara)))
 
 (defn nayta-valittu-toimenpide-tai-kaikki
   [valittu-toimenpide {:keys [sisainen-id] :as toimenpide}]  
@@ -149,7 +149,7 @@
     {:nimi nimi 
      :sisainen-id id
      :alue-tehtavia (count (:alueet taulukkorakenne-alueet-ja-maarat-eroteltuna))
-     ;:taulukko taulukkorakenne-alueet-ja-maarat-eroteltuna
+                                        ;:taulukko taulukkorakenne-alueet-ja-maarat-eroteltuna
      :nayta-toimenpide? true}))
 
 (defn paivita-tehtavien-maarat-hoitokaudelle 
@@ -582,4 +582,36 @@
 
   SamatTulevilleMoodi
   (process-event [{:keys [samat?]} app]
-    (assoc-in app [:valinnat :samat-tuleville] samat?)))
+    (assoc-in app [:valinnat :samat-tuleville] samat?))
+
+  JokaVuosiErikseenKlikattu
+  (process-event [{:keys [ruksittu? vanhempi id]} app]
+    (let [vuosi (-> @tiedot/yleiset
+                  :urakka
+                  :alkupvm
+                  pvm/vuosi)
+          loppuvuosi (-> @tiedot/yleiset
+                       :urakka
+                       :loppupvm
+                       pvm/vuosi)
+          sopimuksen-tehtavamaara (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaara])]
+      (if-not ruksittu?
+        (tuck-apurit/post! app :tallenna-sopimuksen-tehtavamaara
+          {:urakka-id (-> @tiedot/yleiset :urakka :id)
+           :tehtava-id id
+           :hoitovuosi vuosi
+           :samat-maarat-vuosittain? (not (true? ruksittu?))
+           :maara sopimuksen-tehtavamaara}
+          {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+           :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui})
+        (do
+          (doseq [vuosi (range vuosi loppuvuosi)]
+            (tuck-apurit/post! app :tallenna-sopimuksen-tehtavamaara
+              {:urakka-id (-> @tiedot/yleiset :urakka :id)
+               :tehtava-id id
+               :hoitovuosi vuosi
+               :samat-maarat-vuosittain? (not (true? ruksittu?))
+               :maara (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat vuosi])}
+              {:onnistui ->SopimuksenTehtavaTallennusOnnistui
+               :epaonnistui ->SopimuksenTehtavaTallennusEpaonnistui}))
+          app)))))

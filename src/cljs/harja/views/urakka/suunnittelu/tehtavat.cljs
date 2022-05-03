@@ -123,7 +123,8 @@
                             :valitse!
                             (fn [v]
                               (let [ruksittu? (.. v -target -checked)]
-                                (swap! t/taulukko-tila assoc-in [:maarat vanhempi id :joka-vuosi-erikseen?] ruksittu?))) }
+                                (swap! t/taulukko-tila assoc-in [:maarat vanhempi id :joka-vuosi-erikseen?] ruksittu?)
+                                (e! (t/->JokaVuosiErikseenKlikattu ruksittu? vanhempi id))))}
          joka-vuosi-erikseen?]]
        [:div.flex-row.tasaa-alas.loppuun
         (doall 
