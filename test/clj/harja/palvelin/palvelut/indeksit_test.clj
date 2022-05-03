@@ -102,13 +102,13 @@
         (is (= 2 (count vastaus)) "indeksejä on 2 poiston jälkeen")))))
 
 (deftest laske-vesivaylaurakan-indeksilaskennan-perusluku
-  (let [ur (hae-helsingin-vesivaylaurakan-id)
+  (let [ur (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         perusluku (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");")))]
     ; (103.9+105.2+106.2) / 3 = 105.1M tammi, helmi- ja maaliskuun keskiarvo urakan alkuvuonna
     (is (= 105.1M perusluku))))
 
 (deftest laske-tampereen-2017-alkavan-hoitourakan-indeksilaskennan-perusluku
-  (let [ur (hae-tampereen-alueurakan-2017-2022-id)
+  (let [ur (hae-urakan-id-nimella "Tampereen alueurakka 2017-2022")
         perusluku (ffirst (q (str "select * from indeksilaskennan_perusluku(" ur ");")))]
     ; alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo urakan alkuvuonna
     (is (= 115.4M perusluku))))
@@ -168,7 +168,7 @@
 
 (deftest indeksikorjaukset-lasketaan-uudelleen-kun-indeksia-muokataan
   (let [db (:db jarjestelma)
-        urakka (hae-kittilan-mhu-2019-2024-id)
+        urakka (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
         indeksi "TESTI-INDEKSI 2015"]
     ;; Päivitä Kittilän testiurakka käyttämään tämän testin indeksiä
     (is (= 1 (u (format "update urakka set indeksi = '%s' where id = %s" indeksi urakka))))
@@ -317,7 +317,7 @@
 
 (deftest vahvistettua-indeksikorjausta-ei-muokata
   (let [db (:db jarjestelma)
-        urakka (hae-kittilan-mhu-2019-2024-id)
+        urakka (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
         indeksi "TESTI-INDEKSI 2015"]
     ;; Päivitä Kittilän testiurakka käyttämään tämän testin indeksiä
     (is (= 1 (u (format "update urakka set indeksi = '%s' where id = %s" indeksi urakka))))

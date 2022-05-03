@@ -22,6 +22,6 @@
 
 (deftest ei-voi-poistaa-vaaran-urakan-kohteita
   (let [db (:db jarjestelma)] ;; kohde 1 on oulun urakan kohde]
-    (is (thrown? Exception (paikkauskohteen-poistosanoma/muodosta db (hae-rovaniemen-maanteiden-hoitourakan-id) 1))
+    (is (thrown? Exception (paikkauskohteen-poistosanoma/muodosta db (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)") 1))
         "Sanoman muodostaminen epäonnistuu, kun paikkauskohde ei kuulu urakkaan.")))
 
