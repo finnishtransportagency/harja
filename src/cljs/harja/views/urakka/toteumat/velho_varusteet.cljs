@@ -112,25 +112,6 @@
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
         :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
         :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
-      [valinnat/monivalinta-pudotusvalikko
-       "Varustetyypit"
-       varustetyypit
-       (fn [varustetyyppi valittu?]
-         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
-       [" Varusteluokka valittu" " Varusteluokkaa valittu"]
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :vayla-tyyli? true
-        :fmt itse-tai-kaikki
-        :valintojen-maara (count (:varustetyypit valinnat))}]
-      [valinnat/monivalinta-pudotusvalikko
-       "Kuntoluokat"
-       kuntoluokat
-       (fn [kuntoluokka valittu?]
-         (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-       [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :vayla-tyyli? true
-        :fmt itse-tai-kaikki}]
       [yleiset/pudotusvalikko "Toimenpide"
        {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :valinta valittu-toteuma
@@ -140,7 +121,26 @@
                       (v/toteuma->toimenpide %)
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       toteumat]]
+       toteumat]
+      [valinnat/monivalinta-pudotusvalikko
+       "Varustetyyppi"
+       varustetyypit
+       (fn [varustetyyppi valittu?]
+         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
+       [" Varustetyyppiä valittu" " Varustetyyppiä valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt itse-tai-kaikki
+        :valintojen-maara (count (:varustetyypit valinnat))}]
+      [valinnat/monivalinta-pudotusvalikko
+       "Kuntoluokitus"
+       kuntoluokat
+       (fn [kuntoluokka valittu?]
+         (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
+       [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt itse-tai-kaikki}]]
      [:div.row
       [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
                                                                 (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
