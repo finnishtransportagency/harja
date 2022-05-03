@@ -133,7 +133,9 @@
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
                                    (when (:varoitus? (and (vector? arvo) (second arvo)))
-                                     "solu-varoitus"))
+                                     "solu-varoitus")
+                                   (when (:ala-korosta? (and (vector? arvo) (second arvo)))
+                                     "solun-korostus-estetty"))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn

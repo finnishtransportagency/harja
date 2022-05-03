@@ -227,8 +227,7 @@
                  :fmt :numero}) kuukaudet)
 
          [{:otsikko (when-not yksikot-soluissa? " (t)") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
-           :excel [:summa-vasen (if urakoittain? 2 1)]
-           :sarakkeen-luokka "tausta-blue-lighter"}
+           :excel [:summa-vasen (if urakoittain? 2 1)]}
           {:otsikko "Suunniteltu (t)"
            :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
           {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]))
@@ -262,7 +261,6 @@
                   {:korosta-hennosti? true
                    :lihavoi? true})
                   {:lihavoi? yhteenvetorivi?
-                   :rivin-luokka (when yhteenvetorivi? "tausta-blue-lighter")
                    :rivi (into []
                            (concat
 
@@ -281,13 +279,15 @@
 
                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                          [(yhteensa-kentta (vals kk-arvot) true)
-                          (when suunniteltu [:arvo-ja-yksikko {:arvo suunniteltu
+                          (when suunniteltu [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
                                                                :yksikko (:yksikko materiaali)
-                                                               :desimaalien-maara 2}])
-                          (when suunniteltu [:arvo-ja-yksikko {:arvo toteuma-prosentti
+                                                               :desimaalien-maara 2
+                                                               :ala-korosta? true}])
+                          (when suunniteltu [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
                                                                :yksikko "%"
                                                                :desimaalien-maara 2
-                                                               :varoitus? (< 100 (or toteuma-prosentti 0))}])]))})]
+                                                               :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                               :ala-korosta? true}])]))})]
 
              ;; Mahdolliset hoitoluokkakohtaiset rivit
              (mapv (fn [[luokka rivit]]

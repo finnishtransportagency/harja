@@ -67,6 +67,10 @@
            background-color: @red-lighter;
            color: @red-dark;
        } 
+       
+        &.solun-korostus-estetty {
+            background-color: @harmaa15;
+        }
     }
 }
 .tyomaakokous {
@@ -191,13 +195,10 @@
 }
 
 .ymparistoraportti .livi-grid table {
-    tr, td {
-        // Yhteenlaskurivien ensimmäisen sarakkeen taustaväri myös siniseksi.
-        &.tausta-blue-lighter td:nth-last-child(n+3),
-        .tausta-blue-lighter {
-            background-color: @blue-lighter;
+    // Yhteenlaskurivien viimeisten sarakkeiden taustaväri takaisin vaaleanharmaaksi.
+    tr.hennosti-korostettu-rivi td:nth-last-child(-n+2) {
+            background-color: @gray250;
         }
-    }
 }
 
 /**********************************
