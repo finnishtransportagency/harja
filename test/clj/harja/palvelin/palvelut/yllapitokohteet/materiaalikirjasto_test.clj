@@ -805,7 +805,6 @@
                                                                        (::pot2-domain/murske-id toiset-murskeet)))
                                                                   tuodut-murskeet-toka)
                                                        tuodut-murskeet-kolmas))]
-    ; (println "Jarno kolmas-kopioimalla-luotu-murske " kolmas-kopioimalla-luotu-murske)
     (is (nil? (::pot2-domain/nimen-tarkenne (first tuodut-massat-eka))) "Ensi tuonnin jälkeen massan nimi")
     (is (= " 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-massa)) "Toisen tuonnin jälkeen massan nimi")
     (is (= " 3" (::pot2-domain/nimen-tarkenne kolmas-kopioimalla-luotu-massa)) "Kolmannen tuonnin jälkeen massan nimi")
