@@ -745,7 +745,7 @@
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
 
 (deftest toteuman-paivitys-sama-partitiolle
-  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
         toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
@@ -783,7 +783,7 @@
 
 
 (deftest toteuman-paivitys-siirtaa-eri-partitiolle
-  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
         toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
@@ -840,7 +840,7 @@
 
 (deftest toteuman-paivitys-ei-muuta-lukumaaraa
   (let [toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))
-        urakka-id (hae-pudasjarven-alueurakan-id)
+        urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
 

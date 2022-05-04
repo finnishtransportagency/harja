@@ -119,7 +119,7 @@
 
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! :varoitus "Tavoitehintojen haku epäonnistui!")
+    (viesti/nayta-toast! "Tavoitehintojen haku epäonnistui!" :varoitus)
     app)
 
   HaeKattohintojenOikaisut
@@ -137,7 +137,7 @@
 
   HaeKattohintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! :varoitus "Kattohintojen haku epäonnistui!")
+    (viesti/nayta-toast! "Kattohintojen haku epäonnistui!" :varoitus)
     app)
 
   HaeUrakanPaatokset
@@ -154,7 +154,7 @@
 
   HaeUrakanPaatoksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! :varoitus "Urakan päätösten haku epäonnistui!")
+    (viesti/nayta-toast! "Urakan päätösten haku epäonnistui!" :varoitus)
     app)
 
   ;; Monta riviä voi olla avattuna kerrallaan
