@@ -43,7 +43,7 @@
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tietokanta-fixture))
 
 (deftest tallenna-ja-paivita-soratietarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         kuvaus (str "kuvaus nyt " (System/currentTimeMillis))
         soratietarkastus (assoc-in soratietarkastus [:havainnot] kuvaus)
         hae-tarkastukset #(kutsu-http-palvelua :hae-urakan-tarkastukset +kayttaja-jvh+
@@ -100,7 +100,7 @@
             (is (= 5 (get-in muokattu-tarkastus [:soratiemittaus :tasaisuus])))))))))
 
 (deftest hae-urakan-tarkastukset
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-tarkastukset +kayttaja-jvh+
                                 {:urakka-id urakka-id
@@ -133,7 +133,7 @@
     (is (= (count vastaus) 1))))
 
 (deftest hae-tarkastus
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tarkastus +kayttaja-jvh+ {:urakka-id urakka-id
                                                                :tarkastus-id 1})]

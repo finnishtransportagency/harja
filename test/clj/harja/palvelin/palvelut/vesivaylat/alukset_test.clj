@@ -38,7 +38,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-urakoitsijan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         args {::alus/urakoitsija-id urakoitsija-id
               ::urakka/id urakka-id}
@@ -52,7 +52,7 @@
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))))
 
 (deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-urakoitsijan-alukset +kayttaja-ulle+
@@ -60,7 +60,7 @@
                                             ::urakka/id urakka-id})))))
 
 (deftest tallenna-urakoitsijan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
         alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
@@ -94,7 +94,7 @@
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 
 (deftest tallenna-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         uudet-alukset []
         args {::alus/urakoitsija-id urakoitsija-id
@@ -116,7 +116,7 @@
                                            args)))))
 
 (deftest tallenna-eri-urakoitsijan-alukset
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus WHERE urakoitsija != " urakoitsija-id ";")))
         uudet-alukset [{::alus/mmsi (first alus-mmsit)
