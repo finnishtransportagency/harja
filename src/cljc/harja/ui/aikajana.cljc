@@ -85,8 +85,7 @@
      (if-not p
        acc
        (let [x (paiva-x p)
-             viikko-nyt #?(:cljs (.getWeekNumber p)
-                           :clj  (t/week-number-of-year p))
+             viikko-nyt (t/week-number-of-year p)
              acc (conj acc
                        ^{:key p}
                        [:line {:x1 x :y1 (- alku-y 5)
