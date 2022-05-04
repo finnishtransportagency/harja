@@ -417,8 +417,9 @@
                                               rivi))
                                       materiaalit))]
 
-    [:raportti {:nimi otsikko
+    [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
+     [:teksti otsikko]
      [:teksti (str "Erilaisia talvisuoloja käytetty valitulla aikavälillä: "
                    (fmt/desimaaliluku-opt talvisuolan-toteutunut-maara 2)
                    "t")]
