@@ -15,7 +15,7 @@
   (let [db (:db jarjestelma)
         vastaus (kanava-q/hae-kanavatomenpiteet-jeesql
                   db
-                  {:urakka (hae-saimaan-kanavaurakan-id)
+                  {:urakka (hae-urakan-id-nimella "Saimaan kanava")
                    :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)
                    :alkupvm (harja.pvm/luo-pvm 2016 1 1)
                    :loppupvm (harja.pvm/luo-pvm 2018 1 1)

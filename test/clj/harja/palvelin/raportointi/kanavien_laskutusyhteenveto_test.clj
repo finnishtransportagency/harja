@@ -47,7 +47,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :kanavien-laskutusyhteenveto
                                  :konteksti "urakka"
-                                 :urakka-id (hae-saimaan-kanavaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Saimaan kanava")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
                                               :loppupvm (c/to-date (t/local-date 2018 7 30))}})]
     (is (vector? vastaus))

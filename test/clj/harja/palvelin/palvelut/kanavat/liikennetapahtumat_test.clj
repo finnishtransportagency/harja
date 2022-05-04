@@ -40,7 +40,7 @@
                       urakkatieto-fixture))
 
 (deftest tapahtumien-haku
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         params {:urakka-idt #{urakka-id}}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -60,7 +60,7 @@
               vastaus))))))
 
 (deftest tapahtumien-haku-eri-filttereilla
-  (let [saimaan-urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [saimaan-urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         params {:urakka-idt #{saimaan-urakka-id}}]
 
@@ -101,7 +101,7 @@
         (is (> (count vastaus-kaikki) (count vastaus-rajattu)))))
 
     (testing "Urakoiden valinta -suodatin toimii"
-      (let [joensuun-urakka-id (hae-joensuun-kanavaurakan-id)
+      (let [joensuun-urakka-id (hae-urakan-id-nimella "Joensuun kanava")
             vastaus-kaikki-urakat (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :hae-liikennetapahtumat
                                                    +kayttaja-jvh+
@@ -124,7 +124,7 @@
         (is (= (count vastaus-ei-urakoita-valittu) 0))))))
 
 (deftest edellisten-tapahtumien-haku
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (hae-kohde-soskua)
         params {::lt/urakka-id urakka-id
@@ -168,7 +168,7 @@
 
 (deftest tapahtuman-tallentaminen
   (testing "Uuden luonti"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
           kohde-id (hae-kohde-palli)
           [kohteenosa-id tyyppi] (hae-kohteenosat-palli)
@@ -211,7 +211,7 @@
       (is (= 1 (count (q (str "SELECT * FROM kan_liikennetapahtuma_ketjutus WHERE \"tapahtumasta-id\"=" tapahtuma-id)))))))
 
   (testing "Ketjutuksen käyttöönotto"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
           kohde-id (hae-kohde-kansola)
           [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
@@ -269,7 +269,7 @@
       (is (= 2 (count (q (str "SELECT * FROM kan_liikennetapahtuma_ketjutus WHERE \"tapahtumasta-id\"=" tapahtuma-id)))))))
 
   (testing "Muokkaaminen"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
           [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
           _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
@@ -312,7 +312,7 @@
       (is (some #(= (::lt/lisatieto %) "FOOBAR FOOBAR FOOBAR") vastaus))))
 
   (testing "Laivan poistaminen"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
           [kohteenosa-id tyyppi] (hae-kohteenosat-kansola)
           _ (is (= tyyppi "sulku") "Kansolan kohteenosan tyyppiä on vaihdettu, päivitä testi tai testidata.")
@@ -366,7 +366,7 @@
       (is (true? (ffirst laivatiedot)) "Alusta ei merkattu poistetuksi")))
 
   (testing "Poistaminen"
-    (let [urakka-id (hae-saimaan-kanavaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
           kohde-id (hae-kohde-kansola)
           tapahtuma-id (ffirst (q (str "SELECT id FROM kan_liikennetapahtuma WHERE lisatieto = 'FOOBAR FOOBAR FOOBAR';")))
