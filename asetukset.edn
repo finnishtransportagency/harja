@@ -229,7 +229,7 @@
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
-                               ; TODO PETRISI ÄLÄ MERGEÄ TÄTÄ :varusteet-ulkoiset
+                               :varusteet-ulkoiset
                                :itmf
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
