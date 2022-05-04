@@ -80,12 +80,11 @@
                                                :aluetieto? aluetieto
                                                :urakka urakka                                               
                                                :yksikko   yksikko
+                                               :maarat maarat
                                                :taso      4}
                                               (if aluetieto
-                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara
-                                                 :aluemaara (get maarat (first (keys maarat)))}
+                                                {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
-                                                 :maarat maarat
                                                  :sopimuksen-tehtavamaarat sopimuksen-tehtavamaarat})))
                 taso)) 
         tasot))))
@@ -202,8 +201,8 @@
       (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) haettu))))
 
 (defn tallenna-tehtavamaarat
-  "Luo tai päivittää urakan hoitokauden tehtävämäärät."
-  [db user {:keys [urakka-id hoitokauden-alkuvuosi tehtavamaarat]}]
+  "Luo tai päivittää urakan tehtävämääriä."
+  [db user {:keys [urakka-id tehtavamaarat nykyinen-hoitokausi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)]
@@ -213,19 +212,20 @@
 
     (jdbc/with-db-transaction [c db]
                               (doseq [tm tehtavamaarat]
-                                (let [nykyiset-arvot (hae-tehtavamaarat c user {:urakka-id             urakka-id
+                                (let [{:keys [hoitokauden-alkuvuosi tehtava-id maara]} tm
+                                      nykyiset-arvot (hae-tehtavamaarat c user {:urakka-id             urakka-id
                                                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
                                       tehtavamaara-avain (fn [rivi]
                                                            [(:hoitokauden-alkuvuosi rivi) (:tehtava-id rivi) (:urakka rivi)])
                                       tehtavamaarat-kannassa (into #{} (map tehtavamaara-avain nykyiset-arvot))
                                       parametrit [c {:urakka     urakka-id
                                                      :hoitokausi hoitokauden-alkuvuosi
-                                                     :tehtava    (:tehtava-id tm)
-                                                     :maara      (:maara tm)
+                                                     :tehtava    tehtava-id
+                                                     :maara      maara
                                                      :kayttaja   (:id user)}]]
                                   ;; TODO: Kaikki feilaa jos yksi feilaa. Olisiko parempi tallentaa ne mitkä voidaan?
                                   (when (empty?
-                                          (filter #(= (:tehtava-id tm)
+                                          (filter #(= tehtava-id
                                                       (:tehtava-id %))
                                                   validit-tehtavat))
                                     (throw (IllegalArgumentException. (str "Tehtävälle " (:tehtava-id tm) " ei voi tallentaa määrätietoja."))))
@@ -239,7 +239,7 @@
                                     ;;  update                                   
                                     (apply q/paivita-tehtavamaara! parametrit))))))
   (hae-tehtavahierarkia-maarineen db user {:urakka-id             urakka-id
-                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+                                           :hoitokauden-alkuvuosi nykyinen-hoitokausi}))
 
 (defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi samat-maarat-vuosittain?]}]
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
