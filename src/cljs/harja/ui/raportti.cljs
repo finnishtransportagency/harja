@@ -99,7 +99,8 @@
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid? avattavat-rivit]}
+                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
+                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
@@ -110,8 +111,8 @@
                 :rivi-ennen rivi-ennen
                 :avattavat-rivit avattavat-rivit
                 :piilota-toiminnot? true
-                :sivuttain-rullattava? true
-                :ensimmainen-sarake-sticky? true
+                :sivuttain-rullattava? sivuttain-rullattava?
+                :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
                 :esta-tiivis-grid? esta-tiivis-grid?}
      (into []
            (map-indexed
@@ -132,10 +133,15 @@
                    :solun-luokka (fn [arvo _rivi]
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
-                                   (when (:varoitus? (and (vector? arvo) (second arvo)))
-                                     "solu-varoitus")
-                                   (when (:ala-korosta? (and (vector? arvo) (second arvo)))
-                                     "solun-korostus-estetty"))
+                                   (str/join
+                                     " "
+                                     (conj
+                                       (when (:varoitus? (and (vector? arvo) (second arvo)))
+                                         "solu-varoitus")
+                                       (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
+                                         "hennosti-korostettu-solu")
+                                       (when (false? (:korosta-hennosti? (and (vector? arvo) (second arvo))))
+                                         "solun-korostus-estetty"))))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn

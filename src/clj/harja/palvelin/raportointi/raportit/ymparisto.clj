@@ -207,8 +207,10 @@
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
     [:taulukko {:otsikko otsikko
-                :oikealle-tasattavat-kentat (into #{} (range 1 (+ 5 (count kuukaudet))))
+                :oikealle-tasattavat-kentat (into #{} (range 2 (+ 5 (count kuukaudet))))
                 :esta-tiivis-grid? true
+                :sivuttain-rullattava? true
+                :ensimmainen-sarake-sticky? true
                 :samalle-sheetille? true
                 :avattavat-rivit avattavat-rivit}
      (into []
@@ -226,7 +228,7 @@
                  :leveys (if urakoittain? "4.83%" "5%")
                  :fmt :numero}) kuukaudet)
 
-         [{:otsikko (when-not yksikot-soluissa? " (t)") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
+         [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
            :excel [:summa-vasen (if urakoittain? 2 1)]}
           {:otsikko "Suunniteltu (t)"
            :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
@@ -260,34 +262,34 @@
                 (when yhteenvetorivi?
                   {:korosta-hennosti? true
                    :lihavoi? true})
-                  {:lihavoi? yhteenvetorivi?
-                   :rivi (into []
-                           (concat
+                {:lihavoi? yhteenvetorivi?
+                 :rivi (into []
+                         (concat
 
-                             ;; Vetolaatikkojuttuja
-                             [" "]
+                           ;; Vetolaatikkojuttuja
+                           [" "]
 
-                             ;; Urakan nimi, jos urakoittain jaottelu päällä
-                             (when urakoittain?
-                               [(:nimi urakka)])
+                           ;; Urakan nimi, jos urakoittain jaottelu päällä
+                           (when urakoittain?
+                             [(:nimi urakka)])
 
-                             ;; Materiaalin nimi
-                             [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
+                           ;; Materiaalin nimi
+                           [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
 
-                             ;; Kuukausittaiset määrät, viiva jos tyhjä.
-                             (map #(or (kk-arvot %) "–") kuukaudet)
+                           ;; Kuukausittaiset määrät, viiva jos tyhjä.
+                           (map #(or (kk-arvot %) "–") kuukaudet)
 
-                         ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                         [(yhteensa-kentta (vals kk-arvot) true)
-                          (when suunniteltu [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
-                                                               :yksikko (:yksikko materiaali)
-                                                               :desimaalien-maara 2
-                                                               :ala-korosta? true}])
-                          (when suunniteltu [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
-                                                               :yksikko "%"
-                                                               :desimaalien-maara 2
-                                                               :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                               :ala-korosta? true}])]))})]
+                           ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
+                           [(yhteensa-kentta (vals kk-arvot) true)
+                            [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
+                                                          :yksikko (when suunniteltu (:yksikko materiaali))
+                                                          :desimaalien-maara 2
+                                                          :korosta-hennosti? false}]
+                            [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
+                                                          :yksikko (when suunniteltu "%")
+                                                          :desimaalien-maara 2
+                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                          :korosta-hennosti? false}]]))})]
 
              ;; Mahdolliset hoitoluokkakohtaiset rivit
              (mapv (fn [[luokka rivit]]

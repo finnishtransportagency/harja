@@ -151,11 +151,16 @@
 (defn- korostetaanko-hennosti
   "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
   solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
+  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
 
   'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
   'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
   [korosta-hennosti? arvo-datassa]
   (cond
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (false? (:korosta-hennosti? (second arvo-datassa))))
+    {}
     korosta-hennosti? korosta-hennosti?
     (and
       (raportti-domain/raporttielementti? arvo-datassa)

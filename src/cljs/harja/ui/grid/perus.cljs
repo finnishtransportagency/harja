@@ -1092,7 +1092,7 @@
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
                     validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva? 
-                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit] :as opts}
+                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1119,7 +1119,7 @@
                        tiedot)
               luokat (cond-> luokat
                        @infolaatikko-nakyvissa? (conj "livi-grid-infolaatikolla")
-                       esta-tiivis-grid? (conj "skrollattava")
+                       sivuttain-rullattava? (conj "skrollattava")
                        ensimmainen-sarake-sticky? (conj "ensimmainen-sarake-sticky"))
               muokattu? (not (empty? @historia))]
           [:div.panel.panel-default.livi-grid (merge

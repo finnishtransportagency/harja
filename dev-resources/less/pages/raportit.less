@@ -67,6 +67,10 @@
            background-color: @red-lighter;
            color: @red-dark;
        } 
+        
+        &.hennosti-korostettu-solu {
+            background-color: @hento-korostusvari;
+        }
        
         &.solun-korostus-estetty {
             background-color: @harmaa15;
@@ -192,13 +196,6 @@
         border-left: none;
         border-right: @reunaviivan-paksuus solid @reunaviivan-vari;
     }
-}
-
-.ymparistoraportti .livi-grid table {
-    // Yhteenlaskurivien viimeisten sarakkeiden taustaväri takaisin vaaleanharmaaksi.
-    tr.hennosti-korostettu-rivi td:nth-last-child(-n+2) {
-            background-color: @gray250;
-        }
 }
 
 /**********************************
