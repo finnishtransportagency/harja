@@ -343,20 +343,26 @@
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
-    (apply fo/dokumentti {:orientation *orientaatio*
-                          :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
-           (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
-                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
-                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
-                       (muodosta-pdf [:yhteenveto tiedot])])]
-                   (keep identity
-                         (mapcat #(when %
-                                    (if (seq? %)
-                                      (map muodosta-pdf %)
-                                      [(muodosta-pdf %)]))
-                                 sisalto))
-                   #_[[:fo:block {:id "raportti-loppu"}]]))))
+  (let [tiedoston-nimi (str/join ", "
+                         ((juxt :raportin-nimi :urakka (fn [rivi]
+                                                         (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+                          (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
+    (with-meta
+      (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
+        (apply fo/dokumentti {:orientation *orientaatio*
+                              :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
+          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
+                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
+                     [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
+                      (muodosta-pdf [:yhteenveto tiedot])])]
+            (keep identity
+              (mapcat #(when %
+                         (if (seq? %)
+                           (map muodosta-pdf %)
+                           [(muodosta-pdf %)]))
+                sisalto))
+            #_[[:fo:block {:id "raportti-loppu"}]])))
+      {:tiedostonimi (str tiedoston-nimi ".pdf")})))
 
 (def aikajana-rivimaara 25)
 
