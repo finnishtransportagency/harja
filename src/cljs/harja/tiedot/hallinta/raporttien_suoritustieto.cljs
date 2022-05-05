@@ -75,6 +75,12 @@
    ["kanavien-laskutusyhteenveto" "Kanavien laskutusyhteenveto"]
    ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]])
 
+(defn raportin-nimi-fmt [vaihtoehdot tunniste]
+  (first (keep #(when (= (first %)
+                         tunniste)
+                  (second %))
+               vaihtoehdot)))
+
 (def +mahdolliset-roolit+
   [[nil "Kaikki"]
    [:urakanvalvoja "Urakanvalvoja (tilaaja)"]
