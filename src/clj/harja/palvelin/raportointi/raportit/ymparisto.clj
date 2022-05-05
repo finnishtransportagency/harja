@@ -269,6 +269,17 @@
                                          nil))})
     materiaalityyppi-ryhmiteltyna))
 
+(defn koosta-yhteensa-rivi [tyypin-mukaan-jaotellut-materiaalit tyypin-yhteensa-materiaali]
+  (if-not (empty? tyypin-mukaan-jaotellut-materiaalit)
+    (mapv (fn [[urakka rivit]]
+            [{:materiaali tyypin-yhteensa-materiaali
+              :urakka urakka}
+             rivit])
+      tyypin-mukaan-jaotellut-materiaalit)
+    (list [{:maara 0
+            :luokka nil :kk nil :urakka nil
+            :materiaali tyypin-yhteensa-materiaali}])))
+
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id hallintayksikko-id
                                urakoittain? urakkatyyppi] :as parametrit}]
@@ -323,39 +334,21 @@
         kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
           (apply concat (map vals kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)))
-        formiaatit-yhteensa-rivi (if-not (empty? kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)
-                                   (mapv (fn [[urakka rivit]]
-                                           [{:materiaali materiaali-kaikki-formiaatit-yhteensa
-                                             :urakka urakka}
-                                            rivit])
-                                     kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)
-                                   (list [{:maara 0
-                                           :luokka nil :kk nil :urakka nil
-                                           :materiaali materiaali-kaikki-formiaatit-yhteensa}]))
+        formiaatit-yhteensa-rivi (koosta-yhteensa-rivi
+                                   kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
+                                   materiaali-kaikki-formiaatit-yhteensa)
 
         kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
         (group-by :urakka
           (apply concat (map vals kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)))
-        kesasuola-yhteensa-rivi (if-not (empty? kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)
-                                  (mapv (fn [[urakka rivit]]
-                                          [{:materiaali materiaali-kaikki-kesasuolat-yhteensa
-                                            :urakka urakka}
-                                           rivit])
-                                    kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)
-                                  (list [{:maara 0
-                                          :luokka nil :kk nil :urakka nil
-                                          :materiaali materiaali-kaikki-kesasuolat-yhteensa}]))
+        kesasuola-yhteensa-rivi (koosta-yhteensa-rivi
+                                  kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
+                                  materiaali-kaikki-kesasuolat-yhteensa)
         kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna (group-by :urakka
                                                               (apply concat (map vals kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)))
-        murske-yhteensa-rivi (if-not (empty? kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)
-                               (mapv (fn [[urakka rivit]]
-                                       [{:materiaali materiaali-kaikki-murskeet-yhteensa
-                                         :urakka urakka}
-                                        rivit])
-                                 kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)
-                               (list [{:maara 0
-                                       :luokka nil :kk nil :urakka nil
-                                       :materiaali materiaali-kaikki-murskeet-yhteensa}]))
+        murske-yhteensa-rivi (koosta-yhteensa-rivi
+                               kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
+                               materiaali-kaikki-murskeet-yhteensa)
 
         kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
 
