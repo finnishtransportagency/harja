@@ -30,7 +30,7 @@
                                       tietokanta-fixture))
 
 (deftest kiintioiden-haku
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
                 ::kiintio/sopimus-id sopimus-id}
@@ -43,7 +43,7 @@
     (is (>= (count vastaus) 2))))
 
 (deftest kiintioiden-haku
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
                 ::kiintio/sopimus-id sopimus-id}
@@ -60,7 +60,7 @@
     (is (every? #(nil? (::kiintio/toimenpiteet %)) kiintiot))))
 
 (deftest kiintioiden-haku-toimenpiteineen
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
                 ::kiintio/sopimus-id sopimus-id}
@@ -77,7 +77,7 @@
     (is (not (some (comp (partial = "POISTETTU KIINTIÖ EI SAA NÄKYÄ") ::kiintio/kuvaus) kiintiot)))))
 
 (deftest kiintioiden-muokkaaminen
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         params {::kiintio/urakka-id urakka-id
                 ::kiintio/sopimus-id sopimus-id}
@@ -152,7 +152,7 @@
                                      params)))))))
 
 (deftest toimenpiteen-liittaminen-kiintioon
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
         toimenpiteen-kiintio-id-ennen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))
@@ -172,7 +172,7 @@
     (is (= toimenpiteen-kiintio-id-jalkeen kiintio-id) "Toimenpide liitettiin kiintiöön")))
 
 (deftest toimenpiteen-liittaminen-kiintioon-kun-toimenpide-ei-kuulu-urakkaan
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
         params {::kiintio/id kiintio-id
@@ -185,7 +185,7 @@
                                                    params)))))
 
 (deftest toimenpiteen-liittaminen-kiintioon-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         kiintio-id (hae-kiintio-siirtyneiden-poijujen-korjaus)
         params {::kiintio/id kiintio-id
@@ -198,7 +198,7 @@
                                            params)))))
 
 (deftest toimenpiteen-liittaminen-kiintioon-joka-ei-kuulu-urakkaan
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         kiintio-id (hae-kiintio-id-nimella "Joku kiintiö Vantaalla")
         params {::kiintio/id kiintio-id
@@ -211,7 +211,7 @@
                                                    params)))))
 
 (deftest toimenpiteen-irrotus-kiintiosta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
         toimenpiteen-kiintio-id-ennen (ffirst (q "SELECT \"kiintio-id\" FROM reimari_toimenpide WHERE id = " toimenpide-id ";"))
         params {::to/urakka-id urakka-id
@@ -229,7 +229,7 @@
     (is (nil? toimenpiteen-kiintio-id-jalkeen) "Toimenpide irrotettiin kiintiöstä")))
 
 (deftest toimenpiteen-irrotus-kun-toimenpiteet-eivat-kuulu-urakkaan
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
         params {::to/urakka-id urakka-id
                 ::to/idt #{toimenpide-id}}]
@@ -239,7 +239,7 @@
                                                    params)))))
 
 (deftest toimenpiteen-irrotus-ilman-oikeuksia
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-kiintioon-kuuluva-reimari-toimenpide)
         params {::to/urakka-id urakka-id
                 ::to/idt #{toimenpide-id}}]

@@ -26,6 +26,9 @@
          (mapv #(.getPath %))
          )))
 
+(def +kaikki-tietolajit+ #{:tl501 :tl503 :tl504 :tl505 :tl506 :tl507 :tl508 :tl509 :tl512
+                           :tl513 :tl514 :tl515 :tl516 :tl517 :tl518 :tl520 :tl522 :tl524})
+
 (defn json->kohde [json-lahde lahdetiedosto]
   (let [lahderivi (inc (first json-lahde))                  ; inc, koska 0-based -> järjestysluvuksi
         json (second json-lahde)]

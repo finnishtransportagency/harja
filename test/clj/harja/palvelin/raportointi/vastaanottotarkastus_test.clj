@@ -47,6 +47,6 @@
                                 +kayttaja-jvh+
                                 {:nimi :vastaanottotarkastusraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-muhoksen-paallystysurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                                  :parametrit {:vuosi 2017}})]
     (is (vector? vastaus))))

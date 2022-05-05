@@ -73,7 +73,7 @@
                        referenssi-toimenpide-tietue
                        (first (tohaku/kasittele-toimenpiteet-vastaus db (slurp "resources/xsd/reimari/haetoimenpiteet-vastaus.xml"))))]
     (tarkista-fn)
-    (t/is (= (ht/hae-helsingin-vesivaylaurakan-id)
+    (t/is (= (ht/hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
              (::toimenpide/urakka-id (first (specql/fetch db
                                                           ::toimenpide/reimari-toimenpide #{::toimenpide/id ::toimenpide/reimari-id ::toimenpide/urakka-id}
                                                           {::toimenpide/reimari-id -123456})))))

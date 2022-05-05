@@ -1,11 +1,11 @@
 (ns harja.views.urakka.toteumat.velho-varusteet
-  "Urakan 'Toteumat' välilehden 'Varusteet' osio
+  "Urakan 'TOTEUMAT' välilehden 'Varusteet2' osio
 
-  Näyttä Harjan kautta kirjatut varustetoteumat sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
+  Näyttää Harjan kautta kirjatut varustetoimenpiteet sekä mahdollistaa haut ja muokkaukset suoraan Tierekisteriin rajapinnan
   kautta.
 
-  Harjaan tallennettu varustetoteuma sisältää tiedot varsinaisesta työstä. Varusteiden tekniset tiedot päivitetään
-  aina Tierekisteriin"
+  Harjaan tallennettu varustetoimenpide sisältää Tievelhosta haetun kopion toimenpiteestä ja sen kohteesta rajatuilla tiedoilla.
+  Tarkemmat tiedot löytyvät Tievelhosta."
   (:require [cljs.core.async :refer [<! >! chan timeout]]
             [clojure.string :as str]
             [harja.asiakas.kommunikaatio :as kommunikaatio]
@@ -22,6 +22,7 @@
             [harja.tiedot.tierekisteri.varusteet :as tv]
             [harja.tiedot.urakka.toteumat.velho-varusteet-tiedot :as v]
             [harja.tiedot.urakka.urakka :as urakka-tila]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.ui.debug :refer [debug]]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
@@ -35,7 +36,6 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.tierekisteri.varusteet :refer [varustehaku] :as view]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
@@ -67,8 +67,8 @@
                                                (contains? (get valinnat avain) nimi)
                                                (nil? (get valinnat avain)))}))
         varustetyypit-ja-suosikit (map-indexed (fn [idx itm] {:id idx :nimi itm})
-                                        (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
-                                              (sort (vals v/tietolaji->varustetyyppi-map))))
+                                               (into ["Aidat" "Liikennemerkit" "Portaalit" "Rummut"]
+                                                     (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
         toteumat (into [nil] (map :tallennusmuoto v/toteumat))
@@ -112,25 +112,6 @@
         :aeta [yleiset/tr-kentan-elementti {:otsikko "aet" :valitse-fn (tr-kentan-valitse-fn :aeta) :luokka "tr-alkuetaisyys" :arvo aeta}]
         :losa [yleiset/tr-kentan-elementti {:otsikko "losa" :valitse-fn (tr-kentan-valitse-fn :losa) :luokka "tr-loppuosa" :arvo losa}]
         :leta [yleiset/tr-kentan-elementti {:otsikko "let" :valitse-fn (tr-kentan-valitse-fn :leta) :luokka "tr-loppuetaisyys" :arvo leta}]}]
-      [valinnat/monivalinta-pudotusvalikko
-       "Varustetyypit"
-       varustetyypit
-       (fn [varustetyyppi valittu?]
-         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
-       [" Varusteluokka valittu" " Varusteluokkaa valittu"]
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :vayla-tyyli? true
-        :fmt itse-tai-kaikki
-        :valintojen-maara (count (:varustetyypit valinnat))}]
-      [valinnat/monivalinta-pudotusvalikko
-       "Kuntoluokat"
-       kuntoluokat
-       (fn [kuntoluokka valittu?]
-         (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
-       [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
-       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
-        :vayla-tyyli? true
-        :fmt itse-tai-kaikki}]
       [yleiset/pudotusvalikko "Toimenpide"
        {:wrap-luokka "col-md-1 filtteri label-ja-alasveto-grid"
         :valinta valittu-toteuma
@@ -140,11 +121,30 @@
                       (v/toteuma->toimenpide %)
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       toteumat]]
+       toteumat]
+      [valinnat/monivalinta-pudotusvalikko
+       "Varustetyyppi"
+       varustetyypit
+       (fn [varustetyyppi valittu?]
+         (e! (v/->ValitseVarustetyyppi (:nimi varustetyyppi) valittu?)))
+       [" Varustetyyppiä valittu" " Varustetyyppiä valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt itse-tai-kaikki
+        :valintojen-maara (count (:varustetyypit valinnat))}]
+      [valinnat/monivalinta-pudotusvalikko
+       "Kuntoluokitus"
+       kuntoluokat
+       (fn [kuntoluokka valittu?]
+         (e! (v/->ValitseKuntoluokka (:nimi kuntoluokka) valittu?)))
+       [" Kuntoluokka valittu" " Kuntoluokkaa valittu"]
+       {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
+        :vayla-tyyli? true
+        :fmt itse-tai-kaikki}]]
      [:div.row
-      [napit/yleinen-ensisijainen "Hae varusteita" #(do
-                                                      (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
-                                                      (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
+      [napit/yleinen-ensisijainen "Hae varustetoimenpiteitä" #(do
+                                                                (e! (v/->TaydennaTR-osoite-suodatin tie aosa aeta losa leta))
+                                                                (e! (v/->HaeVarusteet))) {:luokka "nappi-korkeus-32"
                                                                                 :disabled false
                                                                                 :ikoni (ikonit/livicon-search)}]
       [napit/yleinen-toissijainen "Tyhjennä valinnat" #(e! (v/->TyhjennaSuodattimet (pvm/vuosi (get-in app [:urakka :alkupvm]))))
@@ -154,7 +154,7 @@
 
 (defn listaus [e! {:keys [varusteet] :as app}]
   [grid/grid
-   {:otsikko (str "Varusteet (" (let [m (count varusteet)]
+   {:otsikko (str "Varustetoimenpiteet (" (let [m (count varusteet)]
                                   (if (> m v/+max-toteumat+)
                                     (str v/+max-toteumat+ "*")
                                     m)) ")")
@@ -174,14 +174,14 @@
      :fmt pvm/fmt-p-k-v-lyhyt}
     {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
      :hae v/muodosta-tr-osoite}
+    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
+     :fmt v/toteuma->toimenpide}
     {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
      :fmt v/tietolaji->varustetyyppi}
     {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
     {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt v/toteuma->toimenpide}
     {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
    varusteet])
 
@@ -258,12 +258,14 @@
       [:div
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
-       [suodatuslomake e! app]
-       [kartta/kartan-paikka]
-       (when (> (count (:varusteet app)) v/+max-toteumat+)
+       (when (= 0 (count (:varusteet app)))
+         [yleiset/info-laatikko :neutraali "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä."])
+       (when (>= (count (:varusteet app)) v/+max-toteumat+)
          [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
                                                 v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
           nil "100%"])
+       [suodatuslomake e! app]
+       [kartta/kartan-paikka]
        [listaus e! app]])))
 
 (defn velho-varusteet [ur]

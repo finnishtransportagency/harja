@@ -25,7 +25,7 @@
 
 (deftest joutsensillalle-ei-ole-tarkastuksia
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                      :listaus :kaikki})
         joutsensilta (silta-nimella sillat "Joutsensilta")]
     (is joutsensilta "Joutsensilta löytyi")
@@ -33,7 +33,7 @@
 
 (deftest kempeleen-testisillan-tarkastus
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                      :listaus :kaikki})
         kempele (silta-nimella sillat "Kempeleen testisilta")]
     (is kempele "Kempeleen testisilta löytyy")
@@ -41,7 +41,7 @@
 
 (deftest puutteellisia-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                      :listaus :puutteet})]
     (is (silta-nimella sillat "Kempeleen testisilta"))
     (is (silta-nimella sillat "Oulujoen silta"))
@@ -49,7 +49,7 @@
 
 (deftest korjattuja-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                      :listaus :korjatut})
         kajaanintie (silta-nimella sillat "Kajaanintien silta")]
     (is kajaanintie)
@@ -58,7 +58,7 @@
 
 (deftest oulun-urakan-2005-2012-sillat
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                      :listaus :kaikki})
         sillat-ilman-tarkastuksia (filter #(and (not= "Joutsensilta" (:siltanimi %))
                                                 (not= "Pyhäjoen silta" (:siltanimi %))) sillat)]
@@ -79,7 +79,7 @@
 
 (deftest oulun-urakan-2005-2012-tarkastukset
   (let [tarkastukset (kutsu-http-palvelua :hae-sillan-tarkastukset +kayttaja-jvh+
-                                          {:urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                          {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                            :silta-id (hae-oulujoen-sillan-id)})]
     (is (= (count tarkastukset) 2))
     (is (every? #(map? (:kohteet %)) tarkastukset))))

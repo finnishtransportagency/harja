@@ -465,14 +465,17 @@
           rivi-ennen)])
      [:tr
       (map-indexed
-        (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
+        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
           ^{:key (str i nimi)}
           [:th {:class (y/luokat otsikkorivi-luokka
                                  (y/tasaus-luokka tasaa)
                                  (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))
                 :width (or leveys "5%")
                 :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
-           [:div otsikko]]) skeema)
+           (if otsikko-komp
+             [otsikko-komp]
+             [:div otsikko])
+           ]) skeema)
       (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
                      tallenna))
@@ -691,6 +694,7 @@
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
+  :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
 
   :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}
@@ -1091,7 +1095,7 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva? 
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?
                     esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava?] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
