@@ -176,7 +176,7 @@
        [:h2 nimi])
      (when (> alue-tehtavia 0)
        [:<>        
-        [:div.tm-otsikko {:class (str (when sopimukset-syotetty? "marginilla"))} "Urakka-alueen tiedot"]
+        [:div.tm-otsikko {:class (str (when sopimukset-syotetty? "marginilla"))} "Hoitoluokkatiedot"]
         (when sopimukset-syotetty?
           [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"])
         [grid/muokkaus-grid
