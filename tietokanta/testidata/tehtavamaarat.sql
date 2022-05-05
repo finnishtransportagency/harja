@@ -93,11 +93,6 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, h
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1500, NOW(), null, 2022);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja, hoitovuosi) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null, 2023);
 
-
--- tämä pois, kun tiedetään, mitkä on aluetietoja ja mitkä ei
-update toimenpidekoodi set aluetieto = true where yksikko like '%km%';
-
-
 DO
 $$
 declare 
