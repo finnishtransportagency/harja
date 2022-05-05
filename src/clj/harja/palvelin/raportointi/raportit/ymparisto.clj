@@ -149,14 +149,6 @@
      :luokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
-(defn- laske-prosentti [tot bud]
-  (let [tot (bigdec tot)
-        bud (bigdec bud)]
-    (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
-      0
-      (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
-
-
 (defn koosta-taulukko [otsikko konteksti kuukaudet raportin-nimi urakoittain? kk-lev osamateriaalit yht-rivi]
   [:taulukko {:otsikko otsikko
               :oikealle-tasattavat-kentat (into #{} (range 1 (+ 4 (count kuukaudet))))
@@ -197,16 +189,6 @@
                                                       :yksikko (:yksikko materiaali)
                                                       :desimaalien-maara 2}])))]
          (concat
-           ;; Talvisuolat-väliotsikko
-           #_(when (and (= listan-ensimmaisen-urakan-id (:id urakka))
-                     (= "Talvisuola" (:nimi materiaali)))
-               [{:otsikko "Talvisuolat"}])
-
-           ;; Muut materiaalit -väliotsikko, pakko käyttää nimeä, perustuu järjestykseen domain.materiaali:ssa
-           #_(when (and (= listan-ensimmaisen-urakan-id (:id urakka))
-                     (= "Kaliumformiaatti" (:nimi materiaali)))
-               [{:otsikko "Muut materiaalit"}])
-
            ;; Normaali materiaalikohtainen rivi
            [{:lihavoi? true
              :rivi (into []
@@ -435,7 +417,7 @@
      (koosta-taulukko "Murskeet" konteksti kuukaudet "Murskeet" urakoittain? kk-lev
        (materiaalit-tyypin-mukaan "murske") nil)
      (koosta-taulukko "Muut materiaalit" konteksti kuukaudet "Muut materiaalit" urakoittain? kk-lev
-       (materiaalit-tyypin-mukaan "muut") nil)
+       (materiaalit-tyypin-mukaan "muu") nil)
 
      (when-not (empty? materiaalit)
        [:teksti (str "Tummennetut arvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
