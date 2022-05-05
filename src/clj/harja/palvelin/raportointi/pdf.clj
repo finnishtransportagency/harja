@@ -18,6 +18,7 @@
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]
             [harja.domain.raportointi :as raportti-domain]
+            [harja.palvelin.raportointi.raportit.yleinen :as raportit-yleinen]
             [harja.ui.aikajana :as aikajana]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
@@ -343,10 +344,7 @@
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (let [tiedoston-nimi (str/join ", "
-                         ((juxt :raportin-nimi :urakka (fn [rivi]
-                                                         (str (:alkupvm rivi) "-" (:loppupvm rivi))))
-                          (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
+  (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
     (with-meta
       (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
         (apply fo/dokumentti {:orientation *orientaatio*
