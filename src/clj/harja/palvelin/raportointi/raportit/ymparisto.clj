@@ -189,15 +189,36 @@
 (def isantarivi-indeksi (atom -1))
 
 (defn koosta-taulukko [otsikko konteksti kuukaudet urakoittain? osamateriaalit yht-rivi yksikot-soluissa?]
-  (let [avattavat-rivit (into #{}
-                          (keep-indexed (fn [indeksi osa]
-                                          (when
-                                            (and
-                                              (not (:yht-rivi osa))
-                                              (not (nil? (filter :luokka (second (nth osamateriaalit indeksi)))))
-                                              (seq (filter :luokka (second (nth osamateriaalit indeksi)))))
-                                            (str "raportti_rivi_" indeksi)))
-                            osamateriaalit))
+  (let [
+        ;; Avattavien rivien indeksit päätellään loopilla.
+        ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
+        
+        ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
+        ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka-arvo.
+        ;; :luokka-arvo kertoo rivin hoitoluokan.
+        
+        avattavat-rivit (mapv (partial str "raportti_rivi_")
+                          (loop [idx 0
+                                 o osamateriaalit
+                                 res []]
+                            (if (empty? o)
+                              res
+                              ;; Uniikkien :luokka-arvojen lasku kertoo, kuinka hoittoluokkakohtaista riviä on.
+                              (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
+                                (recur
+                                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
+                                  ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
+                                  ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
+                                  ;; materiaaliin.
+                                  (+ (inc idx) nykyiset-lapset-cnt)
+                                  (rest o)
+                                  (if (= 0 nykyiset-lapset-cnt)
+                                    res
+                                    ;; Ja jos materiaalila on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
+                                    ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
+                                    ;; perusteella tavaraa, esim. (get avattavat-rivit 0). 
+                                    (conj res idx)))))))
+
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
    [:taulukko {:otsikko otsikko
@@ -206,7 +227,8 @@
                :sivuttain-rullattava? true
                :ensimmainen-sarake-sticky? true
                :samalle-sheetille? true
-               :avattavat-rivit avattavat-rivit}
+               ;; Tässä muutetaan vektori setiksi, koska se on kätevä gridissä. Ehkä voi muuttaa?
+               :avattavat-rivit (into #{} avattavat-rivit)}
     (into []
       ;; Muodostetaan skeema taulukolle
       (concat
@@ -230,11 +252,13 @@
 
     (mapcat
       (fn [[{:keys [urakka materiaali]} rivit]]
-        (let [_ (reset! isantarivi-indeksi (+ @isantarivi-indeksi 1))
-              suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
+        (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
               suunniteltu (when-not (empty? suunnitellut)
                             (reduce + suunnitellut))
               luokitellut (filter :luokka rivit)
+              ;; Jos materiaalilla on hoitoluokkakohtaisia rivejä, nostetaan inantarivin-indeksiä yhdellä
+              ;; koska materiaalit, joilla ei ole niitä, ei löydy myöskään avattavat-rivit-vektorista.
+              _ (when (seq luokitellut) (reset! isantarivi-indeksi (+ @isantarivi-indeksi 1)))
               kk-arvot (kk-arvot (kk-rivit rivit) materiaali yksikot-soluissa?)
               yhteenvetorivi? (:yht-rivi materiaali)
               yhteensa-kentta (fn [arvot nayta-aina?]
@@ -301,17 +325,17 @@
                                                         (:maara %))))
                                       rivit)]
                        {:lihavoi? false
-                        :isanta-rivin-id (str "raportti_rivi_" @isantarivi-indeksi)
+                        ;; Ja täällä haetaan isanta-rivin-id avattavat-rivit-vektorista isäntärivin indeksillä.
+                        :isanta-rivin-id (nth avattavat-rivit @isantarivi-indeksi)
                         :rivi (into []
                                 (concat
                                   [" "]
                                   (when urakoittain?
                                     [(:nimi urakka)])
-                                  [(str " - "
-                                     (hoitoluokat/talvihoitoluokan-nimi luokka))]
+                                  [(hoitoluokat/talvihoitoluokan-nimi luokka)]
 
                                   ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
-                                  (map #(or (kk-arvot %) "-") kuukaudet)
+                                  (map #(or (kk-arvot %) "–") kuukaudet)
 
                                   [(yhteensa-kentta (vals kk-arvot) true)
                                    nil nil]))}))
@@ -478,5 +502,6 @@
        (materiaalit-tyypin-mukaan "hiekoitushiekka") nil false)
      (koosta-taulukko "Murskeet" konteksti kuukaudet urakoittain?
        (materiaalit-tyypin-mukaan "murske") nil false)
+     ;; TODO: Piilota kaksi viimeistä saraketta
      (koosta-taulukko "Muut materiaalit" konteksti kuukaudet urakoittain?
        (materiaalit-tyypin-mukaan "muu") nil true)]))

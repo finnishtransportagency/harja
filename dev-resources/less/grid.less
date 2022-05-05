@@ -108,8 +108,22 @@
       word-break: normal;
     }
     tbody {
-      > tr:not(.valiotsikko) {
+      > tr:not(.valiotsikko) td {
         border-bottom: 1px solid @harmaa-vaalea;
+      }
+
+      // Häkki, jolla saadaan avattuihin riveihin sininen marginaaliviiva.
+      > tr.avattava-rivi td:first-child {
+        border-bottom: none;
+
+        > div {
+          height: 100%;
+          padding: 8px 0;
+          border-right: 3px solid @blue-default;
+          // Taikanumero, jotta täsmää keskelle.
+          width: 27px;
+          position: absolute;
+        }
       }
     }
 
