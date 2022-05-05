@@ -149,7 +149,7 @@
     {:nimi nimi 
      :sisainen-id id
      :alue-tehtavia (count (:alueet taulukkorakenne-alueet-ja-maarat-eroteltuna))
-                                        ;:taulukko taulukkorakenne-alueet-ja-maarat-eroteltuna
+     :maara-tehtavia (count (:maarat taulukkorakenne-alueet-ja-maarat-eroteltuna))
      :nayta-toimenpide? true}))
 
 (defn paivita-tehtavien-maarat-hoitokaudelle 
