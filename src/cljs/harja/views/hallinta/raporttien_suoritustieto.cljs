@@ -47,7 +47,7 @@
     [:div.raporttitietojen-grid
      [grid/grid
       {:otsikko (str "Raporttien suoritustiedot")
-       :tyhja (if (nil? rivit) [yleiset/ajax-loader "Toetpka haetaan..."] "Ei tietoja")
+       :tyhja (if (nil? rivit) [yleiset/ajax-loader "Tietoja haetaan..."] "Ei tietoja")
        :tunniste :raportti
        :piilota-toiminnot? true}
       [{:otsikko "Raportti" :nimi :raportti :tyyppi :string :leveys 6
