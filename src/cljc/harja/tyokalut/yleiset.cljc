@@ -1,4 +1,6 @@
-(ns harja.tyokalut.yleiset)
+(ns harja.tyokalut.yleiset
+  #?@(:clj  [(:require [clojure.pprint :refer [pprint]])]
+      :cljs [(:require [cljs.pprint :refer [pprint]])]))
 
 (defn pyorista-kahteen [numero]
   (/ 100 (Math/round (* 100 numero))))
@@ -52,7 +54,7 @@
   ([x y]
    (let [f (fn [prefix object]
              (print prefix)
-             (clojure.pprint/pprint object)
+             (pprint object)
              object)]
      (if (string? x)
        (f x y)

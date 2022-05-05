@@ -18,6 +18,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (rtm.paiva::DATE BETWEEN :alkupvm AND :loppupvm)
       AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+      AND mk.materiaalityyppi != 'erityisalue'
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, mk.yksikko, date_trunc('month', rtm.paiva)
 UNION
 -- Haetaan hoitoluokittaiset käytöt urakan_materiaalin_kaytto_hoitoluokittain taulusta.
@@ -47,6 +48,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                ELSE
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
+      AND mk.materiaalityyppi != 'erityisalue'
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
@@ -73,10 +75,12 @@ WHERE s.poistettu IS NOT TRUE
                ELSE
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
+      AND mk.materiaalityyppi != 'erityisalue'
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
 -- Huomaa, että tämän kyselyn pitää palauttaa samat sarakkeet, kuin mitkä ympäristöraportissa haetaan
 -- "materiaali_*" nimeen
-SELECT id,nimi, yksikko, materiaalityyppi as tyyppi FROM materiaalikoodi;
+SELECT id,nimi, yksikko, materiaalityyppi as tyyppi FROM materiaalikoodi
+ WHERE materiaalityyppi != 'erityisalue';

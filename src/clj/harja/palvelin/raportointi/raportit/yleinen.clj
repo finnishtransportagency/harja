@@ -232,3 +232,9 @@
 
 (def ei-tuloksia-aikavalilla-str
   "Tietoja ei löytynyt valitulta aikaväliltä.")
+
+(defn raportti-tiedostonimi [raportin-tunnistetiedot]
+  (str/join ", "
+    ((juxt :raportin-nimi :urakka (fn [rivi]
+                                    (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+     (:raportin-yleiset-tiedot raportin-tunnistetiedot))))
