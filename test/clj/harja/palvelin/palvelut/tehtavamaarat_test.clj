@@ -65,16 +65,16 @@
    {:tehtava-id id-ib-rampit :maara 444}])
 
 (def uudet-tehtavat
-  [{:tehtava-id id-kalium :maara 555}
-   {:tehtava-id id-ise-rampit :maara 666}
-   {:tehtava-id id-suolaus :maara 7.77}
-   {:tehtava-id id-portaiden-talvihuolto :maara 88.8}
-   {:tehtava-id id-ic-rampit :maara 999}
-   {:tehtava-id id-yksityisten-rumpujen :maara 666}])
+  [{:tehtava-id id-kalium :maara 555 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-ise-rampit :maara 666 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-suolaus :maara 7.77 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-portaiden-talvihuolto :maara 88.8 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-ic-rampit :maara 999 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-yksityisten-rumpujen :maara 666 :hoitokauden-alkuvuosi 2020}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id id-portaiden-talvihuolto :maara 6.66}
-   {:tehtava-id id-opastustaulut :maara 999}])
+  [{:tehtava-id id-portaiden-talvihuolto :maara 6.66 :hoitokauden-alkuvuosi 2022}
+   {:tehtava-id id-opastustaulut :maara 999 :hoitokauden-alkuvuosi 2022}])
 
 (def virheellinen-tehtava
   [{:tehtava-id id-ib-rampit :maara 6.66}
@@ -150,14 +150,14 @@
                                                                                            :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                                      :hoitokauden-alkuvuosi 2020
+                                                                      :nykyinen-hoitokausi 2020
                                                                       :tehtavamaarat         uudet-tehtavat})
         tehtavamaarat-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                           :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                          :hoitokauden-alkuvuosi 2020})
         hoitokausi-2022-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                                        :hoitokauden-alkuvuosi 2022
+                                                                        :nykyinen-hoitokausi 2022
                                                                         :tehtavamaarat         uuden-hoitokauden-tehtavat})
         hoitokausi-2022 (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
