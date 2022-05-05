@@ -140,7 +140,7 @@
 
 (deftest raportin-suoritus-vesivayla-urakalle-toimii
   (let [konteksti "urakka"
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         alkupvm [2017 1 1]
         loppupvm [2017 12 31]
         urakkatyyppi :vesivayla

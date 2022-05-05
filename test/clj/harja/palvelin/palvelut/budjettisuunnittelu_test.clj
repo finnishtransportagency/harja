@@ -219,9 +219,9 @@
                                    (into #{} (keys (group-by (juxt :hoitokausi :maksukausi) tiedot)))))))))))
 
 (deftest indeksikertoimien-haku
-  (let [rovaniemi-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
-        ivalo-urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
-        pellon-urakka-id (hae-pellon-maanteiden-hoitourakan-id)
+  (let [rovaniemi-urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        ivalo-urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+        pellon-urakka-id (hae-urakan-id-nimella "Pellon MHU testiurakka (3. hoitovuosi)")
         ;; Indeksi lyödään automaagisesti urakalle, josta syystä Pellolla saattaa olla vanha indeksi käytössä
         _ (u (str "UPDATE urakka SET indeksi = 'MAKU 2015' WHERE id = " pellon-urakka-id ";"))
         kuluvan-hoitokauden-aloitusvuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
@@ -241,7 +241,7 @@
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
 
 (deftest tallenna-kiinteahintaiset-tyot
-  (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
         urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
@@ -565,7 +565,7 @@
               (str "Ajat eivät oikein päivityksen jälkeen päivitetylle datalle toimenpiteelle: " toimenpide-avain " ja tallennettavalle asialle: " tallennettava-asia)))))))
 
 (deftest tallenna-johto-ja-hallintokorvaukset
-  (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
@@ -722,7 +722,7 @@
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
 
 (deftest budjettitavoite-haku
-  (let [parametrit {:urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)}
+  (let [parametrit {:urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")}
         budjettitavoite (bs/hae-urakan-tavoite (:db jarjestelma) +kayttaja-jvh+ parametrit)
         kerroin 1.1]
     (is (every? :luotu budjettitavoite) "Luotuaika ei löytynyt")
@@ -746,7 +746,7 @@
                      (float (* kerroin 250000M)))))))))
 
 (deftest budjettitavoite-tallennus
-  (let [urakka-id (hae-ivalon-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
         urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
         uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
@@ -990,7 +990,7 @@
                 tavoite-ja-kattohinnat)))))))
 
 (deftest vahvista-suunnitelman-osa-hoitovuodelle
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")]
     (testing "Vahvista hankintakustannukset osio"
       (testing "Tallenna osioon liittyvää dataa"
         (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-id :hankintakustannukset))
@@ -1068,7 +1068,7 @@
         (testaa-osioon-liittyvat-vahvistetut-rivit urakka-id :tavoite-ja-kattohinta 1)))))
 
 (deftest budjettisuunnittelun-oikeustarkastukset
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")]
     (testing "budjetoidut-tyot kutsun oikeustarkistus"
       (is (= (try+ (bs/hae-urakan-budjetoidut-tyot (:db jarjestelma) +kayttaja-seppo+ {:urakka-id urakka-id})
                    (catch harja.domain.roolit.EiOikeutta eo#
@@ -1126,8 +1126,8 @@
          bs-p/toimenpide-avaimet)))
 
 (deftest kustannusten-vahvistus-ei-vahvista-muita-urakoita
-  (let [urakka-1-id (hae-rovaniemen-maanteiden-hoitourakan-id)
-        urakka-2-id (hae-ivalon-maanteiden-hoitourakan-id)]
+  (let [urakka-1-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        urakka-2-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")]
     ;; Testidataa molemmille urakoille
     (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-1-id :erillishankinnat)
     (generoi-ja-tallenna-osioon-liittyvaa-dataa urakka-2-id :erillishankinnat)

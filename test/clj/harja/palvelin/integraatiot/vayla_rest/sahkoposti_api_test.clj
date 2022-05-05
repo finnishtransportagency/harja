@@ -285,7 +285,7 @@
 
 ;; Erilaisia kuittaustyyppejä kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopetettu|Lopetettu toimenpitein|Muutettu|Vastattu|Väärä urakka)\]")
 (deftest vastaanota-sahkoposti-paivystaja-ilmoittaa-toimenpiteesta
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia
         _ (tloik-testi-tyokalut/tuo-ilmoitus)
@@ -423,7 +423,7 @@
 
 
 (deftest vastaanota-vaarallinen-sahkoposti-xml-api-rajapintaan
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vaarallinen-sisalto "<![CDATA[<IMG SRC=http://www.example.com/siteLogo.gif onmouseover=javascript:alert(‘XSS’);>]]>"
         ;; 1. Tee ilmoitus tietokantaan - simuloi tilannetta, jossa T-LOIKilta on tullut jonon kautta ilmoituksia

@@ -211,7 +211,7 @@
         muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :summa nil})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -234,7 +234,7 @@
         (is (= 1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
         (is (= -4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
         (is (= nil (:summa lisatty-muistutus)) "Päällystysurakan bonuksen oikea summa")
-        (is (= (hae-muhoksen-paallystysurakan-id) (get-in lisatty-sakko [:laatupoikkeama :urakka])) "Päällystysurakan sanktiorunko oikea summa")
+        (is (= (hae-urakan-id-nimella "Muhoksen päällystysurakka") (get-in lisatty-sakko [:laatupoikkeama :urakka])) "Päällystysurakan sanktiorunko oikea summa")
         (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
@@ -305,7 +305,7 @@
                               :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
         laatupoikkeama-paallystys {:tekijanimi "Järjestelmä Vastaava"
                                    :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                                    :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -326,7 +326,7 @@
         paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
         laatupoikkeama-paallystys {:tekijanimi "Järjestelmä Vastaava"
                                    :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                                    :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -394,7 +394,7 @@
 
 
 (deftest hae-laatupoikkeaman-tiedot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                             :laatupoikkeama-id 1})]
@@ -403,7 +403,7 @@
     (is (>= (count (:kuvaus vastaus)) 10))))
 
 (deftest hae-urakan-laatupoikkeamat
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-laatupoikkeamat +kayttaja-jvh+
                                 {:listaus :kaikki
