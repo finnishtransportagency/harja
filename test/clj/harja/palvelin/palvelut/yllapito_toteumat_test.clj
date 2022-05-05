@@ -34,7 +34,7 @@
                       urakkatieto-fixture))
 
 (deftest yllapitototeumien-haku-test
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         alkupvm (pvm/luo-pvm 2016 0 1)
         loppupvm (pvm/luo-pvm 2016 11 31)
@@ -53,7 +53,7 @@
     (is (= (count res) oulun-tiemerkintaurakan-toiden-lkm) "Muiden töiden määrä")))
 
 (deftest tallenna-yllapito-toteuma-test
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         alkupvm (pvm/luo-pvm 2016 0 1)
         loppupvm (pvm/luo-pvm 2016 11 31)
@@ -96,7 +96,7 @@
     (is (= (count laskentakohteet-jalkeen) (+ 1 laskentakohdelkm-ennen)))))
 
 (deftest hae-tiemerkinnan-yksikkohintaiset-tyot-toimii
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-tiemerkinnan-yksikkohintaiset-tyot +kayttaja-jvh+
                                 {:urakka-id urakka-id
@@ -104,7 +104,7 @@
     (is (= (count vastaus) 3))))
 
 (deftest usean-tiemerkinnan-yks-hint-toteuman-tallennus-toimii
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)
         toteumien-maara 10
         gen-tyo (fn [] (gen/generate (s/gen ::tt/tiemerkinnan-yksikkohintainen-tyo)))
@@ -137,7 +137,7 @@
     (is (= (+ maara-ennen-lisaysta toteumien-maara) maara-lisayksen-jalkeen))))
 
 (deftest tiemerkinnan-yks-hint-toteuma-kirjataan-oikein
-  (let [urakka-id (hae-oulun-tiemerkintaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
         testien-maara 50
         maara-ennen-testia (ffirst (q "SELECT COUNT(*) FROM tiemerkinnan_yksikkohintainen_toteuma;"))
         yllapitokohde-id (hae-tiemerkintaurakkaan-osoitettu-yllapitokohde urakka-id)]

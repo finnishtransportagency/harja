@@ -25,7 +25,8 @@
             [dk.ative.docjure.spreadsheet :as excel]
             [clojure.string :as str]
             [harja.fmt :as fmt]
-            [harja.domain.raportointi :as raportti-domain])
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.palvelin.raportointi.raportit.yleinen :as raportit-yleinen])
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
            (org.apache.poi.ss.usermodel HorizontalAlignment)))
 
@@ -341,10 +342,7 @@
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
-        tiedoston-nimi (str/join ", "
-                                 ((juxt :raportin-nimi :urakka (fn [rivi]
-                                                                 (str (:alkupvm rivi) "-" (:loppupvm rivi))))
-                                  (:raportin-yleiset-tiedot raportin-tunnistetiedot)))]
+        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     tiedoston-nimi))

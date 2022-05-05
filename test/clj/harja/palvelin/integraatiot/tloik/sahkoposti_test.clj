@@ -81,7 +81,7 @@
                                             {:status 200
                                              :header "jotain"
                                              :body onnistunut-kuittaus})]
-    (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
           ilmoitus-id 123456789]
       (tloik-apurit/tee-testipaivystys urakka-id)
       ;; Lähetä t-loikista jonoihin ilmoitus - ilmoitusid 123456789
@@ -149,8 +149,8 @@
         x 4492320.265
         y 3458642.657
         eri-x 4492320.300
-        vaara-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
-        oikea-urakka-id (hae-oulun-valaistusurakan-id)]
+        vaara-urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        oikea-urakka-id (hae-urakan-id-nimella "Oulun valaistuksen palvelusopimus 2013-2050")]
 
     (with-redefs
             [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] lokaali-sahkopostipalvelin)

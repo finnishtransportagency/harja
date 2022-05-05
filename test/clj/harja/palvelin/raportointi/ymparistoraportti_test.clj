@@ -98,12 +98,14 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2015 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 9 30))}})
-        talvisuolojen-kaytto (nth (butlast vastaus) 2)]
+        talvisuolojen-kaytto (nth vastaus 3)]
     (is (vector? vastaus))
-    (let [raportin-nimi "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+    (let [raportin-nimi "Ympäristöraportti"
+          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           talvisuolataulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
+      (is (= teksti (second (nth vastaus 2))))
       (is (= talvisuolojen-kaytto [:teksti "Erilaisia talvisuoloja käytetty valitulla aikavälillä: 0,00t"]) "talvisuolan toteutunut määrä")
       (apurit/tarkista-taulukko-sarakkeet talvisuolataulukko
                                           {:otsikko "Materiaali"}
@@ -135,10 +137,12 @@
                                                       :loppupvm     (c/to-date (t/local-date 2016 9 30))
                                                       :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+    (let [raportin-nimi "Ympäristöraportti"
+          teksti "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
+      (is (= teksti (second (nth vastaus 2))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Materiaali"}
                                           {:otsikko "10/15"}
@@ -168,10 +172,12 @@
                                               :loppupvm     (c/to-date (t/local-date 2016 9 30))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [raportin-nimi "KOKO MAA, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+    (let [raportin-nimi "Ympäristöraportti"
+          teksti "KOKO MAA, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
+      (is (= teksti (second (nth vastaus 2))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Materiaali"}
                                           {:otsikko "10/15"}
@@ -196,7 +202,8 @@
         param {:alkupvm (c/to-date (t/local-date 2014 10 1))
                :loppupvm (c/to-date (t/local-date 2015 9 30))
                :urakkatyyppi :hoito}
-        raportin-nimi "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
+        raportin-nimi "Ympäristöraportti"
+        teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -242,6 +249,7 @@
                 "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")
         suola-kaytetty-suola (apurit/taulukon-solu suola 8 0)]
     (is (= raportin-nimi (:nimi (second vastaus))))
+    (is (= teksti (second (nth vastaus 2))))
     (is (= ymp-kaytetty-suolaliuos  mat-kaytetty-talvisuolaliuos 1800M)
         "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Talvisuolaliuos NaCl samalla tavalla")
     (is (=  ymp-suolaliuos-yht mat-kaytetty-kaikki-talvisuola 2000M)
@@ -317,7 +325,8 @@
                                                               :urakkatyyppi :hoito}})]
 
     (is (vector? vastaus-pop-ely))
-    (let [raportin-nimi-pop-ely "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+    (let [raportin-nimi "Ympäristöraportti"
+          teksti-pop-ely "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-pop-ely "Talvisuolat"
           taulukko-pop-ely (apurit/taulukko-otsikolla vastaus-pop-ely otsikko-pop-ely)
           pop-ely-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 1))
@@ -326,7 +335,8 @@
           pop-ely-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 4))
           pop-ely-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 5 5))
 
-          raportin-nimi-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+
+          teksti-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 1))
@@ -334,14 +344,15 @@
           oulu-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 3))
           oulu-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 4))
           oulu-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 5 5))]
-      (is (= raportin-nimi-pop-ely (:nimi (second vastaus-pop-ely))))
+      (is (= raportin-nimi (:nimi (second vastaus-pop-ely))))
+      (is (= teksti-pop-ely (second (nth vastaus-pop-ely 2))))
       (is (= pop-ely-talvisuola-luokka-IsE 600M))
       (is (= pop-ely-talvisuola-luokka-Is 400M))
       (is (= pop-ely-talvisuola-luokka-I 400M))
       (is (= pop-ely-talvisuola-luokka-Ib 400M))
       (is (= pop-ely-talvisuola-luokka-Ic 200M))
 
-      (is (= raportin-nimi-oulu (:nimi (second vastaus-oulu))))
+      (is (= teksti-oulu (second (nth vastaus-oulu 2))))
       (is (= oulu-talvisuola-luokka-IsE 300M))
       (is (= oulu-talvisuola-luokka-Is 200M))
       (is (= oulu-talvisuola-luokka-I 200M))
@@ -380,7 +391,8 @@
                                                            :urakkatyyppi :hoito}})]
 
     (is (vector? vastaus-oulu))
-    (let [raportin-nimi "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+    (let [raportin-nimi "Ympäristöraportti"
+          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 2 0))
@@ -411,6 +423,7 @@
           oulu-talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 10 11))]
 
       (is (= raportin-nimi (:nimi (second vastaus-oulu))))
+      (is (= teksti (second (nth vastaus-oulu 2))))
       (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 2600M))
       (is (= oulu-talvisuola-luokka-IsE-02-18 300M))
       (is (= oulu-talvisuola-luokka-Is-02-18 200M))

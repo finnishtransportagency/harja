@@ -1,4 +1,4 @@
--- Luodaan raporttia varten uusi materiaalikoodi - Hox päivitä tämä
+-- Luodaan raporttia varten tarkemmat materiaalityypit
 ALTER TYPE materiaalityyppi ADD VALUE 'erityisalue';
 ALTER TYPE materiaalityyppi ADD VALUE 'formiaatti';
 ALTER TYPE materiaalityyppi ADD VALUE 'kesasuola';

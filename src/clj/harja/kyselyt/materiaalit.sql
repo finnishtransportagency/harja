@@ -17,8 +17,7 @@ SELECT
   urakkatyyppi,
   kohdistettava
 FROM materiaalikoodi
-WHERE materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI
-  AND materiaalityyppi != 'erityisalue' :: MATERIAALITYYPPI
+WHERE materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI)
 ORDER BY jarjestys;
 
 -- name: hae-urakan-materiaalit
@@ -35,10 +34,9 @@ SELECT
   m.yksikko AS materiaali_yksikko
 FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
-WHERE mk.urakka = :urakka AND
-      mk.poistettu = FALSE AND
-    (m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI
-        AND m.materiaalityyppi != 'erityisalue' :: MATERIAALITYYPPI);
+WHERE mk.urakka = :urakka
+  AND mk.poistettu = FALSE
+  AND m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
@@ -65,8 +63,7 @@ FROM
             (alkupvm BETWEEN :alku AND :loppu) AND
             sopimus = :sopimus)     AS kokonaismaara
    FROM materiaalikoodi m
-   WHERE (m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI
-       AND m.materiaalityyppi != 'erityisalue' :: MATERIAALITYYPPI)) AS mat
+   WHERE m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI)) AS mat
 WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
 -- name: paivita-sopimuksen-materiaalin-kaytto
@@ -328,8 +325,7 @@ ORDER BY pvm DESC;
 -- name: hae-suolamateriaalit
 SELECT *
 FROM materiaalikoodi
-WHERE materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI
-   OR materiaalityyppi = 'erityisalue' :: MATERIAALITYYPPI;
+WHERE materiaalityyppi IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
 
 -- name: hae-kaikki-materiaalit
 SELECT
