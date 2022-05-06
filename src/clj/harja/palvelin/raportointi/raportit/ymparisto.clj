@@ -213,32 +213,35 @@
                                                              :yksikko (:yksikko materiaali)
                                                              :desimaalien-maara 2}])]))}]
 
-           ;; Mahdolliset hoitoluokkakohtaiset rivit
-           (map (fn [[luokka rivit]]
-                  (let [rivit (if (or urakoittain? (= konteksti :urakka))
-                                rivit
-                                ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
-                                (map
-                                  #(assoc (first (val %)) :maara (reduce + 0 (keep :maara (val %))))
-                                  (group-by :kk rivit)))
-                        kk-arvot (into {}
-                                   (map (juxt :kk #(do
-                                                     [:arvo-ja-yksikko {:arvo (:maara %)
-                                                                        :yksikko (:yksikko materiaali)
-                                                                        :desimaalien-maara 2}])))
-                                   rivit)]
-                    (into []
-                      (concat
-                        (when urakoittain?
-                          [(:nimi urakka)])
-                        [(str " - "
-                           (hoitoluokat/talvihoitoluokan-nimi luokka))]
+           ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
+           ;; Jätetään soratieluokat myöhempää aikaa varten
+           (when (or (= "Talvisuolat" otsikko)
+                   (= "Formiaatit" otsikko))
+             (map (fn [[luokka rivit]]
+                        (let [rivit (if (or urakoittain? (= konteksti :urakka))
+                                      rivit
+                                      ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
+                                      (map
+                                        #(assoc (first (val %)) :maara (reduce + 0 (keep :maara (val %))))
+                                        (group-by :kk rivit)))
+                              kk-arvot (into {}
+                                         (map (juxt :kk #(do
+                                                           [:arvo-ja-yksikko {:arvo (:maara %)
+                                                                              :yksikko (:yksikko materiaali)
+                                                                              :desimaalien-maara 2}])))
+                                         rivit)]
+                          (into []
+                            (concat
+                              (when urakoittain?
+                                [(:nimi urakka)])
+                              [(str " - "
+                                 (hoitoluokat/talvihoitoluokan-nimi luokka))]
 
-                        (map kk-arvot kuukaudet)
+                              (map kk-arvot kuukaudet)
 
-                        [(yhteensa-kentta (vals kk-arvot) false)
-                         nil nil]))))
-             (sort-by first (group-by :luokka luokitellut)))
+                              [(yhteensa-kentta (vals kk-arvot) false)
+                               nil nil]))))
+                   (sort-by first (group-by :luokka luokitellut))))
            (when yht-rivi yht-rivi))))
 
      osamateriaalit)])
