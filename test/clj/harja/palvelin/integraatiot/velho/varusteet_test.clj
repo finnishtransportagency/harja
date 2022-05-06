@@ -685,16 +685,6 @@
        {:url +varuste-kohteet-regex+ :method :post} ei-sallittu]
       (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
 
-(deftest varuste-velho-palauttaa-vaaran-kohdeluokan-varusteen
-  (u "DELETE FROM varustetoteuma_ulkoiset")
-  (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.125998655\", \"1.2.246.578.4.3.15.506.283640192\"]"
-        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/varusterekisteri_api_v1_historia_kohteet-vaara-kohdeluokka.jsonl")
-        odotettu-oid-lista #{"1.2.246.578.4.3.1.501.125998655"}
-        lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
-    (is (not (str/includes? lokiteksti "ERROR")))
-    (is (str/includes? lokiteksti "odotettu kohdeluokka: varusteet/kaiteet saatu kohdeluokka: varusteet/liikennemerkit"))
-    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
-
 (deftest velho-palauttaa-teknisen-tapahtuman
   (u "DELETE FROM varustetoteuma_ulkoiset")
   (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.158276054\"]"

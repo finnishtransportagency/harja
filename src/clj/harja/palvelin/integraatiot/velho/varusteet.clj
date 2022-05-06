@@ -450,33 +450,23 @@
                       viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
                       tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                       tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
-                      tallenna-toteuma-fn (fn [{:keys [kohdeluokka muokattu oid] :as kohde}]
-                                            (if (= tietolahteen-kohdeluokka kohdeluokka)
-                                              (do
-                                                (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
-                                                           " version-voimassaolo.alku: " (get-in kohde [:version-voimassaolo :alku]))
-                                                (let [{varustetoteuma :tulos
-                                                       virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma db kohde)]
-                                                  (cond varustetoteuma
-                                                        (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                      tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
+                                            (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
+                                                       " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
+                                            (let [{varustetoteuma :tulos
+                                                   virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma db kohde)]
+                                              (cond varustetoteuma
+                                                    (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
 
-                                                        virheviesti
-                                                        (lokita-ja-tallenna-hakuvirhe
-                                                          db kohde
-                                                          (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                               (format "%s muokattu: %s validointivirhe: %s"
-                                                                       oid muokattu virheviesti)))
+                                                    virheviesti
+                                                    (lokita-ja-tallenna-hakuvirhe
+                                                      db kohde
+                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
+                                                           (format "%s muokattu: %s validointivirhe: %s"
+                                                                   oid muokattu virheviesti)))
 
-                                                        :else
-                                                        :ohita)))
-                                              (lokita-ja-tallenna-hakuvirhe
-                                                db kohde
-                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei ole oikeasta kohdeluokasta"
-                                                     (format "%s muokattu: %s odotettu kohdeluokka: %s saatu kohdeluokka: %s"
-                                                             oid
-                                                             muokattu
-                                                             tietolahteen-kohdeluokka
-                                                             kohdeluokka)))))]
+                                                    :else
+                                                    :ohita)))]
                   (hae-ja-tallenna
                     tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                     token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))
