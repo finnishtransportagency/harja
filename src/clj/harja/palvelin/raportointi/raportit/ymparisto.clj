@@ -26,26 +26,31 @@
                                    (yleinen/kk-ja-vv pvm))))))
         (hae-ymparistoraportti-tiedot db parametrit)))
 
+(def talvisuola-yht-rivi-materiaali "Talvisuolat yhteensä (100%) kuivatonnia")
 (def materiaali-kaikki-talvisuola-yhteensa
-  {:nimi "Talvisuolat yhteensä (100%) kuivatonnia"
+  {:id 999
+   :nimi talvisuola-yht-rivi-materiaali
    :yksikko "t"
    :yht-rivi true
    :tyyppi "talvisuola"})
 
 (def materiaali-kaikki-formiaatit-yhteensa
-  {:nimi "Formiaatit yhteensä (50 % liuostonnia)"
+  {:id 999
+   :nimi "Formiaatit yhteensä (50 % liuostonnia)"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "formiaatti"})
 
 (def materiaali-kaikki-kesasuolat-yhteensa
-  {:nimi "Kesäsuola yhteensä (t)"
+  {:id 999
+   :nimi "Kesäsuola yhteensä (t)"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "kesasuola"})
 
 (def materiaali-kaikki-murskeet-yhteensa
-  {:nimi "Murskeet yhteensä (t)"
+  {:id 999
+   :nimi "Murskeet yhteensä (t)"
    :yksikko "t"
    :yht-rivi true
    :tyyppi "murske"})
@@ -391,7 +396,12 @@
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         materiaalit-tyypin-mukaan (fn [materiaalityyppi]
                                     (keep (fn [rivi]
-                                            (when (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi]))
+                                            (when (and
+                                                    ;; Jätä MH-urakoille tulevat tehtävät ja määrät luettelon suunnitellut rivit pois
+                                                    ;; Ihan niin suoraa ne eivät tule, mutta ne on materiaaleja, joilla ei ole id:tä.
+                                                    ;; Eli ne on yhteenveto tietoja, joita kanta palauttaa
+                                                    (not (nil? (get-in (first rivi) [:materiaali :id])))
+                                                    (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi])))
                                               rivi))
                                       materiaalit))]
 
