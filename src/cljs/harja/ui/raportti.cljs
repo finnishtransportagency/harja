@@ -137,11 +137,11 @@
                                      " "
                                      (conj
                                        (when (:varoitus? (and (vector? arvo) (second arvo)))
-                                         "solu-varoitus")
+                                         ["solu-varoitus"])
                                        (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
-                                         "hennosti-korostettu-solu")
+                                         ["hennosti-korostettu-solu"])
                                        (when (false? (:korosta-hennosti? (and (vector? arvo) (second arvo))))
-                                         "solun-korostus-estetty"))))
+                                         ["solun-korostus-estetty"]))))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn

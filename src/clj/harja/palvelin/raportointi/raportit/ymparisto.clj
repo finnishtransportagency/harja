@@ -214,7 +214,7 @@
                                   (rest o)
                                   (if (= 0 nykyiset-lapset-cnt)
                                     res
-                                    ;; Ja jos materiaalila on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
+                                    ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
                                     ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
                                     ;; perusteella tavaraa, esim. (get avattavat-rivit 0). 
                                     (conj res idx)))))))
@@ -256,7 +256,7 @@
               suunniteltu (when-not (empty? suunnitellut)
                             (reduce + suunnitellut))
               luokitellut (filter :luokka rivit)
-              ;; Jos materiaalilla on hoitoluokkakohtaisia rivejä, nostetaan inantarivin-indeksiä yhdellä
+              ;; Jos materiaalilla on hoitoluokkakohtaisia rivejä, nostetaan isantarivin-indeksiä yhdellä
               ;; koska materiaalit, joilla ei ole niitä, ei löydy myöskään avattavat-rivit-vektorista.
               _ (when (seq luokitellut) (reset! isantarivi-indeksi (+ @isantarivi-indeksi 1)))
               kk-arvot (kk-arvot (kk-rivit rivit) materiaali yksikot-soluissa?)
