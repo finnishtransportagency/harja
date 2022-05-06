@@ -82,6 +82,7 @@
          [raporttivalinta tiedot/valittu-raportti tiedot/+mahdolliset-raportit+]
          [roolivalinta tiedot/valittu-rooli tiedot/+mahdolliset-roolit+]
          [formaattivalinta tiedot/valittu-formaatti tiedot/+mahdolliset-formaatit+]
+         [yleiset/vihje "Tilastotiedon kerääminen aloitettu 1.10.2021."]
          [:div.flex
           [raporttitieto-grid rivit]
           (when-not @tiedot/valittu-raportti
