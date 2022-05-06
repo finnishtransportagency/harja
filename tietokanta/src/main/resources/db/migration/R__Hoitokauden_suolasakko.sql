@@ -77,9 +77,10 @@ BEGIN
   SELECT SUM(kokonaismaara) INTO suolankaytto
     FROM raportti_toteutuneet_materiaalit rtm
              JOIN materiaalikoodi mk ON rtm."materiaali-id"=mk.id
-   WHERE mk.materiaalityyppi = 'talvisuola'::materiaalityyppi AND
-           rtm."urakka-id" = urakka_id AND
-       rtm.paiva BETWEEN hk_alkupvm AND hk_loppupvm;
+   WHERE (mk.materiaalityyppi = 'talvisuola'::materiaalityyppi
+              OR mk.materiaalityyppi = 'erityisalue'::materiaalityyppi)
+     AND rtm."urakka-id" = urakka_id
+     AND rtm.paiva BETWEEN hk_alkupvm AND hk_loppupvm;
 
   RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
 
