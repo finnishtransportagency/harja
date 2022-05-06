@@ -22,6 +22,13 @@
            (java.util.zip GZIPInputStream)
            (org.httpkit BytesInputStream)))
 
+
+(def cors-headers
+  "Palautetaan kutsujalle pari Cross-Origin Resource Sharing headeria, jotta kutsuja voi hyödyntää
+  Harjan palauttamia tietoja sisällön esittämiseksi omassa domainissaan sijaitsevalla sivustolla."
+      {"Access-Control-Allow-Origin" "*",
+       "Vary" "Origin"})
+
 (defn kutsun-formaatti
   "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Palautetaan nil, mikäli ei passaa kumpaankaan."
   [request]
@@ -185,13 +192,21 @@
                (json/validoi skeema vastaus)))
            {:status status
             :headers (if xml?
-                       {"Content-Type" "application/xml"}
-                       {"Content-Type" "application/json"})
+                       {"Content-Type" "application/xml",
+                        "Access-Control-Allow-Origin" "*",
+                        "Vary" "Origin"}
+                       {"Content-Type" "application/json",
+                        "Access-Control-Allow-Origin" "*",
+                        "Vary" "Origin"})
             :body vastaus})
          {:status status
           :headers (if xml?
-                     {"Content-Type" "application/xml"}
-                     {"Content-Type" "application/json"})}))
+                     {"Content-Type" "application/xml",
+                      "Access-Control-Allow-Origin" "*",
+                      "Vary" "Origin"}
+                     {"Content-Type" "application/json",
+                      "Access-Control-Allow-Origin" "*",
+                      "Vary" "Origin"})}))
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
@@ -353,7 +368,8 @@
     {:status 415
      :headers {"Content-Type" "text/plain"}
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
-    (let [xml? (= (kutsun-formaatti request) "xml")
+    (let [_ (println "REQUEST " request)
+          xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request body))
