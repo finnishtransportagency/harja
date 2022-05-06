@@ -56,6 +56,10 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
+(def ^{:doc "Template, jolla muodostetaan URL jonka avulla käyttäjä itse voi avata sijainnin Google Mapsissä" :private true :const true}
+  open-google-map-url-template
+  "https://maps.google.com/?q=%s,%s")
+
 (defn- otsikko
   "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
    sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
@@ -94,8 +98,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:img {:src (format goole-static-map-url-template
-                             lat lon google-static-maps-key)}]))
+         [:img {:src (format open-google-map-url-template lat lon)}]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
