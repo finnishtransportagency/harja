@@ -88,5 +88,5 @@ UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokk
 WHERE nimi = 'Sorastus' AND taso = 4;
 
 -- Korjataan sorastuksen yksikkö
-UPDATE toimenpidekoodi SET yksikko = 'tonni' AND suunnitteluyksikko = 'tonni'
+UPDATE toimenpidekoodi SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
 WHERE nimi = 'Sorastus' AND taso = 4;
