@@ -653,7 +653,7 @@
                           {:status 200 :body "[]"})
         fake-tunnisteet-2 (fn [_ {:keys [body headers url]} _]
                             (let [jalkeen (->> url
-                                               (re-find #"jalkeen=(.*)")
+                                               (re-find #"alkumuokkausaika=(.*)")
                                                second
                                                pvm/iso-8601->aika)]
                               (is (= odotettu-viimeisin-aika jalkeen)))

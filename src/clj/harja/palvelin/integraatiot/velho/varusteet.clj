@@ -335,7 +335,7 @@
   [lahde varuste-api-juuri viimeksi-haettu-velhosta]
   (let [viimeksi-haettu-iso-8601 (varuste-vastaanottosanoma/aika->velho-aika viimeksi-haettu-velhosta)]
     (str varuste-api-juuri "/" (:palvelu lahde) "/api/" (:api-versio lahde)
-         "/tunnisteet/" (:kohdeluokka lahde) "?jalkeen="
+         "/tunnisteet/" (:kohdeluokka lahde) "?alkumuokkausaika="
          (http/url-encode viimeksi-haettu-iso-8601))))
 
 
@@ -450,10 +450,10 @@
                       viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
                       tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                       tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
-                      tallenna-toteuma-fn (fn [{:keys [kohdeluokka] :as kohde}]
+                      tallenna-toteuma-fn (fn [{:keys [kohdeluokka muokattu oid] :as kohde}]
                                             (if (= tietolahteen-kohdeluokka kohdeluokka)
                                               (do
-                                                (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " (:oid kohde)
+                                                (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
                                                            " version-voimassaolo.alku: " (get-in kohde [:version-voimassaolo :alku]))
                                                 (let [{varustetoteuma :tulos
                                                        virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma db kohde)]
@@ -464,14 +464,19 @@
                                                         (lokita-ja-tallenna-hakuvirhe
                                                           db kohde
                                                           (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                               (:oid kohde) " muokattu: " (:muokattu kohde) " validointivirhe: " virheviesti))
+                                                               (format "%s muokattu: %s validointivirhe: %s"
+                                                                       oid muokattu virheviesti)))
 
                                                         :else
                                                         :ohita)))
                                               (lokita-ja-tallenna-hakuvirhe
                                                 db kohde
-                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei ole oikeasta kohdeluokasta "
-                                                     (:oid kohde) " muokattu: " (:muokattu kohde) " odotettu kohdeluokka: " tietolahteen-kohdeluokka " saatu kohdeluokka: " kohdeluokka))))]
+                                                (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei ole oikeasta kohdeluokasta"
+                                                     (format "%s muokattu: %s odotettu kohdeluokka: %s saatu kohdeluokka: %s"
+                                                             oid
+                                                             muokattu
+                                                             tietolahteen-kohdeluokka
+                                                             kohdeluokka)))))]
                   (hae-ja-tallenna
                     tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                     token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))
