@@ -100,7 +100,7 @@
 
 (defn- materiaalien-jarjestys-ymparistoraportilla
   [materiaalinimi]
-  (if (= "Kaikki talvisuola yhteensä" materiaalinimi)
+  (if (= talvisuola-yht-rivi-materiaali materiaalinimi)
     7.5
     (materiaalidomain/materiaalien-jarjestys materiaalinimi)))
 
@@ -258,7 +258,7 @@
                               materiaalit)]
     (group-by ryhmittely-fn valitut-materiaalit)))
 
-(defn materiaalit-summattuna-ja-ryhmiteltyna [urakoittain? materiaalityyppi-ryhmiteltyna]
+(defn materiaalit-summattuna-ja-ryhmiteltyna [urakoittain? materiaalityyppi-ryhmiteltyna yht-rivi-materiaali]
   (map (fn [[ryhmittelyavain rivit]]
          {(if urakoittain?
             ;; [kk urakka]
@@ -266,7 +266,7 @@
             ;; kk
             [ryhmittelyavain])
           (assoc (first rivit) :maara (reduce + (keep :maara rivit))
-                               :materiaali materiaali-kaikki-talvisuola-yhteensa
+                               :materiaali yht-rivi-materiaali
                                :urakka (if urakoittain?
                                          (:urakka (first rivit))
                                          nil))})
@@ -316,13 +316,13 @@
                                                    materiaalit-kannasta "murske")
 
         talvisuola-toteumat-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? talvisuola-toteumat-yhteensa-ryhmiteltyna)
+        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? talvisuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-talvisuola-yhteensa)
         kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? formiaatti-toteumat-yhteensa-ryhmiteltyna)
+        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? formiaatti-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-formiaatit-yhteensa)
         kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? kesasuola-toteumat-yhteensa-ryhmiteltyna)
+        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? kesasuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-kesasuolat-yhteensa)
         kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? murske-toteumat-yhteensa-ryhmiteltyna)
+        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? murske-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-murskeet-yhteensa)
 
 
         talvisuola-toteumat-ryhmiteltyna-ja-summattuna
