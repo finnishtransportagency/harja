@@ -454,7 +454,8 @@
                                                         (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
                                                                    " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
                                                         (let [{varustetoteuma :tulos
-                                                               virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma db kohde)]
+                                                               virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma
+                                                                                           db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
                                                           (cond varustetoteuma
                                                                 (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
 
