@@ -1,8 +1,6 @@
 (ns harja.tiedot.urakka.toteumat.maarien-toteumat
   "UI controlleri määrien toteutumille"
-  (:require [reagent.core :refer [atom] :as r]
-            [cljs.core.async :refer [<!]]
-            [harja.loki :refer [log tarkkaile!]]
+  (:require [reagent.core :as r]
             [tuck.core :refer [process-event] :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.domain.toteuma :as t]
@@ -12,9 +10,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
-            [namespacefy.core :as namespacefy])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]))
+            [namespacefy.core :as namespacefy]))
 
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
@@ -259,22 +255,21 @@
   HaeTehtavanToteumat
   (process-event [{tehtava :tehtava} app]
     ;; Avataan tai suljetaan rivi
-    (do
-      (if (= (:avattu-tehtava app) (:tehtava tehtava))
+    (if (= (:avattu-tehtava app) (:tehtava tehtava))
+      (-> app
+        (dissoc :haetut-toteumat)
+        (dissoc :avattu-tehtava))
+      (do
+        (tuck-apurit/post! :hae-tehtavan-toteumat
+          {:urakka-id (-> @tila/yleiset :urakka :id)
+           :toimenpidekoodi-id (:toimenpidekoodi_id tehtava)
+           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
+          {:onnistui ->HaeTehtavanToteumatOnnistui
+           :epaonnistui ->HaeTehtavanToteumatEpaonnistui})
         (-> app
+          (assoc :haetut-toteumat-lataa true)
           (dissoc :haetut-toteumat)
-          (dissoc :avattu-tehtava))
-        (do
-          (tuck-apurit/post! :hae-tehtavan-toteumat
-                             {:urakka-id (-> @tila/yleiset :urakka :id)
-                              :toimenpidekoodi-id (:toimenpidekoodi_id tehtava)
-                              :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
-                             {:onnistui ->HaeTehtavanToteumatOnnistui
-                              :epaonnistui ->HaeTehtavanToteumatEpaonnistui})
-          (-> app
-              (assoc :haetut-toteumat-lataa true)
-              (dissoc :haetut-toteumat)
-              (assoc :avattu-tehtava (:tehtava tehtava)))))))
+          (assoc :avattu-tehtava (:tehtava tehtava))))))
 
   HaeTehtavanToteumatOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -623,16 +618,7 @@
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/lisatieto] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/maara] nil)
                   true (assoc-in [:lomake ::t/toteumat 0 ::t/ei-sijaintia] true)
-                  true (assoc-in [:lomake ::t/pvm] (uusi-pvm-lomakkeelle app)))
-          lomake (get app :lomake)
-          ;Valitoidaan lomake - ehkä on parmepi, ettei valitoida kun aletaan syöttämään tyhjää lomaketta?
-          ;{:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
-          ;{:keys [validi? validius]} (validoi validoinnit lomake)
-          ;app
-          #_(-> app
-                (assoc-in [:lomake ::tila/validius] validius)
-                (assoc-in [:lomake ::tila/validi?] validi?))]
-      #_ (hae-toimenpiteelle-tehtavat-ja-aseta toimenpide tehtava)
+                  true (assoc-in [:lomake ::t/pvm] (uusi-pvm-lomakkeelle app)))]
       (hae-tehtavat toimenpide tehtava)
       app))
 
@@ -676,22 +662,14 @@
     (viesti/nayta! "Toteuman tallennus epäonnistui!" :danger)
     app))
 
-(defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi aikavali-alkupvm aikavali-loppupvm]
-  (let [alkupvm (when hoitokauden-alkuvuosi
-                  (str hoitokauden-alkuvuosi "-10-01"))
-        #_alkupvm #_(if aikavali-alkupvm
-                      aikavali-alkupvm alkupvm)
-        loppupvm (when hoitokauden-alkuvuosi
-                   (str (inc hoitokauden-alkuvuosi) "-09-30"))
-        #_loppupvm #_(if aikavali-loppupvm
-                       aikavali-loppupvm loppupvm)]
-    (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
-                       {:urakka-id urakka-id
-                        :tehtavaryhma (:id toimenpide)
-                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
-                       {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
-                        :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
-                        :paasta-virhe-lapi? true})))
+(defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
+  (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
+    {:urakka-id urakka-id
+     :tehtavaryhma (:id toimenpide)
+     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
+    {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
+     :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
+     :paasta-virhe-lapi? true}))
 
 (defn- hae-tehtavat
   ([toimenpide] (hae-tehtavat toimenpide nil))
