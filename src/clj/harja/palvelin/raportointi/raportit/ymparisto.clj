@@ -188,7 +188,7 @@
 
 (def isantarivi-indeksi (atom -1))
 
-(defn koosta-taulukko [otsikko konteksti kuukaudet urakoittain? osamateriaalit yht-rivi yksikot-soluissa?]
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?] :as taulukon-tiedot}]
   (let [
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
@@ -339,8 +339,7 @@
 
                                   [(yhteensa-kentta (vals kk-arvot) true)
                                    nil nil]))}))
-               (sort-by first (group-by :luokka luokitellut)))
-             (when yht-rivi yht-rivi))))
+               (sort-by first (group-by :luokka luokitellut))))))
        osamateriaalit)]))
 
 (defn summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan [urakoittain? materiaalit-kannasta materiaalityyppi]
@@ -483,7 +482,13 @@
                                     (keep (fn [rivi]
                                             (when (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi]))
                                               rivi))
-                                      materiaalit))]
+                                      materiaalit))
+        taulukon-tiedot {:otsikko nil
+                         :osamateriaalit nil
+                         :konteksti konteksti
+                         :kuukaudet kuukaudet
+                         :urakoittain? urakoittain?
+                         :yksikot-soluissa? false}]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -492,16 +497,23 @@
        [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
      [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]
 
-     (koosta-taulukko "Talvisuolat" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "talvisuola") nil false)
-     (koosta-taulukko "Formiaatit" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "formiaatti") nil false)
-     (koosta-taulukko "Kesäsuola" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "kesasuola") nil false)
-     (koosta-taulukko "Hiekoitushiekka" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "hiekoitushiekka") nil false)
-     (koosta-taulukko "Murskeet" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "murske") nil false)
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Talvisuolat")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "talvisuola"))))
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Formiaatit")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "formiaatti"))))
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Kesäsuola")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "kesasuola"))))
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Hiekoitushiekka")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "hiekoitushiekka"))))
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Murskeet")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
      ;; TODO: Piilota kaksi viimeistä saraketta
-     (koosta-taulukko "Muut materiaalit" konteksti kuukaudet urakoittain?
-       (materiaalit-tyypin-mukaan "muu") nil true)]))
+     (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Muut materiaalit")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
+                        (assoc :yksikot-soluissa? true)))]))
