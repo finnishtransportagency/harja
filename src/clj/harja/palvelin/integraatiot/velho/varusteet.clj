@@ -406,7 +406,7 @@
     (try
       (q-toteumat/luo-varustetoteuma-ulkoiset<! db varustetoteuma)
       (catch PSQLException e
-        (if (= (str/includes? (.getMessage e) "duplicate key value violates unique constraint"))
+        (if (str/includes? (.getMessage e) "varustetoteuma_ulkoiset_unique_versio")
           (try
             (log/warn "Päivitetään varustetoteuma oid: "
                       (:ulkoinen_oid varustetoteuma) " alkupvm: "
