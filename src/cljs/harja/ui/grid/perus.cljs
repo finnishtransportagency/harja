@@ -197,7 +197,7 @@
                            mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
                            data esta-tiivis-grid? avattavat-rivit isanta-rivin-id] :as rivin-data}
                    skeema rivi index]
-  [:tr {:class [luokka
+  [:tr {:class (str luokka
                 (when (= id @valittu-rivi)
                   " rivi-valittu")
                 ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
@@ -205,7 +205,7 @@
                 (when (and isanta-rivin-id (not= isanta-rivin-id (avattavat-rivit-auki? ohjaus isanta-rivin-id)))
                   " hide")
                 (when isanta-rivin-id
-                  "avattava-rivi")]
+                  "avattava-rivi"))
         :on-click #(kasittele-rivin-klikkaus
                      {:rivi-klikattu rivi-klikattu
                       :rivi-valinta-peruttu rivi-valinta-peruttu
