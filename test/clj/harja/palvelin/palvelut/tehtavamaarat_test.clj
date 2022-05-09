@@ -59,10 +59,10 @@
 
 
 (def paivitettavat-olemassaolevat-tehtavat
-  [{:tehtava-id id-opastustaulut :maara 111}
-   {:tehtava-id id-palteiden-poisto :maara 666.7}
-   {:tehtava-id id-K2 :maara 666.6}
-   {:tehtava-id id-ib-rampit :maara 444}])
+  [{:tehtava-id id-opastustaulut :maara 111 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-palteiden-poisto :maara 666.7 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-K2 :maara 666.6 :hoitokauden-alkuvuosi 2020}
+   {:tehtava-id id-ib-rampit :maara 444 :hoitokauden-alkuvuosi 2020}])
 
 (def uudet-tehtavat
   [{:tehtava-id id-kalium :maara 555 :hoitokauden-alkuvuosi 2020}
@@ -140,7 +140,7 @@
                                                                         :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-paivita (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                                        :hoitokauden-alkuvuosi 2020
+                                                                        :nykyinen-hoitokausi 2020
                                                                         :tehtavamaarat         paivitettavat-olemassaolevat-tehtavat})
         tehtavamaarat-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
                                             :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -207,7 +207,7 @@
     
     ;; aluetieto muuttui
     (let [tehtava (hae-tehtava id-ise-rampit @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)]
-      (is (= (get tehtava :aluemaara) 666M) "Lisäys lisäsi muuttuneen aluemaaran."))
+      (is (= (get-in tehtava [:maarat 2020]) 666M) "Lisäys lisäsi muuttuneen aluemaaran."))
 
     ;; uuden hoitokauden lisäys
     #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
@@ -236,51 +236,51 @@
 (deftest tehtavahierarkian-haku-maarineen-testi
   (kutsu-palvelua (:http-palvelin jarjestelma)
     :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                            :hoitokauden-alkuvuosi 2022
+                                            :nykyinen-hoitokausi 2022
                                             :tehtavamaarat         uuden-hoitokauden-tehtavat})
   (let [tehtavat-ja-maarat (kutsu-palvelua
                              (:http-palvelin jarjestelma)
                              :tehtavamaarat-hierarkiassa
                              +kayttaja-jvh+
                              {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                              :hoitokauden-alkuvuosi 2020})
-        tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
+                              :hoitokauden-alkuvuosi 2020})]
+    (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle"))
+  (let [tehtavat-ja-maarat-urakan-ulkopuolelta (kutsu-palvelua
                                                  (:http-palvelin jarjestelma)
                                                  :tehtavamaarat-hierarkiassa
                                                  +kayttaja-jvh+
                                                  {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                                  :hoitokauden-alkuvuosi 2028})
-        tehtavat-ja-maarat-kaikki (kutsu-palvelua
+                                                  :hoitokauden-alkuvuosi 2028})]
+    (is (empty? (filter #(and
+                         (not= 0 (:maara %))
+                         (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä"))
+  (let [tehtavat-ja-maarat-kaikki (kutsu-palvelua
                                     (:http-palvelin jarjestelma)
                                     :tehtavamaarat-hierarkiassa
                                     +kayttaja-jvh+
                                     {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
-                                     :hoitokauden-alkuvuosi :kaikki})
-        tehtavat-ja-maarat-ei-urakkaa (kutsu-palvelua
+                                     :hoitokauden-alkuvuosi :kaikki})]
+    (is (true? (let [maaralliset (filter 
+                                 #(some? (:maarat %)) 
+                                 (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
+               
+               (and (some #(contains? (:maarat %) 2020) maaralliset)
+                 (some #(contains? (:maarat %) 2022) maaralliset)))) "Palauttaa kaikki määrät"))
+  (let [tehtavat-ja-maarat-ei-urakkaa (kutsu-palvelua
                                         (:http-palvelin jarjestelma)
                                         :tehtavamaarat-hierarkiassa
                                         +kayttaja-jvh+
                                         {:urakka-id             904569045
                                          :hoitokauden-alkuvuosi 2020})]
-    (is (true? (every? #(= 2020 (:hoitokauden-alkuvuosi %)) (filter #(not (nil? (:hoitokauden-alkuvuosi %))) tehtavat-ja-maarat))) "Palauttaa tehtavahiearkian määrineen vuodelle")
-    (is (empty? (filter #(and
-                           (not= 0 (:maara %))
-                           (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä")
-    (is (true? (let [maaralliset (filter 
-                                   #(some? (:maarat %)) 
-                                   (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
-                 
-                 (and (some #(contains? (:maarat %) 2020) maaralliset)
-                      (some #(contains? (:maarat %) 2022) maaralliset)))) "Palauttaa kaikki määrät")
     (is (every? #(and (nil? (:urakka %))
-                      (nil? (:hoitokauden-alkuvuosi %))
-                      (or (= 0 (:maara %))
-                          (nil? (:maara %)))) tehtavat-ja-maarat-ei-urakkaa) "Tietoja ei löydy, jos ei urakkaa")
-    (is (thrown? IllegalArgumentException (kutsu-palvelua
-                                            (:http-palvelin jarjestelma)
-                                            :tehtavamaarat-hierarkiassa
-                                            +kayttaja-jvh+
-                                            {})) "Virhe jos ei parametria")))
+                 (nil? (:hoitokauden-alkuvuosi %))
+                 (or (= 0 (:maara %))
+                   (nil? (:maara %)))) tehtavat-ja-maarat-ei-urakkaa) "Tietoja ei löydy, jos ei urakkaa"))
+  (is (thrown? IllegalArgumentException (kutsu-palvelua
+                                          (:http-palvelin jarjestelma)
+                                          :tehtavamaarat-hierarkiassa
+                                          +kayttaja-jvh+
+                                          {})) "Virhe jos ei parametria"))
 
 (deftest tallenna-sopimuksen-tehtavamaara-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
