@@ -453,14 +453,17 @@
           rivi-ennen)])
      [:tr
       (map-indexed
-        (fn [i {:keys [otsikko leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
+        (fn [i {:keys [otsikko otsikko-komp leveys nimi otsikkorivi-luokka tasaa] :as s-opts}]
           ^{:key (str i nimi)}
           [:th {:class (y/luokat otsikkorivi-luokka
                                  (y/tasaus-luokka tasaa)
                                  (grid-yleiset/tiivis-tyyli skeema))
                 :width (or leveys "5%")
                 :on-click (when otsikkorivi-klikattu #(otsikkorivi-klikattu s-opts))}
-           otsikko]) skeema)
+           (if otsikko-komp
+             [otsikko-komp]
+             otsikko)
+           ]) skeema)
       (when (or nayta-toimintosarake?
                 (and (not piilota-toiminnot?)
                      tallenna))
@@ -673,6 +676,7 @@
   :fmt                                  kentän näyttämis-fn (oletus str). Ottaa argumenttina kentän arvon.
   :hae                                  funktio, jolla voidaan näyttää arvo kentässä. Ottaa argumenttina koko rivin.
   :otsikko                              ihmiselle näytettävä otsikko
+  :otsikko-komp                         jos haluaa viedä sarakkeen yläriviin (theadin th) toiminnallisuutta, kuten checkboxin
 
   :solun-luokka                         funktio, joka palauttaa solun luokan\n
   :tyyppi                               kentän tietotyyppi,  #{:string :puhelin :email :pvm}

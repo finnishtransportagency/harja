@@ -86,8 +86,20 @@
      {:luokka "medium pull-left"
       :disabled (or disabled lukittu?)}]))
 
+(defn poistamisen-varmistus-dialogi-fn [materiaalin-str massa-str toiminto-fn]
+  (varmista-kayttajalta/varmista-kayttajalta
+    {:otsikko (str materiaalin-str " poistaminen")
+     :sisalto
+     [:div (str "Haluatko ihan varmasti poistaa "
+                (str/lower-case materiaalin-str)
+                " "
+                massa-str
+                "?")]
+     :toiminto-fn toiminto-fn
+     :hyvaksy "Kyllä"}))
+
 (defn poista-materiaali-nappi
-  [materiaali-kaytossa toiminto-fn tyyppi]
+  [materiaali-kaytossa materiaalin-nimi toiminto-fn tyyppi]
   (assert (#{:massa :murske} tyyppi) "Poistettavan tyyppi oltava massa tai murske")
   (let [lukittu? (some #(str/includes? % "lukittu")
                        (map :tila materiaali-kaytossa))
@@ -96,12 +108,7 @@
      [napit/poista
       "Poista"
       (fn []
-        (varmista-kayttajalta/varmista-kayttajalta
-          {:otsikko (str materiaalin-str " poistaminen")
-           :sisalto
-           [:div (str "Haluatko ihan varmasti poistaa tämän " (clojure.string/lower-case materiaalin-str) "?")]
-           :toiminto-fn toiminto-fn
-           :hyvaksy "Kyllä"}))
+        (poistamisen-varmistus-dialogi-fn materiaalin-str materiaalin-nimi toiminto-fn))
       {:disabled (not (empty? materiaali-kaytossa))
        :luokka "medium pull-left"}]
      (when (and (not lukittu?)
@@ -110,7 +117,8 @@
 
 (defn tallennus-ja-puutelistaus
   [e! {:keys [data validointivirheet tallenna-fn voi-tallentaa?
-              peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?]}]
+              peruuta-fn poista-fn tyyppi id materiaali-kaytossa voi-muokata?
+              materiaalin-nimi]}]
   [:div
    [puutelistaus data validointivirheet]
    [:div
@@ -119,7 +127,7 @@
        voi-tallentaa?
        tyyppi])
     (when (and id voi-muokata?)
-      [poista-materiaali-nappi materiaali-kaytossa poista-fn tyyppi])
+      [poista-materiaali-nappi materiaali-kaytossa materiaalin-nimi poista-fn tyyppi])
     [napit/yleinen (if voi-muokata? "Peruuta" "Sulje") :toissijainen peruuta-fn
      {:luokka "medium pull-right"}]]
    [materiaalin-kaytto materiaali-kaytossa]])
@@ -137,9 +145,23 @@
                                              :fmt :komponentti :toiminto-fn toiminto-fn}]]))
 
 (defn materiaalirivin-toiminnot [e! rivi]
-  (let [muokkaus-event (if (contains? rivi :harja.domain.pot2/murske-id)
+  (let [murske? (contains? rivi :harja.domain.pot2/murske-id)
+        kaytossa? (boolean (not-empty (::pot2-domain/kaytossa rivi)))
+        muokkaus-event (if murske?
                          mk-tiedot/->MuokkaaMursketta
-                         mk-tiedot/->MuokkaaMassaa)]
+                         mk-tiedot/->MuokkaaMassaa)
+        poisto-event (if murske?
+                       mk-tiedot/->PoistaMurske
+                       mk-tiedot/->PoistaMassa)
+        poiston-tooltip (if kaytossa?
+                          "Materiaalia on jo kirjattu, eikä sitä voida poistaa."
+                          "Poista")
+        materiaalityypin-str (if murske?
+                          "Murskeen "
+                          "Massan ")
+        materiaalin-nimi-str (if murske?
+                               (::pot2-domain/murskeen-nimi rivi)
+                               (::pot2-domain/massan-nimi rivi))]
     [:span.pull-right.materiaalitoiminnot
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Muokkaa"]
@@ -147,7 +169,7 @@
        #(e! (muokkaus-event rivi false))
        {:luokka "napiton-nappi btn-xs"
         :ikoninappi? true
-        :ikoni (ikonit/action-edit)}]]
+        :ikoni (ikonit/harja-icon-action-edit)}]]
 
      [yleiset/wrap-if true
       [yleiset/tooltip {} :% "Luo kopio"]
@@ -155,12 +177,30 @@
        #(e! (muokkaus-event rivi true))
        {:luokka "napiton-nappi btn-xs"
         :ikoninappi? true
-        :ikoni (ikonit/action-copy)}]]]))
+        :ikoni (ikonit/harja-icon-action-copy)}]]
+
+     [yleiset/wrap-if true
+      [yleiset/tooltip {} :% poiston-tooltip]
+      [napit/nappi ""
+       (when-not kaytossa?
+         (fn []
+           (poistamisen-varmistus-dialogi-fn materiaalityypin-str
+                                             materiaalin-nimi-str
+                                             (fn [_]
+                                               (e! (poisto-event (if murske?
+                                                                   (::pot2-domain/murske-id rivi)
+                                                                   (::pot2-domain/massa-id rivi))))))))
+       {:luokka (yleiset/luokat "napiton-nappi"
+                                "btn-xs"
+                                ;; halutaan laittaa disabledista vain luokka, koska napin disabled häiritsee tooltipin toimintaa
+                                (when kaytossa? "disabled"))
+        :ikoninappi? true
+        :ikoni (ikonit/harja-icon-action-delete)}]]]))
 
 (defn muokkaa-nappi [muokkaa-fn]
-  {:nimi ::pot2-domain/muokkaus :otsikko "" :tyyppi :komponentti :palstoja 3
+  {:nimi ::pot2-domain/muokkaus :otsikko " " :tyyppi :komponentti :palstoja 3
    :piilota-label? true
    :komponentti (fn [rivi]
-                  [napit/muokkaa "Muokkaa"
+                  [napit/muokkaa " Muokkaa "
                    #(yleiset/fn-viiveella muokkaa-fn)
-                   {:luokka "napiton-nappi"}])})
+                   {:luokka " napiton-nappi "}])})

@@ -88,7 +88,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-kohteet
                                 +kayttaja-jvh+
-                                {::ur/id (hae-saimaan-kanavaurakan-id)})]
+                                {::ur/id (hae-urakan-id-nimella "Saimaan kanava")})]
     (is (true? (every? (comp some? ::kohde/nimi) vastaus)))))
 
 (deftest urakan-kohteiden-haku
@@ -100,7 +100,7 @@
 (deftest kohteen-liittaminen-urakkaan
   (testing "Uuden linkin lisääminen"
     (let [kohde-id (hae-kohde-iisalmen-kanava)
-          urakka-id (hae-saimaan-kanavaurakan-id)
+          urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
@@ -119,7 +119,7 @@
 
   (testing "Linkin poistaminen"
     (let [kohde-id (hae-kohde-soskua)
-          urakka-id (hae-saimaan-kanavaurakan-id)
+          urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))
@@ -138,7 +138,7 @@
 
   (testing "Linkin palauttaminen"
     (let [kohde-id (hae-kohde-soskua)
-          urakka-id (hae-saimaan-kanavaurakan-id)
+          urakka-id (hae-urakan-id-nimella "Saimaan kanava")
           linkki (first (q (str "SELECT * FROM kan_kohde_urakka WHERE \"kohde-id\" = " kohde-id
                                 " AND \"urakka-id\" =" urakka-id ";")))
           _ (is (and (some? kohde-id) (some? urakka-id)))

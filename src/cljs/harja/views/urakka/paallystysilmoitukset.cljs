@@ -305,4 +305,7 @@
             [ilmoitusluettelo e! app]]))
        (when-not paikkauskohteet?
          [massat-view/materiaalikirjasto-modal e! (select-keys app #{:massat :murskeet :materiaalikoodistot
-                                                                     :pot2-massa-lomake :pot2-murske-lomake})])])))
+                                                                     :pot2-massa-lomake :pot2-murske-lomake
+                                                                     :muut-urakat-joissa-materiaaleja
+                                                                     :nayta-muista-urakoista-tuonti?
+                                                                     :materiaalit-toisesta-urakasta})])])))

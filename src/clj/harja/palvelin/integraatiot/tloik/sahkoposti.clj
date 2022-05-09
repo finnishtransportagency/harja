@@ -56,6 +56,10 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
+(def ^{:doc "Template, jolla muodostetaan URL jonka avulla käyttäjä itse voi avata sijainnin Google Mapsissä" :private true :const true}
+  open-google-map-url-template
+  "https://maps.google.com/?q=%s,%s")
+
 (defn- otsikko
   "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
    sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
@@ -74,7 +78,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
-(defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
+(defn- viesti [vastausosoite otsikko ilmoitus]
   (html
     [:div
      [:table
@@ -94,16 +98,16 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:img {:src (format goole-static-map-url-template
-                             lat lon google-static-maps-key)}]))
+         [:a {:href (format open-google-map-url-template lat lon)
+              :target "_blank"
+              :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
-(defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
+(defn otsikko-ja-viesti [vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
-        viesti (viesti vastausosoite otsikko ilmoitus
-                       google-static-maps-key)]
+        viesti (viesti vastausosoite otsikko ilmoitus)]
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]

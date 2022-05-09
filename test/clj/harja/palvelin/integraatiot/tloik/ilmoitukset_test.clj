@@ -76,7 +76,7 @@
   (tuo-ilmoitus)
   (let [ilmoitukset (hae-testi-ilmoitukset)
         ilmoitus (first ilmoitukset)
-        urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)]
+        urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")]
     (is (= 1 (count ilmoitukset)) "Viesti on käsitelty ja tietokannasta löytyy ilmoitus T-LOIK:n id:llä.")
     (is (= (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss")
                        (tc/from-date (:ilmoitettu ilmoitus)))
@@ -149,7 +149,7 @@
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
-    (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
           ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                                        kayttaja portti))]
       (async/<!! (async/timeout timeout))
@@ -195,7 +195,7 @@
                                             :loppu (t/now)
                                             :vastuuhenkilo true
                                             :varahenkilo true}))]
-     (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+     (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true&suljeVastauksenJalkeen=false"]
                                   kayttaja portti))
            testi-sanoma (testi-ilmoitus-sanoma)]

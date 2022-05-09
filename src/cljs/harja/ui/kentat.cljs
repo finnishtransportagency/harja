@@ -488,7 +488,7 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id]}]
+  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
@@ -507,7 +507,9 @@
                            (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
-                             :class (str label-luokka (when disabled? " disabled"))
+                             :class (y/luokat label-luokka
+                                              (when disabled? "disabled")
+                                              (when indeterminate "indeterminate"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
@@ -649,7 +651,8 @@
                                            :disabled? disabled?
                                            :valitse! valitse!
                                            :arvo arvo
-                                           :label-luokka label-luokka})]
+                                           :label-luokka label-luokka
+                                           :indeterminate (= ::indeterminate data)})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
