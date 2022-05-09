@@ -95,6 +95,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2019'::INT
                                                               AND urakka = " urakka-id)))
@@ -103,6 +104,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2020'::INT
                                                               AND urakka = " urakka-id)))
@@ -111,6 +113,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2021'::INT
                                                               AND urakka = " urakka-id)))]
