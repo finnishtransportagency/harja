@@ -83,7 +83,7 @@
        :viesti (format "Tuntematon urakkatyyppi: %s" (:urakkatyyppi parametrit))})))
 
 (defn- paivita-tai-luo-uusi-paivystys [db urakka-id {:keys [alku loppu varahenkilo vastuuhenkilo id]} paivystaja-id kirjaaja]
-  (if (yhteyshenkilot-q/onko-olemassa-paivystys-ulkoisella-idlla? db id (:id kirjaaja))
+  (if (yhteyshenkilot-q/onko-olemassa-paivystys-ulkoisella-idlla? db urakka-id id)
     (do
       (log/debug "Päivitetään päivystys.")
       (yhteyshenkilot-q/paivita-paivystys-ulkoisella-idlla<!
@@ -93,8 +93,9 @@
         varahenkilo
         vastuuhenkilo
         paivystaja-id
+        (:id kirjaaja)
         id
-        (:id kirjaaja)))
+        urakka-id))
     (do
       (log/debug "Luodaan uusi päivystys.")
       (yhteyshenkilot-q/luo-paivystys<!
