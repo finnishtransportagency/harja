@@ -299,15 +299,19 @@
 
                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                          [(yhteensa-kentta (vals kk-arvot) true)
-                          [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
-                                                        :yksikko (when suunniteltu (:yksikko materiaali))
-                                                        :desimaalien-maara 2
-                                                        :korosta-hennosti? false}]
-                          [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
-                                                        :yksikko (when suunniteltu "%")
-                                                        :desimaalien-maara 2
-                                                        :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                        :korosta-hennosti? false}]]))})]
+                          (if (nil? suunniteltu)
+                            nil
+                            [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
+                                                          :yksikko (when suunniteltu (:yksikko materiaali))
+                                                          :desimaalien-maara 2
+                                                          :korosta-hennosti? false}])
+                          (if (nil? toteuma-prosentti)
+                            nil
+                            [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
+                                                          :yksikko (when suunniteltu "%")
+                                                          :desimaalien-maara 2
+                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                          :korosta-hennosti? false}])]))})]
 
              ;; Mahdolliset hoitoluokkakohtaiset rivit
              (mapv (fn [[luokka rivit]]
