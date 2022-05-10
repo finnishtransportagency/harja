@@ -193,7 +193,6 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
           :on-click (when avattava-rivi?
                       #(do (.preventDefault %)
                            (.stopPropagation %)
-                           (js/console.log "Klikkasit avattavaa riviä")
                            (avaa-tai-sulje-avattavat-rivit! ohjaus id)))}
      (when avattava-rivi?
        [:div.vetolaatikon-sailio
