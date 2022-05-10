@@ -129,9 +129,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
         (avattavat-rivit-auki? @gridi id))
 
       (avaa-avattavat-rivit! [_ id]
-        (do
-          (js/console.log "reify kutsuttiin avaa-avattavat rivit " (pr-str @gridi) (pr-str id))
-          (avaa-avattavat-rivit! @gridi id)))
+        (avaa-avattavat-rivit! @gridi id))
 
       (sulje-avattavat-rivit! [_ id]
         (sulje-avattavat-rivit! @gridi id))
