@@ -199,13 +199,13 @@
                    skeema rivi index]
   [:tr {:class (str luokka
                 (when (= id @valittu-rivi)
-                  " rivi-valittu")
+                  " rivi-valittu ")
                 ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
                 ;; mutta ne piilotetaan taulukon eheyden säilyttämiseksi.
                 (when (and isanta-rivin-id (not= isanta-rivin-id (avattavat-rivit-auki? ohjaus isanta-rivin-id)))
-                  " hide")
+                  " piilota ")                                  ;; Todo Vaihda teksti hide -> piilota
                 (when isanta-rivin-id
-                  "avattava-rivi"))
+                  " avattava-rivi "))
         :on-click #(kasittele-rivin-klikkaus
                      {:rivi-klikattu rivi-klikattu
                       :rivi-valinta-peruttu rivi-valinta-peruttu
@@ -764,7 +764,7 @@
                                         jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
   :avattavat-rivit                      {id [vectori rivin idekseistä]} sisältää tiedot avattavista riveistä. id on rivin id ja avain tässä mäpissä.
-                                        avataan rivi, jonka indeksi löytyy käytetin avaimen alta
+                                        avataan rivi, jonka indeksi löytyy käytetin avaimen alta. Toimii vain näyttökäyttöliittymässä
   :ei-footer-muokkauspaneelia?          Jos true, muokkauspaneelia ei koskaan piirretä gridin alaosaan.
   :vetolaatikot-auki                    Ulkopuolelta annettu tila vetolaatikoille (atom, jonka arvo on setti)
   :avattavat-rivit-auki                 Ulkopuolelta annettu tila avattaville riveille (atom, jonka arvo on setti)
@@ -1177,7 +1177,7 @@
                                            :tyhja tyhja :virheet virheet :varoitukset varoitukset
                                            :huomautukset huomautukset :fokus fokus :ohjaus ohjaus
                                            :vetolaatikot vetolaatikot
-                                           :avattavat-rivit avattavat-rivit
+                                           :avattavat-rivit avattavat-rivit ;; TODO: Ominaisuutta ei ole testattu muokkauksessa
                                            :muokkaa! muokkaa!
                                            :voi-poistaa? voi-poistaa?
                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?

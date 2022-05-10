@@ -133,15 +133,13 @@
                    :solun-luokka (fn [arvo _rivi]
                                    ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
                                    ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
-                                   (str/join
-                                     " "
-                                     (conj
-                                       (when (:varoitus? (and (vector? arvo) (second arvo)))
-                                         ["solu-varoitus"])
-                                       (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
-                                         ["hennosti-korostettu-solu"])
-                                       (when (false? (:korosta-hennosti? (and (vector? arvo) (second arvo))))
-                                         ["solun-korostus-estetty"]))))
+                                   (str
+                                     (when (:varoitus? (and (vector? arvo) (second arvo)))
+                                       " solu-varoitus ")
+                                     (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
+                                       " hennosti-korostettu-solu ")
+                                     (when (false? (:korosta-hennosti? (and (vector? arvo) (second arvo))))
+                                       " solun-korostus-estetty ")))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn
