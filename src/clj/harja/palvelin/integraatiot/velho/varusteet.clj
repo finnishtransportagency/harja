@@ -86,8 +86,7 @@
                                               :alku
                                               varuste-vastaanottosanoma/velho-pvm->pvm
                                               varuste-vastaanottosanoma/aika->sql)
-                    :virhekohteen_vastaus (str kohde)}
-         _ (println hakuvirhe)]
+                    :virhekohteen_vastaus (str kohde)}]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
 (defn- urakka-sijainnin-avulla
