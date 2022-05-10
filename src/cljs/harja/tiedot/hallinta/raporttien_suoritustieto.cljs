@@ -81,15 +81,6 @@
                   (second %))
                vaihtoehdot)))
 
-(def +mahdolliset-roolit+
-  [[nil "Kaikki"]
-   [:urakanvalvoja "Urakanvalvoja (tilaaja)"]
-   [:ely-kayttaja "ELY:n käyttajä"]
-   [:ely-paakayttaja "ELY:n paakayttaja"]
-   [:jvh "Järjestelmävastaava (tilaaja)"]
-   [:rakennuttajakonsultti "Rakennuttajakonsultti"]
-   [:urak-vastuuhenkilo "Urakoitsijan vastuuhenkilö"]
-   [:urak-paakayttaja "Urakoitsijan pääkäyttäjä"]])
 
 (def +mahdolliset-formaatit+
   [[nil "Kaikki"]
