@@ -326,10 +326,10 @@
     (when viesti (log/debug viesti))
     (cond
       (= :tallenna toiminto)                                ; <3
-      {:tulos varustetoteuma :virheviesti nil}
+      {:tulos varustetoteuma :virheviesti nil :ohitus-syy nil}
 
       (= :ohita toiminto)                                 ; :|
-      {:tulos nil :virheviesti nil}
+      {:tulos nil :virheviesti nil :ohitus-syy viesti}
 
       (= :varoita toiminto)                                 ; :(
-      {:tulos nil :virheviesti viesti})))
+      {:tulos nil :virheviesti viesti :ohitus-syy nil})))

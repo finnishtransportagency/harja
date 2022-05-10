@@ -63,8 +63,8 @@
     (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
     {:status 200 :body odotettu-kohteet-vastaus :headers {:content-type "application/x-ndjson"}}))
 
-(defn fake-ei-saa-kutsua [syy-teksti]
-  (fn [_ {:keys [body headers url]} _]
+(defn fake-ei-saa-kutsua-fn [syy-teksti]
+  (fn [_ {:keys [_ headers url]} _]
     (is false (str "Ei saa kutsua: '" syy-teksti "' otsikot: " headers " url: " url))
     {:status 400 :body ""}))
 
@@ -83,20 +83,24 @@
 
 (defn feikkaa-ja-kutsu-varusteintegraatiota
   "Feikkaa http-palvelut ja kutsuu `tuo-uudet-varustetoteumat-velhosta`"
-  [oidit-vastaus kohteet-vastaus]
-  (let [fake-tunnisteet (fn [_ {:keys [body headers url]} _]
-                          (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                          {:status 200 :body oidit-vastaus})
-        fake-kohteet (fn [_ {:keys [body headers url]} _]
-                       (is (= (json/read-str oidit-vastaus) (json/read-str body))
-                           "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
-                       (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
-                       {:status 200 :body kohteet-vastaus})]
-    (with-fake-http
-      [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
-       {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet
-       {:url +varuste-kohteet-regex+ :method :post} fake-kohteet]
-      (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
+  ([oidit-vastaus kohteet-vastaus]
+   (let [fake-tunnisteet (fn [_ {:keys [_ headers _]} _]
+                           (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                           {:status 200 :body oidit-vastaus})
+         fake-kohteet (fn [_ {:keys [body headers _]} _]
+                        (is (= (json/read-str oidit-vastaus) (json/read-str body))
+                            "Odotettiin kohteiden hakua samalla oid-listalla kuin hae-oid antoi")
+                        (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
+                        {:status 200 :body kohteet-vastaus})]
+     (feikkaa-ja-kutsu-varusteintegraatiota {:fake-token-fn yhteiset-test/fake-token-palvelin
+                                             :fake-tunnisteet-fn fake-tunnisteet
+                                             :fake-kohteet-fn fake-kohteet})))
+  ([{:keys [fake-token-fn fake-kohteet-fn fake-tunnisteet-fn]}]
+   (with-fake-http
+     [{:url +velho-token-url+ :method :post} fake-token-fn
+      {:url +varuste-tunnisteet-regex+ :method :get} fake-tunnisteet-fn
+      {:url +varuste-kohteet-regex+ :method :post} fake-kohteet-fn]
+     (velho-integraatio/tuo-uudet-varustetoteumat-velhosta (:velho-integraatio jarjestelma)))))
 
 (defn kutsu-ja-palauta-urakoiden-loki
   "Kaappaa talteen varusteiden urakka-virhelokitekstit.
@@ -138,6 +142,11 @@
        (map :ulkoinen_oid)
        set))
 
+(defn kaikki-varustetoteuma-ohitettu-oidt []
+  (->> (q-map "SELECT velho_oid FROM varustetoteuma_ulkoiset_ohitus")
+       (map :velho_oid)
+       set))
+
 (defn kaikki-virheet []
   (q-map "SELECT * FROM varustetoteuma_ulkoiset_virhe"))
 
@@ -145,7 +154,7 @@
   (yhteiset-test/tyhjenna-velho-tokenit-atomi)
   (let [fake-feilava-token (fn [_ _ _]
                              "{\"error\":\"invalid_client\"}")
-        kieletty (fake-ei-saa-kutsua "Ei ole saanut tokenia")]
+        kieletty (fake-ei-saa-kutsua-fn "Ei ole saanut tokenia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} fake-feilava-token
        {:url +varuste-tunnisteet-regex+ :method :get} kieletty
@@ -157,7 +166,7 @@
   (let [fake-feilava-tunnisteet (fn [_ {:keys [_ headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 500 :body "{\n    \"viesti\": \"Sisäinen palvelukutsu epäonnistui: palvelinvirhe\"\n}"})
-        kieletty (fake-ei-saa-kutsua "Ei ole oikeita oid-tunnuksia")]
+        kieletty (fake-ei-saa-kutsua-fn "Ei ole oikeita oid-tunnuksia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
@@ -172,7 +181,7 @@
   (let [fake-feilava-tunnisteet (fn [_ {:keys [_ headers]} _]
                                   (is (= "Bearer TEST_TOKEN" (get headers "Authorization")) "Oikeaa autorisaatio otsikkoa ei käytetty")
                                   {:status 200 :body "[\n    \"1.2.246.578.4.3.1.501.120103774\",\n    \"1.2.246.578.4.3.1.501.120103775\",\n"})
-        kieletty (fake-ei-saa-kutsua "Ei ole oikeita oid-tunnuksia")]
+        kieletty (fake-ei-saa-kutsua-fn "Ei ole oikeita oid-tunnuksia")]
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
        {:url +varuste-tunnisteet-regex+ :method :get} fake-feilava-tunnisteet
@@ -656,8 +665,7 @@
                                                pvm/iso-8601->aika)]
                               (is (= odotettu-viimeisin-aika jalkeen)))
                             {:status 200 :body "[]"})
-        ei-sallittu (fn [_ {:keys [body headers url]} _]
-                      (is false "Oid-lista oli tyhjä. Tätä ei saa kutsua."))]
+        ei-sallittu (fake-ei-saa-kutsua-fn "Oid-lista oli tyhjä. Tätä ei saa kutsua.")]
     ; SUORITA
     (with-fake-http
       [{:url +velho-token-url+ :method :post} yhteiset-test/fake-token-palvelin
@@ -691,6 +699,27 @@
         lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (not (str/includes? lokiteksti "ERROR")))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
+
+;#_(deftest ohitus-taulussa-oleva-oid-ohittaa-kohteen-latauksen-velhosta
+;  (u "DELETE FROM varustetoteuma_ulkoiset")
+;  (u "DELETE FROM varustetoteuma_ulkoiset_ohitus")
+;  (assert (= 1 (u "INSERT INTO varustetoteuma_ulkoiset_ohitus (velho_oid, aikaleima, viesti, muokattu)
+;  VALUES ('1.2.246.578.4.3.1.501.158276053', '2022-05-10T00:00:00EEST', 'jotain', '2022-05-10')")))
+;  (let [fake-tunnisteet (fn [_ _ _]
+;                          {:status 200 :body "[\"1.2.246.578.4.3.1.501.158276054\"]"})
+;        ei-sallittu-fn (fake-ei-saa-kutsua-fn "Oid oli ohitettava. Tätä ei saa kutsua.")
+;        odotettu-oid-lista #{}
+;        odotettu-ohitettu-oid-lista #{"1.2.246.578.4.3.1.501.158276054"}
+;        lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota {:fake-token-fn yhteiset-test/fake-token-palvelin
+;                                                                                               :fake-tunnisteet-fn fake-tunnisteet
+;                                                                                               :fake-kohteet-fn ei-sallittu-fn}))]
+;    (is (not (str/includes? lokiteksti "ERROR")))
+;    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))
+;    #_(is (= odotettu-ohitettu-oid-lista (kaikki-varustetoteuma-ohitettu-oidt)))))
+
+(deftest ohitus-taulussa-oleva-oid-ladataan-jos-latauspvm-on-uudempi
+  ;TODO toteuta latauspvm käsite koodiin
+  )
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
   (let [tietokannan-kohdeluokat (->> "SELECT enumlabel
@@ -776,7 +805,7 @@
 (deftest velho-palauttaa-500-urakka-oideja-haettaessa
   (let [fake-oid-fn (fn [_ _ _]
                       {:status 500 :body "spec spec spec..." :headers {:content-type "text/html"}})
-        kieletty-fn (fake-ei-saa-kutsua "Ei ole saatu oikeita oideja")
+        kieletty-fn (fake-ei-saa-kutsua-fn "Ei ole saatu oikeita oideja")
         lokiteksti (kutsu-ja-palauta-urakoiden-loki #(feikkaa-ja-kutsu-paivita-urakat {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kieletty-fn}))]
     (is (str/includes? lokiteksti "Ulkoinen järjestelmä palautti statuskoodin: 500 ja virheen: spec spec spec..."))))
 
@@ -808,13 +837,13 @@
 (deftest velho-urakka-oid-json-on-rikki
   (let [fake-oid-fn (fn [_ _ _]
                       {:status 200 :body "[\"1.2.3.4\"," :headers {:content-type "application/json"}})
-        kielletty-fn (fake-ei-saa-kutsua "Rikkinäinen OID lista JSON. Ei saa kutsua kohdehakua.")
+        kielletty-fn (fake-ei-saa-kutsua-fn "Rikkinäinen OID lista JSON. Ei saa kutsua kohdehakua.")
         lokiteksti (kutsu-ja-palauta-urakoiden-loki #(feikkaa-ja-kutsu-paivita-urakat {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kielletty-fn}))]
     (is (str/includes? lokiteksti "JSON error (end-of-file inside array)"))))
 
 (deftest velho-palauttaa-tyhjan-urakka-oid-listan
   (let [fake-oid-fn (fn [_ _ _]
                       {:status 200 :body "[]" :headers {:content-type "application/json"}})
-        kielletty-fn (fake-ei-saa-kutsua "Tyhjä OID lista, ei saa kutsua kohdehakua")
+        kielletty-fn (fake-ei-saa-kutsua-fn "Tyhjä OID lista, ei saa kutsua kohdehakua")
         lokiteksti (kutsu-ja-palauta-urakoiden-loki #(feikkaa-ja-kutsu-paivita-urakat {:fake-oid-fn fake-oid-fn :fake-kohteet-fn kielletty-fn}))]
     (is (str/includes? lokiteksti "Velho palautti tyhjän OID listan"))))

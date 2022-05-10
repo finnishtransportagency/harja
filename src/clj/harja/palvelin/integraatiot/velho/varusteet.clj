@@ -89,6 +89,22 @@
                     :virhekohteen_vastaus (str kohde)}]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
+(defn lokita-ja-tallenna-ohitus
+  ([db {:keys [oid muokattu] :as kohde} viesti]
+   (let [ohitus {:velho_oid oid
+                 :aikaleima (pvm/nyt)
+                 :viesti viesti
+                 :muokattu (-> muokattu
+                               varuste-vastaanottosanoma/velho-aika->aika
+                               varuste-vastaanottosanoma/aika->sql)}]
+     (try
+       (q-toteumat/tallenna-varustetoteuma-ulkoiset-ohitus<! db ohitus)
+       (catch PSQLException e
+         (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint \"varustetoteuma_ulkoiset_ohitus_pkey\"")
+           (q-toteumat/paivita-varustetoteuma-ulkoiset-ohitus<! db ohitus)
+           (throw e))
+         )))))
+
 (defn- urakka-sijainnin-avulla
   [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
@@ -453,20 +469,30 @@
                                                         (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
                                                                    " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
                                                         (let [{varustetoteuma :tulos
-                                                               virheviesti :virheviesti} (jasenna-ja-tarkasta-varustetoteuma
-                                                                                           db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
+                                                               virheviesti :virheviesti
+                                                               ohitus-syy :ohitus-syy} (jasenna-ja-tarkasta-varustetoteuma
+                                                                                         db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
                                                           (cond varustetoteuma
-                                                                (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                                                                (do
+                                                                  (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                                                                  true)
 
                                                                 virheviesti
-                                                                (lokita-ja-tallenna-hakuvirhe
-                                                                  db kohde
-                                                                  (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                                       (format "%s muokattu: %s validointivirhe: %s"
-                                                                               oid muokattu virheviesti)))
+                                                                (do
+                                                                  (lokita-ja-tallenna-hakuvirhe
+                                                                    db kohde
+                                                                    (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
+                                                                         (format "%s muokattu: %s validointivirhe: %s"
+                                                                                 oid muokattu virheviesti)))
+                                                                  false)
+
+                                                                ohitus-syy
+                                                                (do
+                                                                  (lokita-ja-tallenna-ohitus db kohde ohitus-syy)
+                                                                  true)
 
                                                                 :else
-                                                                :ohita)))]
+                                                                (log/error "Virhe varusteen tallennuksessa. Epälooginen lopputulema varusteen jäsennyksestä."))))]
                               (hae-ja-tallenna
                                 tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                                 token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))

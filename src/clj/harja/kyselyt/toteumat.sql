@@ -917,6 +917,24 @@ VALUES (:aikaleima,
         :virhekohteen_alkupvm,
         :virhekohteen_vastaus);
 
+-- name: tallenna-varustetoteuma-ulkoiset-ohitus<!
+-- Tallentaa ohitus tiedot. Tämän tiedon perusteella jatkossa kohdetta ei yritetä ladata uudelleen, jos latauksen pvm < muokattu
+INSERT INTO varustetoteuma_ulkoiset_ohitus (velho_oid,
+                                            aikaleima,
+                                            viesti,
+                                            muokattu)
+VALUES (:velho_oid,
+        :aikaleima,
+        :viesti,
+        :muokattu);
+
+-- name: paivita-varustetoteuma-ulkoiset-ohitus<!
+UPDATE varustetoteuma_ulkoiset_ohitus
+SET aikaleima = :aikaleima,
+    viesti    = :viesti,
+    muokattu  = :muokattu
+WHERE velho_oid = :velho_oid;
+
 -- name: hae-yksikkohintaisten-toiden-reitit
 -- fetch-size: 64
 -- row-fn: muunna-reitti
