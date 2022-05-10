@@ -7,8 +7,9 @@
             [cheshire.core :as cheshire]
             [harja.fmt :as fmt]))
 
-(def kayttaja-yit "yit-rakennus")
-(def kayttaja-jvh "jvh")
+(def kayttaja-yit   "yit-rakennus")
+(def kayttaja-yit-2 "yit-pk")
+(def kayttaja-jvh   "jvh")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja-yit
@@ -174,7 +175,8 @@
     (tee-testiyhteyshenkilo 9876543456)
     (tee-urakalle-paivystys 4 paivystys-id-1 9876543456 kayttaja-yit)
     (tee-urakalle-paivystys 1 paivystys-id-2 9876543456 kayttaja-yit)
-    (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa")
+    (tee-urakalle-paivystys 1 paivystys-id-2 9876543456 kayttaja-yit-2) ;; Ei luo uutta, päivittää edellisen rivin tallentaman päivystyksen
+    (is (= 2 (count (q "SELECT * FROM paivystys WHERE yhteyshenkilo = (SELECT id FROM yhteyshenkilo WHERE ulkoinen_id = '9876543456')"))) "toisen urakan paivystaja samalla ulkoisella id:lla edelleen olemassa, omassa urakassa ei kahta päivystystä samalla ulkoisella-id:llä")
     (let [msg (cheshire/encode
                 {:otsikko {:lahettaja {:jarjestelma "jarjestelma"
                                        :organisaatio {:nimi "Urakoitsija"
