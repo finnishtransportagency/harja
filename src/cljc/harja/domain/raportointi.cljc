@@ -126,3 +126,21 @@
 
 (defn numero-fmt? [fmt]
   (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
+
+(def +mahdolliset-roolit+
+  [[nil "Kaikki"]
+   [:urakanvalvoja "Urakanvalvoja"]
+   [:ely-kayttaja "ELY:n käyttajä"]
+   [:ely-paakayttaja "ELY:n paakayttaja"]
+   [:jvh "Järjestelmävastaava"]
+   [:rakennuttajakonsultti "Rakennuttajakonsultti"]
+   [:urak-vastuuhenkilo "Urakoitsijan vastuuhenkilö"]
+   [:urak-paakayttaja "Urakoitsijan pääkäyttäjä"]])
+
+(def +mahdolliset-roolit-avaimet+
+  (keep #(first %) +mahdolliset-roolit+))
+
+(defn roolin-avain->nimi [avain]
+  (second
+    (first (filter #(= avain (first %))
+                   +mahdolliset-roolit+))))
