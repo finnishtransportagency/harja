@@ -61,7 +61,7 @@
   [e! {:keys [materiaalit-toisesta-urakasta materiaalikoodistot] :as app}]
   (let [{murskeet :murskeet} materiaalit-toisesta-urakasta]
     [grid/grid
-     {:otsikko "Murkseet"
+     {:otsikko "Murskeet"
       :tyhja "Ei murskeita."
       :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id %) :murskeet))
       :tunniste ::pot2-domain/murske-id}
