@@ -287,7 +287,6 @@
        [debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       [yleiset/info-laatikko :varoitus "Alueiden ja suunniteltavien määrien jako on testitarkoituksiin mielivaltainen, eikä välttämättä vastaa totuutta" "" "100%" {:luokka "ala-margin-16"}]
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko    
           [:<>
