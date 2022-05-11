@@ -203,7 +203,7 @@
                 ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
                 ;; mutta ne piilotetaan taulukon eheyden säilyttämiseksi.
                 (when (and isanta-rivin-id (not= isanta-rivin-id (avattavat-rivit-auki? ohjaus isanta-rivin-id)))
-                  " piilota ")                                  ;; Todo Vaihda teksti hide -> piilota
+                  " piilota ")
                 (when isanta-rivin-id
                   " avattava-rivi "))
         :on-click #(kasittele-rivin-klikkaus
@@ -228,7 +228,6 @@
                   (and (= :avattava-rivi tyyppi) (not isanta-rivin-id))
                   ^{:key (str "avattava-rivi-tila" id)}
                   [avattavat-rivi-tila ohjaus avattavat-rivit id (y/luokat "vetolaatikon-tila"
-                                                                   "klikattava"
                                                                    (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
 
                   (= :vetolaatikon-tila tyyppi)
@@ -763,8 +762,8 @@
   :vetolaatikot                         {id komponentti} lisäriveistä, jotka näytetään normaalirivien välissä
                                         jos rivin id:llä on avain tässä mäpissä, näytetään arvona oleva komponentti
                                         rivin alla
-  :avattavat-rivit                      {id [vectori rivin idekseistä]} sisältää tiedot avattavista riveistä. id on rivin id ja avain tässä mäpissä.
-                                        avataan rivi, jonka indeksi löytyy käytetin avaimen alta. Toimii vain näyttökäyttöliittymässä
+  :avattavat-rivit                      [vectori rivin avamista] sisältää tiedot avattavista riveistä. Anna avaimeksi esim raportin_rivi_0, joka
+                                        viittaa rivin indeksiin, joka on avattava rivi ja jonka alta löytyy loput rivit. Toimii vain näyttökäyttöliittymässä
   :ei-footer-muokkauspaneelia?          Jos true, muokkauspaneelia ei koskaan piirretä gridin alaosaan.
   :vetolaatikot-auki                    Ulkopuolelta annettu tila vetolaatikoille (atom, jonka arvo on setti)
   :avattavat-rivit-auki                 Ulkopuolelta annettu tila avattaville riveille (atom, jonka arvo on setti)
@@ -1042,8 +1041,8 @@
                                               (swap! renderoi-max-rivia + renderoi-rivia-kerralla)))
         kasittele-otsikkorivin-kiinnitys (fn [this]
                                            (if (and
-                                                 (empty? @vetolaatikot-auki) ;; Jottei naulattu otiskkorivi peitä sisältöä
-                                                 (empty? @avattavat-rivit-auki) ;; Jottei naulattu otiskkorivi peitä sisältöä
+                                                 (empty? @vetolaatikot-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
+                                                 (empty? @avattavat-rivit-auki) ;; Jottei naulattu otsikkorivi peitä sisältöä
                                                  (> (dom/elementin-korkeus (r/dom-node this)) @dom/korkeus)
                                                  (< (dom/elementin-etaisyys-viewportin-ylareunaan (r/dom-node this)) -20)
                                                  (pos? (dom/elementin-etaisyys-viewportin-ylareunaan-alareunasta (r/dom-node this))))
@@ -1177,7 +1176,6 @@
                                            :tyhja tyhja :virheet virheet :varoitukset varoitukset
                                            :huomautukset huomautukset :fokus fokus :ohjaus ohjaus
                                            :vetolaatikot vetolaatikot
-                                           :avattavat-rivit avattavat-rivit ;; TODO: Ominaisuutta ei ole testattu muokkauksessa
                                            :muokkaa! muokkaa!
                                            :voi-poistaa? voi-poistaa?
                                            :salli-valiotsikoiden-piilotus? salli-valiotsikoiden-piilotus?
