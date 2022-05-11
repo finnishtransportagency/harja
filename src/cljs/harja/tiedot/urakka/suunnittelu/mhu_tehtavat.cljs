@@ -72,7 +72,11 @@
 
 (defn- summaa-maarat
   [maarat-tahan-asti summa vuosi]
-  (+ summa (get maarat-tahan-asti vuosi)))
+  (let [formatoitava (get maarat-tahan-asti vuosi)
+        luku (if (string? formatoitava)
+               (js/parseFloat formatoitava)
+               formatoitava)]
+    (+ summa luku)))
 
 (defn- laske-sopimusmaarat
   [rivi]
