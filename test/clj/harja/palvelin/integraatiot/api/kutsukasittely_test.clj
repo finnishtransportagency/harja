@@ -49,3 +49,10 @@
                   (fn [_]))]
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
+
+(deftest testaa-cors-headerien-lisaaminen
+         (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "*" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} nil)) "Palauta asterix, jos Origin on nil.")
+         (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "*" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} "")) "Palauta asterix, jos Origin on tyhjä.")
+         (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} "http://localhost:3000")) "Palauta Origin, jos Origin on annettu."))
+
+
