@@ -60,8 +60,11 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('not.exist')
   })
 
-  it('Määrän voi syöttää', () => {
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('666').blur()
+    it('Määrän voi syöttää', () => {
+        cy.server()
+    cy.route('POST', '_/tallenna-tehtavamaarat').as('tehtavamaarat')
+      cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('666').blur()
+        cy.wait('@tehtavamaarat')
   })
 
   it('Toimenpidettä voi vaihtaa', () => {

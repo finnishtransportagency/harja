@@ -461,7 +461,8 @@
   TallennaMuuttunutAluemaara
   (process-event
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
-    (let [{:keys [id muuttunut-aluetieto-maara]} tehtava]
+    (let [{:keys [id muuttunut-aluetieto-maara vanhempi]} tehtava]
+      (swap! taulukko-tila assoc-in [:alueet vanhempi id :maarat hoitokausi] muuttunut-aluetieto-maara)
       (-> app
         (tallenna-tehtavamaarat
           {:hoitokausi hoitokausi
