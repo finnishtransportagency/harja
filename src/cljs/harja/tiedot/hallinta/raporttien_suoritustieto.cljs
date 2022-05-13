@@ -13,6 +13,7 @@
 (def valittu-raportti (atom nil))
 (def valittu-rooli (atom nil))
 (def valittu-formaatti (atom nil))
+(def nakymassa? (atom false))
 
 (defn hae-raporttitiedot [{:keys [alkupvm loppupvm raportti rooli formaatti]}]
   (k/post! :hae-raporttien-suoritustiedot
@@ -27,12 +28,14 @@
                        loppupvm (second @yhteiset/valittu-aikavali)
                        raportti @valittu-raportti
                        rooli @valittu-rooli
-                       formaatti @valittu-formaatti]
-                      (go (<! (hae-raporttitiedot {:alkupvm alkupvm
-                                                   :loppupvm loppupvm
-                                                   :raportti raportti
-                                                   :rooli rooli
-                                                   :formaatti formaatti})))))
+                       formaatti @valittu-formaatti
+                       nakymassa? @nakymassa?]
+                      (when nakymassa?
+                        (go (<! (hae-raporttitiedot {:alkupvm alkupvm
+                                                     :loppupvm loppupvm
+                                                     :raportti raportti
+                                                     :rooli rooli
+                                                     :formaatti formaatti}))))))
 
 
 ;; järjestetty tuotantodatan yleisyyden mukaan
