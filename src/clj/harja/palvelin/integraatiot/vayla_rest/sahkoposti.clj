@@ -41,7 +41,7 @@
         (log/error "Virhe sähköpostin lähetyksessä :: saatu virhe: " body)
         nil))
     (catch Exception e
-      (log/error "Virhe käsiteltäessä sähköpostin kuittausta :: poikkeuks " e)
+      (log/error "Virhe käsiteltäessä sähköpostin kuittausta :: poikkeus " e)
       ;; Palautetaan virheen sattuessa nil
       nil)))
 
@@ -85,7 +85,7 @@
               {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
           (if liite?
             (kasittele-sahkoposti-ja-liite-vastaus status body db)
-            (kasittele-sahkoposti-vastaus headers body)))))
+            (kasittele-sahkoposti-vastaus status body)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 
