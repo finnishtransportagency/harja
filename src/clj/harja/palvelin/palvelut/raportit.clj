@@ -1,17 +1,75 @@
 (ns harja.palvelin.palvelut.raportit
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.komponentit.pdf-vienti :refer [rekisteroi-pdf-kasittelija! poista-pdf-kasittelija!] :as pdf-vienti]
             [harja.palvelin.raportointi :refer [hae-raportit suorita-raportti]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.kyselyt.raportit :as q]))
+            [harja.domain.raportointi :as raportti-domain]
+            [harja.kyselyt.raportit :as q]
+            [clojure.string :as str]))
+
+(defn rooliksi [rooli]
+  (case rooli
+    :ely-kayttaja "ELY_Kayttaja"
+    :ely-paakayttaja "ELY_Paakayttaja"
+    :jvh "Jarjestelmavastaava"
+
+    nil))
+
+(defn urakkarooliksi [rooli]
+  (case rooli
+    :urakanvalvoja "ELY_Urakanvalvoja"
+    :rakennuttajakonsultti "Rakennuttajakonsultti"
+    :urak-vastuuhenkilo "vastuuhenkilo"
+
+    nil) )
+
+(defn organisaatiorooliksi [rooli]
+  (case rooli
+    :urak-paakayttaja "Paakayttaja"
+
+    nil))
+
+(defn yhdista-roolit
+  "Kasaa kolmesta eri kentästä roolit yhdeksi stringiksi"
+  [{:keys [rooli urakkarooli organisaatiorooli] :as rivi}]
+  (-> rivi
+      (assoc :roolit (str/join " " [rooli urakkarooli organisaatiorooli]))
+      (dissoc :rooli :urakkarooli :organisaatiorooli)))
+
+(defn hae-raporttien-suoritustiedot-kannasta
+  [db user {:keys [alkupvm loppupvm raportti rooli urakkarooli organisaatiorooli formaatti] :as parametrit}]
+  (into []
+        (q/hae-raporttien-suoritustiedot db {:alkupvm alkupvm :loppupvm loppupvm :raportti raportti
+                                             :rooli rooli :urakkarooli urakkarooli :organisaatiorooli organisaatiorooli
+                                             :formaatti (when formaatti
+                                                          (name formaatti))})))
 
 (defn hae-raporttien-suoritustiedot 
-  [db user parametrit]
+  [db user {:keys [alkupvm loppupvm raportti rooli formaatti] :as parametrit}]
   ;; käytetään hallintapaneelissa olevan indeksisivun oikeuksia, käytännössä siis
   ;; Harjan pääkäyttäjät vain pääsevät tähän tietoon toistaiseksi
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-indeksit user)
-  (q/hae-raporttien-suoritustiedot db))
+  (let [rivit (hae-raporttien-suoritustiedot-kannasta db user {:alkupvm alkupvm :loppupvm loppupvm
+                                                                :raportti raportti :formaatti (when formaatti
+                                                                                                (name formaatti))
+                                                                :rooli (rooliksi rooli)
+                                                                :urakkarooli (urakkarooliksi rooli)
+                                                                :organisaatiorooli (organisaatiorooliksi rooli)})
+        rooleittain (when-not rooli
+                                           (into []
+                                                 (for [r raportti-domain/+mahdolliset-roolit-avaimet+]
+                                                   [(raportti-domain/roolin-avain->nimi r)
+                                                    (reduce + (map :count
+                                                                   (hae-raporttien-suoritustiedot-kannasta db user {:alkupvm alkupvm :loppupvm loppupvm
+                                                                                                                    :raportti raportti
+                                                                                                                    :formaatti (when formaatti (name formaatti))
+                                                                                                                    :rooli (rooliksi r)
+                                                                                                                    :urakkarooli (urakkarooliksi r)
+                                                                                                                    :organisaatiorooli (organisaatiorooliksi r)})))])))
+        kaikki-yhteensa-lkm (reduce + 0 (map :count rivit))]
+    {:rivit rivit
+     :kaikki-yhteensa-lkm kaikki-yhteensa-lkm
+     :rooleittain rooleittain}))
 
 (defrecord Raportit []
   component/Lifecycle
