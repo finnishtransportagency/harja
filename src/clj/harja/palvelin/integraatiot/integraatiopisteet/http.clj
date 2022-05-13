@@ -67,7 +67,7 @@
                                       "<|||glogglog||||Graylog>")}]
                 :tekstikentta (str "Kutsu palveluun: " url " epäonnistui.|||"
                                    "Virhe: " error "|||"
-                                   "Statuskoodi: " status)}))
+                                   "Statuskoodi: " status)})
   (lokittaja :epaonnistunut lokiviesti (str "Virhe: " error ", statuskoodi: %s" status) tapahtuma-id)
   ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
   ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
@@ -80,7 +80,8 @@
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
                             (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.
-                            Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
+                            Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]}))))
+
 (defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers status response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
   (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)
