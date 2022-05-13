@@ -157,6 +157,42 @@
                     nil
                     urakka-id))))
 
+;; Konvertoi apilta tulevan materiaalinimen tietokannassa olevaan materiaaliin
+(def mat-apilta->mat-db
+  {"Talvisuola" "Talvisuola"
+   "Talvisuolaliuos CaCl2" "Talvisuolaliuos CaCl2"
+   "Talvisuolaliuos NaCl" "Talvisuolaliuos NaCl"
+
+   "Erityisalueet CaCl2-liuos" "Erityisalueet CaCl2-liuos"
+   "Erityisalueet NaCl" "Erityisalueet NaCl"
+   "Erityisalueet NaCl-liuos" "Erityisalueet NaCl-liuos"
+
+   "Hiekoitushiekan suola" "Hiekoitushiekan suola"
+
+   "Kaliumformiaatti" "Kaliumformiaatti"
+   "Natriumformiaatti" "Natriumformiaatti"
+   "Natriumformiaattiliuos" "Natriumformiaattiliuos"
+
+   "Kesäsuola" "Kesäsuola (pölynsidonta)"
+   "Kesäsuola (pölynsidonta)" "Kesäsuola (pölynsidonta)"
+   "Kesäsuola (sorateiden kevätkunnostus)" "Kesäsuola (sorateiden kevätkunnostus)"
+   "Kesäsuola (päällystettyjen teiden pölynsidonta)" "Kesäsuola (päällystettyjen teiden pölynsidonta)"
+
+   "Hiekoitushiekka" "Hiekoitushiekka"
+
+   "Jätteet kaatopaikalle" "Jätteet kaatopaikalle"
+   "Rikkaruohojen torjunta-aineet" "Rikkaruohojen torjunta-aineet"
+   ;; Murskeet
+   "Murskeet" "Sorastusmurske"
+   "Murske" "Sorastusmurske"
+   "Reunantäyttömurske" "Reunantäyttömurske"
+   "Kelirikkomurske" "Kelirikkomurske"
+   "Sorastusmurske" "Sorastusmurske"})
+
+(defn hae-materiaalikoodi-nimella [db materiaali-nimi]
+  (when-not (nil? (mat-apilta->mat-db materiaali-nimi))
+    (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db (mat-apilta->mat-db materiaali-nimi))))))
+
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)
   (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
@@ -164,7 +200,7 @@
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (:materiaali materiaali)
-          materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
+          materiaalikoodi-id (hae-materiaalikoodi-nimella db materiaali-nimi)]
       (if (nil? materiaalikoodi-id)
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi virheet/+tuntematon-materiaali+
