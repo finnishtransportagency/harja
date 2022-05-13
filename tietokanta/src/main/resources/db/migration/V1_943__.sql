@@ -47,6 +47,16 @@ UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluok
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Muu') WHERE nimi = 'Jätteet kaatopaikalle';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Muu') WHERE nimi = 'Rikkaruohojen torjunta-aineet';
 
+-- Päivitä muuttuneiden materiaalikoodien vuoksi myös järjestykset
+UPDATE materiaalikoodi SET jarjestys = 13 WHERE nimi = 'Kesäsuola (päällystettyjen teiden pölynsidonta)';
+UPDATE materiaalikoodi SET jarjestys = 14 WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)';
+UPDATE materiaalikoodi SET jarjestys = 15 WHERE nimi = 'Hiekoitushiekka';
+UPDATE materiaalikoodi SET jarjestys = 16 WHERE nimi = 'Jätteet kaatopaikalle';
+UPDATE materiaalikoodi SET jarjestys = 17 WHERE nimi = 'Rikkaruohojen torjunta-aineet';
+UPDATE materiaalikoodi SET jarjestys = 18 WHERE nimi = 'Sorastusmurske';
+UPDATE materiaalikoodi SET jarjestys = 19 WHERE nimi = 'Reunantäyttömurske';
+UPDATE materiaalikoodi SET jarjestys = 20 WHERE nimi = 'Kelirikkomurske';
+
 -- Lisää toimenpidekoodille tieto mihin materiaalikoodiin tai materiaaliluokkaan se kuuluu
 ALTER TABLE toimenpidekoodi
     ADD COLUMN materiaaliluokka_id INTEGER,
