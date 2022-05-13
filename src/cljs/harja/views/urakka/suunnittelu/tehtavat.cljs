@@ -92,8 +92,8 @@
     false
     rivi))
 
-(defn tallenna! 
-  [e! sopimukset-syotetty? alueet-vai-maarat rivi]   
+(defn tallenna!
+  [e! sopimukset-syotetty? alueet-vai-maarat rivi]
   (let [tuck-event (cond
                      (and (= :alueet alueet-vai-maarat)
                        sopimukset-syotetty?)
@@ -111,6 +111,8 @@
                        (not sopimukset-syotetty?))
                      t/->TallennaSopimuksenTehtavamaara)] 
     (e! (tuck-event rivi))))
+
+(defn vali->viiva [nimi] (str/replace (str/lower-case nimi) " " "-"))
 
 (defn vetolaatikko-komponentti-
   [_ _ {:keys [vanhempi id yksikko nimi] :as _rivi}]
@@ -141,7 +143,7 @@
             [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
-                                 :elementin-id (str "vetolaatikko-input-" (str/replace (str/lower-case nimi) " " "-") "-" vuosi)
+                                 :elementin-id (str "vetolaatikko-input-" (vali->viiva nimi) "-" vuosi)
                                  :disabled? (not @joka-vuosi-erikseen?)                            
                                  :on-blur #(tallenna! e! 
                                              (:sopimukset-syotetty? app)
@@ -180,7 +182,7 @@
         (when sopimukset-syotetty?
           [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"])
         [grid/muokkaus-grid
-         {:id (keyword (str "tehtavat-alueet-" nimi))
+         {:id (keyword (str "tehtavat-alueet-" (vali->viiva nimi)))
           :tyhja "Ladataan tietoja"
           :voi-poistaa? (constantly false)
           :jarjesta :jarjestys 
@@ -209,7 +211,7 @@
         [:div.tm-otsikko "Määrät"]
         [grid/muokkaus-grid
          (merge 
-           {:id (keyword (str "tehtavat-maarat-" nimi))
+           {:id (keyword (str "tehtavat-maarat-" (vali->viiva nimi)))
             :tyhja "Ladataan tietoja"
             :voi-poistaa? (constantly false)
             :jarjesta :jarjestys 

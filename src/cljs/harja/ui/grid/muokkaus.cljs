@@ -281,11 +281,12 @@
 (def on-blur-fn (atom nil))
 
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
-                             nayta-virheet? i voi-muokata? tulevat-rivit
+                             nayta-virheet? i voi-muokata? tulevat-rivit gridin-id
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
                              disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu disabloi-autocomplete?
                              sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?] :as rivi-asetukset}]
-  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
+  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))
+        rivi-grid-tunniste (str gridin-id "-" i)]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
                                "parillinen"
@@ -298,7 +299,7 @@
                                                        {:muokkaus-grid-id id})))
                     :on-blur #(when on-rivi-blur
                                 (.stopPropagation %)
-                                (reset! blurred-from-idx i)
+                                (reset! blurred-from-idx rivi-grid-tunniste)
                                 (reset! on-blur-fn
                                         (yleiset/fn-viiveella (fn []
                                                                 (on-rivi-blur rivi id)))))
@@ -306,7 +307,7 @@
                                  (do
                                    (.stopPropagation %)
                                    (when on-rivi-focus (on-rivi-focus rivi id))
-                                   (when (= i @blurred-from-idx)
+                                   (when (= rivi-grid-tunniste @blurred-from-idx)
                                      (.clearTimeout js/window @on-blur-fn)
                                      (reset! on-blur-fn nil))))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
@@ -362,7 +363,7 @@
       (fn [{:keys [muokatut skeema tyhja virheet varoitukset huomautukset valiotsikot ohjaus vetolaatikot disable-input?
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
+                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args gridin-id
                    rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni? sarake-disabloitu-arvo-fn disabloi-autocomplete?
                    vetolaatikko-optiot]}]
         (let [muokatut-atom muokatut
@@ -419,7 +420,7 @@
                                                  [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
                                                                 :vetolaatikot vetolaatikot :id id :rivi rivi
                                                                 :nayta-virheet? nayta-virheet? :disable-input? disable-input?
-                                                                :i i :voi-muokata? voi-muokata?
+                                                                :i i :voi-muokata? voi-muokata? :gridin-id gridin-id
                                                                 :tulevat-rivit tulevat-rivit :rivi-index i
                                                                 :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                                                 :disabloi-rivi? disabloi-rivi?
@@ -537,6 +538,7 @@
            sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
+        gridin-id (keyword (gensym "grid"))
         historia (atom [])
         virheet-atom (or (:virheet opts) (atom {}))         ;; validointivirheet: (:id rivi) => [virheet]
         varoitukset-atom (or (:varoitukset opts) (atom {}))
@@ -708,7 +710,7 @@
             [:div.panel-body
              [:table.grid
               [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]
-              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja
+              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja :gridin-id gridin-id
                              :virheet virheet :varoitukset varoitukset :huomautukset huomautukset
                              :valiotsikot valiotsikot :disable-input? disable-input?
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
