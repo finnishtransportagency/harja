@@ -81,10 +81,10 @@
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
                             (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.
                             Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]})))
-(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers response->loki]
+(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers status response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
   (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)
-  {:body body :headers headers})
+  {:body body :headers headers :status status})
 
 (defn laheta-kutsu
   [lokittaja tapahtuma-id url metodi otsikot parametrit
@@ -112,7 +112,7 @@
           (if (or error
                   (not (= 200 status)))
             (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
-            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers response->loki)))))))
+            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))))
 
 (defprotocol HttpIntegraatiopiste
   (GET
