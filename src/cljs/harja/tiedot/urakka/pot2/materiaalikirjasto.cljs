@@ -15,7 +15,6 @@
 
 (def materiaalikirjastossa? (atom false))
 (def nayta-materiaalikirjasto? (atom false))
-(def tuontiin-valittu-urakka (atom nil))
 
 (defrecord AlustaTila [])
 (defrecord UusiMassa [])
@@ -63,6 +62,7 @@
 (defrecord HaeMateriaalitToisestaUrakasta [urakka-id])
 (defrecord HaeMateriaalitToisestaUrakastaOnnistui [vastaus])
 (defrecord HaeMateriaalitToisestaUrakastaEpaonnistui [vastaus])
+(defrecord ValitseTuontiUrakka [urakka-id])
 (defrecord TuoMateriaalitToisestaUrakasta [])
 (defrecord TuoMateriaalitToisestaUrakastaOnnistui [vastaus])
 (defrecord TuoMateriaalitToisestaUrakastaEpaonnistui [vastaus])
@@ -304,8 +304,8 @@
 
   SuljeMuistaUrakoistaTuonti
   (process-event [_ app]
-    (reset! tuontiin-valittu-urakka nil)
-    (assoc app :nayta-muista-urakoista-tuonti? false
+    (assoc app :tuonti-urakka nil
+               :nayta-muista-urakoista-tuonti? false
                :muut-urakat-joissa-materiaaleja nil
                :materiaalit-toisesta-urakasta nil))
 
@@ -329,6 +329,15 @@
     (viesti/nayta! "Materiaalien haku toisesta urakasta epäonnistui!" :danger)
     app)
 
+  ValitseTuontiUrakka
+  (process-event [{urakka-id :urakka-id} app]
+    (-> app
+        (assoc :tuonti-urakka urakka-id)
+        (tuck-apurit/post! :hae-urakan-massat-ja-murskeet
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeMateriaalitToisestaUrakastaOnnistui
+                            :epaonnistui ->HaeMateriaalitToisestaUrakastaEpaonnistui})))
+
   TuoMateriaalitToisestaUrakasta
   (process-event [_ app]
     (let [massa-idt (keep #(when (true? (:valittu? %))
@@ -351,10 +360,10 @@
                     murskeet :murskeet} :vastaus} app]
     (let [{massat :massat
            murskeet :murskeet} (rikasta-materiaalien-nimi app massat murskeet)]
-      (reset! tuontiin-valittu-urakka nil)
       (viesti/nayta-toast! "Materiaalien tuonti toisesta urakasta onnistui")
       (assoc app :massat massat
                  :murskeet murskeet
+                 :tuonti-urakka nil
                  :materiaalit-toisesta-urakasta nil
                  :muut-urakat-joissa-materiaaleja nil
                  :nayta-muista-urakoista-tuonti? false)))
@@ -581,9 +590,9 @@
 
   SuljeMateriaaliModal
   (process-event [_ app]
-    (reset! tuontiin-valittu-urakka nil)
     (swap! nayta-materiaalikirjasto? not)
-    (assoc app :nayta-muista-urakoista-tuonti? false
+    (assoc app :tuonti-urakka nil
+               :nayta-muista-urakoista-tuonti? false
                :materiaalit-toisesta-urakasta nil))
 
   AloitaMuokkaus
