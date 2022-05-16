@@ -85,6 +85,8 @@
 
 (defn raporttien-suoritustieto [_]
   (komp/luo
+    (komp/sisaan-ulos #(reset! tiedot/nakymassa? true)
+                      #(reset! tiedot/nakymassa? false))
     (fn [_]
       (let [{:keys [rivit rooleittain kaikki-yhteensa-lkm]} @tiedot/raporttitiedot
             top-5 (take 5 rivit)
