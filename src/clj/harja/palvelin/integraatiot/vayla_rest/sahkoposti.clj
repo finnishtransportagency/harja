@@ -28,31 +28,40 @@
 
 (defn kasittele-sahkoposti-vastaus
   "Kun sähköposti lähetetään sähköpostipalvelu rest-apiin, niin sieltä tulee vastaukseksi kuittaus siitä, onnistuiko kaikki ihan ok.
-   Kuittauksen sisältö on suunnilleen xml muotoisena: {:viesti-id <viesti-id>
-                                                      :aika <datetime>
-                                                      :onnistunut <boolean true/false>}
+   Kuittaus on ok, jos status on 200, muutoin logita virhe.
    Kuittaukselle ei kuitenkaan tehdä sähköpostin tilanteessa mitään erikoista. Käsittely on osana integraatio-tapahtumaa.
    Tässä vain extra varmistetaan, että kuittaus on loogisesti oikein ja logitetaan mahdollinen virhe."
-  [body]
+  [status body]
 
   (try
-    (sahkoposti-sanomat/lue-kuittaus body)
+    (if (= 200 status)
+      body
+      (do
+        ;; Virheen sattuessa palauta nil
+        (log/error "Virhe sähköpostin lähetyksessä :: saatu virhe: " body)
+        nil))
     (catch Exception e
-      (log/error "Virhe käsiteltäessä sähköpostin kuittausta: " e)
+      (log/error "Virhe käsiteltäessä sähköpostin kuittausta :: poikkeus " e)
       ;; Palautetaan virheen sattuessa nil
       nil)))
 
 (defn kasittele-sahkoposti-ja-liite-vastaus
   "Liitteellinen sähköposti on Harjassa aina tietyöilmoitus. Käsitellään niihin tulevat kuittaukset hieman eri tavalla."
-  [body db]
+  [status body db]
   (try
-    (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
-          _ (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
-              (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
-                (when-not (:onnistunut kuittaus-vastaus)
-                  {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
-              {::tietyoilmoituksen-e/lahetysid (:viesti-id kuittaus-vastaus)})]
-      kuittaus-vastaus)
+    (if (= 200 status)
+      (let [kuittaus-vastaus (sahkoposti-sanomat/lue-kuittaus body)
+            _ (q-tietyoilmoituksen-e/paivita-lahetetyn-emailin-tietoja db
+                (merge {::tietyoilmoituksen-e/kuitattu (:aika kuittaus-vastaus)}
+                  (when-not (:onnistunut kuittaus-vastaus)
+                    {::tietyoilmoituksen-e/lahetysvirhe (:aika kuittaus-vastaus)}))
+                {::tietyoilmoituksen-e/lahetysid (:viesti-id kuittaus-vastaus)})]
+        kuittaus-vastaus)
+      ;; Tapahtui virhe. Logitetaan se ja palautetaan nil
+      (do
+        (log/error "Virhe liitteellisen sähköpostin lähetyksessä :: saatu virhe: " body)
+        nil)
+      )
     (catch Exception e
       (log/error "Virhe käsiteltäessä sähköpostin kuittausta: " e)
       ;; Palautetaan virheen sattuessa nil
@@ -73,10 +82,10 @@
                               :otsikot {"Content-Type" "application/xml"}
                               :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
                               :salasana (get-in asetukset [:api-sahkoposti :salasana])}
-              {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
+              {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
           (if liite?
-            (kasittele-sahkoposti-ja-liite-vastaus body db)
-            (kasittele-sahkoposti-vastaus body)))))
+            (kasittele-sahkoposti-ja-liite-vastaus status body db)
+            (kasittele-sahkoposti-vastaus status body)))))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 

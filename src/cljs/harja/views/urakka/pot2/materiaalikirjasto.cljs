@@ -61,7 +61,7 @@
   [e! {:keys [materiaalit-toisesta-urakasta materiaalikoodistot] :as app}]
   (let [{murskeet :murskeet} materiaalit-toisesta-urakasta]
     [grid/grid
-     {:otsikko "Murkseet"
+     {:otsikko "Murskeet"
       :tyhja "Ei murskeita."
       :rivi-klikattu #(e! (mk-tiedot/->ValitseMassaTaiMurske (::pot2-domain/murske-id %) :murskeet))
       :tunniste ::pot2-domain/murske-id}
@@ -91,7 +91,8 @@
    [tuotavat-massat e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]
    [tuotavat-murskeet e! (select-keys app [:materiaalit-toisesta-urakasta :materiaalikoodistot])]])
 
-(defn tuo-materiaalit-modal [e! {:keys [nayta-muista-urakoista-tuonti?
+(defn tuo-materiaalit-modal [e! {:keys [tuonti-urakka
+                                        nayta-muista-urakoista-tuonti?
                                         muut-urakat-joissa-materiaaleja
                                         materiaalit-toisesta-urakasta] :as app}]
   (let [sulje-fn #(e! (mk-tiedot/->SuljeMuistaUrakoistaTuonti))
@@ -113,7 +114,8 @@
      (when-not ei-loytynyt?
        [:div
         [kentat/tee-otsikollinen-kentta {:otsikko "Valitse urakka"
-                                         :arvo-atom mk-tiedot/tuontiin-valittu-urakka
+                                         :arvo-atom tuonti-urakka
+                                         :data-muokkaus-fn #(e! (mk-tiedot/->ValitseTuontiUrakka (:id %)))
                                          :kentta-params {:tyyppi :valinta
                                                          :valinta-nayta :nimi :valinta-arvo :id
                                                          :valinnat muut-urakat-joissa-materiaaleja}}]
@@ -124,10 +126,10 @@
          [napit/yleinen-ensisijainen "Tuo materiaalit"
           (if materiaalit-toisesta-urakasta
             #(e! (mk-tiedot/->TuoMateriaalitToisestaUrakasta))
-            #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta @mk-tiedot/tuontiin-valittu-urakka)))
+            #(e! (mk-tiedot/->HaeMateriaalitToisestaUrakasta tuonti-urakka)))
           {:ikoni (ikonit/harja-icon-action-copy)
            :luokka "tuo-materiaalit"
-           :disabled (not @mk-tiedot/tuontiin-valittu-urakka)}]
+           :disabled (empty? materiaalit-toisesta-urakasta)}]
          [napit/yleinen-toissijainen "Kumoa" sulje-fn {:luokka "pull-right"}]]])]))
 
 (defn- urakan-materiaalit [e! app]
