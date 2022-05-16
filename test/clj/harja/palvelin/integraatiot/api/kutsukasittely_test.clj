@@ -28,14 +28,33 @@
                                                 "hae-urakka"
                                                 {:body kutsun-data
                                                  :request-method :post
-                                                 :headers {"oam_remote_user" "yit-rakennus",}}
+                                                 :headers {"oam_remote_user" "yit-rakennus", "Origin" "http://locahost:3000"}}
                                                 json-skeemat/laatupoikkeaman-kirjaus
                                                 json-skeemat/kirjausvastaus
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))
+    (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "invalidi-json"))))
 
-(deftest huomaa-kutsu-jossa-tuntematon-kayttaja
+;;"application/x-www-form-urlencoded"
+;;"application/x-www-form-urlencoded"
+
+#_ (deftest huomaa-kutsu-jossa-tuntematon-kayttaja-ei
+         (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+               vastaus (kutsukasittely/kasittele-kutsu
+                         (:db jarjestelma)
+                         (:integraatioloki jarjestelma)
+                         "hae-urakka"
+                         {:body kutsun-data
+                          :request-method :post
+                          :headers {"oam_remote_user" "tuntematon",}}
+                         json-skeemat/laatupoikkeaman-kirjaus
+                         json-skeemat/kirjausvastaus
+                         (fn [_]))]
+              (is (= 500 (:status vastaus)))
+              (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
+
+#_ (deftest huomaa-kutsu-jossa-tuntematon-kayttaja
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
         vastaus (kutsukasittely/kasittele-kutsu
                   (:db jarjestelma)
@@ -50,7 +69,7 @@
     (is (= 403 (:status vastaus)))
     (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
 
-(deftest testaa-cors-headerien-lisaaminen
+#_ (deftest testaa-cors-headerien-lisaaminen
          (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "*" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} nil)) "Palauta asterix, jos Origin on nil.")
          (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "*" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} "")) "Palauta asterix, jos Origin on tyhjä.")
          (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (kutsukasittely/lisaa-cors-headerit {"Content-Type" "text/plain"} "http://localhost:3000")) "Palauta Origin, jos Origin on annettu."))

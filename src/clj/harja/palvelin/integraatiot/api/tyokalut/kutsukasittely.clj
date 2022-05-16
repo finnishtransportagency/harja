@@ -23,11 +23,21 @@
            (org.httpkit BytesInputStream)))
 
 
-(def cors-headers
+(defn lisaa-request-headerit-cors
   "Palautetaan kutsujalle pari Cross-Origin Resource Sharing headeria, jotta kutsuja voi hyödyntää
   Harjan palauttamia tietoja sisällön esittämiseksi omassa domainissaan sijaitsevalla sivustolla."
-      {"Access-Control-Allow-Origin" "*",
-       "Vary" "Origin"})
+  [response-headerit request-origin]
+      (conj response-headerit
+            {"Access-Control-Allow-Origin" (if (empty? request-origin) "*" request-origin),
+             "Vary"                        "Origin"}))
+
+(defn lisaa-request-headerit
+      "Palautetaan kutsujalle sanoman content-typen mukaiset headerit"
+      [xml? request-origin]
+      (println "****** REQUEST-ORIGIN " request-origin)
+      (lisaa-request-headerit-cors (if xml? {"Content-Type" "application/xml"}
+                                            {"Content-Type" "application/json"})
+                                   request-origin))
 
 (defn kutsun-formaatti
   "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Palautetaan nil, mikäli ei passaa kumpaankaan."
@@ -114,7 +124,8 @@
   (let [xml? (= (kutsun-formaatti request) "xml")
         loki-viesti (if xml?
                      (tee-xml-lokiviesti "sisään" body request)
-                     (tee-lokiviesti "sisään" body request))]
+                     (tee-lokiviesti "sisään" body request))
+        _ (println "Headerit: " (:headers request))]
     ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
     ;(log/debug "Kutsu:" request)
     ;(log/debug "Parametrit: " (:params request))
@@ -177,8 +188,9 @@
   Payload on Clojure dataa, joka muunnetaan JSON/XML-dataksi.
   Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
-  ([skeema payload] (tee-vastaus 200 skeema payload false))
-  ([status skeema payload xml?]
+  ([skeema payload] (tee-vastaus 200 skeema payload {} false))
+  ([status skeema payload request-origin xml?]
+   (println "**")
    (if payload
      (let [vastaus (if xml?
                      (xml/tee-xml-sanoma payload)
@@ -190,28 +202,18 @@
              (if xml?
                (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) vastaus)
                (json/validoi skeema vastaus)))
-           {:status status
-            :headers (if xml?
-                       {"Content-Type" "application/xml",
-                        "Access-Control-Allow-Origin" "*",
-                        "Vary" "Origin"}
-                       {"Content-Type" "application/json",
-                        "Access-Control-Allow-Origin" "*",
-                        "Vary" "Origin"})
-            :body vastaus})
-         {:status status
-          :headers (if xml?
-                     {"Content-Type" "application/xml",
-                      "Access-Control-Allow-Origin" "*",
-                      "Vary" "Origin"}
-                     {"Content-Type" "application/json",
-                      "Access-Control-Allow-Origin" "*",
-                      "Vary" "Origin"})}))
+           {:status  status
+            :headers (lisaa-request-headerit xml? request-origin)
+            :body    vastaus})
+         {:status  status
+          :headers (lisaa-request-headerit xml? request-origin)}))
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
                            :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
-       {:status status}))))
+       {:status status
+        :headers (lisaa-request-headerit xml? request-origin)}
+       ))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
   (if (> (count kutsu) 10000)
@@ -366,10 +368,9 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
-     :headers {"Content-Type" "text/plain"}
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "Origin"))
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
-    (let [_ (println "REQUEST " request)
-          xml? (= (kutsun-formaatti request) "xml")
+    (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request body))
@@ -382,7 +383,11 @@
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                          kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                          vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                      (tee-vastaus 200 vastauksen-skeema vastauksen-data xml?)))]
+                      (tee-vastaus 200
+                                   vastauksen-skeema
+                                   vastauksen-data
+                                   (get (:headers request) "Origin")
+                                   xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
