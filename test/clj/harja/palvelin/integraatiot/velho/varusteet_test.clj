@@ -142,11 +142,6 @@
        (map :ulkoinen_oid)
        set))
 
-(defn kaikki-varustetoteuma-ohitettu-oidt []
-  (->> (q-map "SELECT velho_oid FROM varustetoteuma_ulkoiset_ohitus")
-       (map :velho_oid)
-       set))
-
 (defn kaikki-virheet []
   (q-map "SELECT * FROM varustetoteuma_ulkoiset_virhe"))
 
