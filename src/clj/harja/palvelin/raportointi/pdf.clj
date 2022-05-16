@@ -319,6 +319,11 @@
   [:fo:block {:color (when vari vari)
               :font-size otsikon-fonttikoko} teksti])
 
+(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
+  [:fo:block {:color (when vari vari)
+              :font-size otsikon-fonttikoko
+              :font-weight "bold"} teksti])
+
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
 

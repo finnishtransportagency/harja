@@ -138,7 +138,7 @@
                                        " solu-varoitus ")
                                      (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
                                        " hennosti-korostettu-solu ")
-                                     (when (false? (:korosta-hennosti? (and (vector? arvo) (second arvo))))
+                                     (when (true? (:ala-korosta? (and (vector? arvo) (second arvo))))
                                        " solun-korostus-estetty ")))
                    :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
@@ -217,6 +217,11 @@
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
   [:p {:style {:color (when vari vari)}} teksti
+   (when infopallura (muodosta-html [:infopallura infopallura]))])
+
+(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
+  [:p {:style {:font-weight 700
+               :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]

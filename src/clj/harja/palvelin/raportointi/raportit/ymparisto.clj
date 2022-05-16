@@ -222,7 +222,7 @@
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
    [:taulukko {:otsikko otsikko
-               :oikealle-tasattavat-kentat (into #{} (range 2 (+ 5 (count kuukaudet))))
+               :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ 5 (count kuukaudet))))
                :esta-tiivis-grid? true
                :sivuttain-rullattava? true
                :ensimmainen-sarake-sticky? true
@@ -284,7 +284,7 @@
                :rivi (into []
                        (concat
 
-                         ;; Vetolaatikkojuttuja
+                         ;; Avattaviin riveihin jätetään ensimmäinen kolumni tyhjäksi.
                          [" "]
 
                          ;; Urakan nimi, jos urakoittain jaottelu päällä
@@ -300,18 +300,27 @@
                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                          [(yhteensa-kentta (vals kk-arvot) true)
                           (if (nil? suunniteltu)
-                            nil
+                            [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                          :yksikko nil
+                                                          :desimaalien-maara 2
+                                                          :lihavoi? false
+                                                          :ala-korosta? true}]
                             [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
                                                           :yksikko (when suunniteltu (:yksikko materiaali))
                                                           :desimaalien-maara 2
-                                                          :korosta-hennosti? false}])
+                                                          :lihavoi? false
+                                                          :ala-korosta? true}])
                           (if (nil? toteuma-prosentti)
-                            nil
+                            [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                          :yksikko nil
+                                                          :desimaalien-maara 2
+                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                          :ala-korosta? true}]
                             [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
                                                           :yksikko (when suunniteltu "%")
                                                           :desimaalien-maara 2
                                                           :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                          :korosta-hennosti? false}])]))})]
+                                                          :ala-korosta? true}])]))})]
 
              ;; Mahdolliset hoitoluokkakohtaiset rivit
              (mapv (fn [[luokka rivit]]
@@ -496,7 +505,7 @@
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
-     [:teksti otsikko]
+     [:teksti-paksu otsikko]
      (when-not (empty? materiaalit)
        [:teksti (str "Kokonaisarvot ovat tarkkoja toteumamääriä, hoitoluokittainen jaottelu perustuu reittitietoon ja voi sisältää epätarkkuutta.")])
      [:teksti (str yleinen/materiaalitoteumien-paivitysinfo)]
