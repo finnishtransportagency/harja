@@ -159,35 +159,47 @@
 
 ;; Konvertoi apilta tulevan materiaalinimen tietokannassa olevaan materiaaliin
 (def mat-apilta->mat-db
-  {"Talvisuola" "Talvisuola"
+  {;; Talvisuolat: Talvisuola rakeinen, voi tulla kahdella eri nimellä, koska tuetaan myös aiemmin speksattuja nimiä
+   "Talvisuola" "Talvisuola, rakeinen NaCl"
+   "Talvisuola, rakeinen NaCl" "Talvisuola, rakeinen NaCl"
    "Talvisuolaliuos CaCl2" "Talvisuolaliuos CaCl2"
    "Talvisuolaliuos NaCl" "Talvisuolaliuos NaCl"
 
+   ;; Erityisalueiden nimet eivät ole päivittyneet, joten mäpätään saapuvat tietokantaan, ikäänkuin suoraan
    "Erityisalueet CaCl2-liuos" "Erityisalueet CaCl2-liuos"
    "Erityisalueet NaCl" "Erityisalueet NaCl"
    "Erityisalueet NaCl-liuos" "Erityisalueet NaCl-liuos"
 
+   ;; Hiekoitushiekan nimeä ei ole muutettu
    "Hiekoitushiekan suola" "Hiekoitushiekan suola"
 
-   "Kaliumformiaatti" "Kaliumformiaatti"
+   ;; Kaliumformiaatti voi tulla sekä liuosnimellä että ilman liuosnimeä. Molemmat on sama asia
+   "Kaliumformiaatti" "Kaliumformiaattiliuos"
+   "Kaliumformiaattiliuos" "Kaliumformiaattiliuos"
    "Natriumformiaatti" "Natriumformiaatti"
    "Natriumformiaattiliuos" "Natriumformiaattiliuos"
 
-   "Kesäsuola" "Kesäsuola (pölynsidonta)"
-   "Kesäsuola (pölynsidonta)" "Kesäsuola (pölynsidonta)"
-   "Kesäsuola (sorateiden kevätkunnostus)" "Kesäsuola (sorateiden kevätkunnostus)"
-   "Kesäsuola (päällystettyjen teiden pölynsidonta)" "Kesäsuola (päällystettyjen teiden pölynsidonta)"
+   ;; Kesäsuolan materiaalinimet ovat päivittyneet. Otetaan ne sisään sekä vanhalla, että uudella nimellä
+   "Kesäsuola (sorateiden kevätkunnostus)" "Kesäsuola sorateiden kevätkunnostus"
+   "Kesäsuola sorateiden kevätkunnostus" "Kesäsuola sorateiden kevätkunnostus"
+   ;; Sorateiden pölynsidonta on yleisen materiaali, joten mäpätään vanha nimi uuteen
+   "Kesäsuola" "Kesäsuola sorateiden pölynsidonta"
+   "Kesäsuola (pölynsidonta)" "Kesäsuola sorateiden pölynsidonta"
+   "Kesäsuola sorateiden pölynsidonta" "Kesäsuola sorateiden pölynsidonta"
+   ;; Päällystettyjen teiden pölynsidonta on uusi materiaali
+   "Kesäsuola päällystettyjen teiden pölynsidonta" "Kesäsuola päällystettyjen teiden pölynsidonta"
 
    "Hiekoitushiekka" "Hiekoitushiekka"
 
    "Jätteet kaatopaikalle" "Jätteet kaatopaikalle"
    "Rikkaruohojen torjunta-aineet" "Rikkaruohojen torjunta-aineet"
-   ;; Murskeet
+   ;; Murskeet: Sorastusmurske on yleisin murkse, joten mäpätään murske aina sorastusmurskeeksi.
    "Murskeet" "Sorastusmurske"
    "Murske" "Sorastusmurske"
+   "Sorastusmurske" "Sorastusmurske"
+   ;; Muut murskeet saavat tulla omilla nimillään
    "Reunantäyttömurske" "Reunantäyttömurske"
-   "Kelirikkomurske" "Kelirikkomurske"
-   "Sorastusmurske" "Sorastusmurske"})
+   "Kelirikkomurske" "Kelirikkomurske"})
 
 (defn hae-materiaalikoodi-nimella [db materiaali-nimi]
   (when-not (nil? (mat-apilta->mat-db materiaali-nimi))

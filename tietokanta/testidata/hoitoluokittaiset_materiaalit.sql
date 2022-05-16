@@ -30,7 +30,7 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
@@ -53,7 +53,7 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma-uudet-talvihoitoluokat'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
 
 -- Kajaaniin
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -64,7 +64,7 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurak
 
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma3'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1000, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'));
 
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -81,36 +81,36 @@ VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma4'), NOW(),
 INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
 VALUES
   -- Talvisuolaa 1000t per urakka
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 0, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 300),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 0, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 300),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
 
   -- uudet talvihoitoluokat
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 10, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
-  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 11, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 10, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+  ('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 11, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
 
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 0, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 300),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 1, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 2, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 3, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
-  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 0, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 300),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+  ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100),
 
   -- Hiekoitushiekkaa 1000t per urakka
   ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 0, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 300),

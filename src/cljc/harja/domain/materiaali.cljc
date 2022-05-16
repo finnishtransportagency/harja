@@ -4,22 +4,29 @@
   "Asiakkaan suosima järjestys, jossa suolat ovat peräkkäin"
   [materiaali-nimi]
   (case materiaali-nimi
-    "Kaikki talvisuola yhteensä" 0
-    "Talvisuola" 1
+    "Talvisuola, rakeinen NaCl" 1
+    "Talvisuola NaCl, rakeinen" 1.1
     "Talvisuolaliuos CaCl2" 2
     "Talvisuolaliuos NaCl" 3
-    "Talvisuola NaCl, rakeinen" 4
-    "Erityisalueet CaCl2-liuos" 4.5
-    "Erityisalueet NaCl" 5
-    "Erityisalueet NaCl-liuos" 6
-    "Hiekoitushiekan suola" 7
-    "Kaliumformiaatti" 8
-    "Natriumformiaatti" 9
-    "Natriumformiaattiliuos" 9.5
-    "Kesäsuola (pölynsidonta)" 10
-    "Kesäsuola (sorateiden kevätkunnostus)" 11
-    "Hiekoitushiekka" 12
-    "Jätteet kaatopaikalle" 13
-    "Murskeet" 14
-    "Rikkaruohojen torjunta-aineet" 15
+    "Hiekoitushiekan suola" 4
+    "Erityisalueet CaCl2-liuos" 5
+    "Erityisalueet NaCl" 6
+    "Erityisalueet NaCl-liuos" 7
+    "Talvisuolat yhteensä (100%) kuivatonnia" 8
+    "Kaliumformiaattiliuos" 9
+    "Natriumformiaatti" 10
+    "Natriumformiaattiliuos" 10.5
+    "Formiaatit yhteensä (50 % liuostonnia)" 11
+    "Kesäsuola sorateiden kevätkunnostus" 12
+    "Kesäsuola sorateiden pölynsidonta" 13
+    "Kesäsuola päällystettyjen teiden pölynsidonta" 14
+    "Kesäsuola yhteensä (t)" 15
+    "Hiekoitushiekka" 16
+    "Murskeet" 17
+    "Sorastusmurske" 17.1
+    "Kelirikkomurske" 17.2
+    "Reunantäyttömurske" 17.3
+    "Murskeet yhteensä (t)" 17.4
+    "Jätteet kaatopaikalle" 18
+    "Rikkaruohojen torjunta-aineet" 19
     16))

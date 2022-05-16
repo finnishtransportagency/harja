@@ -524,7 +524,7 @@
 
 
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (1, 'Talvisuolaliuos NaCl', 't', false, 'talvisuola');
-;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (7, 'Talvisuola', 't', false, 'talvisuola');
+;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (7, 'Talvisuola, rakeinen NaCl', 't', false, 'talvisuola');
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (16, 'Natriumformiaatti', 't', false, 'muu');
 (def sopimuksen-kaytetty-mat-ennen-odotettu
   [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]

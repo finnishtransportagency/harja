@@ -31,31 +31,38 @@ UPDATE materiaalikoodi SET nimi  = 'Sorastusmurske',
                            materiaaliluokka_id = (SELECT id FROM materiaaliluokka
                                                   WHERE nimi = 'Murske') WHERE nimi = 'Murskeet';
 
+-- Nimetään materiaalikoodit uusiksi
+UPDATE materiaalikoodi SET nimi  = 'Talvisuola, rakeinen NaCl' WHERE nimi = 'Talvisuola';
+UPDATE materiaalikoodi SET nimi  = 'Kaliumformiaattiliuos' WHERE nimi = 'Kaliumformiaatti';
+UPDATE materiaalikoodi SET nimi  = 'Kesäsuola sorateiden pölynsidonta' WHERE nimi = 'Kesäsuola (pölynsidonta)';
+UPDATE materiaalikoodi SET nimi  = 'Kesäsuola sorateiden kevätkunnostus' WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)';
+
 INSERT INTO materiaalikoodi (nimi, yksikko, urakkatyyppi, kohdistettava, materiaalityyppi)
-VALUES ('Kesäsuola (päällystettyjen teiden pölynsidonta)', 't', 'hoito'::urakkatyyppi, false, 'kesasuola'::materiaalityyppi);
+VALUES ('Kesäsuola päällystettyjen teiden pölynsidonta', 't', 'hoito'::urakkatyyppi, false, 'kesasuola'::materiaalityyppi);
 
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Erityisalue') WHERE nimi = 'Erityisalueet CaCl2-liuos';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Erityisalue') WHERE nimi = 'Erityisalueet NaCl';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Erityisalue') WHERE nimi = 'Erityisalueet NaCl-liuos';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola') WHERE nimi = 'Hiekoitushiekan suola';
-UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti') WHERE nimi = 'Kaliumformiaatti';
+UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti') WHERE nimi = 'Kaliumformiaattiliuos';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti') WHERE nimi = 'Natriumformiaatti';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti') WHERE nimi = 'Natriumformiaattiliuos';
-UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesasuola') WHERE nimi = 'Kesäsuola (pölynsidonta)';
-UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesasuola') WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)';
+UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesasuola') WHERE nimi = 'Kesäsuola sorateiden pölynsidonta';
+UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesasuola') WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka') WHERE nimi = 'Hiekoitushiekka';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Muu') WHERE nimi = 'Jätteet kaatopaikalle';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Muu') WHERE nimi = 'Rikkaruohojen torjunta-aineet';
 
 -- Päivitä muuttuneiden materiaalikoodien vuoksi myös järjestykset
-UPDATE materiaalikoodi SET jarjestys = 13 WHERE nimi = 'Kesäsuola (päällystettyjen teiden pölynsidonta)';
-UPDATE materiaalikoodi SET jarjestys = 14 WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)';
-UPDATE materiaalikoodi SET jarjestys = 15 WHERE nimi = 'Hiekoitushiekka';
-UPDATE materiaalikoodi SET jarjestys = 16 WHERE nimi = 'Jätteet kaatopaikalle';
-UPDATE materiaalikoodi SET jarjestys = 17 WHERE nimi = 'Rikkaruohojen torjunta-aineet';
-UPDATE materiaalikoodi SET jarjestys = 18 WHERE nimi = 'Sorastusmurske';
-UPDATE materiaalikoodi SET jarjestys = 19 WHERE nimi = 'Reunantäyttömurske';
-UPDATE materiaalikoodi SET jarjestys = 20 WHERE nimi = 'Kelirikkomurske';
+UPDATE materiaalikoodi SET jarjestys = 13 WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus';
+UPDATE materiaalikoodi SET jarjestys = 14 WHERE nimi = 'Kesäsuola sorateiden pölynsidonta';
+UPDATE materiaalikoodi SET jarjestys = 15 WHERE nimi = 'Kesäsuola päällystettyjen teiden pölynsidonta';
+UPDATE materiaalikoodi SET jarjestys = 16 WHERE nimi = 'Hiekoitushiekka';
+UPDATE materiaalikoodi SET jarjestys = 17 WHERE nimi = 'Jätteet kaatopaikalle';
+UPDATE materiaalikoodi SET jarjestys = 18 WHERE nimi = 'Rikkaruohojen torjunta-aineet';
+UPDATE materiaalikoodi SET jarjestys = 19 WHERE nimi = 'Sorastusmurske';
+UPDATE materiaalikoodi SET jarjestys = 20 WHERE nimi = 'Reunantäyttömurske';
+UPDATE materiaalikoodi SET jarjestys = 21 WHERE nimi = 'Kelirikkomurske';
 
 -- Lisää toimenpidekoodille tieto mihin materiaalikoodiin tai materiaaliluokkaan se kuuluu
 ALTER TABLE toimenpidekoodi
@@ -76,7 +83,7 @@ UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokk
 WHERE nimi = 'Liukkaudentorjunta hiekoituksella' AND taso = 4;
 
 UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
-                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola (sorateiden kevätkunnostus)')
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')
 WHERE nimi = 'Sorateiden pölynsidonta' AND taso = 4;
 
 UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),

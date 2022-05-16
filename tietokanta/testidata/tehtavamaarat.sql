@@ -57,7 +57,7 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja) V
 -- Kaikkia toimenpidekoodeja ei ole migraatiotiedostoja ajettaessa lokaaliympäristöissä.
 -- Kun dataa haetaan urakat_tehtavamaara taulusta, materliaalikoodi ja materiaaliluokka mäppäykset on oltava.
 -- Joten luodaan ne tässä
-UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola')
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola, rakeinen NaCl')
 WHERE nimi = 'Suolaus' AND taso = 4;
 UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti')
 WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' AND taso = 4;
