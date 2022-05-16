@@ -700,27 +700,6 @@
     (is (not (str/includes? lokiteksti "ERROR")))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
 
-;#_(deftest ohitus-taulussa-oleva-oid-ohittaa-kohteen-latauksen-velhosta
-;  (u "DELETE FROM varustetoteuma_ulkoiset")
-;  (u "DELETE FROM varustetoteuma_ulkoiset_ohitus")
-;  (assert (= 1 (u "INSERT INTO varustetoteuma_ulkoiset_ohitus (velho_oid, aikaleima, viesti, muokattu)
-;  VALUES ('1.2.246.578.4.3.1.501.158276053', '2022-05-10T00:00:00EEST', 'jotain', '2022-05-10')")))
-;  (let [fake-tunnisteet (fn [_ _ _]
-;                          {:status 200 :body "[\"1.2.246.578.4.3.1.501.158276054\"]"})
-;        ei-sallittu-fn (fake-ei-saa-kutsua-fn "Oid oli ohitettava. Tätä ei saa kutsua.")
-;        odotettu-oid-lista #{}
-;        odotettu-ohitettu-oid-lista #{"1.2.246.578.4.3.1.501.158276054"}
-;        lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota {:fake-token-fn yhteiset-test/fake-token-palvelin
-;                                                                                               :fake-tunnisteet-fn fake-tunnisteet
-;                                                                                               :fake-kohteet-fn ei-sallittu-fn}))]
-;    (is (not (str/includes? lokiteksti "ERROR")))
-;    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))
-;    #_(is (= odotettu-ohitettu-oid-lista (kaikki-varustetoteuma-ohitettu-oidt)))))
-
-(deftest ohitus-taulussa-oleva-oid-ladataan-jos-latauspvm-on-uudempi
-  ;TODO toteuta latauspvm käsite koodiin
-  )
-
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
   (let [tietokannan-kohdeluokat (->> "SELECT enumlabel
                                       FROM pg_type pt
