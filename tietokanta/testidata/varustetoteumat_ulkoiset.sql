@@ -49,7 +49,15 @@ $$
                ('1.2.246.578.4.3.12.512.310174001', kemin_mhu_testiurakka, 4, 422, 2283, NULL, NULL, '01010000009D8153FE6F661841E316C055E0CA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2024-10-01', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
                ('1.2.246.578.4.3.12.512.310174002', kemin_mhu_testiurakka, 4, 422, 2317, NULL, NULL, '0101000000ED563147E86518410FCA46E2E0CA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2025-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
                ('1.2.246.578.4.3.12.512.310174003', kemin_mhu_testiurakka, 4, 422, 3846, NULL, NULL, '01010000000173C7483E4E184175AAD9A9B5CA5B41', 'tl512', NULL, 'lisatty', 'Puuttuu', '2026-09-30', NULL, 'migraatio', '2021-05-28 14:01:33.000000'),
-               ('1.2.246.578.4.3.12.512.310174004', kemin_mhu_testiurakka, 4, 422, 3898, NULL, NULL, '0101000000C01F567B6E4D184168963E1BB5CA5B41', 'tl512', NULL, 'poistettu', 'Puuttuu', '2020-09-30', '2021-06-01', 'migraatio', '2021-05-28 14:01:33.000000');
+               ('1.2.246.578.4.3.12.512.310174004', kemin_mhu_testiurakka, 4, 422, 3898, NULL, NULL, '0101000000C01F567B6E4D184168963E1BB5CA5B41', 'tl512', NULL, 'poistettu', 'Puuttuu', '2020-09-30', '2021-06-01', 'migraatio', '2021-05-28 14:01:33.000000'),
+               ('1.2.246.578.4.3.11.503.295749434', kemin_mhu_testiurakka, 9, 206, 10352, null, null, '0101000000DBEAFC068AEB14418D174FFEEA0A5A41', 'tl503', null, 'lisatty', 'Tyydyttävä', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295749435', kemin_mhu_testiurakka, 9, 206, 10352, null, null, '0101000000DBEAFC068AEB14418D174FFEEA0A5A41', 'tl503', null, 'lisatty', 'Tyydyttävä', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295751776', kemin_mhu_testiurakka, 9, 206, 10352, null, null, '0101000000DBEAFC068AEB14418D174FFEEA0A5A41', 'tl503', null, 'lisatty', 'Hyvä', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295752863', kemin_mhu_testiurakka, 9, 208, 8690, null, null, '01010000003C394EE9E53E15413E08D23033115A41', 'tl503', null, 'lisatty', 'Puuttuu', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295752875', kemin_mhu_testiurakka, 9, 208, 10290, null, null, '01010000002CB9AF28144D154121CD912A7C125A41', 'tl503', null, 'lisatty', 'Puuttuu', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295753976', kemin_mhu_testiurakka, 9, 212, 4264, null, null, '01010000000D5B9EB56D901641AE83E999D41B5A41', 'tl503', null, 'lisatty', 'Puuttuu', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.295753978', kemin_mhu_testiurakka, 9, 212, 4565, null, null, '010100000068D4D797629416417CA65CF2AB1B5A41', 'tl503', null, 'lisatty', 'Puuttuu', '2020-05-21', null, 'migraatio', '2022-04-01 19:12:05.000000'),
+               ('1.2.246.578.4.3.11.503.296385570', kemin_mhu_testiurakka, 377, 3, 689, null, null, '0101000000F40004A541591F41798C7FC8A5D65941', 'tl503', null, 'lisatty', 'Tyydyttävä', '2020-07-16', null, 'migraatio', '2022-04-01 19:12:05.000000');
     END
 $$;
 
