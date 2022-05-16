@@ -89,22 +89,6 @@
                     :virhekohteen_vastaus (str kohde)}]
      (q-toteumat/tallenna-varustetoteuma-ulkoiset-virhe<! db hakuvirhe))))
 
-(defn lokita-ja-tallenna-ohitus
-  ([db {:keys [oid muokattu] :as kohde} viesti]
-   (let [ohitus {:velho_oid oid
-                 :aikaleima (pvm/nyt)
-                 :viesti viesti
-                 :muokattu (-> muokattu
-                               varuste-vastaanottosanoma/velho-aika->aika
-                               varuste-vastaanottosanoma/aika->sql)}]
-     (try
-       (q-toteumat/tallenna-varustetoteuma-ulkoiset-ohitus<! db ohitus)
-       (catch PSQLException e
-         (if (str/includes? (.getMessage e) "duplicate key value violates unique constraint \"varustetoteuma_ulkoiset_ohitus_pkey\"")
-           (q-toteumat/paivita-varustetoteuma-ulkoiset-ohitus<! db ohitus)
-           (throw e))
-         )))))
-
 (defn- urakka-sijainnin-avulla
   [db sijainti alkusijainti version-voimassaolo alkaen]
   (let [s (or sijainti alkusijainti)
@@ -486,13 +470,8 @@
                                                                                  oid muokattu virheviesti)))
                                                                   false)
 
-                                                                ohitus-syy
-                                                                (do
-                                                                  (lokita-ja-tallenna-ohitus db kohde ohitus-syy)
-                                                                  true)
-
                                                                 :else
-                                                                (log/error "Virhe varusteen tallennuksessa. Epälooginen lopputulema varusteen jäsennyksestä."))))]
+                                                                :ohitus)))]
                               (hae-ja-tallenna
                                 tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                                 token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))
