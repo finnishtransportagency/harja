@@ -174,7 +174,7 @@
                                   :epaonnistui ->HaeVarusteetEpaonnistui}))))))
 
   HaeVarusteetOnnistui
-  (process-event [{:keys [vastaus] :as jotain} app]
+  (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
             (map (fn [t] {:sijainti (:sijainti t)}) (:toteumat vastaus)))
     (-> app
@@ -182,7 +182,7 @@
         (assoc :varusteet (:toteumat vastaus))))
 
   HaeVarusteetEpaonnistui
-  (process-event [{:keys [vastaus] :as jotain-muuta} app]
+  (process-event [_ app]
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     (-> app
