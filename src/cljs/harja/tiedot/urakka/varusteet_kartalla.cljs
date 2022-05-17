@@ -5,6 +5,12 @@
   (:require-macros [reagent.ratom :refer [reaction]]))
 
 
+(def toteuma-vari {"lisatty" "green"
+                   "paivitetty" "yellow"
+                   "poistettu" "red"
+                   "tarkastus" "purple"
+                   "korjaus" "black"
+                   "puhdistus" "white"})
 (def karttataso-varusteet (atom []))
 (defonce karttataso-nakyvissa? (atom true))
 
@@ -12,10 +18,10 @@
          (reaction
            (let [kohteet @karttataso-varusteet]
              (when (and (not-empty kohteet) @karttataso-nakyvissa?)
-               (with-meta (mapv (fn [kohde]
+               (with-meta (mapv (fn [{:keys [toteuma] :as kohde}]
                                   (when (:sijainti kohde)
                                     {:alue (merge {:stroke {:width 8
-                                                            :color "red"}}
+                                                            :color (or (get toteuma-vari toteuma) "pink")}}
                                                   (:sijainti kohde))
                                      :selite {:teksti "Varuste"
                                               :img (kartta-ikonit/pinni-ikoni "sininen")}

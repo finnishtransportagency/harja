@@ -176,7 +176,7 @@
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
-            (map (fn [t] {:sijainti (:sijainti t)}) (:toteumat vastaus)))
+            (map (fn [t] {:sijainti (:sijainti t) :toteuma (:toteuma t)}) (:toteumat vastaus)))
     (-> app
         (assoc :haku-paalla false)
         (assoc :varusteet (:toteumat vastaus))))
