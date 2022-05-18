@@ -49,7 +49,7 @@
 (defn urakan-hoitokausi
   [ur hoitokaudet valittu-hoitokausi-atom valitse-fn]
   [:div.label-ja-alasveto.hoitokausi
-   [:label.alasvedon-otsikko (cond
+   [:span.alasvedon-otsikko (cond
                               (#{:hoito :teiden-hoito} (:tyyppi ur)) "Hoitokausi"
                               (u-domain/vesivaylaurakkatyyppi? (:tyyppi ur)) "Urakkavuosi"
                               :default "Sopimuskausi")]
