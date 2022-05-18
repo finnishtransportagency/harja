@@ -22,6 +22,22 @@
            (java.util.zip GZIPInputStream)
            (org.httpkit BytesInputStream)))
 
+
+(defn lisaa-request-headerit-cors
+  "Palautetaan kutsujalle lisäksi pari Cross-Origin Resource Sharing headeria, jotta kutsuja voi hyödyntää
+  Harjan palauttamia tietoja sisällön esittämiseksi omassa domainissaan sijaitsevalla sivustolla."
+  [response-headerit request-origin]
+      (conj response-headerit
+            {"Access-Control-Allow-Origin" (if (empty? request-origin) "*" request-origin),
+             "Vary"                        "Origin"}))
+
+(defn lisaa-request-headerit
+      "Palautetaan kutsujalle sanoman content-typen mukaiset headerit"
+      [xml? request-origin]
+      (lisaa-request-headerit-cors (if xml? {"Content-Type" "application/xml"}
+                                            {"Content-Type" "application/json"})
+                                   request-origin))
+
 (defn kutsun-formaatti
   "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Palautetaan nil, mikäli ei passaa kumpaankaan."
   [request]
@@ -170,8 +186,8 @@
   Payload on Clojure dataa, joka muunnetaan JSON/XML-dataksi.
   Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
-  ([skeema payload] (tee-vastaus 200 skeema payload false))
-  ([status skeema payload xml?]
+  ([skeema payload] (tee-vastaus 200 skeema payload nil false))
+  ([status skeema payload request-origin xml?]
    (if payload
      (let [vastaus (if xml?
                      (xml/tee-xml-sanoma payload)
@@ -183,20 +199,18 @@
              (if xml?
                (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) vastaus)
                (json/validoi skeema vastaus)))
-           {:status status
-            :headers (if xml?
-                       {"Content-Type" "application/xml"}
-                       {"Content-Type" "application/json"})
-            :body vastaus})
-         {:status status
-          :headers (if xml?
-                     {"Content-Type" "application/xml"}
-                     {"Content-Type" "application/json"})}))
+           {:status  status
+            :headers (lisaa-request-headerit xml? request-origin)
+            :body    vastaus})
+         {:status  status
+          :headers (lisaa-request-headerit xml? request-origin)}))
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
                            :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
-       {:status status}))))
+       {:status status
+        :headers (lisaa-request-headerit xml? request-origin)}
+       ))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
   (if (> (count kutsu) 10000)
@@ -351,7 +365,7 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
-     :headers {"Content-Type" "text/plain"}
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
      :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
@@ -364,9 +378,14 @@
                    parametrit
                    #(let
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                         origin-header (get (:headers request) "origin")
                          kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                          vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                      (tee-vastaus 200 vastauksen-skeema vastauksen-data xml?)))]
+                      (tee-vastaus 200
+                                   vastauksen-skeema
+                                   vastauksen-data
+                                   origin-header
+                                   xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
@@ -398,7 +417,7 @@
                        [_ (vaadi-jarjestelmaoikeudet db
                             (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
                         vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
-                       (tee-vastaus 200 vastauksen-skeema vastauksen-data xml?)))]
+                       (tee-vastaus 200 vastauksen-skeema vastauksen-data (get (:headers request) "origin") xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
