@@ -323,6 +323,7 @@
         urakka-olemassaolo (urakka-pvmt-idlla-fn (:urakka_id varustetoteuma))
         {toiminto :toiminto
          viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo)]
+    (when viesti (log/debug viesti))
     (cond
       (= :tallenna toiminto)                                ; <3
       {:tulos varustetoteuma :virheviesti nil}
