@@ -12,6 +12,7 @@
                    "korjaus" "black"
                    "puhdistus" "white"})
 (def karttataso-varusteet (atom []))
+
 (defonce karttataso-nakyvissa? (atom true))
 
 (defonce varusteet-kartalla
