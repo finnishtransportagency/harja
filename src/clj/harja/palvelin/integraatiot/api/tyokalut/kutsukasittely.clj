@@ -186,7 +186,7 @@
   Payload on Clojure dataa, joka muunnetaan JSON/XML-dataksi.
   Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
-  ([skeema payload] (tee-vastaus 200 skeema payload {} false))
+  ([skeema payload] (tee-vastaus 200 skeema payload nil false))
   ([status skeema payload request-origin xml?]
    (if payload
      (let [vastaus (if xml?
@@ -378,12 +378,13 @@
                    parametrit
                    #(let
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                         origin-header (get (:headers request) "origin")
                          kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                          vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
                       (tee-vastaus 200
                                    vastauksen-skeema
                                    vastauksen-data
-                                   (get (:headers request) "origin")
+                                   origin-header
                                    xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
