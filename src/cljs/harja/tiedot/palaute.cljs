@@ -10,7 +10,7 @@
 (def sahkoposti-kehitystiimi "harjapalaute@solita.fi")
 (def sahkoposti-paakayttaja "harjapalaute@solita.fi")
 
-(def +linkki-koulutusvideot+ "http://finnishtransportagency.github.io/harja/")
+(def +linkki-koulutusvideot+ "https://finnishtransportagency.github.io/harja/")
 
 (defn mailto-kehitystiimi []
   (str "mailto:" sahkoposti-kehitystiimi))
