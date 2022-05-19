@@ -67,6 +67,16 @@
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
 
+;; Toimii tismalleen samoin, kuin :arvo-ja-yksikko, mutta tämän avulla
+;; PDF:lle saadaan yksittäisille soluille korostuksia
+(defmethod muodosta-pdf :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+  [:fo:inline
+   [:fo:inline (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 fmt (fmt arvo)
+                 :else arvo)]
+   [:fo:inline (str "\u00A0" yksikko)]])
+
 (defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
   [:fo:inline
    [:fo:inline (cond
@@ -74,6 +84,10 @@
                  fmt (fmt arvo)
                  :else arvo)]
    [:fo:inline (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-pdf :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:fo:inline
+   [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
@@ -84,7 +98,6 @@
 
 (defmethod muodosta-pdf :infopallura [_]
   nil)
-
 
 (def alareuna
   {:border-bottom reunan-tyyli})
@@ -135,6 +148,27 @@
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
+
+(defn- korostetaanko-hennosti
+  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
+  solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
+  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
+
+  'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
+  [korosta-hennosti? arvo-datassa]
+  (cond
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (false? (:korosta-hennosti? (second arvo-datassa))))
+    {}
+    korosta-hennosti? korosta-hennosti?
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (:korosta-hennosti? (second arvo-datassa)))
+    {:background-color hennosti-korostettu-vari
+     :color "black"}
+    :else {}))
 
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
@@ -194,7 +228,7 @@
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
-                               korosta-hennosti?
+                               (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
@@ -284,6 +318,11 @@
 (defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
   [:fo:block {:color (when vari vari)
               :font-size otsikon-fonttikoko} teksti])
+
+(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
+  [:fo:block {:color (when vari vari)
+              :font-size otsikon-fonttikoko
+              :font-weight "bold"} teksti])
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
