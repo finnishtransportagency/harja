@@ -109,7 +109,12 @@
                  (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
                      (close! chan))
 
-                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
+                 ;; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
+                 ;; Käsitellään vain, jos ping-rajapinta palauttaa 403, koska muut rajapinnat
+                 ;; saattavat palauttaa sen oikeastakin syystä.
+                 (and
+                   (= palvelu :ping)
+                   (= (:status vastaus) 403))
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
