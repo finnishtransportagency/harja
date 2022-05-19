@@ -842,66 +842,66 @@
     "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
 (def vuosi-kuukausi-malli
-  {1 {10 {:kuukausi 10 :kuukausipalkka 100}
-      11 {:kuukausi 11 :kuukausipalkka 120}
-      12 {:kuukausi 12 :kuukausipalkka 100}
-      1 {:kuukausi 1 :kuukausipalkka 120}
-      2 {:kuukausi 2 :kuukausipalkka 130}
-      3 {:kuukausi 3 :kuukausipalkka 100}
-      4 {:kuukausi 4 :kuukausipalkka 100}
-      5 {:kuukausi 5 :kuukausipalkka 150}
-      6 {:kuukausi 6 :kuukausipalkka 100}
-      7 {:kuukausi 7 :kuukausipalkka 160}
-      8 {:kuukausi 8 :kuukausipalkka 170}
-      9 {:kuukausi 9 :kuukausipalkka 100}}
-   2 {10 {:kuukausi 10 :kuukausipalkka 100}
-      11 {:kuukausi 11 :kuukausipalkka 120}
-      12 {:kuukausi 12 :kuukausipalkka 100}
-      1 {:kuukausi 1 :kuukausipalkka 120}
-      2 {:kuukausi 2 :kuukausipalkka 130}
-      3 {:kuukausi 3 :kuukausipalkka 100}
-      4 {:kuukausi 4 :kuukausipalkka 100}
-      5 {:kuukausi 5 :kuukausipalkka 150}
-      6 {:kuukausi 6 :kuukausipalkka 100}
-      7 {:kuukausi 7 :kuukausipalkka 160}
-      8 {:kuukausi 8 :kuukausipalkka 170}
-      9 {:kuukausi 9 :kuukausipalkka 100}}
-   3 {10 {:kuukausi 10 :kuukausipalkka 100}
-      11 {:kuukausi 11 :kuukausipalkka 120}
-      12 {:kuukausi 12 :kuukausipalkka 100}
-      1 {:kuukausi 1 :kuukausipalkka 120}
-      2 {:kuukausi 2 :kuukausipalkka 130}
-      3 {:kuukausi 3 :kuukausipalkka 100}
-      4 {:kuukausi 4 :kuukausipalkka 100}
-      5 {:kuukausi 5 :kuukausipalkka 150}
-      6 {:kuukausi 6 :kuukausipalkka 100}
-      7 {:kuukausi 7 :kuukausipalkka 160}
-      8 {:kuukausi 8 :kuukausipalkka 170}
-      9 {:kuukausi 9 :kuukausipalkka 100}}
-   4 {10 {:kuukausi 10 :kuukausipalkka 100}
-      11 {:kuukausi 11 :kuukausipalkka 120}
-      12 {:kuukausi 12 :kuukausipalkka 100}
-      1 {:kuukausi 1 :kuukausipalkka 120}
-      2 {:kuukausi 2 :kuukausipalkka 130}
-      3 {:kuukausi 3 :kuukausipalkka 100}
-      4 {:kuukausi 4 :kuukausipalkka 100}
-      5 {:kuukausi 5 :kuukausipalkka 150}
-      6 {:kuukausi 6 :kuukausipalkka 100}
-      7 {:kuukausi 7 :kuukausipalkka 160}
-      8 {:kuukausi 8 :kuukausipalkka 170}
-      9 {:kuukausi 9 :kuukausipalkka 100}}
-   5 {10 {:kuukausi 10 :kuukausipalkka 100}
-      11 {:kuukausi 11 :kuukausipalkka 120}
-      12 {:kuukausi 12 :kuukausipalkka 100}
-      1 {:kuukausi 1 :kuukausipalkka 120}
-      2 {:kuukausi 2 :kuukausipalkka 130}
-      3 {:kuukausi 3 :kuukausipalkka 100}
-      4 {:kuukausi 4 :kuukausipalkka 100}
-      5 {:kuukausi 5 :kuukausipalkka 150}
-      6 {:kuukausi 6 :kuukausipalkka 100}
-      7 {:kuukausi 7 :kuukausipalkka 160}
-      8 {:kuukausi 8 :kuukausipalkka 170}
-      9 {:kuukausi 9 :kuukausipalkka 100}}})
+  {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 1}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 1}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 1}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 1}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 1}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 1}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 1}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 1}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 1}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 1}}
+   2 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 2}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 2}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 2}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 2}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 2}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 2}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 2}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 2}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 2}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 2}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 2}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 2}}
+   3 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 3}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 3}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 3}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 3}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 3}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 3}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 3}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 3}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 3}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 3}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 3}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 3}}
+   4 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 4}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 4}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 4}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 4}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 4}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 4}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 4}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 4}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 4}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 4}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 4}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 4}}
+   5 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 5}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 5}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 5}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 5}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 5}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 5}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 5}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 5}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 5}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 5}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 5}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 5}}})
 
 #_(defonce kuluva-hkn-sininen (r/atom 1))
 (defonce
@@ -928,30 +928,59 @@
 
 (def testiveisti {:id 1})
 
+(defn- luo-kursori
+  [toimenkuva hoitokausi]
+  (r/cursor mock-data [toimenkuva :maarat-per-hoitovuosi-per-kuukausi hoitokausi]))
+
+(defn tallenna-kuukausipalkka
+  [rivi]
+  (e! (->TallennaToimenkuvanKuukausipalkkaVuodella rivi)))
+
+(defn formatoi-kuukausi
+  [hoitokausi kuukausi]
+  (str
+    (get {1 "Tammikuu"
+          2 "Helmikuu"
+          3 "Maaliskuu"
+          4 "Huhtikuu"
+          5 "Toukokuu"
+          6 "Kesäkuu"
+          7 "Heinäkuu"
+          8 "Elokuu" 9 "Syyskuu" 10 "Lokakuu" 11 "Marraskuu" 12 "Joulukuu"}
+      kuukausi)
+    (when (or (< kuukausi (-> pvm/nyt pvm/kuukausi))) " (mennyt)")))
+
 (defn- vetolaatikko-komponentti
   [toimenkuva]
-  (let [kuluva-hkn-sininen (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet :hoitokauden-numero])
-        kursorit (into {} (map (juxt identity #(r/cursor mock-data [toimenkuva :maarat-per-hoitovuosi-per-kuukausi %]))) (range 1 6))]
+  (let [valittu-hoitokausi (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet :hoitokauden-numero])
+        kursorit (into {} (map (juxt identity (r/partial luo-kursori toimenkuva))) (range 1 6))]
     (fn [toimenkuva]
-      [:div (str "veto" toimenkuva @kuluva-hkn-sininen (pr-str kursorit))
-       [vanha-grid/muokkaus-grid
-        {:id "afasdf" :voi-poistaa? (constantly false)
-         :voi-lisata? false
-     :voi-kumota? false}
-        [{:nimi :kuukausi :tyyppi :numero :muokattava? (constantly false) :leveys "80%"}
-         {:nimi :kuukausipalkka :tyyppi :numero :leveys "20%"}]
-        (get kursorit @kuluva-hkn-sininen)]
-       #_(doall
-           (for [kk (range 1 13)]
-             ^{:key (str "kk-" kk)}
-             [:div (str "veto" kk (:kk-v rivi))
-              [kentat/tee-kentta
-               {:tyyppi :numero
-                :on-blur #(e! (->TallennaToimenkuvanKuukausipalkkaVuodella {:summa (.. % -target -value) :kuukausi kk}))}
-               (r/cursor mock-data ["sopimusvastaava" :maarat-per-hoitovuosi-per-kuukausi 3 kk])]]))])))
+      (let [valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec @valittu-hoitokausi)))]
+        [:div #_(str "veto" toimenkuva @valittu-hoitokausi (pr-str kursorit))
+         [kentat/tee-kentta {:tyyppi :checkbox :teksti "Suunnittele maksuerät kuukausittain" :valitse! #(println "kliketiklik")} (r/atom false)]
+         [:div {:style {:border-left "4px solid black" :margin-top "16px" :padding-left "18px"}}
+          [vanha-grid/muokkaus-grid
+           {:id (str toimenkuva valitun-hoitokauden-alkuvuosi)
+            :voi-poistaa? (constantly false)
+            :voi-lisata? false
+            :piilota-toiminnot? true
+            :muokkauspaneeli? false
+            :jarjesta (fn [{:keys [kuukausi]}] (if (> kuukausi 9)
+                                                 (- kuukausi 12)
+                                                 kuukausi))
+            :piilota-table-header? true
+            :on-rivi-blur tallenna-kuukausipalkka
+            :voi-kumota? false}
+           [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
+            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%"}]
+           (get kursorit @valittu-hoitokausi)]]]))))
 
 (defonce mock-laatikot
   (into {} (map (juxt :toimenkuva #(-> [vetolaatikko-komponentti (:toimenkuva %)]))) t/johto-ja-hallintokorvaukset-pohjadata))
+
+(defn- tallenna-vuosipalkka
+  [rivi]
+  (e! (->TallennaToimenkuvanVuosipalkka rivi)))
 
 (defn osio-2022
   [app _ _ _ _ _ _ _ _ _ kuluva-hoitokausi & params]
@@ -960,24 +989,17 @@
    [debug/debug @mock-data]
    [vanha-grid/muokkaus-grid
     {:otsikko "tämmöttinen"
-     :id "idid"
-     :voi-lisata? false
+     :id "toimenkuvat-taulukko"
+     :voi-lisata? false     
      :voi-kumota? false
-     :on-rivi-blur (fn [rivi] (e! (->TallennaToimenkuvanVuosipalkka rivi)))
+     :piilota-toiminnot? true
+     :on-rivi-blur tallenna-vuosipalkka
      :voi-poistaa? (constantly false)
      :vetolaatikot mock-laatikot}
     [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
      {:tyyppi :vetolaatikon-tila :leveys "5%"}
      {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (constantly true) :leveys "15%"}]
-    mock-data]
-   #_(doall
-       (for [a params]
-         (if-let [osat (:osat a)]
-           (for [o @osat]
-             (if-let [ozat (:osat o)]
-               [debug/debug @ozat]
-               [debug/debug o]))
-           [debug/debug a])))])
+    mock-data]])
 
 ;; ### Johto- ja hallintokorvaus osion pääkomponentti ###
 

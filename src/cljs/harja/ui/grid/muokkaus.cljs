@@ -510,7 +510,8 @@
   :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
   :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
   :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin.
-  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan."
+  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
+  :piilota-table-header?          True, niin ei piirretä thead -elementtiä."
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
@@ -660,7 +661,7 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus] :as opts} skeema muokatut]
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus piilota-table-header?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -689,7 +690,8 @@
                                 :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
             [:div.panel-body
              [:table.grid
-              [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]
+              (when-not (true? piilota-table-header?)
+                [gridin-otsikot skeema rivinumerot? piilota-toiminnot?])
               [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja
                              :virheet virheet :varoitukset varoitukset :huomautukset huomautukset
                              :valiotsikot valiotsikot :disable-input? disable-input?
