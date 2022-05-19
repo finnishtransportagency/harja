@@ -59,6 +59,7 @@
         solu? #(or (nil? %)
                  (= "–" %)
                  (and (not (nil? %)) (number? %))
+                 (and (apurit/raporttisolu? %) (nil? (apurit/raporttisolun-arvo %)))
                  (and (apurit/raporttisolu? %) (number? (apurit/raporttisolun-arvo %)))
                  (apurit/tyhja-raporttisolu? %))]
 
@@ -73,10 +74,10 @@
         (every? solu? hoitokaudet)
         (solu? yhteensa)
         (solu? suunniteltu)
-        (or (nil? prosentti)
+         (or (nil? prosentti) (nil? (apurit/raporttisolun-arvo prosentti))
           (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti)))
           (and (vector? prosentti) (= "%" (:yksikko (second prosentti))))) ;; Tämä on näitä keissejä varten [:arvo-ja-yksikko {:arvo 277.625, :yksikko "%", :desimaalien-maara 2}]
-        (or (and (every? nil? hoitokaudet) (nil? yhteensa) (nil? (apurit/raporttisolun-arvo yhteensa)))
+         (or (and (every? nil? hoitokaudet) (nil? yhteensa) (nil? (apurit/raporttisolun-arvo yhteensa)))
           (= (apurit/raporttisolun-arvo yhteensa)
             (reduce (fn [summa h]
                       (+ summa (if (number? (apurit/raporttisolun-arvo h))
