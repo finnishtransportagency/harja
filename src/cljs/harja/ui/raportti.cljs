@@ -66,7 +66,7 @@
 (defmethod muodosta-html :arvo-ja-selite [[_ {:keys [arvo selite]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo arvo]
-   [:div.selite.caption selite]])
+   [:div.selite.small-caption selite]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
