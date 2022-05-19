@@ -13,20 +13,23 @@
     "Erityisalueet NaCl" 6
     "Erityisalueet NaCl-liuos" 7
     "Talvisuolat yhteensä (100%) kuivatonnia" 8
+    "Talvisuolat yhteensä" 8.1
     "Kaliumformiaattiliuos" 9
     "Natriumformiaatti" 10
-    "Natriumformiaattiliuos" 10.5
-    "Formiaatit yhteensä (50 % liuostonnia)" 11
-    "Kesäsuola sorateiden kevätkunnostus" 12
-    "Kesäsuola sorateiden pölynsidonta" 13
-    "Kesäsuola päällystettyjen teiden pölynsidonta" 14
-    "Kesäsuola yhteensä (t)" 15
-    "Hiekoitushiekka" 16
-    "Murskeet" 17
-    "Sorastusmurske" 17.1
-    "Kelirikkomurske" 17.2
-    "Reunantäyttömurske" 17.3
-    "Murskeet yhteensä (t)" 17.4
-    "Jätteet kaatopaikalle" 18
-    "Rikkaruohojen torjunta-aineet" 19
-    16))
+    "Natriumformiaattiliuos" 11
+    "Formiaatit yhteensä (50 % liuostonnia)" 12
+    "Formiaatit yhteensä" 12.1
+    "Kesäsuola sorateiden kevätkunnostus" 13
+    "Kesäsuola sorateiden pölynsidonta" 14
+    "Kesäsuola päällystettyjen teiden pölynsidonta" 15
+    "Kesäsuola yhteensä (t)" 16
+    "Hiekoitushiekka" 17
+    "Murskeet" 18
+    "Sorastusmurske" 19
+    "Kelirikkomurske" 20
+    "Reunantäyttömurske" 21
+    "Murskeet yhteensä (t)" 22
+    "Murskeet yhteensä" 22.1
+    "Jätteet kaatopaikalle" 23
+    "Rikkaruohojen torjunta-aineet" 24
+    25))
