@@ -186,24 +186,21 @@
      :luokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
-(def isantarivi-indeksi (atom -1))
-
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?] :as taulukon-tiedot}]
-  (let [
+  (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
-        
+
         ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
-        ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka-arvo.
-        ;; :luokka-arvo kertoo rivin hoitoluokan.
-        
+        ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka -arvo.
+        ;; :luokka -arvo kertoo rivin hoitoluokan.
         avattavat-rivit (mapv (partial str "raportti_rivi_")
                           (loop [idx 0
                                  o osamateriaalit
                                  res []]
                             (if (empty? o)
                               res
-                              ;; Uniikkien :luokka-arvojen lasku kertoo, kuinka hoittoluokkakohtaista riviä on.
+                              ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
                               (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
                                 (recur
                                   ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
