@@ -488,18 +488,7 @@
                  (when true
                    [johto-ja-hallintokorvaus-osio/osio-2022
                     app
-                    (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
-                    (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
-                    (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
-                    (get-in app [:gridit :toimistokulut :grid])
-                    (dissoc suodattimet :hankinnat)
-                    (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
-                    (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
-                    (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset])
-                    (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :toimistokulut])
-                    (get-in app [:domain :kuluva-hoitokausi])
-                    (get-in app [:domain :indeksit])
-                    (:kantahaku-valmis? app)])
+                    ])
                  [johto-ja-hallintokorvaus-osio/osio
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
                   (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
