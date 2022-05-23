@@ -533,7 +533,7 @@ VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019,
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100');
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100'), '2018-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 1000, urakka_id_oulu_2014_2019);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1000, urakka_id_oulu_2014_2019);
 
 -- Ymp. raportin testausta varten toteuma, jolla reittipisteitä siten, että hoitoluokka jää tunnistamatta (NULL)
 INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, lisatieto, suorittajan_ytunnus, suorittajan_nimi, poistettu, muokkaaja, muokattu, luoja, ulkoinen_id, reitti, tyyppi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, envelope, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto) VALUES (22433645, urakka_id_oulu_2014_2019, (SELECT id FROM sopimus WHERE urakka = urakka_id_oulu_2014_2019 AND paasopimus IS NULL), '2019-02-19 23:28:19.325931', '2019-02-19 20:47:15.000000', '2019-02-19 21:54:16.000000', '', '1234567-8', 'Yrittäjä Oy', false, null, null, (SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), -1536051328, null, 'kokonaishintainen', null, null, null, null, null, 'harja-api', '010300000001000000050000009C85E64835CE1A4141FEED94F8105B419C85E64835CE1A4104560EC5881A5B41F0FF109A9B521C4104560EC5881A5B41F0FF109A9B521C4141FEED94F8105B419C85E64835CE1A4141FEED94F8105B41', null, null, null);
@@ -565,7 +565,7 @@ VALUES ('harja-ui'::lahde, urakka_id_oulu_2014_2019,
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2');
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Oulu Käsin Ympäristöraporttia varten tehty toteuma hoitoluokalle 100 #2'), '2019-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 10, urakka_id_oulu_2014_2019);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 10, urakka_id_oulu_2014_2019);
 
     END
 $$ LANGUAGE plpgsql;

@@ -58,7 +58,7 @@
 
   (u (str "INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
   VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),(SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),\n        NOW(), '2014-12-15 13:00:00+02', '2014-12-15 13:01:00+02',\n        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Suolasakkototeuma');"))
-  (u (str "INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)\nVALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Suolasakkototeuma'), NOW(),\n        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola')," kaytetty-maara ");"))
+  (u (str "INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)\nVALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Suolasakkototeuma'), NOW(),\n        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl')," kaytetty-maara ");"))
 
   (raportit-q/paivita_raportti_toteutuneet_materiaalit (:db jarjestelma))
   (let [hae-suolasakko-sql (str "SELECT hoitokauden_suolasakko(" ur ", '2014-10-01','2015-09-30')")]
