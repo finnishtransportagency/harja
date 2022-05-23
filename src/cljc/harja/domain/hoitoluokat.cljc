@@ -2,7 +2,7 @@
   "Määrittelee talvihoitoluokat ja soratien hoitoluokat"
   (:require [harja.pvm :as pvm]))
 
-(def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
+(def ei-talvihoitoluokkaa-nimi "Hoitoluokka puuttuu")
 
 (def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa. Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
@@ -19,7 +19,8 @@ talvihoitoluokat
    {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
    {:nimi "K1"  :numero 9 :numero-str "9"}
    {:nimi "K2"  :numero 10 :numero-str "10"}
-   {:nimi "Ei talvihoitoa"  :numero 11 :numero-str "11"}
+   {:nimi "Ei talvihoitoa" :numero 11 :numero-str "11"}
+   {:nimi "Käsin kirjattu" :numero 99 :numero-str "99"}
    {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 
 (def hoitoluokkavaihtoehdot-raporteille
