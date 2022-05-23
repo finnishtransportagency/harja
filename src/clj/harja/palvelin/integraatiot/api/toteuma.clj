@@ -157,6 +157,54 @@
                     nil
                     urakka-id))))
 
+;; Konvertoi apilta tulevan materiaalinimen tietokannassa olevaan materiaaliin
+(def mat-apilta->mat-db
+  {;; Talvisuolat: Talvisuola rakeinen, voi tulla kahdella eri nimellä, koska tuetaan myös aiemmin speksattuja nimiä
+   "Talvisuola" "Talvisuola, rakeinen NaCl"
+   "Talvisuola, rakeinen NaCl" "Talvisuola, rakeinen NaCl"
+   "Talvisuolaliuos CaCl2" "Talvisuolaliuos CaCl2"
+   "Talvisuolaliuos NaCl" "Talvisuolaliuos NaCl"
+
+   ;; Erityisalueiden nimet eivät ole päivittyneet, joten mäpätään saapuvat tietokantaan, ikäänkuin suoraan
+   "Erityisalueet CaCl2-liuos" "Erityisalueet CaCl2-liuos"
+   "Erityisalueet NaCl" "Erityisalueet NaCl"
+   "Erityisalueet NaCl-liuos" "Erityisalueet NaCl-liuos"
+
+   ;; Hiekoitushiekan nimeä ei ole muutettu
+   "Hiekoitushiekan suola" "Hiekoitushiekan suola"
+
+   ;; Kaliumformiaatti voi tulla sekä liuosnimellä että ilman liuosnimeä. Molemmat on sama asia
+   "Kaliumformiaatti" "Kaliumformiaattiliuos"
+   "Kaliumformiaattiliuos" "Kaliumformiaattiliuos"
+   "Natriumformiaatti" "Natriumformiaatti"
+   "Natriumformiaattiliuos" "Natriumformiaattiliuos"
+
+   ;; Kesäsuolan materiaalinimet ovat päivittyneet. Otetaan ne sisään sekä vanhalla, että uudella nimellä
+   "Kesäsuola (sorateiden kevätkunnostus)" "Kesäsuola sorateiden kevätkunnostus"
+   "Kesäsuola sorateiden kevätkunnostus" "Kesäsuola sorateiden kevätkunnostus"
+   ;; Sorateiden pölynsidonta on yleisen materiaali, joten mäpätään vanha nimi uuteen
+   "Kesäsuola" "Kesäsuola sorateiden pölynsidonta"
+   "Kesäsuola (pölynsidonta)" "Kesäsuola sorateiden pölynsidonta"
+   "Kesäsuola sorateiden pölynsidonta" "Kesäsuola sorateiden pölynsidonta"
+   ;; Päällystettyjen teiden pölynsidonta on uusi materiaali
+   "Kesäsuola päällystettyjen teiden pölynsidonta" "Kesäsuola päällystettyjen teiden pölynsidonta"
+
+   "Hiekoitushiekka" "Hiekoitushiekka"
+
+   "Jätteet kaatopaikalle" "Jätteet kaatopaikalle"
+   "Rikkaruohojen torjunta-aineet" "Rikkaruohojen torjunta-aineet"
+   ;; Murskeet: Sorastusmurske on yleisin murkse, joten mäpätään murske aina sorastusmurskeeksi.
+   "Murskeet" "Sorastusmurske"
+   "Murske" "Sorastusmurske"
+   "Sorastusmurske" "Sorastusmurske"
+   ;; Muut murskeet saavat tulla omilla nimillään
+   "Reunantäyttömurske" "Reunantäyttömurske"
+   "Kelirikkomurske" "Kelirikkomurske"})
+
+(defn hae-materiaalikoodi-nimella [db materiaali-nimi]
+  (when-not (nil? (mat-apilta->mat-db materiaali-nimi))
+    (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db (mat-apilta->mat-db materiaali-nimi))))))
+
 (defn tallenna-materiaalit [db kirjaaja toteuma toteuma-id urakka-id]
   (log/debug "Tuhotaan toteuman vanhat materiaalit. Toteuma id: " toteuma-id)
   (q-toteumat/poista-toteuma-materiaali-toteuma-idlla! db toteuma-id)
@@ -164,7 +212,7 @@
   (doseq [materiaali (:materiaalit toteuma)]
     (log/debug "Etsitään materiaalikoodi kannasta.")
     (let [materiaali-nimi (:materiaali materiaali)
-          materiaalikoodi-id (:id (first (materiaalit/hae-materiaalikoodin-id-nimella db materiaali-nimi)))]
+          materiaalikoodi-id (hae-materiaalikoodi-nimella db materiaali-nimi)]
       (if (nil? materiaalikoodi-id)
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi virheet/+tuntematon-materiaali+

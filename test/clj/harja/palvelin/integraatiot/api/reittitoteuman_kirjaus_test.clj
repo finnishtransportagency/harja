@@ -7,9 +7,11 @@
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json-tyokalut]
             [specql.core :refer [fetch columns]]
-            [harja.domain.reittipiste :as rp]))
+            [harja.domain.reittipiste :as rp]
+            [clojure.data.json :as json]))
 
 (def kayttaja "destia")
+(def kayttaja-yit "yit-rakennus")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -186,10 +188,10 @@
     (is (= 200 (:status vastaus)) "Reittitoteuman tallennus onnistuu")
     ulkoinen-id))
 
-(defn poista-toteuma [ulkoinen-id]
+(defn poista-toteuma [ulkoinen-id urakka-id annettu-kayttaja]
   (let [vastaus (api-tyokalut/delete-kutsu
-                 ["/api/urakat/" urakka "/toteumat/reitti"]
-                 kayttaja portti
+                 ["/api/urakat/" urakka-id "/toteumat/reitti"]
+                  annettu-kayttaja portti
                  (-> "test/resurssit/api/toteuman-poisto.json"
                      slurp
                      (.replace "__ID__" (str ulkoinen-id))
@@ -220,13 +222,91 @@
               (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
 
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
-            (poista-toteuma ulkoinen-id)
+            (poista-toteuma ulkoinen-id urakka kayttaja)
 
             (let [rivit3 (hae-materiaalit)
                   maara3 (-> rivit3 first last)]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")
               (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
 
+(defn laheta-yksittainen-reittitoteuma-materiaalilla [urakka-id kayttaja reittitoteuma-materiaali reittipiste1-materiaali reittipiste2-materiaali]
+  (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        data (-> "test/resurssit/api/reittitoteuma_ilman_materiaalia.json"
+               slurp
+               (.replace "__SOPIMUS_ID__" (str sopimus-id))
+               (.replace "__ID__" (str ulkoinen-id))
+               (.replace "__SUORITTAJA_NIMI__" "Materiaalinlaskijat Oy")
+               (.replace "__REITTITOTEUMA_MATERIAALIT__" (json/write-str reittitoteuma-materiaali))
+               (.replace "__REITTIPISTE1_MATERIAALIT__" (json/write-str reittipiste1-materiaali))
+               (.replace "__REITTIPISTE2_MATERIAALIT__" (json/write-str reittipiste2-materiaali)))
+        vastaus (api-tyokalut/post-kutsu
+                  ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti data)]
+    (is (= 200 (:status vastaus)) "Reittitoteuman tallennus onnistuu")
+    ulkoinen-id))
+
+(defn aja-materiaalit-kantaan [materiaali yksikko kokonaismaara piste1_maara piste2_maara]
+  (let [kokonaistoteuma {:materiaali materiaali :maara {:yksikko yksikko, :maara kokonaismaara}}
+        p1-mat {:materiaali materiaali :maara {:yksikko yksikko, :maara piste1_maara}}
+        p2-mat {:materiaali materiaali :maara {:yksikko yksikko, :maara piste2_maara}}
+        ;; Päivitetään varalta materiaalin käyttöraporttitaulu
+        _ (q-map "SELECT paivita_raportti_toteutuneet_materiaalit();")
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        sopiva-ajankohta "2020-01-02T12:00:00Z"
+        hae-materiaalit (fn [urakka-id aika]
+                          (q-map (str (format "SELECT kokonaismaara, \"materiaali-id\" FROM raportti_toteutuneet_materiaalit
+        WHERE \"urakka-id\" = %s AND paiva > '%s'" urakka-id aika))))
+        oulun-materiaalit (hae-materiaalit urakka-id sopiva-ajankohta)]
+    (testing "Materiaalin käyttö on tyhjä aluksi"
+      (is (empty? oulun-materiaalit)))
+
+    (testing "Materiaalin lisääminen"
+      (let [ulkoinen-id (laheta-yksittainen-reittitoteuma-materiaalilla urakka-id kayttaja-yit
+                          kokonaistoteuma p1-mat p2-mat)
+            _ (q-map "SELECT paivita_raportti_toteutuneet_materiaalit();")]
+        (let [rivit1 (hae-materiaalit urakka-id sopiva-ajankohta)
+              kokonaismaara1 (-> rivit1 first :kokonaismaara)]
+          (is (= 1 (count rivit1)))
+          (is (=marginaalissa? kokonaismaara1 kokonaismaara) "Materiaali ei täsmää kokonaismäärään")
+
+          (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
+            ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
+            (let [ulkoinen-id3 (laheta-yksittainen-reittitoteuma-materiaalilla urakka-id kayttaja-yit
+                                 kokonaistoteuma p1-mat p2-mat)
+                  _ (q-map "SELECT paivita_raportti_toteutuneet_materiaalit();")
+                  rivit2 (hae-materiaalit urakka-id sopiva-ajankohta)
+                  kokonaismaara2 (-> rivit2 first :kokonaismaara)]
+              (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
+              (is (=marginaalissa? kokonaismaara2 (* 2 kokonaismaara1)) "Määrä on tuplautunut")
+
+              (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
+                (poista-toteuma ulkoinen-id urakka-id kayttaja-yit)
+
+                (let [paivitys (q-map "SELECT paivita_raportti_toteutuneet_materiaalit();")
+                      rivit3 (hae-materiaalit urakka-id sopiva-ajankohta)
+                      kokonaismaara3 (-> rivit3 first :kokonaismaara)]
+                  (is (= 1 (count rivit3)) "Rivejä on sama määrä")
+                  (is (=marginaalissa? kokonaismaara3 kokonaismaara) "Määrä on laskenut takaisin")))
+
+              (testing "Kolmannen toteuman poistaminen nollaa määrät"
+                (poista-toteuma ulkoinen-id3 urakka-id kayttaja-yit)
+
+                (let [_ (q-map "SELECT paivita_raportti_toteutuneet_materiaalit();")
+                      rivit4 (hae-materiaalit urakka-id sopiva-ajankohta)]
+                  (is (= 0 (count rivit4)) "Materiaaleja ei ole enää"))))))))))
+
+(deftest materiaalien-ajo-kantaan-onnistuu
+  ;; Sorastusmurske
+  (aja-materiaalit-kantaan "Sorastusmurske" "t" 0.6 0.1 0.5)
+  ;; Kesäsuola (päällystettyjen teiden pölynsidonta)
+  (aja-materiaalit-kantaan "Kesäsuola päällystettyjen teiden pölynsidonta" "t" 5M 2M 3M )
+  ;; Murske -> pitäisi muuntua sorastusmurskeeksi
+  (aja-materiaalit-kantaan "Murske" "t" 10.2M 5.0M 5.2M)
+  ;; Kesäsuola -> pitäisi muuntua Kesäsuola (pölynsidonta)
+  (aja-materiaalit-kantaan "Kesäsuola" "t" 8M 2M 6M)
+  (aja-materiaalit-kantaan "Kesäsuola sorateiden kevätkunnostus" "t" 1M 0.8 0.2)
+  (aja-materiaalit-kantaan "Kaliumformiaattiliuos" "t" 0.9 0.6 0.3)
+  (aja-materiaalit-kantaan "Kaliumformiaatti" "t" 4M 2M 2M))
 
 (deftest lahetys-tuntemattomalle-urakalle-ei-toimi []
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
