@@ -133,7 +133,7 @@
                         :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
                         :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"
