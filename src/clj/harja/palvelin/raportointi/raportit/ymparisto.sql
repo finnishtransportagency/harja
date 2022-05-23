@@ -76,7 +76,33 @@ WHERE s.poistettu IS NOT TRUE
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi;
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi
+UNION
+-- Liitä myös tehtävät ja määrät sivun suunnittelutiedot MHU urakoiden osalta.
+-- toimenpidekoodit on mäpätty materiaaleihin erikseen materiaaliluokan ja materiaalikoodin avulla
+-- Ja jätä suolauksen suunnitellut määrät ulos, koska ne haetaan taas hieman eri logiikalla
+SELECT
+    u.id as urakka_id, u.nimi as urakka_nimi,
+    NULL as luokka,
+    mk.id as materiaali_id,
+    coalesce(mk.nimi, ml.nimi) as materiaali_nimi,
+    coalesce(mk.yksikko, ml.yksikko) AS materiaali_yksikko,
+    coalesce(mk.materiaalityyppi, ml.materiaalityyppi) AS materiaali_tyyppi,
+    NULL as kk,
+    SUM(ut.maara) as maara
+FROM urakka_tehtavamaara ut
+         JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
+         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+         JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id AND ml.materiaalityyppi != 'talvisuola'
+         LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
+WHERE ut.poistettu IS NOT TRUE
+  -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
+  AND ut."hoitokauden-alkuvuosi" = EXTRACT(YEAR from :alkupvm::DATE)
+  AND (:urakka::integer IS NULL OR ut.urakka = :urakka)
+  AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+  -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
+  AND u.tyyppi = 'teiden-hoito'
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi;
 
 -- name: hae-materiaalit
 -- Hakee materiaali id:t ja nimet
