@@ -101,7 +101,7 @@ $$
 
         INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
             VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Sami-Suolaaja-2020'), NOW(),
-                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola'), 1300, kayttaja_id, urakka_id);
+                    (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1300, kayttaja_id, urakka_id);
 
 
         INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)

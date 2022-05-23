@@ -582,7 +582,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "urakoiden-haku" nil
       (fn [konteksti]
-        (let [virheet (atom #{})]                           ;TODO <- Laita virheet tänne
+        (let [virheet (atom #{})]
           (when-let [token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                                             (fn [x]
                                               (swap! virheet conj (str "Virhe velho token haussa " x))
