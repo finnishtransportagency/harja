@@ -22,7 +22,7 @@
              (when (and (not-empty kohteet) @karttataso-nakyvissa?)
                (with-meta (mapv (fn [{:keys [toteuma] :as kohde}]
                                   (when (:sijainti kohde)
-                                    (let [vari (or (get toteuma-vari toteuma) "white")]
+                                    (let [vari (get toteuma-vari toteuma "white")]
                                       {:alue (merge {:stroke {:width 8
                                                               :color vari}}
                                                     (:sijainti kohde))
