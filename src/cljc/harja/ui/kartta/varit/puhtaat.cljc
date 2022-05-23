@@ -21,12 +21,20 @@
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
 
+(def fig-default   (rgb 0 176 204))
+(def lemon-default (rgb 255 195 0))
+(def eggplant-default (rgb 160 80 160))
+(def pitaya-default (rgb 229 0 131))
+(def pea-default (rgb 141 203 109))
+(def black-light (rgb 92 92 92))
+
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
   [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
-   tummansininen violetti lime pinkki])
+   tummansininen violetti lime pinkki
+   fig-default lemon-default eggplant-default pitaya-default pea-default black-light])
 
 #?(:clj
    (defn- poista-testit [setti]

@@ -81,8 +81,8 @@
         losa (:losa valinnat)
         leta (:leta valinnat)]
     [:div
-     [:div.row.filtterit-container
-      [debug app {:otsikko "TUCK STATE"}]
+     [debug app {:otsikko "TUCK STATE"}]
+     [:div.row.filtterit-container {:style {:height "100px"}}
       [yleiset/pudotusvalikko "Hoitovuosi"
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :valinta hoitokauden-alkuvuosi
