@@ -494,7 +494,10 @@
                          :konteksti konteksti
                          :kuukaudet kuukaudet
                          :urakoittain? urakoittain?
-                         :yksikot-soluissa? false}]
+                         :yksikot-soluissa? false
+                         :nayta-suunnittelu? (if (pvm/onko-hoitokausi? alkupvm loppupvm)
+                                               true
+                                               false)}]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -522,4 +525,5 @@
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
-                        (assoc :yksikot-soluissa? true)))]))
+                        (assoc :yksikot-soluissa? true)
+                        (assoc :nayta-suunnittelu? false)))]))
