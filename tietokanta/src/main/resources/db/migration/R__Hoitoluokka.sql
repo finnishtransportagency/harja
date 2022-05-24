@@ -20,7 +20,7 @@ CREATE OR REPLACE FUNCTION normalisoi_talvihoitoluokka (talvihoitoluokka INTEGER
 SELECT
   CASE
   WHEN talvihoitoluokka IS NULL THEN 100
-  WHEN talvihoitoluokka > 11 AND talvihoitoluokka != 99 THEN 100
+  WHEN (talvihoitoluokka > 11 AND talvihoitoluokka != 99) THEN 100
   WHEN pvm < '2018-07-02'::TIMESTAMP THEN
     CASE
     WHEN talvihoitoluokka = 0 THEN 1  -- Ise
