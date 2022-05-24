@@ -68,6 +68,21 @@
    [:span.arvo arvo]
    [:div.selite.small-caption selite]])
 
+(defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara]}]]
+  (let [etuliite (cond
+                   (neg? arvo) "+ "
+                   (zero? arvo) ""
+                   :else "+ ")
+        arvo (Math/abs arvo)
+        prosentti (Math/abs prosentti)]
+    [:span.erotus-ja-prosentti
+     [:span.arvo (str etuliite (cond
+                                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                                 :else arvo))]
+     [:div.selite.small-caption
+      {:style {:text-align :inherit}}
+      (str "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
+
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
