@@ -175,11 +175,11 @@
     (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")
     (is (= 200 (:status vastaus-lisays)))))
 
-(defn laheta-yksittainen-reittitoteuma []
+(defn laheta-yksittainen-reittitoteuma [urakka-id]
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         vastaus (api-tyokalut/post-kutsu
-                 ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                 ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                      slurp
                      (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -200,14 +200,16 @@
     (is (= 200 (:status vastaus)) "Toteuman poisto onnistuu")))
 
 (deftest materiaalin-kaytto-paivittyy-oikein
-  (let [poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+        poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
         hae-materiaalit #(q "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain")
         materiaalin-kaytto-ennen (hae-materiaalit)]
+
     (testing "Materiaalin käyttö on tyhjä aluksi"
       (is (empty? materiaalin-kaytto-ennen)))
 
     (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma)]
+      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id)]
         (let [rivit1 (hae-materiaalit)
               maara1 (-> rivit1 first last)]
           (is (= 1 (count rivit1)))
@@ -215,14 +217,14 @@
 
           (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
             ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-            (laheta-yksittainen-reittitoteuma)
+            (laheta-yksittainen-reittitoteuma urakka-id)
             (let [rivit2 (hae-materiaalit)
                   maara2 (-> rivit2 first last)]
               (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
               (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
 
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
-            (poista-toteuma ulkoinen-id urakka kayttaja)
+            (poista-toteuma ulkoinen-id urakka-id kayttaja)
 
             (let [rivit3 (hae-materiaalit)
                   maara3 (-> rivit3 first last)]
@@ -475,9 +477,9 @@
         (is (not= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
                sopimuksen-mat-kaytto-toisen-kutsun-jalkeen))
 
-        (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 100 2 4.62M]]) "eka kutsun jälkeen")
+        (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M]]) "eka kutsun jälkeen")
         ;; varmista että alkuperäiset on nollattu, ja uuteen pvm:ään puolestaan lisätty määrät
-        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 100 2 0.00M] [#inst "2014-12-31T22:00:00.000-00:00" 1 100 2 4.62M]]) "toisen kutsun jälkeen")
+        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M] [#inst "2014-12-31T22:00:00.000-00:00" 1 99 2 4.62M]]) "toisen kutsun jälkeen")
         (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[5
                                                           #inst "2016-01-29T22:00:00.000-00:00"
                                                           1

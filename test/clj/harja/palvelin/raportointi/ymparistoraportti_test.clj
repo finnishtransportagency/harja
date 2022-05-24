@@ -52,9 +52,10 @@
                       jarjestelma-fixture))
 
 (defn tarkistusfunktio [sisalto]
-  (let [rivi (:rivi sisalto)
+  (let [nayta-suunnittelu? (if (= (count (:rivi sisalto)) 17) true false)
+        rivi (:rivi sisalto)
         materiaali (or (:arvo (second (second rivi))) (second rivi))
-        [yhteensa suunniteltu prosentti] (take-last 3 rivi)
+        [yhteensa suunniteltu prosentti] (if nayta-suunnittelu? (take-last 3 rivi) [(last rivi) nil nil])
         hoitokaudet (drop-last 3 (drop 2 rivi))
         solu? #(or (nil? %)
                  (= "–" %)
@@ -69,7 +70,7 @@
              hoitoluokat/talvihoitoluokat))
       ; datarivi
       (and
-        (= (count rivi) 17)
+        (= (count rivi) (if nayta-suunnittelu? 17 15))
         (string? materiaali)
         (every? solu? hoitokaudet)
         (solu? yhteensa)
@@ -286,7 +287,7 @@
                                 :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (testing "Talvisuola -taulukossa nimet vain kerran"
       (let [talvisuolataulukko (apurit/taulukko-otsikolla vastaus "Talvisuolat")
-            nimet (filter #(not (str/includes? % "Ei tiedossa"))
+            nimet (filter #(not (str/includes? % "- Käsin kirjattu"))
                     (apurit/taulukon-sarake talvisuolataulukko 1))]
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
     (testing "Formiaatti -taulukossa nimet vain kerran"
@@ -415,6 +416,7 @@
           oulu-talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 10))
           oulu-talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 11))
           oulu-talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 12))
+          oulu-talvisuola-kasin-kirjattu-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 13))
 
           oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 0))
           oulu-talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 1))
@@ -443,9 +445,8 @@
       (is (= oulu-talvisuola-luokka-K1-02-18 100M))
       (is (= oulu-talvisuola-luokka-K2-02-18 100M))
       (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
-      ;; Tähän tarkoituksella lasketaan myös käsin syötetyt toteumat, joille ei voida saada muuta hoitoluokkaa
-      ;; kuten API:n kautta kirjattavilla saadaan
-      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 1100M))
+      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 1000M))
+      (is (= oulu-talvisuola-kasin-kirjattu-02-18 100M))
 
       (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
       (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
@@ -475,9 +476,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
 
 
@@ -510,6 +509,7 @@
           talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 10))
           talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
           talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))
+          talvisuola-luokka-kasin-kirjattu-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 13))
 
           talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 0))
           talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 1))
@@ -537,7 +537,8 @@
       (is (= talvisuola-luokka-K1-02-18 100M))
       (is (= talvisuola-luokka-K2-02-18 100M))
       (is (= talvisuola-luokka-ei-talvih-02-18 100M))
-      (is (= talvisuola-luokka-ei-tiedossa-02-18 1100M))
+      (is (= talvisuola-luokka-ei-tiedossa-02-18 1000M))
+      (is (= talvisuola-luokka-kasin-kirjattu-02-18 100M))
 
       (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
       (is (= talvisuola-luokka-IsE-10-18 100M))
@@ -568,9 +569,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-urakoittain
@@ -607,7 +606,8 @@
           talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
           talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
           talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
-          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))]
+          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
+          talvisuola-luokka-02-18-oulu-kasin-kirjattu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))]
 
       (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
       (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))
@@ -628,7 +628,8 @@
       (is (= talvisuola-luokka-02-18-oulu-K1 100M))
       (is (= talvisuola-luokka-02-18-oulu-K2 100M))
       (is (= talvisuola-luokka-02-18-oulu-ei-talvihoitoa 100M))
-      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 1100M))
+      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 1000M))
+      (is (= talvisuola-luokka-02-18-oulu-kasin-kirjattu 100M))
 
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -647,9 +648,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"}))))
+        {:otsikko "Yhteensä (t)"}))))
 
 ;; Testaa että talvihoitoluokan normalisointisproc-toimii odotetusti.
 ;;Muutospvm aineistossa 2.7.2018 jonka mukaan vipu vääntyy.
@@ -748,7 +747,5 @@
         {:otsikko "10/19"}
         {:otsikko "11/19"}
         {:otsikko "12/19"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
