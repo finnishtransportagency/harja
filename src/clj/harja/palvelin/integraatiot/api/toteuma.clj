@@ -74,11 +74,19 @@
       (log/debug "Poistettujen määrä:" poistettujen-maara)
       (when (and (> poistettujen-maara 0)
                  (> (count sopimus-idt) 0))
-        (doseq [sopimus-id sopimus-idt]
-          (doseq [alkupvm toteumien-alkupvmt]
-            (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm))
-            (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                   :alkupvm (pvm/->pvm alkupvm)}))))
+        (do
+          ;; Päivitetään sopimuksiin liittyvät materiaalien käytöt
+          (doseq [sopimus-id sopimus-idt]
+            (doseq [alkupvm toteumien-alkupvmt]
+              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " (pvm/->pvm alkupvm))
+              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                     :alkupvm (pvm/->pvm alkupvm)})))
+          ;; Päivitetään urakoihin liittyvät materiaalin käytöt
+          (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
+            " alkupvm: " (pvm/->pvm (first toteumien-alkupvmt)) " loppupvm: "(pvm/->pvm (last toteumien-alkupvmt)))
+          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                             :alkupvm (pvm/->pvm (first toteumien-alkupvmt))
+                                                                             :loppupvm (pvm/->pvm (last toteumien-alkupvmt))})))
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]

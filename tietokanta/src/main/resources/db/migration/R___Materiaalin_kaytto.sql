@@ -25,9 +25,9 @@ BEGIN
                     AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
               GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
-  -- hoitoluokaksi 100 eli 'ei tiedossa', ks. esim VHAR-4204
+  -- hoitoluokaksi 99 eli 'Käsin kirjattu'
   UNION
-  SELECT t.urakka, 100 AS talvihoitoluokka, tm.materiaalikoodi,
+  SELECT t.urakka, 99 AS talvihoitoluokka, tm.materiaalikoodi,
          sum(tm.maara) as summa,
          t.alkanut::DATE as aika
     FROM toteuma t
@@ -41,7 +41,7 @@ BEGIN
     (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara, muokattu)
     VALUES (rivi.aika,
             rivi.materiaalikoodi,
-            COALESCE(rivi.talvihoitoluokka, 100),
+            COALESCE(rivi.talvihoitoluokka, 99),
             rivi.urakka,
             rivi.summa,
             current_timestamp)
