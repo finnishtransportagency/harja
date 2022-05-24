@@ -914,30 +914,51 @@
 (def erikseen-suunniteltavat
   {1 false 2 false 3 false 4 false 5 false})
 
-#_(defonce kuluva-hkn-sininen (r/atom 1))
 (defonce
   mock-data
   (r/atom
     (into {}
       (comp
-        (map #(assoc % :vuosipalkka 400 :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli :erikseen-syotettava? erikseen-suunniteltavat))
+        (map #(assoc % :vuosipalkka 400
+                :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
+                :erikseen-syotettava? erikseen-suunniteltavat))
         (map (juxt :toimenkuva identity)))
       t/johto-ja-hallintokorvaukset-pohjadata)))
 
 (defrecord TallennaToimenkuvanVuosipalkka [rivi])
 (defrecord TallennaToimenkuvanKuukausipalkkaVuodella [rivi])
 
+(defn- laske-yhteenveto-hoitokaudelle
+  [yhteenvedot-vuosille tiedot hoitokausi]
+  (let [ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi))
+        ota-oikea-vuosi (map #(get % hoitokausi))
+        ota-kuukaudet (mapcat vals)
+        ota-kuukausipalkat (map #(-> % :kuukausipalkka))
+        yhteenveto (into [] (comp ota-maksuerat ota-oikea-vuosi ota-kuukaudet ota-kuukausipalkat) tiedot)
+        laskettu-yhteen (reduce + 0 yhteenveto)]    
+    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
+
+#_(comment (laske-yhteenveto-hoitokaudelle @mock-data 3))
+
 (extend-protocol tuck/Event
   TallennaToimenkuvanKuukausipalkkaVuodella
   (process-event [{rivi :rivi} app]
-    (println "kuukausi" rivi)
-    app)
+    (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
+          hoitokausi (-> app :suodattimet :hoitokauden-numero)
+          tiedot @mock-data
+          summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
+      (assoc-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] summat)
+      ;; POST
+      ))
   TallennaToimenkuvanVuosipalkka
   (process-event [{rivi :rivi} app]
-    (println "toimenkuva" rivi)
-    app))
-
-(def testiveisti {:id 1})
+    (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
+          hoitokausi (-> app :suodattimet :hoitokauden-numero)
+          tiedot @mock-data
+          summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
+      (assoc-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] summat)
+      ;; POST
+      )))
 
 (defn- luo-kursori
   [atomi toimenkuva polku hoitokausi]
@@ -979,7 +1000,7 @@
         " (mennyt)"))))
 
 (defn kun-checkbox-klikattu
-  [checkbox-tila rivi]
+  [checkbox-tila]
   @checkbox-tila)
 
 (defn- jaa-vuosipalkka-kuukausille
@@ -1018,16 +1039,35 @@
   (swap! tiedot #(assoc-in % [toimenkuva] (second (paivita-toimenkuvan-vuosiloota (:vuosi rivi) [toimenkuva (get % toimenkuva)]))))
   (e! (->TallennaToimenkuvanKuukausipalkkaVuodella rivi)))
 
+(defn jarjesta-hoitovuoden-jarjestykseen
+  "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
+  [{:keys [kuukausi]}]
+  (if (> kuukausi 9)
+    (- kuukausi 12)
+    kuukausi))
+
 (defn- vetolaatikko-komponentti
   [tiedot toimenkuva]
   (let [valittu-hoitokausi (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet :hoitokauden-numero])
+        urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
+        vuosien-erotus (- urakan-loppuvuosi urakan-alkuvuosi)
         kursorit (assoc {}
-                   :maksuerat (into {} (map (juxt identity (r/partial luo-kursori tiedot toimenkuva :maksuerat-per-hoitovuosi-per-kuukausi))) (range 1 6))
-                   :erikseen-syotettava? (into {} (map (juxt identity (r/partial luo-kursori tiedot toimenkuva :erikseen-syotettava?))) (range 1 6)))]
+                   :maksuerat (into {}
+                                (map (juxt
+                                       identity
+                                       (r/partial luo-kursori tiedot toimenkuva :maksuerat-per-hoitovuosi-per-kuukausi)))
+                                (range 1 vuosien-erotus))
+                   :erikseen-syotettava? (into {}
+                                           (map
+                                             (juxt
+                                               identity
+                                               (r/partial luo-kursori tiedot toimenkuva :erikseen-syotettava?)))
+                                           (range 1 vuosien-erotus)))]
     (fn [tiedot toimenkuva]
       (let [valitun-hoitokauden-numero @valittu-hoitokausi
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
-        [:div #_(str "veto" toimenkuva @valittu-hoitokausi (pr-str kursorit))
+        [:div 
          [debug/debug kursorit]
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
@@ -1039,10 +1079,7 @@
             :voi-lisata? false
             :piilota-toiminnot? true
             :muokkauspaneeli? false
-            :jarjesta (fn [{:keys [kuukausi]}]
-                        (if (> kuukausi 9)
-                          (- kuukausi 12)
-                          kuukausi))
+            :jarjesta jarjesta-hoitovuoden-jarjestykseen
             :piilota-table-header? true
             :on-rivi-blur (r/partial tallenna-kuukausipalkka tiedot toimenkuva)
             :voi-kumota? false}
