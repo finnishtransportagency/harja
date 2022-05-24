@@ -800,55 +800,6 @@
         {:data-cy "johto-ja-hallintokorvaus-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
-(defn- johto-ja-hallintokorvaus
-  [vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
-   suodattimet
-   johto-ja-hallintokorvaukset-summat toimistokulut-summat
-   johto-ja-hallintokorvaukset-summat-indeksikorjattu
-   toimistokulut-summat-indeksikorjattu
-   kuluva-hoitokausi
-   indeksit
-   kantahaku-valmis?]
-  [:<>
-   [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
-   [johto-ja-hallintokorvaus-yhteenveto
-    johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
-    toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
-
-   ;; Tuntimäärät ja -palkat -taulukko
-   [:h3 "Tuntimäärät ja -palkat"]
-   [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
-    [ks-yhteiset/yleis-suodatin suodattimet]]
-
-   (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-     [:div {:class (when vahvistettu? "osio-vahvistettu")}
-      [grid/piirra johto-ja-hallintokorvaus-grid]]
-     [yleiset/ajax-loader])
-
-   (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
-     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-     [:div {:class (when vahvistettu? "osio-vahvistettu")}
-      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]]
-     [yleiset/ajax-loader])
-
-   ;; Johto ja hallinto: Muut kulut -taulukko
-   [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
-   [:div {:data-cy "johto-ja-hallinto-muut-kulut-taulukko-suodattimet"}
-    [ks-yhteiset/yleis-suodatin suodattimet]]
-
-   ;; Note: "Muut kulut" taulukko on hämäävästi toimistokulut-grid. Jos gridiin tulee myöhemmin
-   ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
-   ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
-   (if (and toimistokulut-grid kantahaku-valmis?)
-     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-     [:div {:class (when vahvistettu? "osio-vahvistettu")}
-      [grid/piirra toimistokulut-grid]]
-     [yleiset/ajax-loader])
-
-   [:span
-    "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
-
 (def vuosi-kuukausi-malli
   {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
       11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
@@ -938,25 +889,37 @@
         laskettu-yhteen (reduce + 0 yhteenveto)]    
     (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
 
-#_(comment (laske-yhteenveto-hoitokaudelle @mock-data 3))
+(defn paivita-yhteiset-tiedot
+  [app]
+  (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
+        hoitokausi (-> app :suodattimet :hoitokauden-numero)
+        indeksit (-> app :domain :indeksit)
+        vuoden-indeksi (some
+                         #(when (=
+                                  (:vuosi %)
+                                  (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi (+ hoitokausi) dec))
+                            (:indeksikerroin %)) indeksit)
+        tiedot @mock-data
+        summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
+    (-> app
+      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
+        summat)
+      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset]
+        (into [] (map #(* % vuoden-indeksi)) summat))
+      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto "hankintavastaava" :molemmat]
+        summat))))
 
 (extend-protocol tuck/Event
   TallennaToimenkuvanKuukausipalkkaVuodella
   (process-event [{rivi :rivi} app]
-    (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
-          hoitokausi (-> app :suodattimet :hoitokauden-numero)
-          tiedot @mock-data
-          summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
-      (assoc-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] summat)
+    (-> app
+      paivita-yhteiset-tiedot
       ;; POST
       ))
   TallennaToimenkuvanVuosipalkka
   (process-event [{rivi :rivi} app]
-    (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
-          hoitokausi (-> app :suodattimet :hoitokauden-numero)
-          tiedot @mock-data
-          summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
-      (assoc-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] summat)
+    (-> app
+      paivita-yhteiset-tiedot
       ;; POST
       )))
 
@@ -1094,20 +1057,21 @@
   [hoitokausi tiedot]
   (not (get-in tiedot [:erikseen-syotettava? hoitokausi])))
 
-(defn osio-2022
-  [app]
+(defn taulukko-2022-eteenpain
+  [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))]
-    (fn [app]
+    (fn [app indeksit]
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)] 
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (println "bomo")
           (swap! mock-data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
-        [:div (str "joo semmottist" kuluva-hoitokausi @kaytetty-hoitokausi)
+        [:div
+         [debug/debug indeksit]
          [debug/debug app]
          [debug/debug @mock-data]
          [vanha-grid/muokkaus-grid
-          {:otsikko "tämmöttinen"
+          {:otsikko "Tuntimäärät ja -palkat"
            :id "toimenkuvat-taulukko"
            :voi-lisata? false     
            :voi-kumota? false
@@ -1120,11 +1084,70 @@
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           mock-data]]))))
 
+(defn- johto-ja-hallintokorvaus
+  [app vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
+   suodattimet
+   johto-ja-hallintokorvaukset-summat toimistokulut-summat
+   johto-ja-hallintokorvaukset-summat-indeksikorjattu
+   toimistokulut-summat-indeksikorjattu
+   kuluva-hoitokausi
+   indeksit
+   kantahaku-valmis?]
+  (let [alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
+        vertailuvuosi 2018]
+    [:<>
+     [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
+     [johto-ja-hallintokorvaus-yhteenveto
+      johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
+      toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
+
+     ;; Tuntimäärät ja -palkat -taulukko
+     [:h3 "Tuntimäärät ja -palkat"]
+     [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
+      [ks-yhteiset/yleis-suodatin suodattimet]]
+
+     (cond
+       (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi vertailuvuosi))
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra johto-ja-hallintokorvaus-grid]]
+
+       (and (>= alkuvuosi vertailuvuosi) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [taulukko-2022-eteenpain app indeksit]]
+
+       :else
+       [yleiset/ajax-loader])
+
+     (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]]
+       [yleiset/ajax-loader])
+
+     ;; Johto ja hallinto: Muut kulut -taulukko
+     [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
+     [:div {:data-cy "johto-ja-hallinto-muut-kulut-taulukko-suodattimet"}
+      [ks-yhteiset/yleis-suodatin suodattimet]]
+
+     ;; Note: "Muut kulut" taulukko on hämäävästi toimistokulut-grid. Jos gridiin tulee myöhemmin
+     ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
+     ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
+     (if (and toimistokulut-grid kantahaku-valmis?)
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra toimistokulut-grid]]
+       [yleiset/ajax-loader])
+
+     [:span
+      "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]]))
+
 ;; ### Johto- ja hallintokorvaus osion pääkomponentti ###
 
 ;; FIXME: Arvojen tallentamisessa on jokin häikkä. Tallennus ei onnistu. (Oli ennen ositustakin sama homma)
 (defn osio
-  [vahvistettu?
+  [app
+   vahvistettu?
    johto-ja-hallintokorvaus-grid
    johto-ja-hallintokorvaus-yhteenveto-grid
    toimistokulut-grid
@@ -1136,7 +1159,7 @@
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
-  [johto-ja-hallintokorvaus
+  [johto-ja-hallintokorvaus app
    vahvistettu?
    johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid suodattimet
    johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu

@@ -484,12 +484,9 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
 
-                 ::t/johto-ja-hallintokorvaukset
-                 (when true
-                   [johto-ja-hallintokorvaus-osio/osio-2022
-                    app
-                    ])
+                 ::t/johto-ja-hallintokorvaukset                 
                  [johto-ja-hallintokorvaus-osio/osio
+                  app
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
                   (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
                   (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
