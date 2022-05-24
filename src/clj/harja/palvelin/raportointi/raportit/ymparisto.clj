@@ -167,7 +167,7 @@
      :luokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
-(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?] :as taulukon-tiedot}]
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
@@ -200,7 +200,7 @@
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
    [:taulukko {:otsikko otsikko
-               :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ 5 (count kuukaudet))))
+               :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ (if nayta-suunnittelu? 5 3) (count kuukaudet))))
                :esta-tiivis-grid? true
                :sivuttain-rullattava? true
                :ensimmainen-sarake-sticky? true
@@ -221,12 +221,13 @@
                {:otsikko kk
                 :leveys (if urakoittain? "4.83%" "5%")
                 :fmt :numero}) kuukaudet)
-
-        [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
-          :excel [:summa-vasen (if urakoittain? 2 1)]}
-         {:otsikko "Suunniteltu (t)"
-          :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
-         {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]))
+        (if nayta-suunnittelu?
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
+            :excel [:summa-vasen (if urakoittain? 2 1)]}
+           {:otsikko "Suunniteltu (t)" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+           {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
+            :excel [:summa-vasen (if urakoittain? 2 1)]}])))
 
     (mapcat
       (fn [[{:keys [urakka materiaali]} rivit]]
@@ -275,30 +276,32 @@
                          ;; Kuukausittaiset määrät, viiva jos tyhjä.
                          (map #(or (kk-arvot %) "–") kuukaudet)
 
-                         ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                         [(yhteensa-kentta (vals kk-arvot) true)
-                          (if (nil? suunniteltu)
-                            [:arvo-ja-yksikko-korostettu {:arvo nil
-                                                          :yksikko nil
-                                                          :desimaalien-maara 2
-                                                          :lihavoi? false
-                                                          :ala-korosta? true}]
-                            [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
-                                                          :yksikko (when suunniteltu (:yksikko materiaali))
-                                                          :desimaalien-maara 2
-                                                          :lihavoi? false
-                                                          :ala-korosta? true}])
-                          (if (nil? toteuma-prosentti)
-                            [:arvo-ja-yksikko-korostettu {:arvo nil
-                                                          :yksikko nil
-                                                          :desimaalien-maara 2
-                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                          :ala-korosta? true}]
-                            [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
-                                                          :yksikko (when suunniteltu "%")
-                                                          :desimaalien-maara 2
-                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                          :ala-korosta? true}])]))})]
+                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
+                          (if nayta-suunnittelu?
+                            [(yhteensa-kentta (vals kk-arvot) true)
+                             (if (nil? suunniteltu)
+                               [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                             :yksikko nil
+                                                             :desimaalien-maara 2
+                                                             :lihavoi? false
+                                                             :ala-korosta? true}]
+                               [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
+                                                             :yksikko (when suunniteltu (:yksikko materiaali))
+                                                             :desimaalien-maara 2
+                                                             :lihavoi? false
+                                                             :ala-korosta? true}])
+                             (if (nil? toteuma-prosentti)
+                               [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                             :yksikko nil
+                                                             :desimaalien-maara 2
+                                                             :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                             :ala-korosta? true}]
+                               [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
+                                                             :yksikko (when suunniteltu "%")
+                                                             :desimaalien-maara 2
+                                                             :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                             :ala-korosta? true}])]
+                            [(yhteensa-kentta (vals kk-arvot) true)])))})]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
             ;; Jätetään soratieluokat myöhempää aikaa varten
@@ -332,8 +335,10 @@
                                   ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                                   (map #(or (kk-arvot %) "–") kuukaudet)
 
-                                  [(yhteensa-kentta (vals kk-arvot) true)
-                                   nil nil]))}))
+                                  (if nayta-suunnittelu?
+                                    [(yhteensa-kentta (vals kk-arvot) true)
+                                                          nil nil]
+                                    [(yhteensa-kentta (vals kk-arvot) true)])))}))
                (sort-by first (group-by :luokka luokitellut)))))))
      osamateriaalit)]))
 
