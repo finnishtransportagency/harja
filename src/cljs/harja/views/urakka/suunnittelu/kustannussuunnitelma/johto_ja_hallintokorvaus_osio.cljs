@@ -36,101 +36,109 @@
   (partial grid-apurit/maarataulukko-grid "toimistokulut" [:yhteenvedot :johto-ja-hallintokorvaukset]
     {:tallennus-onnistui-event t/->TallennaToimistokulutOnnistui}))
 
-(defn johto-ja-hallintokorvaus-laskulla-grid []
-  (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"
-        yhteenveto-grid-rajapinta-asetukset
-        (fn [toimenkuva maksukausi data-koskee-ennen-urakkaa?]
-          (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-            {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
-             :solun-polun-pituus 1
-             :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
-             :datan-kasittely (fn [yhteenveto]
-                                (mapv (fn [[_ v]]
-                                        v)
-                                  yhteenveto))
-             :tunnisteen-kasittely (fn [osat data]
-                                     (second
-                                       (reduce (fn [[loytynyt? tunnisteet] osa]
-                                                 (let [syote-osa? (instance? solu/Syote osa)
-                                                       osa (when syote-osa?
-                                                             (if loytynyt?
-                                                               :tuntipalkka
-                                                               :tunnit))
-                                                       ;; Note: Nämä tiedot valuvat jotenkin :aseta-jh-yhteenveto! toiminnon kautta
-                                                       ;;       jh-yhteenvetopaivitys -funktiolle parametreiksi.
-                                                       tunniste {:osa osa :toimenkuva toimenkuva :maksukausi maksukausi
-                                                                 :data-koskee-ennen-urakkaa? data-koskee-ennen-urakkaa?}]
-                                                   [(or loytynyt? syote-osa?)
-                                                    (conj tunnisteet tunniste)]))
-                                         [false []]
-                                         (grid/hae-grid osat :lapset))))}))
+(defn- yhteenveto-grid-rajapinta-asetukset
+  [toimenkuva maksukausi data-koskee-ennen-urakkaa?]
+  (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+    {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
+     :solun-polun-pituus 1
+     :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
+     :datan-kasittely (fn [yhteenveto]
+                        (mapv (fn [[_ v]]
+                                v)
+                          yhteenveto))
+     :tunnisteen-kasittely (fn [osat data]
+                             (second
+                               (reduce (fn [[loytynyt? tunnisteet] osa]
+                                         (let [syote-osa? (instance? solu/Syote osa)
+                                               osa (when syote-osa?
+                                                     (if loytynyt?
+                                                       :tuntipalkka
+                                                       :tunnit))
+                                               ;; Note: Nämä tiedot valuvat jotenkin :aseta-jh-yhteenveto! toiminnon kautta
+                                               ;;       jh-yhteenvetopaivitys -funktiolle parametreiksi.
+                                               tunniste {:osa osa :toimenkuva toimenkuva :maksukausi maksukausi
+                                                         :data-koskee-ennen-urakkaa? data-koskee-ennen-urakkaa?}]
+                                           [(or loytynyt? syote-osa?)
+                                            (conj tunnisteet tunniste)]))
+                                 [false []]
+                                 (grid/hae-grid osat :lapset))))}))
 
-        muokkausrivien-rajapinta-asetukset (fn [nimi]
-                                             {:rajapinta (keyword (str "yhteenveto-" nimi))
-                                              :solun-polun-pituus 1
-                                              :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :maksukausi]]
-                                              :datan-kasittely (fn [yhteenveto]
-                                                                 (mapv (fn [[_ v]]
-                                                                         v)
-                                                                   yhteenveto))
-                                              :tunnisteen-kasittely (fn [_ _]
-                                                                      (mapv (fn [index]
-                                                                              (assoc
-                                                                                (case index
-                                                                                  0 {:osa :toimenkuva}
-                                                                                  1 {:osa :tunnit}
-                                                                                  2 {:osa :tuntipalkka}
-                                                                                  3 {:osa :yhteensa}
-                                                                                  4 {:osa :maksukausi})
-                                                                                :omanimi nimi))
-                                                                        (range 5)))})
-        blur-tallenna! (fn -blur-tallenna!
-                         ([tallenna-kaikki? etsittava-osa solu]
-                          (-blur-tallenna! tallenna-kaikki? etsittava-osa solu nil))
-                         ([tallenna-kaikki? etsittava-osa solu muutos]
-                          (println "blur tallenna JHO" tallenna-kaikki? etsittava-osa)
-                          (if tallenna-kaikki?
-                            (e! (t/->TallennaJohtoJaHallintokorvaukset
-                                  (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
-                                           :tunniste-rajapinnan-dataan)
-                                    (grid/hae-grid
-                                      (get (grid/hae-grid (grid/etsi-osa (grid/root solu) etsittava-osa)
-                                             :lapset)
-                                        1)
-                                      :lapset))))
-                            (e! (t/->TallennaJohtoJaHallintokorvaukset
-                                  [(grid/solun-asia solu :tunniste-rajapinnan-dataan)])))))
-        nappia-painettu-tallenna! (fn -nappi-tallenna!
-                                    ([rivit-alla]
-                                     (-nappi-tallenna! rivit-alla nil))
-                                    ([rivit-alla muutos]
-                                     (println "nappi tallenna JHO")
-                                     (e! (t/->TallennaJohtoJaHallintokorvaukset
-                                           (vec (keep (fn [rivi]
-                                                        (let [haettu-solu (grid/get-in-grid rivi [1])
-                                                              piilotettu? (grid/piilotettu? rivi)]
-                                                          (when-not piilotettu?
-                                                            (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
-                                                  rivit-alla))))))
-        rividisable! (fn [g index kuukausitasolla?]
-                       (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::t/data-sisalto])
-                         (not kuukausitasolla?))
-                       (ks-yhteiset/maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0 1])]
-                                                             osa
-                                                             (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 1]))
-                         kuukausitasolla?))
-        disable-osa-indexissa! (fn [rivi indexit disabled?]
-                                 (grid/paivita-grid! rivi
-                                   :lapset
-                                   (fn [osat]
-                                     (vec (map-indexed
-                                            (fn [index solu]
-                                              (if (contains? indexit index)
-                                                (if (grid/pudotusvalikko? solu)
-                                                  (assoc-in solu [:livi-pudotusvalikko-asetukset :disabled?] disabled?)
-                                                  (assoc-in solu [:parametrit :disabled?] disabled?))
-                                                solu))
-                                            osat)))))
+(defn- muokkausrivien-rajapinta-asetukset
+  [nimi]
+  {:rajapinta (keyword (str "yhteenveto-" nimi))
+   :solun-polun-pituus 1
+   :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :maksukausi]]
+   :datan-kasittely (fn [yhteenveto]
+                      (mapv (fn [[_ v]]
+                              v)
+                        yhteenveto))
+   :tunnisteen-kasittely (fn [_ _]
+                           (mapv (fn [index]
+                                   (assoc
+                                     (case index
+                                       0 {:osa :toimenkuva}
+                                       1 {:osa :tunnit}
+                                       2 {:osa :tuntipalkka}
+                                       3 {:osa :yhteensa}
+                                       4 {:osa :maksukausi})
+                                     :omanimi nimi))
+                             (range 5)))})
+
+(defn- blur-tallenna!
+  ([tallenna-kaikki? etsittava-osa solu]
+   (blur-tallenna! tallenna-kaikki? etsittava-osa solu nil))
+  ([tallenna-kaikki? etsittava-osa solu muutos]
+   (println "blur tallenna JHO" tallenna-kaikki? etsittava-osa)
+   (if tallenna-kaikki?
+     (e! (t/->TallennaJohtoJaHallintokorvaukset
+           (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
+                    :tunniste-rajapinnan-dataan)
+             (grid/hae-grid
+               (get (grid/hae-grid (grid/etsi-osa (grid/root solu) etsittava-osa)
+                      :lapset)
+                 1)
+               :lapset))))
+     (e! (t/->TallennaJohtoJaHallintokorvaukset
+           [(grid/solun-asia solu :tunniste-rajapinnan-dataan)])))))
+
+(defn- nappia-painettu-tallenna! 
+  ([rivit-alla]
+   (nappia-painettu-tallenna! rivit-alla nil))
+  ([rivit-alla muutos]
+   (println "nappi tallenna JHO")
+   (e! (t/->TallennaJohtoJaHallintokorvaukset
+         (vec (keep (fn [rivi]
+                      (let [haettu-solu (grid/get-in-grid rivi [1])
+                            piilotettu? (grid/piilotettu? rivi)]
+                        (when-not piilotettu?
+                          (grid/solun-asia haettu-solu :tunniste-rajapinnan-dataan))))
+                rivit-alla))))))
+
+(defn- rividisable!
+  [g index kuukausitasolla?]
+  (ks-yhteiset/maara-solujen-disable! (grid/get-in-grid g [::g-pohjat/data index ::t/data-sisalto])
+    (not kuukausitasolla?))
+  (ks-yhteiset/maara-solujen-disable! (if-let [osa (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0 1])]
+                                        osa
+                                        (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 1]))
+    kuukausitasolla?))
+
+(defn- disable-osa-indexissa!
+  [rivi indexit disabled?]
+  (grid/paivita-grid! rivi
+    :lapset
+    (fn [osat]
+      (vec (map-indexed
+             (fn [index solu]
+               (if (contains? indexit index)
+                 (if (grid/pudotusvalikko? solu)
+                   (assoc-in solu [:livi-pudotusvalikko-asetukset :disabled?] disabled?)
+                   (assoc-in solu [:parametrit :disabled?] disabled?))
+                 solu))
+             osat)))))
+
+(defn johto-ja-hallintokorvaus-laskulla-grid []
+  (let [taulukon-id "johto-ja-hallintokorvaus-laskulla-taulukko"               
         vakiorivit (mapv (fn [{:keys [toimenkuva maksukausi hoitokaudet] :as toimenkuva-kuvaus}]
                            (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
                              (if (t/toimenpide-koskee-ennen-urakkaa? hoitokaudet)
