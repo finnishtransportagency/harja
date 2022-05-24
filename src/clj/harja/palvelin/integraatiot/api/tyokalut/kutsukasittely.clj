@@ -379,7 +379,7 @@
           vastaus (aja-virhekasittelyn-kanssa
                    resurssi
                    parametrit
-                   (:headers request)
+                   headerit
                    body
                    #(let
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
@@ -417,9 +417,9 @@
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
+                    parametrit
                     otsikot
                     nil
-                    parametrit
                     #(let
                        [_ (vaadi-jarjestelmaoikeudet db
                             (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
