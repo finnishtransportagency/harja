@@ -52,9 +52,10 @@
                       jarjestelma-fixture))
 
 (defn tarkistusfunktio [sisalto]
-  (let [rivi (:rivi sisalto)
+  (let [nayta-suunnittelu? (if (= (count (:rivi sisalto)) 17) true false)
+        rivi (:rivi sisalto)
         materiaali (or (:arvo (second (second rivi))) (second rivi))
-        [yhteensa suunniteltu prosentti] (take-last 3 rivi)
+        [yhteensa suunniteltu prosentti] (if nayta-suunnittelu? (take-last 3 rivi) [(last rivi) nil nil])
         hoitokaudet (drop-last 3 (drop 2 rivi))
         solu? #(or (nil? %)
                  (= "–" %)
@@ -69,7 +70,7 @@
              hoitoluokat/talvihoitoluokat))
       ; datarivi
       (and
-        (= (count rivi) 17)
+        (= (count rivi) (if nayta-suunnittelu? 17 15))
         (string? materiaali)
         (every? solu? hoitokaudet)
         (solu? yhteensa)
@@ -475,9 +476,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
 
 
@@ -570,9 +569,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-urakoittain
@@ -651,9 +648,7 @@
         {:otsikko "10/18"}
         {:otsikko "11/18"}
         {:otsikko "12/18"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"}))))
+        {:otsikko "Yhteensä (t)"}))))
 
 ;; Testaa että talvihoitoluokan normalisointisproc-toimii odotetusti.
 ;;Muutospvm aineistossa 2.7.2018 jonka mukaan vipu vääntyy.
@@ -752,7 +747,5 @@
         {:otsikko "10/19"}
         {:otsikko "11/19"}
         {:otsikko "12/19"}
-        {:otsikko "Yhteensä (t)"}
-        {:otsikko "Suunniteltu (t)"}
-        {:otsikko "Tot-%"})
+        {:otsikko "Yhteensä (t)"})
       (apurit/tarkista-taulukko-kaikki-rivit taulukko-oulu tarkistusfunktio))))
