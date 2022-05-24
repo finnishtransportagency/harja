@@ -226,9 +226,7 @@
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
             (poista-toteuma ulkoinen-id urakka-id kayttaja)
 
-            (let [;; Toteumien poisto ei siivoa kaikkia taustalla pyöriviä raportti -tauluja
-                  _(q (str "SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2016-01-01T12:00:00Z','2016-09-30T12:00:00Z');"))
-                  rivit3 (hae-materiaalit)
+            (let [rivit3 (hae-materiaalit)
                   maara3 (-> rivit3 first last)]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")
               (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
