@@ -175,27 +175,29 @@
         ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
         ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka -arvo.
         ;; :luokka -arvo kertoo rivin hoitoluokan.
-        avattavat-rivit (mapv (partial str "raportti_rivi_")
-                          (loop [idx 0
-                                 o osamateriaalit
-                                 res []]
-                            (if (empty? o)
-                              res
-                              ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
-                              (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
-                                (recur
-                                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
-                                  ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
-                                  ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
-                                  ;; materiaaliin.
-                                  (+ (inc idx) nykyiset-lapset-cnt)
-                                  (rest o)
-                                  (if (= 0 nykyiset-lapset-cnt)
-                                    res
-                                    ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
-                                    ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
-                                    ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
-                                    (conj res idx)))))))
+        avattavat-rivit (when (or (= "Talvisuolat" otsikko)
+                                (= "Formiaatit" otsikko))
+                          (mapv (partial str "raportti_rivi_")
+                            (loop [idx 0
+                                   o osamateriaalit
+                                   res []]
+                              (if (empty? o)
+                                res
+                                ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
+                                (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
+                                  (recur
+                                    ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
+                                    ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
+                                    ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
+                                    ;; materiaaliin.
+                                    (+ (inc idx) nykyiset-lapset-cnt)
+                                    (rest o)
+                                    (if (= 0 nykyiset-lapset-cnt)
+                                      res
+                                      ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
+                                      ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
+                                      ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
+                                      (conj res idx))))))))
 
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
