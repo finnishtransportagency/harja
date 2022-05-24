@@ -449,14 +449,11 @@
 
         ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
         hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        talvisuolan-maxmaarat (group-by :urakka
-                                        (map
-                                          konv/alaviiva->rakenne
-                                          (suolasakko-q/hae-urakoiden-talvisuolarajat
-                                            db
-                                            {:urakka_idt kontekstin-urakka-idt
-                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-
+        talvisuolarajat (suolasakko-q/hae-urakoiden-talvisuolarajat db
+                          {:urakka_idt kontekstin-urakka-idt
+                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
+        talvisuolaa-suunniteltu-yhteensa (apply + (map :talvisuolaraja talvisuolarajat))
 
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
@@ -465,9 +462,9 @@
                                                                 urakka
                                                                 urakoittain?))])
                                       talvisuolatoteumat)
-                                    (list [{:maara 0
-                                            :luokka nil :kk nil :urakka nil
-                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}]))
+                                    (list [{:maara 0 :luokka nil :kk nil :urakka nil
+                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}
+                                           [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
@@ -523,7 +520,6 @@
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Murskeet")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
-     ;; TODO: Piilota kaksi viimeistä saraketta
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
