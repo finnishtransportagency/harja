@@ -481,7 +481,7 @@
 
         (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M]]) "eka kutsun jälkeen")
         ;; varmista että alkuperäiset on nollattu, ja uuteen pvm:ään puolestaan lisätty määrät
-        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 0.00M] [#inst "2014-12-31T22:00:00.000-00:00" 1 99 2 4.62M]]) "toisen kutsun jälkeen")
+        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M] [#inst "2014-12-31T22:00:00.000-00:00" 1 99 2 4.62M]]) "toisen kutsun jälkeen")
         (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[5
                                                           #inst "2016-01-29T22:00:00.000-00:00"
                                                           1
