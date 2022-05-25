@@ -245,19 +245,23 @@
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
   (when (= (name +liikennemerkki-tietolaji+) tietolaji)
     (let [asetusnumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero])
-          lakinumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lakinumero])]
-      (cond
-        (and asetusnumero (nil? lakinumero))
-        (konversio-fn "v/vtlm" asetusnumero)
+          lakinumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lakinumero])
+          lisatietoja (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lisatietoja])
+          merkki (cond
+                   (and asetusnumero (nil? lakinumero))
+                   (str (konversio-fn "v/vtlm" asetusnumero))
 
-        (and (nil? asetusnumero) lakinumero)
-        (konversio-fn "v/vtlmln" lakinumero)
+                   (and (nil? asetusnumero) lakinumero)
+                   (konversio-fn "v/vtlmln" lakinumero)
 
-        (and (nil? asetusnumero) (nil? lakinumero))
-        "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
+                   (and (nil? asetusnumero) (nil? lakinumero))
+                   "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
 
-        (and asetusnumero lakinumero)
-        "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa"))))
+                   (and asetusnumero lakinumero)
+                   "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa")]
+      (if lisatietoja
+        (str merkki ": " lisatietoja)
+        merkki))))
 
 (defn varusteen-kuntoluokka [konversio-fn kohde]
   (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
