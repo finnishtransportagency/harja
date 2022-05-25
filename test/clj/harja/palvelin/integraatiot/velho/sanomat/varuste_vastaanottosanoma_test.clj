@@ -151,7 +151,7 @@
         muokattu (vos/aika->sql (vos/velho-aika->aika "2021-03-10T07:57:40Z"))
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
                   :alkupvm alkupvm, :ulkoinen_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
-                  :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
+                  :lisatieto "Tienviitta: 45 Joutsa 2 Kangasniemi", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
@@ -203,7 +203,28 @@
         db (:db jarjestelma)
         konversio-fn (partial koodistot/konversio db)]
     (doseq [tl tietolajit]
-      (varuste-vastaanottosanoma/varusteen-lisatieto konversio-fn (name tl) kohde))))
+      (vos/varusteen-lisatieto konversio-fn (name tl) kohde))))
+
+(deftest liikennemerkin-puuttuva-asetus-ja-lakinumero-palauttaa-virhetiedon-lisatietona-test
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/puuttuvat-asetus-ja-lakinumerot.json")
+        db (:db jarjestelma)
+        konversio-fn (partial koodistot/konversio db)]
+    (is (= "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
+           (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
+
+(deftest liikennemerkin-tupla-asetus-ja-lakinumero-palauttaa-virhetiedon-lisatietona-test
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/seka-asetus-etta-lakinumero.json")
+        db (:db jarjestelma)
+        konversio-fn (partial koodistot/konversio db)]
+    (is (= "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa"
+           (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
+
+(deftest liikennemerkin-lisatietoja-poimitaan-mukaan-test
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/liikennemerkin-lisatietoja.json")
+        db (:db jarjestelma)
+        konversio-fn (partial koodistot/konversio db)]
+    (is (= "Tienviitta: Lisätietokilven teksti"
+           (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
 
 (deftest varusteen-yleinen-kuntoluokka-konvertoituu-oikein-test
   "Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua."
