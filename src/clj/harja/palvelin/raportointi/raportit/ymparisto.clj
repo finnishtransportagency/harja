@@ -180,27 +180,29 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
         ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
         ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka -arvo.
         ;; :luokka -arvo kertoo rivin hoitoluokan.
-        avattavat-rivit (mapv (partial str "raportti_rivi_")
-                          (loop [idx 0
-                                 o osamateriaalit
-                                 res []]
-                            (if (empty? o)
-                              res
-                              ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
-                              (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
-                                (recur
-                                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
-                                  ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
-                                  ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
-                                  ;; materiaaliin.
-                                  (+ (inc idx) nykyiset-lapset-cnt)
-                                  (rest o)
-                                  (if (= 0 nykyiset-lapset-cnt)
-                                    res
-                                    ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
-                                    ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
-                                    ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
-                                    (conj res idx)))))))
+        avattavat-rivit (when (or (= "Talvisuolat" otsikko)
+                                (= "Formiaatit" otsikko))
+                          (mapv (partial str "raportti_rivi_")
+                            (loop [idx 0
+                                   o osamateriaalit
+                                   res []]
+                              (if (empty? o)
+                                res
+                                ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
+                                (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
+                                  (recur
+                                    ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
+                                    ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
+                                    ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
+                                    ;; materiaaliin.
+                                    (+ (inc idx) nykyiset-lapset-cnt)
+                                    (rest o)
+                                    (if (= 0 nykyiset-lapset-cnt)
+                                      res
+                                      ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
+                                      ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
+                                      ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
+                                      (conj res idx))))))))
 
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
@@ -491,14 +493,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
 
         ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
         hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        talvisuolan-maxmaarat (group-by :urakka
-                                        (map
-                                          konv/alaviiva->rakenne
-                                          (suolasakko-q/hae-urakoiden-talvisuolarajat
-                                            db
-                                            {:urakka_idt kontekstin-urakka-idt
-                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-
+        talvisuolarajat (suolasakko-q/hae-urakoiden-talvisuolarajat db
+                          {:urakka_idt kontekstin-urakka-idt
+                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
+        talvisuolaa-suunniteltu-yhteensa (apply + (map :talvisuolaraja talvisuolarajat))
 
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
@@ -507,9 +506,9 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                                                                 urakka
                                                                 urakoittain?))])
                                       talvisuolatoteumat)
-                                    (list [{:maara 0
-                                            :luokka nil :kk nil :urakka nil
-                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}]))
+                                    (list [{:maara 0 :luokka nil :kk nil :urakka nil
+                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}
+                                           [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
@@ -565,7 +564,6 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Murskeet")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
-     ;; TODO: Piilota kaksi viimeistä saraketta
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
