@@ -167,7 +167,7 @@
      :luokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
-(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?] :as taulukon-tiedot}]
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
@@ -175,32 +175,34 @@
         ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
         ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :luokka -arvo.
         ;; :luokka -arvo kertoo rivin hoitoluokan.
-        avattavat-rivit (mapv (partial str "raportti_rivi_")
-                          (loop [idx 0
-                                 o osamateriaalit
-                                 res []]
-                            (if (empty? o)
-                              res
-                              ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
-                              (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
-                                (recur
-                                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
-                                  ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
-                                  ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
-                                  ;; materiaaliin.
-                                  (+ (inc idx) nykyiset-lapset-cnt)
-                                  (rest o)
-                                  (if (= 0 nykyiset-lapset-cnt)
-                                    res
-                                    ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
-                                    ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
-                                    ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
-                                    (conj res idx)))))))
+        avattavat-rivit (when (or (= "Talvisuolat" otsikko)
+                                (= "Formiaatit" otsikko))
+                          (mapv (partial str "raportti_rivi_")
+                            (loop [idx 0
+                                   o osamateriaalit
+                                   res []]
+                              (if (empty? o)
+                                res
+                                ;; Uniikkien :luokka -arvojen lasku kertoo, kuinka monta hoittoluokkakohtaista riviä on.
+                                (let [nykyiset-lapset-cnt (count (into #{} (keep :luokka (second (first o)))))]
+                                  (recur
+                                    ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
+                                    ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
+                                    ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
+                                    ;; materiaaliin.
+                                    (+ (inc idx) nykyiset-lapset-cnt)
+                                    (rest o)
+                                    (if (= 0 nykyiset-lapset-cnt)
+                                      res
+                                      ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
+                                      ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
+                                      ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
+                                      (conj res idx))))))))
 
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
    [:taulukko {:otsikko otsikko
-               :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ 5 (count kuukaudet))))
+               :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ (if nayta-suunnittelu? 5 3) (count kuukaudet))))
                :esta-tiivis-grid? true
                :sivuttain-rullattava? true
                :ensimmainen-sarake-sticky? true
@@ -221,12 +223,13 @@
                {:otsikko kk
                 :leveys (if urakoittain? "4.83%" "5%")
                 :fmt :numero}) kuukaudet)
-
-        [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
-          :excel [:summa-vasen (if urakoittain? 2 1)]}
-         {:otsikko "Suunniteltu (t)"
-          :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
-         {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]))
+        (if nayta-suunnittelu?
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
+            :excel [:summa-vasen (if urakoittain? 2 1)]}
+           {:otsikko "Suunniteltu (t)" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+           {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
+            :excel [:summa-vasen (if urakoittain? 2 1)]}])))
 
     (mapcat
       (fn [[{:keys [urakka materiaali]} rivit]]
@@ -275,30 +278,32 @@
                          ;; Kuukausittaiset määrät, viiva jos tyhjä.
                          (map #(or (kk-arvot %) "–") kuukaudet)
 
-                         ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
-                         [(yhteensa-kentta (vals kk-arvot) true)
-                          (if (nil? suunniteltu)
-                            [:arvo-ja-yksikko-korostettu {:arvo nil
-                                                          :yksikko nil
-                                                          :desimaalien-maara 2
-                                                          :lihavoi? false
-                                                          :ala-korosta? true}]
-                            [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
-                                                          :yksikko (when suunniteltu (:yksikko materiaali))
-                                                          :desimaalien-maara 2
-                                                          :lihavoi? false
-                                                          :ala-korosta? true}])
-                          (if (nil? toteuma-prosentti)
-                            [:arvo-ja-yksikko-korostettu {:arvo nil
-                                                          :yksikko nil
-                                                          :desimaalien-maara 2
-                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                          :ala-korosta? true}]
-                            [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
-                                                          :yksikko (when suunniteltu "%")
-                                                          :desimaalien-maara 2
-                                                          :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                          :ala-korosta? true}])]))})]
+                          ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
+                          (if nayta-suunnittelu?
+                            [(yhteensa-kentta (vals kk-arvot) true)
+                             (if (nil? suunniteltu)
+                               [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                             :yksikko nil
+                                                             :desimaalien-maara 2
+                                                             :lihavoi? false
+                                                             :ala-korosta? true}]
+                               [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
+                                                             :yksikko (when suunniteltu (:yksikko materiaali))
+                                                             :desimaalien-maara 2
+                                                             :lihavoi? false
+                                                             :ala-korosta? true}])
+                             (if (nil? toteuma-prosentti)
+                               [:arvo-ja-yksikko-korostettu {:arvo nil
+                                                             :yksikko nil
+                                                             :desimaalien-maara 2
+                                                             :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                             :ala-korosta? true}]
+                               [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
+                                                             :yksikko (when suunniteltu "%")
+                                                             :desimaalien-maara 2
+                                                             :varoitus? (< 100 (or toteuma-prosentti 0))
+                                                             :ala-korosta? true}])]
+                            [(yhteensa-kentta (vals kk-arvot) true)])))})]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
             ;; Jätetään soratieluokat myöhempää aikaa varten
@@ -332,8 +337,10 @@
                                   ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                                   (map #(or (kk-arvot %) "–") kuukaudet)
 
-                                  [(yhteensa-kentta (vals kk-arvot) true)
-                                   nil nil]))}))
+                                  (if nayta-suunnittelu?
+                                    [(yhteensa-kentta (vals kk-arvot) true)
+                                                          nil nil]
+                                    [(yhteensa-kentta (vals kk-arvot) true)])))}))
                (sort-by first (group-by :luokka luokitellut)))))))
      osamateriaalit)]))
 
@@ -442,14 +449,11 @@
 
         ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
         hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        talvisuolan-maxmaarat (group-by :urakka
-                                        (map
-                                          konv/alaviiva->rakenne
-                                          (suolasakko-q/hae-urakoiden-talvisuolarajat
-                                            db
-                                            {:urakka_idt kontekstin-urakka-idt
-                                             :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})))
-
+        talvisuolarajat (suolasakko-q/hae-urakoiden-talvisuolarajat db
+                          {:urakka_idt kontekstin-urakka-idt
+                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
+        talvisuolaa-suunniteltu-yhteensa (apply + (map :talvisuolaraja talvisuolarajat))
 
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
@@ -458,9 +462,9 @@
                                                                 urakka
                                                                 urakoittain?))])
                                       talvisuolatoteumat)
-                                    (list [{:maara 0
-                                            :luokka nil :kk nil :urakka nil
-                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}]))
+                                    (list [{:maara 0 :luokka nil :kk nil :urakka nil
+                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}
+                                           [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
@@ -489,7 +493,10 @@
                          :konteksti konteksti
                          :kuukaudet kuukaudet
                          :urakoittain? urakoittain?
-                         :yksikot-soluissa? false}]
+                         :yksikot-soluissa? false
+                         :nayta-suunnittelu? (if (pvm/onko-hoitokausi? alkupvm loppupvm)
+                                               true
+                                               false)}]
 
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
@@ -513,8 +520,8 @@
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Murskeet")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
-     ;; TODO: Piilota kaksi viimeistä saraketta
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
-                        (assoc :yksikot-soluissa? true)))]))
+                        (assoc :yksikot-soluissa? true)
+                        (assoc :nayta-suunnittelu? false)))]))
