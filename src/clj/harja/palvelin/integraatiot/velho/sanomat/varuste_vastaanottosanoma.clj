@@ -276,8 +276,8 @@
             ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
             ; varusteen versiossa on monta toimenpidettä
             (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
-                           " version-alku: " version-alku " toimenpiteet(suodatettu): " toimenpidelista
-                           " Otimme vain 1. toimenpiteen talteen."))
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): (" (str/join ", " (map #(str "\"" % "\"") toimenpidelista))
+                           ") Otimme vain 1. toimenpiteen talteen."))
             (first toimenpidelista))
 
           (= 1 (count toimenpidelista))
