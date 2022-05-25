@@ -252,7 +252,6 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                                                prosentti (if (zero? kk-arvo)
                                                            0
                                                            (with-precision 2 (* 100 (/ erotus kk-arvo))))]
-                                           ;; TODO: implementoi exceliin ja pdf.
                                            {kk [:erotus-ja-prosentti
                                                 {:arvo erotus
                                                  :prosentti prosentti
