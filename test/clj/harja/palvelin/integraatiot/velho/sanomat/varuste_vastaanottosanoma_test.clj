@@ -141,10 +141,14 @@
     (is (= 1 (count kohteet)) "Odotin X testikohdetta testiresursseista.")
     (assertoi-kohteen-tietolaji-on-kohteen-oidissa kohteet)))
 
+(defn slurp->json
+  [tiedosto]
+  (json/read-str (slurp tiedosto) :key-fn keyword))
+
 (deftest varustetoteuma-velho->harja-test
-  (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
-        alkupvm (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-pvm->pvm "2019-10-01"))
-        muokattu (varuste-vastaanottosanoma/aika->sql (varuste-vastaanottosanoma/velho-aika->aika "2021-03-10T07:57:40Z"))
+  (let [syote (slurp->json "test/resurssit/velho/varusteet/velho-harja-test-syote.json")
+        alkupvm (vos/aika->sql (vos/velho-pvm->pvm "2019-10-01"))
+        muokattu (vos/aika->sql (vos/velho-aika->aika "2021-03-10T07:57:40Z"))
         odotettu {:sijainti "dummy", :loppupvm nil, :tietolaji "tl506", :tr_loppuosa nil, :muokkaaja "migraatio", :tr_numero 22, :kuntoluokka "Hyvä",
                   :alkupvm alkupvm, :ulkoinen_oid "1.2.246.578.4.3.15.506.283640192", :tr_loppuetaisyys nil, :tr_alkuetaisyys 4139,
                   :lisatieto "Tienviitta", :urakka_id 35, :muokattu muokattu, :tr_alkuosa 5, :toteuma "lisatty"}
@@ -158,7 +162,7 @@
 
 (deftest velho->harja-puuttuvia-arvoja-test
   (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
-    (let [syote (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-test-syote.json") :key-fn keyword)
+    (let [syote (slurp->json "test/resurssit/velho/varusteet/velho-harja-test-syote.json")
           puuttuu-oid (dissoc syote :oid)
           odotettu {:tulos nil :virheviesti "Puuttuu pakollisia kenttiä: [:ulkoinen_oid]"}
           db (:db jarjestelma)
@@ -169,7 +173,7 @@
       (is (= odotettu (vos/varustetoteuma-velho->harja urakka-id-fn sijainti-fn konversio-fn urakka-pvmt-idlla-fn puuttuu-oid))))))
 
 (deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
-  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json") :key-fn keyword)
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json")
         odotettu {:tulos {:alkupvm #inst "2016-08-09T00:00:00.000-00:00"
                           :kuntoluokka "Tyydyttävä"
                           :lisatieto nil
@@ -203,20 +207,20 @@
 
 (deftest varusteen-yleinen-kuntoluokka-konvertoituu-oikein-test
   "Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua."
-  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/kuntoluokka-konvertoituu-oikein.json") :key-fn keyword)
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/kuntoluokka-konvertoituu-oikein.json")
         odotettu-kuntoluokka "Hyvä"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (vos/varusteen-kuntoluokka konversio-fn kohde)))))
 
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
   "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
-  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json") :key-fn keyword)
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json")
         odotetut-toimenpiteet "korjaus"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotetut-toimenpiteet (vos/varusteen-toteuma konversio-fn kohde)))))
 
 (deftest toteumatyyppi-konvertoituu-oikein-test
-  (let [kohde (json/read-str (slurp "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json") :key-fn keyword)
+  (let [kohde (slurp->json "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json")
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
         muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2010-07-01")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
