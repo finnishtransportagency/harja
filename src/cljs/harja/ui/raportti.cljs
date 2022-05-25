@@ -70,7 +70,7 @@
 
 (defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara]}]]
   (let [etuliite (cond
-                   (neg? arvo) "+ "
+                   (neg? arvo) "- "
                    (zero? arvo) ""
                    :else "+ ")
         arvo (Math/abs arvo)

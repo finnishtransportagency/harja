@@ -167,6 +167,11 @@
      :luokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
+(def poikkeama-info
+  "Poikkeamalla tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
+ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran (+/- x %), sillä
+reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
+
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
@@ -222,12 +227,10 @@
                 :leveys (if urakoittain? "4.83%" "5%")
                 :fmt :numero}) kuukaudet)
         (if nayta-suunnittelu?
-          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
-            :excel [:summa-vasen (if urakoittain? 2 1)]}
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
            {:otsikko "Suunniteltu (t)" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
            {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
-          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"
-            :excel [:summa-vasen (if urakoittain? 2 1)]}])))
+          [{:otsikko (str "Yhteensä" (when-not yksikot-soluissa? " (t)")) :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}])))
 
     (mapcat
       (fn [[{:keys [urakka materiaali]} rivit]]
@@ -247,6 +250,7 @@
                                                prosentti (if (zero? kk-arvo)
                                                            0
                                                            (with-precision 2 (* 100 (/ erotus kk-arvo))))]
+                                           ;; TODO: implementoi exceliin ja pdf.
                                            {kk [:erotus-ja-prosentti
                                                 {:arvo erotus
                                                  :prosentti prosentti
@@ -363,19 +367,23 @@
                               [" "]
                               (when urakoittain?
                                 [(:nimi urakka)])
+                              ;; TODO: Tooltip. Kokeiltu tehdä arvo-ja-info, joka käyttää yleiset/tooltip html-puolella,
+                              ;;       Mutta siinä ongelmana kaatuminen ja z-indeksi.
                               [" - Poikkeama (+/-)"]
 
                               ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                               (map #(or (poikkeamat %) "–") kuukaudet)
 
                               (let [arvo (yhteensa-arvo (vals poikkeamat))]
-                                [[:erotus-ja-prosentti
-                                  {:arvo arvo
-                                   :prosentti (if (zero? kk-arvot-yht)
-                                                0 
-                                                (with-precision 2 (* 100 (/ arvo kk-arvot-yht))))
-                                   :desimaalien-maara 2
-                                   :korosta-hennosti? true}]])))}]))))))
+                                (concat
+                                  [[:erotus-ja-prosentti
+                                    {:arvo arvo
+                                     :prosentti (if (zero? kk-arvot-yht)
+                                                  0
+                                                  (with-precision 2 (* 100 (/ arvo kk-arvot-yht))))
+                                     :desimaalien-maara 2
+                                     :korosta-hennosti? true}]]
+                                  (when nayta-suunnittelu? [nil nil])))))}]))))))
      osamateriaalit)]))
 
 (defn summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan [urakoittain? materiaalit-kannasta materiaalityyppi]
