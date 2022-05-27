@@ -348,8 +348,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                                            [" "]
                                            (when urakoittain?
                                              [(:nimi urakka)])
-                                           [(str " - "
-                                              (hoitoluokat/talvihoitoluokan-nimi luokka))]
+                                           [(hoitoluokat/talvihoitoluokan-nimi luokka)]
 
                                            ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                                            (map #(or (kk-arvot %) "–") kuukaudet)
@@ -370,7 +369,8 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                                 [(:nimi urakka)])
                               ;; TODO: Tooltip. Kokeiltu tehdä arvo-ja-info, joka käyttää yleiset/tooltip html-puolella,
                               ;;       Mutta siinä ongelmana kaatuminen ja z-indeksi.
-                              [" - Poikkeama (+/-)"]
+                              [[:teksti-ja-info {:arvo "Poikkeama (+/-)"
+                                               :info poikkeama-info}]]
 
                               ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                               (map #(or (poikkeamat %) "–") kuukaudet)
