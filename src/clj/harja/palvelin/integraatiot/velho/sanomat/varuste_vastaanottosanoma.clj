@@ -212,7 +212,7 @@
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
       ; 2
-      (nil? (:urakka_id varustetoteuma))
+      (nil? urakka_id)
       {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
