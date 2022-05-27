@@ -362,10 +362,10 @@
                                     +kohde-haku-maksimi-koko+
                                     nil
                                     oidit)
-                  kaikki-onnistunut (every? #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
-                                                                               % tallenna-fn tallenna-virhe-fn)
-                                            oidit-alijoukot)]
-              (if kaikki-onnistunut
+                  tulokset (map #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
+                                                                       % tallenna-fn tallenna-virhe-fn)
+                                   oidit-alijoukot)]
+              (if (every? true? tulokset)
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
