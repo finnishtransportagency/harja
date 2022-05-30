@@ -20,13 +20,6 @@
             [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]
             [harja.domain.mhu :as mhu]
-
-
-
-
-
-
-
             [tuck.core :as tuck]))
 
 
@@ -800,132 +793,12 @@
         {:data-cy "johto-ja-hallintokorvaus-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
-(def vuosi-kuukausi-malli
-  {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 1}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 1}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 1}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 1}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 1}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 1}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 1}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 1}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 1}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 1}}
-   2 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 2}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 2}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 2}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 2}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 2}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 2}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 2}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 2}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 2}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 2}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 2}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 2}}
-   3 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 3}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 3}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 3}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 3}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 3}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 3}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 3}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 3}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 3}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 3}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 3}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 3}}
-   4 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 4}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 4}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 4}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 4}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 4}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 4}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 4}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 4}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 4}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 4}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 4}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 4}}
-   5 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 5}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 5}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 5}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 5}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 5}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 5}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 5}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 5}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 5}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 5}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 5}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 5}}})
-
-(def erikseen-suunniteltavat
-  {1 false 2 false 3 false 4 false 5 false})
-
-(defonce
-  mock-data
-  (r/atom
-    (into {}
-      (comp
-        (map #(assoc % :vuosipalkka 400
-                :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
-                :erikseen-syotettava? erikseen-suunniteltavat))
-        (map (juxt :toimenkuva identity)))
-      t/johto-ja-hallintokorvaukset-pohjadata)))
-
-(defrecord TallennaToimenkuvanVuosipalkka [rivi])
-(defrecord TallennaToimenkuvanKuukausipalkkaVuodella [rivi])
-
-(defn- laske-yhteenveto-hoitokaudelle
-  [yhteenvedot-vuosille tiedot hoitokausi]
-  (let [ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi))
-        ota-oikea-vuosi (map #(get % hoitokausi))
-        ota-kuukaudet (mapcat vals)
-        ota-kuukausipalkat (map #(-> % :kuukausipalkka))
-        yhteenveto (into [] (comp ota-maksuerat ota-oikea-vuosi ota-kuukaudet ota-kuukausipalkat) tiedot)
-        laskettu-yhteen (reduce + 0 yhteenveto)]    
-    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
-
-(defn paivita-yhteiset-tiedot
-  [app]
-  (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
-        hoitokausi (-> app :suodattimet :hoitokauden-numero)
-        indeksit (-> app :domain :indeksit)
-        vuoden-indeksi (some
-                         #(when (=
-                                  (:vuosi %)
-                                  (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi (+ hoitokausi) dec))
-                            (:indeksikerroin %)) indeksit)
-        tiedot @mock-data
-        summat (laske-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)]
-    (-> app
-      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
-        summat)
-      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset]
-        (into [] (map #(* % vuoden-indeksi)) summat))
-      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto "hankintavastaava" :molemmat]
-        summat))))
-
-(extend-protocol tuck/Event
-  TallennaToimenkuvanKuukausipalkkaVuodella
-  (process-event [{rivi :rivi} app]
-    (-> app
-      paivita-yhteiset-tiedot
-      ;; POST
-      ))
-  TallennaToimenkuvanVuosipalkka
-  (process-event [{rivi :rivi} app]
-    (-> app
-      paivita-yhteiset-tiedot
-      ;; POST
-      )))
-
-(defn- luo-kursori
-  [atomi toimenkuva polku hoitokausi]
-  (r/cursor atomi [toimenkuva polku hoitokausi]))
+(defn- laske-vuoden-summa
+  [hoitokauden-kuukausittaiset-summat]
+  (let [summat-vuodelle (map
+                          #(-> % second :kuukausipalkka)
+                          hoitokauden-kuukausittaiset-summat)]
+    (reduce + 0 summat-vuodelle)))
 
 (defn formatoi-kuukausi
   [vuosi kuukausi]
@@ -962,7 +835,7 @@
                 (< 9 kuukausi))))          
         " (mennyt)"))))
 
-(defn kun-checkbox-klikattu
+(defn- kun-checkbox-klikattu
   [checkbox-tila]
   @checkbox-tila)
 
@@ -977,14 +850,7 @@
 (defn- tallenna-vuosipalkka
   [atomi hoitokausi rivi]
   (swap! atomi jaa-vuosipalkka-kuukausille hoitokausi rivi)
-  (e! (->TallennaToimenkuvanVuosipalkka rivi)))
-
-(defn- laske-vuoden-summa
-  [hoitokauden-kuukausittaiset-summat]
-  (let [summat-vuodelle (map
-                          #(-> % second :kuukausipalkka)
-                          hoitokauden-kuukausittaiset-summat)]
-    (reduce + 0 summat-vuodelle)))
+  (e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)))
 
 (defn- paivita-toimenkuvan-vuosiloota
   [hoitokausi [toimenkuva toimenkuvan-tiedot]]
@@ -997,17 +863,29 @@
     (map (r/partial paivita-toimenkuvan-vuosiloota hoitokausi))
     tiedot))
 
-(defn tallenna-kuukausipalkka
+(defn- tallenna-kuukausipalkka
   [tiedot toimenkuva rivi]
   (swap! tiedot #(assoc-in % [toimenkuva] (second (paivita-toimenkuvan-vuosiloota (:vuosi rivi) [toimenkuva (get % toimenkuva)]))))
-  (e! (->TallennaToimenkuvanKuukausipalkkaVuodella rivi)))
+  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi toimenkuva)))
 
-(defn jarjesta-hoitovuoden-jarjestykseen
+(defn- jarjesta-hoitovuoden-jarjestykseen
   "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
   [{:keys [kuukausi]}]
   (if (> kuukausi 9)
     (- kuukausi 12)
     kuukausi))
+
+(defn- luo-kursori
+  [atomi toimenkuva polku hoitokausi]
+  (r/cursor atomi [toimenkuva polku hoitokausi]))
+
+(defn- kursorit-polulle
+  [polku tiedot toimenkuva vuosien-erotus]
+  (into {}
+    (map (juxt
+           identity
+           (r/partial luo-kursori tiedot toimenkuva polku)))
+    (range 1 vuosien-erotus)))
 
 (defn- vetolaatikko-komponentti
   [tiedot toimenkuva]
@@ -1016,17 +894,8 @@
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         vuosien-erotus (- urakan-loppuvuosi urakan-alkuvuosi)
         kursorit (assoc {}
-                   :maksuerat (into {}
-                                (map (juxt
-                                       identity
-                                       (r/partial luo-kursori tiedot toimenkuva :maksuerat-per-hoitovuosi-per-kuukausi)))
-                                (range 1 vuosien-erotus))
-                   :erikseen-syotettava? (into {}
-                                           (map
-                                             (juxt
-                                               identity
-                                               (r/partial luo-kursori tiedot toimenkuva :erikseen-syotettava?)))
-                                           (range 1 vuosien-erotus)))]
+                   :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot toimenkuva vuosien-erotus)
+                   :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot toimenkuva vuosien-erotus))]
     (fn [tiedot toimenkuva]
       (let [valitun-hoitokauden-numero @valittu-hoitokausi
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
@@ -1035,7 +904,7 @@
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
-         [:div {:style {:border-left "4px solid black" :margin-top "16px" :padding-left "18px"}}
+         [:div.vetolaatikko-border {:style {:border-left "4px solid black" :margin-top "16px" :padding-left "18px"}}
           [vanha-grid/muokkaus-grid
            {:id (str toimenkuva valitun-hoitokauden-alkuvuosi)
             :voi-poistaa? (constantly false)
@@ -1050,8 +919,9 @@
             {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial kun-checkbox-klikattu (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]))}]
            (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
 
-(defonce mock-laatikot
-  (into {} (map (juxt :toimenkuva #(-> [vetolaatikko-komponentti mock-data (:toimenkuva %)]))) t/johto-ja-hallintokorvaukset-pohjadata))
+(defn luo-vetolaatikot
+  [atomi]
+  (into {} (map (juxt :toimenkuva #(-> [vetolaatikko-komponentti atomi (:toimenkuva %)]))) t/johto-ja-hallintokorvaukset-pohjadata))
 
 (defn- kun-ei-syoteta-erikseen
   [hoitokausi tiedot]
@@ -1059,30 +929,35 @@
 
 (defn taulukko-2022-eteenpain
   [app _]
-  (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))]
+  (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
+        data t/mock-data2
+        vetolaatikot (luo-vetolaatikot data)]
     (fn [app indeksit]
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)] 
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (println "bomo")
-          (swap! mock-data paivita-vuosilootat kuluva-hoitokausi)
+          (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
         [:div
          [debug/debug indeksit]
          [debug/debug app]
-         [debug/debug @mock-data]
+         [debug/debug @t/mock-data]
+         [debug/debug @data]
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
            :id "toimenkuvat-taulukko"
            :voi-lisata? false     
            :voi-kumota? false
            :piilota-toiminnot? true
-           :on-rivi-blur (r/partial tallenna-vuosipalkka mock-data kuluva-hoitokausi)
+           :on-rivi-blur (r/partial tallenna-vuosipalkka data kuluva-hoitokausi)
            :voi-poistaa? (constantly false)
-           :vetolaatikot mock-laatikot}
+           :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
            {:tyyppi :vetolaatikon-tila :leveys "5%"}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
-          mock-data]]))))
+          data]]))))
+
+(def piilota-2022-taulukko? true)
 
 (defn- johto-ja-hallintokorvaus
   [app vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
@@ -1106,18 +981,25 @@
      [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
       [ks-yhteiset/yleis-suodatin suodattimet]]
 
-     (cond
-       (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi vertailuvuosi))
-       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [grid/piirra johto-ja-hallintokorvaus-grid]]
+     ;; FIXME: tupla-if kömpelö, mutta poistetaan sitten, kun ominaisuus otetaan käyttöön ja jätetään vaan cond
+     (if piilota-2022-taulukko?
+       (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+         [:div {:class (when vahvistettu? "osio-vahvistettu")}
+          [grid/piirra johto-ja-hallintokorvaus-grid]]
+         [yleiset/ajax-loader])
+         
+       (cond
+         (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi vertailuvuosi))
+         ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+         [:div {:class (when vahvistettu? "osio-vahvistettu")}
+          [grid/piirra johto-ja-hallintokorvaus-grid]]
 
-       (and (>= alkuvuosi vertailuvuosi) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [taulukko-2022-eteenpain app indeksit]]
+         (and (>= alkuvuosi vertailuvuosi) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+         [:div {:class (when vahvistettu? "osio-vahvistettu")}
+          [taulukko-2022-eteenpain app indeksit]]
 
-       :else
-       [yleiset/ajax-loader])
+         :else
+         [yleiset/ajax-loader]))
 
      (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
        ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.

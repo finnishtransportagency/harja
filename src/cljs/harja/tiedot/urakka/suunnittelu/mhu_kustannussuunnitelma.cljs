@@ -1822,6 +1822,11 @@
 (defrecord PoistaOmaJHDdata [sarake nimi maksukausi piilota-modal! paivita-ui! modal-fn!])
 (defrecord PoistaOmaJHDdataOnnistui [vastaus])
 (defrecord PoistaOmaJHDdataEpaonnistui [vastaus])
+;; 2022 -> vanhan griditaulukon eventit (ei ylikirjoiteta vanhoja, koska eri logiikka)
+(defrecord TallennaJHOToimenkuvanVuosipalkka [rivi])
+(defrecord TallennaJHOToimenkuvanKuukausipalkkaVuodella [rivi toimenkuva])
+
+
 ;; FIXME: Tätä ei käytetä missään?
 (defrecord MuutaOmanJohtoJaHallintokorvauksenArvoa [nimi sarake arvo])
 
@@ -2207,6 +2212,138 @@
                (disj vapaat-omien-toimekuvien-idt toimenkuva-id)]))
           [{} vapaat-omien-toimekuvien-idt]
           (range 1 (inc jh-korvausten-omiariveja-lkm)))))))
+
+(def vuosi-kuukausi-malli
+  {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 1}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 1}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 1}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 1}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 1}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 1}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 1}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 1}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 1}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 1}}
+   2 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 2}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 2}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 2}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 2}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 2}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 2}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 2}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 2}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 2}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 2}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 2}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 2}}
+   3 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 3}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 3}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 3}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 3}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 3}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 3}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 3}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 3}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 3}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 3}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 3}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 3}}
+   4 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 4}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 4}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 4}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 4}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 4}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 4}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 4}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 4}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 4}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 4}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 4}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 4}}
+   5 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 5}
+      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 5}
+      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 5}
+      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 5}
+      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 5}
+      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 5}
+      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 5}
+      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 5}
+      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 5}
+      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 5}
+      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 5}
+      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 5}}})
+
+(def erikseen-suunniteltavat
+  {1 false 2 false 3 false 4 false 5 false})
+
+(defonce
+  mock-data
+  (r/atom
+    (into {}
+      (comp
+        (map #(assoc % :vuosipalkka 400
+                :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
+                :erikseen-syotettava? erikseen-suunniteltavat))
+        (map (juxt :toimenkuva identity)))
+      johto-ja-hallintokorvaukset-pohjadata)))
+
+(defonce
+  mock-data2
+  (r/atom
+    (into {}
+      (comp
+        (map #(assoc % :vuosipalkka 400
+                :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
+                :erikseen-syotettava? erikseen-suunniteltavat))
+        (map (juxt #(do (str (:toimenkuva %) (when-not (= :molemmat (:maksukausi %))
+                                               (str "-" (get {:kesa "kesa" :talvi "talvi"} (:maksukausi %)))))) identity)))
+      johto-ja-hallintokorvaukset-pohjadata)))
+
+
+(def ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi)))
+(def ota-kuukaudet (mapcat vals))
+(def ota-kuukausipalkat (map #(-> % :kuukausipalkka)))
+
+(defn ota-oikea-vuosi [hoitokausi] (map #(get % hoitokausi)))
+(defn ota-toimenkuva [toimenkuva] (filter #(= toimenkuva (first %))))
+
+(defn- laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle
+  [yhteenvedot-vuosille tiedot hoitokausi]
+  (let [yhteenveto (into [] (comp ota-maksuerat (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat) tiedot)
+        laskettu-yhteen (reduce + 0 yhteenveto)]    
+    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
+
+(defn- laske-toimenkuvan-yhteenveto-hoitokaudelle
+  [yhteenvedot-vuosille tiedot hoitokausi toimenkuva]
+  (let [yhteenveto (into [] (comp (ota-toimenkuva toimenkuva) ota-maksuerat (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat) tiedot)
+        laskettu-yhteen (reduce + 0 yhteenveto)]
+    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
+
+(defn paivita-yhteiset-tiedot
+  [app toimenkuva]
+  (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
+        hoitokausi (-> app :suodattimet :hoitokauden-numero)
+        indeksit (-> app :domain :indeksit)
+        maksukausi (-> mock-data2 deref (get toimenkuva) :maksukausi)
+        vuoden-indeksi (some
+                         #(when (=
+                                  (:vuosi %)
+                                  (-> tiedot/yleiset deref :urakka :alkupvm pvm/vuosi (+ hoitokausi) dec))
+                            (:indeksikerroin %)) indeksit)
+        tiedot @mock-data2
+        summat (laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)
+        nykyiset-vuosisummat-toimenkuvalla (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi])
+        paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi toimenkuva)]
+    (println "pv p" nykyiset-vuosisummat-toimenkuvalla paivitetyt-vuosisummat-toimenkuvalla)
+    (-> app
+      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
+        summat)
+      (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset]
+        (into [] (map #(* % vuoden-indeksi)) summat))
+      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]
+        paivitetyt-vuosisummat-toimenkuvalla))))
 
 (extend-protocol tuck/Event
   TaulukoidenVakioarvot
@@ -2925,7 +3062,18 @@
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain))))))
 
   ;;
-
+  TallennaJHOToimenkuvanKuukausipalkkaVuodella
+  (process-event [{rivi :rivi toimenkuva :toimenkuva} app]
+    (-> app
+      (paivita-yhteiset-tiedot toimenkuva)
+      ;; POST
+      ))
+  TallennaJHOToimenkuvanVuosipalkka
+  (process-event [{rivi :rivi} app]
+    (-> app
+      (paivita-yhteiset-tiedot (:toimenkuva rivi))
+      ;; POST
+      ))
   ;; NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.
   ;;       Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu.
   TallennaJohtoJaHallintokorvaukset
