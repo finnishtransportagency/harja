@@ -610,9 +610,7 @@
           talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
           talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))
           talvisuola-luokka-02-18-oulu-kasin-kirjattu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 20))
-          talvisuola-luokka-02-18-oulu-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 21))
-          
-          ]
+          talvisuola-luokka-02-18-oulu-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 21))]
 
       (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
       (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))

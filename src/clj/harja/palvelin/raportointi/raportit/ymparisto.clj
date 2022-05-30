@@ -175,6 +175,9 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 (def hoitoluokka-puuttuu-info
   [:p [:b "Hoitoluokka puuttuu:\n\n"] "Materiaalimäärä, johon sidottuja reittipisteitä ei ole voitu kohdistaa millekään talvihoitoluokitetulle tielle"])
 
+;; Prosentti, jonka yli menevät poikkeamat korostetaan punaisella.
+(def poikkeama-varoitus-raja 5)
+
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
@@ -259,7 +262,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                 {:arvo erotus
                                                  :prosentti prosentti
                                                  :desimaalien-maara 2
-                                                 :varoitus? (< 5 (Math/abs (float prosentti)))}]}))
+                                                 :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
                                     (group-by :kk luokitellut)))
               yhteenvetorivi? (:yht-rivi materiaali)
               yhteensa-kentta (fn [arvot nayta-aina?]
