@@ -74,7 +74,6 @@
 
         &.solu-varoitus {
             background-color: @red-lighter;
-            color: @red-dark;
         }
     }
 }
@@ -218,4 +217,13 @@
 
 .osuus {
     font-size: @fontin-koko-taulukko-pienempi;
+}
+
+.teksti-ja-info .info {
+  color: @blue-dark;
+ 
+    // Toistaiseksi ei haluta paddingia muualle.
+    .tooltip-inner {
+        padding: @valistys-16;
+    }
 }
