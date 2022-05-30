@@ -762,11 +762,12 @@ jatkon."
                        :oikea "right"
                        :ylos "top"
                        "bottom")]
-          [:div.tooltip {:class [suunta (when auki? "in")]
-                         :style {:min-width (if (< 150 s-pituus)
-                                              300
-                                              150)
-                                 :left (when-let [x @x]
+          [:div.tooltip {:class [suunta (when auki? "in")
+                                 (or (:leveys opts)
+                                   (if (< 150 s-pituus)
+                                     "levea"
+                                     "ohut"))]
+                         :style {:left (when-let [x @x]
                                          x)}}
            [:div.tooltip-arrow]
            [:div.tooltip-inner

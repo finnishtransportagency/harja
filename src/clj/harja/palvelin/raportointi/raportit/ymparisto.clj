@@ -168,9 +168,12 @@
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
 (def poikkeama-info
-  "Poikkeamalla tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
+  [:p [:b "Poikkeamalla "] "tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
 ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran (+/- x %), sillä
-reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
+reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
+
+(def hoitoluokka-puuttuu-info
+  [:p [:b "Hoitoluokka puuttuu:\n\n"] "Materiaalimäärä, johon sidottuja reittipisteitä ei ole voitu kohdistaa millekään talvihoitoluokitetulle tielle"])
 
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
@@ -348,7 +351,10 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                                            [" "]
                                            (when urakoittain?
                                              [(:nimi urakka)])
-                                           [(hoitoluokat/talvihoitoluokan-nimi luokka)]
+                                           (if (= luokka 100)
+                                             [[:teksti-ja-info {:arvo (hoitoluokat/talvihoitoluokan-nimi luokka)
+                                                                :info hoitoluokka-puuttuu-info}]]
+                                             [(hoitoluokat/talvihoitoluokan-nimi luokka)])
 
                                            ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                                            (map #(or (kk-arvot %) "–") kuukaudet)
@@ -367,10 +373,8 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla.")
                               [" "]
                               (when urakoittain?
                                 [(:nimi urakka)])
-                              ;; TODO: Tooltip. Kokeiltu tehdä arvo-ja-info, joka käyttää yleiset/tooltip html-puolella,
-                              ;;       Mutta siinä ongelmana kaatuminen ja z-indeksi.
                               [[:teksti-ja-info {:arvo "Poikkeama (+/-)"
-                                               :info poikkeama-info}]]
+                                                 :info poikkeama-info}]]
 
                               ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                               (map #(or (poikkeamat %) "–") kuukaudet)
