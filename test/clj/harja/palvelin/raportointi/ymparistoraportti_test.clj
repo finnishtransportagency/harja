@@ -287,8 +287,8 @@
                                 :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (testing "Talvisuola -taulukossa nimet vain kerran"
       (let [talvisuolataulukko (apurit/taulukko-otsikolla vastaus "Talvisuolat")
-            nimet (filter #(not (or (str/includes? % "- Käsin kirjattu")
-                                  (str/includes? % "- Poikkeama (+/-)")))
+            nimet (filter #(not (or (str/includes? % "Käsin kirjattu")
+                                  (str/includes? % "Poikkeama (+/-)")))
                     (apurit/taulukon-sarake talvisuolataulukko 1))]
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
     (testing "Formiaatti -taulukossa nimet vain kerran"
