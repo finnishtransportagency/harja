@@ -1,0 +1,1 @@
+ALTER TABLE urakan_materiaalin_kaytto_hoitoluokittain
