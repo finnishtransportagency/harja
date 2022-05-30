@@ -5,6 +5,7 @@ SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
   NULL AS luokka,
+  NULL AS soratiehoitoluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -26,6 +27,7 @@ SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
   hl.hoitoluokka as luokka,
+  umkh.soratiehoitoluokka AS soratiehoitoluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -49,13 +51,14 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka, umkh.soratiehoitoluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
   u.id as urakka_id, u.nimi as urakka_nimi,
   NULL as luokka,
+  NULL AS soratiehoitoluokka,
   mk.id as materiaali_id, mk.nimi as materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
@@ -84,6 +87,7 @@ UNION
 SELECT
     u.id as urakka_id, u.nimi as urakka_nimi,
     NULL as luokka,
+    NULL AS soratiehoitoluokka,
     mk.id as materiaali_id,
     coalesce(mk.nimi, ml.nimi) as materiaali_nimi,
     coalesce(mk.yksikko, ml.yksikko) AS materiaali_yksikko,
