@@ -14,7 +14,7 @@ BEGIN
         AND (u IS NULL or urakka = u);
 
   -- Päivitä materiaalin käyttö ko. pvm:lle ja urakalle
-  FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, mat.materiaalikoodi,
+  FOR rivi IN SELECT t.urakka, rp.talvihoitoluokka AS talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi,
                                sum(mat.maara) as summa,
                 rp.aika::DATE
               FROM toteuma t
@@ -23,11 +23,11 @@ BEGIN
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
               WHERE t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
                     AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
-              GROUP BY t.urakka, rp.talvihoitoluokka, mat.materiaalikoodi, rp.aika::DATE
+              GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
   UNION
-  SELECT t.urakka, 99 AS talvihoitoluokka, tm.materiaalikoodi,
+  SELECT t.urakka, 99 AS talvihoitoluokka, 99 AS soratiehoitoluokka, tm.materiaalikoodi,
          sum(tm.maara) as summa,
          t.alkanut::DATE as aika
     FROM toteuma t
@@ -35,13 +35,14 @@ BEGIN
    WHERE t.lahde = 'harja-ui' and
          t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
          AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
-   GROUP BY t.urakka, talvihoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
+   GROUP BY t.urakka, talvihoitoluokka, soratiehoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
-    (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara, muokattu)
+    (pvm, materiaalikoodi, talvihoitoluokka, soratiehoitoluokka, urakka, maara, muokattu)
     VALUES (rivi.aika,
             rivi.materiaalikoodi,
-            COALESCE(rivi.talvihoitoluokka, 99),
+            COALESCE(rivi.talvihoitoluokka, 100),
+            COALESCE(rivi.soratiehoitoluokka, 100),
             rivi.urakka,
             rivi.summa,
             current_timestamp)
