@@ -96,8 +96,24 @@
                            "black")}
     (if fmt (fmt arvo) arvo)]])
 
+(defmethod muodosta-pdf :teksti-ja-info [[_ {:keys [arvo]}]] arvo)
+
 (defmethod muodosta-pdf :infopallura [_]
   nil)
+
+(defmethod muodosta-pdf :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara]}]]
+  (let [etuliite (cond
+                   (neg? arvo) "-\u00A0"  
+                   (zero? arvo) ""
+                   :else "+\u00A0")
+        arvo (Math/abs (float arvo))
+        prosentti (Math/abs (float prosentti))]
+    [:fo:inline
+     [:fo:inline (str etuliite
+                   (cond
+                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                     :else arvo))]
+     [:fo:inline (str "\n" "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
 (def alareuna
   {:border-bottom reunan-tyyli})
