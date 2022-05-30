@@ -96,6 +96,8 @@
                            "black")}
     (if fmt (fmt arvo) arvo)]])
 
+(defmethod muodosta-pdf :teksti-ja-info [[_ {:keys [arvo]}]] arvo)
+
 (defmethod muodosta-pdf :infopallura [_]
   nil)
 

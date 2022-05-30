@@ -136,6 +136,9 @@
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
 
+(defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
+  [arvo solun-tyyli])
+
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
     (map-indexed
