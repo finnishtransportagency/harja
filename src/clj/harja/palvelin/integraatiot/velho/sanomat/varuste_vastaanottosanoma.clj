@@ -244,8 +244,24 @@
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
   (when (= (name +liikennemerkki-tietolaji+) tietolaji)
-    (konversio-fn
-      "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
+    (let [asetusnumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero])
+          lakinumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lakinumero])
+          lisatietoja (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lisatietoja])
+          merkki (cond
+                   (and asetusnumero (nil? lakinumero))
+                   (str (konversio-fn "v/vtlm" asetusnumero))
+
+                   (and (nil? asetusnumero) lakinumero)
+                   (konversio-fn "v/vtlmln" lakinumero)
+
+                   (and (nil? asetusnumero) (nil? lakinumero))
+                   "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
+
+                   (and asetusnumero lakinumero)
+                   "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa")]
+      (if lisatietoja
+        (str merkki ": " lisatietoja)
+        merkki))))
 
 (defn varusteen-kuntoluokka [konversio-fn kohde]
   (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
@@ -264,8 +280,8 @@
             ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
             ; varusteen versiossa on monta toimenpidettä
             (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
-                           " version-alku: " version-alku " toimenpiteet(suodatettu): " toimenpidelista
-                           " Otimme vain 1. toimenpiteen talteen."))
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): (" (str/join ", " (map #(str "\"" % "\"") toimenpidelista))
+                           ") Otimme vain 1. toimenpiteen talteen."))
             (first toimenpidelista))
 
           (= 1 (count toimenpidelista))

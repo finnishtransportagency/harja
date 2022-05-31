@@ -1,0 +1,75 @@
+{
+  "kohdeluokka": "varusteet/liikennemerkit",
+  "sijainti": {
+    "osa": 12,
+    "tie": 616,
+    "etaisyys": 2139,
+    "enkoodattu": 61600042824
+  },
+  "version-voimassaolo": {
+    "alku": "2010-06-16",
+    "loppu": "2021-11-16"
+  },
+  "ominaisuudet": {
+    "toiminnalliset-ominaisuudet": {
+      "tarkenne": null,
+      "lakinumero": null,
+      "asetusnumero": null,
+      "vaikutussuunta": null,
+      "lisatietoja": null,
+      "voimassaolo-alkaa": null,
+      "voimassaolo-paattyy": null
+    },
+    "infranimikkeisto": {
+      "toiminnallinen-jarjestelmakokonaisuus": [],
+      "rakenteellinen-jarjestelmakokonaisuus": [
+        "rakenteellinen-jarjestelmakokonaisuus/rjk03"
+      ]
+    },
+    "kunto-ja-vauriotiedot": {
+      "arvioitu-jaljella-oleva-kayttoika": null,
+      "yleinen-kuntoluokka": "kuntoluokka/kl04",
+      "varustevauriot": []
+    },
+    "rakenteelliset-ominaisuudet": {
+      "tekstikoko": null,
+      "kilven-valaistus": null,
+      "kalvotyyppi": null,
+      "paivaloistekalvo": null,
+      "arvo": null,
+      "kiinnitystapa": null,
+      "tunnus": null,
+      "pinta-ala": 0,
+      "sivutie": null,
+      "lisatyyppi": [
+        "liikennemerkki-lisatyyppi/liility01"
+      ],
+      "yhteydet-muihin-kohteisiin": [],
+      "materiaali": "materiaali/ma02",
+      "suunta": null,
+      "tyyppi": "liikennemerkki-tyyppi/liity06",
+      "koko": null,
+      "korkeusasema": null
+    }
+  },
+  "luotu": "2020-05-08T12:20:15Z",
+  "lahdejarjestelman-id": "506.283640192",
+  "paattyen": null,
+  "sijainti-oid": "1.2.246.578.4.1.2.146265754",
+  "lahdejarjestelma": "lahdejarjestelma/lj01",
+  "schemaversio": 1,
+  "luoja": {
+    "kayttajanimi": "TIERb3320"
+  },
+  "sijaintitarkenne": {
+    "ajoradat": [
+      "ajorata/ajr1"
+    ]
+  },
+  "muokkaaja": {
+    "kayttajanimi": "migraatio"
+  },
+  "oid": "1.2.246.578.4.3.15.506.283640192",
+  "alkaen": "2010-06-16",
+  "muokattu": "2021-03-10T07:57:40Z"
+}
