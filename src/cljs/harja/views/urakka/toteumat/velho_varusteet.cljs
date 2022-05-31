@@ -153,37 +153,37 @@
                        (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
 
 (defn listaus [e! {:keys [varusteet] :as app}]
-  [grid/grid
-   {:otsikko (str "Varustetoimenpiteet (" (let [m (count varusteet)]
-                                  (if (> m v/+max-toteumat+)
-                                    (str v/+max-toteumat+ "*")
-                                    m)) ")")
-    :tunniste :id
-    :luokat ["varuste-taulukko"]
-    ;:tyhja (if (nil? (:varusteet app))
-    ;         [ajax-loader "Haetaan varusteita..."]
-    ;         "Specify filter")
-    :rivi-klikattu #(do
-                      (e! (v/->AvaaVarusteLomake %))
-                      (e! (v/->HaeToteumat)))
-    :otsikkorivi-klikattu (fn [opts]
-                            (e! (v/->JarjestaVarusteet (:nimi opts))))
-    :voi-lisata? false :voi-kumota? false
-    :voi-poistaa? (constantly false) :voi-muokata? true}
-   [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
-     :fmt pvm/fmt-p-k-v-lyhyt}
-    {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
-     :hae v/muodosta-tr-osoite}
-    {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt v/toteuma->toimenpide}
-    {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
-     :fmt v/tietolaji->varustetyyppi}
-    {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
-    {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
-     :komponentti (fn [rivi]
-                    [kuntoluokka-komponentti (:kuntoluokka rivi)])}
-    {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
-   varusteet])
+  (let [lkm (count varusteet)]
+    [grid/grid
+     {:otsikko (if (>= lkm v/+max-toteumat+)
+                 (str "Varustetoimenpiteet (Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
+                 (str "Varustetoimenpiteet (" lkm ")"))
+      :tunniste :id
+      :luokat ["varuste-taulukko"]
+      :tyhja (if (:haku-paalla app)
+               [ajax-loader "Haetaan varustetapahtumia..."]
+               "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
+      :rivi-klikattu #(do
+                        (e! (v/->AvaaVarusteLomake %))
+                        (e! (v/->HaeToteumat)))
+      :otsikkorivi-klikattu (fn [opts]
+                              (e! (v/->JarjestaVarusteet (:nimi opts))))
+      :voi-lisata? false :voi-kumota? false
+      :voi-poistaa? (constantly false) :voi-muokata? true}
+     [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
+       :fmt pvm/fmt-p-k-v-lyhyt}
+      {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
+       :hae v/muodosta-tr-osoite}
+      {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
+       :fmt v/toteuma->toimenpide}
+      {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
+       :fmt v/tietolaji->varustetyyppi}
+      {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
+      {:otsikko "Kunto\u00ADluoki\u00ADtus" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
+       :komponentti (fn [rivi]
+                      [kuntoluokka-komponentti (:kuntoluokka rivi)])}
+      {:otsikko "Teki\u00ADjä" :nimi :muokkaaja :leveys 3}]
+     varusteet]))
 
 (defn listaus-toteumat [{:keys [muokkaa-lomaketta data]} e! valittu-toteumat]
   [grid/grid
@@ -258,12 +258,6 @@
       [:div
        (when (:valittu-varuste app)
          [varustelomake-nakyma e! (:valittu-varuste app) (:valittu-toteumat app)])
-       (when (= 0 (count (:varusteet app)))
-         [yleiset/info-laatikko :neutraali "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä."])
-       (when (>= (count (:varusteet app)) v/+max-toteumat+)
-         [yleiset/info-laatikko :neutraali (str "Liikaa osumia, saatiin hakutuloksia yli "
-                                                v/+max-toteumat+ "kpl. Ole hyvä ja käytä tarkempia hakuehtoja.")
-          nil "100%"])
        [suodatuslomake e! app]
        [kartta/kartan-paikka]
        [listaus e! app]])))
