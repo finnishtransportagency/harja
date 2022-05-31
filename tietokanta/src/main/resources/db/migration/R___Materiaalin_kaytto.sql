@@ -27,11 +27,22 @@ BEGIN
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
   UNION
-  SELECT t.urakka, 99 AS talvihoitoluokka, 99 AS soratiehoitoluokka, tm.materiaalikoodi,
+  SELECT t.urakka,
+         (CASE
+            WHEN m.materiaalityyppi = 'talvisuola' THEN 99
+            WHEN m.materiaalityyppi = 'formiaatti' THEN 99
+            ELSE NULL
+         END) AS talvihoitoluokka,
+         (CASE
+              WHEN m.materiaalityyppi = 'kesasuola' THEN 99
+              ELSE NULL
+             END) AS soratiehoitoluokka,
+         tm.materiaalikoodi,
          sum(tm.maara) as summa,
          t.alkanut::DATE as aika
     FROM toteuma t
              JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
+             JOIN materiaalikoodi m on tm.materiaalikoodi = m.id
    WHERE t.lahde = 'harja-ui' and
          t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
          AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
