@@ -157,7 +157,7 @@
         (do
           (reset! varusteet-kartalla/karttataso-varusteet [])
           (-> app
-              (assoc :haku-paalla true)
+              (assoc :haku-paalla true :varusteet [])
               (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                                  {:urakka-id (get-in app [:urakka :id])
                                   :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
