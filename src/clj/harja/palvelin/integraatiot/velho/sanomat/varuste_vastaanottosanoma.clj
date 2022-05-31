@@ -193,7 +193,7 @@
   1. pakolliset kentät
   2. muutoksen-lahde-oid pitää olla Hallintorekisterin maanteiden-hoitourakka, jonka urakkakoodi vastaa VHAR-6045 mukaisesti Harjassa olevaan hoito
      tai teiden-hoito tyyppisen voimassaolevan urakan tunnisteeseen (URAKKA.urakkanro)
-  3. version-voimassaolon alkupvm ja loppupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
+  3. version-voimassaolon alkupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
   4. Varusteen tietolajin pitää sisältyä VHAR-5109 kommentissa mainittuihin tietolajeihin
   5. Varusteversion toimenpiteen pitää olla jokin seuraavista: lisäys, päivitys, poisto, tarkastus, korjaus ja puhdistus
   6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
@@ -208,11 +208,13 @@
   Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
   Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
   [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo]
-  (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
+
+  (let [; VHAR-6330 Version alkupvm on oltava urakan sisällä, muuten versio ei ole syntynyt urakassa
+        varuste-olemassaolo {:alkupvm alkupvm :loppupvm alkupvm}
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
       ; 2
-      (nil? (:urakka_id varustetoteuma))
+      (nil? urakka_id)
       {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
