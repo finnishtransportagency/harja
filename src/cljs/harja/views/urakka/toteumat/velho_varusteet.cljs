@@ -152,7 +152,7 @@
         :disabled (and (every? nil? (vals (dissoc valinnat :hoitokauden-alkuvuosi)))
                        (= (pvm/vuosi (get-in app [:urakka :alkupvm])) (:hoitokauden-alkuvuosi valinnat)))}]]]))
 
-(defn listaus [e! {:keys [varusteet] :as app}]
+(defn listaus [e! {:keys [varusteet haku-paalla] :as app}]
   (let [lkm (count varusteet)]
     [grid/grid
      {:otsikko (if (>= lkm v/+max-toteumat+)
@@ -160,7 +160,7 @@
                  (str "Varustetoimenpiteet (" lkm ")"))
       :tunniste :id
       :luokat ["varuste-taulukko"]
-      :tyhja (if (:haku-paalla app)
+      :tyhja (if haku-paalla
                [ajax-loader "Haetaan varustetapahtumia..."]
                "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
       :rivi-klikattu #(do
