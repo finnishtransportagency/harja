@@ -213,16 +213,17 @@
     (u "DELETE FROM kayttajan_lisaoikeudet_urakkaan;")
     (is (= 200 (:status vastaus-lisays)))))
 
-(defn laheta-yksittainen-reittitoteuma [urakka-id]
+(defn laheta-yksittainen-reittitoteuma [urakka-id uusi-aika]
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         vastaus (api-tyokalut/post-kutsu
                  ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
-                 (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
-                     slurp
-                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                     (.replace "__ID__" (str ulkoinen-id))
-                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
+                  (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
+                    slurp
+                    (.replace "2016-01-30" uusi-aika)
+                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                    (.replace "__ID__" (str ulkoinen-id))
+                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))]
     (is (= 200 (:status vastaus)) "Reittitoteuman tallennus onnistuu")
     ulkoinen-id))
 
@@ -239,33 +240,37 @@
 
 (deftest materiaalin-kaytto-paivittyy-oikein
   (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
-        poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain")
-        hae-materiaalit #(q "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain")
+        poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = "urakka-id)
+        lasketaan-materiaalicache-uusiksi (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2009-01-01'::DATE,'2100-12-31'::DATE);"))
+        ;; Vuonna 2009 ei pitäisi pudasjärven urakalla olla toteumia kannassa
+        hae-materiaalit #(q-map "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND extract(year from pvm) = 2009 ")
         materiaalin-kaytto-ennen (hae-materiaalit)]
 
     (testing "Materiaalin käyttö on tyhjä aluksi"
       (is (empty? materiaalin-kaytto-ennen)))
 
     (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id)]
+      (let [ulkoinen-id  (laheta-yksittainen-reittitoteuma urakka-id "2009-01-30")]
         (let [rivit1 (hae-materiaalit)
-              maara1 (-> rivit1 first last)]
+              maara1 (:maara (first rivit1))]
           (is (= 1 (count rivit1)))
           (is (=marginaalissa? maara1 4.62) "Suolaa 4.62")
 
           (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
             ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-            (laheta-yksittainen-reittitoteuma urakka-id)
+            (laheta-yksittainen-reittitoteuma urakka-id "2009-01-30")
             (let [rivit2 (hae-materiaalit)
-                  maara2 (-> rivit2 first last)]
+                  maara2 (:maara (first rivit2))]
               (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
               (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
 
           (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
             (poista-toteuma ulkoinen-id urakka-id kayttaja)
 
-            (let [rivit3 (hae-materiaalit)
-                  maara3 (-> rivit3 first last)]
+            (let [ ;; Koska suorituksen ajankohta muuttuu niin paljon, niin koko hoitoluokkahistoria pitää päivittää tälle yritykselle
+                  _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2009-01-01'::DATE,'2100-12-31'::DATE);"))
+                  rivit3 (hae-materiaalit)
+                  maara3 (:maara (first rivit3))]
               (is (= 1 (count rivit3)) "Rivejä on sama määrä")
               (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
 
@@ -453,8 +458,9 @@
 
 ;; testaa että update trigger toimii oikein
 (deftest paivita-reittitoteuman-alkupvm
-  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
         toteuma (-> "test/resurssit/api/reittitoteuma_yksittainen.json"
                     slurp
                     (.replace "__SOPIMUS_ID__" (str sopimus-id))
@@ -463,23 +469,28 @@
         toteuma-alkanut-muokattu (-> toteuma
                                      (.replace  "2016-01-30T12:00:00Z" "2015-01-01T12:00:00Z")
                                      (.replace  "2016-01-30T13:00:00Z" "2015-01-01T13:00:00Z"))
-        reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
-                                                  (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+        reittototeumakutsu-joka-tehdaan-monesti (fn [urakka-id kayttaja portti sopimus-id ulkoinen-id]
+                                                  (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
                 toteuma))
 
-        reittototeumakutsu-jossa-alkanut-muokattu (fn [urakka kayttaja portti sopimus-id ulkoinen-id]
-                                                    (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+        reittototeumakutsu-jossa-alkanut-muokattu (fn [urakka-id kayttaja portti sopimus-id ulkoinen-id]
+                                                    (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja portti
                                                                            toteuma-alkanut-muokattu))
-        vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja portti sopimus-id ulkoinen-id)
-        hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+        vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka-id kayttaja portti sopimus-id ulkoinen-id)
+        ;; Päivitetään
+        hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara
+        FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND pvm > '2014-01-01'::DATE AND pvm < '2016-09-30'::DATE"))
         sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
     (is (= 200 (:status vastaus-lisays)))
     (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
       (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
 
       ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (reittototeumakutsu-jossa-alkanut-muokattu urakka kayttaja portti sopimus-id ulkoinen-id)
-            hoitoluokittaiset-toisen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
+      (let [vastaus-paivitys (reittototeumakutsu-jossa-alkanut-muokattu urakka-id kayttaja portti sopimus-id ulkoinen-id)
+            ;; Koska suorituksen ajankohta muuttuu niin paljon, niin koko hoitoluokkahistoria pitää päivittää tälle yritykselle
+            _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("urakka-id",'2014-01-01'::DATE,'2100-12-31'::DATE);"))
+            hoitoluokittaiset-toisen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara
+            FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND pvm > '2014-01-01'::DATE AND pvm < '2016-09-30'::DATE"))
             sopimuksen-mat-kaytto-toisen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
         (is (= 200 (:status vastaus-paivitys)))
         (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
@@ -515,16 +526,10 @@
         (is (not= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
                sopimuksen-mat-kaytto-toisen-kutsun-jalkeen))
 
-        (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M]]) "eka kutsun jälkeen")
+        (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 100 2 4.62M]]) "eka kutsun jälkeen")
         ;; varmista että alkuperäiset on nollattu, ja uuteen pvm:ään puolestaan lisätty määrät
-        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 99 2 4.62M] [#inst "2014-12-31T22:00:00.000-00:00" 1 99 2 4.62M]]) "toisen kutsun jälkeen")
-        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[5
-                                                          #inst "2016-01-29T22:00:00.000-00:00"
-                                                          1
-                                                          4.62M]])
+        (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2014-12-31T22:00:00.000-00:00" 1 100 2 4.62M]]) "toisen kutsun jälkeen")
+        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[5 #inst "2016-01-29T22:00:00.000-00:00" 1 4.62M]])
             "sopimuksen-mat-kaytto-eka-kutsun-jalkeen")
-        (is (= sopimuksen-mat-kaytto-toisen-kutsun-jalkeen [[5
-                                                             #inst "2014-12-31T22:00:00.000-00:00"
-                                                             1
-                                                             4.62M]])
+        (is (= sopimuksen-mat-kaytto-toisen-kutsun-jalkeen [[5 #inst "2014-12-31T22:00:00.000-00:00" 1 4.62M]])
             "sopimuksen-mat-kaytto-toisen-kutsun-jalkeen")))))

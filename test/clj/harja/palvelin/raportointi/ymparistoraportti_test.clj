@@ -51,6 +51,61 @@
                       urakkatieto-fixture
                       jarjestelma-fixture))
 
+(defn varmista-tietokannan-tila []
+  ;; Ympäristöraportin testaamisen helpottamiseksi osa datasta syötetään suoraa tietokantaan, ilman niihin liittyviä toteumia.
+  ;; Tämä helpottaa joidenkin asioiden testaamista.
+  ;; Niinpä asetetaan kanta sellaiseen tilaan, että testaaminen on mahdollista
+  (do
+    (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019');"))
+    (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019');"))
+    (u (str "
+-- Hoitoluokittaiset vastaavasti Ouluun ja Kajaaniin
+INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
+VALUES
+-- Talvisuolaa 1000t per urakka
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 0, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 300),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+
+-- uudet talvihoitoluokat
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 5, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 6, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 7, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 8, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 9, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 10, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-10-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 11, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 0, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 300),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 2, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100),
+
+-- Hiekoitushiekkaa 1000t per urakka
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 0, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 300),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 1, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 2, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 3, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 4, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 100),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 0, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 300),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 1, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 2, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 3, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100);"))))
+
 (defn tarkistusfunktio [sisalto]
   (let [nayta-suunnittelu? (if (= (count (:rivi sisalto)) 17) true false)
         rivi (:rivi sisalto)
@@ -96,7 +151,8 @@
               (apurit/raporttisolun-arvo prosentti))))))))
 
 (deftest raportin-suoritus-urakalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -134,7 +190,8 @@
       (apurit/tarkista-taulukko-kaikki-rivit talvisuolataulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -171,7 +228,8 @@
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -207,7 +265,8 @@
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparisto-materiaali-ja-suolaraportin-tulokset-tasmaavat
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+  (let [_ (varmista-tietokannan-tila)
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
         param {:alkupvm (c/to-date (t/local-date 2014 10 1))
                :loppupvm (c/to-date (t/local-date 2015 9 30))
                :urakkatyyppi :hoito}
@@ -224,13 +283,13 @@
         formiaatit (apurit/taulukko-otsikolla vastaus "Formiaatit")
         kesasuolat (apurit/taulukko-otsikolla vastaus "Kesäsuola")
         hiekoitushiekat (apurit/taulukko-otsikolla vastaus "Hiekoitushiekka")
-        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 1))
-        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 4))
-        ymp-kaytetty-suolaliuos-hlk-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
-        ymp-kaikki-talvisuola-helmikuu (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 6))
-        ymp-kaikki-talvisuola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 6))
+        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 0))
+        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 2))
+        ;ymp-kaytetty-suolaliuos-hlk-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
+        ymp-kaikki-talvisuola-helmikuu (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
+        ymp-kaikki-talvisuola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 4))
         ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 6 1))
-        ymp-suolaliuos-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 4))
+        ymp-formiaatit-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 3))
         ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 14 0))
         ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 15 0))
         materiaali (apurit/taulukko-otsikolla
@@ -247,7 +306,7 @@
         mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 3 0)
         mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 4 0)
         mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 5 0)
-        suola (apurit/taulukko-otsikolla
+        suola-sakko-taulukko (apurit/taulukko-otsikolla
                 (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -256,17 +315,17 @@
                    :urakka-id urakka-id
                    :parametrit param})
                 "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")
-        suola-kaytetty-suola (apurit/taulukon-solu suola 8 0)]
+        suolasakko-kaytetty-suola (apurit/taulukon-solu suola-sakko-taulukko 8 0)]
     (is (= raportin-nimi (:nimi (second vastaus))))
     (is (= teksti (second (nth vastaus 2))))
     (is (= ymp-kaytetty-suolaliuos mat-kaytetty-talvisuolaliuos 1800M)
       "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Talvisuolaliuos NaCl samalla tavalla")
-    (is (= ymp-suolaliuos-yht mat-kaytetty-kaikki-talvisuola 2000M)
+    (is (= ymp-formiaatit-yht mat-kaytetty-kaikki-talvisuola 2000M)
       "Suolaliuokset yhteensä täsmää")
-    (is (= ymp-kaytetty-suolaliuos-hlk-ei-tiedossa 1800M) "hoitoluokka ei tiedossa")
+    ;(is (= ymp-kaytetty-suolaliuos-hlk-ei-tiedossa 1800M) "hoitoluokka ei tiedossa")
     (is (= ymp-kaytetty-natriumformiaatti mat-kaytetty-natriumformiaatti 2000M)
       "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
-    (is (= suola-kaytetty-suola
+    (is (= suolasakko-kaytetty-suola
           (+ ymp-kaytetty-suolaliuos ymp-kaytetty-suola)
           (+ mat-kaytetty-suola mat-kaytetty-talvisuolaliuos)
           2000M) "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
@@ -277,7 +336,8 @@
     (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")))
 
 (deftest jokainen-materiaali-vain-kerran
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -312,7 +372,8 @@
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat
-  (let [vastaus-pop-ely (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus-pop-ely (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi :ymparistoraportti
@@ -388,7 +449,8 @@
 
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-oulu
-  (let [vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
                        :suorita-raportti
                        +kayttaja-jvh+
                        {:nimi :ymparistoraportti
@@ -403,6 +465,7 @@
           teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
+          _ (println "taulukko-oulu: " taulukko-oulu)
           oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
           oulu-talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
           oulu-talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))
@@ -416,7 +479,6 @@
           oulu-talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 10))
           oulu-talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 11))
           oulu-talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 12))
-          oulu-talvisuola-kasin-kirjattu-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 13))
 
           oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 0))
           oulu-talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 1))
@@ -445,8 +507,7 @@
       (is (= oulu-talvisuola-luokka-K1-02-18 100M))
       (is (= oulu-talvisuola-luokka-K2-02-18 100M))
       (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
-      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 1000M))
-      (is (= oulu-talvisuola-kasin-kirjattu-02-18 100M))
+      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 100M))
 
       (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
       (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
@@ -481,7 +542,8 @@
 
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-ei-urakoittain
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -509,7 +571,6 @@
           talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 10))
           talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
           talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))
-          talvisuola-luokka-kasin-kirjattu-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 13))
 
           talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 0))
           talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 1))
@@ -537,8 +598,7 @@
       (is (= talvisuola-luokka-K1-02-18 100M))
       (is (= talvisuola-luokka-K2-02-18 100M))
       (is (= talvisuola-luokka-ei-talvih-02-18 100M))
-      (is (= talvisuola-luokka-ei-tiedossa-02-18 1000M))
-      (is (= talvisuola-luokka-kasin-kirjattu-02-18 100M))
+      (is (= talvisuola-luokka-ei-tiedossa-02-18 100M))
 
       (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
       (is (= talvisuola-luokka-IsE-10-18 100M))
@@ -573,7 +633,8 @@
       (apurit/tarkista-taulukko-kaikki-rivit taulukko tarkistusfunktio))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat-vanha-ja-uusi-koodisto-sekaisin-pop-ely-urakoittain
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (varmista-tietokannan-tila)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
@@ -606,8 +667,7 @@
           talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
           talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
           talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
-          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
-          talvisuola-luokka-02-18-oulu-kasin-kirjattu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))]
+          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))]
 
       (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
       (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))
@@ -628,8 +688,7 @@
       (is (= talvisuola-luokka-02-18-oulu-K1 100M))
       (is (= talvisuola-luokka-02-18-oulu-K2 100M))
       (is (= talvisuola-luokka-02-18-oulu-ei-talvihoitoa 100M))
-      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 1000M))
-      (is (= talvisuola-luokka-02-18-oulu-kasin-kirjattu 100M))
+      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 100M))
 
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -696,7 +755,8 @@
 
 
 (deftest ymparistoraportin-hoitoluokittaiset-ei-hoitoluokkaa-api-ja-kasin-sekaisin
-  (let [vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [_ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain("(hae-oulun-alueurakan-2014-2019-id)",'2019-01-01'::DATE,'2019-12-31'::DATE);"))
+        vastaus-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
                        :suorita-raportti
                        +kayttaja-jvh+
                        {:nimi :ymparistoraportti
@@ -717,7 +777,8 @@
           oulu-talvisuola-luokka-Ib-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 4))
           oulu-talvisuola-luokka-Ic-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 5))
           oulu-talvisuola-luokka-K2-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 6))
-          oulu-talvisuola-luokka-ei-tiedossa-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))]
+          oulu-talvisuola-luokka-kasin-kirjattu-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))
+          oulu-talvisuola-luokka-ei-tiedossa-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 8))]
 
       (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 46M))
       (is (= oulu-talvisuola-luokka-IsE-02-19 1M))
@@ -730,7 +791,8 @@
       ;; Tähän tarkoituksella lasketaan myös käsin syötetyt toteumat, joille ei voida saada muuta hoitoluokkaa
       ;; kuten API:n kautta kirjattavilla saadaan
       ;; sis. 15 reittipisteiden kautta ja 10 käsin syötetyn toteuman kautta
-      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-19 25M))
+      (is (= oulu-talvisuola-luokka-kasin-kirjattu-02-19 10M))
+      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-19 15M))
 
       (apurit/tarkista-taulukko-sarakkeet taulukko-oulu
         {:leveys "2%", :tyyppi :avattava-rivi}
