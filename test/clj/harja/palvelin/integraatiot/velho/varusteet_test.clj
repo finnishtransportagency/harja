@@ -259,7 +259,7 @@
         kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
     {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
 
-(deftest varuste-hae-varusteet-kayttaa-osajoukkoja-test
+(deftest varuste-tuonti-kayttaa-osajoukkoja-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "osajoukkoja-test"
@@ -332,7 +332,7 @@
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
-(deftest varuste-hae-varusteet-onnistuneet-test
+(deftest varuste-tuonti-onnistuneet-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "onnistuneet-test"

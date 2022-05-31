@@ -347,7 +347,8 @@ VALUES
                                 :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (testing "Talvisuola -taulukossa nimet vain kerran"
       (let [talvisuolataulukko (apurit/taulukko-otsikolla vastaus "Talvisuolat")
-            nimet (filter #(not (str/includes? % "- Käsin kirjattu"))
+            nimet (filter #(not (or (str/includes? % "Käsin kirjattu")
+                                  (str/includes? % "Poikkeama (+/-)")))
                     (apurit/taulukon-sarake talvisuolataulukko 1))]
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
     (testing "Formiaatti -taulukossa nimet vain kerran"
@@ -649,25 +650,28 @@ VALUES
     (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
+          foo (seq (apurit/taulukon-rivit taulukko))
           talvisuola-luokka-02-18-kajaani-kaikki (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 0))
           talvisuola-luokka-02-18-kajaani-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 1))
           talvisuola-luokka-02-18-kajaani-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 2))
           talvisuola-luokka-02-18-kajaani-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 3))
           talvisuola-luokka-02-18-kajaani-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 4))
           talvisuola-luokka-02-18-kajaani-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 5))
-          talvisuola-luokka-02-18-oulu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 6))
-          talvisuola-luokka-02-18-oulu-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 7))
-          talvisuola-luokka-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 8))
-          talvisuola-luokka-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 9))
-          talvisuola-luokka-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 10))
-          talvisuola-luokka-02-18-oulu-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 11))
-          talvisuola-luokka-02-18-oulu-II (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 12))
-          talvisuola-luokka-02-18-oulu-III (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 13))
-          talvisuola-luokka-02-18-oulu-L (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 14))
-          talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
-          talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
-          talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
-          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))]
+          talvisuola-luokka-02-18-kajaani-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 6))
+          talvisuola-luokka-02-18-oulu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 7))
+          talvisuola-luokka-02-18-oulu-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 8))
+          talvisuola-luokka-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 9))
+          talvisuola-luokka-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 10))
+          talvisuola-luokka-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 11))
+          talvisuola-luokka-02-18-oulu-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 12))
+          talvisuola-luokka-02-18-oulu-II (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 13))
+          talvisuola-luokka-02-18-oulu-III (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 14))
+          talvisuola-luokka-02-18-oulu-L (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
+          talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
+          talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
+          talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
+          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))
+          talvisuola-luokka-02-18-oulu-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 20))]
 
       (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
       (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))
@@ -675,6 +679,7 @@ VALUES
       (is (= talvisuola-luokka-02-18-kajaani-I 200M))
       (is (= talvisuola-luokka-02-18-kajaani-Ib 200M))
       (is (= talvisuola-luokka-02-18-kajaani-Ic 100M))
+      (is (= talvisuola-luokka-02-18-kajaani-erotus 0M))
 
       (is (= talvisuola-luokka-02-18-oulu 2600M))
       (is (= talvisuola-luokka-02-18-oulu-IsE 300M))
@@ -689,6 +694,7 @@ VALUES
       (is (= talvisuola-luokka-02-18-oulu-K2 100M))
       (is (= talvisuola-luokka-02-18-oulu-ei-talvihoitoa 100M))
       (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 100M))
+      (is (= talvisuola-luokka-02-18-oulu-erotus -1000M))
 
 
       (apurit/tarkista-taulukko-sarakkeet taulukko

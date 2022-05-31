@@ -148,7 +148,9 @@
                             :salasana s/Str
                             :varuste-api-juuri-url s/Str
                             :varuste-kayttajatunnus s/Str
-                            :varuste-salasana s/Str}
+                            :varuste-salasana s/Str
+                            :varuste-urakka-oid-url s/Str
+                            :varuste-urakka-kohteet-url s/Str}
 
    (s/optional-key :yha-velho) {}
 
