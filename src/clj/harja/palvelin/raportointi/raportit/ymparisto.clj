@@ -121,7 +121,7 @@
   "Kk-rivit toteumille eli tummmennetut rivit - ei hoitoluokkakohtaiset"
   [rivit]
   (group-by :kk (filter
-                  #(and (not (:talvihoitoluokka %)) (not (:soratieluokka %)))
+                  #(and (not (:talvitieluokka %)) (not (:soratieluokka %)))
                   (remove #(nil? (:kk %)) rivit))))
 
 (defn- kk-arvot
@@ -166,7 +166,7 @@
                                (reduce + 0 (keep :talvisuolaraja
                                                 (apply concat (vals talvisuolan-maxmaarat)))))]
     {:maara talvisuolan-maxmaara
-     :talvihoitoluokka nil :kk nil :urakka (when urakoittain? urakka)
+     :talvitieluokka nil :kk nil :urakka (when urakoittain? urakka)
      :materiaali materiaali-kaikki-talvisuola-yhteensa}))
 
 (def poikkeama-info
@@ -186,8 +186,8 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
 
         ;; Osamateriaali-rivejä on niin monta, kuin taulukolla on normaaleja materiaalikohtaisia rivejä.
-        ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :talvihoitoluokka -arvo ja :soratieluokka -arvo.
-        ;; :talvihoitoluokka/:soratieluokka -arvo kertoo rivin hoitoluokan.
+        ;; Niiden sisällä on materiaali- ja hoitoluokkakohtaisia rivejä. Erona niillä on :talvitieluokka -arvo ja :soratieluokka -arvo.
+        ;; :talvitieluokka/:soratieluokka -arvo kertoo rivin hoitoluokan.
         avattavat-rivit
         (mapv (partial str "raportti_rivi_")
           (loop [idx 0
@@ -195,10 +195,10 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                  res []]
             (if (empty? o)
               res
-              ;; Uniikkien :talvihoitoluokka/:soratieluokka -arvojen lasku kertoo, kuinka monta hoitoluokkakohtaista riviä on.
+              ;; Uniikkien :talvitieluokka/:soratieluokka -arvojen lasku kertoo, kuinka monta hoitoluokkakohtaista riviä on.
               (let [nykyiset-lapset-cnt (count (into #{}
                                                  (keep
-                                                   #(or (:talvihoitoluokka %) (:soratieluokka %))
+                                                   #(or (:talvitieluokka %) (:soratieluokka %))
                                                    (second (first o)))))]
                 (recur
                   ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
@@ -249,7 +249,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
         (let [suunnitellut (keep :maara (filter #(nil? (:kk %)) rivit))
               suunniteltu (when-not (empty? suunnitellut)
                             (reduce + suunnitellut))
-              luokitellut (filter #(or (:talvihoitoluokka %) (:soratiehoitoluokka %)) rivit)
+              luokitellut (filter #(or (:talvitieluokka %) (:soratieluokka %)) rivit)
               ;; Jos materiaalilla on hoitoluokkakohtaisia rivejä, nostetaan isantarivin-indeksiä yhdellä
               ;; koska materiaalit, joilla ei ole niitä, ei löydy myöskään avattavat-rivit-vektorista.
               _ (when (seq luokitellut) (swap! isantarivi-indeksi inc))
@@ -373,7 +373,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                    [(yhteensa-kentta (vals kk-arvot) true)])))}))
               (sort-by first (if (or (= "Talvisuolat" otsikko)
                                    (= "Formiaatit" otsikko))
-                               (group-by :talvihoitoluokka luokitellut)
+                               (group-by :talvitieluokka luokitellut)
                                (group-by :soratieluokka luokitellut))))
               ;; Ja loppuun erotusrivi
               (when (seq luokitellut)
@@ -409,7 +409,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                               (fn [rivi]
                                 (and
                                   ;; summataan vain toteumat eli kun luokka (viittaa talvihoitoluokkaan) ja soratieluokka on nil
-                                  (and (nil? (:talvihoitoluokka rivi)) (nil? (:soratieluokka rivi)) )
+                                  (and (nil? (:talvitieluokka rivi)) (nil? (:soratieluokka rivi)) )
                                   (= (str materiaalityyppi) (str (get-in rivi [:materiaali :tyyppi])))))
                               materiaalit)]
     (group-by ryhmittely-fn valitut-materiaalit)))
@@ -436,7 +436,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
              rivit])
       tyypin-mukaan-jaotellut-materiaalit)
     (list [{:maara 0
-            :talvihoitoluokka nil :soratieluokka nil :kk nil :urakka nil
+            :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
             :materiaali tyypin-yhteensa-materiaali}])))
 
 (defn suorita [db user {:keys [alkupvm loppupvm
@@ -520,7 +520,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                                 urakka
                                                                 urakoittain?))])
                                       talvisuolatoteumat)
-                                    (list [{:maara 0 :talvihoitoluokka nil :soratieluokka nil :kk nil :urakka nil
+                                    (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
                                             :materiaali materiaali-kaikki-talvisuola-yhteensa}
                                            [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
 
@@ -532,7 +532,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                           (not= true (get-in materiaali [:materiaali :yht-rivi]))
                                                           (= "talvisuola" (get-in materiaali [:materiaali :tyyppi]))))) ;; vain talvisuolat
                                               (mapcat second)
-                                              (filter #(and (nil? (:talvihoitoluokka %)) (nil? (:soratieluokka %)))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
+                                              (filter #(and (nil? (:talvitieluokka %)) (nil? (:soratieluokka %)))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
                                               (map :maara)
                                               (reduce +))
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)

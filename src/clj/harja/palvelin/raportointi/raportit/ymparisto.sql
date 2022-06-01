@@ -4,8 +4,8 @@
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  NULL AS talvihoitoluokka,
-  NULL AS soratiehoitoluokka,
+  NULL AS talvitieluokka,
+  NULL AS soratieluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -26,10 +26,13 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  hl.hoitoluokka as talvihoitoluokka,
+  (CASE
+       WHEN mk.materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti') THEN hl.hoitoluokka
+       WHEN mk.materiaalityyppi IN ('kesasuola','murske') THEN NULL
+      END) AS talvitieluokka,
   (CASE
       WHEN mk.materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti') THEN NULL
-      WHEN mk.materiaalityyppi IN ('kesasuola','murske') THEN  umkh.soratiehoitoluokka
+      WHEN mk.materiaalityyppi IN ('kesasuola','murske') THEN umkh.soratiehoitoluokka
    END) AS soratieluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
@@ -54,14 +57,14 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka, soratieluokka
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), talvitieluokka, soratieluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
   u.id as urakka_id, u.nimi as urakka_nimi,
-  NULL as talvihoitoluokka,
-  NULL AS soratiehoitoluokka,
+  NULL as talvitieluokka,
+  NULL AS soratieluokka,
   mk.id as materiaali_id, mk.nimi as materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
@@ -89,8 +92,8 @@ UNION
 -- Ja jätä suolauksen suunnitellut määrät ulos, koska ne haetaan taas hieman eri logiikalla
 SELECT
     u.id as urakka_id, u.nimi as urakka_nimi,
-    NULL as talvihoitoluokka,
-    NULL AS soratiehoitoluokka,
+    NULL as talvitieluokka,
+    NULL AS soratieluokka,
     mk.id as materiaali_id,
     coalesce(mk.nimi, ml.nimi) as materiaali_nimi,
     coalesce(mk.yksikko, ml.yksikko) AS materiaali_yksikko,
