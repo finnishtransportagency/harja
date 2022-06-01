@@ -55,10 +55,9 @@
   ;; Ympäristöraportin testaamisen helpottamiseksi osa datasta syötetään suoraa tietokantaan, ilman niihin liittyviä toteumia.
   ;; Tämä helpottaa joidenkin asioiden testaamista.
   ;; Niinpä asetetaan kanta sellaiseen tilaan, että testaaminen on mahdollista
-  (do
-    (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019');"))
-    (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019');"))
-    (u (str "
+  (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019');"))
+  (u (str "delete from urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019');"))
+  (u (str "
 -- Hoitoluokittaiset vastaavasti Ouluun ja Kajaaniin
 INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain (pvm, materiaalikoodi, talvihoitoluokka, urakka, maara)
 VALUES
@@ -104,7 +103,7 @@ VALUES
 ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 1, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
 ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 2, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
 ('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 3, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 200),
-('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100);"))))
+('2018-02-15', (SELECT id from materiaalikoodi WHERE nimi = 'Hiekoitushiekka'), 4, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 100);")))
 
 (defn tarkistusfunktio [sisalto]
   (let [nayta-suunnittelu? (if (= (count (:rivi sisalto)) 17) true false)

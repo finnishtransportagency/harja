@@ -4,7 +4,7 @@
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  NULL AS luokka,
+  NULL AS talvihoitoluokka,
   NULL AS soratiehoitoluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
@@ -26,7 +26,7 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  hl.hoitoluokka as luokka,
+  hl.hoitoluokka as talvihoitoluokka,
   umkh.soratiehoitoluokka AS soratiehoitoluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
@@ -57,7 +57,7 @@ UNION
 -- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
   u.id as urakka_id, u.nimi as urakka_nimi,
-  NULL as luokka,
+  NULL as talvihoitoluokka,
   NULL AS soratiehoitoluokka,
   mk.id as materiaali_id, mk.nimi as materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -86,7 +86,7 @@ UNION
 -- Ja jätä suolauksen suunnitellut määrät ulos, koska ne haetaan taas hieman eri logiikalla
 SELECT
     u.id as urakka_id, u.nimi as urakka_nimi,
-    NULL as luokka,
+    NULL as talvihoitoluokka,
     NULL AS soratiehoitoluokka,
     mk.id as materiaali_id,
     coalesce(mk.nimi, ml.nimi) as materiaali_nimi,
