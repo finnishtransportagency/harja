@@ -27,7 +27,10 @@ SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
   hl.hoitoluokka as talvihoitoluokka,
-  umkh.soratiehoitoluokka AS soratiehoitoluokka,
+  (CASE
+      WHEN mk.materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti') THEN NULL
+      WHEN mk.materiaalityyppi IN ('kesasuola','murske') THEN  umkh.soratiehoitoluokka
+   END) AS soratieluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
@@ -51,7 +54,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka, umkh.soratiehoitoluokka
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), hl.hoitoluokka, soratieluokka
 UNION
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
