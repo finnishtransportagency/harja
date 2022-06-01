@@ -110,7 +110,7 @@ VALUES
         rivi (:rivi sisalto)
         materiaali (or (:arvo (second (second rivi))) (second rivi))
         [yhteensa suunniteltu prosentti] (if nayta-suunnittelu? (take-last 3 rivi) [(last rivi) nil nil])
-        hoitokaudet (drop-last 3 (drop 2 rivi))
+        hoitokaudet (if nayta-suunnittelu? (drop-last 3 (drop 2 rivi)) (drop-last 1 (drop 2 rivi)))
         solu? #(or (nil? %)
                  (= "–" %)
                  (and (not (nil? %)) (number? %))
@@ -129,7 +129,7 @@ VALUES
         (every? solu? hoitokaudet)
         (solu? yhteensa)
         (solu? suunniteltu)
-         (or (nil? prosentti) (nil? (apurit/raporttisolun-arvo prosentti))
+        (or (nil? prosentti) (nil? (apurit/raporttisolun-arvo prosentti))
           (and (number? prosentti) (or (= 0 prosentti) (pos? prosentti)))
           (and (vector? prosentti) (= "%" (:yksikko (second prosentti))))) ;; Tämä on näitä keissejä varten [:arvo-ja-yksikko {:arvo 277.625, :yksikko "%", :desimaalien-maara 2}]
          (or (and (every? nil? hoitokaudet) (nil? yhteensa) (nil? (apurit/raporttisolun-arvo yhteensa)))
