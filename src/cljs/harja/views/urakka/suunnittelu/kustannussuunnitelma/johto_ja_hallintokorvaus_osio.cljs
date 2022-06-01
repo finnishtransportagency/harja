@@ -973,7 +973,7 @@
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data t/mock-data2
+        data t/mock-data
         vetolaatikot (luo-vetolaatikot data)]
     (fn [app indeksit]
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
@@ -985,7 +985,6 @@
         [:div
          [debug/debug indeksit]
          [debug/debug app]
-         [debug/debug @t/mock-data]
          [debug/debug @data]
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
@@ -1003,6 +1002,7 @@
           data]]))))
 
 (def piilota-2022-taulukko? false)
+(def vertailuvuosi 2018)
 
 (defn- johto-ja-hallintokorvaus
   [app vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
@@ -1013,8 +1013,7 @@
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
-  (let [alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
-        vertailuvuosi 2018]
+  (let [alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)]
     [:<>
      [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
      [johto-ja-hallintokorvaus-yhteenveto

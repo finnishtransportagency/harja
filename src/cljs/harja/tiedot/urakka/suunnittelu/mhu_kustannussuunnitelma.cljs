@@ -2213,6 +2213,7 @@
           [{} vapaat-omien-toimekuvien-idt]
           (range 1 (inc jh-korvausten-omiariveja-lkm)))))))
 
+;; TODO MOCK DATAA
 (def vuosi-kuukausi-malli
   {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
       11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
@@ -2278,7 +2279,7 @@
 (def erikseen-suunniteltavat
   {1 false 2 false 3 false 4 false 5 false})
 
-(defonce
+#_(defonce
   mock-data
   (r/atom
     (into {}
@@ -2290,7 +2291,7 @@
       johto-ja-hallintokorvaukset-pohjadata)))
 
 (defonce
-  mock-data2
+  mock-data
   (r/atom
     (into {}
       (comp
@@ -2311,28 +2312,44 @@
 
 (defn- laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle
   [yhteenvedot-vuosille tiedot hoitokausi]
-  (let [yhteenveto (into [] (comp ota-maksuerat (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat) tiedot)
-        laskettu-yhteen (reduce + 0 yhteenveto)]    
-    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
+  (let [maksuerat (into [] (comp ota-maksuerat (ota-oikea-vuosi hoitokausi)) tiedot)
+        lukujen-maara (count yhteenvedot-vuosille)
+        luvut (into []
+                (map (fn [hoitokausi]
+                       (let [summat (into []
+                                      (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
+                                      maksuerat)
+                             laskettu-yhteen (reduce + 0 summat)]
+                         laskettu-yhteen)))
+                (range 1 (inc lukujen-maara)))]    
+    luvut))
 
 (defn- laske-toimenkuvan-yhteenveto-hoitokaudelle
   [yhteenvedot-vuosille tiedot hoitokausi toimenkuva]
-  (let [yhteenveto (into [] (comp (ota-toimenkuva toimenkuva) ota-maksuerat (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat) tiedot)
-        laskettu-yhteen (reduce + 0 yhteenveto)]
-    (assoc yhteenvedot-vuosille (dec hoitokausi) laskettu-yhteen)))
+  (let [maksuerat (into [] (comp (ota-toimenkuva toimenkuva) ota-maksuerat) tiedot)
+        lukujen-maara (count yhteenvedot-vuosille)
+        luvut (into []
+                (map (fn [hoitokausi]
+                       (let [summat (into []
+                                      (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
+                                      maksuerat)
+                             laskettu-yhteen (reduce + 0 summat)]
+                         laskettu-yhteen)))
+                (range 1 (inc lukujen-maara)))]
+    luvut))
 
 (defn paivita-yhteiset-tiedot
   [app toimenkuva]
   (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
         hoitokausi (-> app :suodattimet :hoitokauden-numero)
         indeksit (-> app :domain :indeksit)
-        maksukausi (-> mock-data2 deref (get toimenkuva) :maksukausi)
+        maksukausi (-> mock-data deref (get toimenkuva) :maksukausi)
         vuoden-indeksi (some
                          #(when (=
                                   (:vuosi %)
                                   (-> tiedot/yleiset deref :urakka :alkupvm pvm/vuosi (+ hoitokausi) dec))
                             (:indeksikerroin %)) indeksit)
-        tiedot @mock-data2
+        tiedot @mock-data
         summat (laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)
         nykyiset-vuosisummat-toimenkuvalla (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi])
         paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi toimenkuva)]
