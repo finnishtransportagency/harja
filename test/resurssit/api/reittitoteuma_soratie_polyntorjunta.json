@@ -1,0 +1,103 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 137024
+    },
+    "lahetysaika": "2022-05-30T12:00:00Z"
+  },
+  "reittitoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": __ID__
+      },
+      "suorittaja": {
+        "nimi": "__SUORITTAJA_NIMI__",
+        "ytunnus": "8765432-1"
+      },
+      "sopimusId": __SOPIMUS_ID__,
+      "alkanut": "2022-05-30T12:00:00Z",
+      "paattynyt": "2022-05-30T12:05:00Z",
+      "toteumatyyppi": "kokonaishintainen",
+      "lisatieto": "Pölyntorjuntaa",
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": 1361,
+            "maara": {
+              "yksikko": "km",
+              "maara": 0.5
+            }
+          }
+        }
+      ],
+      "materiaalit": [
+        {
+          "materiaali": "Kesäsuola sorateiden pölynsidonta",
+          "maara": {
+            "yksikko": "t",
+            "maara": 0.044
+          }
+        }
+      ]
+    },
+    "reitti": [
+      {
+        "reittipiste": {
+          "aika": "2022-05-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 440816,
+            "y": 7198387
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1361
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Kesäsuola sorateiden pölynsidonta",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.022
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2022-05-30T12:01:00Z",
+          "koordinaatit": {
+            "x": 441271,
+            "y": 7198865
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": 1361
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Kesäsuola sorateiden pölynsidonta",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.022
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
