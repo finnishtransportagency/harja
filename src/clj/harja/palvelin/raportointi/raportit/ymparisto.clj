@@ -180,6 +180,12 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 ;; Prosentti, jonka yli menevät poikkeamat korostetaan punaisella.
 (def poikkeama-varoitus-raja 5)
 
+(defn- hoitoluokalle-nimi [luokka otsikko]
+  (if (or (= "Talvisuolat" otsikko)
+        (= "Formiaatit" otsikko))
+    (hoitoluokat/talvihoitoluokan-nimi luokka)
+    (hoitoluokat/soratieluokan-nimi luokka)))
+
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu?] :as taulukon-tiedot}]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
@@ -357,12 +363,9 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                          (when urakoittain?
                                            [(:nimi urakka)])
                                          (if (= luokka 100)
-                                           [[:teksti-ja-info {:arvo (hoitoluokat/talvihoitoluokan-nimi luokka)
+                                           [[:teksti-ja-info {:arvo (hoitoluokalle-nimi luokka otsikko)
                                                               :info hoitoluokka-puuttuu-info}]]
-                                           [(if (or (= "Talvisuolat" otsikko)
-                                                  (= "Formiaatit" otsikko))
-                                              (hoitoluokat/talvihoitoluokan-nimi luokka)
-                                              (hoitoluokat/soratieluokan-nimi luokka))])
+                                           [(hoitoluokalle-nimi luokka otsikko)])
 
                                  ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
                                  (map #(or (kk-arvot %) "–") kuukaudet)
