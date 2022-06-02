@@ -7,7 +7,7 @@
     "enkoodattu": 61600042824
   },
   "version-voimassaolo": {
-    "alku": "2010-06-16",
+    "alku": "2019-10-01",
     "loppu": null
   },
   "ominaisuudet": {
@@ -70,6 +70,7 @@
     "kayttajanimi": "migraatio"
   },
   "oid": "1.2.246.578.4.3.15.506.283640192",
-  "alkaen": "2010-06-16",
+  "alkaen": "2019-10-01",
+  "muutoksen-lahde-oid":"1.2.3.4.1236",
   "muokattu": "2021-03-10T07:57:40Z"
 }
