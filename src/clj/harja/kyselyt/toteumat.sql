@@ -1395,6 +1395,7 @@ SELECT t.id as toteuma_tunniste_id,
        t.sopimus as toteuma_sopimus_id,
        t.alkanut as toteuma_alkanut,
        t.paattynyt as toteuma_paattynyt,
+       u.urakkanro AS alueurakkanumero,
        t.suorittajan_ytunnus as toteuma_suorittaja_ytunnus,
        t.suorittajan_nimi as toteuma_suorittaja_nimi,
        t.tyyppi as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
@@ -1421,7 +1422,8 @@ FROM toteuma t
      LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
      LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
      LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+     LEFT JOIN urakka u on t.urakka = u.id
 WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-GROUP BY t.id, t.alkanut
+GROUP BY t.id, t.alkanut, u.id
 ORDER BY t.alkanut ASC
 LIMIT 100000;
