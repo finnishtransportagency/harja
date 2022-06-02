@@ -26,14 +26,8 @@ UNION
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
-  (CASE
-       WHEN mk.materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti') THEN hl.hoitoluokka
-       WHEN mk.materiaalityyppi IN ('kesasuola') THEN NULL
-      END) AS talvitieluokka,
-  (CASE
-      WHEN mk.materiaalityyppi IN ('talvisuola', 'erityisalue', 'formiaatti') THEN NULL
-      WHEN mk.materiaalityyppi IN ('kesasuola') THEN umkh.soratiehoitoluokka
-   END) AS soratieluokka,
+  (CASE WHEN mk.materiaalityyppi IN ('talvisuola', 'formiaatti') THEN hl.hoitoluokka END) AS talvitieluokka,
+  (CASE WHEN mk.materiaalityyppi IN ('kesasuola') THEN umkh.soratiehoitoluokka END) AS soratieluokka,
   mk.id AS materiaali_id,
   mk.nimi AS materiaali_nimi,
   mk.yksikko AS materiaali_yksikko,
