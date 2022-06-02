@@ -55,7 +55,9 @@ Numero on tierekisterin koodi luokalle."}
   soratieluokat
   [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1}
    {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2}
-   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}])
+   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}
+   {:nimi "Käsin kirjattu" :kuvaus "Käsin kirjattu" :numero 99}
+   {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100}])
 
 (def ^{:doc "Mäppäys soratieluokan numerosta sen nimeen."}
   soratieluokan-nimi
