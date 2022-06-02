@@ -207,11 +207,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                    #(or (:talvitieluokka %) (:soratieluokka %))
                                                    (second (first o)))))]
                 (recur
-                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin.
+                  ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin ja poikkeamarivin takia yksi lisärivi
                   ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
                   ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
                   ;; materiaaliin.
-                  (+ (inc idx) nykyiset-lapset-cnt)
+                  (+ (inc idx) (inc nykyiset-lapset-cnt))
                   (rest o)
                   (if (= 0 nykyiset-lapset-cnt)
                     res
