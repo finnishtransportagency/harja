@@ -1395,7 +1395,7 @@ SELECT t.id as toteuma_tunniste_id,
        t.sopimus as toteuma_sopimus_id,
        t.alkanut as toteuma_alkanut,
        t.paattynyt as toteuma_paattynyt,
-       u.urakkanro AS alueurakkanumero,
+       u.urakkanro AS toteuma_alueurakkanumero,
        t.suorittajan_ytunnus as toteuma_suorittaja_ytunnus,
        t.suorittajan_nimi as toteuma_suorittaja_nimi,
        t.tyyppi as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
