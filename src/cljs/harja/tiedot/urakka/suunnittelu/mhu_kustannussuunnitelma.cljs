@@ -2279,27 +2279,23 @@
 (def erikseen-suunniteltavat
   {1 false 2 false 3 false 4 false 5 false})
 
-#_(defonce
-  mock-data
-  (r/atom
-    (into {}
-      (comp
-        (map #(assoc % :vuosipalkka 400
-                :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
-                :erikseen-syotettava? erikseen-suunniteltavat))
-        (map (juxt :toimenkuva identity)))
-      johto-ja-hallintokorvaukset-pohjadata)))
+(defn ->toimenkuva-maksukausi
+  [rivi]
+  (str (:toimenkuva rivi)
+    (when-not (= :molemmat (:maksukausi rivi))
+      (str "-" (get {:kesa "kesa" :talvi "talvi" nil "ennen urakkaa"} (:maksukausi rivi))))))
 
 (defonce
   mock-data
   (r/atom
     (into {}
       (comp
-        (map #(assoc % :vuosipalkka 400
+        (map #(assoc % :vuosipalkka (reduce + 0 (into [] (comp (map second) (map :kuukausipalkka)) (get vuosi-kuukausi-malli 3)))
                 :maksuerat-per-hoitovuosi-per-kuukausi vuosi-kuukausi-malli
+                :ennen-urakkaa? (contains? (:hoitokaudet %) 0)
+                :toimenkuva-maksukausi-tunniste (->toimenkuva-maksukausi %)
                 :erikseen-syotettava? erikseen-suunniteltavat))
-        (map (juxt #(do (str (:toimenkuva %) (when-not (= :molemmat (:maksukausi %))
-                                               (str "-" (get {:kesa "kesa" :talvi "talvi"} (:maksukausi %)))))) identity)))
+        (map (juxt :toimenkuva-maksukausi-tunniste identity)))
       johto-ja-hallintokorvaukset-pohjadata)))
 
 
@@ -2339,11 +2335,11 @@
     luvut))
 
 (defn paivita-yhteiset-tiedot
-  [app toimenkuva]
+  [app {:keys [toimenkuva toimenkuva-maksukausi-tunniste]}]
   (let [yhteenvedot (-> app :yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset)
         hoitokausi (-> app :suodattimet :hoitokauden-numero)
         indeksit (-> app :domain :indeksit)
-        maksukausi (-> mock-data deref (get toimenkuva) :maksukausi)
+        maksukausi (-> mock-data deref (get toimenkuva-maksukausi-tunniste) :maksukausi)
         vuoden-indeksi (some
                          #(when (=
                                   (:vuosi %)
@@ -3080,15 +3076,17 @@
 
   ;;
   TallennaJHOToimenkuvanKuukausipalkkaVuodella
-  (process-event [{rivi :rivi toimenkuva :toimenkuva} app]
+  (process-event [{rivi :rivi parametrit :parametrit} app]
+    (println toimenkuva rivi)
     (-> app
-      (paivita-yhteiset-tiedot toimenkuva)
+      (paivita-yhteiset-tiedot parametrit)
       ;; POST
       ))
   TallennaJHOToimenkuvanVuosipalkka
   (process-event [{rivi :rivi} app]
+    (println rivi)
     (-> app
-      (paivita-yhteiset-tiedot (:toimenkuva rivi))
+      (paivita-yhteiset-tiedot rivi)
       ;; POST
       ))
   ;; NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.

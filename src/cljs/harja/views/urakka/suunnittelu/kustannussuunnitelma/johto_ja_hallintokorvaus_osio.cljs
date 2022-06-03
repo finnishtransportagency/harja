@@ -835,13 +835,15 @@
                 (< 9 kuukausi))))          
         " (mennyt)"))))
 
-(defn- kun-checkbox-klikattu
+(defn- kun-erikseen-syotettava-checkbox-klikattu
   [checkbox-tila]
   @checkbox-tila)
 
 (defn- jaa-vuosipalkka-kuukausille
   [tiedot hoitokausi rivi kopioi-tuleville?]
+  (println "asfdasdf" rivi)
   (let [kuukausipalkka (/ (:vuosipalkka rivi) 12)
+        kopioi-tuleville? (if (:ennen-urakkaa? rivi) false kopioi-tuleville?)
         alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)    
         loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         loppukausi (inc
@@ -850,7 +852,7 @@
                        hoitokausi))
         kaudet (into []
                  (range hoitokausi loppukausi))
-        maarat (get-in tiedot [(:toimenkuva rivi) :maksuerat-per-hoitovuosi-per-kuukausi])
+        maarat (get-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi])
         aseta-kuukausipalkka (map (fn [[kuukausi tiedot]]
                                     [kuukausi (assoc tiedot :kuukausipalkka kuukausipalkka)]))
         paivita-vuoden-tiedot (fn [kkt]
@@ -864,7 +866,7 @@
                            kaudet)
         paivita (apply comp paivitysfunktiot)
         paivitetyt (paivita maarat)]
-    (assoc-in tiedot [(:toimenkuva rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)))
+    (assoc-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)))
 
 (defn- tallenna-vuosipalkka
   [atomi {:keys [hoitokausi kopioi-tuleville?]} rivi]
@@ -883,7 +885,7 @@
     tiedot))
 
 (defn- tallenna-kuukausipalkka
-  [tiedot {:keys [alkuvuosi loppuvuosi toimenkuva hoitokausi kopioi-tuleville?]} rivi]
+  [tiedot {:keys [alkuvuosi loppuvuosi toimenkuva hoitokausi rivin-tiedot kopioi-tuleville?]} rivi]
   (swap!
     tiedot
     #(let [loppukausi (inc
@@ -900,7 +902,7 @@
            paivita (apply comp paivitysfunktiot)
            paivitetyt (paivita erat)]                           
        (assoc % :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)))
-  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi toimenkuva)))
+  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi (merge rivin-tiedot {:toimenkuva toimenkuva}))))
 
 (defn- jarjesta-hoitovuoden-jarjestykseen
   "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
@@ -921,17 +923,24 @@
            (r/partial luo-kursori tiedot toimenkuva polku)))
     (range 1 vuosien-erotus)))
 
+(defn- palkkakentta-muokattava?
+  [erikseen-syotettava? rivi]
+  (println rivi)
+  (and @erikseen-syotettava?
+    ))
+
 (defn- vetolaatikko-komponentti
-  [tiedot toimenkuva]
+  [tiedot polku {:keys [toimenkuva] :as rivi}]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         vuosien-erotus (- urakan-loppuvuosi urakan-alkuvuosi)
         kursorit (assoc {}
                    :toimenkuva (r/cursor tiedot [toimenkuva])
-                   :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot toimenkuva vuosien-erotus)
-                   :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot toimenkuva vuosien-erotus))]
-    (fn [_ toimenkuva]
+                   :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot polku vuosien-erotus)
+                   :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot polku vuosien-erotus))
+        ]
+    (fn [_ polku toimenkuva]
       (let [{valitun-hoitokauden-numero :hoitokauden-numero kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet             
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
         [:div 
@@ -945,7 +954,7 @@
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
          [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :margin-top "16px" :padding-left "18px"}}
           [vanha-grid/muokkaus-grid
-           {:id (str toimenkuva valitun-hoitokauden-alkuvuosi)
+           {:id (str polku valitun-hoitokauden-alkuvuosi)
             :voi-poistaa? (constantly false)
             :voi-lisata? false
             :piilota-toiminnot? true
@@ -953,22 +962,31 @@
             :jarjesta jarjesta-hoitovuoden-jarjestykseen
             :piilota-table-header? true
             :on-rivi-blur (r/partial tallenna-kuukausipalkka (get kursorit :toimenkuva) {:toimenkuva toimenkuva
+                                                                                         :rivin-tiedot rivi
                                                                                          :hoitokausi valitun-hoitokauden-numero
                                                                                          :kopioi-tuleville? kopioi-tuleville?
                                                                                          :alkuvuosi urakan-alkuvuosi
                                                                                          :loppuvuosi urakan-loppuvuosi})
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
-            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial kun-checkbox-klikattu (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]))}]
+            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]))}]
            (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
 
 (defn luo-vetolaatikot
-  [atomi]
-  (into {} (map (juxt :toimenkuva #(-> [vetolaatikko-komponentti atomi (:toimenkuva %)]))) t/johto-ja-hallintokorvaukset-pohjadata))
+  [atomi]  
+  (into {} (map (juxt first #(let [rivi (second %)
+                                   polku (t/->toimenkuva-maksukausi rivi)]
+                               [vetolaatikko-komponentti atomi polku rivi]))) @t/mock-data))
 
 (defn- kun-ei-syoteta-erikseen
   [hoitokausi tiedot]
-  (not (get-in tiedot [:erikseen-syotettava? hoitokausi])))
+  (and
+    (not (get-in tiedot [:erikseen-syotettava? hoitokausi]))
+    (or
+      (and
+         (:ennen-urakkaa? tiedot)
+         (= 1 hoitokausi))
+      (false? (:ennen-urakkaa? tiedot)))))
 
 (defn taulukko-2022-eteenpain
   [app _]
@@ -986,6 +1004,7 @@
          [debug/debug indeksit]
          [debug/debug app]
          [debug/debug @data]
+         [debug/debug vetolaatikot]
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
            :id "toimenkuvat-taulukko"
@@ -996,8 +1015,9 @@
                                                                :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? (constantly false) :leveys "80%" :fmt (fn [rivi] (println rivi) rivi)}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
            {:tyyppi :vetolaatikon-tila :leveys "5%"}
+           {:otsikko "Ennen urakkaa?" :nimi :ennen-urakkaa? :tyyppi :string :muokattava (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]]))))
 
