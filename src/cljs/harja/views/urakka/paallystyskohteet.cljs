@@ -192,9 +192,9 @@
         [:div.paallystyskohteet
          [kartta/kartan-paikka]
 
-         [valinnat/urakan-vuosi ur]
+         [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
 
          [validointivirheet-modal]
 
@@ -205,7 +205,7 @@
                       [ajax-loader-pieni (yha-kohteet-otsikko @urakka/valittu-urakan-vuosi)]
                       (yha-kohteet-otsikko @urakka/valittu-urakan-vuosi))
            :kohdetyyppi :paallystys
-           :yha-sidottu? true
+           :yha-sidottu? true :valittu-vuosi @urakka/valittu-urakan-vuosi
            :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
            :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
                        tallenna-kohde)
@@ -218,7 +218,7 @@
                            "Harjan paikkauskohteet ja muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
                            "Harjan paikkauskohteet ja muut kohteet")
            :kohdetyyppi  :paikkaus
-           :yha-sidottu? false
+           :yha-sidottu? false :valittu-vuosi @urakka/valittu-urakan-vuosi
            :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
            :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
                            tallenna-muukohde)}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
@@ -226,7 +226,8 @@
          [muut-kustannukset-view/muut-kustannukset ur]
 
          [yllapitokohteet-view/yllapitokohteet-yhteensa
-          paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys}]
+          paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys
+                                            :valittu-vuosi @urakka/valittu-urakan-vuosi}]
 
          [vihje-elementti [:span
                            [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
