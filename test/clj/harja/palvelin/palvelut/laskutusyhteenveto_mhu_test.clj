@@ -157,7 +157,7 @@
           AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           alihankinta-ja-tavoitepalkkio (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           ( tyyppi = 'alihankintabonus' OR tyyppi = 'tavoitepalkkio' )
-          AND toimenpideinstanssi = 48 " hallinnolliset-toimenpiteet-tpi-id  "
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id  "
           AND poistettu IS NOT TRUE
           AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
