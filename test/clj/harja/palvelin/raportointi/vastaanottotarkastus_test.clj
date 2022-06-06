@@ -71,7 +71,7 @@
         yha-kohteet (-> vastaus (nth 2))
 
         paikkauskohteet (-> vastaus (nth 4))
-        muut-kustannukset-2017 (-> vastaus (nth 5))
+        muut-kustannukset (-> vastaus (nth 5))
         yhteenveto (-> vastaus (nth 6))
         aikataulu-otsikko (-> vastaus last first)
         aikataulu (-> vastaus last second)
@@ -79,7 +79,7 @@
     (is (vector? vastaus))
     (is (= otsikko {:orientaatio :landscape, :nimi "Vastaanottotarkastus"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2017))
-    (is (= muut-kustannukset-2017 odotettu-muut-kustannukset-2017))
+    (is (= muut-kustannukset odotettu-muut-kustannukset-2017))
     (is (= paikkauskohteet odotettu-paikkauskohteet-2017))
     (is (= yhteenveto odotettu-yhteenveto-2017))
     (is (= aikataulu-otsikko [:otsikko "Aikataulu"]))
