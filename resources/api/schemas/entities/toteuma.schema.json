@@ -11,6 +11,11 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
+    "alueurakkanumero": {
+      "id": "urn:harja/ilmoitukset/0/ilmoitus/alueurakkanumero",
+      "type": "integer",
+      "required": false
+    },
     "sopimusId": {
       "id": "urn:harja/toteumat/0/toteuma/sopimusId",
       "type": "integer"
