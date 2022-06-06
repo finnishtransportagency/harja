@@ -317,6 +317,15 @@
    {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
    {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}])
 
+(def johto-ja-hallintokorvaukset-pohjadata-2022
+  [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5}
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1}
+   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6}])
+
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
         "liikenneympariston hoito" "liikenneympäristön hoito"
@@ -2296,7 +2305,7 @@
                 :toimenkuva-maksukausi-tunniste (->toimenkuva-maksukausi %)
                 :erikseen-syotettava? erikseen-suunniteltavat))
         (map (juxt :toimenkuva-maksukausi-tunniste identity)))
-      johto-ja-hallintokorvaukset-pohjadata)))
+      johto-ja-hallintokorvaukset-pohjadata-2022)))
 
 
 (def ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi)))
@@ -2348,7 +2357,7 @@
         tiedot @mock-data
         summat (laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)
         nykyiset-vuosisummat-toimenkuvalla (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi])
-        paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi toimenkuva)]
+        paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi toimenkuva-maksukausi-tunniste)]
     (println "pv p" nykyiset-vuosisummat-toimenkuvalla paivitetyt-vuosisummat-toimenkuvalla)
     (-> app
       (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
@@ -3077,7 +3086,7 @@
   ;;
   TallennaJHOToimenkuvanKuukausipalkkaVuodella
   (process-event [{rivi :rivi parametrit :parametrit} app]
-    (println toimenkuva rivi)
+    (println parametrit rivi)
     (-> app
       (paivita-yhteiset-tiedot parametrit)
       ;; POST

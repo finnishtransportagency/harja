@@ -924,10 +924,14 @@
     (range 1 vuosien-erotus)))
 
 (defn- palkkakentta-muokattava?
-  [erikseen-syotettava? rivi]
-  (println rivi)
+  [erikseen-syotettava? tiedot hoitokausi rivi]
+  (println tiedot rivi)
   (and @erikseen-syotettava?
-    ))
+    (or
+      (and
+         (:ennen-urakkaa? tiedot)
+         (= 1 hoitokausi))
+      (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-komponentti
   [tiedot polku {:keys [toimenkuva] :as rivi}]
@@ -969,7 +973,7 @@
                                                                                          :loppuvuosi urakan-loppuvuosi})
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
-            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]))}]
+            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]) rivi valitun-hoitokauden-numero)}]
            (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
 
 (defn luo-vetolaatikot
@@ -1017,7 +1021,7 @@
            :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
            {:tyyppi :vetolaatikon-tila :leveys "5%"}
-           {:otsikko "Ennen urakkaa?" :nimi :ennen-urakkaa? :tyyppi :string :muokattava (constantly false)}
+           #_{:otsikko "Ennen urakkaa?" :nimi :ennen-urakkaa? :tyyppi :string :muokattava (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]]))))
 
