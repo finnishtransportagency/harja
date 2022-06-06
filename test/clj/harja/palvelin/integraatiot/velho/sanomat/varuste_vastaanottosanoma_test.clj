@@ -174,7 +174,7 @@
 
 (deftest velho->harja-sijaintipalvelun-vastaus-ei-sisalla-historiaa-test
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/velho-harja-ei-sisalla-historiaa.json")
-        odotettu {:tulos {:alkupvm #inst "2016-08-09T00:00:00.000-00:00"
+        odotettu {:tulos {:alkupvm #inst "2019-10-01T00:00:00.000000000-00:00"
                           :kuntoluokka "Tyydyttävä"
                           :lisatieto nil
                           :loppupvm nil
@@ -186,7 +186,7 @@
                           :tr_loppuetaisyys 4629
                           :tr_loppuosa 5
                           :tr_numero 22
-                          :urakka_id 4
+                          :urakka_id 35
                           :ulkoinen_oid "1.2.246.578.4.1.10.514.330249097"}
                   :virheviesti nil}
         db (:db jarjestelma)
@@ -243,7 +243,7 @@
 (deftest toteumatyyppi-konvertoituu-oikein-test
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/toteumatyyppi-konvertoituu-oikein.json")
         uusi-kohde (assoc kohde :alkaen (get-in kohde [:version-voimassaolo :alku])) ; Oletus: version-voimassaolo.alku = alkaen ==> kohde on uusi
-        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2010-07-01")
+        muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2019-10-15")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
         poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
         kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}

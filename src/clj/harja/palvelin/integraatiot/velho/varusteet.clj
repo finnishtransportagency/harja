@@ -148,10 +148,8 @@
   [db muutoksen-lahde-oid]
   (get (memo-velho-oid->urakka-map db) muutoksen-lahde-oid))
 
-(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
-  (or
-    (hae-urakka-velho-oidlla db muutoksen-lahde-oid)
-    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
+(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid] :as kohde}]
+  (hae-urakka-velho-oidlla db muutoksen-lahde-oid))
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
