@@ -14,12 +14,12 @@
                    :lisatyo 1545.000000000000000000000000M
                    :muu 9000M
                    :sakko 5000M
-                   :tpi_id 42}
+                   :tpi_id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP' and urakka = '" urakka-id "';"))}
                   {:kokonaishintainen 2000M
                    :lisatyo 0M
                    :muu 1000M
                    :sakko 0M
-                   :tpi_id 43}]]
+                   :tpi_id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Testitoimenpideinstanssi' and urakka = '" urakka-id "';"))}]]
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle
