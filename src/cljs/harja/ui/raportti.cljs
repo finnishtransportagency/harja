@@ -68,16 +68,20 @@
    [:span.arvo arvo]
    [:div.selite.small-caption selite]])
 
-(defmethod muodosta-html :erotus [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
+(defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
   (let [etuliite (cond
                    (neg? arvo) "- "
                    (zero? arvo) ""
                    :else "+ ")
-        arvo (Math/abs arvo)]
+        arvo (Math/abs arvo)
+        prosentti (Math/abs prosentti)]
     [:span.erotus-ja-prosentti
      [:span.arvo (str etuliite (cond
                                  desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
-                                 :else arvo))]]))
+                                 :else arvo))]
+     [:div.selite.small-caption
+      {:style {:text-align :inherit}}
+      (str "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
 (defmethod muodosta-html :teksti-ja-info [[_ {:keys [arvo info]}]]
   [:span.teksti-ja-info [:span.arvo (str arvo "\u00A0")]

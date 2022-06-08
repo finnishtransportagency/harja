@@ -172,7 +172,7 @@
 
 (def poikkeama-info
   [:p [:b "Poikkeamalla "] "tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
-ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran (+/- x), sillä
+ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran, sillä
 reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
 (def hoitoluokka-puuttuu-info
@@ -269,8 +269,9 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                prosentti (if (zero? kk-arvo)
                                                            0
                                                            (with-precision 2 (* 100 (/ erotus kk-arvo))))]
-                                           {kk [:erotus
+                                           {kk [:erotus-ja-prosentti
                                                 {:arvo erotus
+                                                 :prosentti prosentti
                                                  :desimaalien-maara 2
                                                  :ryhmitelty? true
                                                  :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
@@ -403,8 +404,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
                             (let [arvo (yhteensa-arvo (vals poikkeamat))]
                               (concat
-                                [[:erotus
+                                [[:erotus-ja-prosentti
                                   {:arvo arvo
+                                   :prosentti (if (zero? kk-arvot-yht)
+                                                0
+                                                (with-precision 2 (* 100 (/ arvo kk-arvot-yht))))
                                    :desimaalien-maara 2
                                    :korosta-hennosti? true
                                    :ryhmitelty? true}]]
