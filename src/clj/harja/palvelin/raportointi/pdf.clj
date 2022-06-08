@@ -69,18 +69,18 @@
 
 ;; Toimii tismalleen samoin, kuin :arvo-ja-yksikko, mutta tämän avulla
 ;; PDF:lle saadaan yksittäisille soluille korostuksia
-(defmethod muodosta-pdf :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+(defmethod muodosta-pdf :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:fo:inline
    [:fo:inline (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:fo:inline (str "\u00A0" yksikko)]])
 
-(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:fo:inline
    [:fo:inline (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:fo:inline (str "\u00A0" yksikko)]])
@@ -101,19 +101,17 @@
 (defmethod muodosta-pdf :infopallura [_]
   nil)
 
-(defmethod muodosta-pdf :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara]}]]
+(defmethod muodosta-pdf :erotus [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
   (let [etuliite (cond
                    (neg? arvo) "-\u00A0"  
                    (zero? arvo) ""
                    :else "+\u00A0")
-        arvo (Math/abs (float arvo))
-        prosentti (Math/abs (float prosentti))]
+        arvo (Math/abs (float arvo))]
     [:fo:inline
      [:fo:inline (str etuliite
                    (cond
-                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
-                     :else arvo))]
-     [:fo:inline (str "\n" "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
+                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                     :else arvo))]]))
 
 (def alareuna
   {:border-bottom reunan-tyyli})

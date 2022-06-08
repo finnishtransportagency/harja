@@ -76,15 +76,9 @@
                         nil
                         [:kustomi desimaalien-maara]))])
 
-(defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta? 
+(defmethod muodosta-solu :erotus [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
                                                           korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
-  (let [etuliite (cond
-                   (neg? arvo) "- "
-                   (zero? arvo) ""
-                   :else "+ ")
-        arvo (Math/abs (float arvo))
-        prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -96,10 +90,7 @@
                         {:background :red
                          :font {:color :white}})
                       solun-tyyli)]
-    [(str etuliite
-       (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
-             :else arvo)
-       (when prosentti (str " (" etuliite (fmt/prosentti-opt prosentti) ")"))) solun-tyyli]))
+    [arvo solun-tyyli]))
 
 ;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
 ;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]

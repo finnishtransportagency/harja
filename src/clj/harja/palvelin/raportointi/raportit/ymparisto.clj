@@ -132,7 +132,8 @@
                                     (if yksikot-soluissa?
                                       [:arvo-ja-yksikko {:arvo (reduce + (keep :maara rivit))
                                                          :yksikko (:yksikko materiaali)
-                                                         :desimaalien-maara 2}]
+                                                         :desimaalien-maara 2
+                                                         :ryhmitelty? true}]
                                       (reduce + (keep :maara rivit)))))
                   {} kk-rivit))
 
@@ -171,7 +172,7 @@
 
 (def poikkeama-info
   [:p [:b "Poikkeamalla "] "tarkoitetaan hoitoluokille kohdistettujen materiaalimäärien ja urakoitsijan 
-ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran (+/- x %), sillä
+ilmoittaman kokonaismateriaalimäärän erotusta.\n\nPoikkeamaa on yleensä aina jonkin verran (+/- x), sillä
 reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
 (def hoitoluokka-puuttuu-info
@@ -268,10 +269,10 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                prosentti (if (zero? kk-arvo)
                                                            0
                                                            (with-precision 2 (* 100 (/ erotus kk-arvo))))]
-                                           {kk [:erotus-ja-prosentti
+                                           {kk [:erotus
                                                 {:arvo erotus
-                                                 :prosentti prosentti
                                                  :desimaalien-maara 2
+                                                 :ryhmitelty? true
                                                  :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
                                     (group-by :kk luokitellut)))
               yhteenvetorivi? (:yht-rivi materiaali)
@@ -282,10 +283,12 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                       [:arvo-ja-yksikko-korostettu {:arvo yht
                                                                     :korosta-hennosti? true
                                                                     :yksikko (:yksikko materiaali)
-                                                                    :desimaalien-maara 2}]
+                                                                    :desimaalien-maara 2
+                                                                    :ryhmitelty? true}]
                                       [:arvo-ja-yksikko-korostettu {:arvo yht
                                                                     :korosta-hennosti? true
-                                                                    :desimaalien-maara 2}]))))
+                                                                    :desimaalien-maara 2
+                                                                    :ryhmitelty? true}]))))
               toteuma-prosentti (when (and kk-arvot (not (zero? (or suunniteltu 0))))
                                   (/ (* 100.0 kk-arvot-yht) suunniteltu))]
           (concat
@@ -319,23 +322,27 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                              :yksikko nil
                                                              :desimaalien-maara 2
                                                              :lihavoi? false
-                                                             :ala-korosta? true}]
+                                                             :ala-korosta? true
+                                                             :ryhmitelty? true}]
                                [:arvo-ja-yksikko-korostettu {:arvo suunniteltu
                                                              :yksikko (when suunniteltu (:yksikko materiaali))
                                                              :desimaalien-maara 2
                                                              :lihavoi? false
-                                                             :ala-korosta? true}])
+                                                             :ala-korosta? true
+                                                             :ryhmitelty? true}])
                              (if (nil? toteuma-prosentti)
                                [:arvo-ja-yksikko-korostettu {:arvo nil
                                                              :yksikko nil
                                                              :desimaalien-maara 2
                                                              :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                             :ala-korosta? true}]
+                                                             :ala-korosta? true
+                                                             :ryhmitelty? true}]
                                [:arvo-ja-yksikko-korostettu {:arvo toteuma-prosentti
                                                              :yksikko (when suunniteltu "%")
                                                              :desimaalien-maara 2
                                                              :varoitus? (< 100 (or toteuma-prosentti 0))
-                                                             :ala-korosta? true}])]
+                                                             :ala-korosta? true
+                                                             :ryhmitelty? true}])]
                             [(yhteensa-kentta (vals kk-arvot) true)])))})]
 
             ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
@@ -351,7 +358,8 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                              (map (juxt :kk #(if yksikot-soluissa?
                                                                [:arvo-ja-yksikko {:arvo (:maara %)
                                                                                   :yksikko (:yksikko materiaali)
-                                                                                  :desimaalien-maara 2}]
+                                                                                  :desimaalien-maara 2
+                                                                                  :ryhmitelty? true}]
                                                                (:maara %))))
                                              rivit)]
                               {:lihavoi? false
@@ -395,13 +403,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
                             (let [arvo (yhteensa-arvo (vals poikkeamat))]
                               (concat
-                                [[:erotus-ja-prosentti
+                                [[:erotus
                                   {:arvo arvo
-                                   :prosentti (if (zero? kk-arvot-yht)
-                                                0
-                                                (with-precision 2 (* 100 (/ arvo kk-arvot-yht))))
                                    :desimaalien-maara 2
-                                   :korosta-hennosti? true}]]
+                                   :korosta-hennosti? true
+                                   :ryhmitelty? true}]]
                                 (when nayta-suunnittelu? [nil nil])))))}])))))
      osamateriaalit)]))
 
