@@ -41,8 +41,8 @@ FROM urakka u
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
-      -- Murskeille ja jätteille ei näytetä hoitoluokkakohtaista luokittelua
-      AND mk.materiaalityyppi NOT IN ('hiekoitushiekka','muu','murske') -- urakan_materiaalin_kaytto_hoitoluokittain tauluun lisätään myös sellaisia materiaaleja, joille ei voida laskea hoitoluokkaa luotettavasti, joten jätetään osa pois
+      -- Hiekoitushiekalle, Murskeille ja Jätteille ei näytetä hoitoluokkakohtaista luokittelua
+      AND mk.materiaalityyppi NOT IN ('hiekoitushiekka','muu','murske')
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR
            CASE
                WHEN (:urakkatyyppi::urakkatyyppi = 'hoito' OR :urakkatyyppi::urakkatyyppi = 'teiden-hoito') THEN
