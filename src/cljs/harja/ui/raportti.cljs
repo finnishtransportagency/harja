@@ -47,18 +47,18 @@
 ;; Tavallisesti raportin solujen tyylit tulevat rivitasolta ja HTML raporteissa yksittäisen solun tyyli annetaan luokka
 ;; määritteessä (:sarakkeen-luokka). Niinpä tämän elementin ainoa olemassaolon syy on se, että tätä vaaditaan PDF ja Excelraportoissa.
 ;; Tämä on siis identtinen :arvo-ja-yksikkö elementin kanssa, mutta sallii raportin toiminnan.
-(defmethod muodosta-html :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+(defmethod muodosta-html :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:span.yksikko (str "\u00A0" yksikko)]])
 
-(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:span.yksikko (str "\u00A0" yksikko)]])
@@ -68,7 +68,7 @@
    [:span.arvo arvo]
    [:div.selite.small-caption selite]])
 
-(defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara]}]]
+(defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
   (let [etuliite (cond
                    (neg? arvo) "- "
                    (zero? arvo) ""
@@ -77,7 +77,7 @@
         prosentti (Math/abs prosentti)]
     [:span.erotus-ja-prosentti
      [:span.arvo (str etuliite (cond
-                                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                                  :else arvo))]
      [:div.selite.small-caption
       {:style {:text-align :inherit}}
