@@ -35,8 +35,6 @@
             jokin eventti, joka aiheuttaa modaalin näkymisen ja tästä modaalista halutaan nakata uusi
             eventti voi olla mahdollista, että e!:tä tarvii tässäkin ns:ssa."}
   *e!* nil)
-
-
 ;; #### Spec ####
 
 (s/def ::maara #(re-matches (re-pattern (re/positiivinen-numero-re)) (str %)))
@@ -306,25 +304,43 @@
   (= #{0} hoitokaudet))
 
 (def johto-ja-hallintokorvaukset-pohjadata
-  [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi nil :hoitokaudet #{0}}
-   {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}])
+  [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 7 :maksukausi :talvi :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 5 :maksukausi :kesa :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "hankintavastaava" :kk-v 4.5 :maksukausi nil :hoitokaudet #{0} :versio 1}
+   {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
+   ;; 2022 eteenpäin alkavien versio datasta
+   {:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 2}
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 2}
+   {:toimenkuva "päätoiminen apulainen" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 2}
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 2}
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 2}
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
+   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}])
 
-(def johto-ja-hallintokorvaukset-pohjadata-2022
-  [{:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6))}
-   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4}
-   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5}
-   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1}
-   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6}])
+(def vertailuvuosi 2018)
+
+(defn pohjadatan-versio
+  []
+  (let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)
+        alkuvuosi (when (some? alkupvm) (pvm/vuosi alkupvm))
+        vuosifiltteri (filter #(cond
+                                 (and alkuvuosi
+                                   (< alkuvuosi vertailuvuosi))
+                                 (= 1 (:versio %))
+
+                                 (and alkuvuosi
+                                   (>= alkuvuosi vertailuvuosi))
+                                 (= 2 (:versio %))
+
+                                 :else
+                                 true))]
+    (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)))
 
 (defn aakkosta [sana]
   (get {"kesakausi" "kesäkausi"
@@ -1175,7 +1191,7 @@
                                                         (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) any?
                                                         (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) any?)))
                                             {}
-                                            johto-ja-hallintokorvaukset-pohjadata)))
+                                            (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))
 
 (defn jh-yhteenvetopaivitys
   [tila arvo
@@ -1367,7 +1383,7 @@
                                       (map merge
                                         arvot
                                         johdetut-arvot))))))}})))
-          johto-ja-hallintokorvaukset-pohjadata)))
+          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))
 
     ;; ### Asetus-kuvaus
     {:aseta-tunnit! (partial aseta-maara!
@@ -1391,7 +1407,7 @@
                                     [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi]
                                     (vec (repeat (kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus) {}))))
                           $
-                          johto-ja-hallintokorvaukset-pohjadata)
+                          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
                         (reduce (fn [tila jarjestysnumero]
                                   (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                                     (assoc-in tila
@@ -1473,7 +1489,7 @@
                                     :tuntipalkka-indeksikorjattu tuntipalkka-indeksikorjattu
                                     :kk-v kk-v})))}})))
         {}
-        johto-ja-hallintokorvaukset-pohjadata)
+        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
 
       ;; Itse lisättyjen toimenkuvien seuranta
       (reduce (fn [seurannat jarjestysnumero]
@@ -1559,7 +1575,7 @@
                 (assoc rajapinnat
                   (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?)))
       {}
-      johto-ja-hallintokorvaukset-pohjadata)
+      (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
     (reduce (fn [rajapinnat index]
               (let [nimi (jh-omienrivien-nimi index)]
                 (merge rajapinnat
@@ -1584,7 +1600,7 @@
                   {(keyword (str "yhteenveto" yksiloiva-nimen-paate))
                    {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]]
                     :haku #(vec (concat [toimenkuva-formatoitu kk-v] %))}}))
-          johto-ja-hallintokorvaukset-pohjadata))
+          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))
       (reduce (fn [rajapinnat index]
                 (let [nimi (jh-omienrivien-nimi index)]
                   (merge rajapinnat
@@ -1607,6 +1623,7 @@
         :aseta (fn [tila yhteenvedot yhteenvedot-indeksikorjattu]
                  (let [yhteensa-arvot (summaa-jjhk-yhteensa yhteenvedot)
                        yhteensa-indeksikorjatut-arvot (summaa-jjhk-yhteensa yhteenvedot-indeksikorjattu)]
+                   (println yhteensa-arvot)
                    (-> tila
                      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
                      (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu] yhteensa-indeksikorjatut-arvot)
@@ -1638,7 +1655,7 @@
                                  yhteensa-arvot)
                                (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu toimenkuva maksukausi]
                                  yhteensa-indeksikorjatut-arvot))))}}))
-        johto-ja-hallintokorvaukset-pohjadata))))
+        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))))
 
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
                            :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}
@@ -1833,7 +1850,7 @@
 (defrecord PoistaOmaJHDdataEpaonnistui [vastaus])
 ;; 2022 -> vanhan griditaulukon eventit (ei ylikirjoiteta vanhoja, koska eri logiikka)
 (defrecord TallennaJHOToimenkuvanVuosipalkka [rivi])
-(defrecord TallennaJHOToimenkuvanKuukausipalkkaVuodella [rivi toimenkuva])
+(defrecord TallennaJHOToimenkuvanKuukausipalkkaVuodella [rivi parametrit])
 
 
 ;; FIXME: Tätä ei käytetä missään?
@@ -2169,7 +2186,7 @@
                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                               taytetty-jh-data))))))))))
         {}
-        johto-ja-hallintokorvaukset-pohjadata)
+        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
       ;; Omat toimenkuvat
       (first
         (reduce
@@ -2305,8 +2322,7 @@
                 :toimenkuva-maksukausi-tunniste (->toimenkuva-maksukausi %)
                 :erikseen-syotettava? erikseen-suunniteltavat))
         (map (juxt :toimenkuva-maksukausi-tunniste identity)))
-      johto-ja-hallintokorvaukset-pohjadata-2022)))
-
+      (into [] (filter #(= (:versio %) 2)) johto-ja-hallintokorvaukset-pohjadata))))
 
 (def ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi)))
 (def ota-kuukaudet (mapcat vals))
@@ -2358,7 +2374,6 @@
         summat (laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)
         nykyiset-vuosisummat-toimenkuvalla (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi])
         paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi toimenkuva-maksukausi-tunniste)]
-    (println "pv p" nykyiset-vuosisummat-toimenkuvalla paivitetyt-vuosisummat-toimenkuvalla)
     (-> app
       (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
         summat)
@@ -2409,7 +2424,7 @@
            :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
                                  (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (toimenkuva-formatoitu toimenkuva-kuvaus)))
                          {}
-                         johto-ja-hallintokorvaukset-pohjadata)})
+                         (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
           {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
         (assoc-in [:gridit :suunnitellut-hankinnat]
@@ -3086,14 +3101,12 @@
   ;;
   TallennaJHOToimenkuvanKuukausipalkkaVuodella
   (process-event [{rivi :rivi parametrit :parametrit} app]
-    (println parametrit rivi)
     (-> app
       (paivita-yhteiset-tiedot parametrit)
       ;; POST
       ))
   TallennaJHOToimenkuvanVuosipalkka
   (process-event [{rivi :rivi} app]
-    (println rivi)
     (-> app
       (paivita-yhteiset-tiedot rivi)
       ;; POST

@@ -5,6 +5,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.loki :refer [log]]
+            [harja.tyokalut.yleiset :as tyokalut]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.taulukko.impl.solu :as solu]
@@ -216,7 +217,7 @@
                                                                {:tyyppi :tyhja}
                                                                {:tyyppi :tyhja}
                                                                {:tyyppi :tyhja}]})))}]})))
-                     t/johto-ja-hallintokorvaukset-pohjadata)
+                     (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
 
         muokattavat-rivit (mapv (fn [index]
                                   (let [rivin-nimi (t/jh-omienrivien-nimi index)]
@@ -445,7 +446,7 @@
                                                                                     (grid/hae-grid rivi :lapset))))
                                                                    (grid/hae-grid data-sisalto-grid :lapset))))}}))]))
           [0 {}]
-          t/johto-ja-hallintokorvaukset-pohjadata)
+          (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
 
         muokkauskasittelijat (second
                                (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
@@ -520,7 +521,7 @@
                                                                            (when (and (= toimenkuva (:toimenkuva jh-pohjadata))
                                                                                    (= maksukausi (:maksukausi jh-pohjadata)))
                                                                              index))
-                                                             t/johto-ja-hallintokorvaukset-pohjadata))]]
+                                                             (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata))]]
                                   (rividisable! g index kuukausitasolla?)))))}
 
               ;; Näyttää tai piilottaa "ennen urakkaa"-rivit. VHAR-3127
@@ -629,7 +630,7 @@
                         :toiminto! (fn [g tila oma-jh-korvausten-tila kuukausitasolla?]
                                      (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                            toimenkuva (get-in oma-jh-korvausten-tila [(dec hoitokauden-numero) 0 :toimenkuva])
-                                           index (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
+                                           index (dec (+ (count (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
                                                         jarjestysnumero))
                                            yhteenvetorivi (if (grid/rivi? (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0]))
                                                             (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0])
@@ -640,7 +641,7 @@
                                              true)
                                            (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true))
                                          (do (rividisable! g
-                                               (dec (+ (count t/johto-ja-hallintokorvaukset-pohjadata)
+                                               (dec (+ (count (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
                                                       jarjestysnumero))
                                                kuukausitasolla?)
                                              (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
@@ -681,7 +682,7 @@
                                                                      (if sisaltaa-erottimen?
                                                                        (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                                        teksti))))))}]})
-                     t/johto-ja-hallintokorvaukset-pohjadata)
+                     (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
              :footer (-> (vec (repeat 7
                                 {:tyyppi :teksti
                                  :luokat #{"table-default" "table-default-sum"}
@@ -737,7 +738,7 @@
                                                                               :solun-polun-pituus 1
                                                                               :datan-kasittely identity}})]))
             [0 {}]
-            t/johto-ja-hallintokorvaukset-pohjadata))))))
+            (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata))))))
 
 
 ;; | -- Gridit päättyy
@@ -841,8 +842,7 @@
 
 (defn- jaa-vuosipalkka-kuukausille
   [tiedot hoitokausi rivi kopioi-tuleville?]
-  (println "asfdasdf" rivi)
-  (let [kuukausipalkka (/ (:vuosipalkka rivi) 12)
+  (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ (:vuosipalkka rivi) 12))
         kopioi-tuleville? (if (:ennen-urakkaa? rivi) false kopioi-tuleville?)
         alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)    
         loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -902,7 +902,7 @@
            paivita (apply comp paivitysfunktiot)
            paivitetyt (paivita erat)]                           
        (assoc % :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)))
-  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi (merge rivin-tiedot {:toimenkuva toimenkuva}))))
+  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi rivin-tiedot)))
 
 (defn- jarjesta-hoitovuoden-jarjestykseen
   "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
@@ -925,7 +925,6 @@
 
 (defn- palkkakentta-muokattava?
   [erikseen-syotettava? tiedot hoitokausi rivi]
-  (println tiedot rivi)
   (and @erikseen-syotettava?
     (or
       (and
@@ -965,12 +964,14 @@
             :muokkauspaneeli? false
             :jarjesta jarjesta-hoitovuoden-jarjestykseen
             :piilota-table-header? true
-            :on-rivi-blur (r/partial tallenna-kuukausipalkka (get kursorit :toimenkuva) {:toimenkuva toimenkuva
-                                                                                         :rivin-tiedot rivi
-                                                                                         :hoitokausi valitun-hoitokauden-numero
-                                                                                         :kopioi-tuleville? kopioi-tuleville?
-                                                                                         :alkuvuosi urakan-alkuvuosi
-                                                                                         :loppuvuosi urakan-loppuvuosi})
+            :on-rivi-blur (r/partial tallenna-kuukausipalkka
+                            (get kursorit :toimenkuva)
+                            {:toimenkuva toimenkuva
+                             :rivin-tiedot rivi
+                             :hoitokausi valitun-hoitokauden-numero
+                             :kopioi-tuleville? kopioi-tuleville?
+                             :alkuvuosi urakan-alkuvuosi
+                             :loppuvuosi urakan-loppuvuosi})
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
             {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]) rivi valitun-hoitokauden-numero)}]
@@ -1001,7 +1002,6 @@
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
             kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)] 
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
-          (println "boom")
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
         [:div
@@ -1014,6 +1014,7 @@
            :id "toimenkuvat-taulukko"
            :voi-lisata? false     
            :voi-kumota? false
+           :jarjesta :jarjestys
            :piilota-toiminnot? true
            :on-rivi-blur (r/partial tallenna-vuosipalkka data {:hoitokausi kuluva-hoitokausi
                                                                :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
