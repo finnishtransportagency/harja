@@ -5,17 +5,16 @@
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [taoensso.timbre :as log]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]))
+            [harja.pvm :as pvm]))
 
 (defn siirra-toteumat
-  "Toteumat siirretään aina myöhään yöllä, jotta edellisen päivän kaikki toteumat ehtivät muodostua."
+  "Toteumat siirretään aina myöhään yöllä, jotta edellisen päivän kaikki toteumat ehtivät muodostua.
+  Funktio olettaa, että sitä ajetaan ajastetusti yöllä, joten käytetän - nyt - hetkeä defaulttina."
   [db & args]
-  (let [annettu-nyt (first args) ;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
+  (let [ ;; Testeissä ja lokaalisti voidaan ajatukset aloittaa milloin vain
+        annettu-nyt (first args)
         nyt (or annettu-nyt (pvm/nyt))]
-    (log/debug "aika"nyt)
-    (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt nyt})
-    (log/debug "Siirto tehty!")))
+    (toteuma-kyselyt/siirra-toteumat-analytiikalle db {:nyt nyt})))
 
 (defn- ajasta [db]
   (log/info "Ajastetaan toteumien siirto analytiikan_toteumat tauluun joka päivä.")
