@@ -57,15 +57,6 @@
   (fn [[tyyppi &_] _ _ _]
     tyyppi))
 
-(defmethod aseta-kaava! :summa-vasen [[_ alkusarake-nro] cell rivi-nro sarake-nro]
-  (.setCellFormula cell
-                   (str "SUM("
-                        (solu rivi-nro alkusarake-nro)
-                        ":"
-                        (solu rivi-nro (dec sarake-nro))
-                        ")")))
-
-
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
     (.replace data "\u00AD" "")
@@ -85,6 +76,58 @@
                         nil
                         [:kustomi desimaalien-maara]))])
 
+(defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
+                                                          korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
+  (let [etuliite (cond
+                   (neg? arvo) "- "
+                   (zero? arvo) ""
+                   :else "+ ")
+        arvo (Math/abs (float arvo))
+        prosentti (Math/abs (float prosentti))
+        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+        solun-tyyli (if-not (empty? solun-tyyli)
+                      solun-tyyli
+                      oletustyyli)
+        solun-tyyli (if ala-korosta?
+                      (dissoc solun-tyyli :background)
+                      solun-tyyli)
+        solun-tyyli (if varoitus?
+                      (merge solun-tyyli
+                        {:background :red
+                         :font {:color :white}})
+                      solun-tyyli)]
+    [(str etuliite
+       (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+             :else arvo)
+       (when prosentti (str " (" etuliite (fmt/prosentti-opt prosentti) ")"))) solun-tyyli]))
+
+;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
+;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
+(defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
+                                                                 korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+        solun-tyyli (if-not (empty? solun-tyyli)
+                      solun-tyyli
+                      oletustyyli)
+        solun-tyyli (if ala-korosta?
+                      (dissoc solun-tyyli :background)
+                      solun-tyyli)
+        ;; Rivin pääasiallista tyyliä on mahdollista muokata myös varoituksen muodossa, kunhan attribuutti varoitus? on annettu
+        ;; Ylikirjoitetaan tässä mahdollisen varoituksen vaikutukset myös yhteenvetoriveille
+        solun-tyyli (if varoitus?
+                      (merge solun-tyyli
+                        {:background :red
+                         :font       {:color :white}})
+                      solun-tyyli)]
+    [arvo solun-tyyli
+     (when desimaalien-maara
+       (if (= yksikko "%")
+         nil
+         [:kustomi desimaalien-maara]))]))
+
+(defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
+  [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
+
 (defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
   [arvo
    (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
@@ -92,6 +135,9 @@
 
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
+
+(defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
+  [arvo solun-tyyli])
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun

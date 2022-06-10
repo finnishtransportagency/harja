@@ -8,7 +8,8 @@
 (def +xsd-polku+ "xsd/yha/")
 
 (defn laske-hinta-kokonaishinta [kohde]
-  (yllapitokohteet-domain/yllapitokohteen-kokonaishinta kohde))
+  (let [vuosi (:vuodet kohde)]
+    (yllapitokohteet-domain/yllapitokohteen-kokonaishinta kohde vuosi)))
 
 (defn kasittele-kohteen-tyyppi [tyyppi]
   (case tyyppi

@@ -1,0 +1,70 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 137023
+    },
+    "lahetysaika": "2020-01-30T12:00:00Z"
+  },
+  "reittitoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": __ID__
+      },
+      "suorittaja": {
+        "nimi": "__SUORITTAJA_NIMI__",
+        "ytunnus": "8765432-1"
+      },
+      "sopimusId": __SOPIMUS_ID__,
+      "alkanut": "2020-01-30T12:00:00Z",
+      "paattynyt": "2020-01-30T14:00:00Z",
+      "toteumatyyppi": "kokonaishintainen",
+      "lisatieto": "Normisuolaus",
+      "tehtavat": [],
+      "materiaalit": [__REITTITOTEUMA_MATERIAALIT__]
+    },
+    "reitti": [
+      {
+        "reittipiste": {
+          "aika": "2020-01-30T12:00:00Z",
+          "koordinaatit": {
+            "x": 429451.2124,
+            "y": 7199520.6102
+          },
+          "tehtavat": [],
+          "materiaalit": [
+
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2020-01-30T13:00:00Z",
+          "koordinaatit": {
+            "x": 429449.505,
+            "y": 7199521.6673
+          },
+          "tehtavat": [],
+          "materiaalit": [__REITTIPISTE1_MATERIAALIT__]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2020-01-30T13:00:00Z",
+          "koordinaatit": {
+            "x": 429440.5079,
+            "y": 7199523.6547
+          },
+          "tehtavat": [],
+          "materiaalit": [__REITTIPISTE2_MATERIAALIT__]
+        }
+      }
+    ]
+  }
+}
