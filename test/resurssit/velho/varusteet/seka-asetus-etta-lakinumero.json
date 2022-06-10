@@ -1,22 +1,22 @@
 {
   "kohdeluokka": "varusteet/liikennemerkit",
   "sijainti": {
-    "osa": 5,
-    "tie": 22,
-    "etaisyys": 4139,
+    "osa": 12,
+    "tie": 616,
+    "etaisyys": 2139,
     "enkoodattu": 61600042824
   },
   "version-voimassaolo": {
-    "alku": "2019-10-01",
-    "loppu": null
+    "alku": "2010-06-16",
+    "loppu": "2021-11-16"
   },
   "ominaisuudet": {
     "toiminnalliset-ominaisuudet": {
       "tarkenne": null,
-      "lakinumero": null,
+      "lakinumero": "liikennemerkki-lakinumero/liilnro209",
       "asetusnumero": "liikennemerkki-asetusnumero/liiasnro310",
       "vaikutussuunta": null,
-      "lisatietoja": "45 Joutsa 2 Kangasniemi",
+      "lisatietoja": null,
       "voimassaolo-alkaa": null,
       "voimassaolo-paattyy": null
     },
@@ -70,7 +70,6 @@
     "kayttajanimi": "migraatio"
   },
   "oid": "1.2.246.578.4.3.15.506.283640192",
-  "alkaen": "2019-10-01",
-  "muutoksen-lahde-oid":"1.2.3.4.1236",
+  "alkaen": "2010-06-16",
   "muokattu": "2021-03-10T07:57:40Z"
 }

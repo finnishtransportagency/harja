@@ -66,6 +66,17 @@
                                      :kayttajatunnus s/Str
                                      :salasana s/Str}
 
+   ;; Lisään vielä hetkeksi tämän takaisin. Saa poistaa, kunhan api-sahkoposti on otettu käyttöön.
+   ;; Tämän ennen aikainen poistaminen on jotanut turhiin virheisiin Harjan käynnistyksessä
+   (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
+                                       (s/optional-key :suora?) s/Bool
+                                       (s/optional-key :palvelin) s/Str
+                                       :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
+                                               (s/optional-key :sahkoposti-ulos-jono) s/Str
+                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
+
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -148,7 +159,9 @@
                             :salasana s/Str
                             :varuste-api-juuri-url s/Str
                             :varuste-kayttajatunnus s/Str
-                            :varuste-salasana s/Str}
+                            :varuste-salasana s/Str
+                            :varuste-urakka-oid-url s/Str
+                            :varuste-urakka-kohteet-url s/Str}
 
    (s/optional-key :yha-velho) {}
 

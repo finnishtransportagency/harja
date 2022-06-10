@@ -53,3 +53,40 @@ INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja) V
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'K2'), 1000, NOW(), null);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta'), 11000, NOW(), null);
 INSERT INTO sopimus_tehtavamaara (urakka, tehtava, maara, muokattu, muokkaaja) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 1100, NOW(), null);
+
+-- Kaikkia toimenpidekoodeja ei ole migraatiotiedostoja ajettaessa lokaaliympäristöissä.
+-- Kun dataa haetaan urakat_tehtavamaara taulusta, materliaalikoodi ja materiaaliluokka mäppäykset on oltava.
+-- Joten luodaan ne tässä
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola')
+WHERE nimi = 'Suolaus' AND taso = 4;
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Formiaatti')
+WHERE nimi = 'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)' AND taso = 4;
+
+-- Materiaaleihin mäpättävät toimenpidekoodit
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
+WHERE nimi = 'Liukkaudentorjunta hiekoituksella' AND taso = 4;
+
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Kesäsuola'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden kevätkunnostus')
+WHERE nimi = 'Sorateiden pölynsidonta' AND taso = 4;
+
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Kelirikkomurske')
+WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND taso = 4;
+
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Hiekoitushiekka'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Hiekoitushiekka')
+WHERE nimi = 'Ennalta arvaamattomien kuljetusten avustaminen' AND taso = 4;
+
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Reunantäyttömurske')
+WHERE nimi = 'Reunantäyttö' AND taso = 4;
+
+UPDATE toimenpidekoodi SET materiaaliluokka_id = (SELECT id FROM materiaaliluokka WHERE nimi = 'Murske'),
+                           materiaalikoodi_id = (SELECT id FROM materiaalikoodi WHERE nimi = 'Sorastusmurske')
+WHERE nimi = 'Sorastus' AND taso = 4;
+
+-- Korjataan sorastuksen yksikkö
+UPDATE toimenpidekoodi SET yksikko = 'tonni', suunnitteluyksikko = 'tonni'
+WHERE nimi = 'Sorastus' AND taso = 4;

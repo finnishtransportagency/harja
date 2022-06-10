@@ -744,25 +744,31 @@ jatkon."
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
 
-(defn- tooltip-sisalto [auki? sisalto]
+(defn- tooltip-sisalto [opts auki? sisalto]
   (let [x (atom nil)]
     (komp/luo
       (komp/piirretty
         #(let [n (r/dom-node %)
                rect (aget (.getClientRects n) 0)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
-           (reset! x
-                   (+ (/ (.-width rect) -2)
-                      (/ (.-width parent-rect) 2)))))
-      (fn [auki? sisalto]
-        (let [s-pituus (count (str sisalto))]
-          [:div.tooltip.bottom {:class (when auki? "in")
-                                :style {:position "absolute"
-                                        :min-width (if (< 150 s-pituus)
-                                                     300
-                                                     150)
-                                        :left (when-let [x @x]
-                                                x)}}
+           (when (and rect parent-rect)
+             (reset! x
+               (+ (/ (.-width rect) -2)
+                 (/ (.-width parent-rect) 2))))))
+      (fn [opts auki? sisalto]
+        (let [s-pituus (count (str sisalto))
+              suunta (case (:suunta opts)
+                       :vasen "left"
+                       :oikea "right"
+                       :ylos "top"
+                       "bottom")]
+          [:div.tooltip {:class [suunta (when auki? "in")
+                                 (or (:leveys opts)
+                                   (if (< 150 s-pituus)
+                                     "levea"
+                                     "ohut"))]
+                         :style {:left (when-let [x @x]
+                                         x)}}
            [:div.tooltip-arrow]
            [:div.tooltip-inner
             sisalto]])))))
@@ -778,7 +784,7 @@ jatkon."
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti
 
-         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+         [tooltip-sisalto opts @tooltip-nakyy? tooltipin-sisalto]]))))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
@@ -906,7 +912,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.otsikko "Tierekisteriosoite"]
+       [:label.alasvedon-otsikko-vayla "Tierekisteriosoite"]
       [:div
        [:div.varusteet.tr-osoite-flex
         [osio tie "Tie"]
