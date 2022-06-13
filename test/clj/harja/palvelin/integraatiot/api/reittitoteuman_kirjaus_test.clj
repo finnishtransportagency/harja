@@ -134,6 +134,48 @@
 
         (poista-reittitoteuma toteuma-id ulkoinen-id)))))
 
+(deftest tallenna-talvisuolausta-pyoratielle
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'"))
+        kayttaja "yit_pk2"
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka " AND paasopimus IS NULL"))
+        tehtava-id (ffirst (q "SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'"))
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                         (-> "test/resurssit/api/reittitoteuma_talvisuola_pyoratiella.json"
+                           slurp
+                           (.replace "__TEHTAVA_ID__" (str tehtava-id))
+                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Suolaajat Oy Ab")))]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
+                                                      (columns ::rp/toteuman-reittipisteet)
+                                                      {::rp/toteuma-id toteuma-id}))
+          toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+          toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
+          toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
+          toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
+                                                    JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+                                                    WHERE toteuma = " toteuma-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Suolaajat Oy Ab"]))
+      (is (= (count reittipisteet) 4))
+      (is (= (count toteuma-tehtava-idt) 1))
+      (is (= (count toteuma-materiaali-idt) 1))
+      (is (= toteuman-materiaali "Kesäsuola sorateiden pölynsidonta"))
+
+      (doseq [reittipiste reittipisteet]
+        (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
+              reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
+              reitti-hoitoluokka (::rp/talvihoitoluokka reittipiste)]
+          (is (= (count reitti-tehtava-idt) 1))
+          (is (= (count reitti-materiaali-idt) 1))
+          ;; Varmista, että reitipiste kohdistuu ajoväylälle, eikä kävelytielle.
+          ;; Osa pisteistä osuu lähemmäksi ajoväylän vieressä olevalle kevyen liikenteen väylälle.
+          (is (= reitti-hoitoluokka 6))))
+
+      (poista-reittitoteuma toteuma-id ulkoinen-id))))
+
 (deftest tallenna-yksittainen-reittitoteuma-ilman-sopimusta-paivittaa-cachen
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " 2 " AND paasopimus IS NULL")))
