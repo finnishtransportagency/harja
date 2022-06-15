@@ -1,8 +1,6 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as clj-str]
             [specql.core :refer [fetch update! insert!]]
             [specql.op :as op]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
@@ -386,13 +384,13 @@
                (dissoc :toimenpiteen-koodi :tehtavan-tunniste :tehtavaryhman-tunniste)))
          kustannusarvoidut-tyot)))
 
-(defn urakan-johto-ja-hallintokorvausten-datan-rikastaminen [data]
+(defn urakan-johto-ja-hallintokorvausten-datan-rikastaminen [data urakan-alkuvuosi]
   (let [to-float #(when % (float %))
         johto-ja-hallintokorvaukset (map (fn [johto-ja-hallintokorvaus]
                                            (-> johto-ja-hallintokorvaus
                                                (update :tunnit to-float)
                                                (update :tuntipalkka to-float)
-                                               (update :maksukuukaudet konv/pgarray->vector)))
+                                               (update :maksukuukaudet konv/pgarray->vector))) ;; Mikä tämä maksukuukaudet homma on? Tietokannasta ei tällaista kolumnia löydy
                                          data)
         hoitokauden-numero-lisatty (apply concat
                                           (map-indexed (fn [index [_ tiedot]]
@@ -406,11 +404,14 @@
                                                                        johto-ja-hallintokorvaukset))))
         maksukausi-lisatty (reduce (fn [johto-ja-hallintokorvaukset {:keys [toimenkuva kuukausi ennen-urakkaa] :as johto-ja-hallintokorvaus}]
                                      (cond
+                                       ;; Ennen urakkakautta tapahtuvat kustannukset toimivat kaikkina vuosina samoin
                                        ennen-urakkaa (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi nil))
-                                       (or (= toimenkuva "päätoiminen apulainen")
-                                           (= toimenkuva "apulainen/työnjohtaja")) (if (<= 5 kuukausi 9)
-                                                                                     (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
-                                                                                     (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
+                                       ;; Vain vuonna 2021 ja sitä aiemmin alkaneille urakoille voi määritellä toimenkuvakohtaisesti erilaisia kuukausijaksoja
+                                       (and (< urakan-alkuvuosi 2022)
+                                         (or (= toimenkuva "päätoiminen apulainen")
+                                           (= toimenkuva "apulainen/työnjohtaja"))) (if (<= 5 kuukausi 9)
+                                                                                      (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
+                                                                                      (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
                                        :else (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
                                    [] hoitokauden-numero-lisatty)
         kk-v-lisatty (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
@@ -426,12 +427,16 @@
     kk-v-lisatty))
 
 (defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
-  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
+  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen
+    (q/hae-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})
+    (urakat-q/hae-urakan-alkuvuosi db urakka-id)))
 
 (defn hae-urakan-omat-johto-ja-hallintokorvaukset
   "Hae JH-korvaukset itse lisätyille toimenkuville."
   [db urakka-id]
-  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen (q/hae-omat-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})))
+  (urakan-johto-ja-hallintokorvausten-datan-rikastaminen
+    (q/hae-omat-johto-ja-hallintokorvaukset db {:urakka-id urakka-id})
+    (urakat-q/hae-urakan-alkuvuosi db urakka-id)))
 
 (defn hae-ja-rikasta-urakan-johto-ja-hallintokorvaukset! [db urakka-id]
   (jdbc/with-db-transaction [db db]
@@ -623,7 +628,7 @@
   NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.
         Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu."
   ;;TODO: Tätä kannattaisi refaktoroida.
-  [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos]}]
+  [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos] :as tiedot}]
   {:pre [(integer? urakka-id)
          (or (and toimenkuva-id (integer? toimenkuva-id))
            (and toimenkuva (string? toimenkuva)))]}
@@ -693,9 +698,13 @@
       (when-not (empty? olemassa-olevat-jhkt)
         (doseq [jhk olemassa-olevat-jhkt
                 :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
-                                     (when (and (= vuosi (::bs/vuosi jhk))
-                                             (= kuukausi (::bs/kuukausi jhk)))
-                                       tunnit))
+                                     (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+                                                    1       ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
+                                                    tunnit)]
+
+                                       (when (and (= vuosi (::bs/vuosi jhk))
+                                               (= kuukausi (::bs/kuukausi jhk)))
+                                         tunnit)))
                                jhk-tiedot)
                       tuntipalkka (some (fn [{:keys [vuosi kuukausi tuntipalkka]}]
                                           (when (and (= vuosi (::bs/vuosi jhk))
@@ -732,7 +741,13 @@
       ;; Käsittele uudet insertoitavat jhk:t
       (when-not (empty? uudet-jhkt)
         (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
-          (let [uusi-rivi (insert! db
+          (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+                         1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
+                         tunnit)
+                osa-kuukaudesta (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+                         1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa, joten osa-kuukaudesta on aina 1
+                         osa-kuukaudesta)
+                uusi-rivi (insert! db
                             ::bs/johto-ja-hallintokorvaus
                             {::bs/urakka-id urakka-id
                              ::bs/toimenkuva-id toimenkuva-id
