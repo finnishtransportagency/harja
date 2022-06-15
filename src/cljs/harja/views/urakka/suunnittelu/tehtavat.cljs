@@ -289,6 +289,8 @@
        [debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
+       (when sopimukset-syotetty?
+         [napit/yleinen-ensisijainen "Muokkaa sopimuksen tilaa" #(e! (t/->TallennaSopimus false))])
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko    
           [:<>
