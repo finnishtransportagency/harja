@@ -88,7 +88,6 @@
         sovitut-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaarat)) 0 hoitokaudet)
         syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
     (assoc rivi
-      :sopimuksen-tehtavamaarat (get rivi :sopimuksen-tehtavamaarat)
       :sopimuksen-tehtavamaara (get-in 
                                  rivi 
                                  [:sopimuksen-tehtavamaarat
@@ -156,7 +155,8 @@
      :maara-tehtavia (count (:maarat taulukkorakenne-alueet-ja-maarat-eroteltuna))
      :nayta-toimenpide? true}))
 
-(defn paivita-tehtavien-maarat-hoitokaudelle 
+(defn paivita-tehtavien-maarat-hoitokaudelle
+  "Taulukolla näkyvälle kentälle päivitetään valitun hoitokauden määrät"
   [hoitokausi [id tehtava]] 
   [id (assoc tehtava (if (:aluetieto? tehtava) :muuttunut-aluetieto-maara :maara) (get-in tehtava [:maarat hoitokausi]))])
 
@@ -167,6 +167,7 @@
                  tehtavat)])
 
 (defn toimenpiteen-tehtavien-maarat-taulukolle-hoitokauden-tiedoilla
+  "Taulukon tila päivitetään hoitokautta vaihtaessa"
   [taulukon-tila hoitokausi]
   (-> taulukon-tila
     (update :maarat
@@ -310,9 +311,23 @@
           (map (r/partial tayta-vuodet sopimuksen-tehtavamaara)) 
           urakan-vuodet)))))
 
+(defn kopioi-tarvittaessa-sopimusmaarat-maariin
+  [rivi]
+  (println "row" rivi)
+  (let [{:keys [sopimuksen-tehtavamaarat maarat]} rivi
+        maarat (into {}
+                 (map
+                   (fn [[vuosi sopimuksen-maara]]
+                     (println "vuosi" vuosi sopimuksen-maara)
+                     [vuosi (if (some? (get maarat vuosi))
+                              (get maarat vuosi)
+                              sopimuksen-maara)]))
+                 sopimuksen-tehtavamaarat)]
+    (assoc rivi :maarat maarat)))
+
 (defn laske-tehtavalle-sopimusmaarat 
   [[id tehtava]]
-  [id (laske-sopimusmaarat tehtava)])
+  [id (-> tehtava laske-sopimusmaarat kopioi-tarvittaessa-sopimusmaarat-maariin)])
 
 (defn laske-toimenpiteen-sopimusmaarat 
   [[avain toimenpiteen-tehtavat]]
@@ -323,13 +338,16 @@
      toimenpiteen-tehtavat)])
 
 (defn laske-kaikki-sopimusmaarat 
-  [taulukon-tila]  
-  (update taulukon-tila :maarat
+  [taulukon-tila] 
+  (update
+    taulukon-tila
+    :maarat
     #(into {} 
        (map laske-toimenpiteen-sopimusmaarat) 
        %)))
 
 (defn paivita-kaikki-maarat
+  "Luodaan taulukon tila tarjousmääriä vahvistaessa"
   [taulukon-tila valinnat]
   (-> taulukon-tila 
     laske-kaikki-sopimusmaarat
@@ -400,7 +418,8 @@
           kaikki-arvot-syotetty? (empty? (keys virheet))] 
       (if (or kaikki-arvot-syotetty? 
             (false? tallennettu)) 
-        (do 
+        (do
+          (reset! taulukko-virheet {})
           (tuck-apurit/post! :tallenna-sopimuksen-tila
             {:urakka-id (-> @tiedot/yleiset :urakka :id)
              :tallennettu tallennettu}
