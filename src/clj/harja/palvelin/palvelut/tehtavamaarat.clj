@@ -285,6 +285,11 @@
       (map poista-mapista-namespacet) 
       tulokset)))
 
+(defn- kopioi-tarjouksen-tiedot-tarvittaessa
+  "Vahvistaessa kopioidaan sopimuksen syötetyt määrätiedot valmiiksi urakan tehtävämääriin (huom ei kopioida aluetietoja)"
+  [db urakka-id]
+  (let [sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat)]))
+
 (defn tallenna-sopimuksen-tila
   "Vahvistetaan sopimuksessa sovitut ja HARJAan syötetyt määräluvut urakalle"
   [db user {:keys [urakka-id] :as parametrit}]
@@ -292,8 +297,10 @@
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))]
     (when-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")))))
-  (poista-tuloksista-namespace 
-    (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit))))
+  (jdbc/with-transaction [db db]
+    (kopioi-tarjouksen-tiedot-tarvittaessa db urakka-id)
+    (poista-tuloksista-namespace 
+      (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))))
 
 (defn hae-sopimuksen-tila
   "Haetaan sopimuksen tila kannasta"
