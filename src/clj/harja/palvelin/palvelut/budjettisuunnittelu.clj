@@ -1,8 +1,6 @@
 (ns harja.palvelin.palvelut.budjettisuunnittelu
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
-            [clojure.spec.alpha :as s]
-            [clojure.string :as clj-str]
             [specql.core :refer [fetch update! insert!]]
             [specql.op :as op]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
