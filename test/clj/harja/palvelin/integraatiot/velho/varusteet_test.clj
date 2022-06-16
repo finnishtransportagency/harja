@@ -384,8 +384,8 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)   ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
-          expected-varustetoteuma-maara 4]
+    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)
+          expected-varustetoteuma-maara 5]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
