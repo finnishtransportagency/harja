@@ -87,6 +87,11 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/muutostiedot.schema.json"
+    },
+    "poistettu": {
+      "id": "urn:harja/toteumat/0/toteuma/poistettu",
+      "type": "boolean",
+      "required": false
     }
   }
 }

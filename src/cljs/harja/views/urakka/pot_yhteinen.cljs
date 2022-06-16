@@ -362,6 +362,16 @@
                             [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
               :varoita [tarkista-takuu-pvm]})
+            (when pot2?
+              {:otsikko "Kokonaishinta kirjattu" :nimi :toteuman-kokonaishinta
+               :hae toteuman-kokonaishinta-hae-fn
+               :fmt (fn [hinta]
+                      (if hinta
+                        "Kyllä"
+                        "Hintatiedot puuttuvat. Päällystysilmoitusta ei voida lähettää ennen kuin kohteen kokonaishinta on kirjattu päällystyskohteet-välilehdelle. Kirjaa hintatiedot."))
+               :tyyppi :numero
+               :muokattava? false-fn
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when-not pot2?
               {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
                :hae toteuman-kokonaishinta-hae-fn
