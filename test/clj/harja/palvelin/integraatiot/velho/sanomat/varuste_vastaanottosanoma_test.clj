@@ -324,8 +324,8 @@
                       (assoc :sijainti nil)))))
     ; 3 -> varoita
     (is (= {:toiminto :varoita :viesti
-            (str "version-voimassaolon alkupvm pitää sisältyä urakan aikaväliin alkupvm: "
-                  "Sun Sep 29 00:00:00 EEST 2019 urakan aikaväli: {:alkupvm 2019-10-01 :loppupvm 2024-09-30}")}
+            (str "version-voimassaolon alkupvm: Sun Sep 29 00:00:00 EEST 2019 pitää sisältyä urakan aikaväliin. "
+                  "Urakan id: 35 voimassaolo: {:alkupvm 2019-10-01 :loppupvm 2024-09-30}")}
            (kutsu (-> {} perus-setti
                       juuri-ennen-oulun-MHU-alkua))))
     ; 5 -> varoita

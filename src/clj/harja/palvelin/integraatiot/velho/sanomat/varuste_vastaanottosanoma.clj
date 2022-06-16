@@ -233,8 +233,8 @@
       ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
       {:toiminto :varoita :viesti
-       (str "version-voimassaolon alkupvm pitää sisältyä urakan aikaväliin alkupvm: " alkupvm
-            " urakan aikaväli: {:alkupvm " (:alkupvm urakka-olemassaolo) " :loppupvm " (:loppupvm urakka-olemassaolo) "}")}
+       (str "version-voimassaolon alkupvm: " alkupvm " pitää sisältyä urakan aikaväliin. "
+            "Urakan id: " urakka_id " voimassaolo: {:alkupvm " (:alkupvm urakka-olemassaolo) " :loppupvm " (:loppupvm urakka-olemassaolo) "}")}
       ; 5
       (nil? (:toteuma varustetoteuma))
       {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
