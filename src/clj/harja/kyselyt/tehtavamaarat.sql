@@ -86,6 +86,12 @@ INSERT INTO urakka_tehtavamaara
   (urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
 VALUES (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja);
 
+-- name: lisaa-tehtavamaara-mutta-ala-paivita<!
+insert into urakka_tehtavamaara
+(urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
+values (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja)
+on conflict do nothing;
+
 -- name: paivita-tehtavamaara!
 -- Päivittää urakan hoitokauden tehtävämäärät
 UPDATE urakka_tehtavamaara
