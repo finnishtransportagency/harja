@@ -44,12 +44,6 @@
       {::sopimuksen-tehtavamaara-tilan-id sopimus-id}
       {::urakka/id urakka-id})))
 
-(defn hae-sopimuksen-tehtavamaarat
-  [db urakka-id]
-  (fetch db ::sopimus-tehtavamaara
-    #{::hoitovuosi ::toimenpidekoodi/id ::maara ::urakka/id}
-    {::urakka/id urakka-id}))
-
 (defn tallenna-sopimuksen-tehtavamaara [db user urakka-id tehtava maara hoitovuosi]
   (upsert! db ::sopimus-tehtavamaara
     #{::urakka/id ::toimenpidekoodi/id ::hoitovuosi}
