@@ -164,7 +164,7 @@
   (testing "velho->harja-puuttuvia-arvoja-test - oid puuttuu"
     (let [syote (slurp->json "test/resurssit/velho/varusteet/velho-harja-test-syote.json")
           puuttuu-oid (dissoc syote :oid)
-          odotettu {:tulos nil :virheviesti "Puuttuu pakollisia kenttiä: [:ulkoinen_oid]"}
+          odotettu {:tulos nil :virheviesti "Puuttuu pakollisia kenttiä: [:ulkoinen_oid]" :ohitusviesti nil}
           db (:db jarjestelma)
           urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
           urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
@@ -188,7 +188,8 @@
                           :tr_numero 22
                           :urakka_id 35
                           :ulkoinen_oid "1.2.246.578.4.1.10.514.330249097"}
-                  :virheviesti nil}
+                  :virheviesti nil
+                  :ohitusviesti nil}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
@@ -323,8 +324,8 @@
                       (assoc :sijainti nil)))))
     ; 3 -> varoita
     (is (= {:toiminto :varoita :viesti
-            (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa "
-                 "alkupvm: Sun Sep 29 00:00:00 EEST 2019 loppupvm: Mon Sep 30 00:00:00 EEST 2019")}
+            (str "version-voimassaolon alkupvm: Sun Sep 29 00:00:00 EEST 2019 pitää sisältyä urakan aikaväliin. "
+                  "Urakan id: 35 voimassaolo: {:alkupvm 2019-10-01 :loppupvm 2024-09-30}")}
            (kutsu (-> {} perus-setti
                       juuri-ennen-oulun-MHU-alkua))))
     ; 5 -> varoita
