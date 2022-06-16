@@ -76,7 +76,7 @@
                         nil
                         [:kustomi desimaalien-maara]))])
 
-(defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta? 
+(defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
                                                           korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
   (let [etuliite (cond
                    (neg? arvo) "- "
