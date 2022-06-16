@@ -188,7 +188,8 @@
                           :tr_numero 22
                           :urakka_id 35
                           :ulkoinen_oid "1.2.246.578.4.1.10.514.330249097"}
-                  :virheviesti nil}
+                  :virheviesti nil
+                  :ohitusviesti nil}
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
