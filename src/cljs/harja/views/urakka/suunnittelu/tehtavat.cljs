@@ -7,6 +7,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset :as yleiset]   
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
@@ -283,14 +284,15 @@
                             {:hoitokausi :kaikki}))))
     (fn [e! {:keys [sopimukset-syotetty? virhe-sopimuksia-syottaessa?] :as app}]
       [:div#vayla
-       [:h1 "Tehtävät ja määrät"]
+       [:div.flex-row
+        [:h1 "Tehtävät ja määrät"]
+        (when sopimukset-syotetty?
+          [napit/yleinen-reunaton "Muokkaa tarjouksien määriä" #(e! (t/->TallennaSopimus false)) {:ikoni [ikonit/pencil]}])]
        [debug/debug app]
        [debug/debug @t/taulukko-tila]
        [debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
-       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
-       (when sopimukset-syotetty?
-         [napit/yleinen-ensisijainen "Muokkaa sopimuksen tilaa" #(e! (t/->TallennaSopimus false))])
+       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko    
           [:<>
