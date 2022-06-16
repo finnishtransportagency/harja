@@ -287,8 +287,12 @@
 
 (defn- kopioi-tarjouksen-tiedot-tarvittaessa
   "Vahvistaessa kopioidaan sopimuksen syötetyt määrätiedot valmiiksi urakan tehtävämääriin (huom ei kopioida aluetietoja)"
-  [db urakka-id]
-  (let [sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat)]))
+  [db user urakka-id]
+  (let [sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id})
+        sopimuksen-tehtavamaarat (filter #(false? (:aluetieto %)) sopimuksen-tehtavamaarat)]
+    (doseq [rivi sopimuksen-tehtavamaarat]
+      (let [{:keys [hoitovuosi tehtava sopimuksen-tehtavamaara]} rivi]
+        (q/lisaa-tehtavamaara-mutta-ala-paivita<! db {:urakka urakka-id :hoitokausi hoitovuosi :tehtava tehtava :maara sopimuksen-tehtavamaara :kayttaja (:id user)})))))
 
 (defn tallenna-sopimuksen-tila
   "Vahvistetaan sopimuksessa sovitut ja HARJAan syötetyt määräluvut urakalle"
@@ -297,8 +301,8 @@
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))]
     (when-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")))))
-  (jdbc/with-transaction [db db]
-    (kopioi-tarjouksen-tiedot-tarvittaessa db urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (kopioi-tarjouksen-tiedot-tarvittaessa db user urakka-id)
     (poista-tuloksista-namespace 
       (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))))
 
