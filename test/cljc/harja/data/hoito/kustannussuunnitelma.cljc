@@ -4,7 +4,8 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
             [harja.pvm :as pvm]
-            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
+            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
+            [harja.tyokalut.yleiset :as yleiset-tyokalut]))
 
 (def ^:dynamic *hoitokaudet* #{1 2 3 4 5})
 
@@ -133,15 +134,7 @@
                                                       (vec (concat
                                                              data
                                                              (map (fn [{:keys [kuukausi osa-kuukaudesta]}]
-                                                                    {:vuosi (cond
-                                                                              (and (>= kuukausi 10) (<= kuukausi 12)
-                                                                                (= 1 hoitokauden-numero)) urakan-aloitusvuosi
-                                                                              (and (>= kuukausi 1) (<= kuukausi 9)
-                                                                                (= 1 hoitokauden-numero)) (+ hoitokauden-numero urakan-aloitusvuosi)
-                                                                              (and (>= kuukausi 10) (<= kuukausi 12)
-                                                                                (> hoitokauden-numero 1)) (dec (+ hoitokauden-numero urakan-aloitusvuosi))
-                                                                              (and (>= kuukausi 1) (<= kuukausi 9)
-                                                                                (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi))
+                                                                    {:vuosi (yleiset-tyokalut/vuosi-hoitokauden-numerosta-ja-kuukaudesta hoitokauden-numero kuukausi urakan-aloitusvuosi)
                                                                      :kuukausi kuukausi
                                                                      :osa-kuukaudesta osa-kuukaudesta
                                                                      :tunnit (gen/generate (s/gen ::bs-p/tunnit))
