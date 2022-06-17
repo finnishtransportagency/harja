@@ -39,10 +39,10 @@
       ],
       "materiaalit": [
         {
-          "materiaali": "Kesäsuola sorateiden pölynsidonta",
+          "materiaali": "Talvisuola, rakeinen NaCl",
           "maara": {
             "yksikko": "t",
-            "maara": 0.09815
+            "maara": 3.14
           }
         }
       ]

@@ -670,7 +670,7 @@ WHERE
 -- väylälle, ja halutaan kohdistaa toteuma sen sijaan lähimmälle ajoväylälle.
 SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'talvihoito'::hoitoluokan_tietolajitunniste,
-			     250::INTEGER, '{8, 9, 10}') AS talvihoitoluokka,
+			     250::INTEGER, '{9, 10, 11}') AS talvihoitoluokka,
        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'soratie'::hoitoluokan_tietolajitunniste,
 			     250::INTEGER) AS soratiehoitoluokka;
