@@ -19,7 +19,7 @@ talvihoitoluokat
    {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
    {:nimi "K1"  :numero 9 :numero-str "9"}
    {:nimi "K2"  :numero 10 :numero-str "10"}
-   {:nimi "Ei talvihoitoa" :numero 11 :numero-str "11"}
+   {:nimi "K (ei talvihoitoa)" :numero 11 :numero-str "11"}
    {:nimi "Käsin kirjattu" :numero 99 :numero-str "99"}
    {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 

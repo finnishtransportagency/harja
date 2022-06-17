@@ -233,7 +233,8 @@
       ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
       {:toiminto :varoita :viesti
-       (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
+       (str "version-voimassaolon alkupvm: " alkupvm " pitää sisältyä urakan aikaväliin. "
+            "Urakan id: " urakka_id " voimassaolo: {:alkupvm " (:alkupvm urakka-olemassaolo) " :loppupvm " (:loppupvm urakka-olemassaolo) "}")}
       ; 5
       (nil? (:toteuma varustetoteuma))
       {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
@@ -344,10 +345,10 @@
     (when viesti (log/debug viesti))
     (cond
       (= :tallenna toiminto)                                ; <3
-      {:tulos varustetoteuma :virheviesti nil}
+      {:tulos varustetoteuma :virheviesti nil :ohitusviesti nil}
 
       (= :ohita toiminto)                                 ; :|
-      {:tulos nil :virheviesti nil}
+      {:tulos nil :virheviesti nil :ohitusviesti viesti}
 
       (= :varoita toiminto)                                 ; :(
-      {:tulos nil :virheviesti viesti})))
+      {:tulos nil :virheviesti viesti :ohitusviesti nil})))
