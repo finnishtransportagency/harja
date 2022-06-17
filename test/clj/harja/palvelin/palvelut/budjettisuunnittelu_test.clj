@@ -844,11 +844,9 @@
         (doseq [{:keys [toimenkuva maksukausi jhk-tiedot]} paivitettava-data]
           (let [;; Otetaan vain ensimmäisen hoitovuoden kuukaudet vertailuun
                 paivitetyt-generoidut (keep (fn [{:keys [vuosi kuukausi] :as data}]
-                                          (do
-                                           (println "** Looptaan generoidut :: ja otetaan niistä vuodet talteen" vuosi kuukausi ":::::::::data" data)
-                                           (when (= vuosi paivitys-hoitokauden-vuosi)
-                                             (-> data
-                                               (update :tuntipalkka float)))))
+                                              (when (= vuosi paivitys-hoitokauden-vuosi)
+                                                (-> data
+                                                  (update :tuntipalkka float))))
                                     (some (fn [{vanha-toimenkuva :toimenkuva
                                                 vanha-jhkt :jhk-tiedot
                                                 vanha-maksukausi :maksukausi
@@ -859,18 +857,15 @@
                                               vanha-jhkt))
                                       paivitettava-data))
                 paivitetyt-kannassa-jhkt (keep (fn [{:keys [vuosi] :as data}]
-                                             (let [_ (println "keep :: vuosi paivitys-hoitokaudennumero " vuosi paivitys-hoitokaudennumero " data ::: " data " maksukausi :: " (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi))
-                                                   ]
-                                               (when
-                                                 ;; Otetaan mukaan vain yhden hoitokauden data
-                                                 (and (= vuosi paivitys-hoitokauden-vuosi)
-                                                       (= toimenkuva (:toimenkuva data))
-                                                       (= maksukausi (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi)))
-                                                 ;; Testivertailu tehdään generoituun, joten otetaan automaattisesti täydennetyt arvot pois
-                                                 (-> data
-                                                   (dissoc :tunnit)
-                                                   (dissoc :osa-kuukaudesta)
-                                                   ))))
+                                                 (when
+                                                   ;; Otetaan mukaan vain yhden hoitokauden data
+                                                   (and (= vuosi paivitys-hoitokauden-vuosi)
+                                                     (= toimenkuva (:toimenkuva data))
+                                                     (= maksukausi (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi)))
+                                                   ;; Testivertailu tehdään generoituun, joten otetaan automaattisesti täydennetyt arvot pois
+                                                   (-> data
+                                                     (dissoc :tunnit)
+                                                     (dissoc :osa-kuukaudesta))))
                                        tallennettu-data-hoitokaudella)
                 sorttaus-fn (juxt :vuosi :kuukausi)
                 paivitetyt-generoidut-sortatut (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-generoidut))
