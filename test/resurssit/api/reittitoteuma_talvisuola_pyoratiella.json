@@ -10,7 +10,7 @@
     "viestintunniste": {
       "id": 137025
     },
-    "lahetysaika": "2022-01-30T12:05:00Z"
+    "lahetysaika": "2019-01-30T12:05:00Z"
   },
   "reittitoteuma": {
     "toteuma": {
@@ -22,8 +22,8 @@
         "ytunnus": "8765432-1"
       },
       "sopimusId": __SOPIMUS_ID__,
-      "alkanut": "2022-01-30T12:00:00Z",
-      "paattynyt": "2022-01-30T12:05:00Z",
+      "alkanut": "2019-01-30T12:00:00Z",
+      "paattynyt": "2019-01-30T12:05:00Z",
       "toteumatyyppi": "kokonaishintainen",
       "lisatieto": "Talvisuolausta",
       "tehtavat": [
@@ -50,7 +50,7 @@
     "reitti": [
       {
         "reittipiste": {
-          "aika": "2022-01-30T12:00:00Z",
+          "aika": "2019-01-30T12:00:00Z",
           "koordinaatit": {
              
             "x": 460185.66,
@@ -76,7 +76,7 @@
       },
       {
         "reittipiste": {
-          "aika": "2022-01-30T12:01:00Z",
+          "aika": "2019-01-30T12:01:00Z",
           "koordinaatit": {
             "x": 460213.40,
             "y": 7212061.69
@@ -101,7 +101,7 @@
       },
       {
         "reittipiste": {
-          "aika": "2022-01-30T12:02:00Z",
+          "aika": "2019-01-30T12:02:00Z",
           "koordinaatit": {
             "x": 460242.71,
             "y": 7212056.21
@@ -126,7 +126,7 @@
       },
       {
         "reittipiste": {
-          "aika": "2022-01-30T12:03:00Z",
+          "aika": "2019-01-30T12:03:00Z",
           "koordinaatit": {
             "x": 460279.10,
             "y": 7212042.28

@@ -135,7 +135,7 @@
         (poista-reittitoteuma toteuma-id ulkoinen-id)))))
 
 (deftest tallenna-talvisuolausta-pyoratielle
-  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun MHU 2019-2024'"))
+  (let [urakka (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
         kayttaja "yit_pk2"
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka " AND paasopimus IS NULL"))
@@ -162,7 +162,7 @@
       (is (= (count reittipisteet) 4))
       (is (= (count toteuma-tehtava-idt) 1))
       (is (= (count toteuma-materiaali-idt) 1))
-      (is (= toteuman-materiaali "Kesäsuola sorateiden pölynsidonta"))
+      (is (= toteuman-materiaali "Talvisuola, rakeinen NaCl"))
 
       (doseq [reittipiste reittipisteet]
         (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
