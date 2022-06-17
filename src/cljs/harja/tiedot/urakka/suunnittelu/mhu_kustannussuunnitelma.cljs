@@ -2239,69 +2239,6 @@
           [{} vapaat-omien-toimekuvien-idt]
           (range 1 (inc jh-korvausten-omiariveja-lkm)))))))
 
-;; TODO MOCK DATAA
-(def vuosi-kuukausi-malli
-  {1 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 1}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 1}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 1}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 1}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 1}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 1}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 1}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 1}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 1}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 1}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 1}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 1}}
-   2 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 2}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 2}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 2}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 2}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 2}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 2}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 2}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 2}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 2}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 2}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 2}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 2}}
-   3 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 3}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 3}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 3}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 3}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 3}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 3}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 3}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 3}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 3}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 3}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 3}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 3}}
-   4 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 4}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 4}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 4}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 4}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 4}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 4}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 4}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 4}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 4}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 4}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 4}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 4}}
-   5 {10 {:kuukausi 10 :kuukausipalkka 100 :vuosi 5}
-      11 {:kuukausi 11 :kuukausipalkka 120 :vuosi 5}
-      12 {:kuukausi 12 :kuukausipalkka 100 :vuosi 5}
-      1 {:kuukausi 1 :kuukausipalkka 120 :vuosi 5}
-      2 {:kuukausi 2 :kuukausipalkka 130 :vuosi 5}
-      3 {:kuukausi 3 :kuukausipalkka 100 :vuosi 5}
-      4 {:kuukausi 4 :kuukausipalkka 100 :vuosi 5}
-      5 {:kuukausi 5 :kuukausipalkka 150 :vuosi 5}
-      6 {:kuukausi 6 :kuukausipalkka 100 :vuosi 5}
-      7 {:kuukausi 7 :kuukausipalkka 160 :vuosi 5}
-      8 {:kuukausi 8 :kuukausipalkka 170 :vuosi 5}
-      9 {:kuukausi 9 :kuukausipalkka 100 :vuosi 5}}})
-
 (def erikseen-suunniteltavat
   {1 false 2 false 3 false 4 false 5 false})
 
