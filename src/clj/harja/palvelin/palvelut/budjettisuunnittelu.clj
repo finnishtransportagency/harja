@@ -414,16 +414,19 @@
                                                                                       (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :talvi)))
                                        :else (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
                                    [] hoitokauden-numero-lisatty)
-        kk-v-lisatty (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
-                            (cond
-                              #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
-                              (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
-                              (= :talvi maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 7)
-                              (and (= toimenkuva "hankintavastaava") (= 0 hoitokausi)) (assoc johto-ja-hallintokorvaus :kk-v 4.5)
-                              (= toimenkuva "viherhoidosta vastaava henkilö") (assoc johto-ja-hallintokorvaus :kk-v 5)
-                              (= toimenkuva "harjoittelija") (assoc johto-ja-hallintokorvaus :kk-v 4)
-                              :else (assoc johto-ja-hallintokorvaus :kk-v 12)))
-                          maksukausi-lisatty)]
+        ;; Vuoden -22 ja sen jälkeen alkavilla urakoilla ei ole enää erikseen maksukausia ja kk-v erottelua ei enää tarvita
+        kk-v-lisatty (if (< urakan-alkuvuosi 2022)
+                       (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
+                              (cond
+                                #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
+                                (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
+                                (= :talvi maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 7)
+                                (and (= toimenkuva "hankintavastaava") (= 0 hoitokausi)) (assoc johto-ja-hallintokorvaus :kk-v 4.5)
+                                (= toimenkuva "viherhoidosta vastaava henkilö") (assoc johto-ja-hallintokorvaus :kk-v 5)
+                                (= toimenkuva "harjoittelija") (assoc johto-ja-hallintokorvaus :kk-v 4)
+                                :else (assoc johto-ja-hallintokorvaus :kk-v 12)))
+                         maksukausi-lisatty)
+                       maksukausi-lisatty)]
     kk-v-lisatty))
 
 (defn hae-urakan-johto-ja-hallintokorvaukset [db urakka-id]
