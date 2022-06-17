@@ -841,10 +841,10 @@
   @checkbox-tila)
 
 (defn- jaa-vuosipalkka-kuukausille
-  [tiedot hoitokausi rivi kopioi-tuleville?]
-  (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ (:vuosipalkka rivi) 12))
-        kopioi-tuleville? (if (:ennen-urakkaa? rivi) false kopioi-tuleville?)
-        alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)    
+  [hoitokausi kopioi-tuleville? ennen-urakkaa? toimenkuvan-maarat vuosipalkka]
+  (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ vuosipalkka 12))
+        kopioi-tuleville? (if ennen-urakkaa? false kopioi-tuleville?)
+        alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         loppukausi (inc
                      (if kopioi-tuleville?
@@ -852,7 +852,6 @@
                        hoitokausi))
         kaudet (into []
                  (range hoitokausi loppukausi))
-        maarat (get-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi])
         aseta-kuukausipalkka (map (fn [[kuukausi tiedot]]
                                     [kuukausi (assoc tiedot :kuukausipalkka kuukausipalkka)]))
         paivita-vuoden-tiedot (fn [kkt]
@@ -865,13 +864,19 @@
                                 paivita-vuoden-tiedot))
                            kaudet)
         paivita (apply comp paivitysfunktiot)
-        paivitetyt (paivita maarat)]
-    (assoc-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)))
+        paivitetyt (paivita toimenkuvan-maarat)]
+    paivitetyt))
 
 (defn- tallenna-vuosipalkka
   [atomi {:keys [hoitokausi kopioi-tuleville?]} rivi]
-  (swap! atomi jaa-vuosipalkka-kuukausille hoitokausi rivi kopioi-tuleville?)
-  (e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)))
+  (let [toimenkuvan-maarat (get-in rivi [:maksuerat-per-hoitovuosi-per-kuukausi])
+        paivitetyt (jaa-vuosipalkka-kuukausille hoitokausi kopioi-tuleville? (:ennen-urakkaa? rivi) toimenkuvan-maarat (:vuosipalkka rivi))
+        rivi (assoc rivi :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
+        tiedot @atomi
+        tiedot (assoc-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
+        _ (reset! atomi tiedot)]
+    ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
+    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 100)))
 
 (defn- paivita-toimenkuvan-vuosiloota
   [hoitokausi [toimenkuva toimenkuvan-tiedot]]
@@ -981,7 +986,7 @@
   [atomi]  
   (into {} (map (juxt first #(let [rivi (second %)
                                    polku (t/->toimenkuva-maksukausi rivi)]
-                               [vetolaatikko-komponentti atomi polku rivi]))) @t/mock-data))
+                               [vetolaatikko-komponentti atomi polku rivi]))) @atomi))
 
 (defn- kun-ei-syoteta-erikseen
   [hoitokausi tiedot]
@@ -996,7 +1001,7 @@
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data t/mock-data
+        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
         vetolaatikot (luo-vetolaatikot data)]
     (fn [app indeksit]
       (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
