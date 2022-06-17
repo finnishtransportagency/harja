@@ -32,7 +32,9 @@
 (def +velho-urakka-oid-url+ (str +velho-api-juuri+ "/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"))
 (def +velho-urakka-kohde-url+ (str +velho-api-juuri+ "hallintorekisteri/api/v1/kohteet"))
 
-(def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4.5\"}]")
+(def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"osa\":5,\"etaisyys\":4139},
+\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"enkoodattu\":1682900006324,\"osa\":5,\"etaisyys\":4139},
+\"oid\":\"1.2.3.4.5\"}]")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -384,8 +386,8 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)   ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
-          expected-varustetoteuma-maara 4]
+    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)
+          expected-varustetoteuma-maara 5]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
