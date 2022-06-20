@@ -214,7 +214,7 @@
       (fn [e! varuste toteumat]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
-          {:luokka " overlay-oikealla"
+          {:luokka " overlay-oikealla overlay-leveampi"
            :otsikko-komp (fn [_]
                            [:span
                             [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
