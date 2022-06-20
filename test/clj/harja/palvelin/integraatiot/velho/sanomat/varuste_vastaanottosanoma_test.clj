@@ -333,7 +333,7 @@
            (kutsu (-> {} alku-ja-loppupvm
                       oid-muokattu-urakka-tietolaji-sijainti))))
     ; 2 -> ohita
-    (is (= {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
+    (is (= {:toiminto :ohita :viesti "Muutoksen lähteen 4.3.2.1 urakkaa ei löydy Harjasta. Ohita varustetoteuma."}
            (kutsu (-> {} perus-setti
                       sijainti-ei-MHU-testidatassa
                       muutoksen-lahde-tuntematon-oid
