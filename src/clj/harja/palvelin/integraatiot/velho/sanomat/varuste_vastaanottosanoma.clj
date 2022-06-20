@@ -207,7 +207,7 @@
 
   Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
   Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
-  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo]
+  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo muutoksen-lahde-oid]
 
   (let [; VHAR-6330 Version alkupvm on oltava urakan sisällä, muuten versio ei ole syntynyt urakassa
         varuste-olemassaolo {:alkupvm alkupvm :loppupvm alkupvm}
@@ -215,7 +215,7 @@
     (cond
       ; 2
       (nil? urakka_id)
-      {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
+      {:toiminto :ohita :viesti (format "Muutoksen lähteen %s urakkaa ei löydy Harjasta. Ohita varustetoteuma." muutoksen-lahde-oid)}
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
       {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
@@ -341,8 +341,7 @@
                         :muokattu muokattu}
         urakka-olemassaolo (urakka-pvmt-idlla-fn (:urakka_id varustetoteuma))
         {toiminto :toiminto
-         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo)]
-    (when viesti (log/debug viesti))
+         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo (:muutoksen-lahde-oid kohde))]
     (cond
       (= :tallenna toiminto)                                ; <3
       {:tulos varustetoteuma :virheviesti nil :ohitusviesti nil}
