@@ -316,7 +316,7 @@
         muutoksen-lahde-tuntematon-oid (fn [kohde] (assoc kohde :muutoksen-lahde-oid "4.3.2.1"))
         sijainti-ei-MHU-testidatassa (fn [kohde] (assoc kohde :sijainti (sijainti-kohteelle-fn {:sijainti {:osa 10 :tie 20 :etaisyys 100}})))
         perus-setti (comp oid-muokattu-urakka-tietolaji-sijainti toimenpide alku-ja-loppupvm)
-        kutsu (fn [kohde] (vos/tarkasta-varustetoteuma kohde (urakka-pvmt-idlla-fn (:urakka_id kohde))))
+        kutsu (fn [kohde] (vos/tarkasta-varustetoteuma kohde (urakka-pvmt-idlla-fn (:urakka_id kohde)) (:muutoksen-lahde-oid kohde)))
         juuri-ennen-oulun-MHU-alkua (fn [kohde] (assoc kohde :alkupvm (pvm/->pvm "29.9.2019") :loppupvm (pvm/->pvm "30.9.2019")))]
     ; 1 -> varoita
     (is (= {:toiminto :varoita :viesti "Puuttuu pakollisia kenttiä: [:sijainti]"}
