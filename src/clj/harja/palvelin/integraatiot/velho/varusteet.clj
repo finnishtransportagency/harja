@@ -448,8 +448,6 @@
                                   tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                                   tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                                   tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
-                                                        (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
-                                                                   " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
                                                         (try
                                                           (let [{varustetoteuma :tulos
                                                                  virheviesti :virheviesti
@@ -457,6 +455,8 @@
                                                                                              db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
                                                             (cond varustetoteuma
                                                                   (do
+                                                                    (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
+                                                                               " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
                                                                     (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
                                                                     true)
 
@@ -472,7 +472,7 @@
                                                                   :else
                                                                   (log/debug "Ohitettiin varustetoteuma. kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku) " viesti: " ohitusviesti)))
                                                           (catch Throwable t
-                                                            (log/error "Poikkeus jäsennettässä ja tallennettaessa varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
+                                                            (log/error "Poikkeus käsiteltäessä varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
                                                                        "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku)
                                                                        " Throwable:" t)
                                                             (throw t))))]
