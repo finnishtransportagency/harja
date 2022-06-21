@@ -843,6 +843,9 @@
 (defn- jaa-vuosipalkka-kuukausille
   [hoitokausi kopioi-tuleville? ennen-urakkaa? toimenkuvan-maarat vuosipalkka]
   (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ vuosipalkka 12))
+        viimeinen-kuukausi (if-not (= vuosipalkka (* 12 kuukausipalkka))
+                             (tyokalut/pyorista-kahteen (- vuosipalkka (tyokalut/pyorista-kahteen (* 11 kuukausipalkka))))
+                             kuukausipalkka)
         kopioi-tuleville? (if ennen-urakkaa? false kopioi-tuleville?)
         alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -853,7 +856,9 @@
         kaudet (into []
                  (range hoitokausi loppukausi))
         aseta-kuukausipalkka (map (fn [[kuukausi tiedot]]
-                                    [kuukausi (assoc tiedot :kuukausipalkka kuukausipalkka)]))
+                                    [kuukausi (assoc tiedot :kuukausipalkka (if (= 9 kuukausi)
+                                                                              viimeinen-kuukausi
+                                                                              kuukausipalkka))]))
         paivita-vuoden-tiedot (fn [kkt]
                                 (into {}
                                   aseta-kuukausipalkka
