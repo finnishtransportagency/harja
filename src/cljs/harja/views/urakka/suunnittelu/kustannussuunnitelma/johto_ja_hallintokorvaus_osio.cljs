@@ -881,7 +881,7 @@
         tiedot (assoc-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
         _ (reset! atomi tiedot)]
     ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
-    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 100)))
+    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 1)))
 
 (defn- paivita-toimenkuvan-vuosiloota
   [hoitokausi [toimenkuva toimenkuvan-tiedot]]
@@ -895,24 +895,32 @@
     tiedot))
 
 (defn- tallenna-kuukausipalkka
-  [tiedot {:keys [alkuvuosi loppuvuosi toimenkuva hoitokausi rivin-tiedot kopioi-tuleville?]} rivi]
-  (swap!
-    tiedot
-    #(let [loppukausi (inc
-                        (if kopioi-tuleville?
-                          (- loppuvuosi alkuvuosi)
-                          hoitokausi))
-           kaudet (into [] (range hoitokausi loppukausi))
-           erat (get % :maksuerat-per-hoitovuosi-per-kuukausi)
-           paivitysfunktiot (mapv
-                              (fn [kausi]
-                                (fn [maarat]
-                                  (assoc-in maarat [kausi (:kuukausi rivi) :kuukausipalkka] (:kuukausipalkka rivi))))
-                              kaudet)
-           paivita (apply comp paivitysfunktiot)
-           paivitetyt (paivita erat)]                           
-       (assoc % :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)))
-  (e! (t/->TallennaJHOToimenkuvanKuukausipalkkaVuodella rivi rivin-tiedot)))
+  [tiedot-atom {:keys [alkuvuosi loppuvuosi toimenkuva hoitokausi rivin-tiedot kopioi-tuleville?]} rivi]
+  (let [tiedot @tiedot-atom
+        loppukausi (inc
+                     (if kopioi-tuleville?
+                       (- loppuvuosi alkuvuosi)
+                       hoitokausi))
+        kaudet (into [] (range hoitokausi loppukausi))
+        erat (get tiedot :maksuerat-per-hoitovuosi-per-kuukausi)
+        paivitysfunktiot (mapv
+                           (fn [kausi]
+                             (fn [maarat]
+                               (assoc-in maarat [kausi (:kuukausi rivi) :kuukausipalkka] (:kuukausipalkka rivi))))
+                           kaudet)
+        vuosipalkka (reduce (fn [summa kuukauden-arvot]
+                              (if (not (nil? (:kuukausipalkka (second kuukauden-arvot))))
+                                (+ summa (:kuukausipalkka (second kuukauden-arvot)))
+                                summa))
+                      0
+                      (get erat hoitokausi))
+        paivita (apply comp paivitysfunktiot)
+        paivitetyt (paivita erat)
+        tiedot (assoc tiedot :vuosipalkka vuosipalkka)
+        toimenkuvan-tiedot (assoc tiedot :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
+        _ (reset! tiedot-atom toimenkuvan-tiedot)]
+    ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
+    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka toimenkuvan-tiedot)) 1)))
 
 (defn- jarjesta-hoitovuoden-jarjestykseen
   "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
@@ -943,25 +951,25 @@
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-komponentti
-  [tiedot polku {:keys [toimenkuva] :as rivi}]
+  [tiedot-atomi polku {:keys [toimenkuva] :as rivi}]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         vuosien-erotus (- urakan-loppuvuosi urakan-alkuvuosi)
         kursorit (assoc {}
-                   :toimenkuva (r/cursor tiedot [toimenkuva])
-                   :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot polku vuosien-erotus)
-                   :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot polku vuosien-erotus))
-        ]
+                   :toimenkuva (r/cursor tiedot-atomi [toimenkuva])
+                   :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot-atomi polku vuosien-erotus)
+                   :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot-atomi polku vuosien-erotus))]
     (fn [_ polku toimenkuva]
       (let [{valitun-hoitokauden-numero :hoitokauden-numero kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet             
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
-        [:div 
+        [:div
          [:div
-          [debug/debug kursorit]
-          [debug/debug @tiedot]
-          [debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
-          [debug/debug (deref (get-in kursorit [:toimenkuva]))]]
+          ;[debug/debug kursorit]
+          ;[debug/debug @tiedot]
+          ;[debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
+          ;[debug/debug (deref (get-in kursorit [:toimenkuva]))]
+          ]
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
@@ -1006,23 +1014,23 @@
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
-        vetolaatikot (luo-vetolaatikot data)]
+        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)]
     (fn [app indeksit]
-      (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
-            kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)] 
+      (let [vetolaatikot (luo-vetolaatikot data)
+            kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
+            kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
         [:div
-         [debug/debug indeksit]
+         ;[debug/debug indeksit]
          [debug/debug app]
-         [debug/debug @data]
-         [debug/debug vetolaatikot]
+         ;[debug/debug @data]
+         ;[debug/debug vetolaatikot]
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
            :id "toimenkuvat-taulukko"
-           :voi-lisata? false     
+           :voi-lisata? false
            :voi-kumota? false
            :jarjesta :jarjestys
            :piilota-toiminnot? true
@@ -1031,8 +1039,7 @@
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
-           {:tyyppi :vetolaatikon-tila :leveys "5%"}
-           #_{:otsikko "Ennen urakkaa?" :nimi :ennen-urakkaa? :tyyppi :string :muokattava (constantly false)}
+           {:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]]))))
 

@@ -1853,8 +1853,6 @@
 (defrecord PoistaOmaJHDdataEpaonnistui [vastaus])
 ;; 2022 -> vanhan griditaulukon eventit (ei ylikirjoiteta vanhoja, koska eri logiikka)
 (defrecord TallennaJHOToimenkuvanVuosipalkka [rivi])
-(defrecord TallennaJHOToimenkuvanKuukausipalkkaVuodella [rivi parametrit])
-
 
 ;; FIXME: Tätä ei käytetä missään?
 (defrecord MuutaOmanJohtoJaHallintokorvauksenArvoa [nimi sarake arvo])
@@ -2278,7 +2276,7 @@
                                      maksuerat (reduce (fn [maksueran-hoitokaudet kuluva-hoitokausi]
                                                          (let [kuukausi-arvot (reduce (fn [hoitokauden-kuukausiarvot kuluva-kuukausi]
                                                                                         (let [kasiteltavan-hoitokauden-arvot (nth toimenkuvan-data-hoitokausittain (dec kuluva-hoitokausi))
-                                                                                              kuukausi-arvot (some #(= kuluva-kuukausi (:kuukausi %)) kasiteltavan-hoitokauden-arvot)
+                                                                                              kuukausi-arvot (first (filter #(= kuluva-kuukausi (:kuukausi %)) kasiteltavan-hoitokauden-arvot))
                                                                                               arvot {:kuukausi kuluva-kuukausi,
                                                                                                      :kuukausipalkka (* (:tunnit kuukausi-arvot) (:tuntipalkka kuukausi-arvot)),
                                                                                                      :vuosi kuluva-hoitokausi}]
@@ -3079,14 +3077,6 @@
           (-> app
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain))))))
 
-  ;;
-  TallennaJHOToimenkuvanKuukausipalkkaVuodella
-  (process-event [{rivi :rivi parametrit :parametrit} app]
-    (-> app
-      (paivita-yhteiset-tiedot parametrit)
-      ;; POST
-      ))
-
   TallennaJHOToimenkuvanVuosipalkka
   (process-event [{rivi :rivi} app]
     (let [{urakka-id :id alkupvm :alkupvm} (:urakka @tiedot/yleiset)
@@ -3108,7 +3098,9 @@
                                                {:vuosi (yleiset-tyokalut/vuosi-hoitokauden-numerosta-ja-kuukaudesta hoitokauden-numero kuukausi urakan-alkuvuosi)
                                                 :kuukausi kuukausi
                                                 :osa-kuukaudesta 1
-                                                :tuntipalkka (:kuukausipalkka (get h kuukausi))}))
+                                                :tuntipalkka (if (nil? (:kuukausipalkka (get h kuukausi)))
+                                                               0
+                                                               (:kuukausipalkka (get h kuukausi)))}))
                                      [] kuukaudet))]
                              hoitovuoden-data))
                    []
@@ -3222,6 +3214,7 @@
   (process-event [{:keys [vastaus]} app]
     (let [pohjadata (urakan-ajat)
           jh-korvaukset (jh-korvaukset-vastauksesta vastaus pohjadata)]
+      (js/console.log "Tallennus onnistui, päivitetään app-state")
       (assoc-in app [:domain :johto-ja-hallintokorvaukset] jh-korvaukset)))
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
