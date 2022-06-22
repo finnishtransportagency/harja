@@ -131,7 +131,9 @@
        {:wrap-luokka "col-md-2 filtteri label-ja-alasveto-grid"
         :vayla-tyyli? true
         :fmt itse-tai-kaikki
-        :valintojen-maara (count (:varustetyypit valinnat))}]
+        :valintojen-maara (count (:varustetyypit valinnat))
+        :li-luokka-fn (fn [valinta]
+                        (when (= "Aidat" (:teksti (second valinta))) "varusteet alasveto-erotin"))}]
       [valinnat/monivalinta-pudotusvalikko
        "Kuntoluokitus"
        kuntoluokat
@@ -214,7 +216,7 @@
       (fn [e! varuste toteumat]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
          [lomake/lomake
-          {:luokka " overlay-oikealla"
+          {:luokka " overlay-oikealla overlay-leveampi"
            :otsikko-komp (fn [_]
                            [:span
                             [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
