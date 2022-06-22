@@ -264,6 +264,32 @@
                               (geometrisoi-ja-nayta-reittitoteuma @payload))}
         "piirteleppä!"]])))
 
+(defn alueet
+  [alueet]
+  (into []
+    (map #(assoc (update-in % [:alue] assoc
+                   :color "blue" :fill "blue"
+                   :radius 300
+                   :stroke {:color "blue" :width 7})
+            :type :pohjavesialue))
+    alueet))
+
+(defn- hoitoluokat-haku []
+  (let [haku-paalla? (atom false)]
+    (fn []
+      [:button
+       {:on-click (fn []
+                    (go
+                      (reset! haku-paalla? true)
+                      (let [hoitoluokat (<! (k/post! :debug-hae-elyn-hoitoluokat @nav/valittu-hallintayksikko-id))]
+                        #_(swap! tarkasteltava-asia assoc :reitti reitti)
+                        (reset! haku-paalla? false)
+                        (reset!)
+                        #_(tasot/nayta-geometria! :pohjavesialueet (alueet hoitoluokat))
+                        #_(js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200))))
+        :disabled (nil? @nav/valittu-hallintayksikko-id)}
+       (str "Laitahan näkyen" (when @haku-paalla? (str " (hakee " (repeat (inc (mod (harja.pvm/sekuntti (pvm/nyt)) 3)) ".") ")")))])))
+
 (defn tierekisteri []
   (komp/luo
    (komp/lippu-arvo false true kartta-tiedot/pida-geometriat-nakyvilla?)
@@ -296,7 +322,10 @@
       [:hr]
       [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
-      [reittitoteuma-payload]])))
+      [reittitoteuma-payload]
+      [:hr]
+      [:h3 "Hoitoluokat kartalle"]
+      [hoitoluokat-haku]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120

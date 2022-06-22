@@ -10,7 +10,8 @@
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.geo :as geo]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
   (let [tulos (konv/sarakkeet-vektoriin
@@ -38,6 +39,11 @@
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
 
+(defn hae-hoitoluokat [db params]
+  (into []
+    (geo/muunna-pg-tulokset :alue)
+    (q/hae-elyn-hoitoluokat db {:alue params})))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -60,7 +66,9 @@
       :debug-geometrisoi-reittipisteet
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
-      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db)))
+      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db))
+      :debug-hae-elyn-hoitoluokat
+      (vaadi-jvh! (partial #'hae-hoitoluokat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -69,5 +77,6 @@
       :debug-hae-toteuman-reitti-ja-pisteet
       :debug-geometrisoi-reittitoteuma
       :debug-geometrisoi-reittipisteet
-      :debug-hae-tyokonehavainto-reittipisteet)
+      :debug-hae-tyokonehavainto-reittipisteet
+      :debug-hae-elyn-hoitoluokat)
     this))

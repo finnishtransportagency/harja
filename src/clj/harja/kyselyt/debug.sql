@@ -13,3 +13,6 @@ SELECT t.reitti,
 SELECT ST_Simplify(t.sijainti,0.6,true) as sijainti
   FROM tyokonehavainto t
 WHERE t.tyokoneid = :tyokoneid;
+
+-- name: hae-elyn-hoitoluokat
+SELECT geometria, hoitoluokka FROM hoitoluokka hl WHERE st_intersects((SELECT alue FROM organisaatio WHERE id = :alue), hl.geometria);
