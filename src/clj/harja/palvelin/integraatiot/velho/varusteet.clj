@@ -448,28 +448,34 @@
                                   tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                                   tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                                   tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
-                                                        (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
-                                                                   " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
-                                                        (let [{varustetoteuma :tulos
-                                                               virheviesti :virheviesti
-                                                               ohitus-syy :ohitus-syy} (jasenna-ja-tarkasta-varustetoteuma
-                                                                                         db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
-                                                          (cond varustetoteuma
-                                                                (do
-                                                                  (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
-                                                                  true)
+                                                        (try
+                                                          (let [{varustetoteuma :tulos
+                                                                 virheviesti :virheviesti
+                                                                 ohitusviesti :ohitusviesti} (jasenna-ja-tarkasta-varustetoteuma
+                                                                                             db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
+                                                            (cond varustetoteuma
+                                                                  (do
+                                                                    (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
+                                                                               " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
+                                                                    (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                                                                    true)
 
-                                                                virheviesti
-                                                                (do
-                                                                  (lokita-ja-tallenna-hakuvirhe
-                                                                    db kohde
-                                                                    (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                                         (format "%s muokattu: %s validointivirhe: %s"
-                                                                                 oid muokattu virheviesti)))
-                                                                  false)
+                                                                  virheviesti
+                                                                  (do
+                                                                    (lokita-ja-tallenna-hakuvirhe
+                                                                      db kohde
+                                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
+                                                                           (format "%s muokattu: %s validointivirhe: %s"
+                                                                                   oid muokattu virheviesti)))
+                                                                    false)
 
-                                                                :else
-                                                                :ohitus)))]
+                                                                  :else
+                                                                  (log/debug "Ohitettiin varustetoteuma. kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku) " viesti: " ohitusviesti)))
+                                                          (catch Throwable t
+                                                            (log/error "Poikkeus käsiteltäessä varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
+                                                                       "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku)
+                                                                       " Throwable:" t)
+                                                            (throw t))))]
                               (hae-ja-tallenna
                                 tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                                 token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))

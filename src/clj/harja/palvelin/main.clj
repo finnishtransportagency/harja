@@ -146,6 +146,7 @@
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
+    [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
@@ -734,6 +735,10 @@
 
       :kustannusarvioiduntyontoteumien-ajastus
       (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
+        [:http-palvelin :db])
+
+      :analytiikan-toteumien-ajastus
+      (component/using (analytiikan-toteumat/->AnalytiikanToteumat)
         [:http-palvelin :db])
 
       :mobiili-laadunseuranta
