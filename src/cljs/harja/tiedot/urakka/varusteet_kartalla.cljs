@@ -28,6 +28,13 @@
                                                     (:sijainti kohde))
                                        :selite {:teksti toteuma
                                                 :img (kartta-ikonit/pinni-ikoni "sininen")}
+                                       :tyyppi-kartalla :varusteet-ulkoiset
+                                       :infopaneelin-tiedot {:ulkoinen-oid (:ulkoinen-oid kohde)
+                                                             :alkupvm (:alkupvm kohde)
+                                                             :tr-osoite (:tr-osoite kohde)
+                                                             :toimenpide (:toimenpide kohde)
+                                                             :varustetyyppi (:varustetyyppi kohde)
+                                                             :aikataulu "(:formatoitu-aikataulu kohde)"}
                                        :ikonit [{:tyyppi :merkki
                                                  :paikka [:loppu]
                                                  :zindex 21
