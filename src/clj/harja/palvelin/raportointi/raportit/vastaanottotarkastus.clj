@@ -15,7 +15,7 @@
 (defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi]
   (let [nimi (case taulukkotyyppi
                :yha "YHA-kohteet"
-               :paikkaus "Harjan paikkauskohteet ja muut kohteet")]
+               :paikkaus "Muut kohteet")]
     [:taulukko {:otsikko nimi
                 :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
                 :sheet-nimi nimi}
