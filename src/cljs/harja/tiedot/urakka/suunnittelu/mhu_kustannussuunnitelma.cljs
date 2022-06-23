@@ -316,18 +316,15 @@
    {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    ;; 2022 eteenpäin alkavien versio datasta
-   {:toimenkuva "sopimusvastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 2}
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
    {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 2}
    {:toimenkuva "päätoiminen apulainen" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 2}
    {:toimenkuva "apulainen/työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 2}
    {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 2}
-   ;;TODO: Tämän nimistä toimenkuvaa ei ole tietokannassa. Pitäisikö se päivittää tietokantaan vai miten tämä hoidetaan?
-   ;{:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
-   ;{:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
-   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
-   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}])
+   {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
+   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
 
-(def vertailuvuosi 2018)
+(def vertailuvuosi-uudelle-taulukolle 2022)
 
 (defn pohjadatan-versio
   []
@@ -335,11 +332,11 @@
         alkuvuosi (when (some? alkupvm) (pvm/vuosi alkupvm))
         vuosifiltteri (filter #(cond
                                  (and alkuvuosi
-                                   (< alkuvuosi vertailuvuosi))
+                                   (< alkuvuosi vertailuvuosi-uudelle-taulukolle))
                                  (= 1 (:versio %))
 
                                  (and alkuvuosi
-                                   (>= alkuvuosi vertailuvuosi))
+                                   (>= alkuvuosi vertailuvuosi-uudelle-taulukolle))
                                  (= 2 (:versio %))
 
                                  :else
@@ -2160,11 +2157,11 @@
                     ;; Vuoden -22 jälkeen urakoissa ei ole enää maksukausia, vaan kaikki syötetään vuosihintoina (ja voi kyllä laittaa kuukausihinnatkin, mutta ei kausia)
                     (fn [_vuosi kuukausi]
                       (cond
-                        (and (> (pvm/vuosi urakan-aloituspvm) 2022) (= maksukausi :kesa)) (<= 5 kuukausi 9)
-                        (and (> (pvm/vuosi urakan-aloituspvm) 2022) (= maksukausi :talvi)) (or (<= 1 kuukausi 4)
+                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :kesa)) (<= 5 kuukausi 9)
+                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :talvi)) (or (<= 1 kuukausi 4)
                                                 (<= 10 kuukausi 12))
-                        (and (> (pvm/vuosi urakan-aloituspvm) 2022) (= toimenkuva "harjoittelija")) (<= 5 kuukausi 8)
-                        (and (> (pvm/vuosi urakan-aloituspvm) 2022) (= toimenkuva "viherhoidosta vastaava henkilö")) (<= 4 kuukausi 8)
+                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "harjoittelija")) (<= 5 kuukausi 8)
+                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "viherhoidosta vastaava henkilö")) (<= 4 kuukausi 8)
                         :else true))
                     (fn [{:keys [vuosi kuukausi tunnit tuntipalkka tuntipalkka-indeksikorjattu] :as data}]
                       #_(println "### jh-korvaukset toimenkuvat:" vuosi " kuukausi: " kuukausi " tuntipalkka: " tuntipalkka " indeksikorjattu: " tuntipalkka-indeksikorjattu)
