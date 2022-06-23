@@ -193,7 +193,7 @@
   1. pakolliset kentät
   2. muutoksen-lahde-oid pitää olla Hallintorekisterin maanteiden-hoitourakka, jonka urakkakoodi vastaa VHAR-6045 mukaisesti Harjassa olevaan hoito
      tai teiden-hoito tyyppisen voimassaolevan urakan tunnisteeseen (URAKKA.urakkanro)
-  3. version-voimassaolon alkupvm ja loppupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
+  3. version-voimassaolon alkupvm pitää leikata 1. kohdan urakan keston kanssa. (Jos näin ei ole, ei kohde näy käyttöliittymässä.)
   4. Varusteen tietolajin pitää sisältyä VHAR-5109 kommentissa mainittuihin tietolajeihin
   5. Varusteversion toimenpiteen pitää olla jokin seuraavista: lisäys, päivitys, poisto, tarkastus, korjaus ja puhdistus
   6. Varusten ollessa tl506 (liikennemerkki) tulee sillä olla asetusnumero tai lakinumero, joka kertoo liikennemerkin tyypin
@@ -207,13 +207,15 @@
 
   Varoitus jättää tämän lähteen viimeisen ajokerran päiväyksen päivittämättä, eli integraatio epäonnistuu osittain.
   Tästä seuraa uudelleen lataus samasta alkupäivämäärästä lähtien seuraavalla ajokerralla."
-  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo]
-  (let [varuste-olemassaolo {:alkupvm alkupvm :loppupvm loppupvm}
+  [{:keys [alkupvm loppupvm urakka_id] :as varustetoteuma} urakka-olemassaolo muutoksen-lahde-oid]
+
+  (let [; VHAR-6330 Version alkupvm on oltava urakan sisällä, muuten versio ei ole syntynyt urakassa
+        varuste-olemassaolo {:alkupvm alkupvm :loppupvm alkupvm}
         puuttuvat-pakolliset (puuttuvat-pakolliset-avaimet varustetoteuma)]
     (cond
       ; 2
-      (nil? (:urakka_id varustetoteuma))
-      {:toiminto :ohita :viesti "Urakka ei löydy Harjasta. Ohita varustetoteuma."}
+      (nil? urakka_id)
+      {:toiminto :ohita :viesti (format "Muutoksen lähteen %s urakkaa ei löydy Harjasta. Ohita varustetoteuma." muutoksen-lahde-oid)}
       ; 4
       (not (contains? +kaikki-tietolajit+ (keyword (:tietolaji varustetoteuma))))
       {:toiminto :ohita :viesti "Tietolaji ei vastaa Harjan valittuja tietojajeja. Ohita varustetoteuma."}
@@ -231,7 +233,8 @@
       ; 3
       (not (aikavalit-leikkaavat varuste-olemassaolo urakka-olemassaolo))
       {:toiminto :varoita :viesti
-       (str "version-voimassaolon alkupvm ja loppupvm pitää leikata urakan keston kanssa alkupvm: " alkupvm " loppupvm: " loppupvm)}
+       (str "version-voimassaolon alkupvm: " alkupvm " pitää sisältyä urakan aikaväliin. "
+            "Urakan id: " urakka_id " voimassaolo: {:alkupvm " (:alkupvm urakka-olemassaolo) " :loppupvm " (:loppupvm urakka-olemassaolo) "}")}
       ; 5
       (nil? (:toteuma varustetoteuma))
       {:toiminto :varoita :viesti "Toimenpide ei ole lisäys, päivitys, poisto, tarkastus, korjaus tai puhdistus"}
@@ -244,8 +247,24 @@
 
 (defn varusteen-lisatieto [konversio-fn tietolaji kohde]
   (when (= (name +liikennemerkki-tietolaji+) tietolaji)
-    (konversio-fn
-      "v/vtlm" (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero]))))
+    (let [asetusnumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :asetusnumero])
+          lakinumero (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lakinumero])
+          lisatietoja (get-in kohde [:ominaisuudet :toiminnalliset-ominaisuudet :lisatietoja])
+          merkki (cond
+                   (and asetusnumero (nil? lakinumero))
+                   (str (konversio-fn "v/vtlm" asetusnumero))
+
+                   (and (nil? asetusnumero) lakinumero)
+                   (konversio-fn "v/vtlmln" lakinumero)
+
+                   (and (nil? asetusnumero) (nil? lakinumero))
+                   "VIRHE: Liikennemerkin asetusnumero ja lakinumero tyhjiä Tievelhossa"
+
+                   (and asetusnumero lakinumero)
+                   "VIRHE: Liikennemerkillä sekä asetusnumero että lakinumero Tievelhossa")]
+      (if lisatietoja
+        (str merkki ": " lisatietoja)
+        merkki))))
 
 (defn varusteen-kuntoluokka [konversio-fn kohde]
   (let [kuntoluokka (get-in kohde [:ominaisuudet :kunto-ja-vauriotiedot :yleinen-kuntoluokka])]
@@ -264,8 +283,8 @@
             ; Kuvittelemme, ettei ole kovin yleistä, että yhdessä
             ; varusteen versiossa on monta toimenpidettä
             (log/warn (str "Löytyi varusteversio, jolla on monta toimenpidettä: oid: " (:ulkoinen-oid kohde)
-                           " version-alku: " version-alku " toimenpiteet(suodatettu): " toimenpidelista
-                           " Otimme vain 1. toimenpiteen talteen."))
+                           " version-alku: " version-alku " toimenpiteet(suodatettu): (" (str/join ", " (map #(str "\"" % "\"") toimenpidelista))
+                           ") Otimme vain 1. toimenpiteen talteen."))
             (first toimenpidelista))
 
           (= 1 (count toimenpidelista))
@@ -322,14 +341,13 @@
                         :muokattu muokattu}
         urakka-olemassaolo (urakka-pvmt-idlla-fn (:urakka_id varustetoteuma))
         {toiminto :toiminto
-         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo)]
-    (when viesti (log/debug viesti))
+         viesti :viesti} (tarkasta-varustetoteuma varustetoteuma urakka-olemassaolo (:muutoksen-lahde-oid kohde))]
     (cond
       (= :tallenna toiminto)                                ; <3
-      {:tulos varustetoteuma :virheviesti nil}
+      {:tulos varustetoteuma :virheviesti nil :ohitusviesti nil}
 
       (= :ohita toiminto)                                 ; :|
-      {:tulos nil :virheviesti nil}
+      {:tulos nil :virheviesti nil :ohitusviesti viesti}
 
       (= :varoita toiminto)                                 ; :(
-      {:tulos nil :virheviesti viesti})))
+      {:tulos nil :virheviesti viesti :ohitusviesti nil})))

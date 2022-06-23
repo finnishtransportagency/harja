@@ -93,7 +93,7 @@
                                                                      :yllapitokohde-id (:id %)})))
                                 ypk)
                               (map
-                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta %))
+                                #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
                                 ypk)
                               (map
                                 #(assoc % :maksuerat (vec (sort-by :maksueranumero (:maksuerat %))))
@@ -349,7 +349,10 @@
                                  (assoc p :ilmoitustiedot
                                           (muunna-tallennetut-ilmoitustiedot-lomakemuotoon (:ilmoitustiedot p)))
                                  (taydenna-paallystysilmoituksen-kohdeosien-tiedot p))
-        kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus)
+        kokonaishinta-ilman-maaramuutoksia (yllapitokohteet-domain/yllapitokohteen-kokonaishinta paallystysilmoitus
+                                                                                                 ;; käytännössä kaikilla kohteilla on vuodet-sarakkeessa vain yksi vuosi mutta se on sekvenssissä
+                                                                                                 (apply max (or (:vuodet paallystysilmoitus)
+                                                                                                                [(pvm/vuosi (pvm/nyt))])))
         kommentit (into []
                         (comp (map konversio/alaviiva->rakenne)
                               (map (fn [{:keys [liite] :as kommentti}]

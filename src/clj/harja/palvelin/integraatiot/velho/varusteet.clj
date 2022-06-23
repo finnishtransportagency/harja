@@ -148,10 +148,8 @@
   [db muutoksen-lahde-oid]
   (get (memo-velho-oid->urakka-map db) muutoksen-lahde-oid))
 
-(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid sijainti alkusijainti version-voimassaolo alkaen] :as kohde}]
-  (or
-    (hae-urakka-velho-oidlla db muutoksen-lahde-oid)
-    (urakka-sijainnin-avulla db sijainti alkusijainti version-voimassaolo alkaen))) ; TODO VHAR-6161 Poista sijantiin perustuva urakan päättely
+(defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid] :as kohde}]
+  (hae-urakka-velho-oidlla db muutoksen-lahde-oid))
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
@@ -362,10 +360,10 @@
                                     +kohde-haku-maksimi-koko+
                                     nil
                                     oidit)
-                  kaikki-onnistunut (every? #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
-                                                                               % tallenna-fn tallenna-virhe-fn)
-                                            oidit-alijoukot)]
-              (if kaikki-onnistunut
+                  tulokset (map #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
+                                                                       % tallenna-fn tallenna-virhe-fn)
+                                   oidit-alijoukot)]
+              (if (every? true? tulokset)
                 (do
                   (tallenna-hakuaika-fn haku-alkanut)
                   true)
@@ -450,28 +448,34 @@
                                   tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                                   tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
                                   tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
-                                                        (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
-                                                                   " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
-                                                        (let [{varustetoteuma :tulos
-                                                               virheviesti :virheviesti
-                                                               ohitus-syy :ohitus-syy} (jasenna-ja-tarkasta-varustetoteuma
-                                                                                         db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
-                                                          (cond varustetoteuma
-                                                                (do
-                                                                  (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
-                                                                  true)
+                                                        (try
+                                                          (let [{varustetoteuma :tulos
+                                                                 virheviesti :virheviesti
+                                                                 ohitusviesti :ohitusviesti} (jasenna-ja-tarkasta-varustetoteuma
+                                                                                             db (assoc kohde :kohdeluokka tietolahteen-kohdeluokka))]
+                                                            (cond varustetoteuma
+                                                                  (do
+                                                                    (log/debug "Tallennetaan kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid
+                                                                               " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku))
+                                                                    (lisaa-tai-paivita-kantaan db varustetoteuma kohde)
+                                                                    true)
 
-                                                                virheviesti
-                                                                (do
-                                                                  (lokita-ja-tallenna-hakuvirhe
-                                                                    db kohde
-                                                                    (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
-                                                                         (format "%s muokattu: %s validointivirhe: %s"
-                                                                                 oid muokattu virheviesti)))
-                                                                  false)
+                                                                  virheviesti
+                                                                  (do
+                                                                    (lokita-ja-tallenna-hakuvirhe
+                                                                      db kohde
+                                                                      (str "hae-varustetoteumat-velhosta: tallenna-toteuma-fn: Kohde ei onnistu muuttaa Harjan muotoon. ulkoinen_oid: "
+                                                                           (format "%s muokattu: %s validointivirhe: %s"
+                                                                                   oid muokattu virheviesti)))
+                                                                    false)
 
-                                                                :else
-                                                                :ohitus)))]
+                                                                  :else
+                                                                  (log/debug "Ohitettiin varustetoteuma. kohdeluokka: " tietolahteen-kohdeluokka "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku) " viesti: " ohitusviesti)))
+                                                          (catch Throwable t
+                                                            (log/error "Poikkeus käsiteltäessä varustetoteumaa. Kohdeluokka: "tietolahteen-kohdeluokka
+                                                                       "oid: " oid " version-voimassaolo.alku: " (-> kohde :version-voimassaolo :alku)
+                                                                       " Throwable:" t)
+                                                            (throw t))))]
                               (hae-ja-tallenna
                                 tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
                                 token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))
@@ -582,7 +586,7 @@
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "velho" "urakoiden-haku" nil
       (fn [konteksti]
-        (let [virheet (atom #{})]                           ;TODO <- Laita virheet tänne
+        (let [virheet (atom #{})]
           (when-let [token (hae-velho-token token-url varuste-kayttajatunnus varuste-salasana konteksti
                                             (fn [x]
                                               (swap! virheet conj (str "Virhe velho token haussa " x))

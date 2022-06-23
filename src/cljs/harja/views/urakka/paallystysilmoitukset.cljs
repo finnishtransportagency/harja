@@ -242,7 +242,7 @@
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div
-   [valinnat/vuosi {}
+   [valinnat/vuosi {:vayla-tyyli? true}
     (t/year (:alkupvm urakka))
     (t/year (:loppupvm urakka))
     urakka/valittu-urakan-vuosi
@@ -258,11 +258,13 @@
                                                      ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
                                                      ;; joskus refaktoroitua
                                                      (reset! yllapito-tiedot/tienumero valittu-arvo)
-                                                     (e! (paallystys/->SuodataYllapitokohteet)))]
+                                                     (e! (paallystys/->SuodataYllapitokohteet)))
+    {:otsikon-luokka "alasvedon-otsikko-vayla"}]
    [yleiset/pudotusvalikko
     "Järjestä kohteet"
     {:valinta pot-jarjestys
      :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
+     :vayla-tyyli? true
      :format-fn {:tila "Tilan mukaan"
                  :kohdenumero "Kohdenumeron mukaan"
                  :muokkausaika "Muokkausajan mukaan"}}

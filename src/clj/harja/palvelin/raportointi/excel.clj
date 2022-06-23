@@ -57,15 +57,6 @@
   (fn [[tyyppi &_] _ _ _]
     tyyppi))
 
-(defmethod aseta-kaava! :summa-vasen [[_ alkusarake-nro] cell rivi-nro sarake-nro]
-  (.setCellFormula cell
-                   (str "SUM("
-                        (solu rivi-nro alkusarake-nro)
-                        ":"
-                        (solu rivi-nro (dec sarake-nro))
-                        ")")))
-
-
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
     (.replace data "\u00AD" "")
@@ -84,6 +75,31 @@
                       (if (= yksikko "%")
                         nil
                         [:kustomi desimaalien-maara]))])
+
+(defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
+                                                          korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
+  (let [etuliite (cond
+                   (neg? arvo) "- "
+                   (zero? arvo) ""
+                   :else "+ ")
+        arvo (Math/abs (float arvo))
+        prosentti (Math/abs (float prosentti))
+        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+        solun-tyyli (if-not (empty? solun-tyyli)
+                      solun-tyyli
+                      oletustyyli)
+        solun-tyyli (if ala-korosta?
+                      (dissoc solun-tyyli :background)
+                      solun-tyyli)
+        solun-tyyli (if varoitus?
+                      (merge solun-tyyli
+                        {:background :red
+                         :font {:color :white}})
+                      solun-tyyli)]
+    [(str etuliite
+       (cond desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+             :else arvo)
+       (when prosentti (str " (" etuliite (fmt/prosentti-opt prosentti) ")"))) solun-tyyli]))
 
 ;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
 ;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
@@ -119,6 +135,9 @@
 
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
+
+(defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
+  [arvo solun-tyyli])
 
 (defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
   (dorun
