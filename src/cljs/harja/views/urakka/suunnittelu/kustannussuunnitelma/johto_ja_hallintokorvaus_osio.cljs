@@ -1014,9 +1014,19 @@
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)]
+        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
+        rivin-avaimet (keys @data)
+        omat-toimenkuvat (r/atom (reduce (fn [omat rivin-avain]
+                                           (let [arvo (get @data rivin-avain)]
+                                             (if (clj-str/includes? rivin-avain "oma")
+                                               (assoc-in omat [rivin-avain] arvo)
+                                               omat)))
+                                   {} rivin-avaimet))
+        _ (js/console.log "ui:lta omat-toimenkuvat: " (pr-str @omat-toimenkuvat))
+        ]
     (fn [app indeksit]
       (let [vetolaatikot (luo-vetolaatikot data)
+            ;omat-vetolaatikot (luo-vetolaatikot omat-toimenkuvat)
             kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
             kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
@@ -1027,9 +1037,11 @@
          [debug/debug app]
          ;[debug/debug @data]
          ;[debug/debug vetolaatikot]
+         ;; Kaikille yhteiset toimenkuvat
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
            :id "toimenkuvat-taulukko"
+           :luokat ["poista-bottom-margin"]
            :voi-lisata? false
            :voi-kumota? false
            :jarjesta :jarjestys
@@ -1041,10 +1053,37 @@
           [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
            {:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
-          data]]))))
+          data]
+         ;; Urakkakohtaiset toimenkuvat
+         [vanha-grid/muokkaus-grid
+          {:piilota-table-header? true
+           :id "omat-toimenkuvat-taulukko"
+           :voi-lisata? false
+           :voi-kumota? false
+           :jarjesta :jarjestys
+           :piilota-toiminnot? true
+           :on-rivi-blur (fn [rivin-tiedot]
+                           (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
+                                 uusi-toimenkuva-nimi (:toimenkuva-maksukausi-tunniste rivin-tiedot)
+                                 rivin-nimi (:rivin-nimi rivin-tiedot)
+                                 _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
+                             ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
+                             (if (not= uusi-toimenkuva-nimi rivin-nimi)
+                               (do
+                                 (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
+                                 (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))
+                               (tallenna-vuosipalkka data
+                                 {:hoitokausi kuluva-hoitokausi
+                                  :kopioi-tuleville? kopioidaan-tuleville-vuosille?}
+                                 rivin-tiedot))))
+           :voi-poistaa? (constantly false)
+           :vetolaatikot vetolaatikot}
+          [{:nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly true) :leveys "80%"}
+           {:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+           {:nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
+          omat-toimenkuvat]]))))
 
 (def piilota-2022-taulukko? false)
-(def vertailuvuosi 2018)
 
 (defn- johto-ja-hallintokorvaus
   [app vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
@@ -1075,12 +1114,12 @@
          [yleiset/ajax-loader])
          
        (cond
-         (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi vertailuvuosi))
+         (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
          ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
          [:div {:class (when vahvistettu? "osio-vahvistettu")}
           [grid/piirra johto-ja-hallintokorvaus-grid]]
 
-         (and (>= alkuvuosi vertailuvuosi) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+         (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
          [:div {:class (when vahvistettu? "osio-vahvistettu")}
           [taulukko-2022-eteenpain app indeksit]]
 
