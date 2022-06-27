@@ -120,7 +120,7 @@ INSERT INTO toteuman_reittipisteet (toteuma, luotu, reittipisteet) VALUES ((SELE
                                                                                ]::reittipistedata[]);
 
 
--- Oulun MHU 2019-2024, talvisuolauksen GPS-pisteet kevyen liikenteen väylillä.
+-- Oulun alueurakka 2014-2019, talvisuolauksen GPS-pisteet kevyen liikenteen väylillä.
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019') AND paasopimus IS null),
@@ -139,12 +139,12 @@ INSERT INTO toteuman_reittipisteet (toteuma, luotu, reittipisteet)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Talvisuolaus Ylikiimingissä'), NOW(),
         ARRAY [
             -- kevli
-            ROW ('2018-10-15 13:00.00', st_makepoint(460185.66, 7212072.31)::POINT, 6, NULL,
+            ROW ('2018-10-15 13:00.00', st_makepoint(460185.66, 7212072.31)::POINT, 10, NULL,
                 ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata,
             -- kevli
-            ROW ('2018-10-15 13:01.00', st_makepoint(460213.40, 7212061.69) ::POINT, 6, NULL,
+            ROW ('2018-10-15 13:01.00', st_makepoint(460213.40, 7212061.69) ::POINT, 10, NULL,
                 ARRAY [((SELECT id FROM toimenpidekoodi WHERE nimi = 'Suolaus'), 0.785)]::reittipiste_tehtava[],
                 ARRAY [((SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'),
                         0.785)]::reittipiste_materiaali[])::reittipistedata,
