@@ -96,8 +96,8 @@
        yllapitokohteet)]))
 
 (defn yhteensa-taulukko [yllapitokohteet muut-kustannukset urakan-sanktiot vuosi]
-  (let [muut-kustannukset-yhteensa (reduce + 0 (concat (keep :hinta muut-kustannukset)
-                                                       (keep :maara urakan-sanktiot)))]
+  (let [kohdistamattomat-sanktiot-yhteensa (reduce + 0 (keep :maara urakan-sanktiot))
+        muut-kustannukset-yhteensa (reduce + 0 (keep :hinta muut-kustannukset))]
     [:taulukko {:otsikko "Yhteenveto"
                 :tyhja (when (empty? yllapitokohteet) "Ei kohteita.")
                 :sheet-nimi "Ylläpitokohteet yhteensä"}
@@ -114,7 +114,10 @@
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
+        {:otsikko (str "Sakot ja bonukset"
+                       (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                         " (muut kuin kohteisiin liittyvät)"))
+         :leveys 10 :fmt :raha}
         {:otsikko "Muut kustannukset" :leveys 10 :fmt :raha}]
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvonväh." :leveys 5 :fmt :raha}
@@ -124,25 +127,26 @@
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      [(concat
         [nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        nil
-        muut-kustannukset-yhteensa]
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         nil
+         kohdistamattomat-sanktiot-yhteensa
+         muut-kustannukset-yhteensa]
         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
           [(reduce + 0 (keep :arvonvahennykset yllapitokohteet))
            (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))])
         [(reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
          (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
          (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
+            kohdistamattomat-sanktiot-yhteensa
             muut-kustannukset-yhteensa)])]]))
 
 (defn muut-kustannukset-taulukko [muut-kustannukset urakan-sanktiot]
@@ -167,7 +171,7 @@
 (defn suorita [db user {:keys [urakka-id vuosi] :as tiedot}]
   (let [raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                     ", " raportin-nimi ", suoritettu " (fmt/pvm (pvm/nyt)))
+                     ", " raportin-nimi " " vuosi)
         yllapitokohteet+kustannukset (->> (into []
                                                 (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
                                                 (hae-yllapitokohteet db {:urakka urakka-id
@@ -182,7 +186,7 @@
                                                                     :vuosi vuosi})
                             (map #(assoc % :maara (- (:maara %)))))]
     [:raportti {:orientaatio :landscape
-                :nimi raportin-nimi}
+                :nimi otsikko}
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi)
      (when (some :maaramuutokset-ennustettu? yllapitokohteet+kustannukset) [:teksti "Taulukko sisältää ennustettuja määrämuutoksia."])
      (yllapitokohteet-taulukko (filter (comp not :yhaid) yllapitokohteet+kustannukset) :paikkaus vuosi)

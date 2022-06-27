@@ -213,7 +213,7 @@
 
          [yllapitokohteet-view/yllapitokohteet
           ur
-          paallystys-tiedot/harjan-paikkauskohteet
+          paallystys-tiedot/muut-kuin-yha-kohteet
           {:otsikko      (if (< @urakka/valittu-urakan-vuosi 2020)
                            "Muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
                            "Muut kohteet")

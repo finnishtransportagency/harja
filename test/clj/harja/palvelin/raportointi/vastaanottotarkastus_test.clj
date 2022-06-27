@@ -51,7 +51,7 @@
   [:taulukko {:otsikko "Muut kustannukset", :tyhja "Ei muita kustannuksia.", :sheet-nimi "Muut kustannukset"} [{:otsikko "Pvm", :leveys 10, :fmt :pvm} {:otsikko "Selitys", :leveys 10} {:otsikko "Summa", :leveys 10, :fmt :raha}] (list [(clojure.instant/read-instant-timestamp "2017-01-01T22:06:06.370000000-00:00") "Sakko" -1500M])])
 
 (def odotettu-yhteenveto-2017
-  [:taulukko {:otsikko "Yhteenveto", :tyhja nil, :sheet-nimi "Ylläpitokohteet yhteensä"} (list {:otsikko "", :leveys 5} {:otsikko "", :leveys 5} {:otsikko "", :leveys 10} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "Muut kustannukset", :leveys 10, :fmt :raha} {:otsikko "Arvonväh.", :leveys 5, :fmt :raha} {:otsikko "Sakko/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) [(list nil nil nil nil nil nil nil nil nil nil nil nil nil -1500M 10671M -1000M 5123.95M 118M 24517.95M)]])
+  [:taulukko {:otsikko "Yhteenveto", :tyhja nil, :sheet-nimi "Ylläpitokohteet yhteensä"} (list {:otsikko "", :leveys 5} {:otsikko "", :leveys 5} {:otsikko "", :leveys 10} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:fmt :raha :leveys 10 :otsikko "Sakot ja bonukset (muut kuin kohteisiin liittyvät)"} {:otsikko "Muut kustannukset", :leveys 10, :fmt :raha} {:otsikko "Arvonväh.", :leveys 5, :fmt :raha} {:otsikko "Sakko/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) [(list nil nil nil nil nil nil nil nil nil nil nil nil -1500M 0 10671M -1000M 5123.95M 118M 24517.95M)]])
 
 (def odotettu-aikataulu-2017
   [:aikajana {} (list #:harja.ui.aikajana{:otsikko "L03 - Leppäjärven ramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-18T21:00:00.000-00:00", :loppu #inst "2017-05-23T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Koko kohde: 19.05.2017 – 24.05.2017"} #:harja.ui.aikajana{:vari "#282B2A", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-18T21:00:00.000-00:00", :loppu #inst "2017-05-20T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Päällystys: 19.05.2017 – 21.05.2017"} #:harja.ui.aikajana{:vari "#DECB03", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-21T21:00:00.000-00:00", :loppu #inst "2017-05-22T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Tiemerkintä: 22.05.2017 – 23.05.2017"}]} #:harja.ui.aikajana{:otsikko "308a - Oulun ohitusramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-20T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulun ohitusramppi", :teksti "Koko kohde: aloitus 21.05.2017"} #:harja.ui.aikajana{:vari "#282B2A", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-20T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulun ohitusramppi", :teksti "Päällystys: aloitus 21.05.2017"}]} #:harja.ui.aikajana{:otsikko "310 - Oulaisten ohitusramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-25T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulaisten ohitusramppi", :teksti "Koko kohde: aloitus 26.05.2017"}]} #:harja.ui.aikajana{:otsikko "666 - Kuusamontien testi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-06-01T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Kuusamontien testi", :teksti "Koko kohde: aloitus 02.06.2017"}]})])
@@ -77,7 +77,7 @@
         aikataulu (-> vastaus last second)
         kohdeluettelo (-> vastaus last last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Vastaanottotarkastus"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Muhoksen päällystysurakka, Vastaanottotarkastus 2017"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2017))
     (is (= muut-kustannukset odotettu-muut-kustannukset-2017))
     (is (= paikkauskohteet odotettu-paikkauskohteet-2017))
@@ -121,23 +121,24 @@
     :sheet-nimi "Ylläpitokohteet yhteensä"
     :tyhja nil}
    (list {:leveys 5 :otsikko ""}
-    {:leveys 5 :otsikko ""}
-    {:leveys 10 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
-    {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
-    {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
-    {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   [(list nil nil nil nil nil nil nil nil nil nil nil nil nil 0 4543.95M 0M 4943.95M)]])
+         {:leveys 5 :otsikko ""}
+         {:leveys 10 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""} {:fmt :raha
+                                  :leveys 10
+                                  :otsikko "Sakot ja bonukset"}
+         {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
+         {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
+         {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
+         {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
+   [(list nil nil nil nil nil nil nil nil nil nil nil nil -1300M 0 4543.95M 0M 3643.95M)]])
 
 (def odotettu-aikataulu-2022
   [:aikajana
@@ -244,7 +245,7 @@
         aikataulu (-> vastaus last second)
         kohdeluettelo (-> vastaus last last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Vastaanottotarkastus"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2022"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2022))
     ;; muut kustannukset ja paikkauskohteet -osalta ei ole loogisia sarakemuutoksia vs. 2017, eikä testidatassa mitään sisältöä, joten ei assertoida
     ;; muita kustannuksia ja paikkauskohteita koska se on tehty 2017-testissä
