@@ -112,7 +112,19 @@ label.radio- {
     color: @black-lighter;
 
     &:before {
+      background-color: @white-default;
       border: 2px solid @white-darker;
+      color: @white-default;
+    }
+    &:checked {
+      &:before {
+        background-color: @white-darker;
+      }
+    }
+  }
+
+  &:disabled&:checked + label {
+    &:before {
       background-color: @white-darker;
     }
   }

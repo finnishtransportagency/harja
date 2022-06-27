@@ -92,7 +92,7 @@
         _ (u (str "UPDATE toteuma SET poistettu = true WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
         poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
         _ (u (str "UPDATE toteuma SET poistettu = false WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
-        _ (Thread/sleep 2000)]
+        _ (Thread/sleep 3500)]
     (is (= 200 (:status @vastaus)))
     (is (= 200 (:status @poistetut)))
     (sisaltaa-perustiedot (:body @vastaus))
