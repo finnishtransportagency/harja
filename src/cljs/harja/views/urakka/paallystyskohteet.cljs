@@ -213,10 +213,10 @@
 
          [yllapitokohteet-view/yllapitokohteet
           ur
-          paallystys-tiedot/harjan-paikkauskohteet
+          paallystys-tiedot/muut-kuin-yha-kohteet
           {:otsikko      (if (< @urakka/valittu-urakan-vuosi 2020)
-                           "Harjan paikkauskohteet ja muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
-                           "Harjan paikkauskohteet ja muut kohteet")
+                           "Muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
+                           "Muut kohteet")
            :kohdetyyppi  :paikkaus
            :yha-sidottu? false :valittu-vuosi @urakka/valittu-urakan-vuosi
            :piilota-tallennus? (when (< @urakka/valittu-urakan-vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.

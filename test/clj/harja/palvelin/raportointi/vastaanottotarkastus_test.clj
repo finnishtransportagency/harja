@@ -45,13 +45,13 @@
   [:taulukko {:otsikko "YHA-kohteet", :tyhja nil, :sheet-nimi "YHA-kohteet"} (list {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Ajorata", :leveys 3, :tasaa :oikea} {:otsikko "Kaista", :leveys 3, :tasaa :oikea} {:otsikko "Aosa", :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Tarjous­hinta", :leveys 5, :fmt :raha} {:otsikko "Määrä­muu­tokset", :leveys 5, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) (list (list "L03" nil "Leppäjärven ramppi" 20 1 11 1 0 3 0 3833 500 8 400M 205M 100M 2000M 4543.95M 0M 7248.95M) (list "308a" nil "Oulun ohitusramppi" 20 0 11 4 334 10 10 29092 605 8 9000M 0 200M nil 565M 100M 9865M) (list "310" nil "Oulaisten ohitusramppi" 20 0 1 19 5 21 15 10137 900 10 500M 0 3457M -3000M 5M 6M 968M) (list "666" nil "Kuusamontien testi" 20 0 1 26 1 41 15 79359 66 2 500M 0 3457M nil 5M 6M 3968M))])
 
 (def odotettu-paikkauskohteet-2017
-  [:taulukko {:otsikko "Harjan paikkauskohteet ja muut kohteet", :tyhja nil, :sheet-nimi "Harjan paikkauskohteet ja muut kohteet"} (list {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Ajorata", :leveys 3, :tasaa :oikea} {:otsikko "Kaista", :leveys 3, :tasaa :oikea} {:otsikko "Aosa" :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Toteutunut hinta", :leveys 10, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) (list (list "3456" nil "Ei YHA-kohde" 20 0 1 26 1 41 15 79359 66 2 nil 3457M nil 5M 6M 3968M))])
+  [:taulukko {:otsikko "Muut kohteet", :tyhja nil, :sheet-nimi "Muut kohteet"} (list {:otsikko "Kohde­numero", :leveys 5} {:otsikko "Tunnus", :leveys 5} {:otsikko "Nimi", :leveys 10} {:otsikko "Tie­numero", :leveys 3, :tasaa :oikea} {:otsikko "Ajorata", :leveys 3, :tasaa :oikea} {:otsikko "Kaista", :leveys 3, :tasaa :oikea} {:otsikko "Aosa" :leveys 3, :tasaa :oikea} {:otsikko "Aet", :leveys 3, :tasaa :oikea} {:otsikko "Losa", :leveys 3, :tasaa :oikea} {:otsikko "Let", :leveys 3, :tasaa :oikea} {:otsikko "Pit. (m)", :leveys 3, :tasaa :oikea} {:otsikko "KVL", :leveys 3, :tasaa :oikea} {:otsikko "YP-lk", :leveys 3} {:otsikko "Toteutunut hinta", :leveys 10, :fmt :raha} {:otsikko "Arvon muu­tok­set", :leveys 5, :fmt :raha} {:otsikko "Sakko­/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) (list (list "3456" nil "Ei YHA-kohde" 20 0 1 26 1 41 15 79359 66 2 nil 3457M nil 5M 6M 3968M))])
 
 (def odotettu-muut-kustannukset-2017
   [:taulukko {:otsikko "Muut kustannukset", :tyhja "Ei muita kustannuksia.", :sheet-nimi "Muut kustannukset"} [{:otsikko "Pvm", :leveys 10, :fmt :pvm} {:otsikko "Selitys", :leveys 10} {:otsikko "Summa", :leveys 10, :fmt :raha}] (list [(clojure.instant/read-instant-timestamp "2017-01-01T22:06:06.370000000-00:00") "Sakko" -1500M])])
 
 (def odotettu-yhteenveto-2017
-  [:taulukko {:otsikko "Yhteenveto", :tyhja nil, :sheet-nimi "Ylläpitokohteet yhteensä"} (list {:otsikko "", :leveys 5} {:otsikko "", :leveys 5} {:otsikko "", :leveys 10} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "Muut kustannukset", :leveys 10, :fmt :raha} {:otsikko "Arvonväh.", :leveys 5, :fmt :raha} {:otsikko "Sakko/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) [(list nil nil nil nil nil nil nil nil nil nil nil nil nil -1500M 10671M -1000M 5123.95M 118M 24517.95M)]])
+  [:taulukko {:otsikko "Yhteenveto", :tyhja nil, :sheet-nimi "Ylläpitokohteet yhteensä"} (list {:otsikko "", :leveys 5} {:otsikko "", :leveys 5} {:otsikko "", :leveys 10} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:otsikko "", :leveys 3} {:fmt :raha :leveys 10 :otsikko "Sakot ja bonukset (muut kuin kohteisiin liittyvät)"} {:otsikko "Muut kustannukset", :leveys 10, :fmt :raha} {:otsikko "Arvonväh.", :leveys 5, :fmt :raha} {:otsikko "Sakko/bonus", :leveys 5, :fmt :raha} {:otsikko "Side­aineen hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set", :leveys 5, :fmt :raha} {:otsikko "Kokonais­hinta", :leveys 5, :fmt :raha}) [(list nil nil nil nil nil nil nil nil nil nil nil nil -1500M 0 10671M -1000M 5123.95M 118M 24517.95M)]])
 
 (def odotettu-aikataulu-2017
   [:aikajana {} (list #:harja.ui.aikajana{:otsikko "L03 - Leppäjärven ramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-18T21:00:00.000-00:00", :loppu #inst "2017-05-23T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Koko kohde: 19.05.2017 – 24.05.2017"} #:harja.ui.aikajana{:vari "#282B2A", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-18T21:00:00.000-00:00", :loppu #inst "2017-05-20T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Päällystys: 19.05.2017 – 21.05.2017"} #:harja.ui.aikajana{:vari "#DECB03", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-21T21:00:00.000-00:00", :loppu #inst "2017-05-22T21:00:00.000-00:00", :kohde-nimi "Leppäjärven ramppi", :teksti "Tiemerkintä: 22.05.2017 – 23.05.2017"}]} #:harja.ui.aikajana{:otsikko "308a - Oulun ohitusramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-20T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulun ohitusramppi", :teksti "Koko kohde: aloitus 21.05.2017"} #:harja.ui.aikajana{:vari "#282B2A", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-20T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulun ohitusramppi", :teksti "Päällystys: aloitus 21.05.2017"}]} #:harja.ui.aikajana{:otsikko "310 - Oulaisten ohitusramppi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-05-25T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Oulaisten ohitusramppi", :teksti "Koko kohde: aloitus 26.05.2017"}]} #:harja.ui.aikajana{:otsikko "666 - Kuusamontien testi", :valitavoitteet nil, :ajat [#:harja.ui.aikajana{:reuna "black", :drag nil, :sahkopostitiedot nil, :alku #inst "2017-06-01T21:00:00.000-00:00", :loppu nil, :kohde-nimi "Kuusamontien testi", :teksti "Koko kohde: aloitus 02.06.2017"}]})])
@@ -77,7 +77,7 @@
         aikataulu (-> vastaus last second)
         kohdeluettelo (-> vastaus last last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Vastaanottotarkastus"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Muhoksen päällystysurakka, Vastaanottotarkastus 2017"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2017))
     (is (= muut-kustannukset odotettu-muut-kustannukset-2017))
     (is (= paikkauskohteet odotettu-paikkauskohteet-2017))
@@ -121,23 +121,24 @@
     :sheet-nimi "Ylläpitokohteet yhteensä"
     :tyhja nil}
    (list {:leveys 5 :otsikko ""}
-    {:leveys 5 :otsikko ""}
-    {:leveys 10 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:leveys 3 :otsikko ""}
-    {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
-    {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
-    {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
-    {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   [(list nil nil nil nil nil nil nil nil nil nil nil nil nil 0 4543.95M 0M 4943.95M)]])
+         {:leveys 5 :otsikko ""}
+         {:leveys 10 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""}
+         {:leveys 3 :otsikko ""} {:fmt :raha
+                                  :leveys 10
+                                  :otsikko "Sakot ja bonukset"}
+         {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
+         {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
+         {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
+         {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
+   [(list nil nil nil nil nil nil nil nil nil nil nil nil -1300M 0 4543.95M 0M 3643.95M)]])
 
 (def odotettu-aikataulu-2022
   [:aikajana
@@ -244,7 +245,7 @@
         aikataulu (-> vastaus last second)
         kohdeluettelo (-> vastaus last last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Vastaanottotarkastus"}))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2022"}))
     (is (= yha-kohteet odotettu-yha-kohteet-2022))
     ;; muut kustannukset ja paikkauskohteet -osalta ei ole loogisia sarakemuutoksia vs. 2017, eikä testidatassa mitään sisältöä, joten ei assertoida
     ;; muita kustannuksia ja paikkauskohteita koska se on tehty 2017-testissä

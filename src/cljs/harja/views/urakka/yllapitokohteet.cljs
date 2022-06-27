@@ -28,6 +28,7 @@
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
             [clojure.string :as string]
             [harja.ui.modal :as modal])
   (:require-macros [reagent.ratom :refer [reaction]]
@@ -1112,7 +1113,12 @@
                 sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
                 bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
-                muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
+                ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
+                kohdistamattomat-sanktiot-yhteensa (let [arvo (laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
+                                                     (if (> (Math/abs arvo) 0)
+                                                       (- arvo)
+                                                       arvo))
+                muut-yhteensa (laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
                 kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
                                    {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
                                     :toteutunut-hinta toteutunut-hinta-yhteensa
@@ -1122,7 +1128,8 @@
                                     :bitumi-indeksi bitumi-indeksi-yhteensa
                                     :kaasuindeksi kaasuindeksi-yhteensa}
                                    (:valittu-vuosi optiot))
-                                 (or muut-yhteensa 0))]
+                                 (or muut-yhteensa 0)
+                                 (or kohdistamattomat-sanktiot-yhteensa 0))]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
@@ -1132,7 +1139,8 @@
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
               :muut-hinta muut-yhteensa
-              :kokonaishinta kokonaishinta}]))]
+              :kokonaishinta kokonaishinta
+              :kohdistamattomat-sanktiot kohdistamattomat-sanktiot-yhteensa}]))]
 
     [grid/grid
      {:nayta-toimintosarake? true
@@ -1152,7 +1160,11 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
-      {:otsikko "" :nimi :tyhja :tyyppi :string :leveys toteutunut-hinta-leveys}
+      {:otsikko (str
+                  "Sakot ja bonukset"
+                  (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
+                    " (muut kuin kohteisiin liittyvät)")) :nimi :kohdistamattomat-sanktiot :tyyppi :numero :leveys toteutunut-hinta-leveys
+       :fmt fmt/euro-opt :tasaa :oikea}
       (when (= (:kohdetyyppi optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero
@@ -1166,7 +1178,7 @@
       {:otsikko "Muut kustan\u00ADnukset" :nimi :muut-hinta :fmt fmt/euro-opt :tyyppi :numero
        :leveys muut-leveys :tasaa :oikea}
       (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
-        {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
+        {:otsikko "Arvon\u00ADmuutokset." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
          :leveys arvonvahennykset-leveys :tasaa :oikea})
       (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
         {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
