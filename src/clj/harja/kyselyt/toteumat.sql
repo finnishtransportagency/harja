@@ -665,7 +665,7 @@ WHERE
                           WHERE id = :toimenpideinstanssi AND loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: hae-pisteen-hoitoluokat
--- Talvihoitoluokilta estetään hoitoluokat 8, 9 ja 10, jotka ovat kevyen liikenteen väyliä, koska
+-- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
 -- niitä ei todellisuudessa suolata. Näissä tapauksissa GPS-piste osoittaa virheellisesti kevyen liikenteen
 -- väylälle, ja halutaan kohdistaa toteuma sen sijaan lähimmälle ajoväylälle.
 SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
