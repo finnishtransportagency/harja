@@ -13,25 +13,35 @@ BEGIN
                      WHERE t.alkanut BETWEEN alku::DATE AND (loppu::DATE + interval '1 day')::DATE
                        AND (urakka_ IS NULL OR t.urakka = urakka_)
                        AND t.poistettu IS false
-                       AND array_length(tr.reittipisteet, 1) > 0)
+                       AND array_length(tr.reittipisteet, 1) > 0
+                       -- Vain talvisuola ja formiaatti
+                       AND EXISTS(SELECT DISTINCT m.materiaalikoodi
+                                  FROM unnest(tr.reittipisteet) trp
+                                           JOIN LATERAL unnest(trp.materiaalit) m ON TRUE
+                                  WHERE materiaalikoodi IN
+                                        (select id
+                                         FROM materiaalikoodi
+                                         where materiaalityyppi IN ('talvisuola', 'formiaatti')))
+                       -- Vain kevyen liikenteen väylillä
+                       AND EXISTS(SELECT DISTINCT trp.talvihoitoluokka
+                                  FROM unnest(tr.reittipisteet) trp
+                                  WHERE trp.talvihoitoluokka IN (9, 10, 11)))
         LOOP
-            IF EXISTS(SELECT * FROM unnest(uusi_trp.reittipisteet) WHERE talvihoitoluokka IN (9, 10, 11)) THEN
-                UPDATE toteuman_reittipisteet trp
-                SET reittipisteet = (SELECT ARRAY_AGG((rp.aika, rp.sijainti,
-                                                       (CASE
-                                                            WHEN rp.talvihoitoluokka IN (9, 10, 11)
-                                                                THEN hoitoluokka_pisteelle(rp.sijainti::GEOMETRY,
-                                                                                           'talvihoito',
-                                                                                           250, '{9,10,11}')
-                                                            ELSE
-                                                                rp.talvihoitoluokka
-                                                           END),
-                                                       rp.soratiehoitoluokka, rp.tehtavat,
-                                                       rp.materiaalit)::reittipistedata)
-                                     FROM unnest(uusi_trp.reittipisteet) rp)::reittipistedata[]
-                WHERE trp.toteuma = uusi_trp.toteuma;
-                maara := maara + count(uusi_trp.reittipisteet);
-            END IF;
+            UPDATE toteuman_reittipisteet trp
+            SET reittipisteet = (SELECT ARRAY_AGG((rp.aika, rp.sijainti,
+                                                   (CASE
+                                                        WHEN rp.talvihoitoluokka IN (9, 10, 11)
+                                                            THEN hoitoluokka_pisteelle(rp.sijainti::GEOMETRY,
+                                                                                       'talvihoito',
+                                                                                       250, '{9,10,11}')
+                                                        ELSE
+                                                            rp.talvihoitoluokka
+                                                       END),
+                                                   rp.soratiehoitoluokka, rp.tehtavat,
+                                                   rp.materiaalit)::reittipistedata)
+                                 FROM unnest(uusi_trp.reittipisteet) rp)::reittipistedata[]
+            WHERE trp.toteuma = uusi_trp.toteuma;
+            maara := maara + count(uusi_trp.reittipisteet);
         END LOOP;
 
 
