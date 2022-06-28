@@ -2227,13 +2227,14 @@
                                           :toimenkuva-id toimenkuva-id
                                           :jarjestys 99
                                           :rivin-nimi omanimi
+                                          :oma-toimenkuva? true
                                           :tunnit (or tunnit nil)
                                           :tuntipalkka (or tuntipalkka nil)
                                           :tuntipalkka-indeksikorjattu (or tuntipalkka-indeksikorjattu nil)
                                           :maksukuukaudet kuukaudet)
                                    (select-keys #{:aika :toimenkuva-id :toimenkuva :tunnit
                                                   :tuntipalkka :tuntipalkka-indeksikorjattu
-                                                  :rivin-nimi :jarjestys
+                                                  :rivin-nimi :jarjestys :oma-toimenkuva?
                                                   :kuukausi :vuosi :osa-kuukaudesta :maksukuukaudet}))
                             ;_ (js/console.log "jh-korvaukset-vastauksesta :: data" (pr-str data) )
                             ]
@@ -2266,12 +2267,16 @@
   uuden taulukon ymmärtämään muotoon.
   Se tapahtuu tässä."
   [data hoitokauden-numero]
+  (println "datataa" data)
+  (println "datataa" (keys data))
   (let [toimenkuvat (keys data)
         kokonaisdata (reduce (fn [kokonaisuus toimenkuva]
                                (let [toimenkuvan-data (get data toimenkuva)
                                      toimenkuvan-nimi (if (map? toimenkuvan-data)
                                                         toimenkuva
-                                                        (:toimenkuva (first (first toimenkuvan-data))))
+                                                        (or
+                                                          (:toimenkuva (first (first toimenkuvan-data)))
+                                                          (:rivin-nimi (first (first toimenkuvan-data)))))
                                      - (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-data" (pr-str toimenkuvan-data))
                                      - (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-nimi" (pr-str toimenkuvan-nimi))
                                      toimenkuvan-data-hoitokausittain (if (map? toimenkuvan-data)
@@ -2302,12 +2307,16 @@
                                                  ;; Sisältää yhtä monta riviä, kuin urakalla on hoitokausia
                                                  (range 1 (inc (count toimenkuvan-data-hoitokausittain))))
                                      jarjestys (first (filter #(= toimenkuva (:toimenkuva %)) (pohjadatan-versio)))
+                                     _ (println "jarjjestys" jarjestys (if-not (nil? jarjestys)
+                                                                      (:jarjestys jarjestys)
+                                                                      99))
                                      toimenkuvan-tiedot {:toimenkuva-maksukausi-tunniste toimenkuvan-nimi
-                                                         :jarjestys (:jarjestys (if-not (nil? jarjestys)
-                                                                                  jarjestys
-                                                                                  99))
+                                                         :jarjestys (if-not (nil? jarjestys)
+                                                                      (:jarjestys jarjestys)
+                                                                      99)
                                                          :rivin-nimi (:rivin-nimi (first (first toimenkuvan-data)))
                                                          :maksukausi :molemmat
+                                                         :oma-toimenkuva? (:oma-toimenkuva? (first (first toimenkuvan-data)))
                                                          :toimenkuva toimenkuvan-nimi
                                                          :ennen-urakkaa? false ;; Todo: Mistä tämä saadaan?
                                                          :vuosipalkka vuosipalkka ;; Lasketaan valitun hoitovuoden datasta :tunnit * :tuntipalkka * kuukaudet
@@ -2321,9 +2330,10 @@
         jarjestetty-data (sort-by :jarjestys < (map #(second %) kokonaisdata))
         kokonaisdata-jarjestetty (reduce (fn [data rivi]
                                (assoc data (str (:toimenkuva rivi)) rivi))
-                       {} jarjestetty-data)
+                                   {} jarjestetty-data)
+        data-ilman-omia-toimenkuvia (filter #(not (:oma-toimenkuva? (second %))) kokonaisdata-jarjestetty)
         _ (reset! toimenkuvadata-atomi kokonaisdata-jarjestetty)]
-    toimenkuvadata-atomi))
+    kokonaisdata-jarjestetty))
 
 (def ota-maksuerat (map #(-> % second :maksuerat-per-hoitovuosi-per-kuukausi)))
 (def ota-kuukaudet (mapcat vals))
@@ -2517,6 +2527,7 @@
   (process-event [{:keys [vastaus]} app]
     (let [{urakan-aloituspvm :alkupvm} (-> @tiedot/tila :yleiset :urakka)
           pohjadata (urakan-ajat)]
+      (println "hejsan " (:johto-ja-hallintokorvaukset vastaus))
       (when pohjadata
         (let [;; Kiinteähintaiset hankinnat
               hankinnat (:kiinteahintaiset-tyot vastaus)

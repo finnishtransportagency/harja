@@ -999,6 +999,7 @@
   [atomi]  
   (into {} (map (juxt first #(let [rivi (second %)
                                    polku (t/->toimenkuva-maksukausi rivi)]
+                               (println "datataata" (first %) rivi)
                                [vetolaatikko-komponentti atomi polku rivi]))) @atomi))
 
 (defn- kun-ei-syoteta-erikseen
@@ -1011,14 +1012,33 @@
          (= 1 hoitokausi))
       (false? (:ennen-urakkaa? tiedot)))))
 
+(defn tallenna-toimenkuvan-tiedot
+  [data-atomi optiot rivin-tiedot]
+  (if (:oma-toimenkuva? rivin-tiedot)
+    (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
+          uusi-toimenkuva-nimi (:toimenkuva-maksukausi-tunniste rivin-tiedot)
+          rivin-nimi (:rivin-nimi rivin-tiedot)
+          _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
+      ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
+      (if (not= uusi-toimenkuva-nimi rivin-nimi)
+        (do
+          (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
+          (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))
+        (tallenna-vuosipalkka
+          data-atomi
+          optiot
+          rivin-tiedot)))))
+
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
-        rivin-avaimet (keys @data)
+        kapistelty-data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
+        data t/toimenkuvadata-atomi
+        rivin-avaimet (keys kapistelty-data)
         omat-toimenkuvat (r/atom (reduce (fn [omat rivin-avain]
-                                           (let [arvo (get @data rivin-avain)]
-                                             (if (clj-str/includes? rivin-avain "oma")
+                                           (let [arvo (get kapistelty-data rivin-avain)]
+                                             (println "arvojsan "arvo)
+                                             (if (:oma-toimenkuva? arvo)
                                                (assoc-in omat [rivin-avain] arvo)
                                                omat)))
                                    {} rivin-avaimet))
@@ -1026,7 +1046,7 @@
         ]
     (fn [app indeksit]
       (let [vetolaatikot (luo-vetolaatikot data)
-            ;omat-vetolaatikot (luo-vetolaatikot omat-toimenkuvat)
+         ;   omat-vetolaatikot (luo-vetolaatikot omat-toimenkuvat)
             kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
             kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
@@ -1046,41 +1066,30 @@
            :voi-kumota? false
            :jarjesta :jarjestys
            :piilota-toiminnot? true
-           :on-rivi-blur (r/partial tallenna-vuosipalkka data {:hoitokausi kuluva-hoitokausi
-                                                               :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
+           :on-rivi-blur (r/partial tallenna-toimenkuvan-tiedot
+                           data
+                           {:hoitokausi kuluva-hoitokausi
+                            :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly false) :leveys "80%"}
-           {:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%"}
+           {:otsikko "kkk" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]
          ;; Urakkakohtaiset toimenkuvat
-         [vanha-grid/muokkaus-grid
-          {:piilota-table-header? true
+         #_[vanha-grid/muokkaus-grid
+          {;:piilota-table-header? true
            :id "omat-toimenkuvat-taulukko"
            :voi-lisata? false
            :voi-kumota? false
            :jarjesta :jarjestys
            :piilota-toiminnot? true
-           :on-rivi-blur (fn [rivin-tiedot]
-                           (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
-                                 uusi-toimenkuva-nimi (:toimenkuva-maksukausi-tunniste rivin-tiedot)
-                                 rivin-nimi (:rivin-nimi rivin-tiedot)
-                                 _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
-                             ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
-                             (if (not= uusi-toimenkuva-nimi rivin-nimi)
-                               (do
-                                 (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
-                                 (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))
-                               (tallenna-vuosipalkka data
-                                 {:hoitokausi kuluva-hoitokausi
-                                  :kopioi-tuleville? kopioidaan-tuleville-vuosille?}
-                                 rivin-tiedot))))
+           :on-rivi-blur (constantly true)
            :voi-poistaa? (constantly false)
-           :vetolaatikot vetolaatikot}
-          [{:nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly true) :leveys "80%"}
-           {:tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
-           {:nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
+           }
+          [{:otsikko "Satan" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly true) :leveys "80%" :placeholder "Oma toimenkuva"}
+           {:otsikko "Satan" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+           {:otsikko "Satan" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           omat-toimenkuvat]]))))
 
 (def piilota-2022-taulukko? false)
