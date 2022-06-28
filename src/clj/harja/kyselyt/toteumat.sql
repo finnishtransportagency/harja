@@ -1425,4 +1425,5 @@ ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
 -- name: siirra-toteumat-analytiikalle
-select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP);
+select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+
