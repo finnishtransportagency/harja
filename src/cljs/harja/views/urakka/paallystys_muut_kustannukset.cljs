@@ -22,7 +22,7 @@
   (log "rivi-poistettavissa? " (pr-str m))
   (or (-> m :muokattava) (-> m :id neg?)))
 
-(def grid-opts {:otsikko "Urakan muut kustannukset (ei kohdekohtaiset)"
+(def grid-opts {:otsikko "Urakan muut kustannukset"
                 :voi-lisata? true
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement rivi-poistettavissa?)
