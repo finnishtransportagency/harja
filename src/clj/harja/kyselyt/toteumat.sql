@@ -1391,40 +1391,39 @@ SELECT alkanut
  WHERE id = :id;
 
 -- name: hae-reittitoteumat-analytiikalle
-SELECT t.id as toteuma_tunniste_id,
-       t.sopimus as toteuma_sopimus_id,
-       t.alkanut as toteuma_alkanut,
-       t.paattynyt as toteuma_paattynyt,
-       u.urakkanro AS toteuma_alueurakkanumero,
-       t.suorittajan_ytunnus as toteuma_suorittaja_ytunnus,
-       t.suorittajan_nimi as toteuma_suorittaja_nimi,
-       t.tyyppi as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
-       t.lisatieto as toteuma_lisatieto,
-       json_agg(row_to_json(row(tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
-       json_agg(row_to_json(row(mk.nimi, tm.maara, mk.yksikko))) AS toteumamateriaalit,
+SELECT t.toteuma_tunniste_id,
+       t.toteuma_sopimus_id,
+       t.toteuma_alkanut,
+       t.toteuma_paattynyt,
+       t.toteuma_alueurakkanumero,
+       t.toteuma_suorittaja_ytunnus,
+       t.toteuma_suorittaja_nimi,
+       t.toteuma_toteumatyyppi,
+       t.toteuma_lisatieto,
+       t.toteumatehtavat,
+       t.toteumamateriaalit,
        json_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
-       --Selvitä, mistä saadaan tien nimi as toteuma_tiesijainti_nimi,
-       t.tr_numero as toteuma_tiesijainti_numero,
-       t.tr_alkuosa as toteuma_tiesijainti_aosa,
-       t.tr_alkuetaisyys as toteuma_tiesijainti_aet,
-       t.tr_loppuosa as toteuma_tiesijainti_losa,
-       t.tr_loppuetaisyys as toteuma_tiesijainti_let,
-       t.luotu as toteuma_muutostiedot_luotu,
-       t.luoja as toteuma_muutostiedot_luoja,
-       t.muokattu as toteuma_muutostiedot_muokattu,
-       t.muokkaaja as toteuma_muutostiedot_muokkaaja,
-       t.tyokonetyyppi as tyokone_tyokonetyyppi,
-       t.tyokonetunniste as tyokone_tunnus,
-       t.poistettu as poistettu
-FROM toteuma t
-     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-     LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
-     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-     LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-     LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
-     LEFT JOIN urakka u on t.urakka = u.id
-WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-GROUP BY t.id, t.alkanut, u.id
-ORDER BY t.alkanut ASC
+       t.toteuma_tiesijainti_numero,
+       t.toteuma_tiesijainti_aosa,
+       t.toteuma_tiesijainti_aet,
+       t.toteuma_tiesijainti_losa,
+       t.toteuma_tiesijainti_let,
+       t.toteuma_muutostiedot_luotu,
+       t.toteuma_muutostiedot_luoja,
+       t.toteuma_muutostiedot_muokattu,
+       t.toteuma_muutostiedot_muokkaaja,
+       t.tyokone_tyokonetyyppi,
+       t.tyokone_tunnus,
+       t.urakkaid,
+       t.poistettu
+FROM analytiikka_toteumat t
+         LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.toteuma_tunniste_id
+         LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+WHERE (t.toteuma_alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+group by toteuma_tunniste_id
+ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
+
+-- name: siirra-toteumat-analytiikalle
+select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+

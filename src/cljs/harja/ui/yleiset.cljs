@@ -655,7 +655,10 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([teksti luokka]
    (let [ikoni-fn (if (vector? teksti)
                     ikonit/ikoni-ja-elementti
-                    ikonit/ikoni-ja-teksti)]
+                    ikonit/ikoni-ja-teksti)
+         ikoni (if (= "varoitus" luokka)
+                 (ikonit/livicon-warning-sign)
+                 (ikonit/status-info-inline-svg +vari-lemon-dark+))]
      [:div {:class
             (luokat
               "yleinen-pikkuvihje"
@@ -663,8 +666,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
               (viesti/+toast-viesti-luokat+ :neutraali)
               (or luokka ""))}
       [:div.vihjeen-sisalto
-       (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                 teksti)]])))
+       (ikoni-fn ikoni teksti)]])))
 
 (def tietyoilmoitus-siirtynyt-txt
   [:div.inline-block.tietyo-info

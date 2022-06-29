@@ -1101,7 +1101,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (cons alku
             (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
 
-(defn paivat-valissa [alku loppu]
+(defn paivat-valissa
+  "Palauttaa laiskan seqin päivistä org.joda.time.DateTime muodossa"
+  [alku loppu]
   (paivat-valissa* (d alku) (d loppu)))
 
 (defn vuodet-valissa [alku loppu]
