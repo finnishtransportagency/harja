@@ -999,7 +999,6 @@
   [atomi]  
   (into {} (map (juxt first #(let [rivi (second %)
                                    polku (t/->toimenkuva-maksukausi rivi)]
-                               (println "datataata" (first %) rivi)
                                [vetolaatikko-komponentti atomi polku rivi]))) @atomi))
 
 (defn- kun-ei-syoteta-erikseen
@@ -1014,30 +1013,27 @@
 
 (defn tallenna-toimenkuvan-tiedot
   [data-atomi optiot rivin-tiedot]
-  (if (:oma-toimenkuva? rivin-tiedot)
+  (when (:oma-toimenkuva? rivin-tiedot)
     (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
           uusi-toimenkuva-nimi (:toimenkuva-maksukausi-tunniste rivin-tiedot)
           rivin-nimi (:rivin-nimi rivin-tiedot)
           _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
       ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
-      (if (not= uusi-toimenkuva-nimi rivin-nimi)
-        (do
-          (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
-          (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))
-        (tallenna-vuosipalkka
-          data-atomi
-          optiot
-          rivin-tiedot)))))
+      (when (not= uusi-toimenkuva-nimi rivin-nimi)
+        (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
+        (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))))
+  (tallenna-vuosipalkka
+    data-atomi
+    optiot
+    rivin-tiedot))
 
 (defn taulukko-2022-eteenpain
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        kapistelty-data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
-        data t/toimenkuvadata-atomi
-        rivin-avaimet (keys kapistelty-data)
+        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
+        rivin-avaimet (keys @data)
         omat-toimenkuvat (r/atom (reduce (fn [omat rivin-avain]
-                                           (let [arvo (get kapistelty-data rivin-avain)]
-                                             (println "arvojsan "arvo)
+                                           (let [arvo (get @data rivin-avain)]
                                              (if (:oma-toimenkuva? arvo)
                                                (assoc-in omat [rivin-avain] arvo)
                                                omat)))
@@ -1055,7 +1051,7 @@
         [:div
          ;[debug/debug indeksit]
          [debug/debug app]
-         ;[debug/debug @data]
+         [debug/debug @data]
          ;[debug/debug vetolaatikot]
          ;; Kaikille yhteiset toimenkuvat
          [vanha-grid/muokkaus-grid
@@ -1073,7 +1069,7 @@
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%"}
-           {:otsikko "kkk" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
+           {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]
          ;; Urakkakohtaiset toimenkuvat
