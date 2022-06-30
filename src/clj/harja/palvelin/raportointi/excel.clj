@@ -177,12 +177,15 @@
     nil))
 
 (defn- tee-raportin-tiedot-rivi  
-  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli] :as tiedot}]
+  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli
+                 custom-ylin-rivi] :as tiedot}]
   (try 
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
-      (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
-                                                              (str " - " alkupvm "-" loppupvm))))
+      (excel/set-cell! solu (or
+                              custom-ylin-rivi
+                              (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
+                                                               (str " - " alkupvm "-" loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.

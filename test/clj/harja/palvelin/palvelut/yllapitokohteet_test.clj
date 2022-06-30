@@ -18,7 +18,7 @@
             [harja.palvelin.palvelut
              [yllapitokohteet :refer :all]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
-
+            [harja.palvelin.palvelut.yllapitokohteet.paallystyskohteet-excel :as paallystyskohteet-excel]
             [harja.testi :refer :all]
 
             [harja.jms-test :refer [feikki-jms]]
@@ -1751,3 +1751,23 @@
               :toimenpiteet nil
               :paallysteet nil)] tiedot)
         "Sähköpostilähetyksen tiedot OK, eli eivät sisällä poistettujen alikohteiden tietoja.")))
+
+(def excel-rivit-utajarvi-2022
+  (list {:lihavoi? false
+         :rivi [13375 "L15" "A" "Puolangantie" 400M 20M 4543.95M 0M 4963.95M]}
+        {:lihavoi? false
+         :rivi [13374 "L14" nil "Ouluntie 2" 0M 0 0M 0M 0M]}
+        {:lihavoi? false
+    :rivi [547523069 "L42" "B" "Tärkeä kohde mt20 2022" 0M 0 0M 0M 0M]}))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        vuosi (pvm/vuosi (pvm/nyt))
+        kohteet (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                            +kayttaja-jvh+
+                                            {:urakka-id urakka-id
+                                             :sopimus-id sopimus-id
+                                             :vuosi vuosi})
+        excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
+    (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
