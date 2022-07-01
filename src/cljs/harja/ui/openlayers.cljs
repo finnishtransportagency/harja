@@ -433,7 +433,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn ol3-will-unmount [this]
   (let [{:keys [ol3 geometries-map unmount-ch]} (reagent/state this)]
-    (async/close! unmount-ch)))
+    (async/close! unmount-ch)
+
+    ;; Poistamalla kartan target mahdollistetaan, että GC poistaa ol3 map objektin ja vapauttaa näin muistia.
+    ;; Resetoidaan myös the-kartta atom, jotta viittauksia karttaobjektiin ei jää ja GC voi tuhota karttaobjektin.
+    (some-> @the-kartta (.setTarget nil))
+    (reset! the-kartta nil)))
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth
