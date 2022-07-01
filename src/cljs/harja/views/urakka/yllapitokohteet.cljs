@@ -34,10 +34,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn laske-sarakkeen-summa [sarake kohderivit]
-  (reduce + 0 (keep
-                (fn [rivi] (sarake rivi))
-                kohderivit)))
+
 
 (defn tr-virheilmoitus [tr-virheet]
   [:div.tr-virheet
@@ -1037,7 +1034,13 @@
                      {:otsikko "Nimi" :nimi :nimi
                       :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
                       :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
-                     {:otsikko "YHA-id" :nimi :yhaid :tasaa :oikea
+                     {:otsikko (if (= (:kohdetyyppi optiot) :paallystys)
+                                 "YHA-id"
+                                 "HARJA-id")
+                      :nimi (if (= (:kohdetyyppi optiot) :paallystys)
+                              :yhaid
+                              :id)
+                      :tasaa :oikea
                       :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
                       :pituus-max 30 :muokattava? (constantly false)}]
                     (tierekisteriosoite-sarakkeet
@@ -1106,19 +1109,19 @@
   (let [yhteensa
         (reaction
           (let [kohteet @kohteet-atom
-                sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-                toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
-                maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
-                arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
-                bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
-                kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
+                sopimuksen-mukaiset-tyot-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                toteutunut-hinta-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :toteutunut-hinta kohteet)
+                maaramuutokset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :maaramuutokset kohteet)
+                arvonvahennykset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :arvonvahennykset kohteet)
+                sakot-ja-bonukset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+                bitumi-indeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
+                kaasuindeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
                 ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
-                kohdistamattomat-sanktiot-yhteensa (let [arvo (laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
+                kohdistamattomat-sanktiot-yhteensa (let [arvo (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
                                                      (if (> (Math/abs arvo) 0)
                                                        (- arvo)
                                                        arvo))
-                muut-yhteensa (laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
+                muut-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
                 kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
                                    {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
                                     :toteutunut-hinta toteutunut-hinta-yhteensa

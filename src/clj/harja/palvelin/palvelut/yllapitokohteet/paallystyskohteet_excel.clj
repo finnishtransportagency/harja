@@ -16,27 +16,41 @@
 (defn muodosta-excelrivit [kohteet vuosi]
   (let [kohteet (map #(assoc % :kokonaishinta
                                        (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
-                             kohteet)]
+                             kohteet)
+        kohderivit (mapcat
+                     (fn [{:keys [yhaid id ;; muille kuin yha-kohteille näytetään Harjan ID, etuliitteen HARJA_<id> kera
+                                  kohdenumero tunnus nimi
+                                  sopimuksen-mukaiset-tyot ;; = Tarjoushinta
+                                  maaramuutokset
+                                  bitumi-indeksi ;; = Sideaineen hintamuutokset
+                                  kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
+                                  kokonaishinta]}]
+                       [{:rivi [(or yhaid
+                                    ;; Muille kuin YHA-kohteille näytetään Harja-ID, joka mahdollistaa kustannusten viennin takaisin Harjaan (linkitys)
+                                    (str "HARJA_" id))
+                                kohdenumero
+                                tunnus
+                                nimi
+                                sopimuksen-mukaiset-tyot
+                                maaramuutokset
+                                bitumi-indeksi
+                                kaasuindeksi
+                                kokonaishinta]
+                         :lihavoi? false}])
+                     kohteet)
+        tyhjat-rivit (for [i (range 0 2)]
+                       [nil nil nil nil nil nil nil nil nil])
+        yhteenvetorivi [[nil nil nil "Yhteensä:"
+                         (yllapitokohteet-domain/laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                         (yllapitokohteet-domain/laske-sarakkeen-summa :maaramuutokset kohteet)
+                         (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
+                         (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
+                         (yllapitokohteet-domain/laske-sarakkeen-summa :kokonaishinta kohteet)]]]
     (concat
       (when (> (count kohteet) 0)
-        (mapcat
-          (fn [{:keys [yhaid kohdenumero tunnus nimi
-                       sopimuksen-mukaiset-tyot ;; = Tarjoushinta
-                       maaramuutokset
-                       bitumi-indeksi ;; = Sideaineen hintamuutokset
-                       kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
-                       kokonaishinta]}]
-            [{:rivi [yhaid
-                     kohdenumero
-                     tunnus
-                     nimi
-                     sopimuksen-mukaiset-tyot
-                     maaramuutokset
-                     bitumi-indeksi
-                     kaasuindeksi
-                     kokonaishinta]
-              :lihavoi? false}])
-          kohteet)))))
+        kohderivit)
+      tyhjat-rivit
+      yhteenvetorivi)))
 
 (defn vie-paallystyskohteet-exceliin
   [db workbook user {:keys [urakka-id vuosi] :as tiedot}]
@@ -45,7 +59,7 @@
         alkupvm (pvm/vuoden-eka-pvm vuosi)
         loppupvm (pvm/vuoden-viim-pvm vuosi)
         kohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user tiedot)
-        sarakkeet [{:otsikko "Kohde-ID"}
+        sarakkeet [{:otsikko "Kohde-ID" :tasaa :oikea :fmt :kokonaisluku}
                    {:otsikko "Kohdenro" :tasaa :oikea}
                    {:otsikko "Tunnus"}
                    {:otsikko "Nimi"}
@@ -71,7 +85,8 @@
                                                          :urakka (:nimi urakka)
                                                          :alkupvm (pvm/kokovuosi-ja-kuukausi alkupvm)
                                                          :loppupvm (pvm/kokovuosi-ja-kuukausi loppupvm)}
-                               :orientaatio :landscape}]
+                               :orientaatio :landscape
+                               :viimeinen-rivi-yhteenveto? true}]
                    (if (empty? taulukot)
                      [[:taulukko optiot nil [["Ei päällystyskohteita"]]]]
                      taulukot))]

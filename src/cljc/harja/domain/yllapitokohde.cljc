@@ -1307,3 +1307,8 @@ yllapitoluokkanimi->numero
                 (= (select-keys kohdeosa tr-domain/vali-avaimet)
                    (select-keys rivi tr-domain/vali-avaimet)))
               kohdeosat))))
+
+(defn laske-sarakkeen-summa [sarake kohderivit]
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))

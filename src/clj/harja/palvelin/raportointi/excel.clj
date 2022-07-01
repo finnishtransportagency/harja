@@ -168,6 +168,7 @@
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
     ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
     ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+    :kokonaisluku (.setDataFormat tyyli 1)
     :raha (.setDataFormat tyyli 8)
     :prosentti (.setDataFormat tyyli 10)
     :numero (.setDataFormat tyyli 2)
