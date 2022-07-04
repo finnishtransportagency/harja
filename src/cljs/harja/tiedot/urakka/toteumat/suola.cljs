@@ -16,6 +16,8 @@
 
 (defonce urakan-pohjavesialueet (atom nil))
 
+(defonce urakan-rajoitusalueet (atom nil))
+
 (defonce suolatoteumissa? (atom false))
 
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
@@ -105,6 +107,39 @@
   (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm}))
+
+
+;; TODO: Tarvitaan palvelu rajoitusalueille. Feikataan data nyt tässä.
+(defn hae-urakan-rajoitusalueet [urakka-id]
+  {:pre [(int? urakka-id)]}
+  #_(k/post! :hae-urakan-rajoitusalueet {:urakka-id urakka-id})
+
+
+  (go [{:tr-osoite {:tie 25
+                    :aosa 2
+                    :aet 200
+                    :losa 3
+                    :let 2837}
+        :pituus 4854
+        :pituus_ajoradat 4857
+        :pohjavesialueet [{:nimi "Hanko" :tunnus "107801"}]
+        :suolankayttoraja 6.6
+        :kaytettava-formaattia? false
+        :formiaatit_t_per_ajoratakm nil
+        :talvisuola_t_per_ajoratakm 0.002}
+       {:tr-osoite {:tie 104
+                    :aosa 2
+                    :aet 1882
+                    :losa 2
+                    :let 3430}
+        :pituus 1548
+        :pituus_ajoradat 1548
+        :pohjavesialueet [{:nimi "Manibacka" :tunnus "160607"}]
+        :suolankayttoraja 1.0
+        :kaytettava-formaattia? true
+        :formiaatit_t_per_ajoratakm 0.002
+        :talvisuola_t_per_ajoratakm 0.457}]))
+
 
 (defn poista-valituista-suolatoteumista [toteumat]
   (reset! valitut-toteumat
