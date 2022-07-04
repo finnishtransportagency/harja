@@ -67,7 +67,7 @@
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
            [suolatoteumat])
 
-         "Pohjavesialueet" :pohjavesialueet
+         "Pohjavesialueiden suola" :pohjavesialueiden-suola
          (when (and (oikeudet/urakat-toteumat-suola id)
                     (#{:hoito :teiden-hoito} (:tyyppi ur)))
            [pohjavesialueen-suola])
