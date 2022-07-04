@@ -1,4 +1,4 @@
-(ns harja.views.urakka.toteumat.materiaalit
+(ns harja.views.urakka.toteumat.muut-materiaalit
   (:require [harja.views.urakka.valinnat :as valinnat]
             [reagent.core :refer [atom wrap]]
             [harja.loki :refer [log]]
@@ -360,7 +360,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
 
     (sort-by (comp :nimi :materiaali) @urakan-materiaalin-kaytot)]])
 
-(defn materiaalit-nakyma [ur]
+(defn muut-materiaalit-nakyma [ur]
   (komp/luo
     (komp/lippu materiaali-tiedot/materiaalinakymassa?)
     (fn [ur]
