@@ -274,6 +274,7 @@
                                                                                                        :ajettavat-jarjestykset true
                                                                                                        :triggeroi-seuranta? true}
                                                                                   true))
+                                                                  _ (println "asdf" rivin-nimi)
                                                                   paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
                                                                   paivita! (fn []
                                                                              (paivita-ui!)
@@ -878,7 +879,7 @@
         paivitetyt (jaa-vuosipalkka-kuukausille hoitokausi kopioi-tuleville? (:ennen-urakkaa? rivi) toimenkuvan-maarat (:vuosipalkka rivi))
         rivi (assoc rivi :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
         tiedot @atomi
-        tiedot (assoc-in tiedot [(:toimenkuva-maksukausi-tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
+        tiedot (assoc-in tiedot [(:tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
         _ (reset! atomi tiedot)]
     ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
     (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 1)))
@@ -951,13 +952,13 @@
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [toimenkuva] :as rivi}]
+  [tiedot-atomi polku {:keys [toimenkuva tunniste] :as rivi}]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
         vuosien-erotus (- urakan-loppuvuosi urakan-alkuvuosi)
         kursorit (assoc {}
-                   :toimenkuva (r/cursor tiedot-atomi [toimenkuva])
+                   :toimenkuva (r/cursor tiedot-atomi [tunniste])
                    :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot-atomi polku vuosien-erotus)
                    :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot-atomi polku vuosien-erotus))]
     (fn [_ polku toimenkuva]
@@ -998,7 +999,7 @@
 (defn luo-vetolaatikot
   [atomi]  
   (into {} (map (juxt first #(let [rivi (second %)
-                                   polku (t/->toimenkuva-maksukausi rivi)]
+                                   polku (t/->tunniste-maksukausi rivi)]
                                [vetolaatikko-komponentti atomi polku rivi]))) @atomi))
 
 (defn- kun-ei-syoteta-erikseen
@@ -1015,13 +1016,13 @@
   [data-atomi optiot rivin-tiedot]
   (when (:oma-toimenkuva? rivin-tiedot)
     (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
-          uusi-toimenkuva-nimi (:toimenkuva-maksukausi-tunniste rivin-tiedot)
+          uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
           rivin-nimi (:rivin-nimi rivin-tiedot)
           _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
       ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
       (when (not= uusi-toimenkuva-nimi rivin-nimi)
         (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
-        (e! (t/->TallennaToimenkuva (:rivin-nimi rivin-tiedot))))))
+        (e! (t/->TallennaToimenkuva (:tunniste rivin-tiedot))))))
   (tallenna-vuosipalkka
     data-atomi
     optiot
@@ -1068,7 +1069,7 @@
                             :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%"}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%"}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]
@@ -1112,24 +1113,24 @@
       [ks-yhteiset/yleis-suodatin suodattimet]]
 
      ;; FIXME: tupla-if kömpelö, mutta poistetaan sitten, kun ominaisuus otetaan käyttöön ja jätetään vaan cond
-     (if piilota-2022-taulukko?
+     #_(if piilota-2022-taulukko?
        (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
          [:div {:class (when vahvistettu? "osio-vahvistettu")}
           [grid/piirra johto-ja-hallintokorvaus-grid]]
-         [yleiset/ajax-loader])
-         
-       (cond
-         (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
-         ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-         [:div {:class (when vahvistettu? "osio-vahvistettu")}
-          [grid/piirra johto-ja-hallintokorvaus-grid]]
-
-         (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-         [:div {:class (when vahvistettu? "osio-vahvistettu")}
-          [taulukko-2022-eteenpain app indeksit]]
-
-         :else
          [yleiset/ajax-loader]))
+         
+     (cond
+       (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
+       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [grid/piirra johto-ja-hallintokorvaus-grid]]
+
+       (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+        [taulukko-2022-eteenpain app indeksit]]
+
+       :else
+       [yleiset/ajax-loader])
 
      (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
        ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
