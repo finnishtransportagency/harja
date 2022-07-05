@@ -274,7 +274,6 @@
                                                                                                        :ajettavat-jarjestykset true
                                                                                                        :triggeroi-seuranta? true}
                                                                                   true))
-                                                                  _ (println "asdf" rivin-nimi)
                                                                   paivita-kanta! (fn [] (e! (t/->TallennaToimenkuva rivin-nimi)))
                                                                   paivita! (fn []
                                                                              (paivita-ui!)
@@ -1069,7 +1068,7 @@
                             :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
            :voi-poistaa? (constantly false)
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%"}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]

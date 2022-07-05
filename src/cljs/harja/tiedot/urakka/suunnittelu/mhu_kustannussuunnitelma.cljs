@@ -2311,6 +2311,13 @@
                                                  ;; Sisältää yhtä monta riviä, kuin urakalla on hoitokausia
                                                  (range 1 (inc (count toimenkuvan-data-hoitokausittain))))
                                      jarjestys (first (filter #(= toimenkuva (:toimenkuva %)) (pohjadatan-versio)))
+                                     _ (println "magzuerat" maksuerat)
+                                     kuukausipalkka-sama?-fn (fn [vertailtava]
+                                                   (fn [[_ tiedot]]
+                                                     (= (:kuukausipalkka vertailtava) (:kuukausipalkka tiedot))))
+                                     erikseen-syotettava? (into {} (map (fn [hoitokausi] [hoitokausi (not (every? (kuukausipalkka-sama?-fn (get-in maksuerat [hoitokausi 1])) (get maksuerat hoitokausi)))])) (range 1 6))
+
+                                     _ (println "erigzeen" erikseen-syotettava?)
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
                                                                       99)
@@ -2322,7 +2329,7 @@
                                                          :ennen-urakkaa? false ;; Todo: Mistä tämä saadaan?
                                                          :vuosipalkka vuosipalkka ;; Lasketaan valitun hoitovuoden datasta :tunnit * :tuntipalkka * kuukaudet
                                                          :hoitokaudet #{1 2 3 4 5}
-                                                         :erikseen-syotettava? {1 false, 2 false, 3 false, 4 false, 5 false} ;; Erikseen syötettävät hoitokaudet. Yleisimmin kopioidaan
+                                                         :erikseen-syotettava? erikseen-syotettava? ;; Erikseen syötettävät hoitokaudet. Yleisimmin kopioidaan
                                                          :tunniste (str tunniste)
                                                          :versio 2
                                                          :kk-v 12
