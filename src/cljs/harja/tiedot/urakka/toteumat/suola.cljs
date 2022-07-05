@@ -115,7 +115,8 @@
   #_(k/post! :hae-urakan-rajoitusalueet {:urakka-id urakka-id})
 
 
-  (go [{:tr-osoite {:tie 25
+  (go [{:id 0
+        :tr-osoite {:tie 25
                     :aosa 2
                     :aet 200
                     :losa 3
@@ -127,7 +128,8 @@
         :kaytettava-formaattia? false
         :formiaatit_t_per_ajoratakm nil
         :talvisuola_t_per_ajoratakm 0.002}
-       {:tr-osoite {:tie 104
+       {:id 1
+        :tr-osoite {:tie 104
                     :aosa 2
                     :aet 1882
                     :losa 2
