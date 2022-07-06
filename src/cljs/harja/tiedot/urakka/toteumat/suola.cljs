@@ -18,6 +18,9 @@
 
 (defonce urakan-rajoitusalueet (atom nil))
 
+(defonce urakan-rajoitusalueiden-summatiedot (atom {}))
+(defonce urakan-rajoitusalueiden-toteumat (atom {}))
+
 (defonce suolatoteumissa? (atom false))
 
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
@@ -84,8 +87,6 @@
                yksittaiset-toteumat))
         #(constantly false)))))
 
-(defonce pohjavesialueen-toteuma (atom nil))
-
 (defn eriteltavat-toteumat [toteumat]
   (map #(hash-map :tid (:tid %)) toteumat))
 
@@ -99,10 +100,13 @@
                 (concat @valitut-toteumat
                         (eriteltavat-toteumat toteumat)))))
 
+
+;; FIXME: Vanha implementaatio (poista)
 (defn hae-urakan-pohjavesialueet [urakka-id]
   {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
 
+;; FIXME: Vanha implementaatio (poista)
 (defn hae-pohjavesialueen-suolatoteuma [pohjavesialue [alkupvm loppupvm]]
   (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue
                                               :alkupvm alkupvm
@@ -141,6 +145,72 @@
         :kaytettava-formaattia? true
         :formiaatit_t_per_ajoratakm 0.002
         :talvisuola_t_per_ajoratakm 0.457}]))
+
+;; TODO: Tarvitaan palvelu rajoitusalueen toteumien summatietojen hakemiseen. Feikataan data nyt tässä.
+(defn hae-rajoitusalueen-toteumien-summatiedot [rajoitusalue-id]
+  {:pre [(int? rajoitusalue-id)]}
+  ;; TODO: Ks. esimerkiksi kyselyt/materiaalit.sql "hae-suolatoteumien-summatiedot"
+  #_(k/post! :hae-rajoitusalueen-toteumien-summatiedot {:urakka-id urakka-id})
+
+
+  (go [{:id 0 ;; tai uniikki "rivinumero"
+        :pvm (pvm/nyt)
+        :maara-t 4.234
+        :materiaali-nimi "Talvisuola, rakeinen NaCl"
+        :materiaali-id 7
+        :toteuma-lkm 2
+        ;; Toteuma-idt tarvitaan, jotta voidaan hakea tarkemmat toteumatiedot, jos käyttöliittymässä klikataan auki
+        ;; summatietorivin vetolaatikko (joka sisältää siihen liittyvät toteumat)
+        :toteuma-idt [0 1]
+        :koneellinen? true}
+       {:id 1 ;; tai uniikki "rivinumero"
+        :pvm (pvm/nyt)
+        :maara-t 1.001
+        :materiaali-nimi "Talvisuolaliuos NaCl"
+        :materiaali-id 1
+        :toteuma-lkm 2
+        :toteuma-idt [2 3]
+        :koneellinen? true}]))
+
+
+;; TODO: Tarvitaan palvelu hae-rajoitusalueen-suolatoteumat. Feikataan data nyt tässä.
+(defn hae-rajoitusalueen-suolatoteumat [toteuma-idt]
+  {:pre [(seq toteuma-idt)]}
+  #_(k/post! :hae-rajoitusalueen-suolatoteumat {:toteuma-idt toteuma-idt})
+
+
+  ;; Feikataan toteuma-id:llä haku
+  (go (filterv #((set toteuma-idt) (:id %))
+        [{:id 0
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 2.232
+          :materiaali-nimi "Talvisuola, rakeinen NaCl"
+          :materiaali-id 7
+          :lisatieto "rdm40"}
+         {:id 1
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 2.000
+          :materiaali-nimi "Talvisuola, rakeinen NaCl"
+          :materiaali-id 7
+          :lisatieto "rdm40"}
+         {:id 2
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 0.402
+          :materiaali-nimi "Talvisuolaliuos NaCl"
+          :materiaali-id 1
+          :lisatieto "rdm40"}
+         {:id 3
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 0.599
+          :materiaali-nimi "Talvisuolaliuos NaCl"
+          :materiaali-id 1
+          :lisatieto "rdm40"}])))
+
+;; ------
 
 
 (defn poista-valituista-suolatoteumista [toteumat]

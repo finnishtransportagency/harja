@@ -9,90 +9,94 @@
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [cljs.core.async :refer [<! >!]]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 
-(defn vetolaatikko-taso-2 [rajoitusalueet]
-  [grid/grid {:tunniste (fn [rivi]
-                          (str "rajoitusalue_vetolaatikko_taso_2_rivi_" (hash rivi)))
-              :piilota-muokkaus? true
-              :reunaviiva? true
-              :tyhjä (if (nil? @tiedot/urakan-rajoitusalueet)
-                       [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
-                       "Ei Rajoitusalueita")}
-   [{:tyyppi :avattava-rivi :leveys "2%"}
-    {:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :leveys 1}
-    {:otsikko "Osoiteväli" :tunniste :tie :hae :tr-osoite
-     :fmt (fn [tr-osoite]
-            (str
-              (str (:aosa tr-osoite) " / " (:aet tr-osoite))
-              " - "
-              (str (:losa tr-osoite) " / " (:let tr-osoite))))
-     :leveys 1}
-    {:otsikko "Pohjavesialue (tunnus)" :tunniste :pohjavesialueet :hae :pohjavesialueet :leveys 1}
-    {:otsikko "Pituus (m)" :tunniste :pituus :hae :pituus :leveys 1}
-    {:otsikko "Pituus ajoradat (m)" :tunniste :pituus_ajoradat :hae :pituus_ajoradat :leveys 1}
-    {:otsikko "Formiaatit (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Talvisuola (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :tunniste :suolankayttoraja :hae :suolankayttoraja :leveys 1}
-    {:otsikko "" :tunniste :pituus :hae :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
-   rajoitusalueet])
+(defn vetolaatikko-taso-2
+  "Valitun toteumien summarivin toteumarivit."
+  [{yhteenveto-id :id
+    toteuma-idt :toteuma-idt :as rivi}]
 
-(defn vetolaatikko-taso-1 [rajoitusalueet]
-  [grid/grid {:tunniste :id
-              :piilota-muokkaus? true
-              :reunaviiva? true
-              :vetolaatikot (into {}
-                              (map (juxt :id (fn [rivi] [vetolaatikko-taso-2 rajoitusalueet])))
-                              rajoitusalueet)
-              :tyhjä (if (nil? @tiedot/urakan-rajoitusalueet)
-                       [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
-                       "Ei Rajoitusalueita")}
-   [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-    {:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :leveys 0.5}
-    {:otsikko "Osoiteväli" :tunniste :tie :hae :tr-osoite
-     :fmt (fn [tr-osoite]
-            (str
-              (str (:aosa tr-osoite) " / " (:aet tr-osoite))
-              " - "
-              (str (:losa tr-osoite) " / " (:let tr-osoite))))
-     :leveys 1}
-    {:otsikko "Pohjavesialue (tunnus)" :tunniste :pohjavesialueet :hae :pohjavesialueet :leveys 1}
-    {:otsikko "Pituus (m)" :tunniste :pituus :hae :pituus :leveys 1}
-    {:otsikko "Pituus ajoradat (m)" :tunniste :pituus_ajoradat :hae :pituus_ajoradat :leveys 1}
-    {:otsikko "Formiaatit (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Talvisuola (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :tunniste :suolankayttoraja :hae :suolankayttoraja :leveys 1}
-    {:otsikko "" :tunniste :pituus :hae :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
-   rajoitusalueet])
+  (komp/luo
+    (komp/sisaan
+      (fn []
+        (go
+          (swap! tiedot/urakan-rajoitusalueiden-toteumat
+            assoc yhteenveto-id (<! (tiedot/hae-rajoitusalueen-suolatoteumat toteuma-idt))))))
+    (fn []
+      (let [toteumat (get @tiedot/urakan-rajoitusalueiden-toteumat yhteenveto-id)]
+        [grid/grid {:tunniste (fn [rivi]
+                                (str "vetolaatikko_taso_2_rivi_" (hash rivi)))
+                    :piilota-muokkaus? true
+                    ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
+                    ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
+                    :esta-tiivis-grid? true
+                    :reunaviiva? true
+                    :tyhjä (if (nil? @tiedot/urakan-rajoitusalueiden-toteumat)
+                             [yleiset/ajax-loader "Toteumia haetaan..."]
+                             "Ei toteumia")}
+         [{:tyyppi :vetolaatikon-tila :leveys 0.05}
+          {:otsikko "Alkoi" :nimi :alkanut :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
+          {:otsikko "Päättyi" :nimi :paattynyt :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
+          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :leveys 1}
+          {:otsikko "ID / lisätieto" :nimi :lisatieto :leveys 2}]
+         toteumat]))))
 
 
+(defn vetolaatikko-taso-1
+  "Rajoitusalueen toteumien summatiedot / yhteenveto per päivämäärä ja käytetty materiaali."
+  [{rajoitusalue-id :id :as rivi}]
+  (komp/luo
+    (komp/sisaan
+      (fn []
+        (go
+          (swap! tiedot/urakan-rajoitusalueiden-summatiedot
+            assoc rajoitusalue-id (<! (tiedot/hae-rajoitusalueen-toteumien-summatiedot rajoitusalue-id))))))
+    (fn []
+      (let [toteumien-summatiedot (get @tiedot/urakan-rajoitusalueiden-summatiedot rajoitusalue-id)]
+        [grid/grid {:tunniste :id
+                    :piilota-muokkaus? true
+                    ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
+                    ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
+                    :esta-tiivis-grid? true
+                    :reunaviiva? true
+                    :vetolaatikot (into {}
+                                    (map (juxt :id
+                                           (fn [rivi] [vetolaatikko-taso-2 rivi])))
+                                    toteumien-summatiedot)
+                    :tyhjä (if (nil? @tiedot/urakan-rajoitusalueiden-summatiedot)
+                             [yleiset/ajax-loader "Toteumien yhteenvetoja haetaan..."]
+                             "Ei toteumia")}
+         [{:tyyppi :vetolaatikon-tila :leveys 0.18}
+          {:otsikko "Päivämäärä" :hae :pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 0.8}
+          {:otsikko "Materiaali" :nimi :materiaali-nimi :leveys 1}
+          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :leveys 1}
+          {:otsikko "Toteumia" :nimi :toteuma-lkm :leveys 1}
+          {:otsikko "Lisätieto" :nimi :koneellinen? :fmt #(when % "Koneellisesti raportoitu") :leveys 1}]
+         toteumien-summatiedot]))))
 
-
-(defn taulukko
+(defn taulukko-rajoitusalueet
   "Rajoitusalueiden taulukko. Näyttää pääriveillä rajoitusalueiden tietojen yhteenvedot.
   Määrittelee tason 1 ja 2 vetolaatikot, joista pääsee sukeltamaan rajoitusalueen suolojen käytön yhteenvetoon ja sieltä
   vielä tiettyyn suolariviin liittyviin toteutumiin."
   [rajoitusalueet]
   [grid/grid {:tunniste :id
               :piilota-muokkaus? true
-              :ensimmainen-sarake-sticky? true
-              #_#_:esta-tiivis-grid? true
-              #_#_:samalle-sheetille? true
+              ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
+              ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
+              :esta-tiivis-grid? true
               :vetolaatikot (into {}
-                              (map (juxt :id (fn [rivi] [vetolaatikko-taso-1 rajoitusalueet])))
+                              (map (juxt :id (fn [rivi] [vetolaatikko-taso-1 rivi])))
                               rajoitusalueet)
               :tyhjä (if (nil? @tiedot/urakan-rajoitusalueet)
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                        "Ei Rajoitusalueita")}
-   [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+   [{:tyyppi :vetolaatikon-tila :leveys 0.3}
     {:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :leveys 0.5}
     {:otsikko "Osoiteväli" :tunniste :tie :hae :tr-osoite
      :fmt (fn [tr-osoite]
@@ -101,15 +105,19 @@
               " - "
               (str (:losa tr-osoite) " / " (:let tr-osoite))))
      :leveys 1}
-    {:otsikko "Pohjavesialue (tunnus)" :tunniste :pohjavesialueet :hae :pohjavesialueet :leveys 1}
-    {:otsikko "Pituus (m)" :tunniste :pituus :hae :pituus :leveys 1}
-    {:otsikko "Pituus ajoradat (m)" :tunniste :pituus_ajoradat :hae :pituus_ajoradat :leveys 1}
-    {:otsikko "Formiaatit (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Talvisuola (t/ajoratakm)" :tunniste :formiaatit_t_per_ajoratakm
-     :hae :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :tunniste :suolankayttoraja :hae :suolankayttoraja :leveys 1}
-    {:otsikko "" :tunniste :pituus :hae :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
+    {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet :fmt (fn [alueet]
+                                                                     (if (seq alueet)
+                                                                       (str/join ", "
+                                                                         (map #(str (:nimi %) " (" (:tunnus %) ")")
+                                                                           alueet))
+                                                                       "-"))
+     :leveys 1}
+    {:otsikko "Pituus (m)" :nimi :pituus :leveys 1}
+    {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :leveys 1}
+    {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm :leveys 1}
+    {:otsikko "Talvisuola (t/ajoratakm)" :nimi :talvisuola_t_per_ajoratakm :leveys 1}
+    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :leveys 1}
+    {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
    rajoitusalueet])
 
 (defn pohjavesialueiden-suola []
@@ -118,7 +126,6 @@
       (fn []
         (let [urakkaid @nav/valittu-urakka-id]
           (go
-            (reset! tiedot/pohjavesialueen-toteuma nil)
             (reset! tiedot/urakan-rajoitusalueet (<! (tiedot/hae-urakan-rajoitusalueet urakkaid)))))))
     (fn []
       (let [rajoitusalueet @tiedot/urakan-rajoitusalueet
@@ -139,4 +146,4 @@
          #_[kartta]
 
          ;; Rajoitusalueiden taulukko
-         [taulukko rajoitusalueet]]))))
+         [taulukko-rajoitusalueet rajoitusalueet]]))))
