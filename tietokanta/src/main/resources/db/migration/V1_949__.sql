@@ -2,8 +2,12 @@
 ALTER TABLE toteuman_reittipisteet
  ADD COLUMN poistettu BOOLEAN;
 
--- Reittipisteiden poistamista ei ole aiemmin käsitelty.
 -- Toteuman reittipisteitä ei yleensä poisteta deletellä, mutta jos niin joskus tehdään, täytyy suolatoteumien reittipisteiden tilanne myös päivittää.
+DROP TRIGGER toteuman_reittipisteet_trigger ON toteuman_reittipisteet;
+CREATE TRIGGER toteuman_reittipisteet_trigger AFTER DELETE OR INSERT OR UPDATE ON toteuman_reittipisteet
+    FOR EACH ROW EXECUTE PROCEDURE toteuman_reittipisteet_trigger_fn();
+
+-- Reittipisteiden poistamista ei ole aiemmin käsitelty.
 -- Jos poistettu = true tai jos operaatio on DELETE, poistetaan suolatoteuman reittipisteet, eikä päätellä niitä uudelleen.
 CREATE OR REPLACE FUNCTION toteuman_reittipisteet_trigger_fn() RETURNS TRIGGER AS $$
 DECLARE
@@ -12,6 +16,7 @@ DECLARE
     suolamateriaalikoodit INTEGER[];
     pohjavesialue_tunnus VARCHAR;
 BEGIN
+
     SELECT array_agg(id) FROM materiaalikoodi
                               -- Muuttunut koodi
     WHERE materiaalityyppi IN ('talvisuola','erityisalue') INTO suolamateriaalikoodit;
@@ -21,10 +26,7 @@ BEGIN
         DELETE FROM suolatoteuma_reittipiste WHERE toteuma=NEW.toteuma;
     END IF;
 
-    RAISE NOTICE 'NEW.poistettu %', NEW.poistettu;
-
-    IF NOT (TG_OP = 'DELETE') AND NEW.poistettu = FALSE THEN
-        RAISE NOTICE 'Päivitetään';
+    IF (NEW.poistettu IS FALSE OR NEW.poistettu IS NULL) THEN
         FOREACH rp IN ARRAY NEW.reittipisteet
             LOOP
                 FOREACH m IN ARRAY rp.materiaalit
