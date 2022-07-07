@@ -43,7 +43,7 @@
          [{:tyyppi :vetolaatikon-tila :leveys 0.05}
           {:otsikko "Alkoi" :nimi :alkanut :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
           {:otsikko "Päättyi" :nimi :paattynyt :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
-          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :leveys 1}
+          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
           {:otsikko "ID / lisätieto" :nimi :lisatieto :leveys 2}]
          toteumat]))))
 
@@ -75,8 +75,9 @@
          [{:tyyppi :vetolaatikon-tila :leveys 0.18}
           {:otsikko "Päivämäärä" :hae :pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 0.8}
           {:otsikko "Materiaali" :nimi :materiaali-nimi :leveys 1}
-          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :leveys 1}
-          {:otsikko "Toteumia" :nimi :toteuma-lkm :leveys 1}
+          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-")
+           :tasaa :oikea :leveys 1}
+          {:otsikko "Toteumia" :nimi :toteuma-lkm :tasaa :oikea :leveys 1}
           {:otsikko "Lisätieto" :nimi :koneellinen? :fmt #(when % "Koneellisesti raportoitu") :leveys 1}]
          toteumien-summatiedot]))))
 
@@ -97,26 +98,34 @@
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                        "Ei Rajoitusalueita")}
    [{:tyyppi :vetolaatikon-tila :leveys 0.3}
-    {:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :leveys 0.5}
+    {:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :tasaa :oikea :leveys 0.5}
     {:otsikko "Osoiteväli" :tunniste :tie :hae :tr-osoite
      :fmt (fn [tr-osoite]
             (str
               (str (:aosa tr-osoite) " / " (:aet tr-osoite))
-              " - "
+              " – 3 "
               (str (:losa tr-osoite) " / " (:let tr-osoite))))
      :leveys 1}
-    {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet :fmt (fn [alueet]
-                                                                     (if (seq alueet)
-                                                                       (str/join ", "
-                                                                         (map #(str (:nimi %) " (" (:tunnus %) ")")
-                                                                           alueet))
-                                                                       "-"))
+    {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
+     :luokka "sarake-pohjavesialueet"
+     :tyyppi :komponentti
+     :komponentti (fn [{:keys [pohjavesialueet]}]
+                    (if (seq pohjavesialueet)
+                      (into [:div]
+                        (mapv (fn [alue]
+                                [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
+                          pohjavesialueet))
+                      "-"))
      :leveys 1}
-    {:otsikko "Pituus (m)" :nimi :pituus :leveys 1}
-    {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :leveys 1}
-    {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm :leveys 1}
-    {:otsikko "Talvisuola (t/ajoratakm)" :nimi :talvisuola_t_per_ajoratakm :leveys 1}
-    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :leveys 1}
+    {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
+    {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :fmt fmt/pyorista-ehka-kolmeen
+     :tasaa :oikea :leveys 1}
+    {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm
+     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-") :tasaa :oikea :leveys 1}
+    {:otsikko "Talvisuola (t/ajoratakm)" :nimi :talvisuola_t_per_ajoratakm
+     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-") :tasaa :oikea :leveys 1}
+    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :tasaa :oikea
+     :fmt #(if % (fmt/desimaaliluku % 1) "-") :leveys 1}
     {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
    rajoitusalueet])
 
@@ -131,13 +140,12 @@
       (let [rajoitusalueet @tiedot/urakan-rajoitusalueet
             urakka @nav/valittu-urakka]
         [:div.pohjavesialueiden-suola
-         ;; TODO: Yleiskäyttöinen komponentti. Speksissä halutaan erilainen komponentti, jossa on nappula, jolla
-         ;;       käynnistetään tietojen hakeminen aikavälin valinnan jälkeen
-
          [:h2 "Pohjavesialueiden suolatoteumat"]
 
          ;; Aikavälivalinta ja muut kontrollit
          [:div.taulukon-kontrollit
+          ;; TODO: Tämä on yleiskäyttöinen komponentti. Speksissä halutaan erilainen komponentti, jossa on nappula, jolla
+          ;;       käynnistetään tietojen hakeminen aikavälin valinnan jälkeen
           [urakka-valinnat/aikavali-nykypvm-taakse urakka
            tiedot/valittu-aikavali
            {:aikavalin-rajoitus [12 :kuukausi]}]]

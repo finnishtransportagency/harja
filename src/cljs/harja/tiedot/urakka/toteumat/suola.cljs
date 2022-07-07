@@ -127,11 +127,11 @@
                     :let 2837}
         :pituus 4854
         :pituus_ajoradat 4857
-        :pohjavesialueet [{:nimi "Hanko" :tunnus "107801"}]
+        :pohjavesialueet [{:nimi "Hanko" :tunnus "107801"} {:nimi "Sandö-Grönvik" :tunnus "107803"}]
         :suolankayttoraja 6.6
         :kaytettava-formaattia? false
         :formiaatit_t_per_ajoratakm nil
-        :talvisuola_t_per_ajoratakm 0.002}
+        :talvisuola_t_per_ajoratakm 1.077}
        {:id 1
         :tr-osoite {:tie 104
                     :aosa 2
@@ -144,7 +144,20 @@
         :suolankayttoraja 1.0
         :kaytettava-formaattia? true
         :formiaatit_t_per_ajoratakm 0.002
-        :talvisuola_t_per_ajoratakm 0.457}]))
+        :talvisuola_t_per_ajoratakm 0.457}
+       {:id 2
+        :tr-osoite {:tie 116
+                    :aosa 1
+                    :aet 590
+                    :losa 1
+                    :let 3508}
+        :pituus 1548
+        :pituus_ajoradat 1548
+        :pohjavesialueet [{:nimi "Lohjanharju" :tunnus "142851 B"}]
+        :suolankayttoraja 0.0
+        :kaytettava-formaattia? true
+        :formiaatit_t_per_ajoratakm nil
+        :talvisuola_t_per_ajoratakm 0.221}]))
 
 ;; TODO: Tarvitaan palvelu rajoitusalueen toteumien summatietojen hakemiseen. Feikataan data nyt tässä.
 (defn hae-rajoitusalueen-toteumien-summatiedot [rajoitusalue-id]
@@ -152,25 +165,54 @@
   ;; TODO: Ks. esimerkiksi kyselyt/materiaalit.sql "hae-suolatoteumien-summatiedot"
   #_(k/post! :hae-rajoitusalueen-toteumien-summatiedot {:urakka-id urakka-id})
 
-
-  (go [{:id 0 ;; tai uniikki "rivinumero"
-        :pvm (pvm/nyt)
-        :maara-t 4.234
-        :materiaali-nimi "Talvisuola, rakeinen NaCl"
-        :materiaali-id 7
-        :toteuma-lkm 2
-        ;; Toteuma-idt tarvitaan, jotta voidaan hakea tarkemmat toteumatiedot, jos käyttöliittymässä klikataan auki
-        ;; summatietorivin vetolaatikko (joka sisältää siihen liittyvät toteumat)
-        :toteuma-idt [0 1]
-        :koneellinen? true}
-       {:id 1 ;; tai uniikki "rivinumero"
-        :pvm (pvm/nyt)
-        :maara-t 1.001
-        :materiaali-nimi "Talvisuolaliuos NaCl"
-        :materiaali-id 1
-        :toteuma-lkm 2
-        :toteuma-idt [2 3]
-        :koneellinen? true}]))
+  ;; Feikkaa rajoitusalueen id:llä haku.
+  (go (vec (remove nil? [(when (#{0} rajoitusalue-id)
+                           {:id 0 ;; tai uniikki "rivinumero"
+                            :pvm (pvm/nyt)
+                            :maara-t 4.234
+                            :materiaali-nimi "Talvisuola, rakeinen NaCl"
+                            :materiaali-id 7
+                            :toteuma-lkm 2
+                            ;; Toteuma-idt tarvitaan, jotta voidaan hakea tarkemmat toteumatiedot, jos käyttöliittymässä klikataan auki
+                            ;; summatietorivin vetolaatikko (joka sisältää siihen liittyvät toteumat)
+                            :toteuma-idt [0 1]
+                            :koneellinen? true})
+                         (when (#{0} rajoitusalue-id)
+                           {:id 1 ;; tai uniikki "rivinumero"
+                            :pvm (pvm/nyt)
+                            :maara-t 1.001
+                            :materiaali-nimi "Talvisuolaliuos NaCl"
+                            :materiaali-id 1
+                            :toteuma-lkm 2
+                            :toteuma-idt [2 3]
+                            :koneellinen? true})
+                         (when (#{1} rajoitusalue-id)
+                           {:id 2 ;; tai uniikki "rivinumero"
+                            :pvm (pvm/nyt)
+                            :maara-t 0.707
+                            :materiaali-nimi "Talvisuola, rakeinen NaCl"
+                            :materiaali-id 7
+                            :toteuma-lkm 1
+                            :toteuma-idt [4]
+                            :koneellinen? true})
+                         (when (#{1} rajoitusalue-id)
+                           {:id 3 ;; tai uniikki "rivinumero"
+                            :pvm (pvm/nyt)
+                            :maara-t 0.00309
+                            :materiaali-nimi "Natriumformiaatti"
+                            :materiaali-id 16
+                            :toteuma-lkm 1
+                            :toteuma-idt [5]
+                            :koneellinen? true})
+                         (when (#{2} rajoitusalue-id)
+                           {:id 4 ;; tai uniikki "rivinumero"
+                            :pvm (pvm/nyt)
+                            :maara-t 0.342108
+                            :materiaali-nimi "Talvisuolaliuos NaCl"
+                            :materiaali-id 1
+                            :toteuma-lkm 1
+                            :toteuma-idt [6]
+                            :koneellinen? true})]))))
 
 
 ;; TODO: Tarvitaan palvelu hae-rajoitusalueen-suolatoteumat. Feikataan data nyt tässä.
@@ -206,6 +248,27 @@
           :alkanut (pvm/nyt)
           :paattynyt (pvm/nyt)
           :maara-t 0.599
+          :materiaali-nimi "Talvisuolaliuos NaCl"
+          :materiaali-id 1
+          :lisatieto "rdm40"}
+         {:id 4
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 0.707
+          :materiaali-nimi "Talvisuolaliuos NaCl"
+          :materiaali-id 1
+          :lisatieto "rdm40"}
+         {:id 5
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 0.00309
+          :materiaali-nimi "Natriumformiaatti"
+          :materiaali-id 16
+          :lisatieto "rdm40"}
+         {:id 6
+          :alkanut (pvm/nyt)
+          :paattynyt (pvm/nyt)
+          :maara-t 0.221
           :materiaali-nimi "Talvisuolaliuos NaCl"
           :materiaali-id 1
           :lisatieto "rdm40"}])))
