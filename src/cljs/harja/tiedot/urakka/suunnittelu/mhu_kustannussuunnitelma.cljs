@@ -2336,12 +2336,6 @@
                                                          :maksuerat-per-hoitovuosi-per-kuukausi maksuerat}]
                                  (assoc-in kokonaisuus [(str tunniste)] toimenkuvan-tiedot)))
                        {} toimenkuvat)
-        _ (println "koksukoo" kokonaisdata)
-        ;jarjestetty-data (sort-by :jarjestys < (map #(second %) kokonaisdata))
-        ;kokonaisdata-jarjestetty
-        #_(reduce (fn [data rivi]
-                  (assoc data (str (:tunniste rivi)) rivi))
-          {} jarjestetty-data)
         _ (reset! toimenkuvadata-atomi kokonaisdata)]
     toimenkuvadata-atomi))
 
@@ -2352,17 +2346,20 @@
 (defn ota-oikea-vuosi [hoitokausi] (map #(get % hoitokausi)))
 (defn ota-toimenkuva [toimenkuva] (filter #(= toimenkuva (first %))))
 
+(defn laske-luvut-yhteen
+  [maksuerat]
+  (fn [hoitokausi]
+    (let [summat (into []
+                   (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
+                   maksuerat)]
+      (reduce + 0 summat))))
+
 (defn- laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle
   [yhteenvedot-vuosille tiedot hoitokausi]
   (let [maksuerat (into [] (comp ota-maksuerat (ota-oikea-vuosi hoitokausi)) tiedot)
         lukujen-maara (count yhteenvedot-vuosille)
         luvut (into []
-                (map (fn [hoitokausi]
-                       (let [summat (into []
-                                      (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
-                                      maksuerat)
-                             laskettu-yhteen (reduce + 0 summat)]
-                         laskettu-yhteen)))
+                (map (laske-luvut-yhteen maksuerat))
                 (range 1 (inc lukujen-maara)))]    
     luvut))
 
@@ -2371,12 +2368,7 @@
   (let [maksuerat (into [] (comp (ota-toimenkuva toimenkuva) ota-maksuerat) tiedot)
         lukujen-maara (count yhteenvedot-vuosille)
         luvut (into []
-                (map (fn [hoitokausi]
-                       (let [summat (into []
-                                      (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
-                                      maksuerat)
-                             laskettu-yhteen (reduce + 0 summat)]
-                         laskettu-yhteen)))
+                (map (laske-luvut-yhteen maksuerat))
                 (range 1 (inc lukujen-maara)))]
     luvut))
 
