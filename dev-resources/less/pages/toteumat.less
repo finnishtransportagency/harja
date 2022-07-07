@@ -1,3 +1,5 @@
+@import "../vayla/colors";
+
 .kustannuserotus-positiivinen {
   color: @onnistuminen;
 }
@@ -38,6 +40,22 @@
 
     .sarake-pohjavesialueet {
       white-space: nowrap;
+    }
+
+    // Solujen sisäiset korostukset
+    // Asetetaan käyttöliittymäkoodissa solun luokaksi
+    td, th {
+      &.rajoitus-ylitetty {
+        > div {
+          display: inline-block;
+          width: fit-content;
+          padding: 0.1rem 0.75rem;
+          border-radius: 4px;
+          background-color: @red-light;
+          color: @red-darker;
+          font-weight: 600;
+        }
+      }
     }
   }
 }

@@ -268,7 +268,7 @@
          {:id 6
           :alkanut (pvm/nyt)
           :paattynyt (pvm/nyt)
-          :maara-t 0.221
+          :maara-t 0.342108
           :materiaali-nimi "Talvisuolaliuos NaCl"
           :materiaali-id 1
           :lisatieto "rdm40"}])))

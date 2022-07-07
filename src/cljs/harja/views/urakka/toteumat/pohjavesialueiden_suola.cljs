@@ -75,7 +75,7 @@
          [{:tyyppi :vetolaatikon-tila :leveys 0.18}
           {:otsikko "Päivämäärä" :hae :pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 0.8}
           {:otsikko "Materiaali" :nimi :materiaali-nimi :leveys 1}
-          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-")
+          {:otsikko "Käytetty määrä (t)" :nimi :maara-t :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–")
            :tasaa :oikea :leveys 1}
           {:otsikko "Toteumia" :nimi :toteuma-lkm :tasaa :oikea :leveys 1}
           {:otsikko "Lisätieto" :nimi :koneellinen? :fmt #(when % "Koneellisesti raportoitu") :leveys 1}]
@@ -121,11 +121,15 @@
     {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :fmt fmt/pyorista-ehka-kolmeen
      :tasaa :oikea :leveys 1}
     {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm
-     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-") :tasaa :oikea :leveys 1}
+     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–") :tasaa :oikea :leveys 1}
     {:otsikko "Talvisuola (t/ajoratakm)" :nimi :talvisuola_t_per_ajoratakm
-     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "-") :tasaa :oikea :leveys 1}
+     :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–")
+     :solun-luokka (fn [arvo rivi]
+                     (when (> arvo (:suolankayttoraja rivi))
+                       "rajoitus-ylitetty"))
+     :tasaa :oikea :leveys 1}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :tasaa :oikea
-     :fmt #(if % (fmt/desimaaliluku % 1) "-") :leveys 1}
+     :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 1}
     {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
    rajoitusalueet])
 
