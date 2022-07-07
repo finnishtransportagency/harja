@@ -1038,7 +1038,7 @@
                                                (assoc-in omat [rivin-avain] arvo)
                                                omat)))
                                    {} rivin-avaimet))
-        _ (js/console.log "ui:lta omat-toimenkuvat: " (pr-str @omat-toimenkuvat))
+;        _ (js/console.log "ui:lta omat-toimenkuvat: " (pr-str @omat-toimenkuvat))
         ]
     (fn [app indeksit]
       (let [vetolaatikot (luo-vetolaatikot data)

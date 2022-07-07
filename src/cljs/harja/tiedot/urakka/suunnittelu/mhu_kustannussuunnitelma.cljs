@@ -2254,9 +2254,6 @@
           [{} vapaat-omien-toimekuvien-idt]
           (range 1 (inc jh-korvausten-omiariveja-lkm)))))))
 
-(def erikseen-suunniteltavat
-  {1 false 2 false 3 false 4 false 5 false})
-
 (defn ->tunniste-maksukausi
   [rivi]
   (str (:tunniste rivi)
@@ -2271,8 +2268,6 @@
   uuden taulukon ymmärtämään muotoon.
   Se tapahtuu tässä."
   [data hoitokauden-numero]
-  (println "datataa" data)
-  (println "datataa" #_(mapv #(if ()) data))
   (let [toimenkuvat (keys data)
         kokonaisdata (reduce (fn [kokonaisuus toimenkuva]
                                (let [toimenkuvan-data (get data toimenkuva)
@@ -2282,7 +2277,7 @@
                                      tunniste (if (-> toimenkuvan-data first first :oma-toimenkuva?)
                                                 (-> toimenkuvan-data first first :toimenkuva-id)
                                                 toimenkuva)
-                                     _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-data" (pr-str toimenkuvan-data))
+                   ;                  _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-data" (pr-str toimenkuvan-data))
                                      _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-nimi" (pr-str toimenkuvan-nimi tunniste))
                                      toimenkuvan-data-hoitokausittain (if (map? toimenkuvan-data)
                                                                         (first (vals toimenkuvan-data))
@@ -2311,13 +2306,10 @@
                                                  ;; Sisältää yhtä monta riviä, kuin urakalla on hoitokausia
                                                  (range 1 (inc (count toimenkuvan-data-hoitokausittain))))
                                      jarjestys (first (filter #(= toimenkuva (:toimenkuva %)) (pohjadatan-versio)))
-                                     _ (println "magzuerat" maksuerat)
                                      kuukausipalkka-sama?-fn (fn [vertailtava]
                                                    (fn [[_ tiedot]]
                                                      (= (:kuukausipalkka vertailtava) (:kuukausipalkka tiedot))))
                                      erikseen-syotettava? (into {} (map (fn [hoitokausi] [hoitokausi (not (every? (kuukausipalkka-sama?-fn (get-in maksuerat [hoitokausi 1])) (get maksuerat hoitokausi)))])) (range 1 6))
-
-                                     _ (println "erigzeen" erikseen-syotettava?)
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
                                                                       99)
