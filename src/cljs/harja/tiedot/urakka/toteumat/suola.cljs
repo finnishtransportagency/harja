@@ -2,7 +2,7 @@
   "Tämän nimiavaruuden avulla voidaan hakea urakan suola- ja lämpötilatietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<! >! chan]]
+            [cljs.core.async :refer [<! >! chan close!]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
@@ -119,7 +119,12 @@
   #_(k/post! :hae-urakan-rajoitusalueet {:urakka-id urakka-id})
 
 
-  (go [{:id 0
+  (go
+    ;; Simuloi latausaikaa
+    (<! (let [c (chan)]
+          (js/setTimeout (fn [] (close! c)) 1000)
+          c))
+    [{:id 0
         :tr-osoite {:tie 25
                     :aosa 2
                     :aet 200
@@ -166,7 +171,12 @@
   #_(k/post! :hae-rajoitusalueen-toteumien-summatiedot {:urakka-id urakka-id})
 
   ;; Feikkaa rajoitusalueen id:llä haku.
-  (go (vec (remove nil? [(when (#{0} rajoitusalue-id)
+  (go
+    ;; Simuloi latausaikaa
+    (<! (let [c (chan)]
+          (js/setTimeout (fn [] (close! c)) 1000)
+          c))
+    (vec (remove nil? [(when (#{0} rajoitusalue-id)
                            {:id 0 ;; tai uniikki "rivinumero"
                             :pvm (pvm/nyt)
                             :maara-t 4.234
@@ -222,7 +232,12 @@
 
 
   ;; Feikataan toteuma-id:llä haku
-  (go (filterv #((set toteuma-idt) (:id %))
+  (go
+    ;; Simuloi latausaikaa
+    (<! (let [c (chan)]
+          (js/setTimeout (fn [] (close! c)) 2000)
+          c))
+    (filterv #((set toteuma-idt) (:id %))
         [{:id 0
           :alkanut (pvm/nyt)
           :paattynyt (pvm/nyt)

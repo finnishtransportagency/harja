@@ -7,6 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.napit :as napit]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [cljs.core.async :refer [<! >!]]
             [harja.fmt :as fmt]
@@ -37,7 +38,7 @@
                     ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
                     :esta-tiivis-grid? true
                     :reunaviiva? true
-                    :tyhjä (if (nil? @tiedot/urakan-rajoitusalueiden-toteumat)
+                    :tyhja (if (nil? @tiedot/urakan-rajoitusalueiden-toteumat)
                              [yleiset/ajax-loader "Toteumia haetaan..."]
                              "Ei toteumia")}
          [{:tyyppi :vetolaatikon-tila :leveys 0.05}
@@ -69,7 +70,7 @@
                                     (map (juxt :id
                                            (fn [rivi] [vetolaatikko-taso-2 rivi])))
                                     toteumien-summatiedot)
-                    :tyhjä (if (nil? @tiedot/urakan-rajoitusalueiden-summatiedot)
+                    :tyhja (if (nil? @tiedot/urakan-rajoitusalueiden-summatiedot)
                              [yleiset/ajax-loader "Toteumien yhteenvetoja haetaan..."]
                              "Ei toteumia")}
          [{:tyyppi :vetolaatikon-tila :leveys 0.18}
@@ -94,7 +95,7 @@
               :vetolaatikot (into {}
                               (map (juxt :id (fn [rivi] [vetolaatikko-taso-1 rivi])))
                               rajoitusalueet)
-              :tyhjä (if (nil? @tiedot/urakan-rajoitusalueet)
+              :tyhja (if (nil? @tiedot/urakan-rajoitusalueet)
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                        "Ei Rajoitusalueita")}
    [{:tyyppi :vetolaatikon-tila :leveys 0.3}
@@ -130,16 +131,30 @@
      :tasaa :oikea :leveys 1}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :tasaa :oikea
      :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 1}
-    {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formaattia") :leveys 1}]
+    {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
    rajoitusalueet])
+
+;; TODO: Toteuta tuck-event kutsut ja tilanhallinta
+(defn virkista-paatason-rivit []
+  (let [urakkaid @nav/valittu-urakka-id]
+    (go
+      (reset! tiedot/urakan-rajoitusalueiden-summatiedot nil)
+      (reset! tiedot/urakan-rajoitusalueiden-toteumat nil)
+      (reset! tiedot/urakan-rajoitusalueet nil)
+      (reset! tiedot/urakan-rajoitusalueet (<! (tiedot/hae-urakan-rajoitusalueet urakkaid))))))
 
 (defn pohjavesialueiden-suola []
   (komp/luo
     (komp/sisaan
       (fn []
-        (let [urakkaid @nav/valittu-urakka-id]
-          (go
-            (reset! tiedot/urakan-rajoitusalueet (<! (tiedot/hae-urakan-rajoitusalueet urakkaid)))))))
+        (virkista-paatason-rivit)))
+    (komp/ulos
+      (fn []
+        ;; TODO: Eroon tila-atomeista. Toteuta tuck-tilanhallinta palanen kerrallaan.
+        (reset! tiedot/urakan-rajoitusalueiden-summatiedot nil)
+        (reset! tiedot/urakan-rajoitusalueiden-toteumat nil)
+        (reset! tiedot/urakan-rajoitusalueet nil)))
+
     (fn []
       (let [rajoitusalueet @tiedot/urakan-rajoitusalueet
             urakka @nav/valittu-urakka]
@@ -148,11 +163,22 @@
 
          ;; Aikavälivalinta ja muut kontrollit
          [:div.taulukon-kontrollit
-          ;; TODO: Tämä on yleiskäyttöinen komponentti. Speksissä halutaan erilainen komponentti, jossa on nappula, jolla
-          ;;       käynnistetään tietojen hakeminen aikavälin valinnan jälkeen
           [urakka-valinnat/aikavali-nykypvm-taakse urakka
            tiedot/valittu-aikavali
-           {:aikavalin-rajoitus [12 :kuukausi]}]]
+           {:aikavalin-rajoitus [12 :kuukausi]
+            :aikavali-valinnat [ ;; Kuluvan kkn aikaväli alkaen kuluvan kkn ensimmäisestä päivästä kkn viimeiseen päivään
+                                ["Kuluva kuukausi" #(pvm/kuukauden-aikavali (pvm/nyt))]
+                                ;; Edellisen kkn aikaväli alkaen edellisen kkn ensimmäiestä päivästä edellisen kkn viimeiseen päivään
+                                ;; TODO: VAI halutaanko edelliset 4 * 7 päivää?
+                                ["Edellinen kuukausi" #(pvm/ed-kk-aikavalina (pvm/nyt))]
+                                ;; TODO: Halutaanko tähän kokonainen edellinen viikko alkaen edellisen viikon ensimmäisestä päivästä
+                                ;;       VAI edelliset 7 päivää?
+                                ["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
+                                ["Valittu aikaväli" nil]]}]
+
+          ;; TODO: Toteuta tuck-eventin kutsu
+          [napit/yleinen-ensisijainen "Hae toteumat" #(virkista-paatason-rivit)
+           {:luokka "nappi-hae-toteumat"}]]
 
          ;; TODO: Kartta
          #_[kartta]
