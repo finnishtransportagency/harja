@@ -486,17 +486,16 @@
 (defn summaa-jjhk-toimenkuvan-tunnit [jh-korvaukset tuntipalkka-avain]
   (mapv (fn [hoitokauden-arvot]
           ;; Hae tuntipalkka hoitovuoden kuukauden tiedoista, jossa tuntipalkka on määritelty.
-          (let [tuntipalkka (some tuntipalkka-avain hoitokauden-arvot)
-                tunnit (reduce (fn [summa {:keys [tunnit osa-kuukaudesta]}]
-                                 (+ summa
-                                   ;; Jos osa-kuukaudesta arvoa ei ole määritelty,
-                                   ;; oletetaan sen olevan 1, jotta tunnit eivät ole nil.
-                                   ;; VHAR-3505
-                                   (* tunnit (or osa-kuukaudesta 1))))
+          (let [tunnit (reduce (fn [summa {:keys [tunnit osa-kuukaudesta] :as kuukausi}]
+                                 (let [tuntipalkka (get kuukausi tuntipalkka-avain)]
+                                   (+ summa
+                                     ;; Jos osa-kuukaudesta arvoa ei ole määritelty,
+                                     ;; oletetaan sen olevan 1, jotta tunnit eivät ole nil.
+                                     ;; VHAR-3505
+                                     (* tunnit (or osa-kuukaudesta 1) tuntipalkka))))
                          0
                          hoitokauden-arvot)]
-            (* tunnit
-              tuntipalkka)))
+            tunnit))
     jh-korvaukset))
 
 
