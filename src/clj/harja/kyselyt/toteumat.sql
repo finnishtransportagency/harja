@@ -352,6 +352,11 @@ UPDATE toteuma
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
+-- name: poista-toteuman-reittipisteet!
+UPDATE harja.public.toteuman_reittipisteet
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE toteuma IN (:id) AND poistettu IS NOT TRUE;
+
 -- name: poista-toteuma-tehtava!
 UPDATE toteuma_tehtava
 SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE

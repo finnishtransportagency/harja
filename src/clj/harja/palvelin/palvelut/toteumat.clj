@@ -413,6 +413,7 @@
     (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
     (jdbc/with-db-transaction [tx db]
       (toteumat-q/poista-toteuma! tx (:id user) toteuma-id)
+      (toteumat-q/poista-toteuman-reittipisteet! tx (:id user) toteuma-id)
       (toteumat-q/poista-toteuma-tehtava! tx {:kayttaja (:id user)
                                               :toteuma-id toteuma-id}))))
 
@@ -597,6 +598,7 @@
       (log/debug "poista toteuma" (get-in toteuma [:toteuma :id]))
       (apply toteumat-q/poista-toteuman-tehtavat! params)
       (apply toteumat-q/poista-toteuma! params)
+      (apply toteumat-q/poista-toteuman-reittipisteet! params)
       (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
                                                          maksueratyyppi
                                                          (:toimenpidekoodi (:tehtava toteuma))
@@ -694,6 +696,7 @@
                                               (do
                                                 (log/debug "Poistetaan toteuma " (:id t))
                                                 (toteumat-q/poista-toteuma! c (:id user) (:id t))
+                                                (toteumat-q/poista-toteuman-reittipisteet! c (:id user) (:id t))
                                                 t)
                                               (do
                                                 (log/debug "Pävitetään toteumaa " (:id t))

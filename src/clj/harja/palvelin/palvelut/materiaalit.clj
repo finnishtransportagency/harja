@@ -208,7 +208,8 @@
     (when (:tmid tiedot)
       (q/poista-toteuma-materiaali! db (:id user) (:tmid tiedot)))
     (when (:tid tiedot)
-      (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot)))
+          (do (toteumat-q/poista-toteuma! db (:id user) (:tid tiedot))
+              (toteumat-q/poista-toteuman-reittipisteet! db (:id user) (:tid tiedot))))
     (when (:hk-alku tiedot)
       (hae-urakassa-kaytetyt-materiaalit
         db user (:urakka tiedot) (:hk-alku tiedot) (:hk-loppu tiedot) (:sopimus tiedot)))))
