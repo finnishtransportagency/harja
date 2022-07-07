@@ -103,7 +103,7 @@
      :fmt (fn [tr-osoite]
             (str
               (str (:aosa tr-osoite) " / " (:aet tr-osoite))
-              " – 3 "
+              " – "
               (str (:losa tr-osoite) " / " (:let tr-osoite))))
      :leveys 1}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
