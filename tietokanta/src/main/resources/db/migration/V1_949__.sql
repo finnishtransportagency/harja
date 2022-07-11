@@ -34,11 +34,16 @@ BEGIN
               FROM rajoitusalue
              WHERE rajoitusalue.id != id_tunniste
                -- FIXME: Varustepuolella on tällainen apufunktio. Tästä voisi tehdä yleisen funktion eri nimellä.
+               --        Ilmeisesti on tapana syöttää tr-osoitteita niin, että edellisen osoitteen loppu on seuraavan alku,
+               --        eli esim. 1. 25 2/200 - 3/2837 2. 25 3/2837 - 5/1153.
+               --        varuste_leikkaus funktio tässä tapauksessa tekee päätelmän, että kyseiset osotteet leikkaavat, mikä
+               --        ei toimi rajoitusalueiden käyttötarkoitukseen.
+               --        Meidän käyttötarkoituksiamme varten täytynee tehdä eri variantti varuste_leikkaus funktiosta.
                AND varuste_leikkaus(
                      osoite.tie, osoite.aosa, osoite.aet, osoite.losa, osoite.let,
-                     rajoitusalue.tierekisteriosoite.tie, rajoitusalue.tierekisteriosoite.aosa,
-                     rajoitusalue.tierekisteriosoite.aet, rajoitusalue.tierekisteriosoite.losa,
-                     rajoitusalue.tierekisteriosoite.let)));
+                     (rajoitusalue.tierekisteriosoite).tie, (rajoitusalue.tierekisteriosoite).aosa,
+                     (rajoitusalue.tierekisteriosoite).aet, (rajoitusalue.tierekisteriosoite).losa,
+                     (rajoitusalue.tierekisteriosoite).let)));
 END;
 $$ LANGUAGE plpgsql;
 
