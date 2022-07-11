@@ -11,11 +11,10 @@ CREATE TABLE rajoitusalue (
     -- Lasketaan tierekisteriosoitteelle
     ajoratojen_pituus  INTEGER,
 
-    -- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain)
+    -- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain ja pohjavesialueet_hallintayksikoittain)
+    -- NOTE: pohjavesialueet_hallintayksikoittain viewiä on käytetty vain kartalle hakuun
+    --       Hallintayksikön saa tarvittaessa haettua urakan id:n perusteella.
     urakka             INTEGER,
-
-    -- TODO: Tarvitaanko, mikä käyttötarkoitus? (vrt. pohjavesialueet_hallintayksikoittain)
-    --hallintayksikko    INTEGER,
 
     luotu              TIMESTAMP,
     luoja              INTEGER REFERENCES kayttaja (id),
