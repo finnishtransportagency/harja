@@ -842,35 +842,36 @@
 
 (defn- jaa-vuosipalkka-kuukausille
   [hoitokausi kopioi-tuleville? ennen-urakkaa? toimenkuvan-maarat vuosipalkka]
-  (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ vuosipalkka 12))
-        viimeinen-kuukausi (if-not (= vuosipalkka (* 12 kuukausipalkka))
-                             (tyokalut/pyorista-kahteen (- vuosipalkka (tyokalut/pyorista-kahteen (* 11 kuukausipalkka))))
-                             kuukausipalkka)
-        kopioi-tuleville? (if ennen-urakkaa? false kopioi-tuleville?)
-        alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
-        loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
-        loppukausi (inc
-                     (if kopioi-tuleville?
-                       (- loppuvuosi alkuvuosi)
-                       hoitokausi))
-        kaudet (into []
-                 (range hoitokausi loppukausi))
-        aseta-kuukausipalkka (map (fn [[kuukausi tiedot]]
-                                    [kuukausi (assoc tiedot :kuukausipalkka (if (= 9 kuukausi)
-                                                                              viimeinen-kuukausi
-                                                                              kuukausipalkka))]))
-        paivita-vuoden-tiedot (fn [kkt]
-                                (into {}
-                                  aseta-kuukausipalkka
-                                  kkt))
-        paivitysfunktiot (mapv
-                           #(fn [maarat]
-                              (update maarat %
-                                paivita-vuoden-tiedot))
-                           kaudet)
-        paivita (apply comp paivitysfunktiot)
-        paivitetyt (paivita toimenkuvan-maarat)]
-    paivitetyt))
+  (if ennen-urakkaa?
+    (assoc-in toimenkuvan-maarat [1 10 :kuukausipalkka] vuosipalkka) ;; ennen urakkaa tapahtuvat laitetaan ekalle lokakuulle
+    (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ vuosipalkka 12))
+          viimeinen-kuukausi (if-not (= vuosipalkka (* 12 kuukausipalkka))
+                               (tyokalut/pyorista-kahteen (- vuosipalkka (tyokalut/pyorista-kahteen (* 11 kuukausipalkka))))
+                               kuukausipalkka)
+          alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
+          loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
+          loppukausi (inc
+                       (if kopioi-tuleville?
+                         (- loppuvuosi alkuvuosi)
+                         hoitokausi))
+          kaudet (into []
+                   (range hoitokausi loppukausi))
+          aseta-kuukausipalkka (map (fn [[kuukausi tiedot]]
+                                      [kuukausi (assoc tiedot :kuukausipalkka (if (= 9 kuukausi)
+                                                                                viimeinen-kuukausi
+                                                                                kuukausipalkka))]))
+          paivita-vuoden-tiedot (fn [kkt]
+                                  (into {}
+                                    aseta-kuukausipalkka
+                                    kkt))
+          paivitysfunktiot (mapv
+                             #(fn [maarat]
+                                (update maarat %
+                                  paivita-vuoden-tiedot))
+                             kaudet)
+          paivita (apply comp paivitysfunktiot)
+          paivitetyt (paivita toimenkuvan-maarat)]
+      paivitetyt)))
 
 (defn- tallenna-vuosipalkka
   [atomi {:keys [hoitokausi kopioi-tuleville?]} rivi]
@@ -951,7 +952,7 @@
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [toimenkuva tunniste] :as rivi}]
+  [tiedot-atomi polku {:keys [toimenkuva tunniste hoitokaudet] :as rivi}]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -965,10 +966,11 @@
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
         [:div
          [:div
-          ;[debug/debug kursorit]
-          ;[debug/debug @tiedot]
-          ;[debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
-          ;[debug/debug (deref (get-in kursorit [:toimenkuva]))]
+          [debug/debug kursorit]
+          [debug/debug @tiedot-atomi]
+          [debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
+          [debug/debug (deref (get-in kursorit [:toimenkuva]))]
+[:div "hoitokaudet" hoitokaudet]
           ]
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
@@ -998,8 +1000,12 @@
 (defn luo-vetolaatikot
   [atomi]  
   (into {} (map (juxt first #(let [rivi (second %)
-                                   polku (t/->tunniste-maksukausi rivi)]
-                               [vetolaatikko-komponentti atomi polku rivi]))) @atomi))
+                                   polku (:tunniste rivi)]
+                               [vetolaatikko-komponentti atomi polku rivi]))) (into {}
+                                                                                (filter #(let [data (second %)]
+                                                                                           (not (or (:ennen-urakkaa? data)
+                                                                                                  (get (:hoitokaudet data) 0)))))
+                                                                                @atomi)))
 
 (defn- kun-ei-syoteta-erikseen
   [hoitokausi tiedot]
@@ -1031,8 +1037,8 @@
   [app _]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
         data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
-        rivin-avaimet (keys @data)
-        omat-toimenkuvat (r/atom (reduce (fn [omat rivin-avain]
+        ;rivin-avaimet (keys @data)
+        #_omat-toimenkuvat #_(r/atom (reduce (fn [omat rivin-avain]
                                            (let [arvo (get @data rivin-avain)]
                                              (if (:oma-toimenkuva? arvo)
                                                (assoc-in omat [rivin-avain] arvo)
@@ -1052,7 +1058,7 @@
          ;[debug/debug indeksit]
          [debug/debug app]
          [debug/debug @data]
-         ;[debug/debug vetolaatikot]
+         [debug/debug vetolaatikot]
          ;; Kaikille yhteiset toimenkuvat
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
@@ -1067,6 +1073,7 @@
                            {:hoitokausi kuluva-hoitokausi
                             :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
            :voi-poistaa? (constantly false)
+           :piilota-rivi #(and (not (= kuluva-hoitokausi 1)) (:ennen-urakkaa? %))
            :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
