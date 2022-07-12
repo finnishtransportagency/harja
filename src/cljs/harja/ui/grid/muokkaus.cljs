@@ -352,7 +352,7 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?]}]
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni? piilota-rivi]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -396,6 +396,8 @@
                              muokkausrivit)
                       (let [[id rivi] rivi-indeksineen
                             otsikko (valiotsikot id)
+                            piilota-rivi (or piilota-rivi identity)
+                            piilota-rivi-fn #(when-not (piilota-rivi rivi) %)
                             muokkausrivi (doall
                                           (into (if otsikko
                                                   [^{:key (str "otsikko" i)}
@@ -426,7 +428,7 @@
                         (recur (inc i)
                                loput-rivit
                                (map second (rest loput-rivit))
-                               (concat muokkausrivit muokkausrivi)))))))))]))})))
+                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))]))})))
 
 (defn- gridin-otsikot
   [skeema rivinumerot? piilota-toiminnot?]
@@ -511,7 +513,8 @@
   :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
   :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin.
   :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
-  :piilota-table-header?          True, niin ei piirretä thead -elementtiä."
+  :piilota-table-header?          True, niin ei piirretä thead -elementtiä.
+  :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy"
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
@@ -661,7 +664,7 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus piilota-table-header?] :as opts} skeema muokatut]
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus piilota-table-header? piilota-rivi] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -706,6 +709,7 @@
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
                              :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu
                              :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                             :piilota-rivi piilota-rivi
                              :on-rivi-blur on-rivi-blur
                              :on-rivi-focus on-rivi-focus}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)
