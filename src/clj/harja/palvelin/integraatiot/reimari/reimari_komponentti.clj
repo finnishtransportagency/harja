@@ -27,12 +27,13 @@
 (defprotocol HaeTurvalaiteryhmat
   (hae-turvalaiteryhmat [this]))
 
+;; Integraatiot poistettu käytöstä kesällä 2022. Ajastukset nollattu.
 (def hakuajat
-  {:toimenpiteet [2 0 0]
-   :komponenttityypit [2 5 0]
-   :turvalaitekomponentit [2 10 0]
-   :viat [2 15 0]
-   :turvalaiteryhmat [2 20 0]})
+  {:toimenpiteet nil
+   :komponenttityypit nil
+   :turvalaitekomponentit nil
+   :viat nil
+   :turvalaiteryhmat nil})
 
 (defrecord Reimari [pohja-url kayttajatunnus salasana]
   component/Lifecycle
