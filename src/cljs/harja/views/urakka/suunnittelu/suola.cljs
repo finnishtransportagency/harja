@@ -2,6 +2,7 @@
   "Urakan suolan käytön suunnittelu"
   (:require [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka.toteumat.suola :as tiedot-suola]
+            [harja.tiedot.urakka :as urakka]
             [cljs.core.async :refer [<!]]
             [clojure.string :as str]
             [harja.ui.komponentti :as komp]
@@ -22,10 +23,138 @@
             [harja.fmt :as fmt]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka :as urakka])
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.validointi :as validointi]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
+
+;; TODO: Lomakkeen tila tuck app-stateen
+(defonce lomake-rajoitusalue-atom (atom {:lomake {}
+                                         :auki? false}))
+(defn lomake-rajoitusalue-skeema
+  [lomake]
+
+  (into []
+    (concat
+      [(lomake/rivi
+         {:nimi :kopioi-rajoitukset :palstoja 3
+          :tyyppi :checkbox
+          :teksti "Kopioi rajoitukset tuleville hoitovuosille"})]
+      [(lomake/ryhma
+         {:otsikko "Sijainti"
+          :rivi? true}
+         {:nimi :tie
+          :otsikko "Tie"
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:tie] lomake)
+          :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)}
+         {:nimi :aosa
+          :otsikko "A-osa"
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:aosa] lomake)}
+         {:nimi :aet
+          :otsikko "A-et."
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:aet] lomake)}
+         {:nimi :losa
+          :otsikko "L-osa."
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:losa] lomake)}
+         {:nimi :let
+          :otsikko "L-et."
+          :tyyppi :positiivinen-numero
+          :kokonaisluku? true
+          :pakollinen? true
+          :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:let] lomake)})
+       (lomake/ryhma
+         {:rivi? true}
+         {:nimi :pituus
+          :otsikko "Pituus (m)"
+          :tyyppi :positiivinen-numero
+          :vayla-tyyli? true
+          :disabled? true
+          :tarkkaile-ulkopuolisia-muutoksia? true
+          :muokattava? (constantly false)}
+         {:nimi :pituus-ajoradat
+          :otsikko "Pituus ajoradat (m)"
+          :tyyppi :positiivinen-numero
+          :vayla-tyyli? true
+          :disabled? true
+          :tarkkaile-ulkopuolisia-muutoksia? true
+          :muokattava? (constantly false)})]
+
+      [(lomake/ryhma
+         {:otsikko "Suolarajoitus"
+          :rivi? true}
+         {:nimi :suolarajoitus
+          :otsikko "Suolan max määrä"
+          :tyyppi :positiivinen-numero
+          :yksikkö "t/ajoratakm"
+          :vayla-tyyli? true
+          :tarkkaile-ulkopuolisia-muutoksia? true})
+       (lomake/rivi
+         {:nimi :kopioi-rajoitukset
+          :tyyppi :checkbox :palstoja 3
+          :teksti "Alueella tulee käyttää suolan sijaan formiaattia"})])))
+
+(defn lomake-rajoitusalue
+  "Rajoitusalueen lisäys/muokkaus"
+  [lomake]
+  (let [muokkaustila? true
+        ;; TODO: Muokkaus
+        ;; TODO: Oikeustarkastukset
+        ;; TODO: Tuck-kytkennät
+        ]
+    [lomake/lomake
+     {:ei-borderia? true
+      :voi-muokata? true
+      :tarkkaile-ulkopuolisia-muutoksia? true
+      :otsikko (when muokkaustila?
+                 (if (:id lomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+      ;; TODO: Muokkaus
+      :muokkaa! :D
+      :footer-fn (fn [lomake]
+                   [:div.row
+
+                    [:div.row
+                     [:div.col-xs-8 {:style {:padding-left "0"}}
+                      [napit/tallenna
+                       "Valmis"
+                       ;; TODO: Tuck-event
+                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       {:disabled false :paksu? true}]
+                      [napit/tallenna
+                       "Tallenna ja lisää seuraava"
+                       ;; TODO: Tuck-event
+                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       {:disabled false :paksu? true}]]
+                     [:div.col-xs-4
+                      [napit/yleinen-toissijainen
+                       "Peruuta"
+                       ;; TODO: Tuck-event
+                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       {:paksu? true}]]]])}
+
+     (lomake-rajoitusalue-skeema lomake)]))
+
+
+;; -------
 
 (defn lomake-talvisuolan-kayttoraja
   [urakka]
@@ -182,11 +311,19 @@
             "Pohjavesialueiden suolarajoitukset"]
            [napit/uusi "Lisää rajoitus"
             ;; TODO: Tuck-event
-            :D
+            #(swap! lomake-rajoitusalue-atom assoc :auki? true)
             {:luokka "pull-right"
              :disabled (not saa-muokata?)}]]
 
           ;; TODO: Kartta
           #_[kartta]
+
+          ;; Rajoitusalueen lisäys/muokkauslomake. Avautuu sivupaneeliin
+          ;; TODO: Lomakkeen avaaminen/sulkeminen tuck-eventeiksi ja app stateen
+          (when (:auki? @lomake-rajoitusalue-atom)
+            [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
+             [lomake-rajoitusalue
+              ;; TODO: Lomake tuck app-statesta
+              (:lomake @lomake-rajoitusalue-atom)]])
 
           [taulukko-rajoitusalueet rajoitusalueet saa-muokata?]]]))))
