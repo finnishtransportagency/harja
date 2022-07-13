@@ -1077,7 +1077,7 @@
            :vetolaatikot vetolaatikot}
           [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
-           {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
+           {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :desimaalien-maara 2 :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]
          ;; Urakkakohtaiset toimenkuvat
          #_[vanha-grid/muokkaus-grid

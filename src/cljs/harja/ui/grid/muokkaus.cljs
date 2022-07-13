@@ -5,7 +5,7 @@
             [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
+            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina] :as kentat]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
             [goog.events :as events]
@@ -22,7 +22,8 @@
             [harja.ui.ikonit :as ikonit]
             [cljs-time.core :as t]
             [harja.ui.grid.yleiset :as grid-yleiset]
-            [harja.ui.napit :as napit])
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.makrot :refer [fnc]]))
@@ -59,11 +60,20 @@
         (map-indexed (fn [i komponentti]
                        ^{:key i}
                        [komponentti])
-                     paneelikomponentit))])])
+          paneelikomponentit))])])
+
+(defmulti ei-muokattava-tyypillinen-fmt identity)
+
+(defmethod ei-muokattava-tyypillinen-fmt :numero
+  [_]
+  (fn [arvo] (fmt/desimaaliluku-opt arvo 2) ))
+
+(defmethod ei-muokattava-tyypillinen-fmt :default
+  [_] nil)
 
 (defn ei-muokattava-elementti
-  [luokat fmt arvo]
-  (let [fmt (or fmt str)
+  [luokat fmt tyyppi arvo]
+  (let [fmt (or fmt (ei-muokattava-tyypillinen-fmt tyyppi) str)
         arvo (fmt arvo)]
     [:td {:class luokat}
      arvo]))
@@ -249,7 +259,9 @@
                [ei-muokattava-elementti (y/luokat "ei-muokattava"
                                                   tasaus-luokka
                                                   (grid-yleiset/tiivis-tyyli skeema))
-                fmt (if (and (= tyyppi :valinta)
+                fmt
+                tyyppi
+                (if (and (= tyyppi :valinta)
                              valinta-arvo valinta-nayta)
                       (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
                       arvo)]))))})))
@@ -396,7 +408,7 @@
                              muokkausrivit)
                       (let [[id rivi] rivi-indeksineen
                             otsikko (valiotsikot id)
-                            piilota-rivi (or piilota-rivi identity)
+                            piilota-rivi (or piilota-rivi (constantly false))
                             piilota-rivi-fn #(when-not (piilota-rivi rivi) %)
                             muokkausrivi (doall
                                           (into (if otsikko

@@ -2322,15 +2322,19 @@
                                                  ;; Sisältää yhtä monta riviä, kuin urakalla on hoitokausia
                                                  (range 1 (inc (count toimenkuvan-data-hoitokausittain))))
                                      jarjestys (first (filter #(= toimenkuva (:toimenkuva %)) (pohjadatan-versio)))
-                                     kuukausipalkka-sama?-fn (fn [vertailtava]
+                                     ;; summittain, koska järjestelmä laskee pyöristysvirheen myötä syntyviä senttejä viimeiselle hoitovuoden kuulle (syyskuulle)
+                                     ;; ei lukita kenttiä, jos virhe mahtuu tähän marginaaliin
+                                     kuukausipalkka-summittain-sama?-fn (fn [vertailtava]
                                                                (fn [[_ tiedot]]
-                                                                 (println "konvertoi-jhk-data-taulukolle :: vertailu" vertailtava tiedot)
-                                                                 (= (:kuukausipalkka vertailtava) (:kuukausipalkka tiedot))))
+                                                                 (println "konvertoi-jhk-data-taulukolle :: vertailu" vertailtava tiedot (>= (:kuukausipalkka tiedot) (:kuukausipalkka vertailtava)) (< (:kuukausipalkka tiedot) (+ (:kuukausipalkka vertailtava) 0.1)))
+                                                                 (and (>= (:kuukausipalkka tiedot) (:kuukausipalkka vertailtava))
+                                                                   (< (:kuukausipalkka tiedot) (+ (:kuukausipalkka vertailtava) 0.1)))))                                     
                                      erikseen-syotettava? (into {}
                                                             (map (fn [hoitokausi]
+                                                                   (println "erikseen ajettu")
                                                                    [hoitokausi (not
                                                                                  (every?
-                                                                                   (kuukausipalkka-sama?-fn
+                                                                                   (kuukausipalkka-summittain-sama?-fn
                                                                                      (get-in maksuerat [hoitokausi
                                                                                                         (first
                                                                                                           (sort

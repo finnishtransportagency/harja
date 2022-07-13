@@ -542,6 +542,7 @@
   ([luku tarkkuus ryhmitelty?]
    (desimaaliluku-opt luku tarkkuus tarkkuus ryhmitelty?))
   ([luku min-desimaalit max-desimaalit ryhmitelty?]
+   (println "erikseen" luku)
    (if (or (nil? luku) (and (string? luku) (empty? luku)))
      ""
      (desimaaliluku luku min-desimaalit max-desimaalit ryhmitelty?))))
