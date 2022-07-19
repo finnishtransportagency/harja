@@ -969,9 +969,7 @@
           [debug/debug kursorit]
           [debug/debug @tiedot-atomi]
           [debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
-          [debug/debug (deref (get-in kursorit [:toimenkuva]))]
-[:div "hoitokaudet" hoitokaudet]
-          ]
+          [debug/debug (deref (get-in kursorit [:toimenkuva]))]]
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
@@ -1075,7 +1073,7 @@
            :voi-poistaa? (constantly false)
            :piilota-rivi #(and (not (= kuluva-hoitokausi 1)) (:ennen-urakkaa? %))
            :vetolaatikot vetolaatikot}
-          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize}
+          [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize :placeholder "Kirjoita muu toimenkuva"}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :desimaalien-maara 2 :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]
