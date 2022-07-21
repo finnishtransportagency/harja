@@ -14,14 +14,21 @@ BEGIN
                        AND (urakka_ IS NULL OR t.urakka = urakka_)
                        AND t.poistettu IS false
                        AND array_length(tr.reittipisteet, 1) > 0
-                       -- Vain talvisuola ja formiaatti
-                       AND EXISTS(SELECT DISTINCT m.materiaalikoodi
-                                  FROM unnest(tr.reittipisteet) trp
-                                           JOIN LATERAL unnest(trp.materiaalit) m ON TRUE
-                                  WHERE materiaalikoodi IN
-                                        (select id
-                                         FROM materiaalikoodi
-                                         where materiaalityyppi IN ('talvisuola', 'formiaatti')))
+                       -- Vain talvisuola ja formiaatti-materiaalit ja suolaus-toimenpide.
+                       AND (EXISTS(SELECT DISTINCT m.materiaalikoodi
+                                   FROM unnest(tr.reittipisteet) trp
+                                            JOIN LATERAL unnest(trp.materiaalit) m ON TRUE
+                                   WHERE materiaalikoodi IN
+                                         (select id
+                                          FROM materiaalikoodi
+                                          where materiaalityyppi IN ('talvisuola', 'formiaatti')))
+                         OR EXISTS(SELECT DISTINCT t.toimenpidekoodi
+                                   FROM unnest(tr.reittipisteet) trp
+                                            JOIN LATERAL unnest(trp.tehtavat) t ON TRUE
+                                   WHERE t.toimenpidekoodi IN
+                                         (select id
+                                          FROM toimenpidekoodi
+                                          where nimi = 'Suolaus')))
                        -- Vain kevyen liikenteen väylillä
                        AND EXISTS(SELECT DISTINCT trp.talvihoitoluokka
                                   FROM unnest(tr.reittipisteet) trp
