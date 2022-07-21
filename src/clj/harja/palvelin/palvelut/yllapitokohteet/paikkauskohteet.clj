@@ -278,39 +278,34 @@
                               (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id roolit))
                          (catch Exception e
                            (log/error e "Fimiin ei saatu yhteyttä.")))
-        vastaanottaja (if (= (count vastaanottajat) 1)
-                        (str (-> vastaanottajat first :etunimi) " " (-> vastaanottajat first :sukunimi))
-                        nil)
-        viesti (muodosta-viesti 
+        viesti (muodosta-viesti
                 tilasiirtyma 
                 {:kohteen-nimi (:nimi kohde)
                  :pvm (pvm/pvm (pvm/nyt))
                                               :urakan-nimi urakan-nimi
                                               :ely-id ely-id
                                               :urakka-id (:urakka-id kohde)
-                                              :vastaanottajan-nimi vastaanottaja
-                                              :tierekisteriosoite (select-keys kohde [:tie :aosa :aet :let :losa]) })
-        _ (if vastaanottaja
-            (case tilasiirtyma
-              ;; Lähetään tilauksesta sähköpostia urakoitsijalle
-              (:ehdotettu->tilattu
-                :tilattu->ehdotettu
-                :ehdotettu->hylatty
-                :hylatty->ehdotettu
-                :tilattu->valmis)
-              (laheta-sahkoposti fim email sampo-id
-                                 roolit
-                                 otsikko
-                                 viesti)
-
-              (log/debug (str "Paikkauskohteen: " (:id kohde) " / " (:nimi kohde) "  tila ei muuttunut. Sähköposteja ei lähetetä.")))
-            (log/debug (str "Paikkauskohteelle: " (:id kohde) " / " (:nimi kohde) " ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä.")))
+                                              :tierekisteriosoite (select-keys kohde [:tie :aosa :aet :let :losa]) })]
+       (if (empty? vastaanottajat)
+         (log/debug (str "Paikkauskohteelle: " (:id kohde) " / " (:nimi kohde) " ei löytynyt sähköpostin vastaanottajaa. Sähköposteja ei lähetetä."))
+         (case tilasiirtyma
+               ;; Lähetään tilauksesta sähköpostia urakoitsijalle
+               (:ehdotettu->tilattu
+                 :tilattu->ehdotettu
+                 :ehdotettu->hylatty
+                 :hylatty->ehdotettu
+                 :tilattu->valmis)
+               (laheta-sahkoposti fim email sampo-id
+                                  roolit
+                                  otsikko
+                                  viesti)
+               (log/debug (str "Paikkauskohteen: " (:id kohde) " / " (:nimi kohde) "  tila ei muuttunut. Sähköposteja ei lähetetä."))))
 
         ;; Jos paikkauskohteessa on tuhottu tiemerkintää, ilmoitetaan siitä myös sähköpostilla
-        _ (when (and (nil? (:tiemerkintapvm vanha-kohde))
+        (when (and (nil? (:tiemerkintapvm vanha-kohde))
                      (:tiemerkintaa-tuhoutunut? kohde))
             (ilmoita-tiemerkintaan db fim email user kohde))
-        ]
+
     ;; Siivotaan paikkauskohteesta mahdolliset tiemerkintään liittyvät tiedot pois
     (dissoc kohde :viesti :kopio-itselle? :tiemerkinta-urakka)))
 
