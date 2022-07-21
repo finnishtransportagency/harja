@@ -30,6 +30,13 @@
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
                    [cljs.core.async.macros :refer [go go-loop]]))
 
+
+(def vertailuvuosi-uudelle-taulukolle 2022)
+(defn post-2022?
+  []
+  (let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)]
+      (when alkupvm (>= (pvm/vuosi alkupvm) vertailuvuosi-uudelle-taulukolle))))
+
 ;; Tuck e!
 (def ^{:dynamic true
        :doc "Käytännössä modaalin nappeja varten. Eli, jos tuckin process-event:issä käsitellään
@@ -316,15 +323,20 @@
    {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    ;; 2022 eteenpäin alkavien versio datasta
-   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :kk-v 1 :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
-   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 2}
-   {:toimenkuva "päätoiminen apulainen" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 2}
-   {:toimenkuva "apulainen/työnjohtaja" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 2}
-   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 5 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 2}
-   {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
-   {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
-
-(def vertailuvuosi-uudelle-taulukolle 2022)
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua"
+    :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
+   {:toimenkuva "vastuunalainen työnjohtaja"
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 2}
+   {:toimenkuva "päätoiminen apulainen"
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 2}
+   {:toimenkuva "apulainen/työnjohtaja"
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 2}
+   {:toimenkuva "viherhoidosta vastaava henkilö"
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 2}
+   {:toimenkuva "hankintavastaava" 
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
+   {:toimenkuva "harjoittelija"
+    :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
 
 (defn pohjadatan-versio
   []
@@ -1590,16 +1602,16 @@
       {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :otsikot]]
                  :haku identity}
        :yhteensa {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
-                  :haku #(vec (concat ["Yhteensä" ""] %))}
+                  :haku #(vec (concat ["Yhteensä"] (when-not (post-2022?) [""]) %))}
        :indeksikorjattu {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu]]
-                         :haku #(vec (concat ["Indeksikorjattu" ""] %))}}
+                         :haku #(vec (concat ["Indeksikorjattu"] (when-not (post-2022?) [""]) %))}}
       (apply merge
         (mapv (fn [{:keys [toimenkuva maksukausi kk-v] :as toimenkuva-kuvaus}]
                 (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
                       toimenkuva-formatoitu (toimenkuva-formatoitu toimenkuva-kuvaus)]
                   {(keyword (str "yhteenveto" yksiloiva-nimen-paate))
                    {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]]
-                    :haku #(vec (concat [toimenkuva-formatoitu kk-v] %))}}))
+                    :haku #(vec (concat [toimenkuva-formatoitu] (when-not (post-2022?) [kk-v]) %))}}))
           (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))
       (reduce (fn [rajapinnat index]
                 (let [nimi (jh-omienrivien-nimi index)]
@@ -1610,7 +1622,7 @@
                       :haku (fn [yhteenvedot-vuosille {:keys [maksukausi toimenkuva]}]
                               (let [kk-v (when maksukausi
                                            (mhu/maksukausi->kuukausien-lkm maksukausi))]
-                                (vec (concat [toimenkuva kk-v] yhteenvedot-vuosille))))}})))
+                                (vec (concat [toimenkuva] (when-not (post-2022?) [kk-v]) yhteenvedot-vuosille))))}})))
         {}
         (range 1 (inc jh-korvausten-omiariveja-lkm))))
 
@@ -2120,8 +2132,7 @@
     rahavaraukset-hoitokausittain))
 
 (defn jh-korvaukset-vastauksesta [vastaus pohjadata]
-  (let [_ (js/console.log "jh-korvaukset-vastauksesta" pohjadata)
-        omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
+  (let [omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
                                            (group-by :toimenkuva-id
                                              (get-in vastaus [:johto-ja-hallintokorvaukset :omat])))))
         vapaat-omien-toimekuvien-idt (clj-set/difference
@@ -2132,10 +2143,8 @@
     (merge
       (reduce
         (fn [korvaukset {:keys [toimenkuva kk-v maksukausi hoitokaudet]}]
-          (println "korvaukset vvv!" toimenkuva kk-v maksukausi hoitokaudet)
           (let [asia-kannasta (reverse (sort-by :osa-kuukaudesta
                                          (filter (fn [jh-korvaus]
-                                                   (println "jh-korvat " jh-korvaus toimenkuva maksukausi hoitokaudet)
                                                    (and (= (:toimenkuva jh-korvaus) toimenkuva)
                                                      (= (:maksukausi jh-korvaus) maksukausi)))
                                            (get-in vastaus [:johto-ja-hallintokorvaukset :vakiot]))))
@@ -2143,7 +2152,6 @@
                 taytetty-jh-data
                 (if data-koskee-ennen-urakkaa?
                   (let [kannasta (filterv :ennen-urakkaa asia-kannasta)]
-                    (println "data koskee 1" toimenkuva asia-kannasta)
                     (if (empty? kannasta)
                       (let [arvot {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
                                    :vuosi (pvm/vuosi urakan-aloituspvm)
@@ -2152,13 +2160,8 @@
                                    :hoitokaudet hoitokaudet
                                    :maksukausi maksukausi
                                    :kuukausi 10}
-                            _ (println "data koskee 2" toimenkuva arvot)
                             kokonaiset (vec (repeat (js/Math.floor kk-v) arvot))
                             osittainen? (not= 0 (- kk-v (count kokonaiset)))]
-                        (println "data koskee 3"
-                          (if osittainen?
-                            (conj kokonaiset (assoc arvot :osa-kuukaudesta (- kk-v (count kokonaiset))))
-                            kokonaiset))
                         (if osittainen?
                           (conj kokonaiset (assoc arvot :osa-kuukaudesta (- kk-v (count kokonaiset))))
                           kokonaiset))
@@ -2176,7 +2179,6 @@
                         :else true))
                     (fn [{:keys [vuosi kuukausi tunnit tuntipalkka tuntipalkka-indeksikorjattu] :as data}]
                       #_(println "### jh-korvaukset toimenkuvat:" vuosi " kuukausi: " kuukausi " tuntipalkka: " tuntipalkka " indeksikorjattu: " tuntipalkka-indeksikorjattu)
-(println "jh-korvaus " (pr-str data))
                       (-> data
                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                           :tunnit (or tunnit nil)
@@ -2221,12 +2223,11 @@
                                     (first vapaat-omien-toimekuvien-idt)))
                                         ;_ (js/console.log "jh-korvaukset-vastauksesta :: omat toimenkuvat" (pr-str (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat])))
                   tunniste (str (or (when (>= (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) toimenkuva-id) omanimi))
-                  _ (println "tunniste" tunniste)
                   toimenkuva (some #(when (= (:toimenkuva-id %) toimenkuva-id)
                                       (:toimenkuva %))
                                (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat]))
-                  _ (js/console.log "jh-korvaukset-vastauksesta :: omien toimenkuvien nimet pitäisi tulla kannasta" (pr-str (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat])))
-                  _ (js/console.log "jh-korvaukset-vastauksesta :: toimenkuva" (pr-str toimenkuva))
+;                  _ (js/console.log "jh-korvaukset-vastauksesta :: omien toimenkuvien nimet pitäisi tulla kannasta" (pr-str (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat])))
+;                  _ (js/console.log "jh-korvaukset-vastauksesta :: toimenkuva" (pr-str toimenkuva))
                   kuukaudet (into #{} (:maksukuukaudet (first asia-kannasta)))
                   taytetty-jh-data
                   (pohjadatan-taydennys-fn pohjadata
@@ -2286,14 +2287,12 @@
                                      toimenkuvan-nimi (if (map? toimenkuvan-data)
                                                         toimenkuva
                                                         (:toimenkuva (first (first toimenkuvan-data))))                                     
-                                     _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-data" (pr-str toimenkuvan-data))
                                      toimenkuvan-data-hoitokausittain (if (map? toimenkuvan-data)
                                                                         (first (vals toimenkuvan-data))
                                                                         toimenkuvan-data)
                                      tunniste (if (-> toimenkuvan-data-hoitokausittain first first :oma-toimenkuva?)
                                                 (-> toimenkuvan-data-hoitokausittain first first :toimenkuva-id)
                                                 toimenkuva)
-                                     _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-nimi" (pr-str toimenkuvan-nimi tunniste))
                                      ennen-urakkaa? (or (-> toimenkuvan-data-hoitokausittain first first :ennen-urakkaa)
                                                       (some? (get (:hoitokaudet (first (first toimenkuvan-data-hoitokausittain))) 0))) 
                                      vuosipalkka (reduce (fn [summa kuukauden-arvot]
@@ -2326,12 +2325,10 @@
                                      ;; ei lukita kenttiä, jos virhe mahtuu tähän marginaaliin
                                      kuukausipalkka-summittain-sama?-fn (fn [vertailtava]
                                                                (fn [[_ tiedot]]
-                                                                 (println "konvertoi-jhk-data-taulukolle :: vertailu" vertailtava tiedot (>= (:kuukausipalkka tiedot) (:kuukausipalkka vertailtava)) (< (:kuukausipalkka tiedot) (+ (:kuukausipalkka vertailtava) 0.1)))
                                                                  (and (>= (:kuukausipalkka tiedot) (:kuukausipalkka vertailtava))
                                                                    (< (:kuukausipalkka tiedot) (+ (:kuukausipalkka vertailtava) 0.1)))))                                     
                                      erikseen-syotettava? (into {}
                                                             (map (fn [hoitokausi]
-                                                                   (println "erikseen ajettu")
                                                                    [hoitokausi (not
                                                                                  (every?
                                                                                    (kuukausipalkka-summittain-sama?-fn
@@ -2341,7 +2338,6 @@
                                                                                                             (keys (get maksuerat hoitokausi))))]))
                                                                                    (get maksuerat hoitokausi)))]))
                                                             (range 1 (inc (count (keys maksuerat)))))
-                                     _ (js/console.log "konvertoi-jhk-data-taulukolle :: toimenkuvan-maksueracount" (pr-str (inc (count (keys maksuerat)))))
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
                                                                       99)
@@ -2372,7 +2368,7 @@
 
 (defn laske-luvut-yhteen
   [maksuerat]
-  (fn [hoitokausi]
+  (fn [hoitokausi]    
     (let [summat (into []
                    (comp (ota-oikea-vuosi hoitokausi) ota-kuukaudet ota-kuukausipalkat)
                    maksuerat)]
@@ -2380,11 +2376,11 @@
 
 (defn- laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle
   [yhteenvedot-vuosille tiedot hoitokausi]
-  (let [maksuerat (into [] (comp ota-maksuerat (ota-oikea-vuosi hoitokausi)) tiedot)
+  (let [maksuerat (into [] (comp ota-maksuerat) tiedot)
         lukujen-maara (count yhteenvedot-vuosille)
         luvut (into []
                 (map (laske-luvut-yhteen maksuerat))
-                (range 1 (inc lukujen-maara)))]    
+                (range 1 (inc lukujen-maara)))]
     luvut))
 
 (defn- laske-toimenkuvan-yhteenveto-hoitokaudelle
@@ -2411,7 +2407,6 @@
         summat (laske-johto-ja-hallintokorvauksien-yhteenveto-hoitokaudelle yhteenvedot tiedot hoitokausi)
         nykyiset-vuosisummat-toimenkuvalla (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi])
         paivitetyt-vuosisummat-toimenkuvalla (laske-toimenkuvan-yhteenveto-hoitokaudelle nykyiset-vuosisummat-toimenkuvalla tiedot hoitokausi tunniste)]
-    (println "kassut dekissä" toimenkuva tunniste maksukausi)
     (-> app
       (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset]
         summat)
@@ -2467,7 +2462,9 @@
                          {}
                          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
-          {:otsikot {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}})
+          {:otsikot (merge {:toimenkuva "Toimenkuva" 
+                            :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}
+                      (when (post-2022?) {:kk-v "kk/v"}))})
         (assoc-in [:gridit :suunnitellut-hankinnat]
           {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})
@@ -2862,7 +2859,6 @@
                                 :hankintakustannus ->TallennaHankintojenArvotOnnistui
                                 :laskutukseen-perustuva-hankinta ->TallennaLaskutukseenperustuvatArvotOnnistui)
                     :epaonnistui ->TallennaHankintojenArvotEpaonnistui}]
-        (println "tallenna hankintojen arvot" tallennettava-asia lahetettava-data)
 
         (when-not onko-osiolla-tila?
           (tallenna-ja-odota-vastaus app
@@ -3177,7 +3173,6 @@
                              {:toimenkuva toimenkuva} ;; onko tää sama asia nyt
                              (when toimenkuva-id {:toimenkuva-id toimenkuva-id})
                              (when maksukausi {:maksukausi maksukausi}))
-          _ (println "lessgoo" lahetettava-data)
           tiedot {:palvelu post-kutsu
                   :payload lahetettava-data
                   :onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
@@ -3398,27 +3393,18 @@
   VaihdaOmanToimenkuvanNimi
   (process-event [{rivin-tiedot :rivin-tiedot} app]
     (let [uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
-          _ (js/console.log "tallenna-toimenkuvan-nimimuutos :: app" (pr-str (get-in app [:domain :johto-ja-hallintokorvaukset])))
-          _ (js/console.log "tallenna-toimenkuvan-nimimuutos :: rivin-nimi" (pr-str (:rivin-nimi rivin-tiedot)))
-          _ (js/console.log "tallenna-toimenkuvan-nimimuutos :: uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi))
           toimenkuvan-tiedot (get-in app [:domain :johto-ja-hallintokorvaukset (:tunniste rivin-tiedot)])
-          _ (js/console.log "tallenna-toimenkuvan-nimimuutos :: toimenkuvan-tiedot" (pr-str toimenkuvan-tiedot))
           app (assoc-in app [:domain :johto-ja-hallintokorvaukset (:tunniste rivin-tiedot) 0 0 :toimenkuva] uusi-toimenkuva-nimi)]
       app))
 
   TallennaToimenkuva
-  (process-event [{:keys [tunniste] :as kakikki} app]
-    (let [_ (js/console.log "rivin-nimi" (pr-str kakikki))
-          _ (js/console.log "rivin-nimi" (get-in app [:domain :johto-ja-hallintokorvaukset]))
-          {urakka-id :id} (:urakka @tiedot/yleiset)
+  (process-event [{:keys [tunniste]} app]
+    (let [{urakka-id :id} (:urakka @tiedot/yleiset)
           toimenkuva-id (get-in app [:domain :johto-ja-hallintokorvaukset tunniste 0 0 :toimenkuva-id])
           toimenkuva-nimi (get-in app [:domain :johto-ja-hallintokorvaukset tunniste 0 0 :toimenkuva])
           lahetettava-data {:urakka-id urakka-id
                             :toimenkuva-id toimenkuva-id
                             :toimenkuva toimenkuva-nimi}]
-      (println "Tallenna toimenkuva :: tunniste" (pr-str tunniste))
-      (println "Tallenna toimenkuva :: domain" (get-in app [:domain :johto-ja-hallintokorvaukset tunniste 0 0]))
-      (println "Tallenna toimenkuva :: lahetettava-data" (pr-str lahetettava-data))
       (tallenna-ja-odota-vastaus app
         {:palvelu :tallenna-toimenkuva
          :payload lahetettava-data
@@ -3444,8 +3430,6 @@
           urakka (-> @tiedot/tila :yleiset :urakka)
           {:keys [hoitovuosi]} parametrit
           payload {:urakka-id urakka}]
-      (println "tilan tallennus")
-
       (tallenna-ja-odota-vastaus app
         {:palvelu palvelu
          :payload payload
@@ -3454,7 +3438,6 @@
 
   TallennaKustannussuunnitelmanOsalleTilaOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "vastaus" vastaus)
     (assoc-in app [:domain :osioiden-tilat] vastaus))
 
   TallennaKustannussuunnitelmanOsalleTilaEpaonnistui

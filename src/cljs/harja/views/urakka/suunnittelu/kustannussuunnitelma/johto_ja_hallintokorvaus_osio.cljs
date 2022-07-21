@@ -35,7 +35,7 @@
   (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
     {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
      :solun-polun-pituus 1
-     :jarjestys [^{:nimi :mapit} [:toimenkuva :tunnit :tuntipalkka :yhteensa :kk-v]]
+     :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) :kk-v)))]
      :datan-kasittely (fn [yhteenveto]
                         (mapv (fn [[_ v]]
                                 v)
@@ -659,7 +659,7 @@
 (defn johto-ja-hallintokorvaus-laskulla-yhteenveto-grid []
   (let [taulukon-id "johto-ja-hallintokorvaus-yhteenveto-taulukko"
         g (g-pohjat/uusi-taulukko
-            {:header (-> (vec (repeat 7
+            {:header (-> (vec (repeat (if (t/post-2022?) 6 7)
                                 {:tyyppi :teksti
                                  :leveys 5
                                  :luokat #{"table-default" "table-default-header" "lihavoitu"}}))
@@ -670,7 +670,7 @@
                             :osat [{:tyyppi :rivi
                                     :nimi ::t/yhteenveto
                                     :osat (->
-                                            (vec (repeat 7
+                                            (vec (repeat (if (t/post-2022?) 6 7)
                                                    {:tyyppi :teksti
                                                     :luokat #{"table-default"}
                                                     :fmt ks-yhteiset/summa-formatointi-uusi}))
@@ -683,12 +683,14 @@
                                                                        (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                                        teksti))))))}]})
                      (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
-             :footer (-> (vec (repeat 7
-                                {:tyyppi :teksti
-                                 :luokat #{"table-default" "table-default-sum"}
-                                 :fmt ks-yhteiset/yhteenveto-format}))
-                       (assoc 1 {:tyyppi :tyhja
-                                 :luokat #{"table-default" "table-default-sum"}}))
+             :footer (let [osat (vec (repeat (if (t/post-2022?) 6 7)
+                                   {:tyyppi :teksti
+                                    :luokat #{"table-default" "table-default-sum"}
+                                    :fmt ks-yhteiset/yhteenveto-format}))]
+                       (if-not (t/post-2022?)
+                         (assoc osat 1 {:tyyppi :tyhja
+                                   :luokat #{"table-default" "table-default-sum"}})
+                         osat))
              :taulukon-id taulukon-id
              :root-asetus! (fn [g]
                              (e! (tuck-apurit/->MuutaTila
@@ -700,17 +702,19 @@
                                             (fn [tila]
                                               (update-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid] f))))}})
         g (grid/lisaa-rivi! g
-            (grid/rivi {:osat (->
-                                (vec (repeatedly 7
-                                       (fn []
-                                         (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
-                                                       :fmt ks-yhteiset/yhteenveto-format}))))
-                                (update-in [1] gov/teksti->tyhja #{"table-default" "table-default-sum" "harmaa-teksti"}))
+            (grid/rivi {:osat (let [osat
+                                    (vec (repeatedly (if (t/post-2022?) 6 7)
+                                           (fn []
+                                             (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
+                                                           :fmt ks-yhteiset/yhteenveto-format}))))]
+                                (if-not (t/post-2022?)
+                                  (update-in osat [1] gov/teksti->tyhja #{"table-default" "table-default-sum" "harmaa-teksti"})
+                                  osat))
                         :koko {:seuraa {:seurattava ::g-pohjat/otsikko
                                         :sarakkeet :sama
                                         :rivit :sama}}
                         :nimi ::t/indeksikorjattu}
-              [{:sarakkeet [0 7] :rivit [0 1]}])
+              [{:sarakkeet [0 (if (t/post-2022?) 6 7)] :rivit [0 1]}])
             [3])]
 
     (grid/rajapinta-grid-yhdistaminen! g
@@ -718,7 +722,7 @@
       (t/johto-ja-hallintokorvaus-yhteenveto-dr)
       (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                     :solun-polun-pituus 1
-                                    :jarjestys [^{:nimi :mapit} [:toimenkuva :kk-v :hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]]
+                                    :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva] (when-not (t/post-2022?) [:kk-v]) [:hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]))]
                                     :datan-kasittely (fn [otsikot]
                                                        (mapv (fn [otsikko]
                                                                otsikko)
@@ -1020,8 +1024,7 @@
   (when (:oma-toimenkuva? rivin-tiedot)
     (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
           uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
-          rivin-nimi (:rivin-nimi rivin-tiedot)
-          _ (js/console.log "uusi-toimenkuva-nimi" (pr-str uusi-toimenkuva-nimi) "rivin-nimi" (pr-str rivin-nimi))]
+          rivin-nimi (:rivin-nimi rivin-tiedot)]
       ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
       (when (not= uusi-toimenkuva-nimi rivin-nimi)
         (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
