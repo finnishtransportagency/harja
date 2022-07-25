@@ -416,9 +416,9 @@
                                    [] hoitokauden-numero-lisatty)
         ;; Vuoden -22 ja sen jälkeen alkavilla urakoilla ei ole enää erikseen maksukausia ja kk-v erottelua ei enää tarvita
         kk-v-lisatty (if (< urakan-alkuvuosi 2022)
-                       (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
+                       (map (fn [{:keys [kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
                               (cond
-                                #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
+                                (not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
                                 (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
                                 (= :talvi maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 7)
                                 (and (= toimenkuva "hankintavastaava") (= 0 hoitokausi)) (assoc johto-ja-hallintokorvaus :kk-v 4.5)
