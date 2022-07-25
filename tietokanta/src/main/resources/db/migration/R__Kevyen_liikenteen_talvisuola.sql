@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION siirra_talvisuola_kevlilta(urakka_ INTEGER, alku TIMESTAMP, loppu TIMESTAMP)
+CREATE OR REPLACE FUNCTION siirra_talvisuola_kelvilta(urakka_ INTEGER, alku TIMESTAMP, loppu TIMESTAMP)
     RETURNS INTEGER AS
 $$
 DECLARE

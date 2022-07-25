@@ -14,7 +14,7 @@
                            "2019-09-30")
         mat-yht-ennen (apply + (map :maara suolaa-kelveilla-ennen))
         mat-kelvi-ennen (apply + (map :maara (filter #(#{9, 10, 11} (:talvihoitoluokka %)) suolaa-kelveilla-ennen)))
-        _poista-suola (q (str "SELECT siirra_talvisuola_kevlilta(null, '2018-10-01', '2019-09-30')"))
+        _poista-suola (q (str "SELECT siirra_talvisuola_kelvilta(null, '2018-10-01', '2019-09-30')"))
         suolaa-kelveilla-jalkeen (suolaa-kelvilla-kysely oulun-au-id
                            "2018-10-01"
                            "2019-09-30")

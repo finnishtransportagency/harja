@@ -21,12 +21,12 @@
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja urakka-id))))
 
 ;; Talvihoitoluokat niille kevyen liikenteen väylille, joita ei suolata, eli K1, K2 ja K (Ei talvihoitoa)
-(def kevlien-talvihoitoluokat [9 10 11])
+(def kelvien-talvihoitoluokat [9 10 11])
 
 (defn pisteen-hoitoluokat [db piste tehtavat materiaalit]
   (let [suolausta? (when (or (seq tehtavat) (seq materiaalit))
                      (onko-toteumalla-suolausta db {:materiaalit materiaalit :tehtavat tehtavat}))]
-    (first (hae-pisteen-hoitoluokat db (assoc piste :kielletyt_hoitoluokat (when suolausta? kevlien-talvihoitoluokat))))))
+    (first (hae-pisteen-hoitoluokat db (assoc piste :kielletyt_hoitoluokat (when suolausta? kelvien-talvihoitoluokat))))))
 
 (defn tallenna-toteuman-reittipisteet! [db toteuman-reittipisteet]
   (upsert! db ::rp/toteuman-reittipisteet
