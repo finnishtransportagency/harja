@@ -35,7 +35,7 @@
   (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
     {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
      :solun-polun-pituus 1
-     :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) :kk-v)))]
+     :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) [:kk-v])))]
      :datan-kasittely (fn [yhteenveto]
                         (mapv (fn [[_ v]]
                                 v)

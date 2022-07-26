@@ -7,14 +7,7 @@ function alustaTampereenUrakka() {
     ks.alustaKanta('Tampereen MHU 2022-2026');
 }
 
-describe('Johto- & Hallintokorvaukset, 2022->', () => {
-    Cypress.on('uncaught:exception', (err, runnable) => {
-        if (err.message.includes('harja.domain.vesivaylat.kommentti/kommentin-til')) {
-            // ignore case
-            return false
-        }
-    })
-    
+describe('Johto- & Hallintokorvaukset, 2022->', () => {        
     before(function () {
         alustaTampereenUrakka();
         avaaKustannussuunnittelu('Tampereen MHU 2022-2026', 'Pirkanmaa', indeksit);
