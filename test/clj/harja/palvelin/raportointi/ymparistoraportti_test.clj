@@ -509,7 +509,7 @@ VALUES
       (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
       (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 100M))
 
-      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
+      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1103.14M))
       (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
       (is (= oulu-talvisuola-luokka-Is-10-18 100M))
       (is (= oulu-talvisuola-luokka-I-10-18 100M))
@@ -600,7 +600,7 @@ VALUES
       (is (= talvisuola-luokka-ei-talvih-02-18 100M))
       (is (= talvisuola-luokka-ei-tiedossa-02-18 100M))
 
-      (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1100M))
+      (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1103.14M))
       (is (= talvisuola-luokka-IsE-10-18 100M))
       (is (= talvisuola-luokka-Is-10-18 100M))
       (is (= talvisuola-luokka-I-10-18 100M))
