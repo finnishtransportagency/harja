@@ -41,11 +41,11 @@
         tyhjat-rivit (for [i (range 0 2)]
                        [nil nil nil nil nil nil nil nil nil])
         yhteenvetorivi [[nil nil nil "Yhteensä:"
-                         (yllapitokohteet-domain/laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-                         (yllapitokohteet-domain/laske-sarakkeen-summa :maaramuutokset kohteet)
-                         (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
-                         (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
-                         (yllapitokohteet-domain/laske-sarakkeen-summa :kokonaishinta kohteet)]]]
+                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
+                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
+                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
+                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
+                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]]]]
     (concat
       (when (> (count kohteet) 0)
         kohderivit)

@@ -54,8 +54,16 @@
   (.formatAsString (CellReference. rivi-nro sarake-nro)))
 
 (defmulti aseta-kaava!
-  (fn [[tyyppi &_] _ _ _]
-    tyyppi))
+  (fn [[_ {:keys [kaava]} &_] _ _]
+    kaava))
+ 
+(defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi]}] workbook cell]
+  (do
+    (.setCellFormula cell (str "SUM(INDIRECT(ADDRESS(" (or alkurivi 1) ",COLUMN())&\":\"&ADDRESS(ROW()-1,COLUMN())))"))
+    (-> workbook
+      (.getCreationHelper)
+      (.createFormulaEvaluator)
+      (.evaluateFormulaCell cell))))
 
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
@@ -318,7 +326,8 @@
 
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
                        [naytettava-arvo solun-tyyli formaatti]
-                       (if (raportti-domain/raporttielementti? arvo-datassa)
+                       (if (and (raportti-domain/raporttielementti? arvo-datassa)
+                             (not (raportti-domain/excel-kaava? arvo-datassa)))
                          (muodosta-solu arvo-datassa oletustyyli)
                          [arvo-datassa oletustyyli])
                        kustomi-formaatti? (and (vector? formaatti) (= (first formaatti) :kustomi))
@@ -358,8 +367,8 @@
                        tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (:fmt sarake)])]
                                tyyli
                                (luo-uusi-tyyli solun-tyyli formaatti-fn (:fmt sarake)))]
-                   (if-let [kaava (:excel sarake)]
-                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
+                   (if (raportti-domain/excel-kaava? arvo-datassa)
+                     (aseta-kaava! arvo-datassa workbook cell)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                    (excel/set-cell-style! cell tyyli)
                    (when (:tasaa sarake)
