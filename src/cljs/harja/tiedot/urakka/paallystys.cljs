@@ -76,6 +76,7 @@
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
     :yha-tr-osoite :muokattu
+    :kokonaishinta-ilman-maaramuutoksia :maaramuutokset
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
@@ -353,6 +354,7 @@
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord SuljePaallystysilmoitus [])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
@@ -569,6 +571,9 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  SuljePaallystysilmoitus
+  (process-event [_ app]
+    (assoc app :paallystysilmoitus-lomakedata nil))
   TallennaHistoria
   (process-event [{polku :polku} app]
     (let [vanha-arvo (get-in app polku)]
