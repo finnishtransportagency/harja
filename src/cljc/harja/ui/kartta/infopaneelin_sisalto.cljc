@@ -847,11 +847,12 @@
   {:tyyppi :varusteet-ulkoiset
    :jarjesta-fn :alkupvm ;; Järjestetään useampi valittu listalla
    :otsikko (str "Varustetapahtuma: " (:ulkoinen-oid (:infopaneelin-tiedot kohde)))
-   :tiedot [{:otsikko "Alkupäivämäärä" :tyyppi :string :nimi :alkupvm}
+   :tiedot [{:otsikko "Alkupäivämäärä" :tyyppi :pvm :nimi :alkupvm}
             {:otsikko "Tierekisteriosoite" :tyyppi :string :nimi :tr-osoite}
             {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
-            {:otsikko "A" :tyyppi :string :nimi :menetelma}
-            {:otsikko "B" :tyyppi :string :nimi :aikataulu}]
+            {:otsikko "Varustetyyppi" :tyyppi :string :nimi :varustetyyppi}
+            {:otsikko "Lisätieto" :tyyppi :string :nimi :lisatieto}
+            {:otsikko "Kuntoluokitus" :tyyppi :string :nimi :kuntoluokka}]
    :data (:infopaneelin-tiedot kohde)})
 
 (defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]

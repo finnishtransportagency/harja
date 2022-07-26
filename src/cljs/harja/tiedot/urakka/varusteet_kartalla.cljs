@@ -34,7 +34,8 @@
                                                              :tr-osoite (:tr-osoite kohde)
                                                              :toimenpide (:toimenpide kohde)
                                                              :varustetyyppi (:varustetyyppi kohde)
-                                                             :aikataulu "(:formatoitu-aikataulu kohde)"}
+                                                             :lisatieto (:lisatieto kohde)
+                                                             :kuntoluokka (:kuntoluokka kohde)}
                                        :ikonit [{:tyyppi :merkki
                                                  :paikka [:loppu]
                                                  :zindex 21

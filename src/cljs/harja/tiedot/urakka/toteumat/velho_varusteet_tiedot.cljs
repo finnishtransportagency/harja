@@ -176,16 +176,17 @@
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
-            (harja.tyokalut.yleiset/prettydenty
-              (map (fn [t]
-                     {:sijainti (:sijainti t)
-                      :toteuma (:toteuma t)
-                      :ulkoinen-oid (:ulkoinen-oid t)
-                      :alkupvm (:alkupvm t)
-                      :tr-osoite (muodosta-tr-osoite t)
-                      :toimenpide "(toteuma->toimenpide (:toteuma t))"
-                      :varustetyyppi "(tietolaji->varustetyyppi (:tietolaji t))"})
-                   (:toteumat vastaus))))
+            (map (fn [t]
+                   {:sijainti (:sijainti t)
+                    :toteuma (:toteuma t)
+                    :ulkoinen-oid (:ulkoinen-oid t)
+                    :alkupvm (:alkupvm t)
+                    :tr-osoite (muodosta-tr-osoite t)
+                    :toimenpide (toteuma->toimenpide (:toteuma t))
+                    :varustetyyppi (tietolaji->varustetyyppi (:tietolaji t))
+                    :lisatieto (:lisatieto t)
+                    :kuntoluokka (:kuntoluokka t)})
+                 (:toteumat vastaus)))
     (-> app
         (assoc :haku-paalla false)
         (assoc :varusteet (:toteumat vastaus))))
