@@ -1624,8 +1624,14 @@
                                            (mhu/maksukausi->kuukausien-lkm maksukausi))]
                                 (vec (concat [toimenkuva] (when-not (post-2022?) [kk-v]) yhteenvedot-vuosille))))}})))
         {}
-        (range 1 (inc jh-korvausten-omiariveja-lkm))))
-        seuranta (apply merge
+        (range 1 (inc jh-korvausten-omiariveja-lkm))))]
+    (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+      johto-ja-hallintokorvaus-yhteenveto-rajapinta
+      rajapinnat
+
+      {}
+
+      (apply merge
         {:yhteensa-seuranta
          {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]
                   [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu]]
@@ -1663,14 +1669,7 @@
                                    yhteensa-arvot)
                                  (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu toimenkuva maksukausi]
                                    yhteensa-indeksikorjatut-arvot))))}}))
-          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))]
-    (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
-      johto-ja-hallintokorvaus-yhteenveto-rajapinta
-      rajapinnat
-
-      {}
-
-      seuranta)))
+          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))))
 
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
                            :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}
