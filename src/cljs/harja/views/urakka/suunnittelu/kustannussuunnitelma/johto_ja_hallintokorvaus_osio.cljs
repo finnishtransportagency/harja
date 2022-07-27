@@ -675,13 +675,15 @@
                                                     :luokat #{"table-default"}
                                                     :fmt ks-yhteiset/summa-formatointi-uusi}))
                                             (assoc-in [0 :fmt] nil)
-                                            (assoc-in [1 :fmt] (fn [teksti]
-                                                                 (if (nil? teksti)
-                                                                   ""
-                                                                   (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
-                                                                     (if sisaltaa-erottimen?
-                                                                       (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
-                                                                       teksti))))))}]})
+                                            (assoc-in [1 :fmt] (if (t/post-2022?)
+                                                                 ks-yhteiset/summa-formatointi-uusi
+                                                                 (fn [teksti]
+                                                                   (if (nil? teksti)
+                                                                     ""
+                                                                     (let [sisaltaa-erottimen? (boolean (re-find #",|\." (str teksti)))]
+                                                                       (if sisaltaa-erottimen?
+                                                                         (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
+                                                                         teksti)))))))}]})
                      (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
              :footer (let [osat (vec (repeat (if (t/post-2022?) 6 7)
                                    {:tyyppi :teksti
@@ -1079,22 +1081,7 @@
           [{:otsikko "Toimenkuva" :nimi :toimenkuva :tyyppi :string :muokattava? :oma-toimenkuva? :leveys "80%" :fmt clj-str/capitalize :placeholder "Kirjoita muu toimenkuva"}
            {:otsikko "" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :desimaalien-maara 2 :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
-          data]
-         ;; Urakkakohtaiset toimenkuvat
-         #_[vanha-grid/muokkaus-grid
-          {;:piilota-table-header? true
-           :id "omat-toimenkuvat-taulukko"
-           :voi-lisata? false
-           :voi-kumota? false
-           :jarjesta :jarjestys
-           :piilota-toiminnot? true
-           :on-rivi-blur (constantly true)
-           :voi-poistaa? (constantly false)
-           }
-          [{:otsikko "Satan" :nimi :toimenkuva-maksukausi-tunniste :tyyppi :string :muokattava? (constantly true) :leveys "80%" :placeholder "Oma toimenkuva"}
-           {:otsikko "Satan" :tyyppi :vetolaatikon-tila :leveys "5%" :muokattava? (constantly false)}
-           {:otsikko "Satan" :nimi :vuosipalkka :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
-          omat-toimenkuvat]]))))
+          data]]))))
 
 (def piilota-2022-taulukko? false)
 
@@ -1118,13 +1105,6 @@
      [:h3 "Tuntimäärät ja -palkat"]
      [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
       [ks-yhteiset/yleis-suodatin suodattimet]]
-
-     ;; FIXME: tupla-if kömpelö, mutta poistetaan sitten, kun ominaisuus otetaan käyttöön ja jätetään vaan cond
-     #_(if piilota-2022-taulukko?
-       (if (and johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-         [:div {:class (when vahvistettu? "osio-vahvistettu")}
-          [grid/piirra johto-ja-hallintokorvaus-grid]]
-         [yleiset/ajax-loader]))
          
      (cond
        (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))

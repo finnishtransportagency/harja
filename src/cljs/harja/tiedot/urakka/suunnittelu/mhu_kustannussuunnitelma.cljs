@@ -325,19 +325,19 @@
    {:toimenkuva "hankintavastaava" :kk-v 12 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    {:toimenkuva "harjoittelija" :kk-v 4 :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :versio 1}
    ;; 2022 eteenpäin alkavien versio datasta
-   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua"
+   {:toimenkuva "valmistelukausi ennen urakka-ajan alkua" :kk-v 1
     :maksukausi nil :hoitokaudet #{0} :jarjestys 1 :versio 2}
-   {:toimenkuva "vastuunalainen työnjohtaja"
+   {:toimenkuva "vastuunalainen työnjohtaja" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 2 :versio 2}
-   {:toimenkuva "päätoiminen apulainen"
+   {:toimenkuva "päätoiminen apulainen" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 3 :versio 2}
-   {:toimenkuva "apulainen/työnjohtaja"
+   {:toimenkuva "apulainen/työnjohtaja" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 4 :versio 2}
-   {:toimenkuva "viherhoidosta vastaava henkilö"
+   {:toimenkuva "viherhoidosta vastaava henkilö" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 5 :versio 2}
-   {:toimenkuva "hankintavastaava" 
+   {:toimenkuva "hankintavastaava" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 6 :versio 2}
-   {:toimenkuva "harjoittelija"
+   {:toimenkuva "harjoittelija" :kk-v 12
     :maksukausi :molemmat :hoitokaudet (into #{} (range 1 6)) :jarjestys 7 :versio 2}])
 
 (defn pohjadatan-versio
@@ -2157,13 +2157,14 @@
                 (if data-koskee-ennen-urakkaa?
                   (let [kannasta (filterv :ennen-urakkaa asia-kannasta)]
                     (if (empty? kannasta)
-                      (let [arvot {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
-                                   :vuosi (pvm/vuosi urakan-aloituspvm)
-                                   :kk-v kk-v
-                                   :osa-kuukaudesta 1
-                                   :hoitokaudet hoitokaudet
-                                   :maksukausi maksukausi
-                                   :kuukausi 10}
+                      (let [arvot (merge
+                                    {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
+                                     :vuosi (pvm/vuosi urakan-aloituspvm)
+                                     :osa-kuukaudesta 1
+                                     :hoitokaudet hoitokaudet
+                                     :maksukausi maksukausi
+                                     :kuukausi 10
+                                     :kk-v kk-v})
                             kokonaiset (vec (repeat (js/Math.floor kk-v) arvot))
                             osittainen? (not= 0 (- kk-v (count kokonaiset)))]
                         (if osittainen?
