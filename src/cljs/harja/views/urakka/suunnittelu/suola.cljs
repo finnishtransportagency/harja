@@ -291,14 +291,6 @@
     {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
    rajoitukset])
 
-;; TODO: Toteuta tuck-event kutsut ja tilanhallinta
-(defn virkista-rajoitusalueet-taulukko []
-  (let [urakkaid @nav/valittu-urakka-id]
-    (go
-      (reset! tiedot-suola/urakan-rajoitusalueet nil)
-      (reset! tiedot-suola/urakan-rajoitusalueet (<! (tiedot-suola/hae-urakan-rajoitusalueet urakkaid))))))
-
-
 (defn urakan-suolarajoitukset* [e! _]
   (komp/luo
     (komp/sisaan

@@ -9,6 +9,8 @@
             [reagent.ratom :refer [reaction]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -116,15 +118,22 @@
 ;; TODO: Tarvitaan palvelu rajoitusalueille. Feikataan data nyt tässä.
 (defn hae-urakan-rajoitusalueet [urakka-id]
   {:pre [(int? urakka-id)]}
-  #_(k/post! :hae-urakan-rajoitusalueet {:urakka-id urakka-id})
+  (let [hoitokausi @urakka/valittu-hoitokausi
+        _ (js/console.log "hae-rajoitusalueen-toteumien-summatiedot :: hoitokausi" (pr-str hoitokausi))
+        hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
+        _ (js/console.log "hae-rajoitusalueen-toteumien-summatiedot :: hoitokauden-alkuvuosi" (pr-str hoitokauden-alkuvuosi))
+        urakka-id (-> @tila/yleiset :urakka :id)
+        suolarajoitukset (k/post! :hae-suolarajoitukset {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                         :urakka-id urakka-id})]
+    #_(k/post! :hae-urakan-rajoitusalueet {:urakka-id urakka-id})
 
 
-  (go
-    ;; Simuloi latausaikaa
-    (<! (let [c (chan)]
-          (js/setTimeout (fn [] (close! c)) 1000)
-          c))
-    [{:id 0
+    #_ (go
+      ;; Simuloi latausaikaa
+      (<! (let [c (chan)]
+            (js/setTimeout (fn [] (close! c)) 1000)
+            c))
+      [{:id 0
         :tr-osoite {:tie 25
                     :aosa 2
                     :aet 200
@@ -162,7 +171,8 @@
         :suolankayttoraja 0.0
         :kaytettava-formaattia? true
         :formiaatit_t_per_ajoratakm nil
-        :talvisuola_t_per_ajoratakm 0.221}]))
+        :talvisuola_t_per_ajoratakm 0.221}])
+    suolarajoitukset))
 
 ;; TODO: Tarvitaan palvelu rajoitusalueen toteumien summatietojen hakemiseen. Feikataan data nyt tässä.
 (defn hae-rajoitusalueen-toteumien-summatiedot [rajoitusalue-id]
