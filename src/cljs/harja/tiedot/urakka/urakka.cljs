@@ -22,11 +22,14 @@
                                                                                                :laskutukseen-perustuen-valinta #{}}
                                                               :kopioidaan-tuleville-vuosille? true}})
 
+(def suolarajoitukset-default {:rajoitusalue-lomake-auki? false})
+
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
                                                                   :toimenpide      nil
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
-                                :kustannussuunnitelma kustannussuunnitelma-default})
+                                :kustannussuunnitelma kustannussuunnitelma-default
+                                :suolarajoitukset suolarajoitukset-default})
 
 (defn parametreilla [v-fn & parametrit]
   (apply r/partial v-fn parametrit))
@@ -400,6 +403,7 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
+(defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
