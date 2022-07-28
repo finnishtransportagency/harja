@@ -423,6 +423,7 @@
       :tallenna-kattohinnan-oikaisu
       :hae-kattohintojen-oikaisut
       :poista-kattohinnan-oikaisu
+      :hae-urakan-paatokset
       :tallenna-urakan-paatos
       :poista-paatos)
     this))
