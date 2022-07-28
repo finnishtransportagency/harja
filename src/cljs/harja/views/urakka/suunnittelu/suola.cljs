@@ -1,46 +1,64 @@
 (ns harja.views.urakka.suunnittelu.suola
   "Urakan suolan käytön suunnittelu"
-  (:require [reagent.core :refer [atom wrap]]
-            [harja.tiedot.urakka.toteumat.suola :as tiedot-suola]
-            [harja.tiedot.urakka :as urakka]
+  (:require [reagent.core :refer [atom wrap] :as r]
             [cljs.core.async :refer [<!]]
-            [clojure.string :as str]
-            [harja.ui.komponentti :as komp]
+            [tuck.core :as tuck]
+
+            [harja.domain.oikeudet :as oikeudet]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+
+            [harja.tiedot.urakka.toteumat.suola :as tiedot-suola]
+            [harja.tiedot.urakka.suunnittelu.suolarajoitukset-tiedot :as suolarajoitukset-tiedot]
+            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.hallinta.indeksit :as i]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+
+            [harja.ui.debug :as debug]
+            [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.napit :refer [palvelinkutsu-nappi]]
             [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.grid :as grid]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.napit :as napit]
-            [harja.ui.viesti :as viesti]
-            [harja.tiedot.hallinta.indeksit :as i]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.views.kartta :as kartta]
-            [harja.fmt :as fmt]
-            [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [harja.tiedot.istunto :as istunto]
             [harja.ui.validointi :as validointi]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.modal :as modal]
+
+            [harja.views.kartta :as kartta]
+            [harja.views.urakka.valinnat :as valinnat]
+            [harja.views.kartta.pohjavesialueet :as pohjavesialueet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<! reaction-writable]]))
 
-;; TODO: Lomakkeen tila tuck app-stateen
-(defonce lomake-rajoitusalue-atom (atom {:lomake {}
-                                         :auki? false}))
-(defn lomake-rajoitusalue-skeema
-  [lomake]
+(defn- rajoituksen-poiston-varmistus-modaali [e! {:keys [varmistus-fn data] :as parametrit}]
+  [:div.row
+   [:p "Olet poistamassa <todo---->"]
 
+
+   [:div {:style {:padding-bottom "1rem"}}
+    [:span {:style {:padding-right "1rem"}}
+     [napit/yleinen-toissijainen
+      "Peruuta"
+      (r/partial (fn []
+                   (modal/piilota!)))
+      {:vayla-tyyli? true
+       :luokka       "suuri"}]]
+    [:span
+     [napit/poista
+      "Poista rajoitusalue"
+      varmistus-fn
+      {:vayla-tyyli? true
+       :luokka       "suuri"}]]]])
+
+(defn lomake-rajoitusalue-skeema [lomake]
   (into []
     (concat
       [(lomake/rivi
-         {:nimi :kopioi-rajoitukset :palstoja 3
+         {:nimi :kopioi-rajoitukset
+          :palstoja 3
           :tyyppi :checkbox
           :teksti "Kopioi rajoitukset tuleville hoitovuosille"})]
       [(lomake/ryhma
@@ -97,61 +115,69 @@
           :vayla-tyyli? true
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
-          :muokattava? (constantly false)})]
-
-      [(lomake/ryhma
+          :muokattava? (constantly false)})
+       (lomake/ryhma
          {:otsikko "Suolarajoitus"
           :rivi? true}
          {:nimi :suolarajoitus
           :otsikko "Suolan max määrä"
           :tyyppi :positiivinen-numero
           :yksikkö "t/ajoratakm"
-          :vayla-tyyli? true
-          :tarkkaile-ulkopuolisia-muutoksia? true})
-       (lomake/rivi
-         {:nimi :kopioi-rajoitukset
-          :tyyppi :checkbox :palstoja 3
+          :vayla-tyyli? true})
+       (lomake/ryhma
+         {:rivi? true}
+         {:nimi :formiaatti
+          :tyyppi :checkbox
+          :palstoja 3
           :teksti "Alueella tulee käyttää suolan sijaan formiaattia"})])))
 
 (defn lomake-rajoitusalue
   "Rajoitusalueen lisäys/muokkaus"
-  [lomake]
+  [e! rajoituslomake]
   (let [muokkaustila? true
         ;; TODO: Muokkaus
         ;; TODO: Oikeustarkastukset
-        ;; TODO: Tuck-kytkennät
         ]
+
     [lomake/lomake
      {:ei-borderia? true
       :voi-muokata? true
-      :tarkkaile-ulkopuolisia-muutoksia? true
+      :tarkkaile-ulkopuolisia-muutoksia? false
       :otsikko (when muokkaustila?
-                 (if (:id lomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+                 (if (:id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
       ;; TODO: Muokkaus
-      :muokkaa! :D
-      :footer-fn (fn [lomake]
+      :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake %)))
+      :footer-fn (fn [data]
                    [:div.row
 
                     [:div.row
-                     [:div.col-xs-8 {:style {:padding-left "0"}}
+                     [:div.col-xs-7 {:style {:padding-left "0"}}
                       [napit/tallenna
-                       "Valmis"
-                       ;; TODO: Tuck-event
-                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       "Tallenna"
+                       #(e! (suolarajoitukset-tiedot/->TallennaLomake data false))
                        {:disabled false :paksu? true}]
                       [napit/tallenna
                        "Tallenna ja lisää seuraava"
-                       ;; TODO: Tuck-event
-                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       #(e! (suolarajoitukset-tiedot/->TallennaLomake data true))
                        {:disabled false :paksu? true}]]
-                     [:div.col-xs-4
+                     [:div.col-xs-5 {:style {:float "right"}}
+                      (when (:rajoitusalue_id data)
+                        [napit/poista
+                         "Poista"
+                         #(modal/nayta! {:otsikko "Rajoitusalueen poistaminen"}
+                            [rajoituksen-poiston-varmistus-modaali e!
+                             {:data data
+                              :varmistus-fn (fn []
+                                              (modal/piilota!)
+                                              (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)})))}])
+                         {:vayla-tyyli? true}])
                       [napit/yleinen-toissijainen
                        "Peruuta"
-                       ;; TODO: Tuck-event
-                       #(swap! lomake-rajoitusalue-atom assoc :auki? false)
+                       #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
                        {:paksu? true}]]]])}
 
-     (lomake-rajoitusalue-skeema lomake)]))
+     (lomake-rajoitusalue-skeema rajoituslomake)
+     rajoituslomake]))
 
 
 ;; -------
@@ -229,27 +255,23 @@
                :palstoja 1}))]
          tiedot]))))
 
-
-
 (defn taulukko-rajoitusalueet
   "Rajoitusalueiden taulukko."
-  [rajoitusalueet voi-muokata?]
-  [grid/grid {:tunniste :id
+  [e! rajoitukset voi-muokata?]
+  [grid/grid {:tunniste :rajoitusalue_id
               :piilota-muokkaus? true
               ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
               ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
               :esta-tiivis-grid? true
-              :tyhja (if (nil? @tiedot-suola/urakan-rajoitusalueet)
+              :tyhja (if (nil? rajoitukset)
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
-                       "Ei Rajoitusalueita")}
-   [{:otsikko "Tie" :tunniste :tie :hae (comp :tie :tr-osoite) :tasaa :oikea :leveys 0.3}
-    {:otsikko "Osoiteväli" :tunniste :tie :hae :tr-osoite
-     :fmt (fn [tr-osoite]
-            (str
-              (str (:aosa tr-osoite) " / " (:aet tr-osoite))
-              " – "
-              (str (:losa tr-osoite) " / " (:let tr-osoite))))
-     :leveys 1}
+                       "Ei Rajoitusalueita")
+              :rivi-klikattu #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true
+                                    (some (fn [r]
+                                            (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
+                                      rajoitukset)))}
+   [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.3}
+    {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
     {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
     {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :fmt fmt/pyorista-ehka-kolmeen
      :tasaa :oikea :leveys 1}
@@ -264,10 +286,10 @@
                           pohjavesialueet))
                       "-"))
      :leveys 1}
-    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolankayttoraja :tasaa :oikea
+    {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea
      :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 1}
-    {:otsikko "" :nimi :kaytettava-formaattia? :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
-   rajoitusalueet])
+    {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
+   rajoitukset])
 
 ;; TODO: Toteuta tuck-event kutsut ja tilanhallinta
 (defn virkista-rajoitusalueet-taulukko []
@@ -277,22 +299,25 @@
       (reset! tiedot-suola/urakan-rajoitusalueet (<! (tiedot-suola/hae-urakan-rajoitusalueet urakkaid))))))
 
 
-(defn urakan-suolarajoitukset []
+(defn urakan-suolarajoitukset* [e! _]
   (komp/luo
     (komp/sisaan
-      (fn []
-        (virkista-rajoitusalueet-taulukko)))
+      #(do
+         (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset))))
     (komp/ulos
       (fn []
-        ;; TODO: Eroon tila-atomeista. Toteuta tuck-tilanhallinta palanen kerrallaan.
-        (reset! tiedot-suola/urakan-rajoitusalueet nil)))
+        ;; Tänne mahdolliset karttatasojen poistot
+        ))
 
-    (fn []
-      (let [rajoitusalueet @tiedot-suola/urakan-rajoitusalueet
+    (fn [e! app]
+      (let [rajoitusalueet (:suolarajoitukset app)
+            lomake-auki? (:rajoitusalue-lomake-auki? app)
+            lomake (:lomake app)
             urakka @nav/valittu-urakka
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
          [:h2 "Urakan suolarajoitukset hoitovuosittain"]
+         [debug/debug app]
 
          [:div.kontrollit
           [valinnat/urakan-hoitokausi urakka]]
@@ -310,8 +335,7 @@
            [:h3 {:class "pull-left"}
             "Pohjavesialueiden suolarajoitukset"]
            [napit/uusi "Lisää rajoitus"
-            ;; TODO: Tuck-event
-            #(swap! lomake-rajoitusalue-atom assoc :auki? true)
+            #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true nil))
             {:luokka "pull-right"
              :disabled (not saa-muokata?)}]]
 
@@ -320,10 +344,13 @@
 
           ;; Rajoitusalueen lisäys/muokkauslomake. Avautuu sivupaneeliin
           ;; TODO: Lomakkeen avaaminen/sulkeminen tuck-eventeiksi ja app stateen
-          (when (:auki? @lomake-rajoitusalue-atom)
+          (when lomake-auki?
             [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
-             [lomake-rajoitusalue
-              ;; TODO: Lomake tuck app-statesta
-              (:lomake @lomake-rajoitusalue-atom)]])
+             [lomake-rajoitusalue e! lomake]])
 
-          [taulukko-rajoitusalueet rajoitusalueet saa-muokata?]]]))))
+          [taulukko-rajoitusalueet e! rajoitusalueet saa-muokata?]]]))))
+
+(defn urakan-suolarajoitukset []
+  (do
+    ;(js/console.log "tila/suunnittelu-suolarajoitukset" (pr-str tila/suunnittelu-suolarajoitukset))
+    (tuck/tuck tila/suunnittelu-suolarajoitukset urakan-suolarajoitukset*)))
