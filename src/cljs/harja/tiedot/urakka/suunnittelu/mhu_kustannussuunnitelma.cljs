@@ -1231,19 +1231,24 @@
                                     (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto omanimi :maksukausi])
                                     maksukausi))
         domain-paivitys (fn [tila]
+                          (println "domian")
                           (reduce (fn [tila hoitokauden-numero]
+                                    (println "domain red" hoitokauden-numero)
                                     (update-in tila
                                       (if omanimi
                                         [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero)]
                                         [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)])
                                       (fn [hoitokauden-jh-korvaukset]
+                                        (println "domian" hoitokauden-jh-korvaukset)
                                         (mapv (fn [kuukauden-jh-korvaus]
+                                                (println "domian " kuukauden-jh-korvaus)
                                                 ;; Päivitetään kuukauden arvot, jos kuukausi liittyy valittuun maksukauteen.
                                                 (if (some #{(:kuukausi kuukauden-jh-korvaus)} paivitettavat-kuukaudet)
                                                   (let [kuukauden-jh-korvaus
                                                         (cond->
-                                                          ;; Päivitä aluksi osasta (eli input-kentästä) tullut muutos tilaan.
-                                                          (assoc kuukauden-jh-korvaus
+                                                            ;; Päivitä aluksi osasta (eli input-kentästä) tullut muutos tilaan.
+                                                            kuukauden-jh-korvaus
+                                                          true (assoc 
                                                             osa
                                                             (cond
                                                               (= osa :toimenkuva)
@@ -2175,14 +2180,14 @@
                     ;; Vuoden -22 jälkeen urakoissa ei ole enää maksukausia, vaan kaikki syötetään vuosihintoina (ja voi kyllä laittaa kuukausihinnatkin, mutta ei kausia)
                     (fn [_vuosi kuukausi]
                       (cond
-                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :kesa)) (<= 5 kuukausi 9)
-                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :talvi)) (or (<= 1 kuukausi 4)
+                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :kesa)) (<= 5 kuukausi 9)
+                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :talvi)) (or (<= 1 kuukausi 4)
                                                 (<= 10 kuukausi 12))
-                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "harjoittelija")) (<= 5 kuukausi 8)
-                        (and (> (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "viherhoidosta vastaava henkilö")) (<= 4 kuukausi 8)
+                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "harjoittelija")) (<= 5 kuukausi 8)
+                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "viherhoidosta vastaava henkilö")) (<= 4 kuukausi 8)
                         :else true))
                     (fn [{:keys [vuosi kuukausi tunnit tuntipalkka tuntipalkka-indeksikorjattu] :as data}]
-                      #_(println "### jh-korvaukset toimenkuvat:" vuosi " kuukausi: " kuukausi " tuntipalkka: " tuntipalkka " indeksikorjattu: " tuntipalkka-indeksikorjattu)
+                     ; (println "### jh-korvaukset toimenkuvat:" vuosi " kuukausi: " kuukausi " tuntipalkka: " tuntipalkka " indeksikorjattu: " tuntipalkka-indeksikorjattu)
                       (-> data
                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                           :tunnit (or tunnit nil)
@@ -2473,9 +2478,9 @@
                          {}
                          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
-          {:otsikot (merge {:toimenkuva "Toimenkuva" 
-                            :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}
-                      (when (post-2022?) {:kk-v "kk/v"}))})
+          {:otsikot (merge {:toimenkuva "Toimenkuva"}
+                      (when-not (post-2022?) {:kk-v "kk/v"})
+                      {:hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"})})
         (assoc-in [:gridit :suunnitellut-hankinnat]
           {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})

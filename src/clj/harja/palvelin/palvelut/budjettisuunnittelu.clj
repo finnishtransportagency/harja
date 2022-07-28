@@ -701,7 +701,7 @@
       (when-not (empty? olemassa-olevat-jhkt)
         (doseq [jhk olemassa-olevat-jhkt
                 :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
-                                     (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+                                     (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
                                                     1       ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
                                                     tunnit)]
 
@@ -744,10 +744,10 @@
       ;; Käsittele uudet insertoitavat jhk:t
       (when-not (empty? uudet-jhkt)
         (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
-          (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+          (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
                          1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
                          tunnit)
-                osa-kuukaudesta (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 9 1))
+                osa-kuukaudesta (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
                          1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa, joten osa-kuukaudesta on aina 1
                          osa-kuukaudesta)
                 uusi-rivi (insert! db
