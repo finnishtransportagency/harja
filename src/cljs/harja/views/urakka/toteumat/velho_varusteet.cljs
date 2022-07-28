@@ -48,9 +48,10 @@
                    [tuck.intercept :refer [intercept send-to]]))
 
 (defn kuntoluokka-komponentti [kuntoluokka]
-  [:span [yleiset/tila-indikaattori kuntoluokka
+  [:span "Kuntoluokitus: " [yleiset/tila-indikaattori kuntoluokka
           {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
            :luokka "body-text"
+           :wrapper-luokka "inline-block"
            :fmt-fn str}]])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
@@ -219,9 +220,10 @@
          [sivupalkki/oikea
           {:leveys "600px"}
           [lomake/lomake
-           {:otsikko-komp (fn [_]
+           {:luokka "padding-32"
+            :otsikko-komp (fn [_]
                             [:span
-                             [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
+                             "Velho OID: " (:ulkoinen-oid varuste)])
             :voi-muokata? false
             :sulje-fn #(e! (v/->SuljeVarusteLomake))
             :ei-borderia? true
@@ -231,17 +233,25 @@
                            #(e! (v/->SuljeVarusteLomake))
                            {:luokka "pull-left"}]])}
            [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
-             :fmt v/tietolaji->varustetyyppi :palstoja 3
+             :fmt v/tietolaji->varustetyyppi :palstoja 1
+             ::lomake/col-luokka ""
              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
             {:nimi :kuntoluokka :tyyppi :komponentti
              :komponentti (fn [data]
                             (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
-             :otsikko "Kuntoluokitus"}
-            {:nimi :tr-alkuosa
-             :palstoja 1
-             :otsikko "Aosa"
-             :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
+             ::lomake/col-luokka ""
+             :piilota-label? true}
+            {:tyyppi :komponentti
+             :nimi :ulkoinen-id
+             ::lomake/col-luokka ""
+             :komponentti (fn [data]
+                            [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
+                             (constantly nil)
+                             {:ikoni [ikonit/harja-icon-navigation-external-link]
+                              :ikoni-oikealle? true
+                              :disabled false}])}
             {:tyyppi :komponentti :palstoja 3
+             ::lomake/col-luokka ""
              :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
            varuste]]]))))
 
