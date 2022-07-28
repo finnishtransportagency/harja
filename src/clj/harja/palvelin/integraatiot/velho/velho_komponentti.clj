@@ -37,14 +37,8 @@
   (tuo-uudet-varustetoteumat-velhosta [this]
     (suorita-ja-kirjaa-alku-loppu-ajat
       #(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
-      ;; Replistä:
-      ;; (def asetukset (harja.tyokalut.yleiset/prettydenty (get-in harja.palvelin.main/harja-jarjestelma [:velho-integraatio :asetukset])))
-      ;; (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki harja.palvelin.main/harja-jarjestelma) (:db harja.palvelin.main/harja-jarjestelma) asetukset)
       "tuo-uudet-varustetoteumat-velhosta"))
   (paivita-mhu-urakka-oidt-velhosta [this]
     (suorita-ja-kirjaa-alku-loppu-ajat
       #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
-      ;; Replistä:
-      ;; (def asetukset (harja.tyokalut.yleiset/prettydenty (get-in harja.palvelin.main/harja-jarjestelma [:velho-integraatio :asetukset])))
-      ;; (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki harja.palvelin.main/harja-jarjestelma) (:db harja.palvelin.main/harja-jarjestelma) asetukset)
       "paivita-mhu-urakka-oidt-velhosta")))
