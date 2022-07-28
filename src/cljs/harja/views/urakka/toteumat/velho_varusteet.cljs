@@ -32,6 +32,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.protokollat :refer [Haku hae]]
+            [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset :refer [ajax-loader]]
@@ -215,34 +216,34 @@
                                   {:tarkista-komponentti? true})
       (fn [e! varuste toteumat]
         [:div.varustelomake {:on-click #(.stopPropagation %)}
-         [lomake/lomake
-          {:luokka " overlay-oikealla overlay-leveampi"
-           :otsikko-komp (fn [_]
-                           [:span
-                            [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
-           :voi-muokata? false
-           :sulje-fn #(e! (v/->SuljeVarusteLomake))
-           :ei-borderia? true
-           :footer-fn (fn [data]
-                        [:span
-
-                         [napit/sulje "Sulje"
-                          #(e! (v/->SuljeVarusteLomake))
-                          {:luokka "pull-left"}]])}
-          [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
-            :fmt v/tietolaji->varustetyyppi :palstoja 3
-            :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
-           {:nimi :kuntoluokka :tyyppi :komponentti
-            :komponentti (fn [data]
-                           (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
-            :otsikko "Kuntoluokitus"}
-           {:nimi :tr-alkuosa
-            :palstoja 1
-            :otsikko "Aosa"
-            :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
-           {:tyyppi :komponentti :palstoja 3
-            :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
-          varuste]]))))
+         [sivupalkki/oikea
+          {:leveys "600px"}
+          [lomake/lomake
+           {:otsikko-komp (fn [_]
+                            [:span
+                             [:div.lomake-otsikko-pieni (:ulkoinen-oid varuste)]])
+            :voi-muokata? false
+            :sulje-fn #(e! (v/->SuljeVarusteLomake))
+            :ei-borderia? true
+            :footer-fn (fn [data]
+                         [:span
+                          [napit/sulje "Sulje"
+                           #(e! (v/->SuljeVarusteLomake))
+                           {:luokka "pull-left"}]])}
+           [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
+             :fmt v/tietolaji->varustetyyppi :palstoja 3
+             :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
+            {:nimi :kuntoluokka :tyyppi :komponentti
+             :komponentti (fn [data]
+                            (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
+             :otsikko "Kuntoluokitus"}
+            {:nimi :tr-alkuosa
+             :palstoja 1
+             :otsikko "Aosa"
+             :pakollinen? true :tyyppi :positiivinen-numero :kokonaisluku? true}
+            {:tyyppi :komponentti :palstoja 3
+             :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
+           varuste]]]))))
 
 (defn- varusteet* [e! app]
   (komp/luo
