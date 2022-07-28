@@ -137,7 +137,7 @@
   (q-toteumat/paivita-toteuman-reitti! db {:id toteuma-id
                                            :reitti reitti}))
 
-(defn tallenna-sijainti [db sijainti aika toteuma-id]
+(defn tallenna-sijainti [db sijainti aika toteuma-id tehtavat materiaalit]
   (log/debug "Luodaan toteumalle uusi sijainti reittipisteenä")
   (q-toteumat/tallenna-toteuman-reittipisteet!
    db
@@ -145,7 +145,7 @@
     ::rp/reittipisteet
     [(rp/reittipiste aika
                      (:koordinaatit sijainti)
-                     (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti)))]}))
+                     (q-toteumat/pisteen-hoitoluokat db (:koordinaatit sijainti) tehtavat materiaalit))]}))
 
 (defn tallenna-tehtavat [db kirjaaja toteuma toteuma-id urakka-id]
       (log/debug (str "Tuhotaan toteuman vanhat tehtävät. Toteuma id: " toteuma-id))
