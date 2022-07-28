@@ -1,0 +1,154 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 137025
+    },
+    "lahetysaika": "2019-01-30T12:05:00Z"
+  },
+  "reittitoteuma": {
+    "toteuma": {
+      "tunniste": {
+        "id": __ID__
+      },
+      "suorittaja": {
+        "nimi": "__SUORITTAJA_NIMI__",
+        "ytunnus": "8765432-1"
+      },
+      "sopimusId": __SOPIMUS_ID__,
+      "alkanut": "2019-01-30T12:00:00Z",
+      "paattynyt": "2019-01-30T12:05:00Z",
+      "toteumatyyppi": "kokonaishintainen",
+      "lisatieto": "Talvisuolausta",
+      "tehtavat": [
+        {
+          "tehtava": {
+            "id": __TEHTAVA_ID__,
+            "maara": {
+              "yksikko": "km",
+              "maara": 0.09815
+            }
+          }
+        }
+      ],
+      "materiaalit": [
+        {
+          "materiaali": "Talvisuola, rakeinen NaCl",
+          "maara": {
+            "yksikko": "t",
+            "maara": 3.14
+          }
+        }
+      ]
+    },
+    "reitti": [
+      {
+        "reittipiste": {
+          "aika": "2019-01-30T12:00:00Z",
+          "koordinaatit": {
+             
+            "x": 460185.66,
+            "y": 7212072.31
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": __TEHTAVA_ID__
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Talvisuola, rakeinen NaCl",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.785
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2019-01-30T12:01:00Z",
+          "koordinaatit": {
+            "x": 460213.40,
+            "y": 7212061.69
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": __TEHTAVA_ID__
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Talvisuola, rakeinen NaCl",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.785
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2019-01-30T12:02:00Z",
+          "koordinaatit": {
+            "x": 460242.71,
+            "y": 7212056.21
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": __TEHTAVA_ID__
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Talvisuola. rakeinen NaCl",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.785
+              }
+            }
+          ]
+        }
+      },
+      {
+        "reittipiste": {
+          "aika": "2019-01-30T12:03:00Z",
+          "koordinaatit": {
+            "x": 460279.10,
+            "y": 7212042.28
+          },
+          "tehtavat": [
+            {
+              "tehtava": {
+                "id": __TEHTAVA_ID__
+              }
+            }
+          ],
+          "materiaalit": [
+            {
+              "materiaali": "Talvisuola. rakeinen NaCl",
+              "maara": {
+                "yksikko": "t",
+                "maara": 0.785
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+}
