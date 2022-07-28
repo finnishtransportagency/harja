@@ -10,7 +10,7 @@ $$
         _luotu := '2022-07-11 15:00:18.947853';
 
         -- Pohjavesialue: Hanko
-        INSERT INTO rajoitusalue(id, tierekisteriosoite, pituus, ajoratojen_pituus, urakka, luotu, luoja)
+        INSERT INTO rajoitusalue(id, tierekisteriosoite, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
         VALUES (1, ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE, NULL, NULL, _urakka, _luotu, _kayttaja);
 
 
@@ -44,3 +44,7 @@ $$
 
     END
 $$;
+
+-- Jostain syystä rajoitusalueen id:n serial sequenssi menee sekaisin, niin päivitetään se kuntoon samalla
+SELECT SETVAL('public.rajoitusalue_id_seq', (SELECT nextval('public.rajoitusalue_id_seq') + 1));
+
