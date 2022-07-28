@@ -20,8 +20,13 @@
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja luojalla " luoja " sekä urakka id:llä: " urakka-id)
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id luoja urakka-id))))
 
-(defn pisteen-hoitoluokat [db piste]
-  (first (hae-pisteen-hoitoluokat db piste)))
+;; Talvihoitoluokat niille kevyen liikenteen väylille, joita ei suolata, eli K1, K2 ja K (Ei talvihoitoa)
+(def kelvien-talvihoitoluokat [9 10 11])
+
+(defn pisteen-hoitoluokat [db piste tehtavat materiaalit]
+  (let [suolausta? (when (or (seq tehtavat) (seq materiaalit))
+                     (onko-toteumalla-suolausta db {:materiaalit materiaalit :tehtavat tehtavat}))]
+    (first (hae-pisteen-hoitoluokat db (assoc piste :kielletyt_hoitoluokat (when suolausta? kelvien-talvihoitoluokat))))))
 
 (defn tallenna-toteuman-reittipisteet! [db toteuman-reittipisteet]
   (upsert! db ::rp/toteuman-reittipisteet

@@ -664,10 +664,19 @@ WHERE
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi AND loppupvm > current_timestamp - INTERVAL '3 months');
 
+-- name: onko-toteumalla-suolausta
+-- single?: true
+SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
+    AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
+OR EXISTS(SELECT * FROM toimenpidekoodi WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+
 -- name: hae-pisteen-hoitoluokat
+-- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
+-- niitä ei todellisuudessa suolata. Näissä tapauksissa GPS-piste osoittaa virheellisesti kevyen liikenteen
+-- väylälle, ja halutaan kohdistaa toteuma sen sijaan lähimmälle ajoväylälle.
 SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'talvihoito'::hoitoluokan_tietolajitunniste,
-			     250::INTEGER) AS talvihoitoluokka,
+			     250::INTEGER, array_remove(ARRAY[:kielletyt_hoitoluokat]::INT[], null)) AS talvihoitoluokka,
        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'soratie'::hoitoluokan_tietolajitunniste,
 			     250::INTEGER) AS soratiehoitoluokka;
@@ -1419,7 +1428,8 @@ SELECT t.toteuma_tunniste_id,
 FROM analytiikka_toteumat t
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.toteuma_tunniste_id
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
-WHERE (t.toteuma_alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))
 group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;

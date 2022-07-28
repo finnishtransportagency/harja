@@ -1,13 +1,14 @@
 -- Hoitoluokka taulun hakuja varten
 
 CREATE OR REPLACE FUNCTION hoitoluokka_pisteelle
-  (piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER)
+  (piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER, kielletyt_hoitoluokat INTEGER[])
   RETURNS INTEGER
 AS $$
 SELECT hoitoluokka
   FROM hoitoluokka
  WHERE ST_DWithin(geometria, piste, treshold) AND
-       tietolajitunniste = tietolaji
+       tietolajitunniste = tietolaji AND
+       hoitoluokka != ALL(kielletyt_hoitoluokat)
  ORDER BY ST_Length(ST_ShortestLine(geometria, piste)) ASC
  LIMIT 1;
 $$ LANGUAGE SQL IMMUTABLE;
