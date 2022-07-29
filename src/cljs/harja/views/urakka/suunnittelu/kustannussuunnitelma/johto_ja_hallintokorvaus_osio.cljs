@@ -37,7 +37,7 @@
         _ (println "kuvaus" kuvaus yksiloiva-nimen-paate)]
     {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
      :solun-polun-pituus 1
-     :jarjestys [^{:nimi :mapit} kuvaus]
+     :jarjestys [(with-meta kuvaus {:nimi :mapit})]
      :datan-kasittely (fn [yhteenveto]
                         (mapv (fn [[_ v]]
                                 v)
@@ -729,7 +729,7 @@
       (let [kuvaus (vec (concat [:toimenkuva] (when-not (t/post-2022?) [:kk-v]) [:hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]))]
         (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
                                            :solun-polun-pituus 1
-                                           :jarjestys [^{:nimi :mapit} kuvaus]
+                                      :jarjestys [(with-meta kuvaus {:nimi :mapit})]
                                            :datan-kasittely (fn [otsikot]
                                                               (mapv (fn [otsikko]
                                                                       otsikko)
