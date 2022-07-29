@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.testi :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]))
 
@@ -127,6 +128,71 @@
     (is (= suolarajoitusalueet-lopuksi suolarajoitusalueet-alkuun) "Poistaminen onnistui")
     (is (= suolarajoitukset-lopuksi suolarajoitukset-alkuun) "Poistaminen onnistui")))
 
+(deftest laske-tierekisteriosoitteelle-pituus-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 50}
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                 :laske-suolarajoituksen-pituudet
+                 +kayttaja-jvh+ suolarajoitus)
+        _ (println "laske-tierekisteriosoitteelle-pituus-onnistuu-test :: pituudet" pituudet)]
+    (is (= 50 (:pituus pituudet)))
+    ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
+    (is (= 150 (:ajoratojen_pituus pituudet)))))
+
+(deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 20 :aosa "makkara" :aet "lenkki" :losa "pihvi" :let "hiiligrilli"}
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (future (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :laske-suolarajoituksen-pituudet
+                           +kayttaja-jvh+ suolarajoitus))]
+    (is (thrown? Exception @pituudet) "Väärillä tiedoilla heitetään poikkeus.")))
+
+
+(deftest laske-tierekisteriosoitteelle-pituus-vaarilla-tiedoilla-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; 20 tien 4 osan pituus on tietokannassa 5752 metriä.
+        ;; Sillä on 3 ajorataa, joiden pituudet on 0 = 4089 m, 1=1667, 2 = 1667 eli yhteensä 7423
+        ;; Yritetään antaa kuitenkin virheellinen tieosoite, jossa loppuetäisyys on 6000 metriä. Meidän pitäisi saada vain
+        ;; maksimit ulos laskennasta.
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 6000}
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :laske-suolarajoituksen-pituudet
+                   +kayttaja-jvh+ suolarajoitus)
+        _ (println "laske-tierekisteriosoitteelle-pituus-onnistuu-test :: pituudet" pituudet)]
+    (is (= 5752 (:pituus pituudet)))
+    (is (= 7423 (:ajoratojen_pituus pituudet)))))
+
+(deftest tallenna-suolarajoitus-tuleville-vuosille-onnistuu
+  (let [hk-alkuvuosi 2022
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+
+        suolarajoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-suolarajoitusalue
+                        +kayttaja-jvh+
+                        (suolarajoitus-pohja
+                          urakka-id
+                          (:id +kayttaja-jvh+)
+                          {:tie 14, :aosa 1, :aet 0, :losa 2, :let 0}
+                          hk-alkuvuosi))
+        suolarajoitus (-> suolarajoitus
+                                 (assoc :suolarajoitus 123)
+                                 (assoc :formiaatti true))
+        muokattu-suolarajoitus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-suolarajoitus +kayttaja-jvh+
+                                 muokattu-suolarajoitus)
+        _ (println "muokattu-suolarajoitus" muokattu-suolarajoitus)
+        ;; Siivotaan kanta
+        _ (poista-suolarajoitus
+            {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
+             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :urakka_id urakka-id})
+        ]
+
+    (is (not (nil? (:muokkaaja muokattu-suolarajoitus))) "Muokkaaja löytyy")
+    (is (not= suolarajoitus muokattu-suolarajoitus) "Päivitys onnistui")
+    (is (= 123M (:suolarajoitus muokattu-suolarajoitus)) "Suolarajoitus asetettu")))
 
 #_(deftest paivita-suolarajoitus-uselle-vuodelle-onnistuu
     (let [hk-alkuvuosi 2022

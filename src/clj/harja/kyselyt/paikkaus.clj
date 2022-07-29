@@ -506,72 +506,6 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q-yllapitokohteet/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
-(defn laske-tien-osien-pituudet
-  "Pätkitään funkkari osiin, jotta se on helpommin testattavissa. Tämä laskee siis
-  tien pätkälle pituudet riippuen siitä, miten osan-pituudet listassa on annettu"
-  [osan-pituudet kohde]
-  (let [varakohde kohde
-        kohde (if (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
-                    (or (> (:aosa kohde) (:losa kohde))
-                      (and (= (:aosa kohde) (:losa kohde))
-                        (> (:aet kohde) (:let kohde)))))
-                (-> kohde
-                  (assoc :aosa (:losa varakohde))
-                  (assoc :losa (:aosa varakohde))
-                  (assoc :aet (:let varakohde))
-                  (assoc :let (:aet varakohde)))
-                kohde)]
-    ;; Pieni validointi kohteen arvoille
-    (when (and (not (nil? (:aosa kohde))) (not (nil? (:losa kohde)))
-            (<= (:aosa kohde) (:losa kohde)))
-      (reduce (fn [k rivi]
-                (cond
-                  ;; Kun alkuosa ja loppuosa ovat erit
-                  ;; Alkuosa täsmää, joten ei oteta koko pituutta, vaan pelkästään jäljelle jäävä pituus
-                  (and (not= (:aosa k) (:losa k))
-                    (= (:aosa k) (:osa rivi)))
-                  (assoc k :pituus (+
-                                     (:pituus k)            ;; Nykyinen pituus
-                                     (- (:pituus rivi) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
-                                     ))
-                  ;; Kun alkuosa ja loppuosa ovat erit
-                  ;; Jos loppuosa täsmää osalistan osaan, niin otetaan vain loppuosan etäisyys
-                  (and (not= (:aosa k) (:losa k))
-                    (= (:losa k) (:osa rivi)))
-                  (assoc k :pituus (+
-                                     (:pituus k)            ;; Nykyinen pituus
-                                     (:let k)               ;; Lopposan pituus, eli alusta tähän asti, ei siis koko osan pituutta
-                                     ))
-                  ;; Kun alkuosa on sama kuin loppuosa
-                  ;; Ja osa on olemassa. Eli jos tiepätkään ei kuulu se osa mitä mitataan, niin ei myöskään
-                  ;; lasketa sitä mukaaj
-                  ;; Otetaan vain osien väliin jäävä pätkä mukaan
-                  (and (= (:osa rivi) (:aosa k))
-                    (= (:aosa k) (:losa k)))
-                  (assoc k :pituus (+
-                                     (:pituus k)            ;; Nykyinen pituus
-                                     (- (:let k) (:aet k))  ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
-                                     ))
-
-                  ;; alkuosa tai loppuosa ei täsmää, joten otetaan koko osan pituus
-                  :else
-                  (if
-                    ;; Varmistetaan, että tietokannasta on saatu validi osa
-                    ;; Ja että tietokannasta saatu osa pitää käsitellä vielä tälle kohteelle.
-                    ;; Jos :osa on suurimpi kuin :losa, niin mitään käsittelyitä ei tarvita enää
-                    ;; Ja jos :osa on pienempi kuin :aosa, niin käsittelyitä ei tarvita
-                    (and (:pituus rivi)
-                      (< (:osa rivi) (:losa k))
-                      (> (:osa rivi) (:aosa k)))
-                    (assoc k :pituus (+
-                                       (:pituus k)          ;; Nykyinen pituus
-                                       (:pituus rivi)       ;; Osamäpin osan pituus
-                                       ))
-                    k)))
-        ;; Annetaan reducelle mäppi, jossa :pituus avaimeen lasketaan annetun tien kohdan pituus.
-        {:pituus 0 :aosa (:aosa kohde) :aet (:aet kohde) :losa (:losa kohde) :let (:let kohde)}
-        osan-pituudet))))
-
 (defn laske-paikkauskohteen-pituus [db kohde]
   (let [;; Jos osan hae-osien-pituudet kyselyn tulos muuttuu, tämän funktion toiminta loppuu
         ;; Alla oleva reduce olettaa, että sille annetaan osien pituudet desc järjestyksessä ja muodossa
@@ -587,7 +521,7 @@
         osan-pituudet (harja.kyselyt.tieverkko/hae-osien-pituudet db {:tie (:tie kohde)
                                                                       :aosa (:aosa kohde)
                                                                       :losa (:losa kohde)})
-        pituus (laske-tien-osien-pituudet osan-pituudet kohde)]
+        pituus (q-tr/laske-tien-osien-pituudet osan-pituudet kohde)]
     pituus))
 
 (defn- kasittele-paikkauskohteiden-sijainti

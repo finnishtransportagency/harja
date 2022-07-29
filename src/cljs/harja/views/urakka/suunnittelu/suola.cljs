@@ -57,7 +57,7 @@
   (into []
     (concat
       [(lomake/rivi
-         {:nimi :kopioi-rajoitukset
+         {:nimi :kopioidaan-tuleville-vuosille?
           :palstoja 3
           :tyyppi :checkbox
           :teksti "Kopioi rajoitukset tuleville hoitovuosille"})]
@@ -109,7 +109,7 @@
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)}
-         {:nimi :pituus-ajoradat
+         {:nimi :ajoratojen_pituus
           :otsikko "Pituus ajoradat (m)"
           :tyyppi :positiivinen-numero
           :vayla-tyyli? true
@@ -273,7 +273,7 @@
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.3}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
     {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
-    {:otsikko "Pituus ajoradat (m)" :nimi :pituus_ajoradat :fmt fmt/pyorista-ehka-kolmeen
+    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :fmt fmt/pyorista-ehka-kolmeen
      :tasaa :oikea :leveys 1}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
      :luokka "sarake-pohjavesialueet"

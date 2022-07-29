@@ -13,14 +13,19 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka]
-            [harja.ui.viesti :as viesti]))
+            [harja.ui.viesti :as viesti]
+            [clojure.set :as set]))
 
 (defrecord HaeSuolarajoitukset [])
 (defrecord HaeSuolarajoituksetOnnistui [vastaus])
 (defrecord HaeSuolarajoituksetEpaonnistui [vastaus])
 
 (defrecord AvaaTaiSuljeSivupaneeli [tila lomakedata])
+;; Päivitys
 (defrecord PaivitaLomake [lomake])
+(defrecord LaskePituusOnnistui [vastaus])
+(defrecord LaskePituusEpaonnistui [vastaus])
+
 (defrecord TallennaLomake [lomake tila])
 (defrecord TallennaLomakeOnnistui [vastaus])
 (defrecord TallennaLomakeEpaonnistui [vastaus])
@@ -80,8 +85,39 @@
   ;; Päivitetään lomakkeen sisältö app-stateen, mutta ei serverille
   PaivitaLomake
   (process-event [{lomake :lomake} app]
-    ;;TODO: Pituuden laskenta pitäisi hoitaa tässä
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
+          uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
+          app (if (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri)))
+              (do
+                (js/console.log "OLI EROA!!!!")
+                (tuck-apurit/post! :laske-suolarajoituksen-pituudet
+                    {:tie (:tie lomake)
+                     :aosa (:aosa lomake)
+                     :aet (:aet lomake)
+                     :losa (:losa lomake)
+                     :let (:let lomake)
+                     :urakka_id urakka-id}
+                    {:onnistui ->LaskePituusOnnistui
+                     :epaonnistui ->LaskePituusEpaonnistui
+                     :paasta-virhe-lapi? true})
+                (assoc app :laske-pituus-kaynnissa? true))
+              app)])
     (assoc app :lomake lomake))
+
+  LaskePituusOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.log "LaskePituusOnnistui :: vastaus" (pr-str vastaus))
+      (-> app
+        (assoc-in [:lomake :pituus] (:pituus vastaus))
+        (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
+        (assoc :laske-pituus-kaynnissa? false))))
+
+  LaskePituusEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LaskePituusEpaonnistui :: vastaus" (pr-str vastaus))
+    (assoc app :laske-pituus-kaynnissa? false))
 
 
   TallennaLomake
@@ -100,7 +136,10 @@
                :aosa (:aosa lomake)
                :aet (:aet lomake)
                :losa (:losa lomake)
-               :let (:let lomake)}
+               :let (:let lomake)
+               :pituus (:pituus lomake)
+               :ajoratojen_pituus (:ajoratojen_pituus lomake)
+               :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? lomake)}
               {:onnistui ->TallennaLomakeOnnistui
                :epaonnistui ->TallennaLomakeEpaonnistui
                :paasta-virhe-lapi? true})]
@@ -155,7 +194,7 @@
 
   PoistaSuolarajoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast "Rajoitusalueen tallennus epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
+    (viesti/nayta-toast! "Rajoitusalueen tallennus epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
     (js/console.log "TallennaLomakeEpaonnistui :: vastaus" (pr-str vastaus))
     (-> app
       (assoc :poisto-kaynnissa? false))))
