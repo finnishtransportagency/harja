@@ -32,10 +32,12 @@
 
 (defn- yhteenveto-grid-rajapinta-asetukset
   [toimenkuva maksukausi data-koskee-ennen-urakkaa?]
-  (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+  (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
+        kuvaus (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) [:kk-v])))
+        _ (println "kuvaus" kuvaus yksiloiva-nimen-paate)]
     {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
      :solun-polun-pituus 1
-     :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) [:kk-v])))]
+     :jarjestys [^{:nimi :mapit} kuvaus]
      :datan-kasittely (fn [yhteenveto]
                         (mapv (fn [[_ v]]
                                 v)
@@ -670,7 +672,7 @@
                             :osat [{:tyyppi :rivi
                                     :nimi ::t/yhteenveto
                                     :osat (cond->
-                                            (vec (repeat (if (t/post-2022?) 6 7)
+                                              (vec (repeat (if (t/post-2022?) 6 7)
                                                    {:tyyppi :teksti
                                                     :luokat #{"table-default"}
                                                     :fmt ks-yhteiset/summa-formatointi-uusi}))
@@ -705,7 +707,8 @@
                                             (fn [tila]
                                               (update-in tila [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid] f))))}})
         g (grid/lisaa-rivi! g
-            (grid/rivi {:osat (let [osat
+            (grid/rivi {:osat
+                        (let [osat
                                     (vec (repeatedly (if (t/post-2022?) 6 7)
                                            (fn []
                                              (solu/teksti {:parametrit {:class #{"table-default" "table-default-sum" "harmaa-teksti"}}
@@ -723,29 +726,30 @@
     (grid/rajapinta-grid-yhdistaminen! g
       t/johto-ja-hallintokorvaus-yhteenveto-rajapinta
       (t/johto-ja-hallintokorvaus-yhteenveto-dr)
-      (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
-                                    :solun-polun-pituus 1
-                                    :jarjestys [^{:nimi :mapit} (vec (concat [:toimenkuva] (when-not (t/post-2022?) [:kk-v]) [:hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]))]
-                                    :datan-kasittely (fn [otsikot]
-                                                       (mapv (fn [otsikko]
-                                                               otsikko)
-                                                         (vals otsikot)))}
-              [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
-                                       :solun-polun-pituus 1
-                                       :datan-kasittely identity}
-              [::t/indeksikorjattu] {:rajapinta :indeksikorjattu
-                                     :solun-polun-pituus 1
-                                     :datan-kasittely identity}}
+      (let [kuvaus (vec (concat [:toimenkuva] (when-not (t/post-2022?) [:kk-v]) [:hoitovuosi-1 :hoitovuosi-2 :hoitovuosi-3 :hoitovuosi-4 :hoitovuosi-5]))]
+        (merge {[::g-pohjat/otsikko] {:rajapinta :otsikot
+                                           :solun-polun-pituus 1
+                                           :jarjestys [^{:nimi :mapit} kuvaus]
+                                           :datan-kasittely (fn [otsikot]
+                                                              (mapv (fn [otsikko]
+                                                                      otsikko)
+                                                                (vals otsikot)))}
+                     [::g-pohjat/yhteenveto] {:rajapinta :yhteensa
+                                              :solun-polun-pituus 1
+                                              :datan-kasittely identity}
+                     [::t/indeksikorjattu] {:rajapinta :indeksikorjattu
+                                            :solun-polun-pituus 1
+                                            :datan-kasittely identity}}
 
-        (second
-          (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi]}]
-                    (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-                      [(inc index) (merge grid-kasittelijat
-                                     {[::g-pohjat/data index ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
-                                                                              :solun-polun-pituus 1
-                                                                              :datan-kasittely identity}})]))
-            [0 {}]
-            (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata))))))
+               (second
+                 (reduce (fn [[index grid-kasittelijat] {:keys [toimenkuva maksukausi]}]
+                           (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                             [(inc index) (merge grid-kasittelijat
+                                            {[::g-pohjat/data index ::t/yhteenveto] {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
+                                                                                     :solun-polun-pituus 1
+                                                                                     :datan-kasittely identity}})]))
+                   [0 {}]
+                   (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)))))))
 
 
 ;; | -- Gridit päättyy
@@ -1106,7 +1110,7 @@
      [:h3 "Tuntimäärät ja -palkat"]
      [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
       [ks-yhteiset/yleis-suodatin suodattimet]]
-                  [debug/debug app]
+;                  [debug/debug app]
      (cond
        (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
        ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.

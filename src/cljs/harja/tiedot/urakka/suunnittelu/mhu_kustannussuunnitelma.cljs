@@ -34,7 +34,9 @@
 (def vertailuvuosi-uudelle-taulukolle 2022)
 (defn post-2022?
   []
-  (let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)]
+  (println "posti katsottu")
+  false
+  #_(let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)]
     (if alkupvm
       (>= (pvm/vuosi alkupvm) vertailuvuosi-uudelle-taulukolle)
       false)))
@@ -1603,7 +1605,10 @@
       (range 1 (inc jh-korvausten-omiariveja-lkm)))))
 
 (defn johto-ja-hallintokorvaus-yhteenveto-dr []
-  (let [rajapinnat (merge
+  #_(let [rajapinnat ])
+  (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
+    johto-ja-hallintokorvaus-yhteenveto-rajapinta
+    (merge
       {:otsikot {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :otsikot]]
                  :haku identity}
        :yhteensa {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa]]
@@ -1629,52 +1634,49 @@
                                            (mhu/maksukausi->kuukausien-lkm maksukausi))]
                                 (vec (concat [toimenkuva] (when-not (post-2022?) [kk-v]) yhteenvedot-vuosille))))}})))
         {}
-        (range 1 (inc jh-korvausten-omiariveja-lkm))))]
-    (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
-      johto-ja-hallintokorvaus-yhteenveto-rajapinta
-      rajapinnat
+        (range 1 (inc jh-korvausten-omiariveja-lkm))))
 
-      {}
+    {}
 
-      (apply merge
-        {:yhteensa-seuranta
-         {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]
-                  [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu]]
-          :aseta (fn [tila yhteenvedot yhteenvedot-indeksikorjattu]
-                   (let [yhteensa-arvot (summaa-jjhk-yhteensa yhteenvedot)
-                         yhteensa-indeksikorjatut-arvot (summaa-jjhk-yhteensa yhteenvedot-indeksikorjattu)]
-                     (-> tila
-                       (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
-                       (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu] yhteensa-indeksikorjatut-arvot)
-                       (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot)
-                       (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset] yhteensa-indeksikorjatut-arvot))))}}
-        (reduce (fn [rajapinnat index]
-                  (let [nimi (jh-omienrivien-nimi index)]
-                    (merge rajapinnat
-                      {(keyword (str "yhteenveto-" nimi "-seuranta"))
-                       {:polut [[:domain :johto-ja-hallintokorvaukset nimi]]
-                        :aseta (fn [tila omat-jh-korvaukset]
-                                 (let [toimenkuva (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :toimenkuva])
-                                       yhteensa-arvot (summaa-omat-jjhk-toimenkuvan-tunnit toimenkuva omat-jh-korvaukset :tuntipalkka)
-                                       yhteensa-indeksikorjatut-arvot (summaa-omat-jjhk-toimenkuvan-tunnit toimenkuva omat-jh-korvaukset :tuntipalkka-indeksikorjattu)]
-                                   (-> tila
-                                     (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto nimi] yhteensa-arvot)
-                                     (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu nimi] yhteensa-indeksikorjatut-arvot))))}})))
-          {}
-          (range 1 (inc jh-korvausten-omiariveja-lkm)))
-        (mapv (fn [{:keys [toimenkuva maksukausi]}]
-                (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
-                  {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta"))
-                   {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]]
-                    :aseta (fn [tila jh-korvaukset]
-                             (let [yhteensa-arvot (summaa-jjhk-toimenkuvan-tunnit jh-korvaukset :tuntipalkka)
-                                   yhteensa-indeksikorjatut-arvot (summaa-jjhk-toimenkuvan-tunnit jh-korvaukset :tuntipalkka-indeksikorjattu)]
-                               (-> tila
-                                 (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]
-                                   yhteensa-arvot)
-                                 (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu toimenkuva maksukausi]
-                                   yhteensa-indeksikorjatut-arvot))))}}))
-          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))))
+    (apply merge
+      {:yhteensa-seuranta
+       {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto]
+                [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu]]
+        :aseta (fn [tila yhteenvedot yhteenvedot-indeksikorjattu]
+                 (let [yhteensa-arvot (summaa-jjhk-yhteensa yhteenvedot)
+                       yhteensa-indeksikorjatut-arvot (summaa-jjhk-yhteensa yhteenvedot-indeksikorjattu)]
+                   (-> tila
+                     (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteensa] yhteensa-arvot)
+                     (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :indeksikorjattu] yhteensa-indeksikorjatut-arvot)
+                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset] yhteensa-arvot)
+                     (assoc-in [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset] yhteensa-indeksikorjatut-arvot))))}}
+      (reduce (fn [rajapinnat index]
+                (let [nimi (jh-omienrivien-nimi index)]
+                  (merge rajapinnat
+                    {(keyword (str "yhteenveto-" nimi "-seuranta"))
+                     {:polut [[:domain :johto-ja-hallintokorvaukset nimi]]
+                      :aseta (fn [tila omat-jh-korvaukset]
+                               (let [toimenkuva (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi :toimenkuva])
+                                     yhteensa-arvot (summaa-omat-jjhk-toimenkuvan-tunnit toimenkuva omat-jh-korvaukset :tuntipalkka)
+                                     yhteensa-indeksikorjatut-arvot (summaa-omat-jjhk-toimenkuvan-tunnit toimenkuva omat-jh-korvaukset :tuntipalkka-indeksikorjattu)]
+                                 (-> tila
+                                   (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto nimi] yhteensa-arvot)
+                                   (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu nimi] yhteensa-indeksikorjatut-arvot))))}})))
+        {}
+        (range 1 (inc jh-korvausten-omiariveja-lkm)))
+      (mapv (fn [{:keys [toimenkuva maksukausi]}]
+              (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)]
+                {(keyword (str "yhteenveto" yksiloiva-nimen-paate "-seuranta"))
+                 {:polut [[:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi]]
+                  :aseta (fn [tila jh-korvaukset]
+                           (let [yhteensa-arvot (summaa-jjhk-toimenkuvan-tunnit jh-korvaukset :tuntipalkka)
+                                 yhteensa-indeksikorjatut-arvot (summaa-jjhk-toimenkuvan-tunnit jh-korvaukset :tuntipalkka-indeksikorjattu)]
+                             (-> tila
+                               (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]
+                                 yhteensa-arvot)
+                               (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu toimenkuva maksukausi]
+                                 yhteensa-indeksikorjatut-arvot))))}}))
+        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))))
 
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
                            :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}
@@ -2478,7 +2480,9 @@
                          {}
                          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
-          {:otsikot (merge {:toimenkuva "Toimenkuva"}
+          {:otsikot
+{:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}
+           #_(merge {:toimenkuva "Toimenkuva"}
                       (when-not (post-2022?) {:kk-v "kk/v"})
                       {:hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"})})
         (assoc-in [:gridit :suunnitellut-hankinnat]
