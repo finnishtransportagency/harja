@@ -12,6 +12,11 @@
             [reagent.core :as r]
             [harja.tiedot.urakka :as u]))
 
+(def kuluva-alkuvuosi
+  (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+    (pvm/vuosi (pvm/nyt))
+    (dec (pvm/vuosi (pvm/nyt)))))
+
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
                                                                          :kopioidaan-tuleville-vuosille? true
@@ -22,7 +27,8 @@
                                                                                                :laskutukseen-perustuen-valinta #{}}
                                                               :kopioidaan-tuleville-vuosille? true}})
 
-(def suolarajoitukset-default {:rajoitusalue-lomake-auki? false})
+(def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
+                               :valittu-hoitovuosi kuluva-alkuvuosi})
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
                                                                   :toimenpide      nil
@@ -407,21 +413,19 @@
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
-(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
-                                                             :toteutuneet-maarat    nil
-                                                             :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                                                                                      (pvm/vuosi (pvm/nyt))
-                                                                                      (dec (pvm/vuosi (pvm/nyt))))
-                                                             :aikavali-alkupvm      nil
-                                                             :aikavali-loppupvm     nil
-                                                             :toteuma               {:toimenpide         nil
-                                                                                     :tehtava            nil
-                                                                                     :toteuma-id         nil
-                                                                                     :toteuma-tehtava-id nil
-                                                                                     :lisatieto          nil
-                                                                                     :maara              nil
-                                                                                     :loppupvm           (pvm/nyt)}
-                                                             :syottomoodi           false}}))
+(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
+                                                             :toteutuneet-maarat nil
+                                                             :hoitokauden-alkuvuosi kuluva-alkuvuosi
+                                                             :aikavali-alkupvm nil
+                                                             :aikavali-loppupvm nil
+                                                             :toteuma {:toimenpide nil
+                                                                       :tehtava nil
+                                                                       :toteuma-id nil
+                                                                       :toteuma-tehtava-id nil
+                                                                       :lisatieto nil
+                                                                       :maara nil
+                                                                       :loppupvm (pvm/nyt)}
+                                                             :syottomoodi false}}))
 
 ;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
 ;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.

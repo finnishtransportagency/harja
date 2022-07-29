@@ -2,6 +2,7 @@
   "Tämän nimiavaruuden avulla voidaan hakea urakan suola- ja lämpötilatietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.pvm :as pvm]
             [tuck.core :refer [process-event] :as tuck]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -15,8 +16,10 @@
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
             [clojure.set :as set]))
+;; Filtterit
+(defrecord ValitseHoitovuosi [vuosi])
 
-(defrecord HaeSuolarajoitukset [])
+(defrecord HaeSuolarajoitukset [valittu-vuosi])
 (defrecord HaeSuolarajoituksetOnnistui [vastaus])
 (defrecord HaeSuolarajoituksetEpaonnistui [vastaus])
 
@@ -34,14 +37,10 @@
 (defrecord PoistaSuolarajoitusOnnistui [vastaus])
 (defrecord PoistaSuolarajoitusEpaonnistui [vastaus])
 
-(defn- hae-suolarajoitukset []
-  (let [hoitokausi @urakka/valittu-hoitokausi
-        _ (js/console.log "hae-suolarajoitukset :: hoitokausi" (pr-str hoitokausi))
-        hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
-        _ (js/console.log "hae-suolarajoitukset :: hoitokauden-alkuvuosi" (pr-str hoitokauden-alkuvuosi))
-        urakka-id (-> @tila/yleiset :urakka :id)
+(defn- hae-suolarajoitukset [valittu-vuosi]
+  (let [urakka-id (-> @tila/yleiset :urakka :id)
         _ (tuck-apurit/post! :hae-suolarajoitukset
-            {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+            {:hoitokauden_alkuvuosi valittu-vuosi
              :urakka_id urakka-id}
             {:onnistui ->HaeSuolarajoituksetOnnistui
              :epaonnistui ->HaeSuolarajoituksetEpaonnistui
@@ -49,10 +48,18 @@
 
 (extend-protocol tuck/Event
 
-  HaeSuolarajoitukset
-  (process-event [_ app]
+  ValitseHoitovuosi
+  (process-event [{vuosi :vuosi} app]
     (do
-      (hae-suolarajoitukset)
+      (js/console.log "ValitseHoitokausi :: vuosi" (pr-str vuosi))
+      (urakka/valitse-aikavali! (pvm/->pvm (str "1.10." vuosi)) (pvm/->pvm (str "30.9." (inc vuosi))))
+      (hae-suolarajoitukset vuosi)
+      (assoc app :valittu-hoitovuosi vuosi)))
+
+  HaeSuolarajoitukset
+  (process-event [{valittu-vuosi :valittu-vuosi} app]
+    (do
+      (hae-suolarajoitukset valittu-vuosi)
       (assoc app :suolarajoitukset-haku-kaynnissa? true)))
 
   HaeSuolarajoituksetOnnistui
@@ -88,8 +95,14 @@
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
           uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
-          app (if (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri)))
-              (do
+          app (if (and
+                    (not (nil? (:tie lomake)))
+                    (not (nil? (:aosa lomake)))
+                    (not (nil? (:aet lomake)))
+                    (not (nil? (:losa lomake)))
+                    (not (nil? (:let lomake)))
+                    (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri))))
+                (do
                 (js/console.log "OLI EROA!!!!")
                 (tuck-apurit/post! :laske-suolarajoituksen-pituudet
                     {:tie (:tie lomake)
@@ -102,8 +115,8 @@
                      :epaonnistui ->LaskePituusEpaonnistui
                      :paasta-virhe-lapi? true})
                 (assoc app :laske-pituus-kaynnissa? true))
-              app)])
-    (assoc app :lomake lomake))
+              app)]
+      (assoc app :lomake lomake)))
 
   LaskePituusOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -122,11 +135,9 @@
 
   TallennaLomake
   (process-event [{lomake :lomake sivupaneeli-tila :tila} app]
-    (let [hoitokausi @urakka/valittu-hoitokausi
-          hoitokauden-alkuvuosi (pvm/vuosi (first hoitokausi))
-          urakka-id (-> @tila/yleiset :urakka :id)
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :tallenna-suolarajoitus
-              {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+              {:hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi lomake)
                :urakka_id urakka-id
                :suolarajoitus (:suolarajoitus lomake)
                :formiaatti (:formiaatti lomake)
@@ -150,7 +161,7 @@
   TallennaLomakeOnnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Rajoitusalueen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (hae-suolarajoitukset)
+    (hae-suolarajoitukset (:valittu-hoitovuosi app))
     (-> app
       (assoc :suolarajoitukset-haku-kaynnissa? true)
       (assoc :tallennus-kaynnissa? false)
@@ -186,7 +197,7 @@
     (do
       (viesti/nayta-toast! "Rajoitusalueen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
       (js/console.log "PoistaSuolarajoitusOnnistui")
-      (hae-suolarajoitukset)
+      (hae-suolarajoitukset (:valittu-hoitovuosi app))
       (-> app
         (assoc :suolarajoitukset-haku-kaynnissa? true)
         (assoc :poisto-kaynnissa? false)

@@ -7,6 +7,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
 
             [harja.tiedot.urakka.toteumat.suola :as tiedot-suola]
             [harja.tiedot.urakka.suunnittelu.suolarajoitukset-tiedot :as suolarajoitukset-tiedot]
@@ -129,12 +130,17 @@
          {:nimi :formiaatti
           :tyyppi :checkbox
           :palstoja 3
-          :teksti "Alueella tulee käyttää suolan sijaan formiaattia"})])))
+          :teksti "Alueella tulee käyttää suolan sijaan formiaattia"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})])))
 
 (defn lomake-rajoitusalue
   "Rajoitusalueen lisäys/muokkaus"
-  [e! rajoituslomake]
-  (let [muokkaustila? true
+  [e! {:keys [lomake valittu-hoitovuosi] :as app}]
+  (let [;; Aseta hoitovuosi lomakkeelle, mikäli sitä ei ole
+        rajoituslomake (if (nil? (:hoitokauden_alkuvuosi lomake))
+                         (assoc lomake :hoitokauden_alkuvuosi valittu-hoitovuosi)
+                         lomake)
+        muokkaustila? true
         ;; TODO: Muokkaus
         ;; TODO: Oikeustarkastukset
         ]
@@ -295,24 +301,39 @@
   (komp/luo
     (komp/sisaan
       #(do
-         (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset))))
+         (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset (pvm/vuosi (first @urakka/valittu-hoitokausi))))))
     (komp/ulos
       (fn []
         ;; Tänne mahdolliset karttatasojen poistot
         ))
 
     (fn [e! app]
-      (let [rajoitusalueet (:suolarajoitukset app)
+      (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
+            vuosi (pvm/vuosi alkupvm)
+            rajoitusalueet (:suolarajoitukset app)
             lomake-auki? (:rajoitusalue-lomake-auki? app)
-            lomake (:lomake app)
             urakka @nav/valittu-urakka
+            valittu-vuosi (if (nil? (:valittu-hoitovuosi app))
+                            (pvm/vuosi (first @urakka/valittu-hoitokausi))
+                            (:valittu-hoitovuosi app))
+            hoitovuodet (into [] (range vuosi (+ 5 vuosi)))
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
          [:h2 "Urakan suolarajoitukset hoitovuosittain"]
          [debug/debug app]
 
          [:div.kontrollit
-          [valinnat/urakan-hoitokausi urakka]]
+          [:div.row
+           [:div.:div.col-xs-12.col-md-3
+            [:span.alasvedon-otsikko-vayla "Hoitovuosi"]
+            [yleiset/livi-pudotusvalikko {:valinta valittu-vuosi
+                                          :vayla-tyyli? true
+                                          :data-cy "hoitokausi-valinta"
+                                          :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))
+                                          :format-fn #(str "01.10." % " - 30.9." (inc %))
+                                          ;:format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
+                                          :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
+             hoitovuodet]]]]
 
          [:div.lomakkeet
           [:h3 "Talvisuolan kokonaismäärän käyttöraja"]
