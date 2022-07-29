@@ -64,7 +64,8 @@
           :teksti "Kopioi rajoitukset tuleville hoitovuosille"})]
       [(lomake/ryhma
          {:otsikko "Sijainti"
-          :rivi? true}
+          :rivi? true
+          :ryhman-luokka "lomakeryhman-otsikko-tausta"}
          {:nimi :tie
           :otsikko "Tie"
           :tyyppi :positiivinen-numero
@@ -72,59 +73,70 @@
           :pakollinen? true
           :vayla-tyyli? true
           :virhe? (validointi/nayta-virhe? [:tie] lomake)
-          :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)}
+          :virheteksti (validointi/nayta-virhe-teksti [:tie] lomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :aosa
           :otsikko "A-osa"
           :tyyppi :positiivinen-numero
           :kokonaisluku? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:aosa] lomake)}
+          :virhe? (validointi/nayta-virhe? [:aosa] lomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :aet
           :otsikko "A-et."
           :tyyppi :positiivinen-numero
           :kokonaisluku? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:aet] lomake)}
+          :virhe? (validointi/nayta-virhe? [:aet] lomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :losa
           :otsikko "L-osa."
           :tyyppi :positiivinen-numero
           :kokonaisluku? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:losa] lomake)}
+          :virhe? (validointi/nayta-virhe? [:losa] lomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :let
           :otsikko "L-et."
           :tyyppi :positiivinen-numero
           :kokonaisluku? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:let] lomake)})
+          :virhe? (validointi/nayta-virhe? [:let] lomake)
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
        (lomake/ryhma
-         {:rivi? true}
+         {:ryhman-luokka "lomakeryhman-otsikko-tausta"
+          :rivi? true}
          {:nimi :pituus
           :otsikko "Pituus (m)"
           :tyyppi :positiivinen-numero
           :vayla-tyyli? true
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
-          :muokattava? (constantly false)}
+          :muokattava? (constantly false)
+          :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :ajoratojen_pituus
           :otsikko "Pituus ajoradat (m)"
           :tyyppi :positiivinen-numero
           :vayla-tyyli? true
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
-          :muokattava? (constantly false)})
+          :muokattava? (constantly false)
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
        (lomake/ryhma
          {:otsikko "Suolarajoitus"
-          :rivi? true}
+          :rivi? true
+          :ryhman-luokka "lomakeryhman-otsikko-tausta"}
          {:nimi :suolarajoitus
           :otsikko "Suolan max määrä"
           :tyyppi :positiivinen-numero
-          :yksikkö "t/ajoratakm"
-          :vayla-tyyli? true})
+          :yksikko "t/ajoratakm"
+          :vayla-tyyli? true
+          ::lomake/col-luokka "col-sm-6"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
        (lomake/ryhma
          {:rivi? true}
          {:nimi :formiaatti
@@ -358,8 +370,8 @@
           ;; Rajoitusalueen lisäys/muokkauslomake. Avautuu sivupaneeliin
           ;; TODO: Lomakkeen avaaminen/sulkeminen tuck-eventeiksi ja app stateen
           (when lomake-auki?
-            [:div.overlay-oikealla {:style {:width "600px" :overflow "auto"}}
-             [lomake-rajoitusalue e! lomake]])
+            [:div.overlay-oikealla {:style {:width "570px" :overflow "auto"}}
+             [lomake-rajoitusalue e! app]])
 
           [taulukko-rajoitusalueet e! rajoitusalueet saa-muokata?]]]))))
 
