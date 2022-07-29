@@ -166,23 +166,33 @@
     (is (= 7423 (:ajoratojen_pituus pituudet)))))
 
 (deftest tallenna-suolarajoitus-tuleville-vuosille-onnistuu
-  (let [hk-alkuvuosi 2022
-        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+  (let [hk-alkuvuosi 2005
+        urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        ;;TODO: Hae ensin urakan kaikki suolarajoitukset
+        db-suolarajoitukset (q-map (str "select ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi, ra.urakka_id as urakka_id
+        from rajoitusalue ra join rajoitusalue_rajoitus rr on rr.rajoitusalue_id = ra.id
+        WHERE ra.urakka_id = " urakka-id "
+        AND ra.poistettu = false
+        AND rr.poistettu = false
+        ORDER BY hoitokauden_alkuvuosi ASC"))
 
-        suolarajoitus (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :tallenna-suolarajoitusalue
-                        +kayttaja-jvh+
-                        (suolarajoitus-pohja
-                          urakka-id
-                          (:id +kayttaja-jvh+)
-                          {:tie 14, :aosa 1, :aet 0, :losa 2, :let 0}
-                          hk-alkuvuosi))
-        suolarajoitus (-> suolarajoitus
-                                 (assoc :suolarajoitus 123)
-                                 (assoc :formiaatti true))
-        muokattu-suolarajoitus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-suolarajoitus +kayttaja-jvh+
-                                 muokattu-suolarajoitus)
-        _ (println "muokattu-suolarajoitus" muokattu-suolarajoitus)
+        suolarajoitus (-> (suolarajoitus-pohja
+                            urakka-id
+                            (:id +kayttaja-jvh+)
+                            {:tie 14, :aosa 1, :aet 0, :losa 2, :let 0}
+                            hk-alkuvuosi)
+                        (assoc :kopioidaan-tuleville-vuosille? true))
+
+        suolarajoitus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-suolarajoitus +kayttaja-jvh+ suolarajoitus)
+
+        ;; TODO: Tarkista, että tallennuksen jälkeen jokaiselle vuodelle on tallentunut rajoitus
+        db-suolarajoitukset-jalkeen (q-map (str "select ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi, ra.urakka_id as urakka_id
+        from rajoitusalue ra join rajoitusalue_rajoitus rr on rr.rajoitusalue_id = ra.id
+        WHERE ra.urakka_id = " urakka-id "
+        AND ra.poistettu = false
+        AND rr.poistettu = false
+        ORDER BY hoitokauden_alkuvuosi ASC"))
+
         ;; Siivotaan kanta
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
@@ -190,9 +200,8 @@
              :urakka_id urakka-id})
         ]
 
-    (is (not (nil? (:muokkaaja muokattu-suolarajoitus))) "Muokkaaja löytyy")
-    (is (not= suolarajoitus muokattu-suolarajoitus) "Päivitys onnistui")
-    (is (= 123M (:suolarajoitus muokattu-suolarajoitus)) "Suolarajoitus asetettu")))
+    (is (empty? db-suolarajoitukset) "Tietokannassa ei ole rajoituksia")
+    (is (= 8 (count db-suolarajoitukset-jalkeen)) "Tietokannassa on jokaiselle hoitovuodelle rajoitus")))
 
 #_(deftest paivita-suolarajoitus-uselle-vuodelle-onnistuu
     (let [hk-alkuvuosi 2022

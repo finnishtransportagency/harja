@@ -2,11 +2,23 @@
   (:require [com.stuartsierra.component :as component]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [slingshot.slingshot :refer [throw+ try+]]))
+
+(defn tulevat-hoitovuodet
+  "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
+  Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
+  [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
+  (let [urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
+        hoitovuodet (if kopioidaan-tuleville-vuosille?
+                      (conj (range nykyvuosi urakan-loppuvuosi) urakan-loppuvuosi)
+                      (conj [] nykyvuosi))]
+    hoitovuodet))
 
 (defn hae-suolarajoitukset [db user {:keys [urakka_id hoitokauden_alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
@@ -19,7 +31,13 @@
 
 (defn tallenna-suolarajoitus [db user suolarajoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
-  (let [;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
+  (log/debug "tallenna-suolarajoitus :: suolarajoitus" suolarajoitus)
+  (let [kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? suolarajoitus)
+        urakan-hoitovuodet (tulevat-hoitovuodet
+                             (:hoitokauden_alkuvuosi suolarajoitus)
+                             kopioidaan-tuleville-vuosille?
+                             (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)})))
+        ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
         db-rajoitusalue {:id (when (:rajoitusalue_id suolarajoitus) (:rajoitusalue_id suolarajoitus))
                          :tie (:tie suolarajoitus)
                          :aosa (:aosa suolarajoitus)
@@ -47,11 +65,19 @@
         ;; Päivitä tai tallenna uutena
         suolarajoitus (if (:id db-rajoitus)
                         (do
-                          (suolarajoitus-kyselyt/paivita-suolarajoitus! db db-rajoitus)
+                          (reduce (fn [rajoitus vuosi]
+                                    (let [rajoitus (assoc rajoitus :hoitokauden_alkuvuosi vuosi)
+                                          _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
+                                      rajoitus))
+                            db-rajoitus urakan-hoitovuodet)
                           (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                               :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)})))
                         (do
-                          (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc db-rajoitus :id))
+                          (reduce (fn [rajoitus vuosi]
+                                    (let [rajoitus (assoc rajoitus :hoitokauden_alkuvuosi vuosi)
+                                          _ (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
+                                      rajoitus))
+                            db-rajoitus urakan-hoitovuodet)
                           (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                               :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)}))))]
     suolarajoitus))
