@@ -352,8 +352,8 @@
                       (assoc :toteuma "tt01")))))
     ; 7b -> ohita
     (is (= {:toiminto :ohita :viesti "Tekninen toimenpide: Muu tekninen toimenpide. Ohita varustetoteuma."}
-                                                         (kutsu (-> {} perus-setti
-                                                                    (assoc :toteuma "tt02")))))
+           (kutsu (-> {} perus-setti
+                      (assoc :toteuma "tt02")))))
     ; else -> tallenna
     (is (= {:toiminto :tallenna :viesti nil}
            (kutsu (-> {} perus-setti))))))

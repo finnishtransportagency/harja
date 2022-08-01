@@ -290,7 +290,7 @@
                                 (tallenna-fn kohde)
                                 true
                                 (catch Throwable t
-                                  (tallenna-virhe-fn kohde (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
+                                  (tallenna-virhe-fn kohde (str t " url: " url))
                                   false)
                                 )) tallennettavat-kohteet)]
           (every? true? tulokset)))
