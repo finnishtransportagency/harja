@@ -70,6 +70,26 @@
              :urakka_id urakka-id})]
     (is (> (count rajoitus) 0) "Uusi rajoitus on tallennettu")))
 
+(deftest tallenna-suolarajoitus-pohjavesialueelle-onnistuu-test
+  (let [hk-alkuvuosi 2022
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        rajoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tallenna-suolarajoitus
+                   +kayttaja-jvh+
+                   (suolarajoitus-pohja
+                     urakka-id
+                     (:id +kayttaja-jvh+)
+                     {:tie 4 :aosa 364 :aet 3268 :losa 364 :let 3451}
+                     hk-alkuvuosi))
+        ;; Siivotaan kanta
+        _ (poista-suolarajoitus
+            {:rajoitusalue_id (:rajoitusalue_id rajoitus)
+             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :urakka_id urakka-id})]
+    (is (> (count rajoitus) 0) "Uusi rajoitus on tallennettu")
+    (is (not (empty? (:pohjavesialueet rajoitus))) "Uusi rajoitus on tallennettu pohjavesialueelle")
+    ))
+
 (deftest paivita-suolarajoitus-onnistuu-test
   (let [hk-alkuvuosi 2022
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -133,7 +153,7 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 50}
         suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
-                 :laske-suolarajoituksen-pituudet
+                  :tierekisterin-tiedot
                  +kayttaja-jvh+ suolarajoitus)
         _ (println "laske-tierekisteriosoitteelle-pituus-onnistuu-test :: pituudet" pituudet)]
     (is (= 50 (:pituus pituudet)))
@@ -202,6 +222,22 @@
 
     (is (empty? db-suolarajoitukset) "Tietokannassa ei ole rajoituksia")
     (is (= 8 (count db-suolarajoitukset-jalkeen)) "Tietokannassa on jokaiselle hoitovuodelle rajoitus")))
+
+(deftest hae-pohjavesialueet-tierekisterille-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 4 :aosa 364 :aet 3268 :losa 364 :let 3451}
+
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        tiedot (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)
+        _ (println "laske-tierekisteriosoitteelle-pituus-onnistuu-test :: tiedot" tiedot)]
+    (is (= 183 (:pituus tiedot)))
+    ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
+    (is (= 366 (:ajoratojen_pituus tiedot)))
+    (is (= 1 (count (:pohjavesialueet tiedot))))
+    (is (= "Kempeleenharju" (:nimi (first (:pohjavesialueet tiedot)))))))
+
 
 #_(deftest paivita-suolarajoitus-uselle-vuodelle-onnistuu
     (let [hk-alkuvuosi 2022
