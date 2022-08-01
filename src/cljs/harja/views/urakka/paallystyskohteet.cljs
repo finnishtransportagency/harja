@@ -214,7 +214,8 @@
           [validointivirheet-modal]
           [excel-toiminnot {:urakka-id (:id ur)
                             :sopimus-id sopimus-id
-                            :vuosi vuosi}]
+                            :vuosi vuosi
+                            :vain-yha-kohteet? true}]
           [yllapitokohteet-view/yllapitokohteet
            ur
            paallystys-tiedot/yhan-paallystyskohteet

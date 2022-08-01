@@ -269,6 +269,7 @@ WHERE
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                      OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
+  AND (:vain_yha_kohteet IS NOT TRUE OR ypk.yhaid IS NOT NULL)
 GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
   ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;

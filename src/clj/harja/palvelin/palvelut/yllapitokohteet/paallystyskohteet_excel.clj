@@ -18,16 +18,14 @@
                                        (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
                              kohteet)
         kohderivit (mapcat
-                     (fn [{:keys [yhaid id ;; muille kuin yha-kohteille näytetään Harjan ID, etuliitteen HARJA_<id> kera
+                     (fn [{:keys [yhaid
                                   kohdenumero tunnus nimi
                                   sopimuksen-mukaiset-tyot ;; = Tarjoushinta
                                   maaramuutokset
                                   bitumi-indeksi ;; = Sideaineen hintamuutokset
                                   kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
                                   kokonaishinta]}]
-                       [{:rivi [(or yhaid
-                                    ;; Muille kuin YHA-kohteille näytetään Harja-ID, joka mahdollistaa kustannusten viennin takaisin Harjaan (linkitys)
-                                    (str "HARJA_" id))
+                       [{:rivi [yhaid
                                 kohdenumero
                                 tunnus
                                 nimi

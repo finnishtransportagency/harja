@@ -1758,7 +1758,28 @@
         {:lihavoi? false
          :rivi [13374 "L14" nil "Ouluntie 2" 0M 0 0M 0M 0M]}
         {:lihavoi? false
-    :rivi [547523069 "L42" "B" "Tärkeä kohde mt20 2022" 0M 0 0M 0M 0M]}))
+    :rivi [547523069 "L42" "B" "Tärkeä kohde mt20 2022" 0M 0 0M 0M 0M]}
+        [nil nil nil nil nil nil nil nil nil]
+        [nil nil nil nil nil nil nil nil nil]
+        [nil
+         nil
+         nil
+         "Yhteensä:"
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat}]]))
 
 (deftest muodosta-paallystysexcelin-kohteiden-rivit
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
@@ -1771,3 +1792,48 @@
                                              :vuosi vuosi})
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
     (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
+
+(def excel-rivit-muhos-2017
+  (list
+    {:lihavoi? false
+     :rivi [1233534 "L03" nil "Leppäjärven ramppi" 400M 205M 4543.95M 0M 7248.95M]}
+    {:lihavoi? false
+     :rivi [54523243 "308a" nil "Oulun ohitusramppi" 9000M 0 565M 100M 9865M]}
+    {:lihavoi? false
+     :rivi [456896958 "310" nil "Oulaisten ohitusramppi" 500M 0 5M 6M 968M]}
+    {:lihavoi? false
+     :rivi [456896959 "666" nil "Kuusamontien testi" 500M 0 5M 6M 3968M]}
+    [nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil]
+    [nil
+     nil
+     nil
+     "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]]))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit-muhos-2017-vain-yha-kohteet
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        vuosi 2017
+        kohteet (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                            +kayttaja-jvh+
+                                            {:urakka-id urakka-id
+                                             :sopimus-id sopimus-id
+                                             :vuosi vuosi
+                                             :vain-yha-kohteet? true})
+        excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
+    (is (= excel-rivit-muhos-2017 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus hakee vain YHA-kohteet")))
