@@ -117,6 +117,7 @@
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)
+          ::lomake/col-luokka "col-xs-4"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
          {:nimi :ajoratojen_pituus
           :otsikko "Pituus ajoradat (m)"
@@ -125,6 +126,24 @@
           :disabled? true
           :tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)
+          ::lomake/col-luokka "col-xs-8"
+          :rivi-luokka "lomakeryhman-rivi-tausta"})
+       (lomake/ryhma
+         {:ryhman-luokka "lomakeryhman-otsikko-tausta"
+          :rivi? true}
+         {:nimi :pohjavesialueet
+          :otsikko "Pohjavesialue"
+          :tyyppi :komponentti
+          :komponentti (fn [data]
+                         (mapcat (fn [rivi]
+                                   [^{:key (hash rivi)}
+                                    [:div (str (:nimi rivi) " (" (:tunnus rivi) ")")]])
+                           (:pohjavesialueet (:data data))))
+
+
+          :tarkkaile-ulkopuolisia-muutoksia? true
+          :muokattava? (constantly false)
+          ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (lomake/ryhma
          {:otsikko "Suolarajoitus"
@@ -343,7 +362,6 @@
                                           :data-cy "hoitokausi-valinta"
                                           :valitse-fn #(e! (suolarajoitukset-tiedot/->ValitseHoitovuosi %))
                                           :format-fn #(str "01.10." % " - 30.9." (inc %))
-                                          ;:format-fn #(str kustannusten-seuranta-tiedot/fin-hk-alkupvm % "-" kustannusten-seuranta-tiedot/fin-hk-loppupvm (inc %))
                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
              hoitovuodet]]]]
 

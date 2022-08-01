@@ -26,8 +26,8 @@
 (defrecord AvaaTaiSuljeSivupaneeli [tila lomakedata])
 ;; Päivitys
 (defrecord PaivitaLomake [lomake])
-(defrecord LaskePituusOnnistui [vastaus])
-(defrecord LaskePituusEpaonnistui [vastaus])
+(defrecord HaeTierekisterinTiedotOnnistui [vastaus])
+(defrecord HaeTierekisterinTiedotEpaonnistui [vastaus])
 
 (defrecord TallennaLomake [lomake tila])
 (defrecord TallennaLomakeOnnistui [vastaus])
@@ -104,33 +104,34 @@
                     (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri))))
                 (do
                 (js/console.log "OLI EROA!!!!")
-                (tuck-apurit/post! :laske-suolarajoituksen-pituudet
+                (tuck-apurit/post! :tierekisterin-tiedot
                     {:tie (:tie lomake)
                      :aosa (:aosa lomake)
                      :aet (:aet lomake)
                      :losa (:losa lomake)
                      :let (:let lomake)
                      :urakka_id urakka-id}
-                    {:onnistui ->LaskePituusOnnistui
-                     :epaonnistui ->LaskePituusEpaonnistui
+                    {:onnistui ->HaeTierekisterinTiedotOnnistui
+                     :epaonnistui ->HaeTierekisterinTiedotEpaonnistui
                      :paasta-virhe-lapi? true})
-                (assoc app :laske-pituus-kaynnissa? true))
+                (assoc app :hae-tiedot-kaynnissa? true))
               app)]
       (assoc app :lomake lomake)))
 
-  LaskePituusOnnistui
+  HaeTierekisterinTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "LaskePituusOnnistui :: vastaus" (pr-str vastaus))
+      (js/console.log "HaeTierekisterinTiedotOnnistui :: vastaus" (pr-str vastaus))
       (-> app
         (assoc-in [:lomake :pituus] (:pituus vastaus))
         (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
-        (assoc :laske-pituus-kaynnissa? false))))
+        (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
+        (assoc :hae-tiedot-kaynnissa? false))))
 
-  LaskePituusEpaonnistui
+  HaeTierekisterinTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "LaskePituusEpaonnistui :: vastaus" (pr-str vastaus))
-    (assoc app :laske-pituus-kaynnissa? false))
+    (js/console.log "HaeTierekisterinTiedotEpaonnistui :: vastaus" (pr-str vastaus))
+    (assoc app :hae-tiedot-kaynnissa? false))
 
 
   TallennaLomake
