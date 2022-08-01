@@ -1,24 +1,24 @@
 -- Rajoitusalue
 CREATE TABLE rajoitusalue (
-                              id                 SERIAL PRIMARY KEY NOT NULL,
-                              tierekisteriosoite TR_OSOITE,
-    -- TODO: Tallennetaanko pituudet suoraan tähän tauluun, vai tehdäänkö esim. VIEW jossa joinataan mukaan
-    --       tavaraa tauluista tr_osan_ajorata tr_ajoratojen_pituudet tr_osien_pituudet ja lasketaan pituudet näkymässä.
-    -- Lasketaan tierekisteriosoitteelle
-                              pituus             INTEGER,
-    -- Lasketaan tierekisteriosoitteelle
-                              ajoratojen_pituus  INTEGER,
+  id                 SERIAL PRIMARY KEY NOT NULL,
+  tierekisteriosoite TR_OSOITE,
+-- TODO: Tallennetaanko pituudet suoraan tähän tauluun, vai tehdäänkö esim. VIEW jossa joinataan mukaan
+--       tavaraa tauluista tr_osan_ajorata tr_ajoratojen_pituudet tr_osien_pituudet ja lasketaan pituudet näkymässä.
+-- Lasketaan tierekisteriosoitteelle
+  pituus             INTEGER,
+-- Lasketaan tierekisteriosoitteelle
+  ajoratojen_pituus  INTEGER,
 
-    -- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain ja pohjavesialueet_hallintayksikoittain)
-    -- NOTE: pohjavesialueet_hallintayksikoittain viewiä on käytetty vain kartalle hakuun
-    --       Hallintayksikön saa tarvittaessa haettua urakan id:n perusteella.
-                              urakka_id          INTEGER,
+-- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain ja pohjavesialueet_hallintayksikoittain)
+-- NOTE: pohjavesialueet_hallintayksikoittain viewiä on käytetty vain kartalle hakuun
+--       Hallintayksikön saa tarvittaessa haettua urakan id:n perusteella.
+  urakka_id          INTEGER,
 
-                              luotu              TIMESTAMP,
-                              luoja              INTEGER REFERENCES kayttaja (id),
-                              muokattu           TIMESTAMP,
-                              muokkaaja          INTEGER REFERENCES kayttaja (id),
-                              poistettu          BOOLEAN default false
+  luotu              TIMESTAMP,
+  luoja              INTEGER REFERENCES kayttaja (id),
+  muokattu           TIMESTAMP,
+  muokkaaja          INTEGER REFERENCES kayttaja (id),
+  poistettu          BOOLEAN default false
 );
 
 -- TODO: Tarkastetaan leikkaako tierekisteriosoite rajoitusalue-taulussa (Hahmotelma. Ei vielä testattu toimiiko.)
@@ -59,15 +59,50 @@ CREATE INDEX rajoitusalue_tr_osoite_geom_idx ON rajoitusalue USING gist (((tiere
 
 -- Rajoitusalueen rajoitus yksittäiselle hoitovuodelle
 CREATE TABLE rajoitusalue_rajoitus (
-                                       id                    SERIAL PRIMARY KEY NOT NULL,
-                                       rajoitusalue_id       INTEGER REFERENCES rajoitusalue (id),
-                                       suolarajoitus         NUMERIC,
-                                       formiaatti            BOOLEAN,
-                                       hoitokauden_alkuvuosi SMALLINT,
+   id                    SERIAL PRIMARY KEY NOT NULL,
+   rajoitusalue_id       INTEGER REFERENCES rajoitusalue (id),
+   suolarajoitus         NUMERIC,
+   formiaatti            BOOLEAN,
+   hoitokauden_alkuvuosi SMALLINT,
 
-                                       luotu                 TIMESTAMP DEFAULT NOW(),
-                                       luoja                 INTEGER REFERENCES kayttaja (id),
-                                       muokattu              TIMESTAMP,
-                                       muokkaaja             INTEGER REFERENCES kayttaja (id),
-                                       poistettu          BOOLEAN default false
+   luotu                 TIMESTAMP DEFAULT NOW(),
+   luoja                 INTEGER REFERENCES kayttaja (id),
+   muokattu              TIMESTAMP,
+   muokkaaja             INTEGER REFERENCES kayttaja (id),
+   poistettu          BOOLEAN default false
 );
+
+CREATE TYPE POHJAVESIALUE_RIVI
+AS
+(
+    nimi          VARCHAR,
+    tunnus        VARCHAR
+);
+
+CREATE OR REPLACE FUNCTION leikkaavat_pohjavesialueet(tie INTEGER, aosa INTEGER, aet INTEGER,
+                                                      losa INTEGER, let INTEGER) RETURNS SETOF POHJAVESIALUE_RIVI AS
+$$
+
+DECLARE
+    p    RECORD;
+    rivi POHJAVESIALUE_RIVI;
+
+BEGIN
+
+    FOR p IN SELECT distinct on (pa.nimi) nimi,
+                    pa.tunnus,
+                    pa.alue
+                    --, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,tr_ajorata, tr_kaista
+             FROM pohjavesialue pa
+             WHERE ST_INTERSECTS(pa.alue, (SELECT *
+                                           FROM tierekisteriosoitteelle_viiva(
+                                                   tie, aosa, aet, losa, let)))
+        LOOP
+
+            rivi := (p.nimi, p.tunnus);
+            RETURN NEXT rivi;
+        END LOOP;
+
+
+END;
+$$ LANGUAGE plpgsql;
