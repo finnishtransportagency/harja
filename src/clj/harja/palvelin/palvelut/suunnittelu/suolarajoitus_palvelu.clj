@@ -4,6 +4,7 @@
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]
@@ -26,10 +27,21 @@
         rajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-hoitokaudelle db
                       {:hoitokauden_alkuvuosi hoitokauden_alkuvuosi
                        :urakka_id urakka_id})
+        rajoitukset (mapv (fn [suolarajoitus]
+                           (update suolarajoitus :pohjavesialueet
+                             (fn [alueet]
+                               (mapv
+                                 #(konv/pgobject->map % :tunnus :string :nimi :string)
+                                 (konv/pgarray->vector alueet)))))
+                      rajoitukset)
         _ (log/debug "Suolarajoitus :: hae-suolarajoitukset :: Löydettiin rajoitukset:" rajoitukset)]
     rajoitukset))
 
-(defn tallenna-suolarajoitus [db user suolarajoitus]
+(defn tallenna-suolarajoitus
+  "Suolarajoitukset on tallennettu kahteen eri tietokantatauluun.
+   Rajoitusalue -taulu sisältää sijaintitiedot ja rajoitusalue_rajoitus sisältää hoitovuosikohtaiset tiedot.
+   Pohjavesialueita ei tallenneta rajoitukselle ollenkaan, vaan ne haetaan tierekisteriosoitteen perusteella aina tarvittaessa lennossa."
+  [db user suolarajoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
   (log/debug "tallenna-suolarajoitus :: suolarajoitus" suolarajoitus)
   (let [kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? suolarajoitus)
@@ -37,6 +49,8 @@
                              (:hoitokauden_alkuvuosi suolarajoitus)
                              kopioidaan-tuleville-vuosille?
                              (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)})))
+        ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
+        pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))
         ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
         db-rajoitusalue {:id (when (:rajoitusalue_id suolarajoitus) (:rajoitusalue_id suolarajoitus))
                          :tie (:tie suolarajoitus)
@@ -48,6 +62,7 @@
                          :ajoratojen_pituus (:ajoratojen_pituus suolarajoitus)
                          :urakka_id (:urakka_id suolarajoitus)
                          :kayttaja_id (:id user)}
+        _ (println "db-rajoitusalue: " db-rajoitusalue)
         ;; Päivitä tai tallenna uutena
         rajoitusalue (if (:id db-rajoitusalue)
                        (do
@@ -79,7 +94,13 @@
                                       rajoitus))
                             db-rajoitus urakan-hoitovuodet)
                           (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
-                                                                              :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)}))))]
+                                                                              :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)}))))
+
+        suolarajoitus (update suolarajoitus :pohjavesialueet
+                        (fn [alueet]
+                          (mapv
+                            #(konv/pgobject->map % :tunnus :string :nimi :string)
+                            (konv/pgarray->vector alueet))))]
     suolarajoitus))
 
 (defn poista-suolarajoitus [db user {:keys [urakka_id rajoitusalue_id hoitokauden_alkuvuosi]}]
@@ -106,10 +127,11 @@
     (int? aet)
     (int? let)))
 
-(defn laske-suolarajoituksen-pituudet [db user suolarajoitus]
+(defn tierekisterin-tiedot [db user suolarajoitus]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
   (if (pituuden-laskennan-data-validi? suolarajoitus)
-    (let [tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
+    (let [;; Pilkotaan tierekisteri osiin tien osien mukaan
+          tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
                                                                        :aosa (:aosa suolarajoitus)
                                                                        :losa (:losa suolarajoitus)})
           pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
@@ -120,9 +142,12 @@
                                       (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
                                             summa (+ summa (:pituus pituus))]
                                         summa))
-                              0 ajoratojen-pituudet)]
+                              0 ajoratojen-pituudet)
+          ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
+          pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
       {:pituus (:pituus pituus)
-       :ajoratojen_pituus ajoratojen-pituus})
+       :ajoratojen_pituus ajoratojen-pituus
+       :pohjavesialueet pohjavesialueet})
     (throw+ {:type "Error"
              :virheet [{:koodi "ERROR" :viesti "Tierekisteriosoitteessa virhe."}]})))
 
@@ -144,10 +169,11 @@
       (fn [user tiedot]
         (poista-suolarajoitus (:db this) user tiedot)))
 
+    ;; Tierekisteriosoitteen perusteella lasketaan ajoratojen pituus, reitin pituus sekä päätellään pohjavesialue/alueet
     (julkaise-palvelu (:http-palvelin this)
-      :laske-suolarajoituksen-pituudet
+      :tierekisterin-tiedot
       (fn [user tiedot]
-        (laske-suolarajoituksen-pituudet (:db this) user tiedot)))
+        (tierekisterin-tiedot (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -155,5 +181,5 @@
       :hae-suolarajoitukset
       :tallenna-suolarajoitus
       :poista-suolarajoitus
-      :laske-suolarajoituksen-pituudet)
+      :tierekisterin-tiedot)
     this))
