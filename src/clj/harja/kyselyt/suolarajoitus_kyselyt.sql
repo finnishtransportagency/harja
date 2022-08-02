@@ -152,3 +152,25 @@ RETURNING *;
 
 -- name: hae-leikkaavat-pohjavesialueet-tierekisterille
 select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa::int, :let::int);
+
+-- name: hae-talvisuolan-kayttoraja
+SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",
+       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, talvisuolaraja
+  FROM suolasakko
+WHERE hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+  AND urakka = :urakka-id;
+
+-- name: paivita-talvisuolan-kayttoraja!
+UPDATE suolasakko SET hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
+                      talvisuolaraja = :talvisuolaraja,
+                      kaytossa = :kaytossa,
+                      tyyppi = :tyyppi,
+                      indeksi = :indeksi,
+                      muokattu = NOW(),
+                      muokkaaja = :kayttaja-id
+WHERE id = :id;
+
+-- name: tallenna-talvisuolan-kayttoraja!
+INSERT INTO suolasakko (urakka, hoitokauden_alkuvuosi, talvisuolaraja, kaytossa, tyyppi, indeksi, luotu, luoja)
+VALUES (:urakka-id, :hoitokauden-alkuvuosi, :talvisuolaraja, :kaytossa, :tyyppi::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
+

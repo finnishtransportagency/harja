@@ -12,6 +12,7 @@
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [slingshot.slingshot :refer [throw+ try+]]))
 
+;; TODO: siirrä tämä pvm namespaceen. Ja tarkista onko sitä olemassa. -> tulevat-hoitokaudet tiedot.urakka namespacessa
 (defn tulevat-hoitovuodet
   "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
   Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
@@ -149,8 +150,50 @@
       {:pituus (:pituus pituus)
        :ajoratojen_pituus ajoratojen-pituus
        :pohjavesialueet pohjavesialueet})
-    (throw+ {:type "Error"
-             :virheet [{:koodi "ERROR" :viesti "Tierekisteriosoitteessa virhe."}]})))
+    (transit-vastaus 400 {:virhe "Tierekisteriosoitteessa virhe."})))
+
+(defn tallenna-talvisuolan-kayttoraja [db user kayttoraja]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka-id kayttoraja))
+  (let [kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? kayttoraja)
+        urakan-hoitovuodet (tulevat-hoitovuodet
+                             (:hoitokauden-alkuvuosi kayttoraja)
+                             kopioidaan-tuleville-vuosille?
+                             (first (urakat-kyselyt/hae-urakka db {:id (:urakka-id kayttoraja)})))
+        kayttoraja (assoc kayttoraja :kayttaja-id (:id user))
+        _ (println "tallenna-talvisuolan-kayttoraja:" kayttoraja)
+        vastaus (if (:id kayttoraja)
+                  ;; Päivitä tiedot
+                  (do
+                    (reduce (fn [raja vuosi]
+                              (let [hoitovuoden-kayttoraja
+                                    (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja db
+                                      {:urakka-id (:urakka-id kayttoraja)
+                                       :hoitokauden-alkuvuosi vuosi})
+                                    _ (println "tallenna-talvisuolan-kayttoraja :: 1 hoitovuoden-kayttoraja " hoitovuoden-kayttoraja)
+                                    hoitovuoden-kayttoraja (merge hoitovuoden-kayttoraja raja)
+                                    _ (println "tallenna-talvisuolan-kayttoraja :: 2 hoitovuoden-kayttoraja " hoitovuoden-kayttoraja)
+                                    _ (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja! db hoitovuoden-kayttoraja)]
+                                hoitovuoden-kayttoraja))
+                      kayttoraja urakan-hoitovuodet)
+                    (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja db {:urakka-id (:urakka-id kayttoraja)
+                                                                                 :hoitokauden-alkuvuosi kayttoraja})))
+                  ;; Tallenna uusi
+                  (do
+                    (reduce (fn [raja vuosi]
+                              (let [raja (assoc raja :hoitokauden-alkuvuosi vuosi)
+                                    _ (println "uusi raja joka tallennetaan: " raja)
+                                    _ (println "uusi raja joka tallennetaan: " raja)
+                                    _ (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja! db raja)]
+                                raja))
+                      kayttoraja urakan-hoitovuodet)
+                    (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja db {:urakka-id (:urakka-id kayttoraja)
+                                                                                 :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi kayttoraja)})))
+                  )
+        _ (println "bäkkäri : vastaus" vastaus)]
+    vastaus))
+
+
+(defn tallenna-rajoitusalueen-sanktio [db user kayttoraja])
 
 (defrecord Suolarajoitus []
   component/Lifecycle
@@ -175,6 +218,17 @@
       :tierekisterin-tiedot
       (fn [user tiedot]
         (tierekisterin-tiedot (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-talvisuolan-kayttoraja
+      (fn [user tiedot]
+        (tallenna-talvisuolan-kayttoraja (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :tallenna-rajoitusalueen-sanktio
+      (fn [user tiedot]
+        (tallenna-rajoitusalueen-sanktio (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -182,5 +236,7 @@
       :hae-suolarajoitukset
       :tallenna-suolarajoitus
       :poista-suolarajoitus
-      :tierekisterin-tiedot)
+      :tierekisterin-tiedot
+      :tallenna-talvisuolan-kayttoraja
+      :tallenna-rajoitusalueen-sanktio)
     this))

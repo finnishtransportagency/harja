@@ -86,23 +86,20 @@ $$
 DECLARE
     p    RECORD;
     rivi POHJAVESIALUE_RIVI;
-
 BEGIN
-
-    FOR p IN SELECT distinct on (pa.nimi) nimi,
-                    pa.tunnus,
-                    pa.alue
-                    --, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,tr_ajorata, tr_kaista
-             FROM pohjavesialue pa
-             WHERE ST_INTERSECTS(pa.alue, (SELECT *
-                                           FROM tierekisteriosoitteelle_viiva(
-                                                   tie, aosa, aet, losa, let)))
-        LOOP
-
-            rivi := (p.nimi, p.tunnus);
-            RETURN NEXT rivi;
-        END LOOP;
-
-
+    FOR p IN SELECT distinct on (pa.nimi) nimi, pa.tunnus, pa.alue
+               FROM pohjavesialue pa
+              WHERE ST_INTERSECTS(pa.alue,
+                  (SELECT * FROM
+                                tierekisteriosoitteelle_viiva(tie, aosa, aet, losa, let)))
+    LOOP
+        rivi := (p.nimi, p.tunnus);
+        RETURN NEXT rivi;
+    END LOOP;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Lisätään suolasakolle tyyppi, jotta voidaan yksilöidä sakko, joko talvisuolan kokonaismäärälle tai yksittäiselle pohjavesialueelle
+CREATE TYPE  suolasakko_tyyppi AS ENUM ('kokonaismaara', 'rajoitusalue');
+ALTER TABLE suolasakko
+  ADD COLUMN tyyppi suolasakko_tyyppi DEFAULT 'kokonaismaara';
