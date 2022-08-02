@@ -12,7 +12,7 @@ SELECT id,
                                                  (tierekisteriosoite).aet::int,
                                                  (tierekisteriosoite).losa::int,
                                                  (tierekisteriosoite).let::int)) as pohjavesialueet,
-       urakka_id as "urakka-id",
+       urakka_id,
        luotu,
        luoja,
        muokattu,
@@ -53,6 +53,7 @@ SELECT ra.id as rajoitusalue_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
        rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
        rr.muokattu as muokattu,
@@ -80,6 +81,7 @@ SELECT ra.id as rajoitusalue_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
        rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
        rr.muokattu as muokattu,
@@ -108,6 +110,7 @@ SELECT ra.id as rajoitusalue_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
        rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
        rr.muokattu as muokattu,
@@ -142,7 +145,8 @@ WHERE id = :id;
 -- name: poista-suolarajoitus<!
 UPDATE rajoitusalue_rajoitus SET poistettu = true
 WHERE rajoitusalue_id = :rajoitusalue_id
-  AND hoitokauden_alkuvuosi >= :hoitokauden_alkuvuosi
+  AND ((:poista-tulevat::TEXT IS NOT NULL AND hoitokauden_alkuvuosi >= :hoitokauden_alkuvuosi)
+        OR (:poista-tulevat::TEXT IS NULL AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi))
   AND poistettu = false
 RETURNING *;
 

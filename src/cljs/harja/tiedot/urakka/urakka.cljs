@@ -28,6 +28,7 @@
                                                               :kopioidaan-tuleville-vuosille? true}})
 
 (def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
+                               :lomake [:kopioidaan-tuleville-vuosille? true]
                                :valittu-hoitovuosi kuluva-alkuvuosi})
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false

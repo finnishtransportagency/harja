@@ -1,9 +1,10 @@
 (ns harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu
   (:require [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
@@ -17,8 +18,8 @@
   [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
   (let [urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
         hoitovuodet (if kopioidaan-tuleville-vuosille?
-                      (conj (range nykyvuosi urakan-loppuvuosi) urakan-loppuvuosi)
-                      (conj [] nykyvuosi))]
+                      (range nykyvuosi (inc urakan-loppuvuosi))
+                      [nykyvuosi])]
     hoitovuodet))
 
 (defn hae-suolarajoitukset [db user {:keys [urakka_id hoitokauden_alkuvuosi] :as tiedot}]
@@ -49,8 +50,6 @@
                              (:hoitokauden_alkuvuosi suolarajoitus)
                              kopioidaan-tuleville-vuosille?
                              (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)})))
-        ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
-        pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))
         ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
         db-rajoitusalue {:id (when (:rajoitusalue_id suolarajoitus) (:rajoitusalue_id suolarajoitus))
                          :tie (:tie suolarajoitus)
@@ -62,7 +61,7 @@
                          :ajoratojen_pituus (:ajoratojen_pituus suolarajoitus)
                          :urakka_id (:urakka_id suolarajoitus)
                          :kayttaja_id (:id user)}
-        _ (println "db-rajoitusalue: " db-rajoitusalue)
+
         ;; Päivitä tai tallenna uutena
         rajoitusalue (if (:id db-rajoitusalue)
                        (do
@@ -103,19 +102,21 @@
                             (konv/pgarray->vector alueet))))]
     suolarajoitus))
 
-(defn poista-suolarajoitus [db user {:keys [urakka_id rajoitusalue_id hoitokauden_alkuvuosi]}]
+(defn poista-suolarajoitus [db user {:keys [kopioidaan-tuleville-vuosille? urakka_id rajoitusalue_id hoitokauden_alkuvuosi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
   (let [_ (log/debug "Suolarajoitus :: poista-suolarajoitus :: rajoitusalue_id:" rajoitusalue_id " hoitokauden_alkuvuosi: " hoitokauden_alkuvuosi)
-        ;; Poistaa kaikki suolarajoitukset joilla on sama tai suurempi hoitokauden alkuvuosi
-        poistetut-alueet (suolarajoitus-kyselyt/poista-suolarajoitus<! db {:rajoitusalue_id rajoitusalue_id
-                                                                           :hoitokauden_alkuvuosi hoitokauden_alkuvuosi})
+        ;; Poistaa kaikki suolarajoitukset joilla on sama tai suurempi hoitokauden alkuvuosi, mikäli kopiointi on käytössä
+        poistetut-rajoitukset (suolarajoitus-kyselyt/poista-suolarajoitus<! db (merge {:rajoitusalue_id rajoitusalue_id
+                                                                                       :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+                                                                                       :poista-tulevat nil}
+                                                                                 (when kopioidaan-tuleville-vuosille?
+                                                                                   {:poista-tulevat "true"})))
         ;; Jos suolarajoituksia ei jää rajoitusalue_rajoitus tauluun, niin poistetaan myös alkuperäinen rajoitusalue
         suolarajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-rajoitusalueelle db {:rajoitusalue_id rajoitusalue_id})
-        poistetut-rajoitukset (when (empty? suolarajoitukset)
+        poistetut-rajoitusalueet (when (empty? suolarajoitukset)
                                 (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
-    (if (nil? poistetut-alueet)
-      (throw+ {:type "Error"
-               :virheet [{:koodi "ERROR" :viesti "Poisto epäonnistui."}]})
+    (if (nil? poistetut-rajoitukset)
+      (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
       "OK")))
 
 (defn pituuden-laskennan-data-validi?

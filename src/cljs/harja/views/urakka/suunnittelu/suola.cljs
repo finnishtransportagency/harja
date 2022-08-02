@@ -36,8 +36,8 @@
 
 (defn- rajoituksen-poiston-varmistus-modaali [e! {:keys [varmistus-fn data] :as parametrit}]
   [:div.row
-   [:p "Olet poistamassa <todo---->"]
-
+   (when (:kopioidaan-tuleville-vuosille? data)
+     [:p "Olet poistamassa rajoitusalueen seuraavilta hoitovuosilta <todo---->"])
 
    [:div {:style {:padding-bottom "1rem"}}
     [:span {:style {:padding-right "1rem"}}
@@ -46,22 +46,24 @@
       (r/partial (fn []
                    (modal/piilota!)))
       {:vayla-tyyli? true
-       :luokka       "suuri"}]]
+       :luokka "suuri"}]]
     [:span
      [napit/poista
       "Poista rajoitusalue"
       varmistus-fn
       {:vayla-tyyli? true
-       :luokka       "suuri"}]]]])
+       :luokka "suuri"}]]]])
 
-(defn lomake-rajoitusalue-skeema [lomake]
+(defn lomake-rajoitusalue-skeema [lomake muokkaustila?]
   (into []
     (concat
       [(lomake/rivi
          {:nimi :kopioidaan-tuleville-vuosille?
           :palstoja 3
           :tyyppi :checkbox
-          :teksti "Kopioi rajoitukset tuleville hoitovuosille"})]
+          :teksti (if muokkaustila?
+                    "Tee muutosket myös tuleville hoitovuosille"
+                    "Kopioi rajoitukset tuleville hoitovuosille")})]
       [(lomake/ryhma
          {:otsikko "Sijainti"
           :rivi? true
@@ -179,7 +181,7 @@
         ;; TODO: Oikeustarkastukset
         ]
     [:div
-     [debug/debug (:lomake app)]
+     #_ [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? true
@@ -210,14 +212,15 @@
                               {:data data
                                :varmistus-fn (fn []
                                                (modal/piilota!)
-                                               (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)})))}])
+                                               (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)
+                                                                                                   :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? data)})))}])
                           {:vayla-tyyli? true}])
                        [napit/yleinen-toissijainen
                         "Peruuta"
                         #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
                         {:paksu? true}]]]])}
 
-      (lomake-rajoitusalue-skeema rajoituslomake)
+      (lomake-rajoitusalue-skeema rajoituslomake muokkaustila?)
       rajoituslomake]]))
 
 

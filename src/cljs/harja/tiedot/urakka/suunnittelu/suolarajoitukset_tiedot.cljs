@@ -220,7 +220,8 @@
           _ (tuck-apurit/post! :poista-suolarajoitus
               {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
                :urakka_id urakka-id
-               :rajoitusalue_id (:rajoitusalue_id parametrit)}
+               :rajoitusalue_id (:rajoitusalue_id parametrit)
+               :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? parametrit)}
               {:onnistui ->PoistaSuolarajoitusOnnistui
                :epaonnistui ->PoistaSuolarajoitusEpaonnistui
                :paasta-virhe-lapi? true})]
