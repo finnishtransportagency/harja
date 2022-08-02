@@ -311,11 +311,11 @@
                                     (some (fn [r]
                                             (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
                                       rajoitukset)))}
-   [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.3}
+   [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
-    {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
+    {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 0.8}
     {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :fmt fmt/pyorista-ehka-kolmeen
-     :tasaa :oikea :leveys 1}
+     :tasaa :oikea :leveys 0.8}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
      :luokka "sarake-pohjavesialueet"
      :tyyppi :komponentti
@@ -326,10 +326,10 @@
                                 [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                           pohjavesialueet))
                       "-"))
-     :leveys 1}
+     :leveys 1.4}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea
-     :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 1}
-    {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
+     :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 0.8}
+    {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 0.8}]
    rajoitukset])
 
 (defn urakan-suolarajoitukset* [e! _]
