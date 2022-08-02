@@ -1796,19 +1796,63 @@
 (def excel-rivit-muhos-2017
   (list
     {:lihavoi? false
-     :rivi [1233534 "L03" nil "Leppäjärven ramppi" 400M 205M 4543.95M 0M 7248.95M]}
+     :rivi [1233534
+            "L03"
+            nil
+            "Leppäjärven ramppi"
+            400M
+            205M
+            100M
+            2000M
+            4543.95M
+            0M
+            7248.95M]}
     {:lihavoi? false
-     :rivi [54523243 "308a" nil "Oulun ohitusramppi" 9000M 0 565M 100M 9865M]}
+     :rivi [54523243
+            "308a"
+            nil
+            "Oulun ohitusramppi"
+            9000M
+            0
+            200M
+            nil
+            565M
+            100M
+            9865M]}
     {:lihavoi? false
-     :rivi [456896958 "310" nil "Oulaisten ohitusramppi" 500M 0 5M 6M 968M]}
+     :rivi [456896958
+            "310"
+            nil
+            "Oulaisten ohitusramppi"
+            500M
+            0
+            3457M
+            -3000M
+            5M
+            6M
+            968M]}
     {:lihavoi? false
-     :rivi [456896959 "666" nil "Kuusamontien testi" 500M 0 5M 6M 3968M]}
-    [nil nil nil nil nil nil nil nil nil]
-    [nil nil nil nil nil nil nil nil nil]
-    [nil
-     nil
-     nil
+     :rivi [456896959
+            "666"
+            nil
+            "Kuusamontien testi"
+            500M
+            0
+            3457M
+            nil
+            5M
+            6M
+            3968M]}
+    [nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil
      "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat}]

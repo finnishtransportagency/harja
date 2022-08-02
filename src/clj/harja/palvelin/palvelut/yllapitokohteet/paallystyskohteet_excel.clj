@@ -13,37 +13,64 @@
            (java.util Date)))
 
 
+(defn- excelin-rivi
+  [{:keys [yhaid kohdenumero tunnus nimi
+           sopimuksen-mukaiset-tyot maaramuutokset arvonvahennykset
+           sakot-ja-bonukset bitumi-indeksi kaasuindeksi kokonaishinta]} vuosi]
+  (let [yhteiset-arvot-alku [yhaid
+                             kohdenumero tunnus nimi
+                             sopimuksen-mukaiset-tyot ;; = Tarjoushinta
+                             maaramuutokset]
+        yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
+                              kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
+                              kokonaishinta]]
+    (into []
+          (concat yhteiset-arvot-alku
+                  (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                    [arvonvahennykset sakot-ja-bonukset])
+                  yhteiset-arvot-loppu))))
+
+(defn- excelin-sarakkeet [vuosi]
+  (let [yhteiset-sarakkeet-alku [{:otsikko "Kohde-ID" :tasaa :oikea :fmt :kokonaisluku}
+                                 {:otsikko "Kohdenro" :tasaa :oikea}
+                                 {:otsikko "Tunnus"}
+                                 {:otsikko "Nimi"}
+                                 {:otsikko "Tarjoushinta" :tasaa :oikea :fmt :raha}
+                                 {:otsikko "Määrämuutokset" :tasaa :oikea :fmt :raha}]
+        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha}
+                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha}
+                                  {:otsikko "Kokonaishinta" :tasaa :oikea :fmt :raha}]]
+    (into []
+          (concat yhteiset-sarakkeet-alku
+                  (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                    [{:otsikko "Arvonmuutokst" :tasaa :oikea :fmt :raha}
+                     {:otsikko "Sakko/Bonus" :tasaa :oikea :fmt :raha}])
+                  yhteiset-sarakkeet-loppu))))
+
 (defn muodosta-excelrivit [kohteet vuosi]
   (let [kohteet (map #(assoc % :kokonaishinta
-                                       (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
-                             kohteet)
+                               (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi))
+                     kohteet)
         kohderivit (mapcat
-                     (fn [{:keys [yhaid
-                                  kohdenumero tunnus nimi
-                                  sopimuksen-mukaiset-tyot ;; = Tarjoushinta
-                                  maaramuutokset
-                                  bitumi-indeksi ;; = Sideaineen hintamuutokset
-                                  kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
-                                  kokonaishinta]}]
-                       [{:rivi [yhaid
-                                kohdenumero
-                                tunnus
-                                nimi
-                                sopimuksen-mukaiset-tyot
-                                maaramuutokset
-                                bitumi-indeksi
-                                kaasuindeksi
-                                kokonaishinta]
+                     (fn [kohde]
+                       [{:rivi (excelin-rivi kohde vuosi)
                          :lihavoi? false}])
                      kohteet)
         tyhjat-rivit (for [i (range 0 2)]
-                       [nil nil nil nil nil nil nil nil nil])
-        yhteenvetorivi [[nil nil nil "Yhteensä:"
-                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
-                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
-                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
-                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]
-                         [:kaava {:kaava :summaa-yllaolevat :alkurivi 5}]]]]
+                       (into []
+                             (repeat (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                       9
+                                       11)
+                                     nil)))
+        eka-rivi-jossa-kustannuksia 5
+        yhteenvetorivi [(into []
+                              (concat
+                                [nil nil nil "Yhteensä:"]
+                                (into []
+                                      (repeat (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                                5
+                                                7)
+                                              [:kaava {:kaava :summaa-yllaolevat :alkurivi eka-rivi-jossa-kustannuksia}]))))]]
     (concat
       (when (> (count kohteet) 0)
         kohderivit)
@@ -56,23 +83,19 @@
   (let [urakka (first (q-urakat/hae-urakka db urakka-id))
         alkupvm (pvm/vuoden-eka-pvm vuosi)
         loppupvm (pvm/vuoden-viim-pvm vuosi)
-        kohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user tiedot)
-        sarakkeet [{:otsikko "Kohde-ID" :tasaa :oikea :fmt :kokonaisluku}
-                   {:otsikko "Kohdenro" :tasaa :oikea}
-                   {:otsikko "Tunnus"}
-                   {:otsikko "Nimi"}
-                   {:otsikko "Tarjoushinta" :tasaa :oikea :fmt :raha}
-                   {:otsikko "Määrämuutokset" :tasaa :oikea :fmt :raha}
-                   {:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha}
-                   {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha}
-                   {:otsikko "Kokonaishinta" :tasaa :oikea :fmt :raha}]
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (yllapitokohteet/hae-urakan-yllapitokohteet db user tiedot))
+        sarakkeet (excelin-sarakkeet vuosi)
         rivit (muodosta-excelrivit kohteet vuosi)
         optiot {:nimi "Päällystysskohteet"
                 :sheet-nimi "HARJAAN"
                 :tyhja (if (empty? kohteet) "Ei päällystyskohteita.")
                 :lista-tyyli? false
                 :rivi-ennen [{:teksti "" :sarakkeita 4}
-                             {:teksti "Kustannukset (€)" :sarakkeita 5}]}
+                             {:teksti "Kustannukset (€)"
+                              :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                                                       5
+                                                                       7)}]}
         taulukot [[:taulukko optiot sarakkeet
                    rivit]]
         tiedostonimi (str (:nimi urakka) "-Päällystyskohteet-" vuosi)
