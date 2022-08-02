@@ -48,11 +48,11 @@
                    [tuck.intercept :refer [intercept send-to]]))
 
 (defn kuntoluokka-komponentti [kuntoluokka]
-  [:span "Kuntoluokitus: " [yleiset/tila-indikaattori kuntoluokka
-          {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
-           :luokka "body-text"
-           :wrapper-luokka "inline-block"
-           :fmt-fn str}]])
+  [yleiset/tila-indikaattori kuntoluokka
+   {:class-skeema (zipmap (map :nimi v/kuntoluokat) (map :css-luokka v/kuntoluokat))
+    :luokka "body-text"
+    :wrapper-luokka "inline-block"
+    :fmt-fn str}])
 
 (defn suodatuslomake [e! {:keys [valinnat urakka] :as app}]
   (let [alkupvm (:alkupvm urakka)
@@ -239,7 +239,9 @@
              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
             {:nimi :kuntoluokka :tyyppi :komponentti
              :komponentti (fn [data]
-                            (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
+                            [:span
+                             "Kuntoluokitus: "
+                             [kuntoluokka-komponentti (get-in data [:data :kuntoluokka])]])
              ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
             {:tyyppi :komponentti
