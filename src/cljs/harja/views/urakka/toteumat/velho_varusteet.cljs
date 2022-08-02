@@ -227,11 +227,10 @@
             :voi-muokata? false
             :sulje-fn #(e! (v/->SuljeVarusteLomake))
             :ei-borderia? true
-            :footer-fn (fn [data]
+            :footer-fn (fn [_]
                          [:span
-                          [napit/sulje "Sulje"
-                           #(e! (v/->SuljeVarusteLomake))
-                           {:luokka "pull-left"}]])
+                          [napit/yleinen-toissijainen "Sulje"
+                           #(e! (v/->SuljeVarusteLomake))]])
             :footer-luokka ""}
            [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
              :fmt v/tietolaji->varustetyyppi :palstoja 1
@@ -248,11 +247,15 @@
              :nimi :ulkoinen-id
              ::lomake/col-luokka ""
              :komponentti (fn [data]
-                            [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
-                             (constantly nil)
-                             {:ikoni [ikonit/harja-icon-navigation-external-link]
-                              :ikoni-oikealle? true
-                              :disabled false}])}
+                            [yleiset/tooltip
+                             {}
+                             [napit/yleinen-toissijainen "Katso tarkemmat varustetiedot"
+                              ;; TODO: Linkki velhoon, kunhan velholta saadaan sellainen.
+                              (constantly nil)
+                              {:ikoni [ikonit/harja-icon-navigation-external-link]
+                               :ikoni-oikealle? true
+                               :disabled true}]
+                             "Linkki velhoon ei ole vielä saatavilla."])}
             {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
              ::lomake/col-luokka "margin-top-32"
              :komponentti (fn [rivi] [:hr])}
