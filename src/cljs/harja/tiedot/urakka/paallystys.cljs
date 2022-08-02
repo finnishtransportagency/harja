@@ -158,17 +158,17 @@
 
 (def tr-osien-tiedot (atom nil))
 
-(def harjan-paikkauskohteet
+(def muut-kuin-yha-kohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
-          harjan-paikkauskohteet (when kohteet
+          muut-kuin-yha-kohteet (when kohteet
                                    (yllapitokohteet/suodata-yllapitokohteet
                                      kohteet
-                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
+                                     {:yha-kohde? false}))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat muut-kuin-yha-kohteet))))
 
 (def kaikki-kohteet
-  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet (when muut-kustannukset/kohteet
+  (reaction (concat @yhan-paallystyskohteet @muut-kuin-yha-kohteet (when muut-kustannukset/kohteet
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
