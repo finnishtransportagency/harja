@@ -489,7 +489,7 @@
                          [:tulos :sijainti])]
     (is (= odotettu-sijainti (geo/pg->clj saatu-sijainti)))))
 
-(deftest line-geometria-konvertoituu-integraatiossa
+(deftest multiline-geometria-konvertoituu-integraatiossa
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
