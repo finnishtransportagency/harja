@@ -154,6 +154,8 @@
           :tyyppi :positiivinen-numero
           :yksikko "t/ajoratakm"
           :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:suolarajoitus] lomake)
+          :pakollinen? true
           ::lomake/col-luokka "col-sm-6"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
        (lomake/ryhma
@@ -172,49 +174,51 @@
                          (assoc lomake :hoitokauden_alkuvuosi valittu-hoitovuosi)
                          lomake)
         muokkaustila? true
+        disabled? (not (get-in app [:lomake ::tila/validi?]))
         ;; TODO: Muokkaus
         ;; TODO: Oikeustarkastukset
         ]
-
-    [lomake/lomake
-     {:ei-borderia? true
-      :voi-muokata? true
-      :tarkkaile-ulkopuolisia-muutoksia? false
-      :otsikko (when muokkaustila?
-                 (if (:id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
-      ;; TODO: Muokkaus
-      :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake %)))
-      :footer-fn (fn [data]
-                   [:div.row
-
+    [:div
+     [debug/debug (:lomake app)]
+     [lomake/lomake
+      {:ei-borderia? true
+       :voi-muokata? true
+       :tarkkaile-ulkopuolisia-muutoksia? false
+       :otsikko (when muokkaustila?
+                  (if (:id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+       ;; TODO: Muokkaus
+       :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake %)))
+       :footer-fn (fn [data]
                     [:div.row
-                     [:div.col-xs-7 {:style {:padding-left "0"}}
-                      [napit/tallenna
-                       "Tallenna"
-                       #(e! (suolarajoitukset-tiedot/->TallennaLomake data false))
-                       {:disabled false :paksu? true}]
-                      [napit/tallenna
-                       "Tallenna ja lisää seuraava"
-                       #(e! (suolarajoitukset-tiedot/->TallennaLomake data true))
-                       {:disabled false :paksu? true}]]
-                     [:div.col-xs-5 {:style {:float "right"}}
-                      (when (:rajoitusalue_id data)
-                        [napit/poista
-                         "Poista"
-                         #(modal/nayta! {:otsikko "Rajoitusalueen poistaminen"}
-                            [rajoituksen-poiston-varmistus-modaali e!
-                             {:data data
-                              :varmistus-fn (fn []
-                                              (modal/piilota!)
-                                              (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)})))}])
-                         {:vayla-tyyli? true}])
-                      [napit/yleinen-toissijainen
-                       "Peruuta"
-                       #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
-                       {:paksu? true}]]]])}
 
-     (lomake-rajoitusalue-skeema rajoituslomake)
-     rajoituslomake]))
+                     [:div.row
+                      [:div.col-xs-7 {:style {:padding-left "0"}}
+                       [napit/tallenna
+                        "Tallenna"
+                        #(e! (suolarajoitukset-tiedot/->TallennaLomake data false))
+                        {:disabled disabled? :paksu? true}]
+                       [napit/tallenna
+                        "Tallenna ja lisää seuraava"
+                        #(e! (suolarajoitukset-tiedot/->TallennaLomake data true))
+                        {:disabled disabled? :paksu? true}]]
+                      [:div.col-xs-5 {:style {:float "right"}}
+                       (when (:rajoitusalue_id data)
+                         [napit/poista
+                          "Poista"
+                          #(modal/nayta! {:otsikko "Rajoitusalueen poistaminen"}
+                             [rajoituksen-poiston-varmistus-modaali e!
+                              {:data data
+                               :varmistus-fn (fn []
+                                               (modal/piilota!)
+                                               (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)})))}])
+                          {:vayla-tyyli? true}])
+                       [napit/yleinen-toissijainen
+                        "Peruuta"
+                        #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
+                        {:paksu? true}]]]])}
+
+      (lomake-rajoitusalue-skeema rajoituslomake)
+      rajoituslomake]]))
 
 
 ;; -------

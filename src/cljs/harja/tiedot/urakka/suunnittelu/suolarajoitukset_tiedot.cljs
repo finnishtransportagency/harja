@@ -1,21 +1,47 @@
 (ns harja.tiedot.urakka.suunnittelu.suolarajoitukset-tiedot
   "Tämän nimiavaruuden avulla voidaan hakea urakan suola- ja lämpötilatietoja."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.pvm :as pvm]
             [tuck.core :refer [process-event] :as tuck]
-            [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [cljs.core.async :refer [<! >! chan close!]]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.pvm :as pvm]
-            [harja.atom :refer-macros [reaction<!]]
-            [reagent.ratom :refer [reaction]]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
             [clojure.set :as set]))
+
+;;Validoinnit
+(def lomake-atom (atom {}))
+(defn validoinnit [avain]
+  (avain
+    {:tie [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+     :aosa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+     :losa [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+     :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
+     :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
+           (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
+             (fn [arvo]
+               ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+               (cond
+                 ;; Jos alkuosa ja loppuosa on sama
+                 ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                 (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
+                 arvo
+                 ;; Alkuetäisyys on suurempi kuin loppuetäisyys
+                 (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
+                 nil
+                 :else arvo)))]
+     :suolarajoitus [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 1000 %)]}))
+(defn- validoi-lomake [lomake]
+  (apply tila/luo-validius-tarkistukset
+    [[:tie] (validoinnit :tie)
+     [:aosa] (validoinnit :aosa)
+     [:losa] (validoinnit :losa)
+     [:aet] (validoinnit :aet)
+     [:let] (validoinnit :let)
+     [:suolarajoitus] (validoinnit :suolarajoitus)]))
+
+
 ;; Filtterit
 (defrecord ValitseHoitovuosi [vuosi])
 
@@ -85,9 +111,14 @@
 
   AvaaTaiSuljeSivupaneeli
   (process-event [{tila :tila lomakedata :lomakedata} app]
-    (-> app
-      (assoc :rajoitusalue-lomake-auki? tila)
-      (assoc :lomake lomakedata)))
+    (let [_ (reset! lomake-atom lomakedata)
+          {:keys [validoi] :as validoinnit} (validoi-lomake lomakedata)
+          {:keys [validi? validius]} (validoi validoinnit lomakedata)]
+      (-> app
+        (assoc :rajoitusalue-lomake-auki? tila)
+        (assoc :lomake lomakedata)
+        (assoc-in [:lomake ::tila/validius] validius)
+        (assoc-in [:lomake ::tila/validi?] validi?))))
 
   ;; Päivitetään lomakkeen sisältö app-stateen, mutta ei serverille
   PaivitaLomake
@@ -95,6 +126,13 @@
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
           uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
+          _ (reset! lomake-atom lomake)
+          {:keys [validoi] :as validoinnit} (validoi-lomake lomake)
+          {:keys [validi? validius]} (validoi validoinnit lomake)
+          app (-> app
+                (assoc :lomake lomake)
+                (assoc-in [:lomake ::tila/validius] validius)
+                (assoc-in [:lomake ::tila/validi?] validi?))
           app (if (and
                     (not (nil? (:tie lomake)))
                     (not (nil? (:aosa lomake)))
@@ -103,8 +141,7 @@
                     (not (nil? (:let lomake)))
                     (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri))))
                 (do
-                (js/console.log "OLI EROA!!!!")
-                (tuck-apurit/post! :tierekisterin-tiedot
+                  (tuck-apurit/post! :tierekisterin-tiedot
                     {:tie (:tie lomake)
                      :aosa (:aosa lomake)
                      :aet (:aet lomake)
@@ -114,9 +151,9 @@
                     {:onnistui ->HaeTierekisterinTiedotOnnistui
                      :epaonnistui ->HaeTierekisterinTiedotEpaonnistui
                      :paasta-virhe-lapi? true})
-                (assoc app :hae-tiedot-kaynnissa? true))
-              app)]
-      (assoc app :lomake lomake)))
+                  (assoc app :hae-tiedot-kaynnissa? true))
+                app)]
+      app))
 
   HaeTierekisterinTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
