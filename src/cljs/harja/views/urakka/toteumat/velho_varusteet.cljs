@@ -231,15 +231,16 @@
                          [:span
                           [napit/sulje "Sulje"
                            #(e! (v/->SuljeVarusteLomake))
-                           {:luokka "pull-left"}]])}
+                           {:luokka "pull-left"}]])
+            :footer-luokka ""}
            [{:otsikko "" :muokattava? (constantly false) :nimi :tietolaji
              :fmt v/tietolaji->varustetyyppi :palstoja 1
-             ::lomake/col-luokka ""
+             ::lomake/col-luokka "margin-top-4"
              :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}
             {:nimi :kuntoluokka :tyyppi :komponentti
              :komponentti (fn [data]
                             (kuntoluokka-komponentti (get-in data [:data :kuntoluokka])))
-             ::lomake/col-luokka ""
+             ::lomake/col-luokka "margin-top-16"
              :piilota-label? true}
             {:tyyppi :komponentti
              :nimi :ulkoinen-id
@@ -250,8 +251,12 @@
                              {:ikoni [ikonit/harja-icon-navigation-external-link]
                               :ikoni-oikealle? true
                               :disabled false}])}
+            {:nimi ::spacer :piilota-label? true :tyyppi :komponentti :palstoja 3
+             ::lomake/col-luokka "margin-top-32"
+             :komponentti (fn [rivi] [:hr])}
             {:tyyppi :komponentti :palstoja 3
-             ::lomake/col-luokka ""
+             ::lomake/col-luokka "margin-top-32"
+             :piilota-label? true
              :komponentti listaus-toteumat :komponentti-args [e! toteumat]}]
            varuste]]]))))
 
