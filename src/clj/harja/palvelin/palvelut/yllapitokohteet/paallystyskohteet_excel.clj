@@ -7,11 +7,78 @@
             [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.pvm :as pvm]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain])
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [clojure.java.jdbc :as jdbc])
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
 
+(defn- validoi-excelin-otsikot
+  "Vaadi oikeat otsikkotiedot määrämuotoisessa Excelissä"
+  [[yhaid kohdenumero tunnus nimi
+                                 sopimuksen-mukaiset-tyot maaramuutokset
+                                 bitumi-indeksi kaasuindeksi kokonaishinta] ]
+  (assert (= yhaid "Kohde-ID") "YHA ID:n otsikko oikein")
+  (assert (= kohdenumero "Kohdenro") "Kohdenro otsikko oikein")
+  (assert (= tunnus "Tunnus") "Tunnus otsikko oikein")
+  (assert (= nimi "Nimi") "Nimi otsikko oikein")
+  (assert (= sopimuksen-mukaiset-tyot "Tarjoushinta") "Tarjoushinta otsikko oikein")
+  (assert (= maaramuutokset "Määrämuutokset") "Määrämuutokset otsikko oikein")
+  (assert (= bitumi-indeksi "Sideaineen hintamuutokset") "Sideaineen hintamuutokset otsikko oikein")
+  (assert (= kaasuindeksi "Nestekaasun ja kevyen polttoöljyn hintamuutokset") "Nestekaasun ja kevyen polttoöljyn hintamuutokset otsikko oikein")
+  (assert (= kokonaishinta "Kokonaishinta") "Kokonaishinta otsikko oikein"))
+
+(defn parsi-paallystyskohteet [workbook]
+  (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
+        raaka-data (->> sivu
+                        xls/row-seq
+                        (remove nil?)
+                        (map xls/cell-seq)
+                        (mapv
+                          (fn [rivi]
+                            (map-indexed (fn [indeksi arvo]
+                                           (xls/read-cell arvo))
+                                         rivi))))
+        ;; Poistetaan otsikkoriviä ylemmät rivit parsinnan kannalta turhana
+        otsikot-ja-rivit (drop-while #(not= (first %) "Kohde-ID") raaka-data)
+        otsikot (first otsikot-ja-rivit)
+        _ (validoi-excelin-otsikot otsikot)
+        ;; Poistetaan rivi kokonaan, mikäli yhaid on nil. Poistaa myös yhteensä-rivin
+        rivit (remove #(nil? (first %)) (rest otsikot-ja-rivit))
+        kohteet (into []
+                      (keep
+                        (fn [rivi]
+                          {:yhaid (int (nth rivi 0))
+                           :kohdenro (nth rivi 1)
+                           :tunnus (nth rivi 2)
+                           :nimi (nth rivi 3)
+                           :sopimuksen-mukaiset-tyot (nth rivi 4)
+                           :maaramuutokset (nth rivi 5)
+                           :bitumi-indeksi (nth rivi 6)
+                           :kaasuindeksi (nth rivi 7)
+                           :kokonaishinta (nth rivi 8)})
+                        rivit))]
+    kohteet))
+
+(defn tallenna-paallystyskohteet-excelista
+  [db user workbook urakka-id]
+  (println "Jarno tallenna päällystyskohteet excelistä ")
+  (let [kohteet (parsi-paallystyskohteet workbook)]
+    (println "Jarno, kohteet ovat: " kohteet)
+    (jdbc/with-db-transaction [db db]
+      (doseq [kohde kohteet
+              :let [p (-> kohde
+                          (assoc :urakka-id urakka-id))]]
+        (let [_ (println "Jarno tallentamassa päällystyksen: " p)]
+          (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db {:yhaid (:yhaid p)
+                                                                              :urakka urakka-id
+                                                                              :sopimuksen_mukaiset_tyot (:sopimuksen-mukaiset-tyot p)
+                                                                              :arvonvahennykset (:arvonvahennykset p)
+                                                                              :bitumi_indeksi (:bitumi-indeksi p)
+                                                                              :kaasuindeksi (:kaasuindeksi p)
+                                                                              :toteutunut_hinta (:toteutunut-hinta p)
+                                                                              :muokkaaja (:id user)}))))))
 
 (defn- excelin-rivi
   [{:keys [yhaid kohdenumero tunnus nimi
