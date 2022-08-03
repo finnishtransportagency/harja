@@ -78,6 +78,7 @@ SELECT ra.id as rajoitusalue_id,
                                                  (ra.tierekisteriosoite).aet::int,
                                                  (ra.tierekisteriosoite).losa::int,
                                                  (ra.tierekisteriosoite).let::int)) as pohjavesialueet,
+       rr.id as rajoitus_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
        rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
@@ -154,23 +155,57 @@ RETURNING *;
 select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa::int, :let::int);
 
 -- name: hae-talvisuolan-kayttoraja
+WITH tehtavamaara AS (
+    SELECT ut.maara
+      FROM urakka_tehtavamaara ut
+     WHERE ut.tehtava = (select id
+                           from toimenpidekoodi
+                          where taso = 4
+                            AND suunnitteluyksikko = 'kuivatonnia'
+                            AND suoritettavatehtava = 'suolaus')
+       AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
+       AND ut.urakka = :urakka-id
+)
 SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",
-       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, talvisuolaraja
-  FROM suolasakko
+       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, maara as sanktio_ylittavalta_tonnilta,
+       (SELECT maara from tehtavamaara) AS talvisuolaraja -- Talvisuolarajaa ei tosiaan haeta suolasakkko taulusta
+  FROM suolasakko s
 WHERE hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
-  AND urakka = :urakka-id;
+  AND urakka = :urakka-id
+  AND tyyppi = 'kokonaismaara'::suolasakko_tyyppi;
+
+-- name: hae-rajoitusalueiden-suolasanktio
+SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",
+       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, maara as sanktio_ylittavalta_tonnilta
+FROM suolasakko s
+WHERE hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+  AND urakka = :urakka-id
+  AND tyyppi = 'rajoitusalue'::suolasakko_tyyppi;
 
 -- name: paivita-talvisuolan-kayttoraja!
 UPDATE suolasakko SET hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
-                      talvisuolaraja = :talvisuolaraja,
                       kaytossa = :kaytossa,
-                      tyyppi = :tyyppi,
+                      tyyppi = 'kokonaismaara'::suolasakko_tyyppi,
                       indeksi = :indeksi,
                       muokattu = NOW(),
                       muokkaaja = :kayttaja-id
 WHERE id = :id;
 
 -- name: tallenna-talvisuolan-kayttoraja!
-INSERT INTO suolasakko (urakka, hoitokauden_alkuvuosi, talvisuolaraja, kaytossa, tyyppi, indeksi, luotu, luoja)
-VALUES (:urakka-id, :hoitokauden-alkuvuosi, :talvisuolaraja, :kaytossa, :tyyppi::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
+INSERT INTO suolasakko (maara, urakka, hoitokauden_alkuvuosi, kaytossa, tyyppi, indeksi, luotu, luoja)
+VALUES (:sanktio_ylittavalta_tonnilta, :urakka-id, :hoitokauden-alkuvuosi, :kaytossa, 'kokonaismaara'::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
+
+-- name: paivita-rajoitusalueen-suolasanktio!
+UPDATE suolasakko SET maara = :sanktio_ylittavalta_tonnilta,
+                      hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
+                      kaytossa = :kaytossa,
+                      tyyppi = 'rajoitusalue'::suolasakko_tyyppi,
+                      indeksi = :indeksi,
+                      muokattu = NOW(),
+                      muokkaaja = :kayttaja-id
+WHERE id = :id;
+
+-- name: tallenna-rajoitusalueen-suolasanktio!
+INSERT INTO suolasakko (maara, urakka, hoitokauden_alkuvuosi, kaytossa, tyyppi, indeksi, luotu, luoja)
+VALUES (:sanktio_ylittavalta_tonnilta, :urakka-id, :hoitokauden-alkuvuosi, :kaytossa, 'rajoitusalue'::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
 
