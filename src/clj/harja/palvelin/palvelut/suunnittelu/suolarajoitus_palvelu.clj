@@ -19,7 +19,7 @@
   [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
   (let [urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
         hoitovuodet (if kopioidaan-tuleville-vuosille?
-                      (range nykyvuosi (inc urakan-loppuvuosi))
+                      (range nykyvuosi urakan-loppuvuosi)
                       [nykyvuosi])]
     hoitovuodet))
 
@@ -30,11 +30,11 @@
                       {:hoitokauden_alkuvuosi hoitokauden_alkuvuosi
                        :urakka_id urakka_id})
         rajoitukset (mapv (fn [suolarajoitus]
-                           (update suolarajoitus :pohjavesialueet
-                             (fn [alueet]
-                               (mapv
-                                 #(konv/pgobject->map % :tunnus :string :nimi :string)
-                                 (konv/pgarray->vector alueet)))))
+                            (update suolarajoitus :pohjavesialueet
+                              (fn [alueet]
+                                (mapv
+                                  #(konv/pgobject->map % :tunnus :string :nimi :string)
+                                  (konv/pgarray->vector alueet)))))
                       rajoitukset)
         _ (log/debug "Suolarajoitus :: hae-suolarajoitukset :: Löydettiin rajoitukset:" rajoitukset)]
     rajoitukset))
@@ -75,24 +75,27 @@
                      :rajoitusalue_id (:id rajoitusalue)
                      :suolarajoitus (:suolarajoitus suolarajoitus)
                      :formiaatti (:formiaatti suolarajoitus)
-                     :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)
                      :kayttaja_id (:id user)}
         ;; Päivitä tai tallenna uutena
         suolarajoitus (if (:id db-rajoitus)
                         (do
-                          (reduce (fn [rajoitus vuosi]
-                                    (let [rajoitus (assoc rajoitus :hoitokauden_alkuvuosi vuosi)
-                                          _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
-                                      rajoitus))
-                            db-rajoitus urakan-hoitovuodet)
+                          (mapv (fn [vuosi]
+                                 (let [;; Haetaan päivitettävä rajoitus tietokannasta urakan ja vuoden perusteella. Meillä ei ole id:tä kaikille vuosille
+                                       haettu-rajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
+                                                                                                           :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)}))
+                                       rajoitus (merge haettu-rajoitus db-rajoitus)
+                                       rajoitus (assoc rajoitus :hoitokauden_alkuvuosi vuosi)
+                                       _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
+                                   rajoitus))
+                            urakan-hoitovuodet)
                           (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                               :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)})))
                         (do
-                          (reduce (fn [rajoitus vuosi]
-                                    (let [rajoitus (assoc rajoitus :hoitokauden_alkuvuosi vuosi)
-                                          _ (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
-                                      rajoitus))
-                            db-rajoitus urakan-hoitovuodet)
+                          (mapv (fn [vuosi]
+                                 (let [rajoitus (assoc db-rajoitus :hoitokauden_alkuvuosi vuosi)
+                                       r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
+                                   rajoitus))
+                            urakan-hoitovuodet)
                           (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                               :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi suolarajoitus)}))))
 
@@ -115,7 +118,7 @@
         ;; Jos suolarajoituksia ei jää rajoitusalue_rajoitus tauluun, niin poistetaan myös alkuperäinen rajoitusalue
         suolarajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-rajoitusalueelle db {:rajoitusalue_id rajoitusalue_id})
         poistetut-rajoitusalueet (when (empty? suolarajoitukset)
-                                (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
+                                   (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
     (if (nil? poistetut-rajoitukset)
       (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
       "OK")))

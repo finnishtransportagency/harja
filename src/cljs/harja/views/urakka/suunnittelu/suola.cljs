@@ -311,9 +311,11 @@
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                        "Ei Rajoitusalueita")
               :rivi-klikattu #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true
-                                    (some (fn [r]
-                                            (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
-                                      rajoitukset)))}
+                                    (merge
+                                      {:kopioidaan-tuleville-vuosille? true}
+                                      (some (fn [r]
+                                                   (when (= (:rajoitusalue_id %) (:rajoitusalue_id r)) %))
+                                             rajoitukset))))}
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
     {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 0.8}
@@ -385,7 +387,7 @@
            [:h3 {:class "pull-left"}
             "Pohjavesialueiden suolarajoitukset"]
            [napit/uusi "Lisää rajoitus"
-            #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true nil))
+            #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true {:kopioidaan-tuleville-vuosille? true}))
             {:luokka "pull-right"
              :disabled (not saa-muokata?)}]]
 

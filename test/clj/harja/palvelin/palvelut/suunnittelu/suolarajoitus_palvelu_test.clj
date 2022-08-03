@@ -189,11 +189,18 @@
              :kopioidaan-tuleville-vuosille? false})
 
         suolarajoitusalueet-lopuksi (hae-rajoitusalueet-urakalle urakka-id)
-        suolarajoitukset-lopuksi (hae-rajoitusalue-rajoitukset-urakalle urakka-id)]
+        suolarajoitukset-lopuksi (hae-rajoitusalue-rajoitukset-urakalle urakka-id)
+
+        ;; Siivoa kanta
+        vastaus (poista-suolarajoitus
+                  {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
+                   :hoitokauden_alkuvuosi hk-alkuvuosi
+                   :urakka_id urakka-id
+                   :kopioidaan-tuleville-vuosille? true})]
 
     (is (not= suolarajoitusalueet-lopuksi suolarajoitusalueet-alkuun) "Vain yhden poistaminen onnistui")
     (is (not= suolarajoitukset-lopuksi suolarajoitukset-alkuun) "Vain yhden poistaminen onnistui")
-    (is (= (+ 4 (count suolarajoitukset-alkuun)) (count suolarajoitukset-lopuksi)) "Vain yhden poistaminen onnistui")))
+    (is (= (+ 3 (count suolarajoitukset-alkuun)) (count suolarajoitukset-lopuksi)) "Vain yhden poistaminen onnistui")))
 
 ;; TODO: Tarkista poistossa, että se ei poista menneitä rajoituksia
 
@@ -267,9 +274,9 @@
                :kopioidaan-tuleville-vuosille? true})]
 
       (is (empty? db-suolarajoitukset-alussa) "Tietokannassa ei ole rajoituksia alussa.")
-      (is (= 8 (count db-suolarajoitukset-jalkeen)) "Tietokannassa on jokaiselle hoitovuodelle rajoitus")))
+      (is (= 7 (count db-suolarajoitukset-jalkeen)) "Tietokannassa on jokaiselle hoitovuodelle rajoitus")))
   (testing "Luodaan urakan toiseksi viimeiselle hoitovuodelle rajoitus ja tarkistetaan, että rajoituksia on vain toiseksi viimeisellä ja viimeisellä vuodella"
-    (let [hk-alkuvuosi 2011
+    (let [hk-alkuvuosi 2010
           urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
           db-suolarajoitukset-alussa (hae-rajoitukset-kannasta urakka-id)
 
