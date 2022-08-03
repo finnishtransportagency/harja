@@ -1754,9 +1754,9 @@
 
 (def excel-rivit-utajarvi-2022
   (list {:lihavoi? false
-         :rivi [13375 "L15" "A" "Puolangantie" 400M 20M 4543.95M 0M 4963.95M]}
-        {:lihavoi? false
          :rivi [13374 "L14" nil "Ouluntie 2" 0M 0 0M 0M 0M]}
+        {:lihavoi? false
+         :rivi [13375 "L15" "A" "Puolangantie" 400M 20M 4543.95M 0M 4963.95M]}
         {:lihavoi? false
     :rivi [547523069 "L42" "B" "Tärkeä kohde mt20 2022" 0M 0 0M 0M 0M]}
         [nil nil nil nil nil nil nil nil nil]
@@ -1785,11 +1785,12 @@
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         vuosi (pvm/vuosi (pvm/nyt))
-        kohteet (hae-urakan-yllapitokohteet (:db jarjestelma)
-                                            +kayttaja-jvh+
-                                            {:urakka-id urakka-id
-                                             :sopimus-id sopimus-id
-                                             :vuosi vuosi})
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                              +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi vuosi}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
     (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
 
@@ -1873,11 +1874,12 @@
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         vuosi 2017
-        kohteet (hae-urakan-yllapitokohteet (:db jarjestelma)
-                                            +kayttaja-jvh+
-                                            {:urakka-id urakka-id
-                                             :sopimus-id sopimus-id
-                                             :vuosi vuosi
-                                             :vain-yha-kohteet? true})
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                              +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi vuosi
+                                               :vain-yha-kohteet? true}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
     (is (= excel-rivit-muhos-2017 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus hakee vain YHA-kohteet")))
