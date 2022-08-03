@@ -1,9 +1,12 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
-  (:require [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
+  (:require [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.pvm :as pvm]
+            [harja.tyokalut.yleiset :as yleiset]
+            [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]))
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
@@ -24,10 +27,36 @@
                      ". Kesto: "
                      (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
 
+(defn hae-varustetoteumat-velhosta [integraatioloki db asetukset]
+  (lukko/yrita-ajaa-lukon-kanssa
+    db
+    "varustetoteuma-haku"
+    #(suorita-ja-kirjaa-alku-loppu-ajat
+       (fn [] (varusteet/tuo-uudet-varustetoteumat-velhosta integraatioloki db asetukset))
+       "tuo-uudet-varustetoteumat-velhosta")))
+
+(defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db asetukset integraatioloki]} suoritusaika]
+  (if suoritusaika
+    (do
+      (log/debug "Ajastetaan varustetoteumien haku Tievelhosta tehtäväksi joka päivä kello: " (-> asetukset :velho :varustetoteuma-suoritusaika))
+      (ajastettu-tehtava/ajasta-paivittain
+        suoritusaika
+        (do
+          (log/info "ajasta-paivittain :: varustetoteumien haku :: Alkaa " (pvm/nyt))
+          (fn [_] (hae-varustetoteumat-velhosta integraatioloki db asetukset)))))
+    (fn [_])))
+
 (defrecord Velho [asetukset]
   component/Lifecycle
-  (start [this] this)
-  (stop [this] this)
+  (start [this]
+    (let [suoritusaika  (:varuste-haku-suoritusaika asetukset)]
+      (log/info (str "Käynnistetään varustetoteuma-haku-komponentti. Suoritusaika: " suoritusaika))
+      (assoc this :varustetoteuma-haku-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika)))
+    this)
+  (stop [this]
+    (log/info "Sammutetaan varustetoteuma-haku-komponentti.")
+    (:varustetoteuma-haku-tehtava this)
+    this)
 
   PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]
