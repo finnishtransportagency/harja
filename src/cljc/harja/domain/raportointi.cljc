@@ -63,6 +63,11 @@
        (> (count solu) 1)
        (keyword? (first solu))))
 
+(defn excel-kaava?
+  [solu]
+  (and (raporttielementti? solu)
+    (= :kaava (first solu))))
+
 (defn sarakkeessa-raporttielementteja? [sarakkeen-indeksi taulukko-riveja]
   (let [sarakkeen-solut
         (mapcat
