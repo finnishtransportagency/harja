@@ -303,6 +303,7 @@
 
 (defn velhogeo->harjageo [geo]
   (let [tyyppi (get {"MultiLineString" :multiline
+                     "MultiPoint" :multipoint
                      "LineString" :line
                      "Point" :point}
                     (:type geo))]
@@ -322,6 +323,11 @@
         (-> {:lines (map
                       (fn [p] {:type :line :points p})
                       (:coordinates geo)) :type tyyppi}
+            (geo/clj->pg)
+            (geo/geometry))
+
+        (= :multipoint tyyppi)
+        (-> {:coordinates (:coordinates geo) :type tyyppi}
             (geo/clj->pg)
             (geo/geometry))
 
