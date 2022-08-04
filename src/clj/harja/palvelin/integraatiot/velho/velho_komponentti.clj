@@ -1,12 +1,11 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
-  (:require [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
+  (:require [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
             [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukko]
-            [harja.pvm :as pvm]
-            [harja.tyokalut.yleiset :as yleiset]
-            [taoensso.timbre :as log]
-            [com.stuartsierra.component :as component]))
+            [harja.pvm :as pvm]))
 
 (defprotocol PaallystysilmoituksenLahetys
   (laheta-kohde [this urakka-id kohde-id]))
