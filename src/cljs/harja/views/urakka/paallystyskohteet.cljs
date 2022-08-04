@@ -120,10 +120,11 @@
        [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lataa kustannus-Excel"]]]]
     (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
       [liitteet/lataa-tiedosto
-       (-> @tila/tila :yleiset :urakka :id)
+       {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+        :vuosi (:vuosi tiedot)}
        {:nappi-teksti "Tuo kustannukset excelistä"
         :nappi-luokka "napiton-nappi"
-        :url "lue-paallystyskustannukset-excelista"
+        :url "tuo-paallystyskustannukset-excelista"
         :lataus-epaonnistui #(println "Epäonnistui")
         :tiedosto-ladattu #(println "Ladattu ok")}])]])
 

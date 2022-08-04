@@ -19,6 +19,7 @@
              [kommentit :as kommentit-q]
              [paallystys-kyselyt :as q]
              [urakat :as urakat-q]
+             [sopimukset :as sopimukset-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
              [tieverkko :as tieverkko-q]]
@@ -40,7 +41,7 @@
             [harja.palvelin.palvelut.yllapitokohteet
              [maaramuutokset :as maaramuutokset]
              [yleiset :as yy]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.tyokalut.html :refer [sanitoi]]
             [clojure.set :as set]
             [clj-time.coerce :as coerce]
@@ -851,19 +852,27 @@
 (defn- kasittele-excel [db user {:keys [urakka-id req]}]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         kohteet (p-excel/tallenna-paallystyskohteet-excelista db user workbook urakka-id)]
-    {:status 200
-     :headers {"Content-Type" "application/json; charset=UTF-8"}
-     :body "Tallennettu onnistuneesti"}))
+   kohteet))
 
 (defn lue-paallystysten-kustannusexcel [db req]
   (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+        sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db {:urakka urakka-id})))
+        vuosi (Integer/parseInt (get (:params req) "vuosi"))
         kayttaja (:kayttaja req)]
     (assert (int? urakka-id) "Urakka ID:n parsinta epäonnistui")
     (assert kayttaja "Käyttäjän parsinta epäonnistui")
     (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db kayttaja urakka-id)
     ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
-    (kasittele-excel db kayttaja {:urakka-id urakka-id
-                                  :req req})))
+    (jdbc/with-db-transaction [db db]
+      (kasittele-excel db kayttaja {:urakka-id urakka-id
+                                    :sopimus-id sopimus-id
+                                    :vuosi vuosi
+                                    :req req})
+      ;; palautetaan päivittyneet kohteet käyttöliittymää varten
+      (transit-vastaus
+        (yllapitokohteet/hae-urakan-yllapitokohteet db kayttaja {:urakka-id urakka-id
+                                                                 :sopimus-id sopimus-id
+                                                                 :vuosi vuosi})))))
 
 (defrecord Paallystys []
   component/Lifecycle
@@ -903,7 +912,7 @@
                         (fn [user tiedot]
                           (aseta-paallystysilmoituksen-tila db user tiedot))
                         {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
-      (julkaise-palvelu http :lue-paallystyskustannukset-excelista
+      (julkaise-palvelu http :tuo-paallystyskustannukset-excelista
                         (wrap-multipart-params (fn [req] (lue-paallystysten-kustannusexcel db req)))
                         {:ring-kasittelija? true})
       (when excel
@@ -922,7 +931,7 @@
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
       :aseta-paallystysilmoituksen-tila
-      :lue-paallystyskustannukset-excelista)
+      :tuo-paallystyskustannukset-excelista)
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paallystyskohteet-excel))
     this))

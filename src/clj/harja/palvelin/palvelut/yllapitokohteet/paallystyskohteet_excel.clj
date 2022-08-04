@@ -50,35 +50,23 @@
                       (keep
                         (fn [rivi]
                           {:yhaid (int (nth rivi 0))
-                           :kohdenro (nth rivi 1)
-                           :tunnus (nth rivi 2)
-                           :nimi (nth rivi 3)
                            :sopimuksen-mukaiset-tyot (nth rivi 4)
                            :maaramuutokset (nth rivi 5)
                            :bitumi-indeksi (nth rivi 6)
-                           :kaasuindeksi (nth rivi 7)
-                           :kokonaishinta (nth rivi 8)})
+                           :kaasuindeksi (nth rivi 7)})
                         rivit))]
     kohteet))
 
 (defn tallenna-paallystyskohteet-excelista
   [db user workbook urakka-id]
-  (println "Jarno tallenna päällystyskohteet excelistä ")
   (let [kohteet (parsi-paallystyskohteet workbook)]
-    (println "Jarno, kohteet ovat: " kohteet)
-    (jdbc/with-db-transaction [db db]
-      (doseq [kohde kohteet
-              :let [p (-> kohde
-                          (assoc :urakka-id urakka-id))]]
-        (let [_ (println "Jarno tallentamassa päällystyksen: " p)]
-          (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db {:yhaid (:yhaid p)
-                                                                              :urakka urakka-id
-                                                                              :sopimuksen_mukaiset_tyot (:sopimuksen-mukaiset-tyot p)
-                                                                              :arvonvahennykset (:arvonvahennykset p)
-                                                                              :bitumi_indeksi (:bitumi-indeksi p)
-                                                                              :kaasuindeksi (:kaasuindeksi p)
-                                                                              :toteutunut_hinta (:toteutunut-hinta p)
-                                                                              :muokkaaja (:id user)}))))))
+    (doseq [p kohteet]
+      (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db {:yhaid (:yhaid p)
+                                                                          :urakka urakka-id
+                                                                          :sopimuksen_mukaiset_tyot (:sopimuksen-mukaiset-tyot p)
+                                                                          :bitumi_indeksi (:bitumi-indeksi p)
+                                                                          :kaasuindeksi (:kaasuindeksi p)
+                                                                          :muokkaaja (:id user)}))))
 
 (defn- excelin-rivi
   [{:keys [yhaid kohdenumero tunnus nimi

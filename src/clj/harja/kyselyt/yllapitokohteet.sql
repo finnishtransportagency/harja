@@ -808,10 +808,8 @@ WHERE yllapitokohde = :yllapitokohde
 UPDATE yllapitokohteen_kustannukset
    SET
        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
-       arvonvahennykset         = :arvonvahennykset,
        bitumi_indeksi           = :bitumi_indeksi,
        kaasuindeksi             = :kaasuindeksi,
-       toteutunut_hinta         = :toteutunut_hinta,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
  WHERE yllapitokohde = (SELECT id
