@@ -29,7 +29,7 @@
 (defn hae-varustetoteumat-velhosta [integraatioloki db asetukset]
   (lukko/yrita-ajaa-lukon-kanssa
     db
-    "varustetoteuma-haku"
+    "tuo-uudet-varustetoteumat-velhosta"
     #(suorita-ja-kirjaa-alku-loppu-ajat
        (fn [] (varusteet/tuo-uudet-varustetoteumat-velhosta integraatioloki db asetukset))
        "tuo-uudet-varustetoteumat-velhosta")))
@@ -37,24 +37,24 @@
 (defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db asetukset integraatioloki]} suoritusaika]
   (if suoritusaika
     (do
-      (log/debug "Ajastetaan varustetoteumien haku Tievelhosta tehtäväksi joka päivä kello: " (-> asetukset :velho :varustetoteuma-suoritusaika))
+      (log/debug "Ajastetaan varustetoteumien tuonti Tievelhosta tehtäväksi joka päivä kello: " (-> asetukset :velho :varustetoteuma-suoritusaika))
       (ajastettu-tehtava/ajasta-paivittain
         suoritusaika
         (do
-          (log/info "ajasta-paivittain :: varustetoteumien haku :: Alkaa " (pvm/nyt))
+          (log/info "ajasta-paivittain :: varustetoteumien tuonti :: Alkaa " (pvm/nyt))
           (fn [_] (hae-varustetoteumat-velhosta integraatioloki db asetukset)))))
-    (fn [_])))
+    (constantly nil)))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [suoritusaika  (:varuste-haku-suoritusaika asetukset)]
-      (log/info (str "Käynnistetään varustetoteuma-haku-komponentti. Suoritusaika: " suoritusaika))
-      (assoc this :varustetoteuma-haku-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika)))
+    (let [suoritusaika  (:varuste-tuonti-suoritusaika asetukset)]
+      (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " suoritusaika))
+      (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika)))
     this)
   (stop [this]
-    (log/info "Sammutetaan varustetoteuma-haku-komponentti.")
-    (:varustetoteuma-haku-tehtava this)
+    (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
+    (:varustetoteuma-tuonti-tehtava this)
     this)
 
   PaallystysilmoituksenLahetys

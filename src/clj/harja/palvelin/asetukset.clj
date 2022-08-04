@@ -158,7 +158,7 @@
                             :kayttajatunnus s/Str
                             :salasana s/Str
                             :varuste-api-juuri-url s/Str
-                            (s/optional-key :varuste-haku-suoritusaika) [s/Num]
+                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str
                             :varuste-urakka-oid-url s/Str
