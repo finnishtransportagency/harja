@@ -434,7 +434,7 @@
                           [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
+                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :excel-vienti])
       :pot2 (component/using
               (pot2/->POT2)
               [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])

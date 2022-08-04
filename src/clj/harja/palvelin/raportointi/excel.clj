@@ -54,8 +54,16 @@
   (.formatAsString (CellReference. rivi-nro sarake-nro)))
 
 (defmulti aseta-kaava!
-  (fn [[tyyppi &_] _ _ _]
-    tyyppi))
+  (fn [[_ {:keys [kaava]} &_] _ _]
+    kaava))
+ 
+(defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi]}] workbook cell]
+  (do
+    (.setCellFormula cell (str "SUM(INDIRECT(ADDRESS(" (or alkurivi 1) ",COLUMN())&\":\"&ADDRESS(ROW()-1,COLUMN())))"))
+    (-> workbook
+      (.getCreationHelper)
+      (.createFormulaEvaluator)
+      (.evaluateFormulaCell cell))))
 
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
@@ -168,6 +176,7 @@
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
     ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
     ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+    :kokonaisluku (.setDataFormat tyyli 1)
     :raha (.setDataFormat tyyli 8)
     :prosentti (.setDataFormat tyyli 10)
     :numero (.setDataFormat tyyli 2)
@@ -177,12 +186,15 @@
     nil))
 
 (defn- tee-raportin-tiedot-rivi  
-  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli] :as tiedot}]
+  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli
+                 custom-ylin-rivi] :as tiedot}]
   (try 
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
-      (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
-                                                              (str " - " alkupvm "-" loppupvm))))
+      (excel/set-cell! solu (or
+                              custom-ylin-rivi
+                              (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
+                                                               (str " - " alkupvm "-" loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.
@@ -314,7 +326,8 @@
 
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
                        [naytettava-arvo solun-tyyli formaatti]
-                       (if (raportti-domain/raporttielementti? arvo-datassa)
+                       (if (and (raportti-domain/raporttielementti? arvo-datassa)
+                             (not (raportti-domain/excel-kaava? arvo-datassa)))
                          (muodosta-solu arvo-datassa oletustyyli)
                          [arvo-datassa oletustyyli])
                        kustomi-formaatti? (and (vector? formaatti) (= (first formaatti) :kustomi))
@@ -354,8 +367,8 @@
                        tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (:fmt sarake)])]
                                tyyli
                                (luo-uusi-tyyli solun-tyyli formaatti-fn (:fmt sarake)))]
-                   (if-let [kaava (:excel sarake)]
-                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
+                   (if (raportti-domain/excel-kaava? arvo-datassa)
+                     (aseta-kaava! arvo-datassa workbook cell)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                    (excel/set-cell-style! cell tyyli)
                    (when (:tasaa sarake)

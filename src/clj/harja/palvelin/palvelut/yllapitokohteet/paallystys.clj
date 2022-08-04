@@ -44,6 +44,8 @@
             [clojure.set :as set]
             [clj-time.coerce :as coerce]
             [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.yllapitokohteet.paallystyskohteet-excel :as p-excel]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.pvm :as pvm]
             [specql.core :as specql])
   (:import (org.postgresql.util PSQLException)))
@@ -851,7 +853,8 @@
           fim (:fim this)
           email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
                   (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+                  (:api-sahkoposti this))
+          excel (:excel-vienti this)]
       (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitukset db user tiedot)))
@@ -880,6 +883,9 @@
                         (fn [user tiedot]
                           (aseta-paallystysilmoituksen-tila db user tiedot))
                         {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :paallystyskohteet-excel
+                                                    (partial #'p-excel/vie-paallystyskohteet-exceliin db)))
       this))
 
   (stop [this]
@@ -893,4 +899,6 @@
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
       :aseta-paallystysilmoituksen-tila)
+    (when (:excel-vienti this)
+      (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paallystyskohteet-excel))
     this))
