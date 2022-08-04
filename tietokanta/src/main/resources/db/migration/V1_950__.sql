@@ -101,5 +101,11 @@ $$ LANGUAGE plpgsql;
 
 -- Lisätään suolasakolle tyyppi, jotta voidaan yksilöidä sakko, joko talvisuolan kokonaismäärälle tai yksittäiselle pohjavesialueelle
 CREATE TYPE  suolasakko_tyyppi AS ENUM ('kokonaismaara', 'rajoitusalue');
+
 ALTER TABLE suolasakko
   ADD COLUMN tyyppi suolasakko_tyyppi DEFAULT 'kokonaismaara';
+-- Päivitä vielä uniikki-constraint
+ALTER TABLE suolasakko DROP CONSTRAINT uniikki_suolasakko;
+ALTER TABLE suolasakko
+     ADD CONSTRAINT uniikki_suolasakko
+        UNIQUE (urakka, hoitokauden_alkuvuosi, tyyppi);
