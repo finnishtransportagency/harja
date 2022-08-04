@@ -340,38 +340,39 @@
         sanktio_ylittavalta_tonnilta 100000M
         _ (aseta-urakalle-talvisuolaraja talvisuolaraja urakka-id hk-alkuvuosi)
         kayttoraja {:urakka-id urakka-id
-                    :kaytossa true
                     :tyyppi "kokonaismaara"
                     :hoitokauden-alkuvuosi hk-alkuvuosi
                     :indeksi "MAKU 2015"
                     :kopioidaan-tuleville-vuosille? false
-                    :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta }
+                    :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ kayttoraja)
 
         ;; Hae rajoitusalueen suolasanktio, jotta voi vertailla lukuja
-        hakutulos (:talvisuolan-kokonaismaara (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                    :hae-talvisuolan-kayttorajat +kayttaja-jvh+
-                                                    {:urakka-id urakka-id
-                                                     :hoitokauden-alkuvuosi hk-alkuvuosi}))
+        hakutulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-talvisuolan-kayttorajat +kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :hoitokauden-alkuvuosi hk-alkuvuosi})
         ;; Siivotaan kanta
         _ (u (str "DELETE from suolasakko WHERE urakka = " urakka-id))
         _ (u (str (format "DELETE from urakka_tehtavamaara
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
                               AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja)))]
+
     ;; Tarkistetaan tallennuksen vastauksen tiedot
-    (is (= talvisuolaraja (:talvisuolaraja vastaus)))
+    (is (not (nil? (:id vastaus))))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
     (is (= "MAKU 2015" (:indeksi vastaus)))
     (is (= true (:kaytossa vastaus)))
     (is (= "kokonaismaara" (:tyyppi vastaus)))
 
     ;; Tarkistetaan hakutulos
-    (is (= talvisuolaraja (:talvisuolaraja hakutulos)))
+    (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
+    (is (= talvisuolaraja (:talvisuolan-kokonaismaara hakutulos)))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
-    (is (= "MAKU 2015" (:indeksi hakutulos)))
-    (is (= true (:kaytossa hakutulos)))
-    (is (= "kokonaismaara" (:tyyppi hakutulos)))))
+    (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
+    (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
 (deftest paivita-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -384,23 +385,23 @@
         muokattu_sanktio_ylittavalta_tonnilta 30000M
         _ (aseta-urakalle-talvisuolaraja talvisuolaraja urakka-id hk-alkuvuosi)
         kayttoraja {:urakka-id urakka-id
-                    :kaytossa true
                     :tyyppi "kokonaismaara"
                     :hoitokauden-alkuvuosi hk-alkuvuosi
                     :indeksi "MAKU 2015"
                     :kopioidaan-tuleville-vuosille? false
                     :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ kayttoraja)
+        uusi-kayttoraja (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ kayttoraja)
+        _ (println "uusi-kayttoraja: " uusi-kayttoraja)
 
         ;; Muokataan kokonaisrajoitusta hieman
-        vastaus (assoc vastaus :sanktio_ylittavalta_tonnilta muokattu_sanktio_ylittavalta_tonnilta)
-        muokattu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ vastaus)
+        muokattu-kayttoraja (assoc uusi-kayttoraja :sanktio_ylittavalta_tonnilta muokattu_sanktio_ylittavalta_tonnilta)
+        muokattu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ muokattu-kayttoraja)
 
         ;; Hae rajoitusalueen suolasanktio, jotta voi vertailla lukuja
-        hakutulos (:talvisuolan-kokonaismaara (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :hae-talvisuolan-kayttorajat +kayttaja-jvh+
-                                                {:urakka-id urakka-id
-                                                 :hoitokauden-alkuvuosi hk-alkuvuosi}))
+        hakutulos (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-talvisuolan-kayttorajat +kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :hoitokauden-alkuvuosi hk-alkuvuosi})
 
         ;; Siivotaan kanta
         _ (u (str "DELETE from suolasakko WHERE urakka = " urakka-id))
@@ -408,41 +409,42 @@
                             WHERE urakka = %s
                               AND \"hoitokauden-alkuvuosi\" = %s
                               AND maara = %s" urakka-id hk-alkuvuosi talvisuolaraja)))]
+
     ;; Tarkistetaan tallennuksen vastauksen tiedot
-    (is (= talvisuolaraja (:talvisuolaraja vastaus)))
-    (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
-    (is (= "MAKU 2015" (:indeksi vastaus)))
-    (is (= true (:kaytossa vastaus)))
-    (is (= "kokonaismaara" (:tyyppi vastaus)))
+    (is (not (nil? (:id uusi-kayttoraja))))
+    (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta uusi-kayttoraja)))
+    (is (= "MAKU 2015" (:indeksi uusi-kayttoraja)))
+    (is (= true (:kaytossa uusi-kayttoraja)))
+    (is (= "kokonaismaara" (:tyyppi uusi-kayttoraja)))
 
     ;; Tarkistetaan muokatun vastauksen tiedot
-    (is (= talvisuolaraja (:talvisuolaraja muokattu-vastaus)))
+    (is (not (nil? (:id muokattu-vastaus))))
     (is (= muokattu_sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta muokattu-vastaus)))
     (is (= "MAKU 2015" (:indeksi muokattu-vastaus)))
     (is (= true (:kaytossa muokattu-vastaus)))
     (is (= "kokonaismaara" (:tyyppi muokattu-vastaus)))
 
     ;; Tarkistetaan hakutulos
-    (is (= talvisuolaraja (:talvisuolaraja hakutulos)))
-    (is (= muokattu_sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta hakutulos)))
-    (is (= "MAKU 2015" (:indeksi hakutulos)))
-    (is (= true (:kaytossa hakutulos)))
-    (is (= "kokonaismaara" (:tyyppi hakutulos)))))
+    (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
+    (is (= talvisuolaraja (:talvisuolan-kokonaismaara hakutulos)))
+    (is (= muokattu_sanktio_ylittavalta_tonnilta (get-in hakutulos [:talvisuolan-sanktiot :sanktio_ylittavalta_tonnilta])))
+    (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
+    (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
 
 (deftest tallenna-ja-hae-rajoitusalueen-suolasanktio-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hk-alkuvuosi 2022
         sanktio-ylittavalta-tonnilta 5000M                  ;; euroa
-        suolasanktio {:urakka-id urakka-id
+        aluesanktio {:urakka-id urakka-id
                       :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
-                      :kaytossa true
                       :tyyppi "rajoitusalue"
                       :hoitokauden-alkuvuosi hk-alkuvuosi
                       :indeksi "MAKU 2015"
                       :kopioidaan-tuleville-vuosille? false}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ suolasanktio)
+                  :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ aluesanktio)
 
         ;; Hae rajoitusalueen suolasanktio, jotta voi vertailla lukuja
         sanktio (:rajoitusalueiden-suolasanktio (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -452,14 +454,55 @@
 
         ;; Siivotaan kanta
         _ (u (str "DELETE from suolasakko WHERE urakka = " urakka-id))]
+
     ;; Testaa vastauksen tiedot
+    (is (not (nil? (:id vastaus))))
     (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
     (is (= "MAKU 2015" (:indeksi vastaus)))
     (is (= true (:kaytossa vastaus)))
     (is (= "rajoitusalue" (:tyyppi vastaus)))
 
     ;; Testaa hakutuloksen tiedot
+    (is (not (nil? (:id sanktio))))
     (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta sanktio)))
     (is (= "MAKU 2015" (:indeksi sanktio)))
     (is (= true (:kaytossa sanktio)))
     (is (= "rajoitusalue" (:tyyppi sanktio)))))
+
+;; Vanhalla uniikkius constraintilla tämä ei voi toimia.
+(deftest tallenna-suolarajat-ja-rajoutusaluerajat-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hk-alkuvuosi 2022
+        sanktio-ylittavalta-tonnilta 5000M                  ;; euroa
+        suolasanktio {:urakka-id urakka-id
+                      :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
+                      :tyyppi "kokonaismaara"
+                      :hoitokauden-alkuvuosi hk-alkuvuosi
+                      :indeksi "MAKU 2015"
+                      :kopioidaan-tuleville-vuosille? false}
+        suolasanktio-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ suolasanktio)
+
+        aluesanktio {:urakka-id urakka-id
+                     :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
+                     :tyyppi "rajoitusalue"
+                     :hoitokauden-alkuvuosi hk-alkuvuosi
+                     :indeksi "MAKU 2015"
+                     :kopioidaan-tuleville-vuosille? false}
+        aluesanktio-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ aluesanktio)
+
+        ;; Siivotaan kanta
+        _ (u (str "DELETE from suolasakko WHERE urakka = " urakka-id))]
+
+    ;; Testaa vastauksen tiedot
+    (is (not (nil? (:id suolasanktio-vastaus))))
+    (is (not (nil? (:id aluesanktio-vastaus))))
+    (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta suolasanktio-vastaus)))
+    (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta aluesanktio-vastaus)))
+    (is (= "MAKU 2015" (:indeksi suolasanktio-vastaus)))
+    (is (= "MAKU 2015" (:indeksi aluesanktio-vastaus)))
+    (is (= true (:kaytossa suolasanktio-vastaus)))
+    (is (= true (:kaytossa aluesanktio-vastaus)))
+    (is (= "kokonaismaara" (:tyyppi suolasanktio-vastaus)))
+    (is (= "rajoitusalue" (:tyyppi aluesanktio-vastaus)))))
