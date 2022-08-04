@@ -226,78 +226,104 @@
 
 ;; -------
 
-(defn lomake-talvisuolan-kayttoraja
-  [urakka]
-  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
+(defn lomake-talvisuolan-kayttoraja [e! app urakka]
+  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))
+        lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
+        ;; Aseta tuleville vuosille kopiointi defaulttina päälle, jos sitä ei ole erikseen estetty
+        lomake (if (nil? (:kopioi-rajoitukset lomake))
+              (assoc lomake :kopioi-rajoitukset true)
+              lomake)]
+    [:div
+     [lomake/lomake {:ei-borderia? true
+                     :tarkkaile-ulkopuolisia-muutoksia? false
+                     :muokkaa! (fn [data] (do
+                                            (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomake data))
+                                            ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
+                                            (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
+                                              (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomake)))))
+                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomake)))}
+      [(lomake/rivi
+         {:nimi :kopioi-rajoitukset
+          :tyyppi :checkbox
+          :palstoja 1
+          :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
+       (lomake/rivi
+         {:nimi :kokonaismaara
+          :tyyppi :positiivinen-numero
+          :palstoja 1
+          :otsikko "Talvisuolan käyttöraja / vuosi"
+          :yksikko "kuivatonnia"
+          :placeholder "Ei rajoitusta"
+          :disabled? true})
 
-    (fn []
-      (let [tiedot {}
-            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
+       (lomake/rivi
+         {:nimi :sanktio_ylittavalta_tonnilta
+          :tyyppi :positiivinen-numero
+          :palstoja 1
+          :muokattava? (constantly saa-muokata?)
+          :otsikko "Sanktio / ylittävä tonni"
+          :yksikko "€"}
 
-        [lomake/lomake {:ei-borderia? true
-                        :muokkaa! (fn [uusi]
-                                    (log "lomaketta muokattu, tiedot:" (pr-str uusi))
-                                    ;; TODO: Tuck event
-                                    )}
-         [(lomake/rivi
-            {:nimi :kopioi-rajoitukset
-             :tyyppi :checkbox :palstoja 1
-             :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
-          (lomake/rivi
-            {:nimi :talvisuolaraja
-             :tyyppi :positiivinen-numero
-             :palstoja 1 :pakollinen? true :muokattava? (constantly saa-muokata?)
-             :otsikko "Talvisuolan käyttöraja / vuosi"
-             :yksikko "kuivatonnia" :placeholder "Ei rajoitusta"})
+         (when (urakka/indeksi-kaytossa-sakoissa?)
+           {:nimi :indeksi
+            :tyyppi :valinta
+            :palstoja 1
+            :otsikko "Indeksi"
+            :muokattava? (constantly saa-muokata?)
+            :valinta-nayta #(if (not saa-muokata?)
+                              ""
+                              (if (nil? %) "Ei indeksiä" (str %)))
+            :valinnat (conj valittavat-indeksit nil)}))]
+      lomake]]))
 
-          (lomake/rivi
-            {:nimi :sanktio :tyyppi :positiivinen-numero
-             :palstoja 1 :muokattava? (constantly saa-muokata?)
-             :otsikko "Sanktio / ylittävä tonni" :yksikko "€"}
+(defn lomake-pohjavesialueen-suolasanktio [e! app urakka]
+  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
+        ;; Aseta tuleville vuosille kopiointi defaulttina päälle, jos sitä ei ole erikseen estetty
+        app (if (nil? (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio :kopioi-rajoitukset]))
+              (assoc-in app [:kayttorajat :rajoitusalueiden-suolasanktio :kopioi-rajoitukset] true)
+              app)
+        valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
 
-            (when (urakka/indeksi-kaytossa-sakoissa?)
-              {:nimi :indeksi :tyyppi :valinta :palstoja 1
-               :otsikko "Indeksi"
-               :muokattava? (constantly saa-muokata?)
-               :valinta-nayta #(if (not saa-muokata?)
-                                 ""
-                                 (if (nil? %) "Ei indeksiä" (str %)))
-               :valinnat (conj valittavat-indeksit nil)}))]
-         tiedot]))))
+    [:div
+     [lomake/lomake {:ei-borderia? true
+                     :tarkkaile-ulkopuolisia-muutoksia? false
+                     :muokkaa! (fn [data toinen]
+                                 (do
+                                   (e! (suolarajoitukset-tiedot/->PaivitaRajoitusalueidenSanktiolomake data))
 
-(defn lomake-pohjavesialueen-suolasanktio
-  [urakka]
-  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
+                                   ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
+                                   (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
+                                     (e! (suolarajoitukset-tiedot/->TallennaRajoitusalueidenSanktiolomake)))))
 
-    (fn []
-      (let [tiedot {}
-            valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))]
+                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaRajoitusalueidenSanktiolomake)))}
+      [(lomake/rivi
+         {:nimi :kopioi-rajoitukset
+          :tyyppi :checkbox
+          :palstoja 1
+          :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
+       (lomake/rivi
+         {:otsikko "Sanktio / ylittävä tonni"
+          :pakollinen? true
+          :muokattava? (constantly saa-muokata?)
+          :nimi :sanktio_ylittavalta_tonnilta
+          :tyyppi :positiivinen-numero
+          :palstoja 1
+          :yksikko "€"}
 
-        [lomake/lomake {:ei-borderia? true
-                        :muokkaa! (fn [uusi]
-                                    (log "lomaketta muokattu, tiedot:" (pr-str uusi))
-                                    ;; TODO: Tuck event
-                                    )}
-         [(lomake/rivi
-            {:nimi :kopioi-rajoitukset
-             :tyyppi :checkbox :palstoja 1
-             :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
-          (lomake/rivi
-            {:otsikko "Sanktio / ylittävä tonni"
-             :pakollinen? true
-             :muokattava? (constantly saa-muokata?) :nimi :vainsakkomaara
-             :tyyppi :positiivinen-numero :palstoja 1 :yksikko "€"}
-
-            (when (urakka/indeksi-kaytossa-sakoissa?)
-              {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
-               :muokattava? (constantly saa-muokata?)
-               :valinta-nayta #(if (not saa-muokata?)
-                                 ""
-                                 (if (nil? %) "Ei indeksiä" (str %)))
-               :valinnat (conj valittavat-indeksit nil)
-
-               :palstoja 1}))]
-         tiedot]))))
+         (when (urakka/indeksi-kaytossa-sakoissa?)
+           {:otsikko "Indeksi"
+            :nimi :indeksi
+            :tyyppi :valinta
+            :on-blur #(e! (suolarajoitukset-tiedot/->TallennaRajoitusalueidenSanktiolomake))
+            :on-change #(log "jee change")
+            :muokattava? (constantly saa-muokata?)
+            :valinta-nayta #(if (not saa-muokata?)
+                              ""
+                              (if (nil? %) "Ei indeksiä" (str %)))
+            :valinnat (conj valittavat-indeksit nil)
+            :palstoja 1}))]
+      (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
 (defn taulukko-rajoitusalueet
   "Rajoitusalueiden taulukko."
@@ -337,11 +363,12 @@
     {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 0.8}]
    rajoitukset])
 
-(defn urakan-suolarajoitukset* [e! _]
+(defn urakan-suolarajoitukset* [e! app]
   (komp/luo
     (komp/sisaan
       #(do
-         (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset (pvm/vuosi (first @urakka/valittu-hoitokausi))))))
+         (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset (pvm/vuosi (first @urakka/valittu-hoitokausi))))
+         (e! (suolarajoitukset-tiedot/->HaeTalvisuolanKayttorajat (pvm/vuosi (first @urakka/valittu-hoitokausi))))))
     (komp/ulos
       (fn []
         ;; Tänne mahdolliset karttatasojen poistot
@@ -376,10 +403,14 @@
 
          [:div.lomakkeet
           [:h3 "Talvisuolan kokonaismäärän käyttöraja"]
-          [lomake-talvisuolan-kayttoraja urakka]
+          (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
+            [lomake-talvisuolan-kayttoraja e! app urakka])
 
           [:h3 "Pohjavesialueen suolasanktio"]
-          [lomake-pohjavesialueen-suolasanktio urakka]]
+          (when-not (nil? (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio]))
+            ;; Ladataan rajoitusalueiden ylityksen määrittävä lomake, nimestä huolimatta. Käyttöliittymässä on historian painolastista johtuen
+            ;; paljon pohjavesialue termiä, vaikka käytännössä käsitellään rajoitusalueita. (joita voi olla monta yhdellä pohjavesialueella)
+            [lomake-pohjavesialueen-suolasanktio e! app urakka])]
 
          ;; Pohjavesialueiden rajoitusalueiden taulukko ym.
          [:div.pohjavesialueiden-suolarajoitukset
@@ -395,7 +426,6 @@
           #_[kartta]
 
           ;; Rajoitusalueen lisäys/muokkauslomake. Avautuu sivupaneeliin
-          ;; TODO: Lomakkeen avaaminen/sulkeminen tuck-eventeiksi ja app stateen
           (when lomake-auki?
             [:div.overlay-oikealla {:style {:width "570px" :overflow "auto"}}
              [lomake-rajoitusalue e! app]])
@@ -403,6 +433,4 @@
           [taulukko-rajoitusalueet e! rajoitusalueet saa-muokata?]]]))))
 
 (defn urakan-suolarajoitukset []
-  (do
-    ;(js/console.log "tila/suunnittelu-suolarajoitukset" (pr-str tila/suunnittelu-suolarajoitukset))
-    (tuck/tuck tila/suunnittelu-suolarajoitukset urakan-suolarajoitukset*)))
+  (tuck/tuck tila/suunnittelu-suolarajoitukset urakan-suolarajoitukset*))

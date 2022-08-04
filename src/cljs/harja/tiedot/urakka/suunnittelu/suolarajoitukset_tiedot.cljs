@@ -49,8 +49,25 @@
 (defrecord HaeSuolarajoituksetOnnistui [vastaus])
 (defrecord HaeSuolarajoituksetEpaonnistui [vastaus])
 
+(defrecord HaeTalvisuolanKayttorajat [valittu-vuosi])
+(defrecord HaeTalvisuolanKayttorajatOnnistui [vastaus])
+(defrecord HaeTalvisuolanKayttorajatEpaonnistui [vastaus])
+
+;; Käyttörajalomake
+(defrecord PaivitaKayttorajalomake [lomake])
+(defrecord TallennaKayttorajalomake [])
+(defrecord TallennaKayttorajalomakeOnnistui [vastaus])
+(defrecord TallennaKayttorajalomakeEpaonnistui [vastaus])
+
+;; RajoitusalueidenSanktiolomake
+(defrecord PaivitaRajoitusalueidenSanktiolomake [lomake])
+(defrecord TallennaRajoitusalueidenSanktiolomake [])
+(defrecord TallennaRajoitusalueidenSanktiolomakeOnnistui [vastaus])
+(defrecord TallennaRajoitusalueidenSanktiolomakeEpaonnistui [vastaus])
+
 (defrecord AvaaTaiSuljeSivupaneeli [tila lomakedata])
-;; Päivitys
+
+;; Suolarajoituslomakkeen Päivitys
 (defrecord PaivitaLomake [lomake])
 (defrecord HaeTierekisterinTiedotOnnistui [vastaus])
 (defrecord HaeTierekisterinTiedotEpaonnistui [vastaus])
@@ -72,21 +89,35 @@
              :epaonnistui ->HaeSuolarajoituksetEpaonnistui
              :paasta-virhe-lapi? true})]))
 
+(defn- hae-kayttorajat [valittu-vuosi]
+  (let [urakka-id (-> @tila/yleiset :urakka :id)
+        _ (tuck-apurit/post! :hae-talvisuolan-kayttorajat
+            {:hoitokauden-alkuvuosi valittu-vuosi
+             :urakka-id urakka-id}
+            {:onnistui ->HaeTalvisuolanKayttorajatOnnistui
+             :epaonnistui ->HaeTalvisuolanKayttorajatEpaonnistui
+             :paasta-virhe-lapi? true})]))
+
 (extend-protocol tuck/Event
 
   ValitseHoitovuosi
   (process-event [{vuosi :vuosi} app]
     (do
-      (js/console.log "ValitseHoitokausi :: vuosi" (pr-str vuosi))
       (urakka/valitse-aikavali! (pvm/->pvm (str "1.10." vuosi)) (pvm/->pvm (str "30.9." (inc vuosi))))
       (hae-suolarajoitukset vuosi)
-      (assoc app :valittu-hoitovuosi vuosi)))
+      (hae-kayttorajat vuosi)
+      (-> app
+        (assoc :suolarajoitukset nil)
+        (assoc :kayttorajat nil)
+        (assoc :valittu-hoitovuosi vuosi))))
 
   HaeSuolarajoitukset
   (process-event [{valittu-vuosi :valittu-vuosi} app]
     (do
       (hae-suolarajoitukset valittu-vuosi)
-      (assoc app :suolarajoitukset-haku-kaynnissa? true)))
+      (-> app
+        (assoc :suolarajoitukset nil)
+        (assoc :suolarajoitukset-haku-kaynnissa? true))))
 
   HaeSuolarajoituksetOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -103,11 +134,128 @@
 
   HaeSuolarajoituksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui tallennus onnistui" :varoitus viesti/viestin-nayttoaika-pitka)
-    (js/console.log "HaeSuolarajoituksetEpannistui :: vastaus")
+    (do
+      (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui tallennus onnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (-> app
+        (assoc :suolarajoitukset-haku-kaynnissa? false)
+        (assoc :suolarajoitukset nil))))
+
+  HaeTalvisuolanKayttorajat
+  (process-event [{valittu-vuosi :valittu-vuosi} app]
+    (let [_ (hae-kayttorajat valittu-vuosi)]
+
+      (-> app
+        (assoc :kayttorajat nil)
+        (assoc :kayttoraja-haku-kaynnissa? true))))
+
+  HaeTalvisuolanKayttorajatOnnistui
+  (process-event [{vastaus :vastaus} app]
     (-> app
-      (assoc :suolarajoitukset-haku-kaynnissa? false)
-      (assoc :suolarajoitukset nil)))
+      (assoc :kayttoraja-haku-kaynnissa? false)
+      (assoc :kayttorajat vastaus)))
+
+  HaeTalvisuolanKayttorajatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Talvisuolan kokonaismäärän käyttörajan haku epäonnistui tallennus onnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (-> app
+        (assoc :kayttoraja-haku-kaynnissa? false)
+        (assoc :kayttorajat nil))))
+
+  PaivitaKayttorajalomake
+  (process-event [{lomake :lomake} app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          lomake {:id (:id lomake)
+                  :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta lomake)
+                  :indeksi (:indeksi lomake)
+                  :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                  :urakka-id urakka-id
+                  :kopioi-rajoitukset (:kopioi-rajoitukset lomake)}]
+
+      (-> app
+        (assoc-in [:kayttorajat :talvisuolan-sanktiot] lomake)
+        (assoc :paivita-kayttoraja-kaynnissa? true))))
+
+  TallennaKayttorajalomake
+  (process-event [_ app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
+          lomake-data {:id (:id lomake)
+                       :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta lomake)
+                       :indeksi (:indeksi lomake)
+                       :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                       :urakka-id urakka-id
+                       :kopioidaan-tuleville-vuosille? (:kopioi-rajoitukset lomake)}
+
+          ;;TODO: Jos muutetaan vain checkboxistsa kopiointia seuraaville vuosille. Ei tuck postia saa tehdä
+
+
+          _ (tuck-apurit/post! :tallenna-talvisuolan-kayttoraja
+              lomake-data
+              {:onnistui ->TallennaKayttorajalomakeOnnistui
+               :epaonnistui ->TallennaKayttorajalomakeEpaonnistui
+               :paasta-virhe-lapi? true})]
+      (assoc app :paivita-kayttoraja-kaynnissa? true)))
+
+  TallennaKayttorajalomakeOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+        (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+        (-> app
+          (assoc-in [:kayttorajat :talvisuolan-sanktiot] vastaus)
+          (assoc :paivita-kayttoraja-kaynnissa? false))))
+
+  TallennaKayttorajalomakeEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-lyhyt)
+      (assoc app :paivita-kayttoraja-kaynnissa? false)))
+
+  PaivitaRajoitusalueidenSanktiolomake
+  (process-event [{lomake :lomake} app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          lomake {:id (:id lomake)
+                  :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta lomake)
+                  :indeksi (:indeksi lomake)
+                  :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                  :urakka-id urakka-id
+                  :kopioi-rajoitukset (:kopioi-rajoitukset lomake)}]
+      (assoc-in app [:kayttorajat :rajoitusalueiden-suolasanktio] lomake)))
+
+  TallennaRajoitusalueidenSanktiolomake
+  (process-event [_ app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          lomake (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])
+          lomake-data {:id (:id lomake)
+                       :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta lomake)
+                       :indeksi (:indeksi lomake)
+                       :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                       :urakka-id urakka-id
+                       :kopioidaan-tuleville-vuosille? (:kopioi-rajoitukset lomake)}
+
+          ;;TODO: Jos muutetaan vain checkboxistsa kopiointia seuraaville vuosille. Ei tuck postia saa tehdä
+
+
+          _ (tuck-apurit/post! :tallenna-rajoitusalueen-sanktio
+              lomake-data
+              {:onnistui ->TallennaRajoitusalueidenSanktiolomakeOnnistui
+               :epaonnistui ->TallennaRajoitusalueidenSanktiolomakeEpaonnistui
+               :paasta-virhe-lapi? true})]
+      (assoc app :paivita-rajoitusalue-sanktio-kaynnissa? true)))
+
+  TallennaRajoitusalueidenSanktiolomakeOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+      (-> app
+        (assoc-in [:kayttorajat :rajoitusalueiden-suolasanktio] vastaus)
+        (assoc :paivita-rajoitusalue-sanktio-kaynnissa? false))))
+
+  TallennaRajoitusalueidenSanktiolomakeEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-lyhyt)
+      (assoc app :paivita-rajoitusalue-sanktio-kaynnissa? false)))
 
   AvaaTaiSuljeSivupaneeli
   (process-event [{tila :tila lomakedata :lomakedata} app]
@@ -158,7 +306,6 @@
   HaeTierekisterinTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "HaeTierekisterinTiedotOnnistui :: vastaus" (pr-str vastaus))
       (-> app
         (assoc-in [:lomake :pituus] (:pituus vastaus))
         (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
@@ -167,8 +314,9 @@
 
   HaeTierekisterinTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeTierekisterinTiedotEpaonnistui :: vastaus" (pr-str vastaus))
-    (assoc app :hae-tiedot-kaynnissa? false))
+    (do
+      (viesti/nayta-toast! "Tierekisteriosoitteen käsittelyssä virhe." :varoitus viesti/viestin-nayttoaika-pitka)
+      (assoc app :hae-tiedot-kaynnissa? false)))
 
 
   TallennaLomake
@@ -208,14 +356,11 @@
   TallennaLomakeEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta-toast! "Rajoitusalueen tallennus epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
-    (js/console.log "TallennaLomakeEpaonnistui :: vastaus" (pr-str vastaus))
-    (-> app
-      (assoc :tallennus-kaynnissa? false)))
+    (assoc app :tallennus-kaynnissa? false))
 
   PoistaSuolarajoitus
   (process-event [{parametrit :parametrit} app]
-    (let [_ (js/console.log "PoistaSuolarajoitus 1")
-          hoitokauden-alkuvuosi (pvm/vuosi (first @urakka/valittu-hoitokausi))
+    (let [hoitokauden-alkuvuosi (pvm/vuosi (first @urakka/valittu-hoitokausi))
           urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :poista-suolarajoitus
               {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
@@ -225,17 +370,14 @@
               {:onnistui ->PoistaSuolarajoitusOnnistui
                :epaonnistui ->PoistaSuolarajoitusEpaonnistui
                :paasta-virhe-lapi? true})]
-      (do
-        (js/console.log "PoistaSuolarajoitus 2")
-        (-> app
-            (assoc :poisto-kaynnissa? true)
-            (assoc :rajoitusalue-lomake-auki? false)))))
+      (-> app
+        (assoc :poisto-kaynnissa? true)
+        (assoc :rajoitusalue-lomake-auki? false))))
 
   PoistaSuolarajoitusOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
       (viesti/nayta-toast! "Rajoitusalueen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-      (js/console.log "PoistaSuolarajoitusOnnistui")
       (hae-suolarajoitukset (:valittu-hoitovuosi app))
       (-> app
         (assoc :suolarajoitukset-haku-kaynnissa? true)
@@ -244,7 +386,6 @@
 
   PoistaSuolarajoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Rajoitusalueen tallennus epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
-    (js/console.log "TallennaLomakeEpaonnistui :: vastaus" (pr-str vastaus))
-    (-> app
-      (assoc :poisto-kaynnissa? false))))
+    (do
+      (viesti/nayta-toast! "Rajoitusalueen tallennus epäonnistui!" :varoitus viesti/viestin-nayttoaika-pitka)
+      (assoc app :poisto-kaynnissa? false))))
