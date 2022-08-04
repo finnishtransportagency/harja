@@ -48,13 +48,15 @@
 (defrecord Velho [asetukset]
   component/Lifecycle
   (start [this]
-    (let [suoritusaika  (:varuste-tuonti-suoritusaika asetukset)]
+    (let [suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
       (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " suoritusaika))
       (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika)))
     this)
   (stop [this]
     (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
-    (:varustetoteuma-tuonti-tehtava this)
+    (let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
+      (varustetoteuma-tuonti-tehtava-cancel))
+    (dissoc this :varustetoteuma-tuonti-tehtava)
     this)
 
   PaallystysilmoituksenLahetys
