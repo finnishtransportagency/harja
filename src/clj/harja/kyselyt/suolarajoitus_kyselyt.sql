@@ -154,21 +154,20 @@ RETURNING *;
 -- name: hae-leikkaavat-pohjavesialueet-tierekisterille
 select * from leikkaavat_pohjavesialueet(:tie::int, :aosa::int, :aet::int, :losa::int, :let::int);
 
--- name: hae-talvisuolan-kayttoraja
-WITH tehtavamaara AS (
-    SELECT ut.maara
-      FROM urakka_tehtavamaara ut
-     WHERE ut.tehtava = (select id
-                           from toimenpidekoodi
-                          where taso = 4
-                            AND suunnitteluyksikko = 'kuivatonnia'
-                            AND suoritettavatehtava = 'suolaus')
-       AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
-       AND ut.urakka = :urakka-id
-)
+-- name: hae-talvisuolan-kokonaiskayttoraja
+SELECT ut.maara as talvisuolan_kayttoraja
+  FROM urakka_tehtavamaara ut
+ WHERE ut.tehtava = (SELECT id
+                       FROM toimenpidekoodi
+                      WHERE taso = 4
+                        AND suunnitteluyksikko = 'kuivatonnia'
+                        AND suoritettavatehtava = 'suolaus')
+  AND ut."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
+  AND ut.urakka = :urakka-id;
+
+-- name: hae-talvisuolan-sanktiot
 SELECT id, hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi", indeksi, urakka as "urakka-id",
-       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, maara as sanktio_ylittavalta_tonnilta,
-       (SELECT maara from tehtavamaara) AS talvisuolaraja -- Talvisuolarajaa ei tosiaan haeta suolasakkko taulusta
+       muokattu, muokkaaja, luotu, luoja, kaytossa, tyyppi, maara as sanktio_ylittavalta_tonnilta
   FROM suolasakko s
 WHERE hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
   AND urakka = :urakka-id
@@ -183,7 +182,8 @@ WHERE hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
   AND tyyppi = 'rajoitusalue'::suolasakko_tyyppi;
 
 -- name: paivita-talvisuolan-kayttoraja!
-UPDATE suolasakko SET hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
+UPDATE suolasakko SET maara = :sanktio_ylittavalta_tonnilta,
+                      hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
                       kaytossa = :kaytossa,
                       tyyppi = 'kokonaismaara'::suolasakko_tyyppi,
                       indeksi = :indeksi,
