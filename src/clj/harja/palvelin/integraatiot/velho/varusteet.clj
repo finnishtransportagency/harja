@@ -148,8 +148,11 @@
   [db muutoksen-lahde-oid]
   (get (memo-velho-oid->urakka-map db) muutoksen-lahde-oid))
 
+; TODO WARN! Tässä on testikoodia, mutta pakko olla nyt Velhon datan vuoksi. Vain CG2:lle! Kysy Petriltä!
 (defn urakka-id-kohteelle [db {:keys [muutoksen-lahde-oid] :as kohde}]
-  (hae-urakka-velho-oidlla db muutoksen-lahde-oid))
+    (or
+      (hae-urakka-velho-oidlla db muutoksen-lahde-oid)
+      35))
 
 (defn alku-500 [s]
   (subs s 0 (min 499 (count s))))
@@ -172,10 +175,13 @@
         onnistunut? (and (some? oidit) (empty? virheet))
         virhe-viesti (str "Jäsennettäessä Velhon vastausta tapahtui virheitä. Url: " url " virheet: " (str/join ", " virheet))]
 
+    ; TODO WARN! Tässä on testikoodia, mutta pakko olla nyt Velhon datan vuoksi. Vain CG2:lle! Kysy Petriltä!
     (if onnistunut?
       (do
         (lokita-oid-haku oidit url)
-        {:tila true :oidit oidit})
+        {:tila true :oidit (->> oidit
+                               (shuffle)
+                               (take 250))})
       (do
         (tallenna-virhe-fn nil virhe-viesti)
         {:tila false :oidit nil}))))
