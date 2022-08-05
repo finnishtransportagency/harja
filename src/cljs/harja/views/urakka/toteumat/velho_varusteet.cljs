@@ -272,7 +272,11 @@
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
          (kartta-tasot/taso-paalle! :varusteet-ulkoiset)
-         (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm])))))
+         (e! (v/->ValitseHoitokausi (pvm/vuosi (get-in app [:urakka :alkupvm]))))
+         (reset! varusteet-kartalla/varuste-klikattu-fn
+           (fn [varuste-kartalla]
+             (e! (v/->AvaaVarusteLomake varuste-kartalla))
+             (e! (v/->HaeToteumat)))))
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (kartta-tasot/taso-pois! :varusteet-ulkoiset)
