@@ -480,8 +480,8 @@
         kohde (assoc mallikohde :keskilinjageometria {:coordinates [[246875.68965580963 6722086.79823778 0.0]
                                                                     [246865.4987514359 6722097.828952567 0.0]], :type "MultiPoint"})
         odotettu-sijainti {:type :multipoint, :points
-                           [{:type :point :points [[246875.68965580963 6722086.79823778]]}
-                            {:type :point :points [[246865.4987514359 6722097.828952567]]}]}
+                           [{:type :point :coordinates [[246875.68965580963 6722086.79823778]]}
+                            {:type :point :coordinates [[246865.4987514359 6722097.828952567]]}]}
         saatu-sijainti (get-in
                          (vos/varustetoteuma-velho->harja urakkaid-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakkaid-kohteelle-fn
                                                           kohde)

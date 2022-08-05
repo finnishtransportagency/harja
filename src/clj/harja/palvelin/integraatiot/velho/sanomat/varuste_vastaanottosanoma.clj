@@ -327,7 +327,9 @@
             (geo/geometry))
 
         (= :multipoint tyyppi)
-        (-> {:coordinates (:coordinates geo) :type tyyppi}
+        (-> {:points (map
+                      (fn [p] {:type :point :coordinates p})
+                      (:coordinates geo)) :type tyyppi}
             (geo/clj->pg)
             (geo/geometry))
 
