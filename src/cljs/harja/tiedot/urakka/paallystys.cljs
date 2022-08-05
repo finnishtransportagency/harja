@@ -138,6 +138,9 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(defn paivita-yllapitokohteet! []
+  (harja.atom/paivita! yllapitokohteet))
+
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet

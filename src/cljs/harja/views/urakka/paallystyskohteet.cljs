@@ -26,7 +26,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.transit :as transit]
             [harja.ui.liitteet :as liitteet]
-            [harja.tiedot.urakka.urakka :as tila])
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -125,8 +126,10 @@
        {:nappi-teksti "Tuo kustannukset excelistä"
         :nappi-luokka "napiton-nappi"
         :url "tuo-paallystyskustannukset-excelista"
-        :lataus-epaonnistui #(println "Epäonnistui")
-        :tiedosto-ladattu #(println "Ladattu ok")}])]])
+        :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
+        :tiedosto-ladattu #(do
+                             (paallystys-tiedot/paivita-yllapitokohteet!)
+                             (viesti/nayta! "Kustannukset päivitetty." :success))}])]])
 
 (defn paallystyskohteet [ur]
   (let [tallennus-gif? (atom false)
