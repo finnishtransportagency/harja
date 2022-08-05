@@ -62,7 +62,7 @@
           :palstoja 3
           :tyyppi :checkbox
           :teksti (if muokkaustila?
-                    "Tee muutosket myös tuleville hoitovuosille"
+                    "Tee muutokset myös tuleville hoitovuosille"
                     "Kopioi rajoitukset tuleville hoitovuosille")})]
       [(lomake/ryhma
          {:otsikko "Sijainti"
