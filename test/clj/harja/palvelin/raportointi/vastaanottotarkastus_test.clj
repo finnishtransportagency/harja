@@ -112,8 +112,8 @@
          {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
    (list (list "L14" nil "Ouluntie 2" 22 nil nil 13 0 13 3888 nil nil nil 0M 0 0M 0M 0M)
-         (list "L15" nil "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil 400M 0 4543.95M 0M 4943.95M)
-         (list "L42" nil "Tärkeä kohde mt20 2022" 20 nil nil 1 1066 1 3827 2761 nil nil 0M 0 0M 0M 0M))])
+         (list "L15" "A" "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil 400M 20M 4543.95M 0M 4963.95M)
+         (list "L42" "B" "Tärkeä kohde mt20 2022" 20 nil nil 1 1066 1 3827 2761 nil nil 0M 0 0M 0M 0M))])
 
 (def odotettu-yhteenveto-2022
   [:taulukko
@@ -138,7 +138,7 @@
          {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   [(list nil nil nil nil nil nil nil nil nil nil nil nil -1300M 0 4543.95M 0M 3643.95M)]])
+   [(list nil nil nil nil nil nil nil nil nil nil nil nil -1300M 0 4543.95M 0M 3663.95M)]])
 
 (def odotettu-aikataulu-2022
   [:aikajana

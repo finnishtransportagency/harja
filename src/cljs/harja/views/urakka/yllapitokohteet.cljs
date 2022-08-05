@@ -34,10 +34,7 @@
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn laske-sarakkeen-summa [sarake kohderivit]
-  (reduce + 0 (keep
-                (fn [rivi] (sarake rivi))
-                kohderivit)))
+
 
 (defn tr-virheilmoitus [tr-virheet]
   [:div.tr-virheet
@@ -934,7 +931,7 @@
 
   Optiot on map, jossa avaimet:
   otsikko             Taulukon otsikko
-  kohdetyyppi         Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus)
+  kohdetyyppi         Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus. :paikkaus tarkoittaa tässä Harjassa luotuja kohteita, eikä YHA:ssa, ja niiltä puuttuu yhaid.)
   yha-sidottu?        Onko taulukon kohteet tulleet kaikki YHA:sta (vaikuttaa mm. kohteiden muokkaamiseen)
   piilota-tallennus?  True jos tallennusnappi piilotetaan
   tallenna            Funktio tallennusnapille
@@ -984,7 +981,8 @@
     (komp/luo
       (komp/piirretty (fn [] (grid/validoi-grid g)))
       (fn [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus? valittu-vuosi] :as optiot}]
-        (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
+        (let [paallystys? (= (:kohdetyyppi optiot) :paallystys)
+              nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
                                            ;; ainakin yhdellä kohteella ne on annettu
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
@@ -998,7 +996,12 @@
                                                               :tr-alkuosa :tr-alkuosa
                                                               :tr-alkuetaisyys :tr-alkuetaisyys
                                                               :tr-loppuosa :tr-loppuosa
-                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
+                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
+              jarjestetyt-kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)
+              jarjestetyt-kohteet (if (and paallystys? (not-empty jarjestetyt-kohteet))
+                                    (conj jarjestetyt-kohteet
+                                          (yllapitokohteet-domain/kohteiden-summarivi jarjestetyt-kohteet))
+                                    jarjestetyt-kohteet)]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
@@ -1037,7 +1040,9 @@
                      {:otsikko "Nimi" :nimi :nimi
                       :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
                       :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
-                     {:otsikko "YHA-id" :nimi :yhaid :tasaa :oikea
+                     {:otsikko (if paallystys? "YHA-id" "HARJA-id")
+                      :nimi (if paallystys? :yhaid :id)
+                      :tasaa :oikea
                       :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
                       :pituus-max 30 :muokattava? (constantly false)}]
                     (tierekisteriosoite-sarakkeet
@@ -1063,10 +1068,10 @@
                       :fmt :lyhyt-nimi
                       :muokattava? (constantly (not yha-sidottu?))}
 
-                     (when (= (:kohdetyyppi optiot) :paallystys)
+                     (when paallystys?
                        {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
-                     (when (= (:kohdetyyppi optiot) :paallystys)
+                     (when paallystys?
                        {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
                         :nimi :maaramuutokset :muokattava? (constantly false)
                         :tyyppi :komponentti :leveys maaramuutokset-leveys :tasaa :oikea
@@ -1099,26 +1104,26 @@
                                      [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                       "grid-solu-ennustettu")}
                                       (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi valittu-vuosi))])}]))
-            (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
+            jarjestetyt-kohteet]
            [tr-virheilmoitus tr-virheet]])))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
   (let [yhteensa
         (reaction
           (let [kohteet @kohteet-atom
-                sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-                toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
-                maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
-                arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
-                bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
-                kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
+                sopimuksen-mukaiset-tyot-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                toteutunut-hinta-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :toteutunut-hinta kohteet)
+                maaramuutokset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :maaramuutokset kohteet)
+                arvonvahennykset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :arvonvahennykset kohteet)
+                sakot-ja-bonukset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+                bitumi-indeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
+                kaasuindeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
                 ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
-                kohdistamattomat-sanktiot-yhteensa (let [arvo (laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
+                kohdistamattomat-sanktiot-yhteensa (let [arvo (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
                                                      (if (> (Math/abs arvo) 0)
                                                        (- arvo)
                                                        arvo))
-                muut-yhteensa (laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
+                muut-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
                 kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
                                    {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
                                     :toteutunut-hinta toteutunut-hinta-yhteensa
