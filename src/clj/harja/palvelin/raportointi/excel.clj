@@ -168,9 +168,12 @@
         data-format (luo-data-formaatti workbook pattern)]
     (.setDataFormat tyyli data-format)))
 
-(defn tyyli-format-mukaan [fmt tyyli]
-  ;; Jos halutaan tukea erityyppisiä sarakkeita,
-  ;; pitää tänne lisätä formatter.
+(defn tyyli-format-mukaan
+  "Antaa Excel-soluille erityyppisiä formattereita, kuten raha, kokonaisluku tai pvm."
+  [fmt voi-muokata? tyyli]
+  ;; voi-muokata? vaikuttaa vain, jos sheet on asetettu protected arvoon,
+  ;; joka enabloidaan lipulla :varjele-sheet-muokkauksilta?)
+  (.setLocked tyyli (not voi-muokata?))
   (case fmt
     ;; .setDataFormat hakee indeksillä tyylejä.
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
@@ -224,6 +227,9 @@
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
                                                (or (:sheet-nimi optiot) nimi))) 0])
+          ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
+          _ (when (:varjele-sheet-muokkauksilta? optiot)
+              (.enableLocking sheet))
           sarake-tyyli (if (:lista-tyyli? optiot)
                          (excel/create-cell-style! workbook {:border-bottom :thin
                                                              :border-top :thin
@@ -339,10 +345,10 @@
                                       (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
 
                                       formaatti
-                                      (partial tyyli-format-mukaan formaatti)
+                                      (partial tyyli-format-mukaan formaatti nil)
 
                                       formatoi-solu?
-                                      (partial tyyli-format-mukaan (:fmt sarake))
+                                      (partial tyyli-format-mukaan (:fmt sarake) (:voi-muokata? sarake))
 
                                       :default
                                       (constantly nil))

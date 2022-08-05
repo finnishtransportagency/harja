@@ -23,15 +23,16 @@
 
 ;; https://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/IndexedColors.html
 (def virhetyylit-excel
-  {:virhe    (merge rajat-excel
-                    {:background :dark_red
-                     :font       {:color :white}})
+  {:virhe (merge rajat-excel
+                 {:background :dark_red
+                  :font {:color :white}})
    :varoitus (merge rajat-excel
                     {:background :orange
-                     :font       {:color :black}})
-   :info     (merge rajat-excel
-                    {:background :light_turquoise
-                     :font       {:color :black}})})
+                     :font {:color :black}})
+   :info (merge rajat-excel
+                {:background :light_turquoise
+                 :font {:color :black}})
+   :disabled {:font {:color :grey_80_percent}}})
 
 (defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti?]
   (let [deep-merge (partial merge-with merge)]

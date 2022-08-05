@@ -75,10 +75,16 @@
   (let [yhteiset-arvot-alku [yhaid
                              kohdenumero tunnus nimi
                              sopimuksen-mukaiset-tyot ;; = Tarjoushinta
-                             maaramuutokset]
+                             ;; Määrämuutosten muokkaus ei mahdollinen, koska syötetään erillisessä taulukossa Harjassa rakenteellisesti
+                             [:varillinen-teksti {:arvo maaramuutokset
+                                                  :fmt :raha
+                                                  :tyyli :disabled}]]
         yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
                               kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
-                              kokonaishinta]]
+                              ;; kokonaishinta lasketaan muista sarakkeista, älä siis salli muokkausta
+                              [:varillinen-teksti {:arvo kokonaishinta
+                                                   :fmt :raha
+                                                   :tyyli :disabled}]]]
     (into []
           (concat yhteiset-arvot-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
@@ -90,10 +96,10 @@
                                  {:otsikko "Kohdenro" :tasaa :oikea}
                                  {:otsikko "Tunnus"}
                                  {:otsikko "Nimi"}
-                                 {:otsikko "Tarjoushinta" :tasaa :oikea :fmt :raha}
+                                 {:otsikko "Tarjoushinta" :tasaa :oikea :fmt :raha :voi-muokata? true}
                                  {:otsikko "Määrämuutokset" :tasaa :oikea :fmt :raha}]
-        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha}
-                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha}
+        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
+                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
                                   {:otsikko "Kokonaishinta" :tasaa :oikea :fmt :raha}]]
     (into []
           (concat yhteiset-sarakkeet-alku
@@ -144,6 +150,7 @@
         rivit (muodosta-excelrivit kohteet vuosi)
         optiot {:nimi "Päällystysskohteet"
                 :sheet-nimi "HARJAAN"
+                :varjele-sheet-muokkauksilta? false
                 :tyhja (if (empty? kohteet) "Ei päällystyskohteita.")
                 :lista-tyyli? false
                 :rivi-ennen [{:teksti "" :sarakkeita 4}
