@@ -280,7 +280,8 @@
       #(do
          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
          (kartta-tasot/taso-pois! :varusteet-ulkoiset)
-         (reset! nav/kartan-edellinen-koko nil)))
+         (reset! nav/kartan-edellinen-koko nil)
+         (reset! varusteet-kartalla/varuste-klikattu-fn (constantly nil))))
     (fn [e! {ur :urakka :as app}]
       [:div
        (when (:valittu-varuste app)
