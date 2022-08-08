@@ -82,9 +82,7 @@
         yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
                               kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
                               ;; kokonaishinta lasketaan muista sarakkeista, älä siis salli muokkausta
-                              [:varillinen-teksti {:arvo kokonaishinta
-                                                   :fmt :raha
-                                                   :tyyli :disabled}]]]
+                              [:kaava {:kaava :summaa-rivin-sarakkeet :sarake-alku #{}}]]]
     (into []
           (concat yhteiset-arvot-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
@@ -150,7 +148,7 @@
         rivit (muodosta-excelrivit kohteet vuosi)
         optiot {:nimi "Päällystysskohteet"
                 :sheet-nimi "HARJAAN"
-                :varjele-sheet-muokkauksilta? false
+                :varjele-sheet-muokkauksilta? true
                 :tyhja (if (empty? kohteet) "Ei päällystyskohteita.")
                 :lista-tyyli? false
                 :rivi-ennen [{:teksti "" :sarakkeita 4}

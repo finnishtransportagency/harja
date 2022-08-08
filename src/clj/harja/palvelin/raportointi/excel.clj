@@ -65,6 +65,15 @@
       (.createFormulaEvaluator)
       (.evaluateFormulaCell cell))))
 
+;; TODO: tässä kovakoodattuna vielä sarakkeiden paikat, toteuta parametrinä antaminen
+(defmethod aseta-kaava! :summaa-rivin-sarakkeet [[_ {:keys [sarake-alku sarake-loppu]}] workbook cell]
+  (do
+    (.setCellFormula cell (str "SUM(INDIRECT(ADDRESS(ROW(),COLUMN()-4)&\":\"&ADDRESS(ROW(),COLUMN()-1)))"))
+    (-> workbook
+        (.getCreationHelper)
+        (.createFormulaEvaluator)
+        (.evaluateFormulaCell cell))))
+
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
     (.replace data "\u00AD" "")
