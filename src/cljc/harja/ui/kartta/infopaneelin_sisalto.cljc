@@ -843,18 +843,6 @@
             {:otsikko "Aikataulu" :tyyppi :string :nimi :aikataulu}]
    :data (:infopaneelin-tiedot kohde)})
 
-(defmethod infopaneeli-skeema :varusteet-ulkoiset [kohde]
-  {:tyyppi :varusteet-ulkoiset
-   :jarjesta-fn :alkupvm ;; Järjestetään useampi valittu listalla
-   :otsikko (str "Varustetapahtuma: " (:ulkoinen-oid (:infopaneelin-tiedot kohde)))
-   :tiedot [{:otsikko "Alkupäivämäärä" :tyyppi :pvm :nimi :alkupvm}
-            {:otsikko "Tierekisteriosoite" :tyyppi :string :nimi :tr-osoite}
-            {:otsikko "Toimenpide" :tyyppi :string :nimi :toimenpide}
-            {:otsikko "Varustetyyppi" :tyyppi :string :nimi :varustetyyppi}
-            {:otsikko "Lisätieto" :tyyppi :string :nimi :lisatieto}
-            {:otsikko "Kuntoluokitus" :tyyppi :string :nimi :kuntoluokka}]
-   :data (:infopaneelin-tiedot kohde)})
-
 (defmethod infopaneeli-skeema :paikkaukset-paikkausten-paallystysilmoitukset [kohde]
   (println (pr-str kohde))
   {:tyyppi :paikkaukset-paikkausten-paallystysilmoitukset
