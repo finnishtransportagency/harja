@@ -359,68 +359,78 @@
     (is (= {:toiminto :tallenna :viesti nil}
            (kutsu (-> {} perus-setti))))))
 
+(def mallikohde {:kohdeluokka "varusteet/kaiteet"
+                 :alkusijainti {:tie 5642 :enkoodattu 564200003793 :osa 1 :etaisyys 3793}
+                 :loppusijainti {:tie 5642 :enkoodattu 564200003852 :osa 1 :etaisyys 3852}
+                 :version-voimassaolo {:alku "2009-06-23" :loppu nil}
+                 :ominaisuudet {:toiminnalliset-ominaisuudet {:nopeustaso nil
+                                                              :tormayskestavyysluokka nil
+                                                              :tehtava nil
+                                                              :aurauskestavyysluokka nil
+                                                              :liikuteltavuus nil
+                                                              :joustovara nil
+                                                              :tuotenimi nil
+                                                              :toimintaleveys nil
+                                                              :vaarakohta nil}
+                                :infranimikkeisto {:rakenteellinen-jarjestelmakokonaisuus ["rakenteellinen-jarjestelmakokonaisuus/rjk03"
+                                                                                           "rakenteellinen-jarjestelmakokonaisuus/rjk13"]
+                                                   :toiminnallinen-jarjestelmakokonaisuus ["toiminnallinen-jarjestelmakokonaisuus/tjk17"]}
+                                :kunto-ja-vauriotiedot {:arvioitu-jaljella-oleva-kayttoika nil :yleinen-kuntoluokka nil}
+                                :sijaintipoikkeus nil
+                                :rakenteelliset-ominaisuudet {:elementtipituus nil
+                                                              :pystytys nil
+                                                              :puoleisuus nil
+                                                              :pylvasvali nil
+                                                              :tunnus nil
+                                                              :ankkurointi nil
+                                                              :rakenne nil
+                                                              :yhteydet-muihin-kohteisiin []
+                                                              :kaidepylvaan-tyyppi "kaidepylvastyyppi/kpt02"
+                                                              :materiaali "materiaali/ma05"
+                                                              :korkeus nil
+                                                              :tyyppi "kaidetyyppi/kt01"}}
+                 :geometrycollection {:type "GeometryCollection"
+                                      :geometries [{:coordinates [[[27.04999527422449 63.420532896756924 138.285]
+                                                                   [27.049986504762163 63.420535269157305 138.275]
+                                                                   [27.049314906221714 63.420723029793 138.075]]
+                                                                  [[27.049314906221714 63.420723029793 138.075]
+                                                                   [27.049242608341988 63.420743238925034 138.098]
+                                                                   [27.049171492015855 63.42076333991712 138.12]]
+                                                                  [[27.049171492015855 63.42076333991712 138.12] [27.0490020698081 63.42081124247714 138.315]]]
+                                                    :type "MultiLineString"}]}
+                 :luotu "2009-11-02T08:24:15Z"
+                 :tekninen-tapahtuma nil
+                 :uusin-versio true
+                 :keskilinjageometria {:coordinates [[[502495.891 7032446.133 138.285] [502495.453 7032446.397 138.275] [502461.909 7032467.292 138.075]]
+                                                     [[502461.909 7032467.292 138.075] [502458.298 7032469.541 138.098] [502454.746 7032471.778 138.12]]
+                                                     [[502454.746 7032471.778 138.12] [502446.284 7032477.109 138.315]]]
+                                       :type "MultiLineString"}
+                 :lahdejarjestelman-id "501.Livi176342"
+                 :tiekohteen-tila nil
+                 :paattyen nil
+                 :sijainti-oid "1.2.246.578.4.1.4.36425217"
+                 :lahdejarjestelma "lahdejarjestelma/lj01"
+                 :schemaversio 1
+                 :luoja {:kayttajanimi "TR"}
+                 :sijaintitarkenne {:pientareet ["piennar-numerointi/pinu04"]}
+                 :menetelma nil
+                 :muokkaaja {:kayttajanimi "migraatio"}
+                 :oid "1.2.246.578.4.3.1.501.10091440"
+                 :alkaen "2009-06-23"
+                 :muutoksen-lahde-oid "1.2.3.4.1236"
+                 :muokattu "2022-06-29T14:23:14Z"})
+
 (deftest point-geometria-konvertoituu-integraatiossa
   (let [db (:db jarjestelma)
         urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)
 
-        ; Kohde on saatu kopioimalla se varustetoteuma_ulkoiset_virhe taulusta tähän
-        kohde {:sijainti {:tie 24 :enkoodattu 2400057787 :osa 11 :etaisyys 5643}
-               :version-voimassaolo {:alku "2016-07-22" :loppu nil}
-               :ominaisuudet {:korjausvastuu []
-                              :toimenpiteet []
-                              :toiminnalliset-ominaisuudet {:asetusnumero "liikennemerkki-asetusnumero/liiasnro226"
-                                                            :voimassaolo-alkaa nil
-                                                            :lisatietoja "Pikavuoro"
-                                                            :tehtava nil
-                                                            :vaikutussuunta "liikennemerkki-vaikutussuunta/liivasu01"
-                                                            :lakinumero nil
-                                                            :voimassaolo-paattyy nil}
-                              :hoitovastuu []
-                              :infranimikkeisto {:rakenteellinen-jarjestelmakokonaisuus ["rakenteellinen-jarjestelmakokonaisuus/rjk03"]
-                                                 :toiminnallinen-jarjestelmakokonaisuus []}
-                              :kunto-ja-vauriotiedot {:varustevauriot [] :arvioitu-jaljella-oleva-kayttoika nil :yleinen-kuntoluokka nil}
-                              :sijaintipoikkeus nil
-                              :rakenteelliset-ominaisuudet {:tekstikoko nil
-                                                            :kilven-valaistus nil
-                                                            :kalvotyyppi nil
-                                                            :paivaloistekalvo nil
-                                                            :arvo nil
-                                                            :kiinnitystapa nil
-                                                            :tunnus nil
-                                                            :pinta-ala nil
-                                                            :lisatyyppi ["liikennemerkki-lisatyyppi/liility04"]
-                                                            :yhteydet-muihin-kohteisiin ["1.2.246.578.4.3.14.506.330263082"]
-                                                            :materiaali "materiaali/ma02"
-                                                            :suunta nil
-                                                            :tyyppi "liikennemerkki-tyyppi/liity09"
-                                                            :koko nil
-                                                            :korkeusasema nil}}
-               :geometrycollection {:type "GeometryCollection" :geometries [{:coordinates [25.190206678389504 61.3841016499991 0.0] :type "Point"}]}
-               :luotu "2022-06-16T07:28:20Z"
-               :tekninen-tapahtuma nil
-               :uusin-versio true
-               :keskilinjageometria {:coordinates [403308.68055337796 6806912.275501393 0.0] :type "Point"}
-               :lahdejarjestelman-id nil
-               :tiekohteen-tila nil
-               :paattyen nil
-               :sijainti-oid "1.2.246.578.4.1.4.35708252"
-               :lahdejarjestelma nil
-               :schemaversio 1
-               :luoja {:kayttajanimi "api/operaattoripalvelu-stg"}
-               :sijaintitarkenne {:puoli "puoli/p02"}
-               :menetelma nil
-               :muokkaaja {:kayttajanimi "api/operaattoripalvelu-stg"}
-               :oid "1.2.246.578.4.3.15.2170656293.1189437358"
-               :alkaen "2016-07-22"
-               :muutoksen-lahde-oid "1.2.246.578.8.1.147501976"
-               :muokattu "2022-06-16T07:28:20Z"}
+        kohde (assoc mallikohde :keskilinjageometria {:coordinates [403308.68055337796 6806912.275501393 0.0] :type "Point"})
         odotettu-sijainti {:type :point :coordinates [403308.68055337796 6806912.275501393]}
         saatu-sijainti (get-in
                          (vos/varustetoteuma-velho->harja urakkaid-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakkaid-kohteelle-fn
-                                                          (assoc kohde :kohdeluokka "varusteet/liikennemerkit"
-                                                                       :muutoksen-lahde-oid "1.2.3.4.1236"))
+                                                          kohde)
                          [:tulos :sijainti])]
     (is (= odotettu-sijainti (geo/pg->clj saatu-sijainti)))))
 
@@ -430,62 +440,12 @@
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)
 
-        ; Kohde on saatu kopioimalla se varustetoteuma_ulkoiset_virhe taulusta tähän
-        kohde {:alkusijainti {:tie 5613 :enkoodattu 561300022266 :osa 4 :etaisyys 4419}
-               :loppusijainti {:tie 5613 :enkoodattu 561300022278 :osa 4 :etaisyys 4431}
-               :version-voimassaolo {:alku "2009-06-25" :loppu nil}
-               :ominaisuudet {:toiminnalliset-ominaisuudet {:nopeustaso nil
-                                                            :tormayskestavyysluokka nil
-                                                            :tehtava nil
-                                                            :aurauskestavyysluokka nil
-                                                            :liikuteltavuus nil
-                                                            :joustovara nil
-                                                            :tuotenimi nil
-                                                            :toimintaleveys nil
-                                                            :vaarakohta nil}
-                              :infranimikkeisto {:rakenteellinen-jarjestelmakokonaisuus ["rakenteellinen-jarjestelmakokonaisuus/rjk03"
-                                                                                         "rakenteellinen-jarjestelmakokonaisuus/rjk13"]
-                                                 :toiminnallinen-jarjestelmakokonaisuus ["toiminnallinen-jarjestelmakokonaisuus/tjk17"]}
-                              :kunto-ja-vauriotiedot {:arvioitu-jaljella-oleva-kayttoika nil :yleinen-kuntoluokka nil}
-                              :sijaintipoikkeus nil
-                              :rakenteelliset-ominaisuudet {:elementtipituus nil
-                                                            :pystytys nil
-                                                            :puoleisuus nil
-                                                            :pylvasvali nil
-                                                            :tunnus nil
-                                                            :ankkurointi nil
-                                                            :rakenne nil
-                                                            :yhteydet-muihin-kohteisiin []
-                                                            :kaidepylvaan-tyyppi "kaidepylvastyyppi/kpt04"
-                                                            :materiaali "materiaali/ma05"
-                                                            :korkeus nil
-                                                            :tyyppi "kaidetyyppi/kt01"}}
-               :geometrycollection {:type "GeometryCollection"
-                                    :geometries [{:coordinates [[26.567453846762298 63.476206880871786 108.769] [26.567445067087064 63.47631509083957 108.244]]
-                                                  :type "LineString"}]}
-               :luotu "2009-11-02T08:24:15Z"
-               :tekninen-tapahtuma nil
-               :uusin-versio true
-               :keskilinjageometria {:coordinates [[478448.212 7038721.375 108.769] [478447.856 7038733.435 108.244]] :type "LineString"}
-               :lahdejarjestelman-id "501.Livi175646"
-               :tiekohteen-tila nil
-               :paattyen nil
-               :sijainti-oid "1.2.246.578.4.1.4.36425123"
-               :lahdejarjestelma "lahdejarjestelma/lj01"
-               :schemaversio 1
-               :luoja {:kayttajanimi "TR"}
-               :sijaintitarkenne {:pientareet ["piennar-numerointi/pinu04"]}
-               :menetelma nil
-               :muokkaaja {:kayttajanimi "migraatio"}
-               :oid "1.2.246.578.4.3.1.501.10091432"
-               :alkaen "2009-06-25"
-               :muutoksen-lahde-oid nil
-               :muokattu "2022-06-29T14:23:14Z"}
+        kohde (assoc mallikohde :keskilinjageometria {:coordinates [[478448.212 7038721.375 108.769] [478447.856 7038733.435 108.244]]
+                                                      :type "LineString"})
         odotettu-sijainti {:type :line :points [[478448.212 7038721.375] [478447.856 7038733.435]]}
         saatu-sijainti (get-in
                          (vos/varustetoteuma-velho->harja urakkaid-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakkaid-kohteelle-fn
-                                                          (assoc kohde :kohdeluokka "varusteet/kaiteet"
-                                                                       :muutoksen-lahde-oid "1.2.3.4.1236"))
+                                                          kohde)
                          [:tulos :sijainti])]
     (is (= odotettu-sijainti (geo/pg->clj saatu-sijainti)))))
 
@@ -495,73 +455,35 @@
         sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
         konversio-fn (partial koodistot/konversio db)
 
-        ; Kohde on saatu kopioimalla se varustetoteuma_ulkoiset_virhe taulusta tähän
-        kohde {:alkusijainti {:tie 5642 :enkoodattu 564200003793 :osa 1 :etaisyys 3793}
-               :loppusijainti {:tie 5642 :enkoodattu 564200003852 :osa 1 :etaisyys 3852}
-               :version-voimassaolo {:alku "2009-06-23" :loppu nil}
-               :ominaisuudet {:toiminnalliset-ominaisuudet {:nopeustaso nil
-                                                            :tormayskestavyysluokka nil
-                                                            :tehtava nil
-                                                            :aurauskestavyysluokka nil
-                                                            :liikuteltavuus nil
-                                                            :joustovara nil
-                                                            :tuotenimi nil
-                                                            :toimintaleveys nil
-                                                            :vaarakohta nil}
-                              :infranimikkeisto {:rakenteellinen-jarjestelmakokonaisuus ["rakenteellinen-jarjestelmakokonaisuus/rjk03"
-                                                                                         "rakenteellinen-jarjestelmakokonaisuus/rjk13"]
-                                                 :toiminnallinen-jarjestelmakokonaisuus ["toiminnallinen-jarjestelmakokonaisuus/tjk17"]}
-                              :kunto-ja-vauriotiedot {:arvioitu-jaljella-oleva-kayttoika nil :yleinen-kuntoluokka nil}
-                              :sijaintipoikkeus nil
-                              :rakenteelliset-ominaisuudet {:elementtipituus nil
-                                                            :pystytys nil
-                                                            :puoleisuus nil
-                                                            :pylvasvali nil
-                                                            :tunnus nil
-                                                            :ankkurointi nil
-                                                            :rakenne nil
-                                                            :yhteydet-muihin-kohteisiin []
-                                                            :kaidepylvaan-tyyppi "kaidepylvastyyppi/kpt02"
-                                                            :materiaali "materiaali/ma05"
-                                                            :korkeus nil
-                                                            :tyyppi "kaidetyyppi/kt01"}}
-               :geometrycollection {:type "GeometryCollection"
-                                    :geometries [{:coordinates [[[27.04999527422449 63.420532896756924 138.285]
-                                                                 [27.049986504762163 63.420535269157305 138.275]
-                                                                 [27.049314906221714 63.420723029793 138.075]]
-                                                                [[27.049314906221714 63.420723029793 138.075]
-                                                                 [27.049242608341988 63.420743238925034 138.098]
-                                                                 [27.049171492015855 63.42076333991712 138.12]]
-                                                                [[27.049171492015855 63.42076333991712 138.12] [27.0490020698081 63.42081124247714 138.315]]]
-                                                  :type "MultiLineString"}]}
-               :luotu "2009-11-02T08:24:15Z"
-               :tekninen-tapahtuma nil
-               :uusin-versio true
-               :keskilinjageometria {:coordinates [[[502495.891 7032446.133 138.285] [502495.453 7032446.397 138.275] [502461.909 7032467.292 138.075]]
-                                                   [[502461.909 7032467.292 138.075] [502458.298 7032469.541 138.098] [502454.746 7032471.778 138.12]]
-                                                   [[502454.746 7032471.778 138.12] [502446.284 7032477.109 138.315]]]
-                                     :type "MultiLineString"}
-               :lahdejarjestelman-id "501.Livi176342"
-               :tiekohteen-tila nil
-               :paattyen nil
-               :sijainti-oid "1.2.246.578.4.1.4.36425217"
-               :lahdejarjestelma "lahdejarjestelma/lj01"
-               :schemaversio 1
-               :luoja {:kayttajanimi "TR"}
-               :sijaintitarkenne {:pientareet ["piennar-numerointi/pinu04"]}
-               :menetelma nil
-               :muokkaaja {:kayttajanimi "migraatio"}
-               :oid "1.2.246.578.4.3.1.501.10091440"
-               :alkaen "2009-06-23"
-               :muutoksen-lahde-oid nil
-               :muokattu "2022-06-29T14:23:14Z"}
+        kohde (assoc mallikohde
+                :keskilinjageometria {:coordinates
+                                      [[[502495.891 7032446.133 138.285] [502495.453 7032446.397 138.275] [502461.909 7032467.292 138.075]]
+                                       [[502461.909 7032467.292 138.075] [502458.298 7032469.541 138.098] [502454.746 7032471.778 138.12]]
+                                       [[502454.746 7032471.778 138.12] [502446.284 7032477.109 138.315]]]
+                                      :type "MultiLineString"})
         odotettu-sijainti {:type :multiline, :lines
                            [{:type :line, :points [[502495.891 7032446.133] [502495.453 7032446.397] [502461.909 7032467.292]]}
                             {:type :line, :points [[502461.909 7032467.292] [502458.298 7032469.541] [502454.746 7032471.778]]}
                             {:type :line, :points [[502454.746 7032471.778] [502446.284 7032477.109]]}]}
         saatu-sijainti (get-in
                          (vos/varustetoteuma-velho->harja urakkaid-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakkaid-kohteelle-fn
-                                                          (assoc kohde :kohdeluokka "varusteet/kaiteet"
-                                                                       :muutoksen-lahde-oid "1.2.3.4.1236"))
+                                                          kohde)
                          [:tulos :sijainti])]
     (is (= odotettu-sijainti (geo/pg->clj saatu-sijainti)))))
+
+(deftest multipoint-geometria-konvertoituu-integraatiossa
+  (let [db (:db jarjestelma)
+        urakkaid-kohteelle-fn (partial varusteet/urakka-id-kohteelle db)
+        sijainti-kohteelle-fn (partial varusteet/sijainti-kohteelle db)
+        konversio-fn (partial koodistot/konversio db)
+
+        kohde (assoc mallikohde :keskilinjageometria {:coordinates [[246875.68965580963 6722086.79823778 0.0]
+                                                                    [246865.4987514359 6722097.828952567 0.0]], :type "MultiPoint"})
+        odotettu-sijainti {:type :multipoint, :coordinates [{:type :point, :coordinates [246875.68965580963 6722086.79823778]}
+                                                            {:type :point, :coordinates [246865.4987514359 6722097.828952567]}]}
+        saatu-sijainti (get-in
+                         (vos/varustetoteuma-velho->harja urakkaid-kohteelle-fn sijainti-kohteelle-fn konversio-fn urakkaid-kohteelle-fn
+                                                          kohde)
+                         [:tulos :sijainti])]
+    (is (= odotettu-sijainti (geo/pg->clj saatu-sijainti)))))
+
