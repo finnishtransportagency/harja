@@ -181,7 +181,7 @@
         ;; TODO: Oikeustarkastukset
         ]
     [:div
-      [debug/debug (:lomake app)]
+      #_ [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? true
@@ -387,7 +387,7 @@
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
          [:h2 "Urakan suolarajoitukset hoitovuosittain"]
-         [debug/debug app]
+         #_ [debug/debug app]
 
          [:div.kontrollit
           [:div.row
