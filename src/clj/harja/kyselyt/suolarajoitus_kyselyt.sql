@@ -62,7 +62,8 @@ FROM rajoitusalue ra JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id
 WHERE ra.poistettu = FALSE
   AND rr.poistettu = FALSE
   AND rr.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-  AND ra.urakka_id = :urakka_id;
+  AND ra.urakka_id = :urakka_id
+  ORDER BY suolarajoitus DESC;
 
 -- name: hae-suolarajoitus
 SELECT ra.id as rajoitusalue_id,
