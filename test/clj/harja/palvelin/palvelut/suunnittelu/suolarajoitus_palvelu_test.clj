@@ -217,6 +217,35 @@
     ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
     (is (= 150 (:ajoratojen_pituus pituudet)))))
 
+;; LAsketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
+;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa
+(deftest laske-kahdelle-osalle-pituus-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 25 :aosa 9 :aet 2177 :losa 11 :let 2995}
+        ;tie 25 osa: 9 pituus: 3688
+        ;tie 25 osa 11 pituus 5870
+        ;; Osien Laskenta
+        ; osan 9, pituus on 3688 metriä, joten 3688 - 2177 = 1511 - haetaan siis loppuosan pituus
+        ;; Osan 10 pituus on 0
+        ;; osan 11 pituus on 5870, joten kohtaaan 2995 asti otetaan kokonaan kaikki -> 1511 + 2995 = 4506
+
+        ;; Ajoratalaskenta
+        ;tie 25 osa 9, ajorata 0 pituus 3268
+        ;tie 25 osa 9 ajorata 1 pituus 420
+        ;tie 25 osa 9 ajorata 2 pituus 420
+        ;tie 25 osa 11 ajorata 0 pituus 5870
+        ;; Osan 9 ajoratojen pituudeksi tulee siis kohdasta 2177 eteenpäin: (3268+420+420) -> 4108 - 2177 = 1931
+        ;; Osan 10 pituus on 0
+        ;; OSan 11 pituus on 5870, joten me otetaan koko mitta 2995 , kokonais ajoratojen pituus on siis 1931 +2995 = 4926
+
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= 4506 (:pituus pituudet)))
+    ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
+    (is (= 4926 (:ajoratojen_pituus pituudet)))))
+
 (deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa "makkara" :aet "lenkki" :losa "pihvi" :let "hiiligrilli"}

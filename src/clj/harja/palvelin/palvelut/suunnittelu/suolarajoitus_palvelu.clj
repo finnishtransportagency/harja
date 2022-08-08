@@ -164,11 +164,17 @@
         ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
                                                                            :aosa (:aosa suolarajoitus)
                                                                            :losa (:losa suolarajoitus)})
+        ;; Yhdistetään mahdolliset ajoradat yhdelle osalle
+        yhdistetyt-ajoradat (map (fn [[osa data]]
+                                   ;; Laske yhdelle osalle pituus kaikista ajoradoista.
+                                   {:osa osa :pituus (apply + (map :pituus data))})
+                              ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
+                              (group-by :osa ajoratojen-pituudet) )
         ajoratojen-pituus (reduce (fn [summa ajorata]
                                     (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
                                           summa (+ summa (:pituus pituus))]
                                       summa))
-                            0 ajoratojen-pituudet)
+                            0 yhdistetyt-ajoradat)
         ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
         pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
     (if validaatiovirheet
