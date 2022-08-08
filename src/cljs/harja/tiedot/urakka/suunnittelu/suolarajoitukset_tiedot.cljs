@@ -68,7 +68,7 @@
 (defrecord AvaaTaiSuljeSivupaneeli [tila lomakedata])
 
 ;; Suolarajoituslomakkeen Päivitys
-(defrecord PaivitaLomake [lomake])
+(defrecord PaivitaLomake [lomake tarkista-tierekisteri?])
 (defrecord HaeTierekisterinTiedotOnnistui [vastaus])
 (defrecord HaeTierekisterinTiedotEpaonnistui [vastaus])
 
@@ -270,32 +270,48 @@
 
   ;; Päivitetään lomakkeen sisältö app-stateen, mutta ei serverille
   PaivitaLomake
-  (process-event [{lomake :lomake} app]
-    (let [urakka-id (-> @tila/yleiset :urakka :id)
+  (process-event [{lomake :lomake tarkista-tierekisteri? :tarkista-tierekisteri?} app]
+    (let [_ (js/console.log "PaivitaLomake")
+          urakka-id (-> @tila/yleiset :urakka :id)
           vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
           uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
           _ (reset! lomake-atom lomake)
           {:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
+          ;; Tarkista palvelinvirheet
+          palvelinvirheet (get-in lomake [:palvelinvirheet :tierekisteri])
+          validius (if-not (nil? palvelinvirheet)
+                     (mapv (fn [virhe] (assoc validius (key virhe) (val virhe))) palvelinvirheet)
+                     validius)
+          validi? (if-not (nil? palvelinvirheet)
+                    false
+                    validi?)
           app (-> app
                 (assoc :lomake lomake)
                 (assoc-in [:lomake ::tila/validius] validius)
                 (assoc-in [:lomake ::tila/validi?] validi?))
-          app (if (and
-                    (not (nil? (:tie lomake)))
-                    (not (nil? (:aosa lomake)))
-                    (not (nil? (:aet lomake)))
-                    (not (nil? (:losa lomake)))
-                    (not (nil? (:let lomake)))
-                    (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri))))
+          app (if (or
+                    tarkista-tierekisteri?
+                    (and
+                        (not (nil? (:tie lomake)))
+                        (not (nil? (:aosa lomake)))
+                        (not (nil? (:aet lomake)))
+                        (not (nil? (:losa lomake)))
+                        (not (nil? (:let lomake)))
+                      (or
+                        (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri)))
+                        (not= (count vanha-tierekisteri) (count uusi-tierekisteri)))))
                 (do
                   (tuck-apurit/post! :tierekisterin-tiedot
-                    {:tie (:tie lomake)
+                    {:rajoitusalue-id (:rajoitusalue_id lomake)
+                     :tie (:tie lomake)
                      :aosa (:aosa lomake)
                      :aet (:aet lomake)
                      :losa (:losa lomake)
                      :let (:let lomake)
-                     :urakka_id urakka-id}
+                     :urakka-id urakka-id
+                     :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)}
+
                     {:onnistui ->HaeTierekisterinTiedotOnnistui
                      :epaonnistui ->HaeTierekisterinTiedotEpaonnistui
                      :paasta-virhe-lapi? true})
@@ -306,7 +322,9 @@
   HaeTierekisterinTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
+      (js/console.log "HaeTierekisterinTiedotOnnistui :: vastaus" (pr-str vastaus))
       (-> app
+        (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
         (assoc-in [:lomake :pituus] (:pituus vastaus))
         (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
         (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
@@ -314,44 +332,68 @@
 
   HaeTierekisterinTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (do
-      (viesti/nayta-toast! "Tierekisteriosoitteen käsittelyssä virhe." :varoitus viesti/viestin-nayttoaika-pitka)
-      (assoc app :hae-tiedot-kaynnissa? false)))
+    (let [tierekisterivirhe (when (get-in vastaus [:response :virhe])
+                              (get-in vastaus [:response :virhe]))
+          tievalidointi (merge
+                          (get-in app [:lomake :harja.tiedot.urakka.urakka/validius [:tie]])
+                          {:validi? false :virheteksti tierekisterivirhe})]
+      (do
 
+           (viesti/nayta-toast! "Tierekisteriosoitteen käsittelyssä virhe." :varoitus viesti/viestin-nayttoaika-pitka)
+           (cond-> app
+             ;; Virheen käsittely lomakkeella on kaksiportainen, kun osa validoinnista tapahtuu clientin päässä ja osa palvelimella.
+             ;; Palvelimelta saadut virheilmoitukset poistuu lomakkeelta heti, kun se validoidaan uudestaan.
+             ;; Asetetaan siis palvelimelta saadut virheilmoitukset talteen, jos niitä tulee
+             (not tierekisterivirhe) (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
+             tierekisterivirhe (assoc-in [:lomake :palvelinvirheet :tierekisteri :tie] tierekisterivirhe)
+             tierekisterivirhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]] tievalidointi)
+             true (assoc :hae-tiedot-kaynnissa? false)))))
 
   TallennaLomake
   (process-event [{lomake :lomake sivupaneeli-tila :tila} app]
     (let [urakka-id (-> @tila/yleiset :urakka :id)
-          _ (tuck-apurit/post! :tallenna-suolarajoitus
-              {:hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi lomake)
-               :urakka_id urakka-id
-               :suolarajoitus (:suolarajoitus lomake)
-               :formiaatti (:formiaatti lomake)
-               :rajoitusalue_id (:rajoitusalue_id lomake)
-               :rajoitus_id (:rajoitus_id lomake)
-               :tie (:tie lomake)
-               :aosa (:aosa lomake)
-               :aet (:aet lomake)
-               :losa (:losa lomake)
-               :let (:let lomake)
-               :pituus (:pituus lomake)
-               :ajoratojen_pituus (:ajoratojen_pituus lomake)
-               :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? lomake)}
+          tallennettava-lomake {:hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi lomake)
+                                :urakka_id urakka-id
+                                :suolarajoitus (:suolarajoitus lomake)
+                                :formiaatti (:formiaatti lomake)
+                                :rajoitusalue_id (:rajoitusalue_id lomake)
+                                :rajoitus_id (:rajoitus_id lomake)
+                                :tie (:tie lomake)
+                                :aosa (:aosa lomake)
+                                :aet (:aet lomake)
+                                :losa (:losa lomake)
+                                :let (:let lomake)
+                                :pituus (:pituus lomake)
+                                :ajoratojen_pituus (:ajoratojen_pituus lomake)
+                                :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? lomake)}
+          _ (tuck-apurit/post! :tallenna-suolarajoitus tallennettava-lomake
               {:onnistui ->TallennaLomakeOnnistui
                :epaonnistui ->TallennaLomakeEpaonnistui
                :paasta-virhe-lapi? true})]
+
       (-> app
         (assoc :tallennus-kaynnissa? true)
         (assoc :rajoitusalue-lomake-auki? sivupaneeli-tila))))
 
   TallennaLomakeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Rajoitusalueen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-    (hae-suolarajoitukset (:valittu-hoitovuosi app))
-    (-> app
-      (assoc :suolarajoitukset-haku-kaynnissa? true)
-      (assoc :tallennus-kaynnissa? false)
-      (assoc :lomake nil)))
+    (let [e! (tuck/current-send-function)
+          tallennettu-lomake (:lomake app)
+          tallennettu-lomake (dissoc tallennettu-lomake :rajoitusalue_id :rajoitus_id)
+          e! (tuck/current-send-function)
+          _ (when (app :rajoitusalue-lomake-auki?)
+              (.setTimeout js/window
+                (tuck/send-async! ->PaivitaLomake tallennettu-lomake true)
+                100))]
+      (do
+        (viesti/nayta-toast! "Rajoitusalueen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+        (hae-suolarajoitukset (:valittu-hoitovuosi app))
+
+        (-> (if (app :rajoitusalue-lomake-auki?)
+              (assoc app :lomake tallennettu-lomake)
+              (assoc app :lomake nil))
+          (assoc :suolarajoitukset-haku-kaynnissa? true)
+          (assoc :tallennus-kaynnissa? false)))))
 
   TallennaLomakeEpaonnistui
   (process-event [{vastaus :vastaus} app]

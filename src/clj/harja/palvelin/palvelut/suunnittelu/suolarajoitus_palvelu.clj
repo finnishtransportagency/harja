@@ -136,28 +136,46 @@
     (int? aet)
     (int? let)))
 
-(defn tierekisterin-tiedot [db user suolarajoitus]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user (:urakka_id suolarajoitus))
-  (if (pituuden-laskennan-data-validi? suolarajoitus)
-    (let [;; Pilkotaan tierekisteri osiin tien osien mukaan
-          tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
-                                                                       :aosa (:aosa suolarajoitus)
-                                                                       :losa (:losa suolarajoitus)})
-          pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
-          ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
-                                                                             :aosa (:aosa suolarajoitus)
-                                                                             :losa (:losa suolarajoitus)})
-          ajoratojen-pituus (reduce (fn [summa ajorata]
-                                      (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
-                                            summa (+ summa (:pituus pituus))]
-                                        summa))
-                              0 ajoratojen-pituudet)
-          ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
-          pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
+(defn tierekisterin-tiedot [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (log/debug "tierekisterin-tiedot :: suolarajoitus: " suolarajoitus)
+  (let [validaatiovirheet nil
+        tierekisteri-valid? (pituuden-laskennan-data-validi? suolarajoitus)
+        validaatiovirheet (if-not tierekisteri-valid?
+                            (str validaatiovirheet "Tierekisteriosoitteessa virhe. \n")
+                            validaatiovirheet)
+        paallekaiset (suolarajoitus-kyselyt/onko-tierekisteriosoite-paallekainen db {:tie (:tie suolarajoitus)
+                                                                                     :aosa (:aosa suolarajoitus)
+                                                                                     :aet (:aet suolarajoitus)
+                                                                                     :losa (:losa suolarajoitus)
+                                                                                     :let (:let suolarajoitus)
+                                                                                     :urakka-id urakka-id
+                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                                     :rajoitusalue-id (:rajoitusalue-id suolarajoitus)})
+        validaatiovirheet (if-not (empty? paallekaiset)
+                            (str validaatiovirheet " Tierekisteriosoitteessa on jo rajoitus. ")
+                            validaatiovirheet)
+
+        ;; Pilkotaan tierekisteri osiin tien osien mukaan
+        tie-osien-pituudet (tieverkko-kyselyt/hae-osien-pituudet db {:tie (:tie suolarajoitus)
+                                                                     :aosa (:aosa suolarajoitus)
+                                                                     :losa (:losa suolarajoitus)})
+        pituus (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus)
+        ajoratojen-pituudet (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
+                                                                           :aosa (:aosa suolarajoitus)
+                                                                           :losa (:losa suolarajoitus)})
+        ajoratojen-pituus (reduce (fn [summa ajorata]
+                                    (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
+                                          summa (+ summa (:pituus pituus))]
+                                      summa))
+                            0 ajoratojen-pituudet)
+        ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
+        pohjavesialueet (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let]))]
+    (if validaatiovirheet
+      (throw (IllegalArgumentException. validaatiovirheet))
       {:pituus (:pituus pituus)
        :ajoratojen_pituus ajoratojen-pituus
-       :pohjavesialueet pohjavesialueet})
-    (transit-vastaus 400 {:virhe "Tierekisteriosoitteessa virhe."})))
+       :pohjavesialueet pohjavesialueet})))
 
 (defn hae-talvisuolan-kayttorajat
   "Talvisuolan käyttöraja tulee urakka_tehtavamaara tauluun tallennetun suolauksen määrästä. Sanktiot ja indeksi tulevat suolasakko taulusta"

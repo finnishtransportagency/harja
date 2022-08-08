@@ -210,3 +210,29 @@ WHERE id = :id;
 INSERT INTO suolasakko (maara, urakka, hoitokauden_alkuvuosi, kaytossa, tyyppi, indeksi, luotu, luoja)
 VALUES (:sanktio_ylittavalta_tonnilta, :urakka-id, :hoitokauden-alkuvuosi, :kaytossa, 'rajoitusalue'::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
 
+-- name: onko-tierekisteriosoite-paallekainen
+SELECT *
+  FROM rajoitusalue ra
+      JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+ WHERE ra.poistettu = FALSE
+   AND rr.poistettu = FALSE
+   AND ra.urakka_id = :urakka-id
+   -- Ei vertailla samalla id:llä olevia
+   AND (:rajoitusalue-id::INT IS NULL OR :rajoitusalue-id::INT IS NOT NULL AND ra.id != :rajoitusalue-id)
+
+   -- tien täytyy aina mätsätä
+   AND (ra.tierekisteriosoite).tie = :tie
+
+   AND (
+       -- Annettu alkuosa osuu kannassa olevan väliin
+       (:aosa != :losa AND ((ra.tierekisteriosoite).aosa BETWEEN :aosa AND :losa))
+        OR
+        -- Annettu loppuosa osuu kannassa olevan väliin
+        (:aosa != :losa AND ((ra.tierekisteriosoite).losa BETWEEN :aosa AND :losa))
+       -- Alkuosa ja loppuosa on samat, tarkista etäisyydet
+       OR
+       -- Alkuosa ja loppuosa on samat ja ne täsmää kannassa jo olevaan alkuosaan,
+       -- joten tarkistetaan onko etäisyydet annettujen etäisyyksien välissä
+       (:aosa = :losa AND (ra.tierekisteriosoite).aosa = :aosa AND ((ra.tierekisteriosoite).aet BETWEEN :aet AND :let
+            OR (ra.tierekisteriosoite).let BETWEEN :aet AND :let)));
+

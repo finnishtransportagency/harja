@@ -117,7 +117,7 @@
           :tyyppi :positiivinen-numero
           :vayla-tyyli? true
           :disabled? true
-          :tarkkaile-ulkopuolisia-muutoksia? true
+          ;:tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)
           ::lomake/col-luokka "col-xs-4"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
@@ -126,7 +126,7 @@
           :tyyppi :positiivinen-numero
           :vayla-tyyli? true
           :disabled? true
-          :tarkkaile-ulkopuolisia-muutoksia? true
+          ;:tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)
           ::lomake/col-luokka "col-xs-8"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
@@ -143,7 +143,7 @@
                            (:pohjavesialueet (:data data))))
 
 
-          :tarkkaile-ulkopuolisia-muutoksia? true
+          ;:tarkkaile-ulkopuolisia-muutoksia? true
           :muokattava? (constantly false)
           ::lomake/col-luokka "col-xs-12"
           :rivi-luokka "lomakeryhman-rivi-tausta"})
@@ -181,15 +181,15 @@
         ;; TODO: Oikeustarkastukset
         ]
     [:div
-     #_ [debug/debug (:lomake app)]
+      [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? true
-       :tarkkaile-ulkopuolisia-muutoksia? false
+       :tarkkaile-ulkopuolisia-muutoksia? true
        :otsikko (when muokkaustila?
-                  (if (:id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+                  (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
        ;; TODO: Muokkaus
-       :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake %)))
+       :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [data]
                     [:div.row
 
