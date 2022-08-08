@@ -82,7 +82,9 @@
         yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
                               kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
                               ;; kokonaishinta lasketaan muista sarakkeista, älä siis salli muokkausta
-                              [:kaava {:kaava :summaa-rivin-sarakkeet :sarake-alku #{}}]]]
+                              [:kaava {:kaava :summaa-vieressaolevat
+                                       :alkusarake "E"
+                                       :loppusarake "H"}]]]
     (into []
           (concat yhteiset-arvot-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
@@ -94,7 +96,7 @@
                                  {:otsikko "Kohdenro" :tasaa :oikea}
                                  {:otsikko "Tunnus"}
                                  {:otsikko "Nimi"}
-                                 {:otsikko "Tarjoushinta" :tasaa :oikea :fmt :raha :voi-muokata? true}
+                                 {:otsikko "Tarjoushinta" :tasaa :oikea :voi-muokata? true}
                                  {:otsikko "Määrämuutokset" :tasaa :oikea :fmt :raha}]
         yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
                                   {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
@@ -129,7 +131,10 @@
                                       (repeat (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                                                 5
                                                 7)
-                                              [:kaava {:kaava :summaa-yllaolevat :alkurivi eka-rivi-jossa-kustannuksia}]))))]]
+                                              [:kaava {:kaava :summaa-yllaolevat
+                                                       :alkurivi eka-rivi-jossa-kustannuksia
+                                                       :loppurivi (+ (count kohderivit)
+                                                                     (- eka-rivi-jossa-kustannuksia 1))}]))))]]
     (concat
       (when (> (count kohteet) 0)
         kohderivit)

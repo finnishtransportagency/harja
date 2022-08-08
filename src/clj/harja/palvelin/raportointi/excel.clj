@@ -56,23 +56,30 @@
 (defmulti aseta-kaava!
   (fn [[_ {:keys [kaava]} &_] _ _]
     kaava))
- 
-(defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi]}] workbook cell]
-  (do
-    (.setCellFormula cell (str "SUM(INDIRECT(ADDRESS(" (or alkurivi 1) ",COLUMN())&\":\"&ADDRESS(ROW()-1,COLUMN())))"))
-    (-> workbook
+
+(defn- evaluoi-kaava
+  "Luo kaavaevaluaattorin ja evaluoi kaavan. Parametrina sisään workbook ja solu."
+  [workbook cell]
+  (-> workbook
       (.getCreationHelper)
       (.createFormulaEvaluator)
-      (.evaluateFormulaCell cell))))
+      (.evaluateFormulaCell cell)))
 
-;; TODO: tässä kovakoodattuna vielä sarakkeiden paikat, toteuta parametrinä antaminen
-(defmethod aseta-kaava! :summaa-rivin-sarakkeet [[_ {:keys [sarake-alku sarake-loppu]}] workbook cell]
-  (do
-    (.setCellFormula cell (str "SUM(INDIRECT(ADDRESS(ROW(),COLUMN()-4)&\":\"&ADDRESS(ROW(),COLUMN()-1)))"))
-    (-> workbook
-        (.getCreationHelper)
-        (.createFormulaEvaluator)
-        (.evaluateFormulaCell cell))))
+(defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi loppurivi]}] workbook cell]
+  (let [osoite (-> cell .getAddress)
+        sarake (first (.toString osoite))]
+    (.setCellFormula
+      cell
+      (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
+    (evaluoi-kaava workbook cell)))
+
+(defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
+  (let [osoite (-> cell .getAddress)
+        rivi (second (.toString osoite))]
+    (.setCellFormula
+      cell
+      (str "SUM("(or alkusarake 1) rivi  ":" (or loppusarake (.getRow osoite)) rivi ")")))
+  (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
