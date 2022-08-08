@@ -96,11 +96,11 @@
                                  {:otsikko "Kohdenro" :tasaa :oikea}
                                  {:otsikko "Tunnus"}
                                  {:otsikko "Nimi"}
-                                 {:otsikko "Tarjoushinta" :tasaa :oikea :voi-muokata? true}
-                                 {:otsikko "Määrämuutokset" :tasaa :oikea :fmt :raha}]
-        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
-                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :tasaa :oikea :fmt :raha :voi-muokata? true}
-                                  {:otsikko "Kokonaishinta" :tasaa :oikea :fmt :raha}]]
+                                 {:otsikko "Tarjoushinta"  :fmt :raha :voi-muokata? true}
+                                 {:otsikko "Määrämuutokset" :fmt :raha}]
+        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :fmt :raha :voi-muokata? true}
+                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :fmt :raha :voi-muokata? true}
+                                  {:otsikko "Kokonaishinta" :fmt :raha}]]
     (into []
           (concat yhteiset-sarakkeet-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
