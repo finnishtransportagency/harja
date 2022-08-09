@@ -242,9 +242,9 @@
 
 (defn- luo-rivi-ennen-tai-jalkeen
   "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
-  [rivi rivi-nro tyyli sheet]
-  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
-            (let [solu (.createCell rivi sarake-nro)]
+  [rivi-maaritys riviolio rivi-nro tyyli sheet]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita]}]
+            (let [solu (.createCell riviolio sarake-nro)]
               (excel/set-cell! solu teksti)
               (excel/set-cell-style! solu tyyli)
               (tasaa-solu solu tasaa)
@@ -253,7 +253,7 @@
                                                            sarake-nro
                                                            (+ sarake-nro sarakkeita -1))))
               (+ sarake-nro sarakkeita)))
-          0 rivi))
+          0 rivi-maaritys))
 
 (defn- font-otsikko
   ([] (font-otsikko 14))
@@ -321,7 +321,8 @@
                              uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
-        (luo-rivi-ennen-tai-jalkeen rivi-ennen-rivi
+        (luo-rivi-ennen-tai-jalkeen rivi-ennen
+                                    rivi-ennen-rivi
                                     rivi-ennen-nro
                                     rivi-ennen-sarake-tyyli
                                     sheet))
@@ -419,7 +420,8 @@
         (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
 
       (when rivi-jalkeen
-        (luo-rivi-ennen-tai-jalkeen rivi-jalkeen-rivi
+        (luo-rivi-ennen-tai-jalkeen rivi-jalkeen
+                                    rivi-jalkeen-rivi
                                     rivi-jalkeen-nro
                                     (excel/create-cell-style! workbook {:font (font-leipateksti)})
                                     sheet)))
