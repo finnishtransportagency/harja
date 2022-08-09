@@ -211,7 +211,8 @@ INSERT INTO suolasakko (maara, urakka, hoitokauden_alkuvuosi, kaytossa, tyyppi, 
 VALUES (:sanktio_ylittavalta_tonnilta, :urakka-id, :hoitokauden-alkuvuosi, :kaytossa, 'rajoitusalue'::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
 
 -- name: onko-tierekisteriosoite-paallekainen
-SELECT *
+SELECT ra.id, rr.id, rr.suolarajoitus, rr.hoitokauden_alkuvuosi, ra.pituus, ra.ajoratojen_pituus, ra.urakka_id,
+       (ra.tierekisteriosoite).tie, (ra.tierekisteriosoite).aosa, (ra.tierekisteriosoite).aet, (ra.tierekisteriosoite).losa, (ra.tierekisteriosoite).let
   FROM rajoitusalue ra
       JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
  WHERE ra.poistettu = FALSE
@@ -233,6 +234,8 @@ SELECT *
        OR
        -- Alkuosa ja loppuosa on samat ja ne täsmää kannassa jo olevaan alkuosaan,
        -- joten tarkistetaan onko etäisyydet annettujen etäisyyksien välissä
-       (:aosa = :losa AND (ra.tierekisteriosoite).aosa = :aosa AND ((ra.tierekisteriosoite).aet BETWEEN :aet AND :let
-            OR (ra.tierekisteriosoite).let BETWEEN :aet AND :let)));
+       (:aosa = :losa AND (ra.tierekisteriosoite).aosa = :aosa
+            AND ((ra.tierekisteriosoite).aet BETWEEN :aet AND :let
+                    OR
+                 ((ra.tierekisteriosoite).let - 1) BETWEEN :aet AND :let)));
 
