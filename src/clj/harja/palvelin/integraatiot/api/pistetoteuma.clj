@@ -23,7 +23,9 @@
         aika (aika-string->java-sql-date (:alkanut toteuma))]
     (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
     (log/debug "Aloitetaan sijainnin tallennus")
-    (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id)
+    (api-toteuma/tallenna-sijainti db sijainti aika toteuma-id
+      (->> toteuma :tehtavat (map (comp :id :tehtava)))
+      (->> toteuma :materiaalit (map :materiaali)))
     (log/debug "Aloitetaan toteuman tehtävien tallennus")
     (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)))
 

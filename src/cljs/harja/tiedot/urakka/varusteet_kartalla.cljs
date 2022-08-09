@@ -16,6 +16,8 @@
 
 (defonce karttataso-nakyvissa? (atom true))
 
+(def varuste-klikattu-fn (atom (constantly nil)))
+
 (defonce varusteet-kartalla
          (reaction
            (let [kohteet @karttataso-varusteet]
@@ -25,13 +27,16 @@
                                     (let [vari (get toteuma-vari toteuma "white")]
                                       {:alue (merge {:stroke {:width 8
                                                               :color vari}}
-                                                    (:sijainti kohde))
+                                               (:sijainti kohde))
                                        :selite {:teksti toteuma
                                                 :img (kartta-ikonit/pinni-ikoni "sininen")}
+                                       :tyyppi-kartalla :varusteet-ulkoiset
                                        :ikonit [{:tyyppi :merkki
                                                  :paikka [:loppu]
                                                  :zindex 21
-                                                 :img (kartta-ikonit/pinni-ikoni "sininen")}]})))
+                                                 :img (kartta-ikonit/pinni-ikoni "sininen")}]
+                                       :on-item-click #(@varuste-klikattu-fn kohde)
+                                       :avaa-paneeli? false})))
                                 kohteet)
                           {:selitteet [{:teksti "Lisätty" :vari puhtaat/fig-default}
                                        {:teksti "Poistettu" :vari puhtaat/eggplant-default}
