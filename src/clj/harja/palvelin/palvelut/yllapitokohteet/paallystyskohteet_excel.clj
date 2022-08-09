@@ -79,12 +79,15 @@
                              [:varillinen-teksti {:arvo maaramuutokset
                                                   :fmt :raha
                                                   :tyyli :disabled}]]
+        loppusarake (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                      "H"
+                      "J")
         yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
                               kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
                               ;; kokonaishinta lasketaan muista sarakkeista, älä siis salli muokkausta
                               [:kaava {:kaava :summaa-vieressaolevat
                                        :alkusarake "E"
-                                       :loppusarake "H"}]]]
+                                       :loppusarake loppusarake}]]]
     (into []
           (concat yhteiset-arvot-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
