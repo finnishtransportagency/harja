@@ -49,7 +49,7 @@
                               (assoc ::paikkaus/paikkaukset
                                      (mapv
                                        (fn [p]
-                                         (let [pituus (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
+                                         (let [pituus (:pituus (tv/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
                                                                                                            :aet (:harja.domain.tierekisteri/aet p)
                                                                                                            :losa (:harja.domain.tierekisteri/losa p)
                                                                                                            :let (:harja.domain.tierekisteri/let p)}))

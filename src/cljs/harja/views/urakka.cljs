@@ -108,6 +108,7 @@
                           (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
                                         (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
                                         (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
+                                        (= :suola (nav/valittu-valilehti :suunnittelu))
                                         )
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))

@@ -84,10 +84,10 @@
             ^{:key "muut-tyot"}
             [muut-tyot/muut-tyot ur])
 
-          "Suola" :suola
+          "Suolarajoitukset" :suola
           (when (and (oikeudet/urakat-suunnittelu-suola id)
                      (valilehti-mahdollinen? :suola ur))
-            [suola/suola])
+            [suola/urakan-suolarajoitukset])
 
           "Materiaalit"
           :materiaalit
