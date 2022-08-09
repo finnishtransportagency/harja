@@ -135,7 +135,7 @@
   HaeSuolarajoituksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui tallennus onnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc :suolarajoitukset-haku-kaynnissa? false)
         (assoc :suolarajoitukset nil))))

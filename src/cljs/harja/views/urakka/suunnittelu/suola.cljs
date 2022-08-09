@@ -344,9 +344,8 @@
                                              rajoitukset))))}
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
-    {:otsikko "Pituus (m)" :nimi :pituus :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 0.8}
-    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :fmt fmt/pyorista-ehka-kolmeen
-     :tasaa :oikea :leveys 0.8}
+    {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.8}
+    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :tasaa :oikea :leveys 0.8}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
      :luokka "sarake-pohjavesialueet"
      :tyyppi :komponentti

@@ -214,8 +214,39 @@
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
     (is (= 50 (:pituus pituudet)))
-    ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
-    (is (= 150 (:ajoratojen_pituus pituudet)))))
+    (is (= 50 (:ajoratojen_pituus pituudet)))))
+
+(deftest laske-tierekisteriosoitteelle-pituus2-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 4100}
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= 100 (:pituus pituudet)))
+    (is (= 111 (:ajoratojen_pituus pituudet)))))
+
+(deftest laske-tierekisteriosoitteelle-pituus3-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5799}
+        ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= 1752 (:pituus pituudet)))
+    (is (= 3423 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+
+(deftest laske-tierekisteriosoitteelle-pituus4-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 5 :let 1}
+        ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= 1753 (:pituus pituudet)))                        ;; Edelliseen testiin verrattuna ollaan lisätty pituutta yhdellä
+    (is (= 3424 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 ;; LAsketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
 ;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa
@@ -230,7 +261,7 @@
         ;; osan 11 pituus on 5870, joten kohtaaan 2995 asti otetaan kokonaan kaikki -> 1511 + 2995 = 4506
 
         ;; Ajoratalaskenta
-        ;tie 25 osa 9, ajorata 0 pituus 3268
+        ;tie 25 osa 9, ajorata 0 pituus 32681
         ;tie 25 osa 9 ajorata 1 pituus 420
         ;tie 25 osa 9 ajorata 2 pituus 420
         ;tie 25 osa 11 ajorata 0 pituus 5870
@@ -253,7 +284,7 @@
         pituudet (future (kutsu-palvelua (:http-palvelin jarjestelma)
                            :tierekisterin-tiedot
                            +kayttaja-jvh+ suolarajoitus))]
-    (is (= "Tierekisteriosoitteessa virhe." (get-in @pituudet [:vastaus :virhe])) "Väärillä tiedoilla ei voi laskea pituutta.")))
+    (is (= "Tierekisteriosoitteessa virhe." (str/trim (get-in @pituudet [:vastaus]))) "Väärillä tiedoilla ei voi laskea pituutta.")))
 
 
 (deftest laske-tierekisteriosoitteelle-pituus-vaarilla-tiedoilla-onnistuu-test
@@ -266,7 +297,8 @@
         suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
-                   +kayttaja-jvh+ suolarajoitus)]
+                   +kayttaja-jvh+ suolarajoitus)
+        _ (println "pituudet" pituudet)]
     (is (= 5752 (:pituus pituudet)))
     (is (= 7423 (:ajoratojen_pituus pituudet)))))
 
@@ -336,6 +368,8 @@
 
 (deftest hae-pohjavesialueet-tierekisterille-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Tiellä 4, osalla 364 on 2 ajorataa, ja niiden pituudet on: 9505m
+        ;; Joten ajoratojen pituudeksi pitäisi  tulla (* 2 (- :let :aet)
         tierekisteriosoite {:tie 4 :aosa 364 :aet 3268 :losa 364 :let 3451}
 
         suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
