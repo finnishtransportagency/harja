@@ -365,8 +365,8 @@
   lataus-epaonnistui        Funktio, jota kutsutaan, kun tiedoston lataus ei onnistunut.
   disabled?                 Nappi disabloitu, true tai false.
   nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
-  [urakka-id opts]
-  (fn [urakka-id {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
+  [params-map opts]
+  (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
     [:span
      [:span.liitekomponentti
       [:div {:class (str "file-upload nappi-toissijainen "
@@ -378,7 +378,7 @@
        [:input.upload
         {:type "file"
          :on-input #(do
-                      (k/laheta-tiedosto! url (.-target %) urakka-id tiedosto-ladattu lataus-epaonnistui)
+                      (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
                       ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
                       ;; uudestaan.
                       (set! (.-value (.-target %)) nil))}]]]]))
