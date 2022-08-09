@@ -1883,3 +1883,24 @@
                                                :vain-yha-kohteet? true}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
     (is (= excel-rivit-muhos-2017 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus hakee vain YHA-kohteet")))
+
+(defn hae-yllapitokohteen-kustannukset  [yhaid]
+  (first (q "SELECT * FROM yllapitokohteen_kustannukset WHERE yllapitokohde = (SELECT id FROM yllapitokohde WHERE yhaid = "yhaid ");")))
+
+(deftest yllapitokohteen-tallennus-yha-idlla
+  (let [db (luo-testitietokanta)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        yhaid 527523069
+        user-id (ffirst (q "SELECT id FROM kayttaja where kayttajanimi = 'jvh'"))
+        kohteen-kustannukset-ennen (hae-yllapitokohteen-kustannukset yhaid)
+        toteutunut-hinta nil ;; vain paikkauskohteille muuta kuin nil
+        kohde {:yhaid yhaid
+               :urakka urakka-id
+               :sopimuksen_mukaiset_tyot 1
+               :bitumi_indeksi 2
+               :kaasuindeksi 3
+               :muokkaaja user-id}
+        _ (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db kohde)
+        kohteen-kustannukset-jalkeen (hae-yllapitokohteen-kustannukset yhaid)]
+    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil]) "kustannukset ennen tallennusta")
+    (is (= (butlast kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset ennen tallennuksen jälkeen")))

@@ -812,14 +812,10 @@ UPDATE yllapitokohteen_kustannukset
        kaasuindeksi             = :kaasuindeksi,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
- WHERE yllapitokohde = (SELECT id
-                          FROM yllapitokohde
-                         WHERE yhaid = :yhaid)
-   AND (SELECT urakka
-          FROM yllapitokohde
-         WHERE id = (SELECT id
-                       FROM yllapitokohde
-                      WHERE yhaid = :yhaid)) = :urakka;
+  FROM yllapitokohde
+ WHERE
+         yllapitokohteen_kustannukset.yllapitokohde = yllapitokohde.id
+   AND yllapitokohde.urakka = :urakka AND yllapitokohde.yhaid = :yhaid;
 
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
