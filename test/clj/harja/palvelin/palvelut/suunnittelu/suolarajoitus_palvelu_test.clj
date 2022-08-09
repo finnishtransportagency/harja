@@ -248,6 +248,20 @@
     (is (= 1753 (:pituus pituudet)))                        ;; Edelliseen testiin verrattuna ollaan lisätty pituutta yhdellä
     (is (= 3424 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
+(deftest laske-tierekisteriosoitteelle-pituus5-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        aet 6000
+        osan-19-pituus 7311
+        let 3300
+        tierekisteriosoite {:tie 25 :aosa 19 :aet aet :losa 20 :let let}
+        ;; tie 25, osan 19 pituus on yht: 7311. Osa 20, koostuu kolmesta ajoradasta joka vaihtuu 1->2 kohdasta:3531 . Sen jälkeen ajoratojen (1,2) pituus: 3965
+        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= (+ (- osan-19-pituus aet) let) (:pituus pituudet)))
+    (is (= (+ (- osan-19-pituus aet) let) (:pituus pituudet)))))
+
 ;; LAsketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
 ;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa
 (deftest laske-kahdelle-osalle-pituus-onnistuu-test
