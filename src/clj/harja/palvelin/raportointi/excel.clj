@@ -54,7 +54,7 @@
   (.formatAsString (CellReference. rivi-nro sarake-nro)))
 
 (defmulti aseta-kaava!
-  (fn [[_ {:keys [kaava]} &_] _ _]
+  (fn [[_ {:keys [kaava]}] _ _]
     kaava))
 
 (defn- evaluoi-kaava
@@ -228,51 +228,50 @@
     (excel/set-cell! solu nimi)
     (excel/set-cell-style! solu raportin-tiedot-tyyli)))
 
-(defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
+(defn- font-leipateksti
+  ([] (font-leipateksti 11))
+  ([font-koko]
+   {:color :black :size font-koko}))
+
+
+(defn- font-otsikko
+  ([] (font-otsikko 14))
+  ([font-koko]
+   {:color :black
+    :size font-koko
+    :name "Arial"
+    :bold true}))
+
+(defn- luo-saraketyyli
+  [workbook lista-tyyli? rivi-ennen?]
+  (excel/create-cell-style! workbook (if lista-tyyli?
+                                       {:border-bottom :thin
+                                        :border-top :thin
+                                        :border-left :thin
+                                        :border-right :thin
+                                        :font (font-otsikko (if rivi-ennen? 18 14))}
+                                       {:background :grey_25_percent
+                                        :font {:color :black}})))
+
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
+                                                sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen] :as optiot}
+                                      sarakkeet data] workbook]
   (try
-    (let [nimi (:otsikko optiot)
-          raportin-tiedot (:raportin-tiedot optiot)
-          viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
-          viimeinen-rivi (last data)
+    (let [viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          samalle-sheetille? (:samalle-sheetille? optiot)
-          [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
+          [sheet nolla] (if (and (nil? sheet-nimi)
                               (or samalle-sheetille? (nil? nimi))
                               aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
-                                               (or (:sheet-nimi optiot) nimi))) 0])
+                                               (or sheet-nimi nimi))) 0])
           ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
           _ (when (:varjele-sheet-muokkauksilta? optiot)
               (.enableLocking sheet))
-          sarake-tyyli (if (:lista-tyyli? optiot)
-                         (excel/create-cell-style! workbook {:border-bottom :thin
-                                                             :border-top :thin
-                                                             :border-left :thin
-                                                             :border-right :thin
-                                                             :font {:color :black
-                                                                    :size 14
-                                                                    :name "Arial"
-                                                                    :bold true}})
-                         (excel/create-cell-style! workbook {:background :grey_25_percent
-                                                             :font {:color :black}}))
-
-          rivi-ennen-sarake-tyyli (if (:lista-tyyli? optiot)
-                                    (excel/create-cell-style! workbook {:border-bottom :thin
-                                                                        :border-top :thin
-                                                                        :border-left :thin
-                                                                        :border-right :thin
-                                                                        :font {:color :black
-                                                                               :size 18
-                                                                               :name "Arial"
-                                                                               :bold true}})
-                                    (excel/create-cell-style! workbook {:background :grey_25_percent
-                                                                        :font {:color :black}}))
-          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
-                                                                           :size 14
-                                                                           :name "Arial"
-                                                                           :bold true}})
+          sarake-tyyli (luo-saraketyyli workbook lista-tyyli? false)
+          rivi-ennen-sarake-tyyli (luo-saraketyyli workbook lista-tyyli? true)
+          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font (font-otsikko)})
           ;; Ei tehdä uutta otsikkoriviä, jos taulukko tulee samalle sheetille.
           tee-raporttitiedot-rivi? (= nolla 0) 
 
@@ -284,11 +283,11 @@
           nolla (if (and samalle-sheetille? tee-raporttitiedot-rivi?)
                   (+ 2 nolla)
                   nolla)
-
-          rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
 
+          rivi-jalkeen-nro (+ 5 (count data))
+          rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
           otsikko-rivi (.createRow sheet nolla)
           luodut-tyylit (atom {})
@@ -410,7 +409,24 @@
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
       ;; Ja tehdään tämä vain kerran, koska ei haluta montaa tietoriviä, jos useampi taulukko on samalla sheetillä.
       (when tee-raporttitiedot-rivi?
-        (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli))))
+        (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
+
+      (when rivi-jalkeen
+        (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
+                  (let [solu (.createCell rivi-jalkeen-rivi sarake-nro)]
+                    (excel/set-cell! solu teksti)
+                    (excel/set-cell-style! solu (excel/create-cell-style! workbook {:font (font-leipateksti)}))
+                    (CellUtil/setAlignment solu
+                                           (case tasaa
+                                             :keskita HorizontalAlignment/CENTER
+                                             :oikea HorizontalAlignment/RIGHT
+                                             HorizontalAlignment/LEFT))
+                    (when (> sarakkeita 1)
+                      (.addMergedRegion sheet (CellRangeAddress. rivi-jalkeen-nro rivi-jalkeen-nro
+                                                                 sarake-nro
+                                                                 (+ sarake-nro sarakkeita -1))))
+                    (+ sarake-nro sarakkeita)))
+                0 rivi-jalkeen)))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 

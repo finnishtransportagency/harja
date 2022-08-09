@@ -144,6 +144,8 @@
       tyhjat-rivit
       yhteenvetorivi)))
 
+(def maaramuutoksien-ohje "Määrämuutokset kirjataan Harjassa kohdekohtaisesti omaan taulukkoonsa.")
+
 (defn vie-paallystyskohteet-exceliin
   [db workbook user {:keys [urakka-id vuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -158,12 +160,15 @@
                 :sheet-nimi "HARJAAN"
                 :varjele-sheet-muokkauksilta? true
                 :tyhja (if (empty? kohteet) "Ei päällystyskohteita.")
-                :lista-tyyli? false
                 :rivi-ennen [{:teksti "" :sarakkeita 4}
                              {:teksti "Kustannukset (€)"
                               :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                                                                       5
-                                                                       7)}]}
+                                            5
+                                            7)}]
+                :rivi-jalkeen [{:teksti maaramuutoksien-ohje
+                                :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                              9
+                                              11)}]}
         taulukot [[:taulukko optiot sarakkeet
                    rivit]]
         tiedostonimi (str (:nimi urakka) "-Päällystyskohteet-" vuosi)
