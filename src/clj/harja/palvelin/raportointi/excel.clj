@@ -233,6 +233,27 @@
   ([font-koko]
    {:color :black :size font-koko}))
 
+(defn- tasaa-solu [solu tasaa]
+  (CellUtil/setAlignment solu
+                         (case tasaa
+                           :keskita HorizontalAlignment/CENTER
+                           :oikea HorizontalAlignment/RIGHT
+                           HorizontalAlignment/LEFT)))
+
+(defn- luo-rivi-ennen-tai-jalkeen
+  "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
+  [rivi rivi-nro tyyli sheet]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
+            (let [solu (.createCell rivi sarake-nro)]
+              (excel/set-cell! solu teksti)
+              (excel/set-cell-style! solu tyyli)
+              (tasaa-solu solu tasaa)
+              (when (> sarakkeita 1)
+                (.addMergedRegion sheet (CellRangeAddress. rivi-nro rivi-nro
+                                                           sarake-nro
+                                                           (+ sarake-nro sarakkeita -1))))
+              (+ sarake-nro sarakkeita)))
+          0 rivi))
 
 (defn- font-otsikko
   ([] (font-otsikko 14))
@@ -252,6 +273,8 @@
                                         :font (font-otsikko (if rivi-ennen? 18 14))}
                                        {:background :grey_25_percent
                                         :font {:color :black}})))
+
+(def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen] :as optiot}
@@ -286,7 +309,7 @@
           rivi-ennen-nro nolla
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
 
-          rivi-jalkeen-nro (+ 5 (count data))
+          rivi-jalkeen-nro (+ puskuririvien-maara-ennen-rivi-jalkeen (count data))
           rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
           otsikko-rivi (.createRow sheet nolla)
@@ -298,21 +321,10 @@
                              uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
-        (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
-                  (let [solu (.createCell rivi-ennen-rivi sarake-nro)]
-                    (excel/set-cell! solu teksti)
-                    (excel/set-cell-style! solu rivi-ennen-sarake-tyyli)
-                    (CellUtil/setAlignment solu
-                                           (case tasaa
-                                             :keskita HorizontalAlignment/CENTER
-                                             :oikea HorizontalAlignment/RIGHT
-                                             HorizontalAlignment/LEFT))
-                    (when (> sarakkeita 1)
-                      (.addMergedRegion sheet (CellRangeAddress. rivi-ennen-nro rivi-ennen-nro
-                                                                 sarake-nro
-                                                                 (+ sarake-nro sarakkeita -1))))
-                    (+ sarake-nro sarakkeita)))
-                0 rivi-ennen))
+        (luo-rivi-ennen-tai-jalkeen rivi-ennen-rivi
+                                    rivi-ennen-nro
+                                    rivi-ennen-sarake-tyyli
+                                    sheet))
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
       (when samalle-sheetille?
@@ -393,12 +405,7 @@
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                    (excel/set-cell-style! cell tyyli)
                    (when (:tasaa sarake)
-                     (CellUtil/setAlignment cell
-                                            (case (:tasaa sarake)
-                                              :keskita HorizontalAlignment/CENTER
-                                              :oikea HorizontalAlignment/RIGHT
-                                              HorizontalAlignment/LEFT)))
-                   ))
+                     (tasaa-solu cell (:tasaa sarake)))))
               sarakkeet))))
         data))
 
@@ -412,21 +419,10 @@
         (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
 
       (when rivi-jalkeen
-        (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
-                  (let [solu (.createCell rivi-jalkeen-rivi sarake-nro)]
-                    (excel/set-cell! solu teksti)
-                    (excel/set-cell-style! solu (excel/create-cell-style! workbook {:font (font-leipateksti)}))
-                    (CellUtil/setAlignment solu
-                                           (case tasaa
-                                             :keskita HorizontalAlignment/CENTER
-                                             :oikea HorizontalAlignment/RIGHT
-                                             HorizontalAlignment/LEFT))
-                    (when (> sarakkeita 1)
-                      (.addMergedRegion sheet (CellRangeAddress. rivi-jalkeen-nro rivi-jalkeen-nro
-                                                                 sarake-nro
-                                                                 (+ sarake-nro sarakkeita -1))))
-                    (+ sarake-nro sarakkeita)))
-                0 rivi-jalkeen)))
+        (luo-rivi-ennen-tai-jalkeen rivi-jalkeen-rivi
+                                    rivi-jalkeen-nro
+                                    (excel/create-cell-style! workbook {:font (font-leipateksti)})
+                                    sheet)))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 
