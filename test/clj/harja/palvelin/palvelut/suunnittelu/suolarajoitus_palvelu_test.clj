@@ -209,7 +209,7 @@
 (deftest laske-tierekisteriosoitteelle-pituus-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 50}
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
@@ -219,7 +219,7 @@
 (deftest laske-tierekisteriosoitteelle-pituus2-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 4100}
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
@@ -230,23 +230,23 @@
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 4 :let 5799}
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
     (is (= 1752 (:pituus pituudet)))
-    (is (= 3423 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+    (is (= 3423 (:ajoratojen_pituus pituudet)))))           ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 (deftest laske-tierekisteriosoitteelle-pituus4-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 4000 :losa 5 :let 1}
         ;; tie 20, osan 4 pituus on yht: 5752 josta loput 1667m on kahta ajorataa, se vaihtuu kahdeksi ajoradaksi kohdassa 4089
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
     (is (= 1753 (:pituus pituudet)))                        ;; Edelliseen testiin verrattuna ollaan lisätty pituutta yhdellä
-    (is (= 3424 (:ajoratojen_pituus pituudet))))) ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
+    (is (= 3424 (:ajoratojen_pituus pituudet)))))           ;; Jos ei otettaisi huomioon, että ajoradan pituus päättyy kohtaan 5752, pituudeksi tulisi 3511
 
 (deftest laske-tierekisteriosoitteelle-pituus5-onnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -255,7 +255,7 @@
         let 3300
         tierekisteriosoite {:tie 25 :aosa 19 :aet aet :losa 20 :let let}
         ;; tie 25, osan 19 pituus on yht: 7311. Osa 20, koostuu kolmesta ajoradasta joka vaihtuu 1->2 kohdasta:3531 . Sen jälkeen ajoratojen (1,2) pituus: 3965
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
@@ -283,7 +283,7 @@
         ;; Osan 10 pituus on 0
         ;; OSan 11 pituus on 5870, joten me otetaan koko mitta 2995 , kokonais ajoratojen pituus on siis 1931 +2995 = 4926
 
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
                    +kayttaja-jvh+ suolarajoitus)]
@@ -294,7 +294,7 @@
 (deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa "makkara" :aet "lenkki" :losa "pihvi" :let "hiiligrilli"}
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (future (kutsu-palvelua (:http-palvelin jarjestelma)
                            :tierekisterin-tiedot
                            +kayttaja-jvh+ suolarajoitus))]
@@ -308,13 +308,41 @@
         ;; Yritetään antaa kuitenkin virheellinen tieosoite, jossa loppuetäisyys on 6000 metriä. Meidän pitäisi saada vain
         ;; maksimit ulos laskennasta.
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 6000}
-        suolarajoitus (assoc tierekisteriosoite :urakka_id urakka-id)
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
                    :tierekisterin-tiedot
-                   +kayttaja-jvh+ suolarajoitus)
-        _ (println "pituudet" pituudet)]
+                   +kayttaja-jvh+ suolarajoitus)]
     (is (= 5752 (:pituus pituudet)))
     (is (= 7423 (:ajoratojen_pituus pituudet)))))
+
+(deftest varmista-paallekaiset-rajoitukset-ei-onnistu-test
+  (let [hk-alkuvuosi 2022
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        rajoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tallenna-suolarajoitus
+                   +kayttaja-jvh+
+                   (suolarajoitus-pohja
+                     urakka-id
+                     (:id +kayttaja-jvh+)
+                     {:tie 4 :aosa 7 :aet 7 :losa 7 :let 8}
+                     hk-alkuvuosi))
+
+        ;; Varmista, että uusi suolarajoitus on hyväksyttävä, vaikka tierekisteri alkaa samasta
+        ;; pisteestä, kuin mihin yllä oleva loppui
+        tierekisteriosoite {:tie 4 :aosa 7 :aet 8 :losa 7 :let 10}
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi)
+        tierekisterin-tiedot (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tierekisterin-tiedot
+                               +kayttaja-jvh+ suolarajoitus)
+        odotettu-tulos {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()}
+
+        ;; Siivotaan kanta
+        _ (poista-suolarajoitus
+            {:rajoitusalue_id (:rajoitusalue_id rajoitus)
+             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :urakka_id urakka-id
+             :kopioidaan-tuleville-vuosille? true})]
+    (is (= odotettu-tulos tierekisterin-tiedot) "Tierekisterin-tiedot on hyväksyttäviä")))
 
 (defn hae-rajoitukset-kannasta [urakka-id]
   (q-map (str "select ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi, ra.urakka_id as urakka_id
@@ -468,7 +496,6 @@
                     :kopioidaan-tuleville-vuosille? false
                     :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta}
         uusi-kayttoraja (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-talvisuolan-kayttoraja +kayttaja-jvh+ kayttoraja)
-        _ (println "uusi-kayttoraja: " uusi-kayttoraja)
 
         ;; Muokataan kokonaisrajoitusta hieman
         muokattu-kayttoraja (assoc uusi-kayttoraja :sanktio_ylittavalta_tonnilta muokattu_sanktio_ylittavalta_tonnilta)
@@ -515,11 +542,11 @@
         hk-alkuvuosi 2022
         sanktio-ylittavalta-tonnilta 5000M                  ;; euroa
         aluesanktio {:urakka-id urakka-id
-                      :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
-                      :tyyppi "rajoitusalue"
-                      :hoitokauden-alkuvuosi hk-alkuvuosi
-                      :indeksi "MAKU 2015"
-                      :kopioidaan-tuleville-vuosille? false}
+                     :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
+                     :tyyppi "rajoitusalue"
+                     :hoitokauden-alkuvuosi hk-alkuvuosi
+                     :indeksi "MAKU 2015"
+                     :kopioidaan-tuleville-vuosille? false}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ aluesanktio)
 
@@ -567,7 +594,7 @@
                      :indeksi "MAKU 2015"
                      :kopioidaan-tuleville-vuosille? false}
         aluesanktio-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ aluesanktio)
+                              :tallenna-rajoitusalueen-sanktio +kayttaja-jvh+ aluesanktio)
 
         ;; Siivotaan kanta
         _ (u (str "DELETE from suolasakko WHERE urakka = " urakka-id))]
