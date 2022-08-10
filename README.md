@@ -181,6 +181,11 @@ Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC k
 
 ## Dokumentaatio
 
+### Uuden kehittäjän ohjeet
+
+ - Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
+ - Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
+
 ### Tietokanta
 
 Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:

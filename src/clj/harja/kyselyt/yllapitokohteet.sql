@@ -804,6 +804,19 @@ WHERE yllapitokohde = :yllapitokohde
            FROM yllapitokohde
            WHERE id = :yllapitokohde) = :urakka;
 
+-- name: tallenna-yllapitokohteen-kustannukset-yhaid!
+UPDATE yllapitokohteen_kustannukset
+   SET
+       sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+       bitumi_indeksi           = :bitumi_indeksi,
+       kaasuindeksi             = :kaasuindeksi,
+       muokattu                 = NOW(),
+       muokkaaja                = :muokkaaja
+  FROM yllapitokohde
+ WHERE
+         yllapitokohteen_kustannukset.yllapitokohde = yllapitokohde.id
+   AND yllapitokohde.urakka = :urakka AND yllapitokohde.yhaid = :yhaid;
+
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
 UPDATE yllapitokohde
