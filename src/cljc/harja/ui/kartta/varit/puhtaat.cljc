@@ -28,6 +28,7 @@
 (def pitaya-default "#E50083")
 (def pea-default "#8DCB6D")
 (def black-light "#5C5C5C")
+(def tumma-reunus "#333")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -43,7 +44,7 @@
 
 #?(:clj
    (defn- poista-epavarit [setti]
-     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa)))
+     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa 'foo)))
 
 #?(:clj
    (defn varmenna-kaikki-vektori [ns]

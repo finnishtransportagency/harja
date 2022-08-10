@@ -1,6 +1,6 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni vesipisara-pinni-ikoni]]
             [clojure.string :as str]
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
@@ -580,6 +580,29 @@ tr-ikoni {:img (pinni-ikoni "musta")
      nil]
 
     [nil nil nil nil]))
+
+(defn velho-varutetoteuma [vt]
+  (conj (case (:toteuma vt)
+          "lisatty" ["Lisätty"
+                     puhtaat/fig-default
+                     (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/fig-default 2)]
+          "paivitetty" ["Päivitetty"
+                        puhtaat/lemon-default
+                        (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/lemon-default 2)]
+          "poistettu" ["Poistettu"
+                       puhtaat/eggplant-default
+                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/eggplant-default 2)]
+          "tarkastus" ["Tarkistettu"
+                       puhtaat/pitaya-default
+                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/pitaya-default 2)]
+          "korjaus" ["Korjattu"
+                     puhtaat/pea-default
+                     (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/pea-default 2)]
+          "puhdistus" ["Puhdistettu"
+                       puhtaat/black-light
+                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/black-light 2)]
+          [(monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 "#FFFFFF" 2)])
+    (vesipisara-pinni-ikoni)))
 
 (defn tilan-vari [tila]
   (case tila
