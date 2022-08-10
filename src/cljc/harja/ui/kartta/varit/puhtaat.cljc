@@ -21,12 +21,13 @@
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
 
-(def fig-default   (rgb 0 176 204))
-(def lemon-default (rgb 255 195 0))
-(def eggplant-default (rgb 160 80 160))
-(def pitaya-default (rgb 229 0 131))
-(def pea-default (rgb 141 203 109))
-(def black-light (rgb 92 92 92))
+;; Näitä värejä käytetään hexoina vektori-ikoneiden värjäämiseen.
+(def fig-default "#00B0CC")
+(def lemon-default "#FFC300")
+(def eggplant-default "#A050A0")
+(def pitaya-default "#E50083")
+(def pea-default "#8DCB6D")
+(def black-light "#5C5C5C")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
