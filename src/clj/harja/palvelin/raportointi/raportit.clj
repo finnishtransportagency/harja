@@ -19,6 +19,7 @@
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-paivittain]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-tehtavittain]
   [harja.palvelin.raportointi.raportit.yksikkohintaiset-tyot-kuukausittain]
+  [harja.palvelin.raportointi.raportit.suolasakko]
   [harja.palvelin.raportointi.raportit.tiestotarkastus]
   [harja.palvelin.raportointi.raportit.kelitarkastus]
   [harja.palvelin.raportointi.raportit.laaduntarkastus]
@@ -212,6 +213,13 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Toimenpidepäivät"
     :suorita      #'harja.palvelin.raportointi.raportit.toimenpidepaivat/suorita
+    :urakkatyyppi #{:hoito :teiden-hoito}}
+
+   {:nimi         :suolasakko
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
+    :kuvaus       "Suolasakkoraportti"
+    :suorita      #'harja.palvelin.raportointi.raportit.suolasakko/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :indeksitarkistus
