@@ -1316,18 +1316,11 @@ yllapitoluokkanimi->numero
 (defn kohteiden-summarivi
   "Laskee ylläpitokohteen kustannusriveistä summarivin."
   [kohteet]
-  (let [sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-        maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
-        arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-        sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
-        bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
-        kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
-        kokonaishinta-yhteensa (laske-sarakkeen-summa :kokonaishinta kohteet)]
-    {:id 0 :nimi "Yhteensä" :yhteenveto true
-     :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
-     :maaramuutokset maaramuutokset-yhteensa
-     :arvonvahennykset arvonvahennykset-yhteensa
-     :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
-     :bitumi-indeksi bitumi-indeksi-yhteensa
-     :kaasuindeksi kaasuindeksi-yhteensa
-     :kokonaishinta kokonaishinta-yhteensa}))
+  {:id 0 :nimi "Yhteensä" :yhteenveto true
+   :sopimuksen-mukaiset-tyot (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+   :maaramuutokset (laske-sarakkeen-summa :maaramuutokset kohteet)
+   :arvonvahennykset (laske-sarakkeen-summa :arvonvahennykset kohteet)
+   :sakot-ja-bonukset (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+   :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
+   :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
+   :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})

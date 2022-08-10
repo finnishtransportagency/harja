@@ -102,29 +102,6 @@
    "Arvioitu lopetus pvm" "Työmenetelmä" "Määrä"
    "Yksikkö" "Kustannusarvio" "Lisätiedot"])
 
-(defn tee-excel [tiedostonimi data]
-  (let [wb (xls/create-workbook "Paikkaukset"
-                                [["Paikkausehdotukset"]
-                                 []
-                                 []
-                                 paikkauskohteet-otsikot]
-                                "Lähtötiedot"
-                                lahtotiedot-sisalto
-                                )
-        ps (xls/select-sheet "Paikkaukset" wb)
-        _ (do
-            (doall (map #(.autoSizeColumn ps %) (range 16)))
-            (xls/set-cell-style! (xls/select-cell "A1" ps)
-                                 (xls/create-cell-style! wb {:font {:size 14 :name "Arial" :bold true}
-                                                             :valign :center}))
-            (xls/set-row-style! (nth (xls/row-seq ps) 3) (xls/create-cell-style! wb {:font {:name "Arial" :bold true :size 10}
-                                                                                     :border-bottom :thin
-                                                                                     :border-top :thin
-                                                                                     :border-left :thin
-                                                                                     :border-right :thin})))
-        file (xls/save-workbook-into-file! tiedostonimi wb)]
-    file))
-
 (defn- rivita-kohteet [kohteet]
   (concat
     (when (> (count kohteet) 0)

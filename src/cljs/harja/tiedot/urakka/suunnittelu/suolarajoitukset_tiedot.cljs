@@ -135,7 +135,7 @@
   HaeSuolarajoituksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui tallennus onnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+      (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc :suolarajoitukset-haku-kaynnissa? false)
         (assoc :suolarajoitukset nil))))
@@ -278,14 +278,6 @@
           _ (reset! lomake-atom lomake)
           {:keys [validoi] :as validoinnit} (validoi-lomake lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
-          ;; Tarkista palvelinvirheet
-          palvelinvirheet (get-in lomake [:palvelinvirheet :tierekisteri])
-          validius (if-not (nil? palvelinvirheet)
-                     (mapv (fn [virhe] (assoc validius (key virhe) (val virhe))) palvelinvirheet)
-                     validius)
-          validi? (if-not (nil? palvelinvirheet)
-                    false
-                    validi?)
           app (-> app
                 (assoc :lomake lomake)
                 (assoc-in [:lomake ::tila/validius] validius)
@@ -293,11 +285,11 @@
           app (if (or
                     tarkista-tierekisteri?
                     (and
-                        (not (nil? (:tie lomake)))
-                        (not (nil? (:aosa lomake)))
-                        (not (nil? (:aet lomake)))
-                        (not (nil? (:losa lomake)))
-                        (not (nil? (:let lomake)))
+                      (not (nil? (:tie lomake)))
+                      (not (nil? (:aosa lomake)))
+                      (not (nil? (:aet lomake)))
+                      (not (nil? (:losa lomake)))
+                      (not (nil? (:let lomake)))
                       (or
                         (not (empty? (set/difference vanha-tierekisteri uusi-tierekisteri)))
                         (not= (count vanha-tierekisteri) (count uusi-tierekisteri)))))
@@ -321,14 +313,23 @@
 
   HaeTierekisterinTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (do
+    (let [virhe (if (= 400 (:status vastaus))
+                  (:vastaus vastaus)
+                  nil)
+          tievalidointi (merge
+                          (get-in app [:lomake :harja.tiedot.urakka.urakka/validius [:tie]])
+                          {:validi? false :virheteksti virhe})]
+
       (js/console.log "HaeTierekisterinTiedotOnnistui :: vastaus" (pr-str vastaus))
-      (-> app
-        (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
-        (assoc-in [:lomake :pituus] (:pituus vastaus))
-        (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
-        (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
-        (assoc :hae-tiedot-kaynnissa? false))))
+      (cond-> app
+        (not virhe) (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
+        virhe (assoc-in [:lomake :palvelinvirheet :tierekisteri :tie] tievalidointi)
+        virhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]] tievalidointi)
+        virhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
+        (not virhe) (assoc-in [:lomake :pituus] (:pituus vastaus))
+        (not virhe) (assoc-in [:lomake :ajoratojen_pituus] (:ajoratojen_pituus vastaus))
+        (not virhe) (assoc-in [:lomake :pohjavesialueet] (:pohjavesialueet vastaus))
+        true (assoc :hae-tiedot-kaynnissa? false))))
 
   HaeTierekisterinTiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -347,6 +348,7 @@
              (not tierekisterivirhe) (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
              tierekisterivirhe (assoc-in [:lomake :palvelinvirheet :tierekisteri :tie] tierekisterivirhe)
              tierekisterivirhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validius [:tie]] tievalidointi)
+             tierekisterivirhe (assoc-in [:lomake :harja.tiedot.urakka.urakka/validi?] false)
              true (assoc :hae-tiedot-kaynnissa? false)))))
 
   TallennaLomake
@@ -377,10 +379,12 @@
 
   TallennaLomakeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [e! (tuck/current-send-function)
-          tallennettu-lomake (:lomake app)
-          tallennettu-lomake (dissoc tallennettu-lomake :rajoitusalue_id :rajoitus_id)
-          e! (tuck/current-send-function)
+    (let [tallennettu-lomake (:lomake app)
+          ;; Muokataan tallennetusta lomakkeesta sopiva uuden rajoituksen pohjaksi
+          tallennettu-lomake (-> tallennettu-lomake
+                               (assoc :aosa (get-in app [:lomake :losa])) ;; loppuosasta uuden alkuosa
+                               (assoc :aet (get-in app [:lomake :let])) ;; loppuetäisyydesta uuden alkuetäisyys
+                               (dissoc :rajoitusalue_id :rajoitus_id :losa :let))
           _ (when (app :rajoitusalue-lomake-auki?)
               (.setTimeout js/window
                 (tuck/send-async! ->PaivitaLomake tallennettu-lomake true)
