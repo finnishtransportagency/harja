@@ -169,7 +169,7 @@
     "vaihtelua/vuosi"
     ""))
 
-(defn- itse-taulukko 
+(defn- tehtava-maarat-taulukko 
   [e! {:keys [sopimukset-syotetty? taso-4-tehtavat valinnat] :as app} toimenpiteen-tiedot]
   (let [{:keys [nimi sisainen-id alue-tehtavia maara-tehtavia]} toimenpiteen-tiedot
         aluetiedot-tila (r/cursor t/taulukko-tila [:alueet sisainen-id])
@@ -254,7 +254,7 @@
           {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
          maarat-tila]])]))
 
-(defn tehtava-maarat-taulukko
+(defn tehtava-maarat-taulukko-kontti
   [e! {:keys [valinnat taulukko] :as app}]
   [:div
    [debug/debug valinnat]
@@ -263,7 +263,7 @@
     (doall
       (for [t (filter :nayta-toimenpide? taulukko)]        
         ^{:key (str "tehtavat" (:sisainen-id t))}
-        [itse-taulukko e! app t]))]])
+        [tehtava-maarat-taulukko e! app t]))]])
 
 (defn sopimuksen-tallennus-boksi
   [e! virhe-sopimuksia-syottaessa?]
@@ -302,7 +302,7 @@
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
        [valitaso-filtteri e! app]
-       [tehtava-maarat-taulukko e! app]
+       [tehtava-maarat-taulukko-kontti e! app]
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])])))
 

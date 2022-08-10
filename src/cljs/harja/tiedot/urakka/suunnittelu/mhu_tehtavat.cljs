@@ -398,11 +398,17 @@
   SopimuksenTallennusOnnistui
   (process-event 
     [{:keys [vastaus]} {:keys [valinnat] :as app}]
-    (viesti/nayta! "Tallennus onnistui")
-    (swap! taulukko-tila paivita-kaikki-maarat valinnat)
-    (-> app 
-      (assoc :sopimukset-syotetty? (:tallennettu vastaus))
-      (update-in [:valinnat :noudetaan] dec)))
+    (do
+      ;; Päivitetään vielä varalta koko taulukon sisältö
+      (tuck/action!
+        (fn [e!]
+          (e! (->HaeTehtavat {:hoitokausi :kaikki}))))
+
+      (viesti/nayta! "Tallennus onnistui")
+      (swap! taulukko-tila paivita-kaikki-maarat valinnat)
+      (-> app
+        (assoc :sopimukset-syotetty? (:tallennettu vastaus))
+        (update-in [:valinnat :noudetaan] dec))))
 
   SopimuksenTallennusEpaonnistui
   (process-event 
