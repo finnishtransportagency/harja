@@ -126,25 +126,6 @@
 
       (is (= (:sakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
 
-(deftest mhu-laskutusyhteenvedon-suolasanktiot-joissa-indeksikorotus
-  (testing "mhu-laskutusyhteenvedon-suolasanktiot-joissa-indeksikorotus"
-    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-06))
-              (reset! oulun-mhu-urakka-2020-06 (hae-2020-06-tiedot)))
-          talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-06))
-          hoitokauden-suolasakko (first (laskutusyhteenveto-kyselyt/hoitokauden-suolasakko
-                                          (:db jarjestelma)
-                                          {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                           :hoitokauden_alkupvm (pvm/->pvm "1.10.2019")
-                                           :hoitokauden_loppupvm (pvm/->pvm "30.9.2020")}))
-          sanktiosumma-indeksikorotettuna (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
-                                                   (:db jarjestelma)
-                                                   {:hoitokauden-alkuvuosi 2019
-                                                    :indeksinimi "MAKU 2015"
-                                                    :summa (:hoitokauden_suolasakko hoitokauden-suolasakko)
-                                                    :perusluku (:perusluku talvihoito)}))]
-
-      (is (= (:suolasakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
-
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-bonukset
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-bonukset"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
