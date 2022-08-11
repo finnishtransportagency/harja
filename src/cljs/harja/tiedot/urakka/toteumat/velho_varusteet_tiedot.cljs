@@ -176,10 +176,14 @@
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
-            (map (fn [t] {:sijainti (:sijainti t) :toteuma (:toteuma t)}) (:toteumat vastaus)))
+      (map (fn [t]
+             (assoc t :tr-osoite (muodosta-tr-osoite t)
+                      :toimenpide (toteuma->toimenpide (:toteuma t))
+                      :varustetyyppi (tietolaji->varustetyyppi (:tietolaji t))))
+        (:toteumat vastaus)))
     (-> app
-        (assoc :haku-paalla false)
-        (assoc :varusteet (:toteumat vastaus))))
+      (assoc :haku-paalla false)
+      (assoc :varusteet (:toteumat vastaus))))
 
   HaeVarusteetEpaonnistui
   (process-event [_ app]

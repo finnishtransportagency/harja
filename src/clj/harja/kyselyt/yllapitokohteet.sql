@@ -269,6 +269,7 @@ WHERE
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                      OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
+  AND (:vain_yha_kohteet IS NOT TRUE OR ypk.yhaid IS NOT NULL)
 GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
   ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
@@ -802,6 +803,19 @@ WHERE yllapitokohde = :yllapitokohde
       AND (SELECT urakka
            FROM yllapitokohde
            WHERE id = :yllapitokohde) = :urakka;
+
+-- name: tallenna-yllapitokohteen-kustannukset-yhaid!
+UPDATE yllapitokohteen_kustannukset
+   SET
+       sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+       bitumi_indeksi           = :bitumi_indeksi,
+       kaasuindeksi             = :kaasuindeksi,
+       muokattu                 = NOW(),
+       muokkaaja                = :muokkaaja
+  FROM yllapitokohde
+ WHERE
+         yllapitokohteen_kustannukset.yllapitokohde = yllapitokohde.id
+   AND yllapitokohde.urakka = :urakka AND yllapitokohde.yhaid = :yhaid;
 
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun

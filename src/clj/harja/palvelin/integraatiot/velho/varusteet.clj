@@ -290,7 +290,7 @@
                                 (tallenna-fn kohde)
                                 true
                                 (catch Throwable t
-                                  (tallenna-virhe-fn kohde (str "Virhe tallennettaessa varustetoteumaa: url: " url " Throwable: " t))
+                                  (tallenna-virhe-fn kohde (str t " url: " url))
                                   false)
                                 )) tallennettavat-kohteet)]
           (every? true? tulokset)))
@@ -300,7 +300,7 @@
   (let [historia-osa (if (= "sijaintipalvelu" palvelu)
                        ""
                        "/historia")]
-    (str varuste-api-juuri-url "/" palvelu "/api/" api-versio historia-osa "/kohteet?rikasta=sijainnit")))
+    (str varuste-api-juuri-url "/" palvelu "/api/" api-versio historia-osa "/kohteet?rikasta=geometriat,sijainnit")))
 
 (defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn tallenna-virhe-fn]
   (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)

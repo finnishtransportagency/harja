@@ -181,8 +181,12 @@
       (tarkista-sarakkeet taulukko)
       (apurit/tarkista-taulukko-rivit
        taulukko
-       (fn [[kajaani & _ ]]
-         (= kajaani "Kajaanin alueurakka 2014-2019"))
+       (fn [[urakka-nimi lampotila keskilampo sallittu & _ ]]
+         (and (= urakka-nimi "Kajaanin alueurakka 2014-2019")
+              (testi/=marginaalissa? lampotila -6.0)
+              (testi/=marginaalissa? keskilampo -9.3)
+              (testi/=marginaalissa? sallittu 800)))
+
        (fn [[urakka-nimi lampotila keskilampo sallittu & _ ]]
          (and (= urakka-nimi "Oulun alueurakka 2014-2019")
               (testi/=marginaalissa? lampotila -6.2)

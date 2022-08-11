@@ -687,6 +687,11 @@
                     <xs:documentation>karhinta</xs:documentation>
                 </xs:annotation>
             </xs:enumeration>
+            <xs:enumeration value="42">
+                <xs:annotation>
+                    <xs:documentation>sorastus</xs:documentation>
+                </xs:annotation>
+            </xs:enumeration>
             <xs:enumeration value="51">
                 <xs:annotation>
                     <xs:documentation>hienojyrsintä</xs:documentation>
