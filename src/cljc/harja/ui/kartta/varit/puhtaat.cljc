@@ -44,7 +44,7 @@
 
 #?(:clj
    (defn- poista-epavarit [setti]
-     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa 'foo)))
+     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa 'tumma-reunus)))
 
 #?(:clj
    (defn varmenna-kaikki-vektori [ns]
