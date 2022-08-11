@@ -581,7 +581,7 @@ tr-ikoni {:img (pinni-ikoni "musta")
 
     [nil nil nil nil]))
 
-(defn velho-varutetoteuma [vt]
+(defn varustetoteuma [vt]
   (conj (case (:toteuma vt)
           "lisatty" ["Lisätty"
                      puhtaat/fig-default
