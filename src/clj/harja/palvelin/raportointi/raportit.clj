@@ -220,7 +220,7 @@
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Suolasakkoraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.suolasakko/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito}}
 
    {:nimi         :indeksitarkistus
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
