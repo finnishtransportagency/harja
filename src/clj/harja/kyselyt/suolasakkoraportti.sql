@@ -22,4 +22,4 @@ SELECT nimi as urakka_nimi, (ss).keskilampotila, (ss).pitkakeskilampotila,
 		    hy.nimi AS hallintayksikko_nimi,
                    lpad(cast(hy.elynumero as varchar), 2, '0') AS hallintayksikko_elynumero
                FROM urakka u JOIN organisaatio hy ON u.hallintayksikko = hy.id
-	      WHERE u.id in (:urakat)) r1) r2;
+	      WHERE u.id in (:urakat) AND u.tyyppi = 'hoito' ORDER BY u.nimi) r1) r2;

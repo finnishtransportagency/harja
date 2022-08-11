@@ -24,7 +24,10 @@
             [harja.domain.tierekisteri :as tr]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.transit :as transit])
+            [harja.transit :as transit]
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -102,6 +105,8 @@
    [napit/peruuta "Peruuta" #(do (modal/piilota!)
                                  (go (>! vastaus-status {:status :ei-paiviteta})))]])
 
+(def nayta-kustannusexcelin-tuonti-alkaen-vuodesta 2022)
+
 (defn excel-toiminnot [tiedot]
   [:div.paallystyskustannusten-toiminnot-container
    [:div.paallystyskustannusten-toiminnot
@@ -113,7 +118,18 @@
                :value (transit/clj->transit tiedot)}]
       [:button {:type "submit"
                 :class #{"nappi-toissijainen napiton-nappi"}}
-       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lataa kustannus-Excel"]]]]]])
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
+    (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
+      [liitteet/lataa-tiedosto
+       {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+        :vuosi (:vuosi tiedot)}
+       {:nappi-teksti "Tuo kustannukset excelistä"
+        :nappi-luokka "napiton-nappi"
+        :url "tuo-paallystyskustannukset-excelista"
+        :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
+        :tiedosto-ladattu #(do
+                             (paallystys-tiedot/paivita-yllapitokohteet!)
+                             (viesti/nayta! "Kustannukset päivitetty." :success))}])]])
 
 (defn paallystyskohteet [ur]
   (let [tallennus-gif? (atom false)

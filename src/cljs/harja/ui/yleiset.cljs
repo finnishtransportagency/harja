@@ -877,8 +877,8 @@ jatkon."
   luokka määrittäää tekstiosan tyylin"
   ([tila]
    (tila-indikaattori tila {}))
-  ([tila {:keys [fmt-fn class-skeema luokka]}]
-   [:div
+  ([tila {:keys [fmt-fn class-skeema luokka wrapper-luokka]}]
+   [:div {:class wrapper-luokka}
     [:div {:class (str "circle "
                     (if class-skeema
                       (or (get class-skeema tila)
