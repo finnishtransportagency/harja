@@ -584,24 +584,24 @@ tr-ikoni {:img (pinni-ikoni "musta")
 (defn varustetoteuma [vt]
   (conj (case (:toteuma vt)
           "lisatty" ["Lisätty"
-                     puhtaat/fig-default
-                     (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/fig-default 2)]
+                     (viiva-mustalla-rajalla puhtaat/fig-default)
+                     puhtaat/fig-default]
           "paivitetty" ["Päivitetty"
-                        puhtaat/lemon-default
-                        (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/lemon-default 2)]
+                        (viiva-mustalla-rajalla puhtaat/lemon-default)
+                        puhtaat/lemon-default]
           "poistettu" ["Poistettu"
-                       puhtaat/eggplant-default
-                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/eggplant-default 2)]
+                       (viiva-mustalla-rajalla puhtaat/eggplant-default)
+                       puhtaat/eggplant-default]
           "tarkastus" ["Tarkistettu"
-                       puhtaat/pitaya-default
-                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/pitaya-default 2)]
+                       (viiva-mustalla-rajalla puhtaat/pitaya-default)
+                       puhtaat/pitaya-default]
           "korjaus" ["Korjattu"
-                     puhtaat/pea-default
-                     (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/pea-default 2)]
+                     (viiva-mustalla-rajalla puhtaat/pea-default)
+                     puhtaat/pea-default]
           "puhdistus" ["Puhdistettu"
-                       puhtaat/black-light
-                       (monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 puhtaat/black-light 2)]
-          [(monivarinen-viiva-leveyksilla puhtaat/tumma-reunus 0 "#FFFFFF" 2)])
+                       (viiva-mustalla-rajalla puhtaat/black-light)
+                       puhtaat/black-light]
+          ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen])
     (vesipisara-pinni-ikoni)))
 
 (defn tilan-vari [tila]

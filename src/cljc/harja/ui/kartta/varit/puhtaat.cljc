@@ -15,20 +15,20 @@
 (def lime (rgb 184 229 127))
 (def pinkki (rgb 199 41 131))
 (def musta (rgb 0 0 0))
-(def musta-raja (rgba 0 0 0 0.4))
+(def musta-raja (rgb 51 51 51))
 (def valkoinen (rgb 255 255 255))
 (def vaaleanharmaa (rgb 242 242 242))
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
 
 ;; Näitä värejä käytetään hexoina vektori-ikoneiden värjäämiseen.
+;; Värit figmasta.
 (def fig-default "#00B0CC")
 (def lemon-default "#FFC300")
 (def eggplant-default "#A050A0")
 (def pitaya-default "#E50083")
 (def pea-default "#8DCB6D")
 (def black-light "#5C5C5C")
-(def tumma-reunus "#333")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
@@ -44,7 +44,7 @@
 
 #?(:clj
    (defn- poista-epavarit [setti]
-     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa 'tumma-reunus)))
+     (disj setti 'musta 'musta-raja 'valkoinen 'harmaa 'tummanharmaa 'vaaleanharmaa)))
 
 #?(:clj
    (defn varmenna-kaikki-vektori [ns]
