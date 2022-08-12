@@ -723,7 +723,7 @@
 
 (defn ikoni-ja-elementti [ikoni elementti]
   [:span
-   [:span ikoni]
+   [:span.margin-right-8 ikoni]
    elementti])
 
 (defn teksti-ja-ikoni [teksti ikoni]
