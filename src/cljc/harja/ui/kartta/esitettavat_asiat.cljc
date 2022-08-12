@@ -691,7 +691,7 @@
                                 ikoni))))
 
 (defmethod asia-kartalle :varusteet-ulkoiset [kohde valittu?]
-  (let [[teksti vari viivat ikoni] (ulkoasu/varustetoteuma kohde)]
+  (let [[teksti viivat vari ikoni] (ulkoasu/varustetoteuma kohde)]
     (assoc kohde
       :type :varusteet-ulkoiset
       :nimi (:ulkoinen-oid kohde)
