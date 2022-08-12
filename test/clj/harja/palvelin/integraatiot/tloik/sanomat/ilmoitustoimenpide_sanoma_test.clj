@@ -18,7 +18,7 @@
 
 (def +ilmoitustoimenpide+
   {:ilmoitusid 12345,
-   ;; VAKKARIFRAASI :vakiofraasi "Polanne tasataan"
+   :vakiofraasi "Polanne tasataan"
    :vapaateksti "Soitan kunhan kerkeän <TESTI>",
    :kuittaustyyppi "vastaus",
    :kasittelija
