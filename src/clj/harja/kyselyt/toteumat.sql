@@ -791,6 +791,11 @@ SET
   muokattu                = current_timestamp
 WHERE id = :id;
 
+-- name: varustetoteuma-ulkoiset-virhe-oidit
+SELECT DISTINCT virhekohteen_oid
+FROM varustetoteuma_ulkoiset_virhe
+WHERE virhekohteen_oid IS NOT NULL;
+
 -- name: varustetoteuma-ulkoiset-viimeisin-hakuaika-kohdeluokalle
 SELECT viimeisin_hakuaika
 FROM varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle

@@ -23,7 +23,7 @@
 
 (def +virhe-varustetoteuma-haussa+ ::velho-virhe-varustetoteuma-haussa)
 (def +kohde-haku-maksimi-koko+ 1000)
-
+(def +virhe-oidit-memoize-ttl+ (* 10 60 1000))
 (def +oid-hakujen-epokki+ "2000-01-01 00:00:00.0")
 (def +oid-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
 (def +urakka-memoize-ttl+ (* 10 60 1000))
@@ -131,6 +131,15 @@
          (fn [{:keys [velho_oid id] :as urakka}]
            [velho_oid id]))
        (into {})))
+
+(defn virhe-oidit-set
+  [db]
+  (->> (q-toteumat/varustetoteuma-ulkoiset-virhe-oidit db)
+    (map :virhekohteen_oid)
+    (set)))
+
+(def memo-virhe-oidit-set
+  (memo/ttl virhe-oidit-set :ttl/threshold +virhe-oidit-memoize-ttl+))
 
 (def memo-id->urakka-pvm-map
   (memo/ttl hae-id->urakka-pvm-map :ttl/threshold +urakka-memoize-ttl+))
@@ -274,7 +283,7 @@
                            (set a))
         puuttuvat-oidit (set/difference haetut-oidit saadut-oidit)
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)
-        tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit)
+        tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (memo-virhe-oidit-set))
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
     ; TODO VHAR-6139 palauta kohteiden haun ja tallentamisen lopputulokset lokita koostetusti kutsussa
     #_(log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
