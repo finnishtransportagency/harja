@@ -147,6 +147,10 @@
 (def memo-velho-oid->urakka-map
   (memo/ttl hae-velho-oid->urakka-id-map :ttl/threshold +urakka-memoize-ttl+))
 
+(defn virhe-oidit
+  [db]
+  (memo-virhe-oidit-set db))
+
 (defn urakka-pvmt-idlla
   "Paluttaa {:alkupvm <sql-date> :loppupvm <sql-date>} kysytylle urakalle `id`."
   [db id]
@@ -268,7 +272,7 @@
    Osittain onnistuminen on mahdollista, vaikka kaikkia kohteita ei saada jäsennettyä ja muunnettua.
    Siitä kuitenkin seuraa, ettei inkrementaalisen hakemisen seuraavan hakukerran päivämäärää kasvateta,
    vaan ensikerralla kohteita haetaan uudelleen samasta päivästä alkaen. "
-  [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn]
+  [kohteiden-historiat-ndjson haetut-oidit url tallenna-fn tallenna-virhe-fn virhe-oidit-fn]
   (let [haetut-oidit (set haetut-oidit)
         {saadut-kohteet :kohteet
          jasennys-onnistui? :onnistui} (try
@@ -283,7 +287,7 @@
                            (set a))
         puuttuvat-oidit (set/difference haetut-oidit saadut-oidit)
         ylimaaraiset-oidit (set/difference saadut-oidit haetut-oidit)
-        tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (memo-virhe-oidit-set))
+        tallennettavat-oidit (set/difference saadut-oidit ylimaaraiset-oidit (virhe-oidit-fn))
         tallennettavat-kohteet (filter #(contains? tallennettavat-oidit (:oid %)) saadut-kohteet)]
     ; TODO VHAR-6139 palauta kohteiden haun ja tallentamisen lopputulokset lokita koostetusti kutsussa
     #_(log/info "Varustehaku Velhosta palautti " (count saadut-kohteet) " historia-kohdetta. Yksikäsitteisiä oideja: "
@@ -311,7 +315,7 @@
                        "/historia")]
     (str varuste-api-juuri-url "/" palvelu "/api/" api-versio historia-osa "/kohteet?rikasta=geometriat,sijainnit")))
 
-(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn tallenna-virhe-fn]
+(defn hae-kohdetiedot-ja-tallenna-kohde [lahde varuste-api-juuri-url konteksti token-fn oidit tallenna-fn tallenna-virhe-fn virhe-oidit-fn]
   (let [url (muodosta-kohteet-url varuste-api-juuri-url lahde)
         token (token-fn)]
     (if token
@@ -323,7 +327,7 @@
                               :url url
                               :otsikot otsikot}
               {sisalto :body otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset pyynto)
-              onnistunut? (tallenna-kohteet sisalto oidit url tallenna-fn tallenna-virhe-fn)]
+              onnistunut? (tallenna-kohteet sisalto oidit url tallenna-fn tallenna-virhe-fn virhe-oidit-fn)]
           onnistunut?)
         (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
           (tallenna-virhe-fn nil (str "Ulkoinen käsittelyvirhe. Haku Velhosta epäonnistui. url: " url " virheet: " virheet))
@@ -350,7 +354,7 @@
 
   Virhekäsittely menee siten, että kutsutut funktiot hoitavat virheet yksittäisten kohdeiden osalta ja kutsuva funktio hoitaa
   virheet kokonaisille joukoille kohteita."
-  [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn tallenna-virhe-fn]
+  [lahde viimeksi-haettu-velhosta konteksti varuste-api-juuri token-fn tallenna-fn tallenna-hakuaika-fn tallenna-virhe-fn virhe-oidit-fn]
   (let [url (muodosta-oidit-url lahde varuste-api-juuri viimeksi-haettu-velhosta)
         token (token-fn)]
     (if token
@@ -370,7 +374,7 @@
                                     nil
                                     oidit)
                   tulokset (map #(hae-kohdetiedot-ja-tallenna-kohde lahde varuste-api-juuri konteksti token-fn
-                                                                       % tallenna-fn tallenna-virhe-fn)
+                                                                       % tallenna-fn tallenna-virhe-fn virhe-oidit-fn)
                                    oidit-alijoukot)]
               (if (every? true? tulokset)
                 (do
@@ -456,6 +460,7 @@
                                   viimeksi-haettu (hae-viimeisin-hakuaika-lahteelle db tietolahteen-kohdeluokka)
                                   tallenna-hakuaika-fn (partial tallenna-viimeisin-hakuaika-kohdeluokalle db tietolahteen-kohdeluokka)
                                   tallenna-virhe-fn (partial lokita-ja-tallenna-hakuvirhe db)
+                                  virhe-oidit-fn (partial virhe-oidit db)
                                   tallenna-toteuma-fn (fn [{:keys [oid muokattu] :as kohde}]
                                                         (try
                                                           (let [{varustetoteuma :tulos
@@ -486,8 +491,8 @@
                                                                        " Throwable:" t)
                                                             (throw t))))]
                               (hae-ja-tallenna
-                                tietolahde viimeksi-haettu konteksti varuste-api-juuri-url
-                                token-fn tallenna-toteuma-fn tallenna-hakuaika-fn tallenna-virhe-fn)))
+                                tietolahde viimeksi-haettu konteksti varuste-api-juuri-url token-fn tallenna-toteuma-fn tallenna-hakuaika-fn
+                                tallenna-virhe-fn virhe-oidit-fn)))
                           +tietolajien-lahteet+)]
               (every? true? tulos))
             false))))
