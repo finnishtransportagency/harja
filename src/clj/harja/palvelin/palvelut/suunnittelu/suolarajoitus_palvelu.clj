@@ -282,7 +282,7 @@
                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     vastaus))
 
-(defn hae-suolatoteumat-rajoitusalueelle [db user {:keys [hoitokauden-alkuvuosi urakka-id] :as tiedot}]
+(defn hae-suolatoteumat-rajoitusalueelle [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (let [_ (log/debug "hae-suolatoteumat-rajoitusalueelle :: tiedot" (pr-str tiedot))
         ;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
@@ -295,9 +295,9 @@
                         materiaalit)
         suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueet-summatiedoin db
                         {:urakka-id urakka-id
-                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                         :alkupvm (pvm/luo-pvm hoitokauden-alkuvuosi 10 1)
-                         :loppupvm (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 9 30)})
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm
+                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         suolatoteumat (mapv (fn [rivi]
                               (-> rivi
                                 (update :pohjavesialueet
@@ -352,14 +352,14 @@
 
 (defn hae-rajoitusalueen-summatiedot
   "Haetaan päivittäin groupatut suolatoteumat halutulle rajoitusalueelle"
-  [db user {:keys [rajoitusalue-id hoitokauden-alkuvuosi urakka-id] :as tiedot}]
+  [db user {:keys [rajoitusalue-id alkupvm loppupvm urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (let [_ (log/debug "hae-rajoitusalueen-summatiedot :: tiedot" (pr-str tiedot))
         suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-suolatoteumasummat db
                         {:urakka-id urakka-id
                          :rajoitusalue-id rajoitusalue-id
-                         :alkupvm (pvm/luo-pvm hoitokauden-alkuvuosi 10 1)
-                         :loppupvm (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 9 30)})
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm})
         suolatoteumat (mapv (fn [rivi]
                               (-> rivi
                                 (assoc :maara (or (:formiaattimaara rivi) (:suolamaara rivi)))
@@ -376,8 +376,10 @@
         paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
                           {:urakka-id urakka-id
                            :rajoitusalue-id rajoitusalue-id
+                           :materiaali-id materiaali-id
                            :alkupvm (c/to-sql-time pvm)
-                           :loppupvm (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi pvm) true 1 :paiva))})]
+                           :loppupvm (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi pvm) true 1 :paiva))})
+        paivan-toteumat (mapv #(assoc % :maara (or (:formiaattimaara %) (:suolamaara %))) paivan-toteumat)]
     paivan-toteumat))
 
 (defrecord Suolarajoitus []

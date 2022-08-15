@@ -186,7 +186,9 @@ SELECT tot.id AS id,
        SUM(rp.maara) as suolamaara,
        null as formiaattimaara
 FROM toteuma tot
-         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id, -- Talvisuolat saadaan täältä
+         LEFT JOIN suolatoteuma_reittipiste rp
+             ON rp.toteuma = tot.id
+                AND rp.materiaalikoodi = :materiaali-id,
      rageom
 WHERE tot.urakka = :urakka-id
   AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
@@ -205,6 +207,7 @@ FROM toteuma tot
      materiaalikoodi mk,
      rageom
 WHERE mat.materiaalikoodi = mk.id
+  AND mat.materiaalikoodi = :materiaali-id
   AND tot.urakka = :urakka-id
   AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
   AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE

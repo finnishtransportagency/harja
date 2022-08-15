@@ -31,7 +31,6 @@
       (fn []
         (e! (suolatoteumat-tiedot/->HaeRajoitusalueenPaivanToteumat
               {:rajoitusalue-id rajoitusalue-id
-               :hoitokauden-alkuvuosi 2021
                :materiaali-id materiaali_id
                :pvm pvm
                :rivi-id rivi-id}))))
@@ -138,62 +137,40 @@
       {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
      rajoitusalueet]))
 
-;; TODO: Toteuta tuck-event kutsut ja tilanhallinta
-(defn virkista-paatason-rivit []
-  (let [urakkaid @nav/valittu-urakka-id]
-    (go
-      (reset! tiedot/urakan-rajoitusalueiden-summatiedot nil)
-      (reset! tiedot/urakan-rajoitusalueiden-toteumat nil)
-      (reset! tiedot/urakan-rajoitusalueet nil)
-      (reset! tiedot/urakan-rajoitusalueet (<! (tiedot/hae-urakan-rajoitusalueet urakkaid))))))
-
 (defn pohjavesialueiden-suola* [e! app]
   (komp/luo
     (komp/sisaan
       (fn []
-        ;; TODO: Päättele jostakin, että minkä vuoden rajoitusalueet haetaan pohjille.
-        (e! (suolatoteumat-tiedot/->HaeRajoitusalueet (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
-        (virkista-paatason-rivit)))
-
-    (komp/ulos
-      (fn []
-        ;; TODO: Eroon tila-atomeista. Toteuta tuck-tilanhallinta palanen kerrallaan.
-        (reset! tiedot/urakan-rajoitusalueiden-summatiedot nil)
-        (reset! tiedot/urakan-rajoitusalueiden-toteumat nil)
-        (reset! tiedot/urakan-rajoitusalueet nil)))
-
+        (e! (suolatoteumat-tiedot/->HaeRajoitusalueet (or (:valittu-hoitovuosi app)
+                                                        (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))))))
     (fn [e! app]
-      (let [;rajoitusalueet @tiedot/urakan-rajoitusalueet
-            urakka @nav/valittu-urakka]
-        [:div.pohjavesialueiden-suola
-         [:h2 "Pohjavesialueiden suolatoteumat"]
+      [:div.pohjavesialueiden-suola
+       [:h2 "Pohjavesialueiden suolatoteumat"]
 
-         ;; Aikavälivalinta ja muut kontrollit
-         [:div.taulukon-kontrollit
-          [urakka-valinnat/aikavali-nykypvm-taakse urakka
-           tiedot/valittu-aikavali
-           {:aikavalin-rajoitus [12 :kuukausi]
-            :aikavali-valinnat [ ;; Kuluvan kkn aikaväli alkaen kuluvan kkn ensimmäisestä päivästä kkn viimeiseen päivään
-                                ["Kuluva kuukausi" #(pvm/kuukauden-aikavali (pvm/nyt))]
-                                ;; Edellisen kkn aikaväli alkaen edellisen kkn ensimmäiestä päivästä edellisen kkn viimeiseen päivään
-                                ;; TODO: VAI halutaanko edelliset 4 * 7 päivää?
-                                ["Edellinen kuukausi" #(pvm/ed-kk-aikavalina (pvm/nyt))]
-                                ;; TODO: Halutaanko tähän kokonainen edellinen viikko alkaen edellisen viikon ensimmäisestä päivästä
-                                ;;       VAI edelliset 7 päivää?
-                                ["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
-                                ["Valittu aikaväli" nil]]}]
+       ;; Aikavälivalinta ja muut kontrollit
+       [:div.taulukon-kontrollit
+        [urakka-valinnat/aikavali-nykypvm-taakse @nav/valittu-urakka
+         suolatoteumat-tiedot/valittu-aikavali
+         {:aikavalin-rajoitus [12 :kuukausi]
+          :aikavali-valinnat [;; Kuluvan kkn aikaväli alkaen kuluvan kkn ensimmäisestä päivästä kkn viimeiseen päivään
+                              ["Kuluva kuukausi" #(pvm/kuukauden-aikavali (pvm/nyt))]
+                              ;; Edellisen kkn aikaväli alkaen edellisen kkn ensimmäiestä päivästä edellisen kkn viimeiseen päivään
+                              ;; TODO: VAI halutaanko edelliset 4 * 7 päivää?
+                              ["Edellinen kuukausi" #(pvm/ed-kk-aikavalina (pvm/nyt))]
+                              ;; TODO: Halutaanko tähän kokonainen edellinen viikko alkaen edellisen viikon ensimmäisestä päivästä
+                              ;;       VAI edelliset 7 päivää?
+                              ["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
+                              ["Valittu aikaväli" nil]]}]
 
-          ;; TODO: Toteuta tuck-eventin kutsu
-          [napit/yleinen-ensisijainen "Hae toteumat" #(do
-                                                        (e! (suolatoteumat-tiedot/->HaeRajoitusalueet (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
-                                                        (virkista-paatason-rivit))
-           {:luokka "nappi-hae-toteumat"}]]
+        ;; TODO: Toteuta tuck-eventin kutsu
+        [napit/yleinen-ensisijainen "Hae toteumat" #(e! (suolatoteumat-tiedot/->HaeRajoitusalueet (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
+         {:luokka "nappi-hae-toteumat"}]]
 
-         ;; TODO: Kartta
-         #_[kartta]
-         [debug/debug app]
-         ;; Rajoitusalueiden taulukko
-         [taulukko-rajoitusalueet e! app]]))))
+       ;; TODO: Kartta
+       #_[kartta]
+       [debug/debug app]
+       ;; Rajoitusalueiden taulukko
+       [taulukko-rajoitusalueet e! app]])))
 
 (defn pohjavesialueiden-suola []
   (tuck/tuck tila/toteuma-pohjavesialueiden-suola pohjavesialueiden-suola*))

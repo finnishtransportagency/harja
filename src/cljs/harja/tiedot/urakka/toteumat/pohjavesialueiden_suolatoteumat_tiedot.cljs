@@ -10,6 +10,10 @@
             [harja.ui.viesti :as viesti]
             [clojure.set :as set]))
 
+(defonce
+  ^{:doc "Jotta voidaan käyttää non-tuck tyyppistä aikavälin valintaa, niin säilötään valittu aikaväli materiaalien tarkastelulle"}
+  valittu-aikavali (atom nil))
+
 (defrecord HaeRajoitusalueet [valittu-vuosi])
 (defrecord HaeRajoitusalueetOnnistui [vastaus])
 (defrecord HaeRajoitusalueetEpaonnistui [vastaus])
@@ -25,7 +29,9 @@
 (defn- hae-suolarajoitukset [valittu-vuosi]
   (let [urakka-id (-> @tila/yleiset :urakka :id)
         _ (tuck-apurit/post! :hae-suolatoteumat-rajoitusalueelle
-            {:hoitokauden-alkuvuosi valittu-vuosi
+            {:hoitokauden-alkuvuosi valittu-vuosi           ;; Määritellään minkä vuoden rajoitusalueille toteumat haetaan
+             :alkupvm (first @valittu-aikavali)
+             :loppupvm (second @valittu-aikavali)
              :urakka-id urakka-id}
             {:onnistui ->HaeRajoitusalueetOnnistui
              :epaonnistui ->HaeRajoitusalueetEpaonnistui
@@ -36,6 +42,7 @@
   HaeRajoitusalueet
   (process-event [{valittu-vuosi :valittu-vuosi} app]
     (do
+      (js/console.log "HaeRAjoitusalueet :: ala käyttämään valittu-aikavali:" (pr-str @valittu-aikavali))
       (hae-suolarajoitukset valittu-vuosi)
       (-> app
         (assoc :rajoitusalueet nil)
@@ -66,7 +73,8 @@
   (process-event [{{:keys [rajoitusalue-id hoitokauden-alkuvuosi] :as parametrit} :parametrit} app]
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :hae-rajoitusalueen-summatiedot
-              {:hoitokauden-alkuvuosi (if hoitokauden-alkuvuosi hoitokauden-alkuvuosi 2021)
+              {:alkupvm (first @valittu-aikavali)
+               :loppupvm (second @valittu-aikavali)
                :urakka-id urakka-id
                :rajoitusalue-id rajoitusalue-id}
               {:onnistui ->HaeRajoitusalueenSummatiedotOnnistui
