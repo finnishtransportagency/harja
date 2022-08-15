@@ -108,9 +108,9 @@
                 :tyhja (if (or (nil? rajoitusalueet))
                          [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                          "Ei Rajoitusalueita")}
-     [{:tyyppi :vetolaatikon-tila :leveys 0.3}
+     [{:tyyppi :vetolaatikon-tila :leveys 0.5}
       {:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.5}
-      {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
+      {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1.5}
       {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
        :luokka "sarake-pohjavesialueet"
        :tyyppi :komponentti
