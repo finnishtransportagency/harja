@@ -360,7 +360,12 @@
                          :rajoitusalue-id rajoitusalue-id
                          :alkupvm (pvm/luo-pvm hoitokauden-alkuvuosi 10 1)
                          :loppupvm (pvm/luo-pvm (inc hoitokauden-alkuvuosi) 9 30)})
-        suolatoteumat (mapv #(assoc % :rivi-id (hash %)) suolatoteumat)]
+        suolatoteumat (mapv (fn [rivi]
+                              (-> rivi
+                                (assoc :maara (or (:formiaattimaara rivi) (:suolamaara rivi)))
+                                (assoc :lukumaara (or (:formiaattilukumaara rivi) (:suolalukumaara rivi)))
+                                (assoc :rivi-id (hash rivi))))
+                        suolatoteumat)]
     suolatoteumat))
 
 (defn hae-rajoitusalueen-paivan-toteumat

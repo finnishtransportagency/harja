@@ -130,25 +130,43 @@ WITH rageom AS (
     FROM rajoitusalue ra
     WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
     )
-SELECT mk.id                                       AS materiaali_id,
-       mk.nimi                                     AS "materiaali-nimi",
-       date_trunc('day', tot.alkanut)              AS pvm,
-       coalesce(SUM(rp.maara), SUM(mat.maara))     AS maara,
-       coalesce(count(rp.maara), count(mat.maara)) AS lukumaara,
-       TRUE                                        AS koneellinen
+SELECT rp.materiaalikoodi             AS materiaali_id,
+       mk.nimi                        AS "materiaali-nimi",
+       date_trunc('day', tot.alkanut) AS pvm,
+       SUM(rp.maara)                  AS suolamaara,
+       null                           AS formiaattimaara,
+       count(rp.maara)                AS suolalukumaara,
+       null                           AS formiaattilukumaara,
+       TRUE                           AS koneellinen
 FROM toteuma tot
-         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id -- Talvisuolat saadaan täältä
+         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id, -- Talvisuolat saadaan täältä
+      rageom,
+      materiaalikoodi mk
+WHERE tot.poistettu = FALSE
+  AND tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
+  AND tot.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND mk.id = rp.materiaalikoodi
+GROUP BY pvm, rp.materiaalikoodi, mk.nimi
+UNION
+SELECT mk.id                          AS materiaali_id,
+       mk.nimi                        AS "materiaali-nimi",
+       date_trunc('day', tot.alkanut) AS pvm,
+       null                           AS suolamaara,
+       SUM(mat.maara)                 AS formiaattimaara,
+       null                           AS suolalukumaara,
+       count(mat.maara)               AS lukumaara,
+       TRUE                           AS koneellinen
+FROM toteuma tot
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
          LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (6,15,16),
-      materiaalikoodi mk,
-      rageom
-WHERE (rp.materiaalikoodi = mk.id OR mat.materiaalikoodi = mk.id )
+     materiaalikoodi mk,
+     rageom
+WHERE mat.materiaalikoodi = mk.id
   AND tot.poistettu = FALSE
   AND tot.urakka = :urakka-id
-  AND (ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
-           OR
-       ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50))
+  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
   AND tot.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE
 GROUP BY pvm, mk.id;
 
@@ -165,19 +183,30 @@ WITH rageom AS (
 SELECT tot.id AS id,
        tot.alkanut AS alkanut,
        tot.paattynyt AS paattynyt,
-       coalesce(SUM(rp.maara), SUM(mat.maara))     AS maara
-  FROM toteuma tot
-         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id -- Talvisuolat saadaan täältä
+       SUM(rp.maara) as suolamaara,
+       null as formiaattimaara
+FROM toteuma tot
+         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id, -- Talvisuolat saadaan täältä
+     rageom
+WHERE tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
+  AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+GROUP BY tot.id
+UNION
+SELECT tot.id AS id,
+       tot.alkanut AS alkanut,
+       tot.paattynyt AS paattynyt,
+       null as suolamaara,
+       SUM(mat.maara) as formiaattimaara
+FROM toteuma tot
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
          LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (6,15,16),
-       materiaalikoodi mk,
-       rageom
- WHERE (rp.materiaalikoodi = mk.id OR mat.materiaalikoodi = mk.id )
-   AND tot.urakka = :urakka-id
-   AND (ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
-            OR
-        ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50))
+     materiaalikoodi mk,
+     rageom
+WHERE mat.materiaalikoodi = mk.id
+  AND tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
   AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
 GROUP BY tot.id;
 
