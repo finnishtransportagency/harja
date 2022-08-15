@@ -194,7 +194,6 @@
          :kayttajatunnus "udqtidknab4bbr8uruua44mql"
          :salasana #=(slurp "../.harja/velho-salasana")
          :varuste-api-juuri-url "https://api-v2.stg.velho.vayla.fi"
-         :varuste-tuonti-suoritusaika [13 26 0]
          :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
          :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")
          :varuste-urakka-oid-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
