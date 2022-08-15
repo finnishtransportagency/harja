@@ -26,6 +26,7 @@
 
 (def +oid-hakujen-epokki+ "2000-01-01 00:00:00.0")
 (def +oid-hakujen-epokki-sqllle+ "2000-01-01T00:00:00Z")
+(def +urakka-memoize-ttl+ (* 10 60 1000))
 
 ; tl523 "Tekninen piste" Lähde puuttuu - "Siirtyy Fintraffic:n vastuulle (tiedon masterjärjestelmä)! Tietolajia ei migroida."
 
@@ -226,7 +227,6 @@
   (let [parametrit {:kohdeluokka kohdeluokka
                     :viimeisin_hakuaika viimeisin-hakuaika}]
     (q-toteumat/varustetoteuma-ulkoiset-paivita-viimeisin-hakuaika-kohdeluokalle! db parametrit)))
-
 
 (defn tallenna-kohteet
   "Kohdetietojen hakeminen ja tallentaminen on kaksivaiheinen toimenpide.
