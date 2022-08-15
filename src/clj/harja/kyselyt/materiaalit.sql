@@ -327,6 +327,15 @@ SELECT *
 FROM materiaalikoodi
 WHERE materiaalityyppi IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
 
+-- name: hae-talvisuolauksen-materiaalit
+SELECT id,
+       nimi,
+       yksikko,
+       materiaalityyppi
+FROM materiaalikoodi
+WHERE materiaalityyppi IN ('talvisuola', 'formiaatti')
+ORDER BY materiaalityyppi;
+
 -- name: hae-kaikki-materiaalit
 SELECT
   id,
