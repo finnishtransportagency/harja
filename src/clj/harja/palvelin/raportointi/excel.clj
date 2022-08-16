@@ -73,9 +73,15 @@
       (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
     (evaluoi-kaava workbook cell)))
 
+(defn parsi-rivinumero
+  "Parsii Excel-solun rivinumeron, esim. 'A16' --> 16"
+  [solun-osoite-str]
+  (let [rivinumero-stringina (re-find (re-pattern "\\d+") (.toString solun-osoite-str))]
+    (when rivinumero-stringina (Integer/parseInt rivinumero-stringina))))
+
 (defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
   (let [osoite (-> cell .getAddress)
-        rivi (second (.toString osoite))]
+        rivi (parsi-rivinumero osoite)]
     (.setCellFormula
       cell
       (str "SUM("(or alkusarake 1) rivi  ":" (or loppusarake (.getRow osoite)) rivi ")")))
