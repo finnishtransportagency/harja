@@ -1,5 +1,5 @@
 ALTER TABLE toteuman_reittipisteet ADD COLUMN IF NOT EXISTS reittipisteiden_kopio reittipistedata[];
-COMMENT ON COLUMN toteuman_reittipisteet.reittipisteiden_kopio IS 'Reittipisteiden varmuuskopio, kun ollaan siirretty talvisuolia pois kevyen liikenteen väyliltä.'
+COMMENT ON COLUMN toteuman_reittipisteet.reittipisteiden_kopio IS 'Reittipisteiden varmuuskopio, kun ollaan siirretty talvisuolia pois kevyen liikenteen väyliltä.';
 
 CREATE OR REPLACE FUNCTION siirra_talvisuola_kelvilta(urakka_ INTEGER, alku TIMESTAMP, loppu TIMESTAMP)
     RETURNS INTEGER AS
