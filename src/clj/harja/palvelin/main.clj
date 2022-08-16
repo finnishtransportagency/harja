@@ -531,7 +531,7 @@
 
       :varustetoteuma-ulkoiset (component/using
                    (varuste-ulkoiset/->VarusteVelho)
-                   [:http-palvelin :db :velho-integraatio])
+                   [:http-palvelin :db :velho-integraatio :excel-vienti])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
