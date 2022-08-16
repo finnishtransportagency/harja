@@ -23,8 +23,8 @@
      [:ytunnus (:ytunnus data)]]))
 
 (defn muodosta-vapaateksti [vapaateksti]
-  (let [vapaateksti (merkkijono/leikkaa 1024 vapaateksti)]
-    (xml/tee-c-data-elementti-tarvittaessa vapaateksti)))
+      (let [vapaateksti (merkkijono/leikkaa 1024 vapaateksti)]
+           (xml/tee-c-data-elementti-tarvittaessa vapaateksti)))
 
 (defn muodosta-viesti [{:keys [ilmoitusid kuittaustyyppi kuitattu vakiofraasi vapaateksti kasittelija kuittaaja]}
                        viesti-id]
