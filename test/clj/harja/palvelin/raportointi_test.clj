@@ -271,3 +271,9 @@
   (is (= 1 (excel/parsi-rivinumero "A1")) "A1 parsitaan rivi 1")
   (is (= 12 (excel/parsi-rivinumero "AC12")) "AC12 parsitaan rivi 12")
   (is (= 665 (excel/parsi-rivinumero "G665")) "G665 parsitaan rivi 665"))
+
+(deftest parsi-excelin-sarakekirjain
+  (is (= "A" (excel/parsi-sarakekirjain "A1")) "A1 parsitaan A")
+  (is (= "AC" (excel/parsi-sarakekirjain "AC12")) "AC12 parsitaan AC")
+  (is (= "ACHHHH" (excel/parsi-sarakekirjain "ACHHHH12")) "ACHHHH12 parsitaan ACHHHH")
+  (is (= "G" (excel/parsi-sarakekirjain "G665")) "G665 parsitaan G"))
