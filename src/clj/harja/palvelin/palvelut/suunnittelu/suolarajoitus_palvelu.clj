@@ -290,9 +290,6 @@
         talvisuolaidt (keep #(when (= "talvisuola" (:materiaalityyppi %))
                                (:id %))
                         materiaalit)
-        formiaattiidt (keep #(when (= "formiaatti" (:materiaalityyppi %))
-                               (:id %))
-                        materiaalit)
         suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueet-summatiedoin db
                         {:urakka-id urakka-id
                          :alkupvm alkupvm
@@ -327,11 +324,7 @@
                                          (some #(= % (:materiaali_id (:suolatoteumat rivi))) talvisuolaidt)
                                          (:maara (:suolatoteumat rivi))
                                          0))
-                                (assoc :formiaatin-kokonaismaara
-                                       (if
-                                         (some #(= % (:materiaali_id (:formiaattitoteumat rivi))) formiaattiidt)
-                                         (:maara (:formiaattitoteumat rivi))
-                                         0))))
+                                (assoc :formiaatin-kokonaismaara (:maara (:formiaattitoteumat rivi)))))
                         suolatoteumat)
         suolatoteumat (mapv (fn [rivi]
                               (-> rivi

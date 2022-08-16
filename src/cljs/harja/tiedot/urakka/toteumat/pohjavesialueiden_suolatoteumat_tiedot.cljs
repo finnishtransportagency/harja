@@ -12,7 +12,7 @@
 
 (defonce
   ^{:doc "Jotta voidaan käyttää non-tuck tyyppistä aikavälin valintaa, niin säilötään valittu aikaväli materiaalien tarkastelulle"}
-  valittu-aikavali (atom nil))
+  valittu-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defrecord HaeRajoitusalueet [valittu-vuosi])
 (defrecord HaeRajoitusalueetOnnistui [vastaus])

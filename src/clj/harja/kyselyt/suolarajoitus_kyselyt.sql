@@ -98,7 +98,9 @@ SELECT ra.id                                                               AS ra
         FROM toteuma tot
                  LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
                  LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
-                 LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (6,15,16),
+                 LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE
+                    AND mat.materiaalikoodi in
+                        (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi),
              materiaalikoodi mk
         WHERE tot.urakka = 35
           AND tot.poistettu = false
@@ -129,6 +131,9 @@ WITH rageom AS (
     (ra.tierekisteriosoite).let::int)) as sijainti
     FROM rajoitusalue ra
     WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
+    ),
+    formiaatit AS (
+        SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi
     )
 SELECT rp.materiaalikoodi             AS materiaali_id,
        mk.nimi                        AS "materiaali-nimi",
@@ -160,7 +165,7 @@ SELECT mk.id                          AS materiaali_id,
 FROM toteuma tot
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
-         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (6,15,16),
+         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (SELECT id FROM formiaatit),
      materiaalikoodi mk,
      rageom
 WHERE mat.materiaalikoodi = mk.id
@@ -179,7 +184,10 @@ WITH rageom AS (
                                           (ra.tierekisteriosoite).let::int)) as sijainti
     FROM rajoitusalue ra
     WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
-)
+),
+ formiaatit AS (
+     SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi
+ )
 SELECT tot.id AS id,
        tot.alkanut AS alkanut,
        tot.paattynyt AS paattynyt,
@@ -203,7 +211,7 @@ SELECT tot.id AS id,
 FROM toteuma tot
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
-         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (6,15,16),
+         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (SELECT id FROM formiaatit),
      materiaalikoodi mk,
      rageom
 WHERE mat.materiaalikoodi = mk.id
