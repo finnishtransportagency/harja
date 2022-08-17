@@ -428,7 +428,7 @@
       (catch Throwable t
         (lokita-ja-heita-poikkeus-fn t)))))
 
-(defn- jasenna-ja-tarkasta-varustetoteuma
+(defn jasenna-ja-tarkasta-varustetoteuma
   [db kohde]
   (let [urakka-id-kohteelle-fn (partial urakka-id-kohteelle db) ; tässä vielä toistaikseksi parametrinä kohde, joten memoize on syvemmällä
         urakka-pvmt-idlla-fn (partial urakka-pvmt-idlla db)

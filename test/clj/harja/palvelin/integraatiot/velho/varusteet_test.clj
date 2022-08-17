@@ -83,6 +83,19 @@
       (testattava-funktio))
     @loki))
 
+(defn kutsu-ja-laske-jasennykset
+  [testattava-funktio]
+  (let [jasennys-lkm (atom 0)
+        laskuri-fn (fn [alkuperainen-fn db kohde]
+                     (swap! jasennys-lkm inc)
+                     (alkuperainen-fn db kohde))
+        vanha-fn varusteet/jasenna-ja-tarkasta-varustetoteuma
+        loki (with-redefs [varusteet/virhe-oidit (fn [db]
+                                                   (varusteet/virhe-oidit-set db))
+                           varusteet/jasenna-ja-tarkasta-varustetoteuma (partial laskuri-fn vanha-fn)]
+               (testattava-funktio))]
+    {:loki loki :jasennykset @jasennys-lkm}))
+
 (defn feikkaa-ja-kutsu-varusteintegraatiota
   "Feikkaa http-palvelut ja kutsuu `tuo-uudet-varustetoteumat-velhosta`"
   ([oidit-vastaus kohteet-vastaus]
@@ -665,6 +678,23 @@
         odotettu-oid-lista #{}
         lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (not (str/includes? lokiteksti "ERROR")))
+    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
+
+(deftest virheillytta-kohdetta-ei-tuoda-kahdesti
+  (u "DELETE FROM varustetoteuma_ulkoiset")
+  (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.158276054\"]"
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/virheelliset/varusterekisteri_api_v1_historia_kohteet-virhe.jsonl")
+        odotettu-oid-lista #{}
+        {lokiteksti :loki, jasennykset :jasennykset} (kutsu-ja-laske-jasennykset
+                                                       (fn [] (kutsu-ja-palauta-varusteiden-loki
+                                                                (fn [] (str
+                                                                         (feikkaa-ja-kutsu-varusteintegraatiota
+                                                                           odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+                                                                         (feikkaa-ja-kutsu-varusteintegraatiota
+                                                                           odotettu-oidit-vastaus odotettu-kohteet-vastaus))))))]
+    (yleiset/prettydenty "petrisi1314: " lokiteksti)
+    (is (= 1 jasennykset) "Kohteen tuontia ei saa tehdä, jos on tallessa virhe ko. oidilla.")
+    (is (str/includes? lokiteksti "virhe"))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test
