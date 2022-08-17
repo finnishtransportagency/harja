@@ -102,7 +102,7 @@ SELECT ra.id                                                               AS ra
                     AND mat.materiaalikoodi in
                         (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi),
              materiaalikoodi mk
-        WHERE tot.urakka = 35
+        WHERE tot.urakka = :urakka-id
           AND tot.poistettu = false
           AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
           AND ST_DWithin((SELECT tierekisteriosoitteelle_viiva((ra.tierekisteriosoite).tie::int,
