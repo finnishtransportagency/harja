@@ -8,6 +8,8 @@ CREATE TABLE rajoitusalue (
   pituus             INTEGER,
 -- Lasketaan tierekisteriosoitteelle
   ajoratojen_pituus  INTEGER,
+-- lasketaan sijainti valmiiksi, niin nopeutetaan tietokantahakuja koordinaattien perusteella
+  sijainti geometry,
 
 -- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain ja pohjavesialueet_hallintayksikoittain)
 -- NOTE: pohjavesialueet_hallintayksikoittain viewiä on käytetty vain kartalle hakuun

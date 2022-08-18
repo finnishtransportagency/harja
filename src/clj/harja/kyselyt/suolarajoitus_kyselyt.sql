@@ -21,13 +21,16 @@ FROM rajoitusalue WHERE id = :id;
 
 -- name: tallenna-rajoitusalue<!
 INSERT INTO rajoitusalue
-(tierekisteriosoite, pituus, ajoratojen_pituus, urakka_id, luotu, luoja) VALUES
-    (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id)
+(tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja) VALUES
+    (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
+     (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
+     :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id)
 RETURNING id;
 
 -- name: paivita-rajoitusalue!
 UPDATE rajoitusalue
 SET tierekisteriosoite = ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
+    sijainti = (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
     pituus = :pituus,
     ajoratojen_pituus = :ajoratojen_pituus,
     urakka_id = :urakka_id,
