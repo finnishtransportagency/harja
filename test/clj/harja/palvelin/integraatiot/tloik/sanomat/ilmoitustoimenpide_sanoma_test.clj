@@ -18,6 +18,7 @@
 
 (def +ilmoitustoimenpide+
   {:ilmoitusid 12345,
+   :vakiofraasi "Polanne tasataan"
    :vapaateksti "Soitan kunhan kerkeän <TESTI>",
    :kuittaustyyppi "vastaus",
    :kasittelija
@@ -48,6 +49,7 @@
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
         data (xml-zip (parse (ByteArrayInputStream. (.getBytes xml "UTF-8"))))]
     (is (= "12345" (z/xml1-> data :ilmoitusId z/text)))
+    ;;(is (= "Polanne tasataan" (z/xml1-> data :vakiofraasi z/text)))
     (is (= "Soitan kunhan kerkeän <TESTI>" (z/xml1-> data :vapaateksti z/text)))
     (is (= "vastaus" (z/xml1-> data :tyyppi z/text)))
     (is (= "Usko<ToivoUntamo04428121283usko.untamo@valittavaurakoitsija.fiVälittävä UrakoitsijaY1234" (z/xml1-> data :kasittelija z/text)))
