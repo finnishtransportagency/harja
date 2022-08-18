@@ -108,11 +108,7 @@ SELECT ra.id                                                               AS ra
         WHERE tot.urakka = :urakka-id
           AND tot.poistettu = false
           AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-          AND ST_DWithin((SELECT tierekisteriosoitteelle_viiva((ra.tierekisteriosoite).tie::int,
-                                                               (ra.tierekisteriosoite).aosa::int,
-                                                               (ra.tierekisteriosoite).aet::int,
-                                                               (ra.tierekisteriosoite).losa::int,
-                                                               (ra.tierekisteriosoite).let::int)), trp.sijainti::geometry, 50)) as formiaattitoteumat,
+          AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 50)) as formiaattitoteumat,
        rr.luotu                                                            as luotu,
        rr.luoja                                                            as luoja,
        rr.muokattu                                                         as muokattu,
@@ -127,11 +123,7 @@ ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisterios
 
 -- name: hae-rajoitusalueen-suolatoteumasummat
 WITH rageom AS (
-    select (tierekisteriosoitteelle_viiva((ra.tierekisteriosoite).tie::int,
-    (ra.tierekisteriosoite).aosa::int,
-    (ra.tierekisteriosoite).aet::int,
-    (ra.tierekisteriosoite).losa::int,
-    (ra.tierekisteriosoite).let::int)) as sijainti
+    SELECT sijainti
     FROM rajoitusalue ra
     WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
     ),
@@ -180,11 +172,7 @@ GROUP BY pvm, mk.id;
 
 -- name: hae-rajoitusalueen-paivan-toteumat
 WITH rageom AS (
-    select (tierekisteriosoitteelle_viiva((ra.tierekisteriosoite).tie::int,
-                                          (ra.tierekisteriosoite).aosa::int,
-                                          (ra.tierekisteriosoite).aet::int,
-                                          (ra.tierekisteriosoite).losa::int,
-                                          (ra.tierekisteriosoite).let::int)) as sijainti
+    SELECT sijainti
     FROM rajoitusalue ra
     WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
 ),
