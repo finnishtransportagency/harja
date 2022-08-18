@@ -1,13 +1,16 @@
 (ns harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu
   (:require [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
+            [harja.tyokalut.yleiset :as yleiset-tyokalut]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
             [taoensso.timbre :as log]
+            [clj-time.coerce :as c]
             [harja.pvm :as pvm]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [slingshot.slingshot :refer [throw+ try+]]))
@@ -157,20 +160,20 @@
                                                                        :aosa (:aosa suolarajoitus)
                                                                        :losa (:losa suolarajoitus)}))
         pituus (when tierekisteri-valid?
-            (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus))
+                 (tieverkko-kyselyt/laske-tien-osien-pituudet tie-osien-pituudet suolarajoitus))
         ajoratojen-pituudet (when tierekisteri-valid?
                               (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
                                                                              :aosa (:aosa suolarajoitus)
                                                                              :losa (:losa suolarajoitus)}))
         yhdistetyt-ajoradat2 (mapv (fn [[osa data]]
-                                    (let [ajoratatiedot {:osa osa   ;; Osa talteen
-                                                         :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
-                                                         :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
-                                                         :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
-                                                         }
-                                          ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
-                                          ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) (or (:ajoratojen-pituus ajoratatiedot) 0)))]
-                                      ajoratatiedot))
+                                     (let [ajoratatiedot {:osa osa ;; Osa talteen
+                                                          :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
+                                                          :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
+                                                          :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
+                                                          }
+                                           ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
+                                           ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) (or (:ajoratojen-pituus ajoratatiedot) 0)))]
+                                       ajoratatiedot))
                                ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
                                (group-by :osa ajoratojen-pituudet))
         ajoratojen-pituus (reduce (fn [summa ajorata]
@@ -279,8 +282,98 @@
                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     vastaus))
 
-(defn hae-suolatoteumat-rajoitusalueelle [db user tiedot]
-  (println "hae-suolatoteumat-rajoitusalueelle :: tiedot" (pr-str tiedot)))
+(defn hae-suolatoteumat-rajoitusalueelle [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
+  (let [_ (log/debug "hae-suolatoteumat-rajoitusalueelle :: tiedot" (pr-str tiedot))
+        ;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
+        materiaalit (materiaalit-kyselyt/hae-talvisuolauksen-materiaalit db)
+        talvisuolaidt (keep #(when (= "talvisuola" (:materiaalityyppi %))
+                               (:id %))
+                        materiaalit)
+        suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueet-summatiedoin db
+                        {:urakka-id urakka-id
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm
+                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        suolatoteumat (mapv (fn [rivi]
+                              (-> rivi
+                                (update :pohjavesialueet
+                                  (fn [alueet]
+                                    (mapv
+                                      #(konv/pgobject->map % :tunnus :string :nimi :string)
+                                      (konv/pgarray->vector alueet))))
+                                (update :suolatoteumat
+                                  (fn [toteumat]            ;materiaali_id, maara
+                                    (if-not (= "(,)" (.getValue toteumat))
+                                      (konv/pgobject->map toteumat
+                                        :materiaali_id :long
+                                        :maara :double)
+                                      nil)))
+                                (update :formiaattitoteumat
+                                  (fn [toteumat]            ;materiaali_id, maara
+                                    (if-not (= "(,)" (.getValue toteumat))
+                                      (konv/pgobject->map toteumat
+                                        :materiaali_id :long
+                                        :maara :double)
+                                      nil)))))
+                        suolatoteumat)
+        suolatoteumat (mapv (fn [rivi]
+                              (-> rivi
+                                (assoc :talvisuolan-kokonaismaara
+                                       (if
+                                         (some #(= % (:materiaali_id (:suolatoteumat rivi))) talvisuolaidt)
+                                         (:maara (:suolatoteumat rivi))
+                                         0))
+                                (assoc :formiaatin-kokonaismaara (:maara (:formiaattitoteumat rivi)))))
+                        suolatoteumat)
+        suolatoteumat (mapv (fn [rivi]
+                              (-> rivi
+                                (assoc :formiaatit_t_per_ajoratakm (when (and
+                                                                           (not (nil? (:formiaatin-kokonaismaara rivi)))
+                                                                           (not (nil? (:ajoratojen_pituus rivi)))
+                                                                           (> (:formiaatin-kokonaismaara rivi) 0)
+                                                                           (> (:ajoratojen_pituus rivi) 0))
+                                                                     (/ (:formiaatin-kokonaismaara rivi) (:ajoratojen_pituus rivi))))
+                                (assoc :talvisuola_t_per_ajoratakm (when (and
+                                                                           (not (nil? (:talvisuolan-kokonaismaara rivi)))
+                                                                           (not (nil? (:ajoratojen_pituus rivi)))
+                                                                           (> (:talvisuolan-kokonaismaara rivi) 0)
+                                                                           (> (:ajoratojen_pituus rivi) 0))
+                                                                     (/ (:talvisuolan-kokonaismaara rivi) (:ajoratojen_pituus rivi))))))
+                        suolatoteumat)]
+    suolatoteumat))
+
+(defn hae-rajoitusalueen-summatiedot
+  "Haetaan päivittäin groupatut suolatoteumat halutulle rajoitusalueelle"
+  [db user {:keys [rajoitusalue-id alkupvm loppupvm urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
+  (let [_ (log/debug "hae-rajoitusalueen-summatiedot :: tiedot" (pr-str tiedot))
+        suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-suolatoteumasummat db
+                        {:urakka-id urakka-id
+                         :rajoitusalue-id rajoitusalue-id
+                         :alkupvm alkupvm
+                         :loppupvm loppupvm})
+        suolatoteumat (mapv (fn [rivi]
+                              (-> rivi
+                                (assoc :maara (or (:formiaattimaara rivi) (:suolamaara rivi)))
+                                (assoc :lukumaara (or (:formiaattilukumaara rivi) (:suolalukumaara rivi)))
+                                (assoc :rivi-id (hash rivi))))
+                        suolatoteumat)]
+    suolatoteumat))
+
+(defn hae-rajoitusalueen-paivan-toteumat
+  "Haetaan yhden päivän toteumat rajoitusalueelle materiaali-id:n perusteella"
+  [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
+  (let [_ (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
+        paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
+                          {:urakka-id urakka-id
+                           :rajoitusalue-id rajoitusalue-id
+                           :materiaali-id materiaali-id
+                           :alkupvm (c/to-sql-time pvm)
+                           :loppupvm (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi pvm) true 1 :paiva))})
+        paivan-toteumat (mapv #(assoc % :maara (or (:formiaattimaara %) (:suolamaara %))) paivan-toteumat)]
+    paivan-toteumat))
 
 (defrecord Suolarajoitus []
   component/Lifecycle
@@ -325,6 +418,17 @@
       :hae-suolatoteumat-rajoitusalueelle
       (fn [user tiedot]
         (hae-suolatoteumat-rajoitusalueelle (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :hae-rajoitusalueen-summatiedot
+      (fn [user tiedot]
+        (hae-rajoitusalueen-summatiedot (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :hae-rajoitusalueen-paivan-toteumat
+      (fn [user tiedot]
+        (hae-rajoitusalueen-paivan-toteumat (:db this) user tiedot)))
+
     this)
 
   (stop [this]
@@ -336,5 +440,7 @@
       :hae-talvisuolan-kayttorajat
       :tallenna-talvisuolan-kayttoraja
       :tallenna-rajoitusalueen-sanktio
-      :hae-suolatoteumat-rajoitusalueelle)
+      :hae-suolatoteumat-rajoitusalueelle
+      :hae-rajoitusalueen-summatiedot
+      :hae-rajoitusalueen-paivan-toteumat)
     this))

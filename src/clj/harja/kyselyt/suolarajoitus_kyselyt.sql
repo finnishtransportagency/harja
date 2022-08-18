@@ -21,13 +21,16 @@ FROM rajoitusalue WHERE id = :id;
 
 -- name: tallenna-rajoitusalue<!
 INSERT INTO rajoitusalue
-(tierekisteriosoite, pituus, ajoratojen_pituus, urakka_id, luotu, luoja) VALUES
-    (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE, :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id)
+(tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja) VALUES
+    (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
+     (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
+     :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id)
 RETURNING id;
 
 -- name: paivita-rajoitusalue!
 UPDATE rajoitusalue
 SET tierekisteriosoite = ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
+    sijainti = (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
     pituus = :pituus,
     ajoratojen_pituus = :ajoratojen_pituus,
     urakka_id = :urakka_id,
@@ -63,7 +66,151 @@ WHERE ra.poistettu = FALSE
   AND rr.poistettu = FALSE
   AND rr.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
   AND ra.urakka_id = :urakka_id
-  ORDER BY suolarajoitus DESC;
+  ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC;
+
+-- name: hae-rajoitusalueet-summatiedoin
+SELECT ra.id                                                               AS rajoitusalue_id,
+       (ra.tierekisteriosoite).tie                                         AS tie,
+       (ra.tierekisteriosoite).aosa                                        AS aosa,
+       (ra.tierekisteriosoite).aet                                         AS aet,
+       (ra.tierekisteriosoite).losa                                        AS losa,
+       (ra.tierekisteriosoite).let                                         AS let,
+       ra.pituus                                                           AS pituus,
+       ra.ajoratojen_pituus                                                AS ajoratojen_pituus,
+       (select array_agg(row (tunnus, nimi))
+        from leikkaavat_pohjavesialueet((ra.tierekisteriosoite).tie::int,
+                                        (ra.tierekisteriosoite).aosa::int,
+                                        (ra.tierekisteriosoite).aet::int,
+                                        (ra.tierekisteriosoite).losa::int,
+                                        (ra.tierekisteriosoite).let::int)) AS pohjavesialueet,
+       rr.id                                                               AS rajoitus_id,
+       rr.suolarajoitus                                                    AS suolarajoitus,
+       rr.formiaatti                                                       AS formiaatti,
+       rr.hoitokauden_alkuvuosi                                            AS hoitokauden_alkuvuosi,
+       ra.urakka_id,
+       (SELECT row (MIN(materiaali_id), SUM(maara))
+        FROM tr_valin_suolatoteumat(:urakka-id::integer,
+                                    (ra.tierekisteriosoite).tie::int,
+                                    (ra.tierekisteriosoite).aosa::int,
+                                    (ra.tierekisteriosoite).aet::int,
+                                    (ra.tierekisteriosoite).losa::int,
+                                    (ra.tierekisteriosoite).let::int,
+                                    50::integer,
+                                    :alkupvm::DATE, :loppupvm::DATE)) as suolatoteumat,
+       (SELECT row (MIN(mat.materiaalikoodi), SUM(mat.maara))
+        FROM toteuma tot
+                 LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
+                 LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
+                 LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE
+                    AND mat.materiaalikoodi in
+                        (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi),
+             materiaalikoodi mk
+        WHERE tot.urakka = :urakka-id
+          AND tot.poistettu = false
+          AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+          AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 50)) as formiaattitoteumat,
+       rr.luotu                                                            as luotu,
+       rr.luoja                                                            as luoja,
+       rr.muokattu                                                         as muokattu,
+       rr.muokkaaja                                                        as muokkaaja
+FROM rajoitusalue ra
+         JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id
+WHERE ra.poistettu = FALSE
+  AND rr.poistettu = FALSE
+  AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+  AND ra.urakka_id = :urakka-id
+ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC;
+
+-- name: hae-rajoitusalueen-suolatoteumasummat
+WITH rageom AS (
+    SELECT sijainti
+    FROM rajoitusalue ra
+    WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
+    ),
+    formiaatit AS (
+        SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi
+    )
+SELECT rp.materiaalikoodi             AS materiaali_id,
+       mk.nimi                        AS "materiaali-nimi",
+       date_trunc('day', tot.alkanut) AS pvm,
+       SUM(rp.maara)                  AS suolamaara,
+       null                           AS formiaattimaara,
+       count(rp.maara)                AS suolalukumaara,
+       null                           AS formiaattilukumaara,
+       TRUE                           AS koneellinen
+FROM toteuma tot
+         LEFT JOIN suolatoteuma_reittipiste rp ON rp.toteuma = tot.id, -- Talvisuolat saadaan täältä
+      rageom,
+      materiaalikoodi mk
+WHERE tot.poistettu = FALSE
+  AND tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
+  AND tot.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND mk.id = rp.materiaalikoodi
+GROUP BY pvm, rp.materiaalikoodi, mk.nimi
+UNION
+SELECT mk.id                          AS materiaali_id,
+       mk.nimi                        AS "materiaali-nimi",
+       date_trunc('day', tot.alkanut) AS pvm,
+       null                           AS suolamaara,
+       SUM(mat.maara)                 AS formiaattimaara,
+       null                           AS suolalukumaara,
+       count(mat.maara)               AS lukumaara,
+       TRUE                           AS koneellinen
+FROM toteuma tot
+         LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
+         LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
+         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (SELECT id FROM formiaatit),
+     materiaalikoodi mk,
+     rageom
+WHERE mat.materiaalikoodi = mk.id
+  AND tot.poistettu = FALSE
+  AND tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
+  AND tot.luotu BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+GROUP BY pvm, mk.id;
+
+-- name: hae-rajoitusalueen-paivan-toteumat
+WITH rageom AS (
+    SELECT sijainti
+    FROM rajoitusalue ra
+    WHERE ra.id = :rajoitusalue-id AND ra.poistettu = FALSE
+),
+ formiaatit AS (
+     SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi
+ )
+SELECT tot.id AS id,
+       tot.alkanut AS alkanut,
+       tot.paattynyt AS paattynyt,
+       SUM(rp.maara) as suolamaara,
+       null as formiaattimaara
+FROM toteuma tot
+         LEFT JOIN suolatoteuma_reittipiste rp
+             ON rp.toteuma = tot.id
+                AND rp.materiaalikoodi = :materiaali-id,
+     rageom
+WHERE tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
+  AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+GROUP BY tot.id
+UNION
+SELECT tot.id AS id,
+       tot.alkanut AS alkanut,
+       tot.paattynyt AS paattynyt,
+       null as suolamaara,
+       SUM(mat.maara) as formiaattimaara
+FROM toteuma tot
+         LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = tot.id -- Rajoitetaan nämä vain formiaatteihin
+         LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
+         LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE AND mat.materiaalikoodi in (SELECT id FROM formiaatit),
+     materiaalikoodi mk,
+     rageom
+WHERE mat.materiaalikoodi = mk.id
+  AND mat.materiaalikoodi = :materiaali-id
+  AND tot.urakka = :urakka-id
+  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
+  AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+GROUP BY tot.id;
 
 -- name: hae-suolarajoitus
 SELECT ra.id as rajoitusalue_id,

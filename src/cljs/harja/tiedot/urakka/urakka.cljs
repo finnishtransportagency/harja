@@ -328,7 +328,8 @@
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
                                                           :toteuma nil}
-                                               :varusteet []}})
+                                               :varusteet []}
+                             :pohjavesialueiden-suolatoteumat {:valittu-hoitovuosi kuluva-alkuvuosi}})
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
@@ -399,6 +400,7 @@
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 (defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
+(defonce toteuma-pohjavesialueiden-suola (cursor tila [:toteumat :pohjavesialueiden-suolatoteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 

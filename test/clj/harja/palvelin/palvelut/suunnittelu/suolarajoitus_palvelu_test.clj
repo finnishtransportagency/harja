@@ -315,6 +315,20 @@
     (is (= 5752 (:pituus pituudet)))
     (is (= 7423 (:ajoratojen_pituus pituudet)))))
 
+(deftest validoi-nolla-let-arvo-onnistuu-test
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; 20 tien 4 osan pituus on tietokannassa 5752 metriä.
+        ;; Sillä on 3 ajorataa, joiden pituudet on 0 = 4089 m, 1=1667, 2 = 1667 eli yhteensä 7423
+        ;; Yritetään antaa kuitenkin virheellinen tieosoite, jossa loppuetäisyys on 6000 metriä. Meidän pitäisi saada vain
+        ;; maksimit ulos laskennasta.
+        tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 5 :let 0}
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
+        pituudet (kutsu-palvelua (:http-palvelin jarjestelma)
+                   :tierekisterin-tiedot
+                   +kayttaja-jvh+ suolarajoitus)]
+    (is (= 5752 (:pituus pituudet)))
+    (is (= 7423 (:ajoratojen_pituus pituudet)))))
+
 (deftest varmista-paallekaiset-rajoitukset-ei-onnistu-test
   (let [hk-alkuvuosi 2022
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
