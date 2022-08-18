@@ -163,7 +163,7 @@
                  (str "Varustetoimenpiteet (Liikaa osumia. Näytetään vain " v/+max-toteumat+ " ensimmäistä.)")
                  (str "Varustetoimenpiteet (" lkm ")"))
       :tunniste :id
-      :luokat ["varuste-taulukko"]
+      :luokat ["varuste-taulukko" "margin-top-32"]
       :tyhja (if haku-paalla
                [ajax-loader "Haetaan varustetapahtumia..."]
                "Suorita haku syöttämällä hakuehdot ja klikkaamalla Hae varustetoimenpiteitä.")
@@ -172,6 +172,10 @@
                         (e! (v/->HaeToteumat)))
       :otsikkorivi-klikattu (fn [opts]
                               (e! (v/->JarjestaVarusteet (:nimi opts))))
+      :custom-toiminto {:teksti "Vie Exceliin"
+                        :toiminto (constantly nil) 
+                        :opts {:ikoni [ikonit/harja-icon-action-upload]
+                               :luokka "nappi-reunaton"}}
       :voi-lisata? false :voi-kumota? false
       :voi-poistaa? (constantly false) :voi-muokata? true}
      [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5

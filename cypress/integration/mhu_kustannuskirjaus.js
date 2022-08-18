@@ -106,8 +106,8 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
 
     it('Poista hoitovuoden päätöksen kulu', () => {
         cy.get('table.grid tr.klikattava').eq(1).click();
-        cy.contains(' Poista kulu').click();
-        cy.contains(' Poista tiedot').click();
+        cy.contains('Poista kulu').click();
+        cy.contains('Poista tiedot').click();
 
         cy.contains('Annetuilla hakuehdoilla ei näytettäviä kuluja')
 
