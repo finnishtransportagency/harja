@@ -55,7 +55,7 @@ SELECT ra.id as rajoitusalue_id,
        rr.id as rajoitus_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
-       rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       rr.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi",
        ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
@@ -64,7 +64,7 @@ SELECT ra.id as rajoitusalue_id,
 FROM rajoitusalue ra JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id
 WHERE ra.poistettu = FALSE
   AND rr.poistettu = FALSE
-  AND rr.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+  AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
   AND ra.urakka_id = :urakka_id
   ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC;
 
@@ -86,7 +86,7 @@ SELECT ra.id                                                               AS ra
        rr.id                                                               AS rajoitus_id,
        rr.suolarajoitus                                                    AS suolarajoitus,
        rr.formiaatti                                                       AS formiaatti,
-       rr.hoitokauden_alkuvuosi                                            AS hoitokauden_alkuvuosi,
+       rr.hoitokauden_alkuvuosi                                            AS "hoitokauden-alkuvuosi",
        ra.urakka_id,
        (SELECT row (MIN(materiaali_id), SUM(maara))
         FROM tr_valin_suolatoteumat(:urakka-id::integer,
@@ -229,7 +229,7 @@ SELECT ra.id as rajoitusalue_id,
        rr.id as rajoitus_id,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
-       rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       rr.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi",
        ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
@@ -239,7 +239,7 @@ FROM rajoitusalue ra JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id
 WHERE ra.poistettu = FALSE
   AND rr.poistettu = FALSE
   AND  ra.id = :rajoitusalue_id
-  AND rr.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
+  AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi;
 
 -- name: hae-suolarajoitukset-rajoitusalueelle
 -- Tällä tarkistetaan, että onko rajoituksia olemassa rajoitusalueelle
@@ -258,7 +258,7 @@ SELECT ra.id as rajoitusalue_id,
                                              (ra.tierekisteriosoite).let::int)) as pohjavesialueet,
        rr.suolarajoitus as suolarajoitus,
        rr.formiaatti as formiaatti,
-       rr.hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       rr.hoitokauden_alkuvuosi as "hoitokauden-alkuvuosi",
        ra.urakka_id,
        rr.luotu as luotu,
        rr.luoja as luoja,
@@ -278,7 +278,7 @@ RETURNING *;
 -- name: tallenna-suolarajoitus<!
 INSERT INTO rajoitusalue_rajoitus
 (rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu, luoja) VALUES
-    (:rajoitusalue_id, :suolarajoitus, :formiaatti, :hoitokauden_alkuvuosi, NOW(), :kayttaja_id)
+    (:rajoitusalue_id, :suolarajoitus, :formiaatti, :hoitokauden-alkuvuosi, NOW(), :kayttaja_id)
 RETURNING id;
 
 -- name: paivita-suolarajoitus!
@@ -286,7 +286,7 @@ UPDATE rajoitusalue_rajoitus
 SET  rajoitusalue_id = :rajoitusalue_id,
      suolarajoitus = :suolarajoitus,
      formiaatti = :formiaatti,
-     hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi,
+     hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi,
      muokattu = NOW(),
      muokkaaja = :kayttaja_id
 WHERE id = :id;
@@ -294,8 +294,8 @@ WHERE id = :id;
 -- name: poista-suolarajoitus<!
 UPDATE rajoitusalue_rajoitus SET poistettu = true
 WHERE rajoitusalue_id = :rajoitusalue_id
-  AND ((:poista-tulevat::TEXT IS NOT NULL AND hoitokauden_alkuvuosi >= :hoitokauden_alkuvuosi)
-        OR (:poista-tulevat::TEXT IS NULL AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi))
+  AND ((:poista-tulevat::TEXT IS NOT NULL AND hoitokauden_alkuvuosi >= :hoitokauden-alkuvuosi)
+        OR (:poista-tulevat::TEXT IS NULL AND hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi))
   AND poistettu = false
 RETURNING *;
 
