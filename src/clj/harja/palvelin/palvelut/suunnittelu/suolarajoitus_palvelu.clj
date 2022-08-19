@@ -422,6 +422,7 @@
         urakan-pohjavesialueet (:pohjavesialueet tiedot)
         _ (doseq [pohjavesialue urakan-pohjavesialueet]
             (let [pohjavesialueen-vuosi (:hoitokauden-alkuvuosi pohjavesialue)
+
                   tallennettava-suolarajoitus {:hoitokauden-alkuvuosi pohjavesialueen-vuosi
                                                :kopioidaan-tuleville-vuosille? true
                                                :urakka_id urakkaid
@@ -432,7 +433,11 @@
                                                :let (:let pohjavesialue)
                                                :suolarajoitus (:talvisuolaraja pohjavesialue)
                                                :formiaatti (if (= 0 (:talvisuolaraja pohjavesialue)) true false)
-                                               :kayttaja_id (:luoja pohjavesialue)}]
+                                               :kayttaja_id (:luoja pohjavesialue)}
+                  tr-tiedot (tierekisterin-tiedot db tallennettava-suolarajoitus)
+                  tallennettava-suolarajoitus (-> tallennettava-suolarajoitus
+                                                (assoc :pituus (:pituus tr-tiedot))
+                                                (assoc :ajoratojen_pituus (:ajoratojen_pituus tr-tiedot)))]
               ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
               (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]))
 
