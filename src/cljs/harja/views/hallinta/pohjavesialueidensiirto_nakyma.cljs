@@ -29,25 +29,18 @@
 
 (defn pohjavesialueet
   "Rajoitusalueen toteumien summatiedot / yhteenveto per päivämäärä ja käytetty materiaali."
-  [e! urakka app]
+  [e! app urakka]
   (komp/luo
     (komp/sisaan
       (fn []
         (e! (tiedot/->HaeUrakanPohjavesialueet (:id urakka)))))
-    (fn [e! urakka app]
-      (let [urakkaid (:urakkaid urakka)
-            ;_ (js/console.log "urakan-pohjavesialueet :: urakka" (pr-str urakka))
-            urakan-pohjavesialueet (some
-                                     (fn [u]
-                                       (when (= urakkaid (:urakkaid u))
-                                         (:pohjavesialueet u)))
-                                     (:urakat app))
-            _ (js/console.log "VIEW: 45: urakan-pohjavesialueet: " (pr-str urakan-pohjavesialueet))]
-        [grid/grid {:tunniste (juxt :hoitokauden-alkuvuosi :talvisuolaraja :nimi :tie)
+    (fn [e! app urakka]
+      (let [urakkaid (:id urakka)
+            valittu-urakka (some #(when (= urakkaid (:id %)) %) (:urakat app))
+            urakan-pohjavesialueet (:pohjavesialueet valittu-urakka)]
+        [grid/grid {:tunniste (juxt :hoitokauden-alkuvuosi :talvisuolaraja :nimi :tie :tunnus)
                     :piilota-muokkaus? true
-                    ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
-                    ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
-                    :esta-tiivis-grid? true
+                    ;:esta-tiivis-grid? true
                     :reunaviiva? true
                     :tyhja (if (nil? urakan-pohjavesialueet)
                              [yleiset/ajax-loader "Urakan pohjavesialueita haetaan..."]
@@ -71,13 +64,13 @@
 (defn listaa-urakat [e! app]
   (let [urakat (:urakat app)
         urakan-pohjavesialueet (into {}
-                                 (map (juxt :id (fn [rivi] [pohjavesialueet e! rivi app])))
+                                 (map (juxt :id (fn [urakka] [pohjavesialueet e! app urakka])))
                                  urakat)]
     [grid/grid {:tunniste :id
                 :piilota-muokkaus? true
                 ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
                 ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
-                :esta-tiivis-grid? true
+                ;:esta-tiivis-grid? true
                 :vetolaatikot urakan-pohjavesialueet
                 :tyhja (if (or (nil? urakat))
                          [yleiset/ajax-loader "Rajoitusalueita haetaan..."]

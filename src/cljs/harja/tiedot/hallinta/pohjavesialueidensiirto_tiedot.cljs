@@ -58,12 +58,20 @@
   ;; HAe valitun urakan pohjavesialueet, joilla on rajoituksia siinä muodossa, kun ne muokattaessa tulee rajoitusalueiksi
   HaeUrakanPohjavesialueet
   (process-event [{urakkaid :urakkaid} app]
-    (let [_ (tuck-apurit/post! :hae-urakan-siirrettavat-pohjavesialueet
+    (let [_ (js/console.log "HaeUrakanPohjavesialueet")
+          _ (tuck-apurit/post! :hae-urakan-siirrettavat-pohjavesialueet
               {:urakkaid urakkaid}
               {:onnistui ->HaeUrakanPohjavesialueetOnnistui
                :epaonnistui ->HaeUrakanPohjavesialueetEpaonnistui
                :paasta-virhe-lapi? true})]
       (-> app
+        (update :urakat (fn [urakat]
+                          (do
+                            (mapv (fn [urakka]
+                                    (if (= urakkaid (:id urakka))
+                                      (assoc urakka :pohjavesialueet nil)
+                                      urakka))
+                              urakat))))
         (assoc :valittu-urakka urakkaid)
         (assoc :pohjavesialuehaku-kaynnissa? true))))
 
@@ -76,20 +84,16 @@
                           (assoc % :formiaatti false)
                           ) vastaus)
           _ (js/console.log "HaeUrakanPohjavesialueetOnnistui :: urakkaid" (pr-str urakkaid))]
-      (do
-        (js/console.log "HaeUrakanPohjavesialueetOnnistui :: vastaus" (pr-str vastaus))
-        (-> app
-          (update :urakat (fn [urakat]
-                            (do
-                              (map (fn [urakka]
-                                     (do
-                                       (js/console.log "HaeUrakanPohjavesialueetOnnistui :: urakka: onko " urakkaid "==" (pr-str urakka))
-                                       (if (= urakkaid (:id urakka))
-                                           (assoc urakka :pohjavesialueet vastaus)
-                                           urakka)))
-                                urakat))))
-          (assoc :pohjavesialueet vastaus)
-          (assoc :pohjavesialuehaku-kaynnissa? false)))))
+      (-> app
+        (update :urakat (fn [urakat]
+                          (do
+                            (mapv (fn [urakka]
+                                    (if (= urakkaid (:id urakka))
+                                      (assoc urakka :pohjavesialueet vastaus)
+                                      urakka))
+                              urakat))))
+        ;(assoc :pohjavesialueet vastaus)
+        (assoc :pohjavesialuehaku-kaynnissa? false))))
 
   HaeUrakanPohjavesialueetEpaonnistui
   (process-event [{vastaus :vastaus} app]
