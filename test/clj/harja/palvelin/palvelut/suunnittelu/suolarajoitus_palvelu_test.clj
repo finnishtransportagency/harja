@@ -25,7 +25,7 @@
 
 (defn- suolarajoitus-pohja
   "Olettaa saavansa tierekisteriosoitteen muodossa: {:tie 86, :aosa 1, :aet 0, :losa 2, :let 10}"
-  [urakka_id kayttaja_id tr_osoite hoitokauden_alkuvuosi]
+  [urakka_id kayttaja_id tr_osoite hoitokauden-alkuvuosi]
   {:tie (:tie tr_osoite)
    :aosa (:aosa tr_osoite)
    :aet (:aet tr_osoite)
@@ -35,7 +35,7 @@
    :ajoratojen_pituus 1
    :suolarajoitus 1234
    :formiaatti false
-   :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
    :kopioidaan-tuleville-vuosille? false
    :urakka_id urakka_id
    :kayttaja_id kayttaja_id})
@@ -61,7 +61,7 @@
 (deftest hae-suolarajoitukset-hoitovuoden-perusteella-onnistuu-test
   (let [urakka_id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         hk_alkuvuosi 2022
-        suolarajoitukset (hae-suolarajoitukset {:hoitokauden_alkuvuosi hk_alkuvuosi :urakka_id urakka_id})]
+        suolarajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi hk_alkuvuosi :urakka_id urakka_id})]
 
     (is (> (count suolarajoitukset) 0) "Suolarajoitukset löytyy")))
 
@@ -80,7 +80,7 @@
         ;; Siivotaan kanta
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id rajoitus)
-             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})]
     (is (> (count rajoitus) 0) "Uusi rajoitus on tallennettu")))
@@ -99,7 +99,7 @@
         ;; Siivotaan kanta
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id rajoitus)
-             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})]
     (is (> (count rajoitus) 0) "Uusi rajoitus on tallennettu")
@@ -117,7 +117,7 @@
                         :tallenna-suolarajoitus
                         +kayttaja-jvh+
                         suolarajoitus)
-        rajoitukset (hae-suolarajoitukset {:urakka_id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi})
+        rajoitukset (hae-suolarajoitukset {:urakka_id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi})
 
         ;; Kovakoodatusti juuri luotu alue
         muokattava-rajoitus (-> (first rajoitukset)
@@ -129,7 +129,7 @@
         ;; Siivotaan kanta
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})]
 
@@ -156,7 +156,7 @@
         ;; Poista luotu rajoitus
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})
 
@@ -185,7 +185,7 @@
         ;; Poista luotu rajoitus
         vastaus (poista-suolarajoitus
                   {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-                   :hoitokauden_alkuvuosi hk-alkuvuosi
+                   :hoitokauden-alkuvuosi hk-alkuvuosi
                    :urakka_id urakka-id
                    :kopioidaan-tuleville-vuosille? false})
 
@@ -195,7 +195,7 @@
         ;; Siivoa kanta
         vastaus (poista-suolarajoitus
                   {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-                   :hoitokauden_alkuvuosi hk-alkuvuosi
+                   :hoitokauden-alkuvuosi hk-alkuvuosi
                    :urakka_id urakka-id
                    :kopioidaan-tuleville-vuosille? true})]
 
@@ -353,7 +353,7 @@
         ;; Siivotaan kanta
         _ (poista-suolarajoitus
             {:rajoitusalue_id (:rajoitusalue_id rajoitus)
-             :hoitokauden_alkuvuosi hk-alkuvuosi
+             :hoitokauden-alkuvuosi hk-alkuvuosi
              :urakka_id urakka-id
              :kopioidaan-tuleville-vuosille? true})]
     (is (= odotettu-tulos tierekisterin-tiedot) "Tierekisterin-tiedot on hyväksyttäviä")))
@@ -387,7 +387,7 @@
           ;; Siivotaan kanta
           _ (poista-suolarajoitus
               {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-               :hoitokauden_alkuvuosi hk-alkuvuosi
+               :hoitokauden-alkuvuosi hk-alkuvuosi
                :urakka_id urakka-id
                :kopioidaan-tuleville-vuosille? true})]
 
@@ -413,7 +413,7 @@
           ;; Siivotaan kanta
           _ (poista-suolarajoitus
               {:rajoitusalue_id (:rajoitusalue_id suolarajoitus)
-               :hoitokauden_alkuvuosi hk-alkuvuosi
+               :hoitokauden-alkuvuosi hk-alkuvuosi
                :urakka_id urakka-id
                :kopioidaan-tuleville-vuosille? true})]
 
@@ -624,3 +624,30 @@
     (is (= true (:kaytossa aluesanktio-vastaus)))
     (is (= "kokonaismaara" (:tyyppi suolasanktio-vastaus)))
     (is (= "rajoitusalue" (:tyyppi aluesanktio-vastaus)))))
+
+(deftest siirra-pohjavesialue-suolatoteumat-rajoitusalueeksi-onnistuu
+  (let [urakka-id (hae-urakan-id-nimella "Espoon alueurakka 2014-2019") ;; Tällä urakalla ei ole olemassa yhtään pohjavesialue rajoitusta vielä
+        hk_alkuvuosi 2014
+        urakan-loppuvuosi 2019
+        urakan-vuodet (range hk_alkuvuosi urakan-loppuvuosi)
+        pohjavesirajoitukset [{:nimi "Kempeleenharju",
+                               :tunnus "11244001",
+                               :talvisuolaraja 6.6M,
+                               :tie 4,
+                               :aosa 364,
+                               :aet 1599,
+                               :losa 364,
+                               :let 4296,
+                               :pituus 2697,
+                               :ajoratojen_pituus 5394,
+                               :hoitokauden-alkuvuosi hk_alkuvuosi,
+                               :urakkaid urakka-id}]
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :siirra-urakan-pohjavesialueet +kayttaja-jvh+ {:urakkaid urakka-id
+                                                           :pohjavesialueet pohjavesirajoitukset})
+        ;; Haetaan rajoitukset jokaiselle urakan vuodelle
+        suolarajoitukset (reduce (fn [rajoitukset vuosi]
+                                   (conj rajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi vuosi :urakka_id urakka-id})))
+                           [] urakan-vuodet)]
+    ;; Jokaiselle tulevalle vuodelle luodaan uusi rajoitus, joten niitä pitää olla yhtä monta kuin lista * vuodet
+    (is (= (* (count pohjavesirajoitukset) (count urakan-vuodet)) (count suolarajoitukset)))))
