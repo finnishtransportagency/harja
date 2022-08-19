@@ -32,12 +32,22 @@
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]
-                   [harja.atom :refer [reaction<! reaction-writable]]))
+                   [harja.atom :refer [reaction<! reaction-writable]]
+                   [harja.tyokalut.ui :refer [for*]]))
 
-(defn- rajoituksen-poiston-varmistus-modaali [e! {:keys [varmistus-fn data] :as parametrit}]
+(defn- rajoituksen-poiston-varmistus-modaali [e! {:keys [varmistus-fn urakka data] :as parametrit}]
   [:div.row
    (when (:kopioidaan-tuleville-vuosille? data)
-     [:p "Olet poistamassa rajoitusalueen seuraavilta hoitovuosilta <todo---->"])
+     [:div
+      [:div "Olet poistamassa rajoitusalueen seuraavilta hoitovuosilta"]
+      [:ul
+       (for* [vuosi (pvm/tulevat-hoitovuodet
+                      (:hoitokauden-alkuvuosi data)
+                      (:kopioidaan-tuleville-vuosille? data)
+                      urakka)]
+         ;; FIXME: Listataan hoitovuodet aikaväleineä, koska sivulla hoitovuoden voi vielä tällä hetkellä valita vanhan mallisesti vain aikavälinä
+         ;;        Kun hoitovuosivalinta UI-komponenttia päivitetään Harjassa yleisesti, voisi tässä näyttää hoitovuosien järjestysnumeroja, kuten on speksattu.
+         [:li (pvm/hoitokausi-str-alkuvuodesta vuosi)])]])
 
    [:div {:style {:padding-bottom "1rem"}}
     [:span {:style {:padding-right "1rem"}}
@@ -170,7 +180,7 @@
 
 (defn lomake-rajoitusalue
   "Rajoitusalueen lisäys/muokkaus"
-  [e! {:keys [lomake valittu-hoitovuosi] :as app}]
+  [e! {:keys [lomake valittu-hoitovuosi] :as app} urakka]
   (let [;; Aseta hoitovuosi lomakkeelle, mikäli sitä ei ole
         rajoituslomake (if (nil? (:hoitokauden-alkuvuosi lomake))
                          (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
@@ -209,6 +219,7 @@
                           #(modal/nayta! {:otsikko "Rajoitusalueen poistaminen"}
                              [rajoituksen-poiston-varmistus-modaali e!
                               {:data data
+                               :urakka urakka
                                :varmistus-fn (fn []
                                                (modal/piilota!)
                                                (e! (suolarajoitukset-tiedot/->PoistaSuolarajoitus {:rajoitusalue_id (:rajoitusalue_id data)
@@ -426,7 +437,7 @@
           ;; Rajoitusalueen lisäys/muokkauslomake. Avautuu sivupaneeliin
           (when lomake-auki?
             [:div.overlay-oikealla {:style {:width "570px" :overflow "auto"}}
-             [lomake-rajoitusalue e! app]])
+             [lomake-rajoitusalue e! app urakka]])
 
           [taulukko-rajoitusalueet e! rajoitusalueet saa-muokata?]]]))))
 
