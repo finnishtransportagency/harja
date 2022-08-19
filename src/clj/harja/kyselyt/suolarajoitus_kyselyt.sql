@@ -386,3 +386,29 @@ SELECT ra.id, rr.id, rr.suolarajoitus, rr.hoitokauden_alkuvuosi, ra.pituus, ra.a
                     OR
                  ((ra.tierekisteriosoite).let - 1) BETWEEN :aet AND :let)));
 
+-- name: hae-pohjavesialueidenurakat
+SELECT DISTINCT ON (u.id) u.id, u.nimi
+  FROM urakka u,
+       pohjavesialue p
+         JOIN pohjavesialue_talvisuola pt ON pt.pohjavesialue = p.tunnus AND pt.talvisuolaraja IS NOT NULL
+ WHERE pt.urakka = u.id;
+
+
+-- name: hae-urakan-siirrettavat-pohjavesialueet
+SELECT MIN(pt.hoitokauden_alkuvuosi)                      AS "hoitokauden-alkuvuosi",
+       MIN(p.nimi)                                        AS nimi,
+       MIN(p.tunnus)                                      AS tunnus,
+       MIN(p."tr_numero")                                 AS tie,
+       MIN(p."tr_alkuosa")                                AS aosa,
+       MIN(p."tr_alkuetaisyys")                           AS aet,
+       MAX(p."tr_loppuosa")                               AS losa,
+       MAX(p."tr_loppuetaisyys")                          AS let,
+       MIN(p.luoja)                                       AS luoja,
+       MIN(pt.urakka)                                     AS urakkaid,
+       MIN(pt.talvisuolaraja)                             AS talvisuolaraja,
+       concat(p.tunnus, p."tr_numero", pt.talvisuolaraja) AS tunniste
+FROM pohjavesialue_talvisuola pt
+         JOIN pohjavesialue p ON pt.pohjavesialue = p.tunnus AND p."tr_numero" = pt.tie
+WHERE pt.urakka = :urakkaid
+  AND pt.talvisuolaraja IS NOT NULL
+GROUP BY tunniste;
