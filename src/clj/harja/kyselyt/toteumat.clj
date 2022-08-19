@@ -5,11 +5,8 @@
             [harja.geo :as geo]
             [specql.core :refer [upsert! delete!]]
             [harja.domain.reittipiste :as rp]
-            [harja.kyselyt.sopimukset :as sopimukset]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [harja.pvm :as pvm]
-            [harja.kyselyt.konversio :as konv])
-  (:use [slingshot.slingshot :only [throw+]]))
+            [harja.kyselyt.konversio :as konv]))
 
 (defn muunna-reitti [{reitti :reitti :as rivi}]
   (assoc rivi

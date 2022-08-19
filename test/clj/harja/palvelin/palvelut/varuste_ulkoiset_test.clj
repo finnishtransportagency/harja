@@ -3,6 +3,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.testi :refer :all]))
 
 (defn jarjestelma-fixture [testit]
@@ -12,9 +14,12 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :excel-vienti (component/using
+                                        (excel-vienti/luo-excel-vienti)
+                                        [:http-palvelin])
                         :varuste-velho (component/using
                                          (varuste-ulkoiset/->VarusteVelho)
-                                         [:http-palvelin :db])))))
+                                         [:http-palvelin :db :excel-vienti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -240,4 +245,95 @@
     (is (= [] (osuvat-varusteet :k)) "k")
     (is (= [:v] (osuvat-varusteet :l)) "l")
     (is (= [:v :x] (osuvat-varusteet :m)) "m" )))
+
+(def odotettu-excel-raportti
+   {:raportti [:raportti
+              {:nimi "Varustetoimenpiteet 01.10.2019-30.09.2020",
+               :raportin-yleiset-tiedot {:raportin-nimi "Varustetoimenpiteet",
+                                         :urakka "Oulun MHU 2019-2024",
+                                         :alkupvm "01.10.2019",
+                                         :loppupvm "30.09.2020"},
+               :orientaatio :landscape}
+               [:taulukko
+                {:nimi "Varustetoimenpiteet"
+                 :tyhja nil}
+                [{:fmt :pvm
+                  :otsikko "Ajankohta"}
+                 {:otsikko "Tierekisteriosoite"}
+                 {:otsikko "Toimenpide"}
+                 {:otsikko "Varustetyyppi"}
+                 {:otsikko "Varusteen lisätieto"}
+                 {:otsikko "Kuntoluokitus"}
+                 {:otsikko "Tekijä"}]
+                '({:rivi [#inst "2019-09-30T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1921"
+                         "Lisätty"
+                         "Viemärit"
+                         "kansi: 600 kaivo: 1000 syvyys: 1000 materiaali: betoni"
+                         "Erittäin hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2019-11-29T22:00:00.000-00:00"
+                         "Tie 4 / 422 / 637"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-01-30T22:00:00.000-00:00"
+                         "Tie 4 / 421 / 1907"
+                         "Päivitetty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-04-24T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1900"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-06-09T21:00:00.000-00:00"
+                         "Tie 4 / 420 / 5758"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Erittäin huono"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1904"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Tyydyttävä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 641"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 648"
+                         "Päivitetty"
+                         "Liikennemerkit"
+                         nil
+                         "Erittäin hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 656"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]})]]})
+
+(deftest tee-varuste-ulkoiset-excel
+  (let [odotettu odotettu-excel-raportti
+        vastaus (kutsu-excel-palvelua (:http-palvelin jarjestelma)
+                  :varusteet-ulkoiset-excel
+                  +kayttaja-jvh+
+                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id :hoitovuosi 2019})]
+    (is (= vastaus odotettu) "Varusteiden excel ei vastannut odotettua")))
 
