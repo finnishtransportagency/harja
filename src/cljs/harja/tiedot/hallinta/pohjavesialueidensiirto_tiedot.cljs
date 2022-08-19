@@ -5,7 +5,6 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [cljs.core.async :refer [<! >! chan close!]]
-            [cljs-http.client :as http]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
