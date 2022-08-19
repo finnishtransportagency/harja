@@ -65,6 +65,17 @@
       (.createFormulaEvaluator)
       (.evaluateFormulaCell cell)))
 
+(defn parsi-sarakekirjain
+  "Parsii Excel-solun sarakekirjaimen, esim. 'A16' --> A, AC15 --> AC"
+  [osoite]
+  (re-find (re-pattern #"^[a-zA-Z]+") (.toString osoite)))
+
+(defn parsi-rivinumero
+  "Parsii Excel-solun rivinumeron, esim. 'A16' --> 16"
+  [osoite]
+  (let [rivinumero-stringina (re-find (re-pattern "\\d+") (.toString osoite))]
+    (when rivinumero-stringina (Integer/parseInt rivinumero-stringina))))
+
 (defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi loppurivi]}] workbook cell]
   (let [osoite (-> cell .getAddress)
         sarake (first (.toString osoite))]
@@ -75,10 +86,11 @@
 
 (defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
   (let [osoite (-> cell .getAddress)
-        rivi (second (.toString osoite))]
+        rivi (parsi-rivinumero osoite)
+        loppusarake (or loppusarake (parsi-sarakekirjain osoite))]
     (.setCellFormula
       cell
-      (str "SUM("(or alkusarake 1) rivi  ":" (or loppusarake (.getRow osoite)) rivi ")")))
+      (str "SUM("(or alkusarake "A") rivi  ":" loppusarake rivi ")")))
   (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
