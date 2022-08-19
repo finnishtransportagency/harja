@@ -89,17 +89,6 @@
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
       tr-tiedot)))
 
-;; TODO: siirrä tämä pvm namespaceen. Ja tarkista onko sitä olemassa. -> tulevat-hoitokaudet tiedot.urakka namespacessa
-(defn tulevat-hoitovuodet
-  "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
-  Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
-  [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
-  (let [urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
-        hoitovuodet (if kopioidaan-tuleville-vuosille?
-                      (range nykyvuosi urakan-loppuvuosi)
-                      [nykyvuosi])]
-    hoitovuodet))
-
 (defn hae-suolarajoitukset [db user {:keys [urakka_id hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
   (let [_ (log/debug "Suolarajoitus :: hae-suolarajoitukset :: tiedot " tiedot)
@@ -129,7 +118,7 @@
       (let [_ (log/debug "tallenna-suolarajoitus :: tierekisteritiedot on validit" tr-tiedot)
             kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? suolarajoitus)
             urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)}))
-            urakan-hoitovuodet (tulevat-hoitovuodet
+            urakan-hoitovuodet (pvm/tulevat-hoitovuodet
                                  (:hoitokauden-alkuvuosi suolarajoitus)
                                  kopioidaan-tuleville-vuosille?
                                  urakan-tiedot)
@@ -239,7 +228,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [_ (log/debug "tallenna-talvisuolan-kayttoraja :: kayttoraja" kayttoraja)
         kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? kayttoraja)
-        urakan-hoitovuodet (tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
+        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
                              (first (urakat-kyselyt/hae-urakka db {:id urakka-id})))
         ;; Päivitä tiedot tai tallenna uusi
         _ (doseq [vuosi urakan-hoitovuodet]
@@ -272,7 +261,7 @@
 (defn tallenna-rajoitusalueen-sanktio [db user {:keys [urakka-id hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?] :as sanktio}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [_ (log/debug "tallenna-rajoitusalueen-sanktio :: sanktio" sanktio)
-        urakan-hoitovuodet (tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
+        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
                              (first (urakat-kyselyt/hae-urakka db {:id urakka-id})))
         ;; Päivitä tiedot tai luo uusi
 
