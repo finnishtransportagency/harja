@@ -15,6 +15,7 @@
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
+            [harja.views.hallinta.pohjavesialueidensiirto_nakyma :as pohjavesialueidensiirto-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -87,3 +88,10 @@
    (when true
      ^{:key "jarjestelma-asetukset"}
      [jarjestelma-asetukset/jarjestelma-asetukset])])
+     [jarjestelma-asetukset/jarjestelma-asetukset])
+  "Pohjavesialueiden siirto"
+  :pohjavesialueiden-siirto
+  (when true
+    ^{:key "pohjavesialueiden-siirto"}
+    [pohjavesialueidensiirto-nakyma/view])]
+  )

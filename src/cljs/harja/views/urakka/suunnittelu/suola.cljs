@@ -172,16 +172,15 @@
   "Rajoitusalueen lisäys/muokkaus"
   [e! {:keys [lomake valittu-hoitovuosi] :as app}]
   (let [;; Aseta hoitovuosi lomakkeelle, mikäli sitä ei ole
-        rajoituslomake (if (nil? (:hoitokauden_alkuvuosi lomake))
-                         (assoc lomake :hoitokauden_alkuvuosi valittu-hoitovuosi)
+        rajoituslomake (if (nil? (:hoitokauden-alkuvuosi lomake))
+                         (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
                          lomake)
         muokkaustila? true
         disabled? (not (get-in app [:lomake ::tila/validi?]))
-        ;; TODO: Muokkaus
         ;; TODO: Oikeustarkastukset
         ]
     [:div
-      #_ [debug/debug (:lomake app)]
+       #_ [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
        :voi-muokata? true

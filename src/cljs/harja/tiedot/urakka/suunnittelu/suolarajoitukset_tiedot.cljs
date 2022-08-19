@@ -83,7 +83,7 @@
 (defn- hae-suolarajoitukset [valittu-vuosi]
   (let [urakka-id (-> @tila/yleiset :urakka :id)
         _ (tuck-apurit/post! :hae-suolarajoitukset
-            {:hoitokauden_alkuvuosi valittu-vuosi
+            {:hoitokauden-alkuvuosi valittu-vuosi
              :urakka_id urakka-id}
             {:onnistui ->HaeSuolarajoituksetOnnistui
              :epaonnistui ->HaeSuolarajoituksetEpaonnistui
@@ -354,7 +354,7 @@
   TallennaLomake
   (process-event [{lomake :lomake sivupaneeli-tila :tila} app]
     (let [urakka-id (-> @tila/yleiset :urakka :id)
-          tallennettava-lomake {:hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi lomake)
+          tallennettava-lomake {:hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi lomake)
                                 :urakka_id urakka-id
                                 :suolarajoitus (:suolarajoitus lomake)
                                 :formiaatti (:formiaatti lomake)
@@ -409,7 +409,7 @@
     (let [hoitokauden-alkuvuosi (pvm/vuosi (first @urakka/valittu-hoitokausi))
           urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :poista-suolarajoitus
-              {:hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+              {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                :urakka_id urakka-id
                :rajoitusalue_id (:rajoitusalue_id parametrit)
                :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? parametrit)}

@@ -168,7 +168,7 @@
 
        ;; TODO: Kartta
        #_[kartta]
-       [debug/debug app]
+       #_ [debug/debug app]
        ;; Rajoitusalueiden taulukko
        [taulukko-rajoitusalueet e! app]])))
 

@@ -46,6 +46,7 @@
       (hae-suolarajoitukset valittu-vuosi)
       (-> app
         (assoc :rajoitusalueet nil)
+        (assoc :valittu-rajoitusalue nil)
         (assoc :rajoitusalueet-haku-kaynnissa? true))))
 
   HaeRajoitusalueetOnnistui
