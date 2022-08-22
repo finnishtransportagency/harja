@@ -38,8 +38,9 @@
     :tunniste :tid}
    [{:otsikko "Alkanut" :nimi :alkanut :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
-    {:otsikko "Määrä" :nimi :maara :tyyppi :positiivinen-numero
+    {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero
      :fmt #(fmt/desimaaliluku-opt % 3) :desimaalien-maara 3 :leveys 10}
+    {:otsikko "Yksilöivä ID" :nimi :ulkoinen_id :leveys 10}
     {:otsikko ""
      :nimi :nayta-kartalla
      :tyyppi :komponentti
@@ -129,7 +130,7 @@
                                                             [vetolaatikon-suolarivit rivi urakka])))
                                    @tiedot/toteumat)
                :piilota-toiminnot? true}
-    [{:tyyppi :vetolaatikon-tila :leveys 3}
+    [{:tyyppi :vetolaatikon-tila :leveys 8}
      {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
