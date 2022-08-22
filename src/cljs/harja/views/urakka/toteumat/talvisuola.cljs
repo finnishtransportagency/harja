@@ -40,7 +40,7 @@
     {:otsikko "Päättynyt" :nimi :paattynyt :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10}
     {:otsikko "Käytetty määrä (t)" :nimi :maara :tyyppi :positiivinen-numero
      :fmt #(fmt/desimaaliluku-opt % 3) :desimaalien-maara 3 :leveys 10}
-    {:otsikko "Yksilöivä ID" :nimi :ulkoinen_id :leveys 10}
+    {:otsikko "Yksilöivä ID" :nimi :ulkoinenid :leveys 10}
     {:otsikko ""
      :nimi :nayta-kartalla
      :tyyppi :komponentti
@@ -126,22 +126,24 @@
                :max-rivimaara 500
                :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                :vetolaatikot (into {}
-                                   (map (juxt :rivinumero (fn [rivi]
-                                                            [vetolaatikon-suolarivit rivi urakka])))
-                                   @tiedot/toteumat)
+                               (map (juxt :rivinumero (fn [rivi]
+                                                        [vetolaatikon-suolarivit rivi urakka])))
+                               (keep #(when-not (:yhteenveto %) %) @tiedot/toteumat))
                :piilota-toiminnot? true}
-    [{:tyyppi :vetolaatikon-tila :leveys 8}
+    [{:tyyppi :vetolaatikon-tila :leveys 9}
      {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
       :tyyppi :valinta
       :validoi [[:ei-tyhja "Valitse materiaali"]]
       :valinta-nayta #(or (:nimi %) "- valitse -")
       :valinnat @tiedot/materiaalit}
-     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 30 :muokattava? muokattava?
+     {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna päivämäärä"]]
       :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
      {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
       :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
+     {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :leveys 15 :muokattava? muokattava?
+      :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
       :hae #(if (muokattava? %)
               (:lisatieto %)
