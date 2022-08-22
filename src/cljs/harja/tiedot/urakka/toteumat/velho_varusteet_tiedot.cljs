@@ -58,7 +58,10 @@
 
 (def toteumat [{:tallennusmuoto "lisatty" :esitysmuoto "Lisätty"}
                {:tallennusmuoto "paivitetty" :esitysmuoto "Päivitetty"}
-               {:tallennusmuoto "poistettu" :esitysmuoto "Poistettu"}])
+               {:tallennusmuoto "poistettu" :esitysmuoto "Poistettu"}
+               {:tallennusmuoto "tarkastus" :esitysmuoto "Tarkastettu"}
+               {:tallennusmuoto "puhdistus" :esitysmuoto "Puhdistettu"}
+               {:tallennusmuoto "korjaus" :esitysmuoto "Korjattu"}])
 
 (defn hae-kentta
   "Hakee `joukko` taulukosta alkion, jonka `kentta-avain` kentällä on haettu `arvo`
