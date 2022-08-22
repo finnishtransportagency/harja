@@ -692,7 +692,6 @@
                                                                            odotettu-oidit-vastaus odotettu-kohteet-vastaus)
                                                                          (feikkaa-ja-kutsu-varusteintegraatiota
                                                                            odotettu-oidit-vastaus odotettu-kohteet-vastaus))))))]
-    (yleiset/prettydenty "petrisi1314: " lokiteksti)
     (is (= 1 jasennykset) "Kohteen tuontia ei saa tehdä, jos on tallessa virhe ko. oidilla.")
     (is (str/includes? lokiteksti "virhe"))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
