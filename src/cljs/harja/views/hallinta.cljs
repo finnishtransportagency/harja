@@ -73,7 +73,7 @@
    "Vesiväyläurakat"
    :vesivayla-hallinta
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              (oikeudet/hallinta-vesivaylat))
+           (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
      [vu/vesivayla-hallinta])
 
@@ -87,11 +87,10 @@
    :jarjestelma-asetukset
    (when true
      ^{:key "jarjestelma-asetukset"}
-     [jarjestelma-asetukset/jarjestelma-asetukset])])
      [jarjestelma-asetukset/jarjestelma-asetukset])
-  "Pohjavesialueiden siirto"
-  :pohjavesialueiden-siirto
-  (when true
-    ^{:key "pohjavesialueiden-siirto"}
-    [pohjavesialueidensiirto-nakyma/view])]
-  )
+
+   "Pohjavesialueiden siirto"
+   :pohjavesialueiden-siirto
+   (when true
+     ^{:key "pohjavesialueiden-siirto"}
+     [pohjavesialueidensiirto-nakyma/view])])

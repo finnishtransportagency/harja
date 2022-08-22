@@ -770,6 +770,16 @@
     {:alkupvm hoitokauden-alkupvm
      :loppupvm hoitokauden-loppupvm}))
 
+(defn tulevat-hoitovuodet
+  "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
+  Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
+  [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
+  (let [urakan-loppuvuosi (vuosi (:loppupvm urakka))
+        hoitovuodet (if kopioidaan-tuleville-vuosille?
+                      (range nykyvuosi urakan-loppuvuosi)
+                      [nykyvuosi])]
+    hoitovuodet))
+
 (defn
   kuukauden-aikavali
   "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
