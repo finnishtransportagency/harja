@@ -272,8 +272,9 @@
   ;; Päivitetään lomakkeen sisältö app-stateen, mutta ei serverille
   PaivitaLomake
   (process-event [{lomake :lomake tarkista-tierekisteri? :tarkista-tierekisteri?} app]
-    (let [_ (js/console.log "PaivitaLomake")
-          urakka-id (-> @tila/yleiset :urakka :id)
+    (log/debug "PaivitaLomake")
+
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
           vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
           uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
           _ (reset! lomake-atom lomake)
@@ -407,7 +408,9 @@
 
   PoistaSuolarajoitus
   (process-event [{:keys [rajoitusalue_id kopioidaan-tuleville-vuosille? hoitokauden-alkuvuosi]} app]
-    (log/debug "PoistaSuolarajoitus" rajoitusalue_id kopioidaan-tuleville-vuosille? hoitokauden-alkuvuosi)
+    (log/debug "PoistaSuolarajoitus -> "
+      "rajoitusalue_id:" rajoitusalue_id
+     "kopioidaan-tuleville-vuosille?:" kopioidaan-tuleville-vuosille? "hoitokauden-alkuvuosi:" hoitokauden-alkuvuosi)
 
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :poista-suolarajoitus
