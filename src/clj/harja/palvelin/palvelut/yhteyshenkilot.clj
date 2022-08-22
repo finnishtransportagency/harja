@@ -237,7 +237,9 @@
                                            :id yht-id))
             (q/paivita-paivystys! c (assoc paivystys
                                       :id (:id p)
-                                      :yhteyshenkilo yht-id)))))
+                                      :yhteyshenkilo yht-id
+                                      :kayttaja_id (:id user))))))
+
 
       ;; Haetaan lopuksi uuden päivystäjät
       (hae-urakan-paivystajat c user urakka-id))

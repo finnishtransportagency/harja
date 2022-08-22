@@ -4,7 +4,7 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]))
 
-(defn fake-token-palvelin [_ {:keys [body headers]} _]
+(defn fake-token-palvelin [_ _ _]
   "{\"access_token\":\"TEST_TOKEN\",\"expires_in\":3600,\"token_type\":\"Bearer\"}")
 
 (def nyt (pvm/iso-8601->aika "2021-11-29 13:28:20.000000"))

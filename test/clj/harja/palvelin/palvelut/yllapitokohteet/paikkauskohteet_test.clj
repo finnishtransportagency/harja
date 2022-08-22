@@ -51,7 +51,7 @@
                             :tyomenetelma 8})
 
 (deftest paikkauskohteet-urakalle-testi
-  (let [_ (hae-kemin-alueurakan-2019-2023-id)
+  (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle
@@ -61,7 +61,7 @@
 
 ;; Testataan käyttäjää, jolla ei ole oikeutta mihinkään
 (deftest paikkauskohteet-urakalle-seppo-testi
-  (let [_ (hae-kemin-alueurakan-2019-2023-id)
+  (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :paikkauskohteet-urakalle
@@ -71,7 +71,7 @@
 
 ;; Haetaan paikkauskohteet käyttäjälle, jolla ei ole oikeutta nähdä hintatietoja (urakan laadunvalvoja)
 (deftest paikkauskohteet-ilman-kustannustietoja-testi
-  (let [_ (hae-kemin-alueurakan-2019-2023-id)
+  (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         ei-kustannustietoja-kayttaja (kemin-alueurakan-2019-2023-laadunvalvoja)
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -83,7 +83,7 @@
     (is (false? (contains? (first paikkauskohteet) :toteutunut-hinta)))))
 
 (deftest muokkaa-paikkauskohdetta-testi
-  (let [_ (hae-kemin-alueurakan-2019-2023-id)
+  (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :paikkauskohteet-urakalle

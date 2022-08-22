@@ -239,12 +239,12 @@
         sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 16 123M]])
-        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
-        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-                                                 [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 123M]])
+        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 123M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
@@ -289,11 +289,11 @@
         sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 16 0M]])
-        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
-        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]])
+        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
@@ -448,7 +448,7 @@
                                                " maara ",
                                                (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'),
                                                (SELECT id FROM urakka WHERE sampoid = '1242141-OULU2'));"))]
-    (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola" (t/date-time 2015 2 18 22) testidatasta))))
+    (is (= 200M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuola, rakeinen NaCl" (t/date-time 2015 2 18 22) testidatasta))))
         "Testidatasta haettu määrä vastaa odotettua")
 
     (is (= 1800M (:maara (first (hae-paivan-materiaalin-kaytto "Talvisuolaliuos NaCl" (t/date-time 2015 2 17 22) testidatasta))))
@@ -456,7 +456,7 @@
 
     (kirjaa-materiaalitoteuma "2018-01-18 12:00:00.000000" "2018-01-18 12:30:00.000000" 12356789 "Talvisuolaliuos NaCl" 10)
     (kirjaa-materiaalitoteuma "2018-01-18 12:30:00.000000" "2018-01-18 13:00:00.000000" 12356710 "Talvisuolaliuos NaCl" 21)
-    (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Talvisuola" 2)
+    (kirjaa-materiaalitoteuma "2018-01-18 13:00:00.000000" "2018-01-18 13:39:00.000000" 12356711 "Talvisuola, rakeinen NaCl" 2)
 
     (let [koneellisesti-kirjatut (kutsu-palvelua
                                    (:http-palvelin jarjestelma)
@@ -468,7 +468,7 @@
                                     :loppupvm #inst "2018-02-01T00:00:00.000-00:00"})]
       (is (= 2 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 2 päivälle.")
       (let [nacl-kirjaukset (filter #(= "Talvisuolaliuos NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)
-            hcoona-kirjaukset (filter #(= "Talvisuola" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
+            hcoona-kirjaukset (filter #(= "Talvisuola, rakeinen NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
         (is (= 2 (:lukumaara (first nacl-kirjaukset))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
         (is (= 31M (apply + (map :maara nacl-kirjaukset))) "Määrä on summa kaikista Talvisuolaliuos NaCl kirjauksista")
 
@@ -500,7 +500,7 @@
     :lukumaara 1
     :maara 200M
     :materiaali {:id 7
-                 :nimi "Talvisuola"}
+                 :nimi "Talvisuola, rakeinen NaCl"}
     :pvm #inst "2015-02-18T22:00:00.000000001-00:00"
     :rivinumero 1
     :tid 1074
@@ -519,12 +519,12 @@
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1154, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1154], :rivinumero 3, :tmid 25, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 27, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
 
 
 
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (1, 'Talvisuolaliuos NaCl', 't', false, 'talvisuola');
-;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (7, 'Talvisuola', 't', false, 'talvisuola');
+;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (7, 'Talvisuola, rakeinen NaCl', 't', false, 'talvisuola');
 ;; (id, nimi, yksikko, kohdistettava, materiaalityyppi) VALUES (16, 'Natriumformiaatti', 't', false, 'muu');
 (def sopimuksen-kaytetty-mat-ennen-odotettu
   [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
@@ -538,15 +538,15 @@
    [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
 
 (def hoitoluokittaiset-ennen-odotettu
-  [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-   [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-   [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
+  [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+   [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+   [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
 
 (defn- hoitoluokittaiset-jalkeen-odotettu [lisatty]
   [lisatty
-   [#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-   [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-   [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
+   [#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+   [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+   [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
 
 
 
@@ -596,7 +596,7 @@
     (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
     (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu [2 #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")
     (is (= hoitoluokittaiset-ennen hoitoluokittaiset-ennen-odotettu) "Hoitoluokittainen materiaalicache ennen OK")
-    (is (= hoitoluokittaiset-jalkeen (hoitoluokittaiset-jalkeen-odotettu [#inst "2015-02-15T22:00:00.000-00:00" 1 100 4 666M])) "Hoitoluokittainen materiaalicache jälkeen OK")
+    (is (= hoitoluokittaiset-jalkeen (hoitoluokittaiset-jalkeen-odotettu [#inst "2015-02-15T22:00:00.000-00:00" 1 99 4 666M])) "Hoitoluokittainen materiaalicache jälkeen OK")
 
     (is (true? vastaus) "Suolatoteuman tallennus")))
 
@@ -625,9 +625,9 @@
         sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
                                                        [2 #inst "2015-02-13T22:00:00.000-00:00" 7 500M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                                               [#inst "2015-02-13T22:00:00.000-00:00" 7 100 4 500M] ;; tässä uusi pvm
-                                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu-pvm-muuttunut (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                                               [#inst "2015-02-13T22:00:00.000-00:00" 7 99 4 500M] ;; tässä uusi pvm
+                                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
 
         sopimuksen-mat-kaytto-jalkeen (set
                                         (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id

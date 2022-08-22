@@ -22,14 +22,14 @@
               :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "harja"
+              :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
               :julkaise-tila? true}
  :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
                       :tietokanta "harja"
                       :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana "harja"
+                      :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
                       :julkaise-tila? true}
  :tarkkailija {:loop-odotus 100}
  :fim {:url
@@ -133,7 +133,7 @@
                         :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
                         :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"
@@ -248,8 +248,8 @@
           :paivitysvali-paivissa 60}
 
  :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
-                :paivittainen-tarkistusaika [12 17 00]
-                :paivitysvali-paivissa 60}
+                :paivittainen-tarkistusaika []
+                :paivitysvali-paivissa nil}
 
 
  :tyotunti-muistutukset {:paivittainen-aika nil}

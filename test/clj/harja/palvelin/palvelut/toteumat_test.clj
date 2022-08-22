@@ -482,12 +482,12 @@
         sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
                                                        [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
                                                        [2 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
-        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 100 4 2000M]])
-        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 100 4 1800M]
-                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 100 4 200M]
-                                                 [#inst "2015-02-13T22:00:00.000-00:00" 16 100 4 2100M]])
+        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                                 [#inst "2015-02-13T22:00:00.000-00:00" 16 99 4 2100M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
@@ -533,7 +533,7 @@
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
         sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
         hoitoluokittaiset-ennen-odotettu (set [])
-        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 100 4 200M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 99 4 200M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                                  (pvm-vali-sql-tekstina "alkupvm" "'2011-02-01' AND '2011-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
@@ -745,7 +745,7 @@
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
 
 (deftest toteuman-paivitys-sama-partitiolle
-  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
         toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
@@ -783,7 +783,7 @@
 
 
 (deftest toteuman-paivitys-siirtaa-eri-partitiolle
-  (let [urakka-id (hae-pudasjarven-alueurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
         toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
@@ -840,7 +840,7 @@
 
 (deftest toteuman-paivitys-ei-muuta-lukumaaraa
   (let [toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))
-        urakka-id (hae-pudasjarven-alueurakan-id)
+        urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
         sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
 

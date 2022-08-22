@@ -266,7 +266,7 @@
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc-in [:ilmoitustiedot :ylimaarainen-keyword]
@@ -299,7 +299,7 @@
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (not (nil? paallystyskohde-id)))
 
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
                                  (assoc :ilmoitustiedot
@@ -396,7 +396,7 @@
     (is (= (count paallystysilmoitukset) 5) "Päällystysilmoituksia löytyi vuodelle 2017")))
 
 (deftest hae-paallystysilmoitukset-utajarvi-2021-pot2
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitukset (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :urakan-paallystysilmoitukset +kayttaja-jvh+
@@ -492,7 +492,7 @@
     (is (every? #(number? (:kohdeosa-id %)) kohdeosat))))
 
 (deftest hae-yllapitokohteen-olemassa-oleva-pot2-paallystysilmoitus
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -513,7 +513,7 @@
 
 (defn- tallenna-testipaallystysilmoitus
   [paallystysilmoitus, vuosi]
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-utajarven-paallystysurakan-kayttajat.xml"))
         viesti-id (str (UUID/randomUUID))
@@ -888,7 +888,7 @@
 
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
                                (assoc :paallystyskohde-id paallystyskohde-id)
@@ -900,7 +900,7 @@
 (deftest tallenna-pot2-paallystysilmoitus-salli-null-materiaali-vain-jos-on-kar-toimenpide
   (let [kar-toimenpide pot2-domain/+kulutuskerros-toimenpide-karhinta+
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
                                (assoc :paallystyskohde-id paallystyskohde-id)
@@ -914,7 +914,7 @@
 
 (deftest tallenna-pot2-paallystysilmoitus-kohteen-alku-ja-loppupvm-muuttuvat
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
                                (assoc :paallystyskohde-id paallystyskohde-id)
@@ -929,7 +929,7 @@
 
 (deftest tallenna-pot2-paallystysilmoitus-throwaa-jos-loppupvm-puuttuu
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystysilmoitus (-> pot2-testidata
                                (assoc :paallystyskohde-id paallystyskohde-id)
@@ -945,7 +945,7 @@
 (deftest ei-saa-paivittaa-jos-on-vaara-versio
   (let [paallystyskohde-vanha-pot-id (ffirst (q "SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'"))]
     (is (not (nil? paallystyskohde-vanha-pot-id)))
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus-pot2 (-> pot2-testidata
                                       (assoc :paallystyskohde-id paallystyskohde-vanha-pot-id)
@@ -1034,7 +1034,7 @@
     :verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}])
 
 (deftest tallenna-pot2-poista-alustarivi
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         [paallystysilmoitus-kannassa-ennen paallystysilmoitus-kannassa-jalkeen] (tallenna-pot2-testi-paallystysilmoitus
@@ -1052,7 +1052,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-verkko-tiedot
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (assoc pot2-alustatestien-ilmoitus :alusta pot2-alusta-esimerkki)
@@ -1081,7 +1081,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-verkko-tiedot
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
@@ -1096,7 +1096,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-tas-tiedot
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         paallystysilmoitus (-> pot2-alustatestien-ilmoitus
@@ -1111,7 +1111,7 @@
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-lisaa-alustarivi
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         muu-tr-numero 7777
@@ -1148,7 +1148,7 @@
 
 ;; VHAR-5750 Liian herkästi muun kohteen päällekkäisyys vaikka ei ollut
 (deftest tallenna-pot2-jossa-on-alikohde-muulla-tiella-validointi-ottaa-tie-huomioon.
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         muu-tr-numero 837
@@ -1192,7 +1192,7 @@
                                        "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista. Tienumero 5555 ei ole.")))
 
 (deftest tallenna-pot2-paivittaa-alustarivi-jossa-on-verkko-tiedot
-  (let [urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
         alkuperaiset-verkon-tiedot {:verkon-tyyppi 1 :verkon-tarkoitus 2 :verkon-sijainti 3}
@@ -1266,7 +1266,7 @@
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)]
     (is (some? paallystyskohde-id))
 
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> pot-testidata
                                  (assoc :paallystyskohde-id paallystyskohde-id)
@@ -1366,7 +1366,7 @@
   (let [paallystyskohde-id (hae-utajarven-yllapitokohde-jolla-ei-ole-paallystysilmoitusta)]
     (is (some? paallystyskohde-id))
 
-    (let [urakka-id (hae-utajarven-paallystysurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
           hae-kohteiden-maara #(count (q (str "SELECT * FROM yllapitokohdeosa"
@@ -1445,7 +1445,7 @@
 
 
 (deftest yllapitokohteiden-maksuerien-haku-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-paallystyksen-maksuerat
@@ -1459,7 +1459,7 @@
     (is (= (count (:maksuerat leppajarven-ramppi)) 2))))
 
 (deftest yllapitokohteen-uusien-maksuerien-tallennus-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
         testidata (gen/sample (s/gen ::paallystyksen-maksuerat-domain/tallennettava-yllapitokohde-maksuerineen))]
@@ -1494,7 +1494,7 @@
                tallennettavat-maksuerat))))))
 
 (deftest yllapitokohteen-maksuerien-paivitys-toimii
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         leppajarven-ramppi (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
 
@@ -1532,7 +1532,7 @@
 
 (deftest avaa-lukitun-potin-lukitus
   (let [kohde-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
-        payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
+        payload {::urakka-domain/id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                  ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
                  ::paallystysilmoitus-domain/tila :valmis}
         tila-ennen-kutsua (keyword (second (first (q (str "SELECT id, tila FROM paallystysilmoitus WHERE paallystyskohde = " kohde-id)))))
@@ -1543,7 +1543,7 @@
 
 (deftest avaa-lukitun-potin-lukitus-ei-sallittu-koska-tero-ei-tassa-urakanvalvojana
   (let [kohde-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
-        payload {::urakka-domain/id (hae-muhoksen-paallystysurakan-id)
+        payload {::urakka-domain/id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                  ::paallystysilmoitus-domain/paallystyskohde-id kohde-id
                  ::paallystysilmoitus-domain/tila :valmis}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1556,7 +1556,7 @@
                                            payload)))))
 
 (deftest sahkopostien-lahetys
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         paallystyskohde-id (:paallystyskohde (first (q-map (str "SELECT paallystyskohde "
                                                              "FROM paallystysilmoitus pi "

@@ -1,32 +1,28 @@
 (ns harja.tiedot.urakka.varusteet-kartalla
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat])
+  (:require [reagent.core :refer [atom]]
+            [harja.tiedot.urakka.urakka :refer [velho-varusteet]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [reagent.ratom :refer [reaction]]))
 
-
 (def karttataso-varusteet (atom []))
+
 (defonce karttataso-nakyvissa? (atom true))
 
+(def varuste-klikattu-fn (atom (constantly nil)))
+
+(def varuste-kartalle-xf
+  (comp
+    (map
+      (fn [varuste] (assoc varuste :tyyppi-kartalla :varusteet-ulkoiset
+                                   :on-item-click #(@varuste-klikattu-fn varuste)
+                                   :avaa-paneeli? false)))))
+
 (defonce varusteet-kartalla
-         (reaction
-           (let [kohteet @karttataso-varusteet]
-             (when (and (not-empty kohteet) @karttataso-nakyvissa?)
-               (with-meta (mapv (fn [kohde]
-                                  (when (:sijainti kohde)
-                                    {:alue (merge {:stroke {:width 8
-                                                            :color "red"}}
-                                                  (:sijainti kohde))
-                                     :selite {:teksti "Varuste"
-                                              :img (kartta-ikonit/pinni-ikoni "sininen")}
-                                     :ikonit [{:tyyppi :merkki
-                                               :paikka [:loppu]
-                                               :zindex 21
-                                               :img (kartta-ikonit/pinni-ikoni "sininen")}]}))
-                                kohteet)
-                          {:selitteet [{:vari (map :color [{:color puhtaat/musta-raja
-                                                            :width 8}
-                                                           {:color puhtaat/vihrea
-                                                            :width 6}])
-                                        :teksti "Varusteet"}]})))))
+  (reaction
+    (let [kohteet @karttataso-varusteet]
+      (when (and (not-empty kohteet) @karttataso-nakyvissa?)
+        (kartalla-esitettavaan-muotoon
+          kohteet
+          #(= (:ulkoinen-oid %) (:ulkoinen-oid (:valittu-varuste @velho-varusteet)))
+          varuste-kartalle-xf)))))
 

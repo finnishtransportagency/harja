@@ -28,17 +28,26 @@
 (defrecord TallennaLomake [data])
 (defrecord TallennaMassaOnnistui [vastaus])
 (defrecord TallennaMassaEpaonnistui [vastaus])
+(defrecord PoistaMassa [id])
+(defrecord PoistaMassaOnnistui [vastaus])
+(defrecord PoistaMassaEpaonnistui [vastaus])
 (defrecord TyhjennaLomake [])
 (defrecord PaivitaMassaLomake [data])
 (defrecord PaivitaAineenTieto [polku arvo])
 (defrecord LisaaSideaine [sideaineen-kayttotapa])
 (defrecord PoistaSideaine [sideaineen-kayttotapa])
+(defrecord ValitseMassaTaiMurske [id tyyppi])
+(defrecord ValitseKaikkiMassatTaiMurskeet [tyyppi])
 
 ;; Murskeet
 (defrecord TallennaMurskeLomake [data])
 (defrecord TallennaMurskeOnnistui [vastaus])
 (defrecord TallennaMurskeEpaonnistui [vastaus])
+(defrecord PoistaMurske [id])
+(defrecord PoistaMurskeOnnistui [vastaus])
+(defrecord PoistaMurskeEpaonnistui [vastaus])
 (defrecord SuljeMurskeLomake [])
+(defrecord SuljeMateriaaliModal [])
 (defrecord PaivitaMurskeLomake [data])
 
 
@@ -46,6 +55,17 @@
 (defrecord HaePot2MassatJaMurskeet [])
 (defrecord HaePot2MassatJaMurskeetOnnistui [vastaus])
 (defrecord HaePot2MassatJaMurskeetEpaonnistui [vastaus])
+(defrecord HaeMuutUrakatJoissaMateriaaleja [])
+(defrecord HaeMuutUrakatJoissaMateriaalejaOnnistui [vastaus])
+(defrecord HaeMuutUrakatJoissaMateriaalejaEpaonnistui [vastaus])
+(defrecord SuljeMuistaUrakoistaTuonti [])
+(defrecord HaeMateriaalitToisestaUrakasta [urakka-id])
+(defrecord HaeMateriaalitToisestaUrakastaOnnistui [vastaus])
+(defrecord HaeMateriaalitToisestaUrakastaEpaonnistui [vastaus])
+(defrecord ValitseTuontiUrakka [urakka-id])
+(defrecord TuoMateriaalitToisestaUrakasta [])
+(defrecord TuoMateriaalitToisestaUrakastaOnnistui [vastaus])
+(defrecord TuoMateriaalitToisestaUrakastaEpaonnistui [vastaus])
 
 (defrecord HaeKoodistot [])
 (defrecord HaeKoodistotOnnistui [vastaus])
@@ -204,6 +224,38 @@
       [materiaalin-nimen-komp params]
       (materiaalin-nimen-komp params))))
 
+(defn- hae-muut-urakat-joissa-materiaaleja [app]
+  (tuck-apurit/post! app
+                     :hae-muut-urakat-joissa-materiaaleja
+                     {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                     {:onnistui ->HaeMuutUrakatJoissaMateriaalejaOnnistui
+                      :epaonnistui ->HaeMuutUrakatJoissaMateriaalejaEpaonnistui}))
+
+(defn- rikasta-materiaalien-nimi
+  "Rikastaa tuotujen materiaalien nimen ja asettaa oletuksen valittu? false"
+  [app massat murskeet]
+  (let [massat (map #(assoc % ::pot2-domain/massan-nimi
+                              (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
+                                                            :materiaali %})
+                              :valittu? false)
+                    massat)
+        murskeet  (map #(assoc % ::pot2-domain/murskeen-nimi
+                                 (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
+                                                               :materiaali %})
+                                 :valittu? false)
+                       murskeet)]
+    {:massat massat
+     :murskeet murskeet}))
+
+(defn materiaalien-ruksin-tila [rivit]
+  (cond
+    (every? :valittu? rivit) true
+
+    (not-any? :valittu? rivit) false
+
+    :else
+    :harja.ui.kentat/indeterminate))
+
 (extend-protocol tuck/Event
 
   AlustaTila
@@ -224,20 +276,101 @@
   HaePot2MassatJaMurskeetOnnistui
   (process-event [{{massat :massat
                     murskeet :murskeet} :vastaus} app]
-    (let [massat (map #(assoc % ::pot2-domain/massan-nimi
-                                (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :massatyypit])
-                                                              :materiaali %}))
-                      massat)
-          murskeet  (map #(assoc % ::pot2-domain/murskeen-nimi
-                                   (materiaalin-rikastettu-nimi {:tyypit (get-in app [:materiaalikoodistot :mursketyypit])
-                                                                 :materiaali %}))
-                         murskeet)]
+    (let [{massat :massat
+           murskeet :murskeet} (rikasta-materiaalien-nimi app massat murskeet)]
       (assoc app :massat massat
                  :murskeet murskeet)))
 
   HaePot2MassatJaMurskeetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Massojen haku epäonnistui!" :danger)
+    app)
+
+  HaeMuutUrakatJoissaMateriaaleja
+  (process-event [_ app]
+    (-> app
+        (hae-muut-urakat-joissa-materiaaleja)))
+
+  HaeMuutUrakatJoissaMateriaalejaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :muut-urakat-joissa-materiaaleja vastaus
+               :nayta-muista-urakoista-tuonti? true))
+
+  HaeMuutUrakatJoissaMateriaalejaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! (str "Muiden urakoiden haku materiaalien tuontia varten epäonnistui!"
+                        vastaus) :danger)
+    app)
+
+  SuljeMuistaUrakoistaTuonti
+  (process-event [_ app]
+    (assoc app :tuonti-urakka nil
+               :nayta-muista-urakoista-tuonti? false
+               :muut-urakat-joissa-materiaaleja nil
+               :materiaalit-toisesta-urakasta nil))
+
+  HaeMateriaalitToisestaUrakasta
+  (process-event [{urakka-id :urakka-id} app]
+    (-> app
+        (tuck-apurit/post! :hae-urakan-massat-ja-murskeet
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeMateriaalitToisestaUrakastaOnnistui
+                            :epaonnistui ->HaeMateriaalitToisestaUrakastaEpaonnistui})))
+
+
+  HaeMateriaalitToisestaUrakastaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [{massat :massat
+           murskeet :murskeet} vastaus]
+      (assoc app :materiaalit-toisesta-urakasta (rikasta-materiaalien-nimi app massat murskeet))))
+
+  HaeMateriaalitToisestaUrakastaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Materiaalien haku toisesta urakasta epäonnistui!" :danger)
+    app)
+
+  ValitseTuontiUrakka
+  (process-event [{urakka-id :urakka-id} app]
+    (-> app
+        (assoc :tuonti-urakka urakka-id)
+        (tuck-apurit/post! :hae-urakan-massat-ja-murskeet
+                           {:urakka-id urakka-id}
+                           {:onnistui ->HaeMateriaalitToisestaUrakastaOnnistui
+                            :epaonnistui ->HaeMateriaalitToisestaUrakastaEpaonnistui})))
+
+  TuoMateriaalitToisestaUrakasta
+  (process-event [_ app]
+    (let [massa-idt (keep #(when (true? (:valittu? %))
+                             (::pot2-domain/massa-id %))
+                          (get-in app [:materiaalit-toisesta-urakasta :massat]))
+          murske-idt (keep #(when (true? (:valittu? %))
+                                (::pot2-domain/murske-id %))
+                            (get-in app [:materiaalit-toisesta-urakasta :murskeet]))]
+      (-> app
+          (tuck-apurit/post! :tuo-materiaalit-toisesta-urakasta
+                             {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                              :massa-idt massa-idt
+                              :murske-idt murske-idt}
+                             {:onnistui ->TuoMateriaalitToisestaUrakastaOnnistui ;; sama paluuarvo eri kutsussa, joten sama käsittelijä
+                              :epaonnistui ->TuoMateriaalitToisestaUrakastaEpaonnistui}))))
+
+
+  TuoMateriaalitToisestaUrakastaOnnistui
+  (process-event [{{massat :massat
+                    murskeet :murskeet} :vastaus} app]
+    (let [{massat :massat
+           murskeet :murskeet} (rikasta-materiaalien-nimi app massat murskeet)]
+      (viesti/nayta-toast! "Materiaalien tuonti toisesta urakasta onnistui")
+      (assoc app :massat massat
+                 :murskeet murskeet
+                 :tuonti-urakka nil
+                 :materiaalit-toisesta-urakasta nil
+                 :muut-urakat-joissa-materiaaleja nil
+                 :nayta-muista-urakoista-tuonti? false)))
+
+  TuoMateriaalitToisestaUrakastaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Materiaalien tuonti toisesta urakasta epäonnistui!" :danger)
     app)
 
   HaeKoodistot
@@ -318,6 +451,27 @@
       (update-in app [:pot2-massa-lomake ::pot2-domain/sideaineet sideaineen-kayttotapa :aineet]
                  dissoc (dec aineiden-lkm))))
 
+  ValitseMassaTaiMurske
+  (process-event [{id :id tyyppi :tyyppi} app]
+    (let [tunniste (if (= tyyppi :massat)
+                     ::pot2-domain/massa-id
+                     ::pot2-domain/murske-id)
+          rivit (mapv #(if (= (tunniste %) id)
+                          (assoc % :valittu? (not (:valittu? %)))
+                          %)
+                       (get-in app [:materiaalit-toisesta-urakasta tyyppi]))]
+      (assoc-in app [:materiaalit-toisesta-urakasta tyyppi] rivit)))
+
+  ValitseKaikkiMassatTaiMurskeet
+  (process-event [{tyyppi :tyyppi} app]
+    (let [rivit (get-in app [:materiaalit-toisesta-urakasta tyyppi])
+          tila-ennen (materiaalien-ruksin-tila rivit)
+          rivit (mapv #(assoc % :valittu? (if (true? tila-ennen)
+                                            false
+                                            true))
+                      rivit)]
+      (assoc-in app [:materiaalit-toisesta-urakasta tyyppi] rivit)))
+
   TallennaLomake
   (process-event [{data :data} app]
     (let [massa (:pot2-massa-lomake app)
@@ -344,6 +498,29 @@
     (viesti/nayta-toast! "Massan tallennus epäonnistui!" :varoitus)
     app)
 
+  PoistaMassa
+  (process-event [{id :id} app]
+    (tuck-apurit/post! :poista-urakan-massa
+                       {:id id}
+                       {:onnistui ->PoistaMassaOnnistui
+                        :epaonnistui ->PoistaMassaEpaonnistui
+                        :paasta-virhe-lapi? true})
+    app)
+
+  PoistaMassaOnnistui
+  (process-event [{massat :massat
+                   murskeet :murskeet} app]
+    (viesti/nayta-toast! "Massa poistettu onnistuneesti")
+    (hae-massat-ja-murskeet app)
+    app)
+
+  PoistaMassaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Massan poistaminen epäonnistui!\n"
+                              (get-in vastaus [:response :virhe]))
+                         :varoitus)
+    app)
+
   TyhjennaLomake
   (process-event [_ app]
     (-> app
@@ -366,7 +543,8 @@
                                     poistettu?)
                              (assoc ::pot2-domain/urakka-id (-> @tila/tila :yleiset :urakka :id)))
                          {:onnistui ->TallennaMurskeOnnistui
-                          :epaonnistui ->TallennaMurskeEpaonnistui}))
+                          :epaonnistui ->TallennaMurskeEpaonnistui
+                          :paasta-virhe-lapi? true}))
     app)
 
   TallennaMurskeOnnistui
@@ -382,13 +560,42 @@
     (viesti/nayta! "Murskeen tallennus epäonnistui!" :danger)
     app)
 
+  PoistaMurske
+  (process-event [{id :id} app]
+    (tuck-apurit/post! :poista-urakan-murske
+                       {:id id}
+                       {:onnistui ->PoistaMurskeOnnistui
+                        :epaonnistui ->PoistaMurskeEpaonnistui
+                        :paasta-virhe-lapi? true})
+    app)
+
+  PoistaMurskeOnnistui
+  (process-event [{massat :massat
+                   murskeet :murskeet} app]
+    (viesti/nayta-toast! "Murske poistettu onnistuneesti")
+    (hae-massat-ja-murskeet app)
+    app)
+
+  PoistaMurskeEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Murskeen poistaminen epäonnistui!\n"
+                              (get-in vastaus [:response :virhe]))
+                         :varoitus)
+    app)
+
   SuljeMurskeLomake
   (process-event [_ app]
     (-> app
         (assoc :pot2-murske-lomake nil)))
 
+  SuljeMateriaaliModal
+  (process-event [_ app]
+    (swap! nayta-materiaalikirjasto? not)
+    (assoc app :tuonti-urakka nil
+               :nayta-muista-urakoista-tuonti? false
+               :materiaalit-toisesta-urakasta nil))
+
   AloitaMuokkaus
   (process-event [{lomakepolku :lomakepolku} app]
-    (js/console.log "AloitaMuokkaus" (pr-str lomakepolku))
     (-> app
         (assoc-in [lomakepolku :voi-muokata?] true))))

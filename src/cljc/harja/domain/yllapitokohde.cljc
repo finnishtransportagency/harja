@@ -1236,12 +1236,22 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
+(def vuosi-jonka-jalkeen-piilotetaan-arvonmuutos-ja-sanktio 2021)
+
+(defn piilota-arvonmuutos-ja-sanktio?
+  [vuosi]
+  (if (nil? vuosi)
+    ;; oletuksena piilotetaan, koska oletuksena kaikki tuleva aktiviteetti on vuonna 2022
+    ;; tai sen jälkeen tapahtuvaa, jolloin ei haluta huomioida arvonmuutosta ja sanktioita
+    true
+    (> vuosi vuosi-jonka-jalkeen-piilotetaan-arvonmuutos-ja-sanktio)))
+
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
-                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
+                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]} vuosi]
   (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
                             maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset                ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+                            (when-not (piilota-arvonmuutos-ja-sanktio? vuosi) arvonvahennykset) ;; Sama kuin arvonmuutokset
+                            (when-not (piilota-arvonmuutos-ja-sanktio? vuosi) sakot-ja-bonukset) ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
@@ -1297,3 +1307,20 @@ yllapitoluokkanimi->numero
                 (= (select-keys kohdeosa tr-domain/vali-avaimet)
                    (select-keys rivi tr-domain/vali-avaimet)))
               kohdeosat))))
+
+(defn laske-sarakkeen-summa [sarake kohderivit]
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))
+
+(defn kohteiden-summarivi
+  "Laskee ylläpitokohteen kustannusriveistä summarivin."
+  [kohteet]
+  {:id 0 :nimi "Yhteensä" :yhteenveto true
+   :sopimuksen-mukaiset-tyot (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+   :maaramuutokset (laske-sarakkeen-summa :maaramuutokset kohteet)
+   :arvonvahennykset (laske-sarakkeen-summa :arvonvahennykset kohteet)
+   :sakot-ja-bonukset (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+   :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
+   :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
+   :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})

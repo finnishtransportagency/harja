@@ -14,7 +14,8 @@
   #?(:clj (:import java.math.BigDecimal
                    java.math.RoundingMode))
   (:require [clojure.string :as str]
-            #?@(:cljs [[cljsjs.big]])))
+            #?@(:cljs [[cljsjs.big]
+                       [harja.tyokalut.yleiset :as yleiset]])))
 
 
 (defprotocol BigDecOps
@@ -56,7 +57,7 @@
 
   (div-decimal [{b1 :b} {b2 :b} decimals]
     #?(:clj (->BigDec (.divide b1 b2 decimals RoundingMode/HALF_UP))
-       :cljs (->BigDec (harja.tyokalut.yleiset/round2 decimals (.div b1 b2)))))
+       :cljs (->BigDec (yleiset/round2 decimals (.div b1 b2)))))
 
   (eq [{b1 :b} {b2 :b}]
     #?(:clj (= b1 b2)

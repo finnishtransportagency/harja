@@ -371,6 +371,7 @@ button > .ajax-loader {
 .yleinen-pikkuvihje {
   .vihjeen-sisalto {
     margin: 5px 0;
+    padding: @valistys-4;
     svg {
       vertical-align: middle;
     }
@@ -381,6 +382,11 @@ button > .ajax-loader {
       margin-left: 8px;
       position: relative;
       top: 2px;
+      // tämän säännön on tarkoitus estää mahdollista ikonia siirtymässä vahingossa alaspäin. Usein ikoni on svg,
+      // mutta toisinaan jokin livicon, kuten toastin varoituskolmiossa
+      &[class*='livicon-'] {
+        top: 0;
+      }
     }
   }
   margin-right: 1em;
@@ -473,7 +479,7 @@ button > .ajax-loader {
       }
     }
     .otsikko {
-      color: @harmaa-tumma;
+      color: @black-light;
       font-weight: normal;
       margin-bottom: 5px
     }
@@ -498,10 +504,13 @@ button > .ajax-loader {
     .ala-otsikko {
       padding-left: 7px;
       padding-right: 7px;
-      color: @harmaa-tumma;
+      color: @black-light;
       font-weight: normal;
       margin-top: 5px
     }
+  }
+  &.alasveto-erotin {
+    border-top: 1px solid @black-light;
   }
 }
 
@@ -699,6 +708,15 @@ button > .ajax-loader {
         padding-left: (@nykyinen-arvo / 16rem);
         padding-right: (@nykyinen-arvo / 16rem);
     }
+  
+    .padding-vertical-@{nykyinen-arvo} {
+      padding-top: (@nykyinen-arvo / 16rem);
+      padding-bottom: (@nykyinen-arvo / 16rem);
+    }
+  
+    .padding-@{nykyinen-arvo} {
+      padding: (@nykyinen-arvo / 16rem)
+    }
     .tee-sisennykset(@i + 1);
 }
 
@@ -722,6 +740,9 @@ button > .ajax-loader {
 @valistys-48: 3rem;
 @valistys-64: 4rem;
 @valistys-128: 8rem;
+
+// joskus tarpeen, mutta ei kuulu välistyskokoihin
+@koko-20px: 1.25rem;
 
 // Varjot, Design librarystä Elevation
 .elevation-1 {

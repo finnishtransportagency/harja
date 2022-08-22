@@ -129,7 +129,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.contains('.nappi-ensisijainen', 'Hae kohteita').click()
 
         // Ja tarkista, että kohde tuli listaan.
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('exist')
+        cy.contains('tr.paikkauskohderivi > td > div > span ', 'CPKohde').should('exist')
     })
 
     it('Tilaa paikkauskohde', function () {
@@ -142,7 +142,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
 
         // Avataan paikkauskohdelomake uuden luomista varten
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('tr.paikkauskohderivi > td > div > span ', 'CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Tilaa kohde
@@ -159,7 +159,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         avaaPaikkauskohteetSuoraan()
 
         //Avataan sivupaneeliin
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').click({force: true})
+        cy.contains('tr.paikkauskohderivi > td > div > span ', 'CPKohde').click({force: true})
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa toteuman lisäys paneeli
@@ -308,7 +308,7 @@ describe('Paikkaustoteumat toimii', function () {
     //     cy.route('POST', '_/paikkauskohteet-urakalle').as('kohteet')
     //
     //     // Avataan paikkauskohdelomake uuden luomista varten
-    //     cy.contains('tr.paikkauskohderivi > td > span > span ', potRaportoitava).click({force: true})
+    //     cy.contains('tr.paikkauskohderivi > td > div > span ', potRaportoitava).click({force: true})
     //     // Varmistetaan, että sivupaneeli aukesi
     //     cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
     //     // Valitse pot-raportointi
@@ -326,7 +326,7 @@ describe('Paikkaustoteumat toimii', function () {
     //     avaaPaikkauskohteetSuoraan()
     //
     //     // Avataan POT lomake
-    //     cy.contains('tr.paikkauskohderivi > td > span > span ', potRaportoitava).click({force: true})
+    //     cy.contains('tr.paikkauskohderivi > td > div > span ', potRaportoitava).click({force: true})
     //     // Varmistetaan, että sivupaneeli aukesi
     //     cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
     //     // Avaa POT lomake
@@ -345,7 +345,7 @@ describe('Paikkaustoteumat toimii', function () {
     //     avaaPaikkauskohteetSuoraan()
     //
     //     // Avataan POT lomake
-    //     cy.contains('tr.paikkauskohderivi > td > span > span ', potRaportoitava).click({force: true})
+    //     cy.contains('tr.paikkauskohderivi > td > div > span ', potRaportoitava).click({force: true})
     //     // Varmistetaan, että sivupaneeli aukesi
     //     cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
     //     // Avaa POT lomake
@@ -425,7 +425,7 @@ describe('Siivotaan lopuksi', function () {
         // siirry paikkauskohteisiin
         avaaPaikkauskohteetSuoraan()
 
-        cy.contains('tr.paikkauskohderivi > td > span > span ', 'CPKohde').should('not.exist')
-        cy.contains('tr.paikkauskohderivi > td > span > span ', potRaportoitava).should('not.exist')
+        cy.contains('tr.paikkauskohderivi > td > div > span ', 'CPKohde').should('not.exist')
+        cy.contains('tr.paikkauskohderivi > td > div > span ', potRaportoitava).should('not.exist')
     })
 })

@@ -145,7 +145,11 @@
     parametrit))
 
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
+  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))
+        ilmoitus (update ilmoitus :vuodet (fn [vuodet]
+                                            ;; Käytännössä tuotannossa on aina yksi vuosi vuodet-sarakkeessa. Jos sattuisi olemaan kaksi,
+                                            ;; otetaan suurempi arvo, koska se on aina kuluva vuosi, koska päällystyskohteita ei voi hakea tulevalle vuodelle YHA:sta
+                                            (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]

@@ -45,8 +45,9 @@
                                                   (::pot2-domain/tyyppi rivi))))}
     {:otsikko "Esiintymä / Lähde" :nimi :esiintyma-tai-lahde :tyyppi :string :muokattava? (constantly false) :leveys 8
      :hae (fn [rivi]
-            (or (::pot2-domain/esiintyma rivi)
-                (::pot2-domain/lahde rivi)))}
+            (str/join ", " (remove empty?
+                                   [(::pot2-domain/esiintyma rivi)
+                                    (::pot2-domain/lahde rivi)])))}
     {:otsikko "Rakei\u00ADsuus" :nimi ::pot2-domain/rakeisuus :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "Iskun\u00ADkestävyys" :nimi ::pot2-domain/iskunkestavyys :tyyppi :string :muokattava? (constantly false) :leveys 4}
     {:otsikko "" :nimi :toiminnot :tyyppi :komponentti :leveys 4

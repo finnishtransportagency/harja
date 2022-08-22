@@ -58,17 +58,17 @@
     (komp/lippu laskutusyhteenveto-nakyvissa?)
     (fn []
       (let [ur @nav/valittu-urakka
-            tiedot @laskutusyhteenvedon-tiedot
-            valittu-aikavali @u/valittu-hoitokauden-kuukausi
+                     valittu-aikavali @u/valittu-hoitokauden-kuukausi
             raportin-nimi (if (= :teiden-hoito (:urakkatyyppi ur))
                             :laskutusyhteenveto-mhu
                             :laskutusyhteenveto)]
         [:span.laskutusyhteenveto
-         [valinnat/urakan-hoitokausi ur]
-         [valinnat/hoitokauden-kuukausi]
-         
-         (when-let [p @laskutusyhteenvedon-parametrit]
-           [upotettu-raportti/raportin-vientimuodot p])
+         [:div.flex-row.alkuun
+          [valinnat/urakan-hoitokausi ur]
+          [valinnat/hoitokauden-kuukausi]
+          
+          (when-let [p @laskutusyhteenvedon-parametrit]
+            [upotettu-raportti/raportin-vientimuodot p])]
          
          (if-let [tiedot @laskutusyhteenvedon-tiedot]
            [muodosta-html (assoc-in tiedot [1 :tunniste] raportin-nimi)]

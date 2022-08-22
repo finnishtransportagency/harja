@@ -29,6 +29,15 @@ label.radio- {
     color: @black-default;
     margin-top: @valistys-4;
 
+    // ns. välitila checkboksille (osa valittu)
+    &.indeterminate {
+      &:before {
+        content: "\2012";
+        padding-right: 6px;
+        padding-left: 5px;
+      }
+    }
+
     &:before {
       content: "\2713";
       margin-right: 0.75rem;
@@ -103,7 +112,19 @@ label.radio- {
     color: @black-lighter;
 
     &:before {
+      background-color: @white-default;
       border: 2px solid @white-darker;
+      color: @white-default;
+    }
+    &:checked {
+      &:before {
+        background-color: @white-darker;
+      }
+    }
+  }
+
+  &:disabled&:checked + label {
+    &:before {
       background-color: @white-darker;
     }
   }

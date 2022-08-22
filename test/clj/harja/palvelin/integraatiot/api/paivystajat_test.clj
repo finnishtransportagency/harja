@@ -40,7 +40,7 @@
            " urakka-id ", (SELECT id FROM yhteyshenkilo WHERE tyopuhelin = '0505555555' LIMIT 1));")))
 
 (deftest tallenna-paivystajatiedot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
         ulkoinen-id (hae-vapaa-yhteyshenkilo-ulkoinen-id)
         vastaus-lisays (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/paivystajatiedot"] kayttaja-yit portti
@@ -135,7 +135,7 @@
     (is (= 400 (:status vastaus)))))
 
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]
@@ -150,7 +150,7 @@
     (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
 
 (deftest hae-paivystajatiedot-sijainnilla
-  (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
         vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=443199&y=7377324"] kayttaja-yit portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)]

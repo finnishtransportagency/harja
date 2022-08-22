@@ -68,7 +68,7 @@
 (defn harja-info []
   [:a {:class "klikattava"
        :id "infolinkki"
-       :href "http://finnishtransportagency.github.io/harja/"}
+       :href "https://finnishtransportagency.github.io/harja/"}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []

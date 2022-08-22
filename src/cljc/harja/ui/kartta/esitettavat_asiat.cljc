@@ -66,10 +66,11 @@
     :else viivat))
 
 (defn- maarittele-piste
-  [valittu? merkki]
+  [valittu? merkki ikonin-vari]
   (let [merkki (first (validoi-merkkiasetukset merkki))]
     (merge
-      {:scale (laske-skaala valittu?)}
+      {:scale (laske-skaala valittu?)
+       :color ikonin-vari}
       merkki)))
 
 (defn- maarittele-viiva
@@ -158,8 +159,10 @@
   ([asia valittu?] (maarittele-feature asia valittu? [{}] [{}]))
   ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
   ([asia valittu? merkit viivat]
-   (maarittele-feature asia valittu? merkit viivat nil))
+   (maarittele-feature asia valittu? merkit viivat nil nil))
   ([asia valittu? merkit viivat pisteen-ikoni]
+   (maarittele-feature asia valittu? merkit viivat pisteen-ikoni nil))
+  ([asia valittu? merkit viivat pisteen-ikoni ikonin-vari]
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
          koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))
@@ -173,7 +176,7 @@
                        (and (= :multipoint tyyppi) (= 1 (count koordinaatit)))
                        (when (or pisteen-ikoni merkit)
                          (merge
-                           (maarittele-piste valittu? (or pisteen-ikoni merkit))
+                           (maarittele-piste valittu? (or pisteen-ikoni merkit) ikonin-vari)
                            {:type :merkki
                             :coordinates (:coordinates (first koordinaatit))}))
 
@@ -185,7 +188,7 @@
                        (or (= :point tyyppi) (= 1 (count koordinaatit)))
                        (when (or pisteen-ikoni merkit)
                          (merge
-                           (maarittele-piste valittu? (or pisteen-ikoni merkit))
+                           (maarittele-piste valittu? (or pisteen-ikoni merkit) ikonin-vari)
                            {:type :merkki
                             :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
 
@@ -686,6 +689,21 @@
                                 viivamerkit
                                 viivat
                                 ikoni))))
+
+(defmethod asia-kartalle :varusteet-ulkoiset [kohde valittu?]
+  (let [[teksti viivat vari ikoni] (ulkoasu/varustetoteuma kohde)]
+    (assoc kohde
+      :type :varusteet-ulkoiset
+      :nimi (:ulkoinen-oid kohde)
+      :selite {:teksti teksti
+               :vari vari}
+      :alue (maarittele-feature
+              kohde
+              valittu?
+              nil
+              viivat
+              ikoni 
+              vari))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi

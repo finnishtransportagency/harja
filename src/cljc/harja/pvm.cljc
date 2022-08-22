@@ -848,6 +848,23 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     true
     false))
 
+(defn onko-hoitokausi?
+  "On tilanteita, joissa voi olla vaikea tietää, käsitelläänkö täydellistä hoitokautta. Tarkistus fn sellaiseen, missä
+  on syytä epäillä, että hoitokausi ei ole ihan kokonaan valittu."
+  [^java.util.Date alkupvm ^java.util.Date loppupvm]
+  (let [alkupvm-vuosi (vuosi alkupvm)
+        loppupvm-vuosi (vuosi loppupvm)
+        alkupvm-kuukausi (kuukausi alkupvm)
+        loppupvm-kuukausi (kuukausi loppupvm)
+        alkupvm-paiva (paiva alkupvm)
+        loppupvm-paiva (paiva loppupvm)]
+    (if (and
+          (= (+ 1 alkupvm-vuosi) loppupvm-vuosi) ;; Alkupvm:n vuosi on edellinen vuosi
+          (and (= alkupvm-kuukausi 10) (= loppupvm-kuukausi 9)) ;; Tarkistetaan lokakuu ja syyskuu
+          (and (= alkupvm-paiva 1) (= loppupvm-paiva 30))) ;; Tarkistetaan päivät
+      true
+      false)))
+
 (defn varmista-aikavali
   "Funktiolla voi varmistaa, että annettu aikaväli on maksimissaan tietyn mittainen.
   Jos ei ole, palauttaa aikavälistä sääntöä muokatun version. Palautettava versio riippuu
@@ -1084,7 +1101,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (cons alku
             (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
 
-(defn paivat-valissa [alku loppu]
+(defn paivat-valissa
+  "Palauttaa laiskan seqin päivistä org.joda.time.DateTime muodossa"
+  [alku loppu]
   (paivat-valissa* (d alku) (d loppu)))
 
 (defn vuodet-valissa [alku loppu]

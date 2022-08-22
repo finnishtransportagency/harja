@@ -106,14 +106,14 @@
             (recur (dec testauskerrat) (conj generoidut-materiaalit m))))))))
 
 (deftest materiaalen-haku-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-vesivayla-materiaalilistaus
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id})))))
 
 (deftest materiaalen-kirjaus-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :kirjaa-vesivayla-materiaali
                                            testi/+kayttaja-ulle+
@@ -124,7 +124,7 @@
                                             ::m/yksikko "kpl"})))))
 
 (deftest materiaalien-poisto
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         poistettava-materiaali-ennen (first (q-map "SELECT id, poistettu FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1"))
         materiaalien-lkm-ennen (:maara (first (q-map "SELECT COUNT(*) as maara FROM vv_materiaali WHERE poistettu IS NOT TRUE")))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -143,7 +143,7 @@
     (is (= materiaalien-lkm-ennen (+ materiaalien-lkm-jalkeen 1)))))
 
 (deftest materiaalen-poisto-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :poista-materiaalikirjaus
                                            testi/+kayttaja-ulle+
@@ -151,7 +151,7 @@
                                             ::m/id 666})))))
 
 (deftest materiaalen-poisto-eri-urakasta
-  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         poistettava-materiaali-id (:id (first (q-map "SELECT id FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1")))]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :poista-materiaalikirjaus
@@ -160,7 +160,7 @@
                                                     ::m/id poistettava-materiaali-id})))))
 
 (deftest materiaalien-maaran-ja-yksikon-muokkaus
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         materiaali-nimi "Hiekkasäkki"
         uusi-alkuperainen-maara 48598
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
@@ -192,7 +192,7 @@
     (is (= (::m/halytysraja hiekkasakki) uusi-halytysraja))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         uusi-alkuperainen-maara 48598
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
@@ -207,7 +207,7 @@
                                                                          ::m/alkuperainen-maara uusi-alkuperainen-maara}]})))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
-  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
                                 (get-in % [:muutokset 0 :id]))
@@ -233,7 +233,7 @@
     (is (= 0 rivi-lkm))))
 
 (deftest materiaalin-halytysrajan-alitus
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL ORDER BY nimi, \"urakka-id\""))
         {nimi :nimi
          aloitus-maara :maara

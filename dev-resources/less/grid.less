@@ -1,4 +1,5 @@
 @import "livi_tyylit";
+@import "./yleiset";
 /* Geneerinen editoitava gridi */
 
 .virhe-tai-varoitus-grid (@taustavari, @vari) {
@@ -108,8 +109,28 @@
       word-break: normal;
     }
     tbody {
-      > tr:not(.valiotsikko) {
+      > tr:not(.valiotsikko) td {
         border-bottom: 1px solid @harmaa-vaalea;
+      }
+
+      // Häkki, jolla saadaan avattuihin riveihin sininen marginaaliviiva.
+      > tr.avattava-rivi td:first-child {
+        border-bottom: none;
+
+        > div {
+          height: 100%;
+          padding: 8px 0;
+          margin-top: -8px;
+          border-right: 3px solid @blue-default;
+          // Taikanumero, jotta täsmää keskelle.
+          width: 11px;
+          position: absolute;
+        }
+      }
+
+      // Sisennys avatulle riville
+      > tr.avattava-rivi td:nth-child(2) {
+        padding-left: @valistys-48;
       }
     }
 
@@ -118,7 +139,7 @@
       > .virheet,
       > .huomautukset {
           display: block;
-	  
+
 	  > .varoitus,
 	  > .virhe,
 	  > .huomautus {
@@ -184,7 +205,7 @@
     padding: @livi-taulukon-padding;
     &.tiivis {
       padding: @livi-taulukon-padding-tiivis;
-    }
+    } 
     &.melko-tiivis {
       padding: @livi-taulukon-padding-melko-tiivis;
     }
@@ -291,6 +312,9 @@
   tr.klikattava:hover:not(.gridin-collapsoitava-valiotsikko) {
     cursor: pointer;
     background-color: @blue-lighter;
+  }
+  tr.piilota {
+    display:none;
   }
   .ei-arvoa {
     color: @varoitus;
@@ -465,6 +489,65 @@
     border: none;
     tr, td, th {
       border: none;
+    }
+  }
+
+  &.skrollattava {
+    .panel-body {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      // Ei haluta pakottaa koko ruudun levyiseksi, vaan skrollataan.
+      min-width: 100%;
+      width: auto;
+
+      tr, td {
+        // Ei rikota tekstiä useammalle riville taulukossa.
+        white-space: pre;
+      }
+    }
+
+    .sticky(@taustavari: initial, @vasemmalta: 0) {
+      position: sticky;
+      left: @vasemmalta;
+      z-index: 1;
+      background-color: @taustavari;
+
+    }
+
+    &.ensimmainen-sarake-sticky {
+      th:first-child {
+        .sticky(@harmaa13);
+      }
+
+      th:nth-child(2) {
+        .sticky(@harmaa13, 52px);
+      }
+
+      tr.hennosti-korostettu-rivi td:nth-child(-n+2) {
+        background-color: @hento-korostusvari;
+      }
+
+      td:first-child {
+        .sticky(@harjan-taustavari);
+        min-width: 52px;
+
+        &:hover {
+          // Tämä on pakollinen, koska mahdolliset tooltipit jäävät ensimmäisten rivien alle.
+          z-index: 1070;
+        }
+      }
+
+      td:nth-child(2) {
+        .sticky(@harjan-taustavari, 52px);
+
+        &:hover {
+          // Tämä on pakollinen, koska mahdolliset tooltipit jäävät ensimmäisten rivien alle.
+          z-index: 1070;
+        }
+      }
     }
   }
 }

@@ -664,10 +664,19 @@ WHERE
                           FROM toimenpideinstanssi
                           WHERE id = :toimenpideinstanssi AND loppupvm > current_timestamp - INTERVAL '3 months');
 
+-- name: onko-toteumalla-suolausta
+-- single?: true
+SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
+    AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
+OR EXISTS(SELECT * FROM toimenpidekoodi WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+
 -- name: hae-pisteen-hoitoluokat
+-- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
+-- niitä ei todellisuudessa suolata. Näissä tapauksissa GPS-piste osoittaa virheellisesti kevyen liikenteen
+-- väylälle, ja halutaan kohdistaa toteuma sen sijaan lähimmälle ajoväylälle.
 SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'talvihoito'::hoitoluokan_tietolajitunniste,
-			     250::INTEGER) AS talvihoitoluokka,
+			     250::INTEGER, array_remove(ARRAY[:kielletyt_hoitoluokat]::INT[], null)) AS talvihoitoluokka,
        hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
                              'soratie'::hoitoluokan_tietolajitunniste,
 			     250::INTEGER) AS soratiehoitoluokka;
@@ -1391,36 +1400,40 @@ SELECT alkanut
  WHERE id = :id;
 
 -- name: hae-reittitoteumat-analytiikalle
-SELECT t.id as toteuma_tunniste_id,
-       t.sopimus as toteuma_sopimus_id,
-       t.alkanut as toteuma_alkanut,
-       t.paattynyt as toteuma_paattynyt,
-       t.suorittajan_ytunnus as toteuma_suorittaja_ytunnus,
-       t.suorittajan_nimi as toteuma_suorittaja_nimi,
-       t.tyyppi as toteuma_toteumatyyppi, -- "yksikkohintainen","kokonaishintainen","akillinen-hoitotyo","lisatyo", "muutostyo","vahinkojen-korjaukset"
-       t.lisatieto as toteuma_lisatieto,
-       json_agg(row_to_json(row(tt.id, tt.maara, tkoodi.yksikko, tt.lisatieto))) AS toteumatehtavat,
-       json_agg(row_to_json(row(mk.nimi, tm.maara, mk.yksikko))) AS toteumamateriaalit,
+SELECT t.toteuma_tunniste_id,
+       t.toteuma_sopimus_id,
+       t.toteuma_alkanut,
+       t.toteuma_paattynyt,
+       t.toteuma_alueurakkanumero,
+       t.toteuma_suorittaja_ytunnus,
+       t.toteuma_suorittaja_nimi,
+       t.toteuma_toteumatyyppi,
+       t.toteuma_lisatieto,
+       t.toteumatehtavat,
+       t.toteumamateriaalit,
        json_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
-       --Selvitä, mistä saadaan tien nimi as toteuma_tiesijainti_nimi,
-       t.tr_numero as toteuma_tiesijainti_numero,
-       t.tr_alkuosa as toteuma_tiesijainti_aosa,
-       t.tr_alkuetaisyys as toteuma_tiesijainti_aet,
-       t.tr_loppuosa as toteuma_tiesijainti_losa,
-       t.tr_loppuetaisyys as toteuma_tiesijainti_let,
-       t.luotu as toteuma_muutostiedot_luotu,
-       t.luoja as toteuma_muutostiedot_luoja,
-       t.muokattu as toteuma_muutostiedot_muokattu,
-       t.muokkaaja as toteuma_muutostiedot_muokkaaja,
-       t.tyokonetyyppi as tyokone_tyokonetyyppi,
-       t.tyokonetunniste as tyokone_tunnus
-FROM toteuma t
-     LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
-     LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
-     LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
-     LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
-     LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-     LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
-WHERE (t.alkanut BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-GROUP BY t.id, t.alkanut
-ORDER BY t.alkanut ASC;
+       t.toteuma_tiesijainti_numero,
+       t.toteuma_tiesijainti_aosa,
+       t.toteuma_tiesijainti_aet,
+       t.toteuma_tiesijainti_losa,
+       t.toteuma_tiesijainti_let,
+       t.toteuma_muutostiedot_luotu,
+       t.toteuma_muutostiedot_luoja,
+       t.toteuma_muutostiedot_muokattu,
+       t.toteuma_muutostiedot_muokkaaja,
+       t.tyokone_tyokonetyyppi,
+       t.tyokone_tunnus,
+       t.urakkaid,
+       t.poistettu
+FROM analytiikka_toteumat t
+         LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.toteuma_tunniste_id
+         LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))
+group by toteuma_tunniste_id
+ORDER BY t.toteuma_alkanut ASC
+LIMIT 100000;
+
+-- name: siirra-toteumat-analytiikalle
+select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+

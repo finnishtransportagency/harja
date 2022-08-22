@@ -56,6 +56,10 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
+(def ^{:doc "Template, jolla muodostetaan URL jonka avulla käyttäjä itse voi avata sijainnin Google Mapsissä" :private true :const true}
+  open-google-map-url-template
+  "https://maps.google.com/?q=%s,%s")
+
 (defn- otsikko
   "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
    sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
@@ -74,7 +78,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
-(defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
+(defn- viesti [vastausosoite otsikko ilmoitus]
   (html
     [:div
      [:table
@@ -94,16 +98,16 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:img {:src (format goole-static-map-url-template
-                             lat lon google-static-maps-key)}]))
+         [:a {:href (format open-google-map-url-template lat lon)
+              :target "_blank"
+              :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
-(defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
+(defn otsikko-ja-viesti [vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
-        viesti (viesti vastausosoite otsikko ilmoitus
-                       google-static-maps-key)]
+        viesti (viesti vastausosoite otsikko ilmoitus)]
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]
@@ -197,6 +201,26 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                              :urakka-id urakka
                              :ilmoitustyyppi ilmoitustyyppi}))))))
 
+(defn- lokita-sahkopostikuittauksen-virhe [kuittaus {:keys [sisalto] :as viesti}]
+  "Annetaan errori kolmessa tilanteessa:
+   Urakka-id puuttuu
+   Ilmoitus-id puuttuu
+   Urakka-id on ja ilmoitus-id on, mutta sisältö on täysin tyhjä.
+
+  Varoitus annetaan, jos urakka-id löytyy ja ilmoitus-id löytyy ja sisältö löytyy, mutta se ei sisällä kuittaustyyppiä."
+  (cond
+    (or
+      (str/includes? (:virhe kuittaus) "Urakka-id puuttuu")
+      (str/includes? (:virhe kuittaus) "Ilmoitus-id puuttuu"))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    (or (nil? sisalto) (empty? sisalto))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    ;; Muuten riittää pelkkä varoitus, että ei sotketa logia turhilla erroreilla
+    :else
+    (log/warn (format "Varoitus: Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))))
+
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
@@ -208,5 +232,9 @@ kuittauksen lähettäjälle."
         (tallenna-toimenpiteiden-aloitus jms-lahettaja db lahettaja v)
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
       (do
-        (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti v))
-        +virheellinen-toimenpide-viesti+))))
+        ;; Logitetaan virhe, jos urakka-id tai ilmoitus-id puuttuu
+        (lokita-sahkopostikuittauksen-virhe v viesti)
+
+        ;; Palautetaan kutsujalle virheviesti ja tarkennus virheestä
+        (assoc +virheellinen-toimenpide-viesti+
+          :sisalto (str (:sisalto +virheellinen-toimenpide-viesti+) " Virhe: " (:virhe v)))))))

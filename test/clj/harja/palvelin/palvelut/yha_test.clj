@@ -42,7 +42,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest sido-yha-urakka-harja-urakkaan
-  (let [urakka-id (hae-yha-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -57,7 +57,7 @@
       (is (integer? yhatiedot-testin-jalkeen) "Urakka sidottiin YHA-urakkaan oikein"))))
 
 (deftest ala-anna-vaihtaa-lukittua-sidontaa
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (integer? yhatiedot-ennen-testia) "Urakka on jo sidottu ennen testiä")
 
@@ -70,7 +70,7 @@
                                                                  :yhanimi "YHANIMI"}})))))
 
 (deftest ala-sido-vajailla-tiedoilla
-  (let [urakka-id (hae-yha-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -80,7 +80,7 @@
                                             :yha-tiedot {}})))))
 
 (deftest alla-anna-sitoa-ilman-oikeuksia
-  (let [urakka-id (hae-yha-paallystysurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :sido-yha-urakka-harja-urakkaan +kayttaja-ulle+
@@ -90,7 +90,7 @@
                                                          :yhanimi "YHANIMI"}})))))
 
 (deftest hae-yha-urakat
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")]
 
     (with-fake-http [urakoiden-haku-test/urakkahaku-url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

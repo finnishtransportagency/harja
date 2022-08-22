@@ -65,7 +65,7 @@
          :luokka :horizontal
          :muokkaa! #(reset! tiedot/valittu-sanktio %)
          :voi-muokata? voi-muokata?
-         :footer-fn (fn [tarkastus]
+         :footer-fn (fn [sanktio]
                       [:span.nappiwrappi
                        [napit/palvelinkutsu-nappi
                         "Tallenna sanktio"
@@ -74,7 +74,7 @@
                          :ikoni (ikonit/tallenna)
                          :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
                          :disabled (or (not voi-muokata?)
-                                       (not (lomake/voi-tallentaa? tarkastus)))}]
+                                       (not (lomake/voi-tallentaa? sanktio)))}]
                        (when (and voi-muokata? (:id @muokattu))
                          [:button.nappi-kielteinen
                           {:class (when @tallennus-kaynnissa "disabled")

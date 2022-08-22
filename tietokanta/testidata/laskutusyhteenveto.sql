@@ -54,7 +54,7 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
 INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Talvisuola'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 200, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 200, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),

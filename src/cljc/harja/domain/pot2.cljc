@@ -1,12 +1,10 @@
 (ns harja.domain.pot2
   "Ylläpidon päällystysurakoissa käytettävän POT2-lomakkeen skeemat."
   (:require [schema.core :as schema]
-            [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [specql.impl.registry]
             [specql.data-types]
-            [harja.domain.urakka :as urakka]
             [harja.domain.muokkaustiedot :as m]
-            [harja.domain.tierekisteri :as tr]
+            [harja.fmt :as fmt]
             [harja.validointi :as v]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
@@ -414,3 +412,14 @@
         tarkennukset (rivin-avaimet->str massa [::dop-nro] ", ")
         tarkennukset-teksti (when (seq tarkennukset) (str " (" tarkennukset ")"))]
     [ydin tarkennukset-teksti]))
+
+(defn massan-runkoaineet
+  [rivi ainetyypit]
+  [:div
+   (str/join "; " (map (fn [aine]
+                         (str (ainetyypin-koodi->nimi ainetyypit (:runkoaine/tyyppi aine))
+                              (when (:runkoaine/massaprosentti aine)
+                                (str " (" (fmt/piste->pilkku (:runkoaine/massaprosentti aine)) "%)"))))
+                       (reverse
+                         (sort-by :runkoaine/massaprosentti
+                                  (::runkoaineet rivi)))))])

@@ -361,17 +361,21 @@ SELECT
     i.lahettaja_puhelinnumero,
     i.lahettaja_sahkoposti,
     i."aiheutti-toimenpiteita",
-    jsonb_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
+    json_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
         it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
         coalesce(it.kuittaaja_organisaatio_ytunnus, '')))) AS kuittaukset
-FROM ilmoitus i JOIN urakka u ON u.id = i.urakka
-     JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
-     JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+FROM ilmoitus i
+    JOIN urakka u ON u.id = i.urakka
+                         -- Haetaan vain käynnissäolevista urakoista
+                         AND ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR (u.loppupvm IS NULL AND u.alkupvm <= NOW()))
+    JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
+    JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
 WHERE (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
       OR
        it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
-ORDER BY i."valitetty-urakkaan" ASC;
+ORDER BY i."valitetty-urakkaan" ASC
+LIMIT 10000;
 
 -- name: hae-id-ilmoitus-idlla
 -- Hakee id:n ilmoitus-id:llä

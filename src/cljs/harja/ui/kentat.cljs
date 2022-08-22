@@ -485,7 +485,7 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id]}]
+  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
@@ -504,7 +504,9 @@
                            (reset! data valittu?))))}]
      [:label.checkbox-label {:on-click #(.stopPropagation %)
                              :id label-id
-                             :class (str label-luokka (when disabled? " disabled"))
+                             :class (y/luokat label-luokka
+                                              (when disabled? "disabled")
+                                              (when indeterminate "indeterminate"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
@@ -646,7 +648,8 @@
                                            :disabled? disabled?
                                            :valitse! valitse!
                                            :arvo arvo
-                                           :label-luokka label-luokka})]
+                                           :label-luokka label-luokka
+                                           :indeterminate (= ::indeterminate data)})]
              (if nayta-rivina?
                [:table.boolean-group
                 [:tbody
@@ -1664,12 +1667,15 @@
         [:span.loppuetaisyys loppuetaisyys]])]))
 
 (defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit
-                                       otsikon-luokka otsikon-tag]}]
+                                       otsikon-luokka otsikon-tag data-muokkaus-fn]}]
   [:span {:class (or luokka "label-ja-kentta")
           :style tyylit}
    [(or otsikon-tag :label) {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
    [:div.kentta
-    [tee-kentta kentta-params arvo-atom]]])
+    (if data-muokkaus-fn
+      ;; mahdollista 3-arity, joka paremmin Tuck-yhteensopiva. Siihen data-parametri ei saa olla atomi.
+      [tee-kentta kentta-params arvo-atom data-muokkaus-fn]
+      [tee-kentta kentta-params arvo-atom])]])
 
 (defn tee-otsikko-ja-kentat [{:keys [otsikko luokka kentat otsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")}

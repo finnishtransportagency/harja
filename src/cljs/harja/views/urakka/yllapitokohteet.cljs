@@ -28,15 +28,13 @@
             [harja.atom :refer [wrap-vain-luku]]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
+            [harja.tiedot.urakka.paallystys-muut-kustannukset :as muut-kustannukset]
             [clojure.string :as string]
             [harja.ui.modal :as modal])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn laske-sarakkeen-summa [sarake kohderivit]
-  (reduce + 0 (keep
-                (fn [rivi] (sarake rivi))
-                kohderivit)))
+
 
 (defn tr-virheilmoitus [tr-virheet]
   [:div.tr-virheet
@@ -933,12 +931,12 @@
 
   Optiot on map, jossa avaimet:
   otsikko             Taulukon otsikko
-  kohdetyyppi         Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus)
+  kohdetyyppi         Minkä tyyppisiä kohteita tässä taulukossa näytetään (:paallystys tai :paikkaus. :paikkaus tarkoittaa tässä Harjassa luotuja kohteita, eikä YHA:ssa, ja niiltä puuttuu yhaid.)
   yha-sidottu?        Onko taulukon kohteet tulleet kaikki YHA:sta (vaikuttaa mm. kohteiden muokkaamiseen)
   piilota-tallennus?  True jos tallennusnappi piilotetaan
   tallenna            Funktio tallennusnapille
   kun-onnistuu        Funktio tallennuksen onnistumiselle"
-  [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus?] :as optiot}]
+  [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus? valittu-vuosi] :as optiot}]
   (let [tr-sijainnit (atom {}) ;; onnistuneesti haetut TR-sijainnit
         tr-virheet (atom {}) ;; virheelliset TR sijainnit
         g (grid/grid-ohjaus)
@@ -982,8 +980,9 @@
                                    (grid/validoi-grid g)))))]
     (komp/luo
       (komp/piirretty (fn [] (grid/validoi-grid g)))
-      (fn [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus?] :as optiot}]
-        (let [nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
+      (fn [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus? valittu-vuosi] :as optiot}]
+        (let [paallystys? (= (:kohdetyyppi optiot) :paallystys)
+              nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
                                            ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
                                            ;; ainakin yhdellä kohteella ne on annettu
                                            ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
@@ -997,7 +996,12 @@
                                                               :tr-alkuosa :tr-alkuosa
                                                               :tr-alkuetaisyys :tr-alkuetaisyys
                                                               :tr-loppuosa :tr-loppuosa
-                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}]
+                                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]}}
+              jarjestetyt-kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)
+              jarjestetyt-kohteet (if (and paallystys? (not-empty jarjestetyt-kohteet))
+                                    (conj jarjestetyt-kohteet
+                                          (yllapitokohteet-domain/kohteiden-summarivi jarjestetyt-kohteet))
+                                    jarjestetyt-kohteet)]
           [:div.yllapitokohteet
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
@@ -1032,12 +1036,18 @@
                       :tyyppi :komponentti :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?
                       :komponentti rivin-kohdenumero-ja-kello}
                       {:otsikko "Tun\u00ADnus" :nimi :tunnus
-                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}]
+                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                     {:otsikko "Nimi" :nimi :nimi
+                      :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
+                      :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                     {:otsikko (if paallystys? "YHA-id" "HARJA-id")
+                      :nimi (if paallystys? :yhaid :id)
+                      :tasaa :oikea
+                      :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
+                      :pituus-max 30 :muokattava? (constantly false)}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
-                      [{:otsikko "Nimi" :nimi :nimi
-                        :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
-                        :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                      [nil ;; kohteen nimi siirretty pois tästä, jotta yha-id saadaan väliin
                        {:nimi :tr-numero :muokattava? (constantly (not yha-sidottu?))}
                        (when nayta-ajorata-ja-kaista?
                          {:nimi :tr-ajorata :muokattava? (constantly (not yha-sidottu?))})
@@ -1058,10 +1068,10 @@
                       :fmt :lyhyt-nimi
                       :muokattava? (constantly (not yha-sidottu?))}
 
-                     (when (= (:kohdetyyppi optiot) :paallystys)
+                     (when paallystys?
                        {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
-                     (when (= (:kohdetyyppi optiot) :paallystys)
+                     (when paallystys?
                        {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
                         :nimi :maaramuutokset :muokattava? (constantly false)
                         :tyyppi :komponentti :leveys maaramuutokset-leveys :tasaa :oikea
@@ -1073,39 +1083,47 @@
                        {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
                         :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
                         :tasaa :oikea})
-                     {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
-                      :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea}
-                     {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
-                      :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
-                      :muokattava? (constantly false)}
-                     {:otsikko "Bi\u00ADtumi-in\u00ADdek\u00ADsi" :nimi :bitumi-indeksi
+                     ;; Arvonmuutokset ja sanktiot halutaan piilottaa 2022 eteenpäin
+                     (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? valittu-vuosi)
+                       {:otsikko "Ar\u00ADvon muu\u00ADtok\u00ADset" :nimi :arvonvahennykset :fmt fmt/euro-opt
+                        :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea})
+                     (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? valittu-vuosi)
+                       {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
+                        :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
+                        :muokattava? (constantly false)})
+                     {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :nimi :bitumi-indeksi
                       :fmt fmt/euro-opt
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
-                     {:otsikko "Kaa\u00ADsu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt
+                     {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-                     {:otsikko (str "Kok.\u00ADhinta (sis. ind.")
+                     {:otsikko "Kokonais\u00ADhinta"
                       :muokattava? (constantly false)
                       :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :komponentti :leveys yhteensa-leveys
                       :tasaa :oikea
                       :komponentti (fn [rivi]
                                      [:span {:class (when (:maaramuutokset-ennustettu? rivi)
                                                       "grid-solu-ennustettu")}
-                                      (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi))])}]))
-            (yllapitokohteet-domain/jarjesta-yllapitokohteet @kohteet-atom)]
+                                      (fmt/euro-opt (yllapitokohteet-domain/yllapitokohteen-kokonaishinta rivi valittu-vuosi))])}]))
+            jarjestetyt-kohteet]
            [tr-virheilmoitus tr-virheet]])))))
 
 (defn yllapitokohteet-yhteensa [kohteet-atom optiot]
   (let [yhteensa
         (reaction
           (let [kohteet @kohteet-atom
-                sopimuksen-mukaiset-tyot-yhteensa (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
-                toteutunut-hinta-yhteensa (laske-sarakkeen-summa :toteutunut-hinta kohteet)
-                maaramuutokset-yhteensa (laske-sarakkeen-summa :maaramuutokset kohteet)
-                arvonvahennykset-yhteensa (laske-sarakkeen-summa :arvonvahennykset kohteet)
-                sakot-ja-bonukset-yhteensa (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
-                bitumi-indeksi-yhteensa (laske-sarakkeen-summa :bitumi-indeksi kohteet)
-                kaasuindeksi-yhteensa (laske-sarakkeen-summa :kaasuindeksi kohteet)
-                muut-yhteensa (laske-sarakkeen-summa :muut-hinta kohteet)
+                sopimuksen-mukaiset-tyot-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+                toteutunut-hinta-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :toteutunut-hinta kohteet)
+                maaramuutokset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :maaramuutokset kohteet)
+                arvonvahennykset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :arvonvahennykset kohteet)
+                sakot-ja-bonukset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+                bitumi-indeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
+                kaasuindeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
+                ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
+                kohdistamattomat-sanktiot-yhteensa (let [arvo (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
+                                                     (if (> (Math/abs arvo) 0)
+                                                       (- arvo)
+                                                       arvo))
+                muut-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
                 kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
                                    {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
                                     :toteutunut-hinta toteutunut-hinta-yhteensa
@@ -1113,8 +1131,10 @@
                                     :arvonvahennykset arvonvahennykset-yhteensa
                                     :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
                                     :bitumi-indeksi bitumi-indeksi-yhteensa
-                                    :kaasuindeksi kaasuindeksi-yhteensa})
-                                 (or muut-yhteensa 0))]
+                                    :kaasuindeksi kaasuindeksi-yhteensa}
+                                   (:valittu-vuosi optiot))
+                                 (or muut-yhteensa 0)
+                                 (or kohdistamattomat-sanktiot-yhteensa 0))]
             [{:id 0
               :sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
               :maaramuutokset maaramuutokset-yhteensa
@@ -1124,7 +1144,8 @@
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
               :muut-hinta muut-yhteensa
-              :kokonaishinta kokonaishinta}]))]
+              :kokonaishinta kokonaishinta
+              :kohdistamattomat-sanktiot kohdistamattomat-sanktiot-yhteensa}]))]
 
     [grid/grid
      {:nayta-toimintosarake? true
@@ -1144,7 +1165,11 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
-      {:otsikko "" :nimi :tyhja :tyyppi :string :leveys toteutunut-hinta-leveys}
+      {:otsikko (str
+                  "Sakot ja bonukset"
+                  (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
+                    " (muut kuin kohteisiin liittyvät)")) :nimi :kohdistamattomat-sanktiot :tyyppi :numero :leveys toteutunut-hinta-leveys
+       :fmt fmt/euro-opt :tasaa :oikea}
       (when (= (:kohdetyyppi optiot) :paallystys)
         {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
          :fmt fmt/euro-opt :tyyppi :numero
@@ -1157,16 +1182,18 @@
          :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Muut kustan\u00ADnukset" :nimi :muut-hinta :fmt fmt/euro-opt :tyyppi :numero
        :leveys muut-leveys :tasaa :oikea}
-      {:otsikko "Arvon\u00ADväh." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
-       :leveys arvonvahennykset-leveys :tasaa :oikea}
-      {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
-       :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "Bitumi-indeksi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
+      (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
+        {:otsikko "Arvon\u00ADmuutokset." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
+         :leveys arvonvahennykset-leveys :tasaa :oikea})
+      (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
+        {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
+         :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
+         :muokattava? (constantly false)})
+      {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys bitumi-indeksi-leveys :tasaa :oikea}
-      {:otsikko "Kaasu\u00ADindeksi" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
+      {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
-      {:otsikko "Kok.\u00ADhinta (sis. ind.)" :nimi :kokonaishinta
+      {:otsikko "Kokonais\u00ADhinta" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
        (fn [rivi]

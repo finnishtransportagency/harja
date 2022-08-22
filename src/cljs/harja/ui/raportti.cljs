@@ -23,7 +23,8 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [clojure.string :as str]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -43,13 +44,48 @@
    [:span " "]
    [:span.osuus (str "(" osuus "%)")]])
 
-(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+;; Tavallisesti raportin solujen tyylit tulevat rivitasolta ja HTML raporteissa yksittäisen solun tyyli annetaan luokka
+;; määritteessä (:sarakkeen-luokka). Niinpä tämän elementin ainoa olemassaolon syy on se, että tätä vaaditaan PDF ja Excelraportoissa.
+;; Tämä on siis identtinen :arvo-ja-yksikkö elementin kanssa, mutta sallii raportin toiminnan.
+(defmethod muodosta-html :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:span.arvo-ja-yksikko
    [:span.arvo (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:span.yksikko (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-html :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                 fmt (fmt arvo)
+                 :else arvo)]
+   [:span.yksikko (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-html :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:span.arvo-ja-yksikko
+   [:span.arvo arvo]
+   [:div.selite.small-caption selite]])
+
+(defmethod muodosta-html :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara ryhmitelty?]}]]
+  (let [etuliite (cond
+                   (neg? arvo) "- "
+                   (zero? arvo) ""
+                   :else "+ ")
+        arvo (Math/abs arvo)
+        prosentti (Math/abs prosentti)]
+    [:span.erotus-ja-prosentti
+     [:span.arvo (str etuliite (cond
+                                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                                 :else arvo))]
+     [:div.selite.small-caption
+      {:style {:text-align :inherit}}
+      (str "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
+
+(defmethod muodosta-html :teksti-ja-info [[_ {:keys [arvo info]}]]
+  [:span.teksti-ja-info [:span.arvo (str arvo "\u00A0")]
+   [:span.info [yleiset/tooltip {:suunta :oikea :leveys :levea} [ikonit/harja-icon-status-info] info]]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
@@ -82,15 +118,21 @@
                                                rivi-ennen
                                                tyhja
                                                korosta-rivit korostustyyli
-                                               oikealle-tasattavat-kentat]}
+                                               oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
+                                               avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?]}
                                      sarakkeet data]]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
-    [grid/grid {:otsikko            (or otsikko "")
-                :tunniste           (fn [rivi] (str "raportti_rivi_"
-                                                    (or (::rivin-indeksi rivi)
-                                                        (hash rivi))))
+    [grid/grid {:otsikko (or otsikko "")
+                :tunniste (fn [rivi]
+                            (str "raportti_rivi_"
+                              (or (::rivin-indeksi rivi)
+                                (hash rivi))))
                 :rivi-ennen rivi-ennen
-                :piilota-toiminnot? true}
+                :avattavat-rivit avattavat-rivit
+                :piilota-toiminnot? true
+                :sivuttain-rullattava? sivuttain-rullattava?
+                :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
+                :esta-tiivis-grid? esta-tiivis-grid?}
      (into []
            (map-indexed
             (fn [i sarake]
@@ -103,18 +145,31 @@
                    :reunus (:reunus sarake)
                    :pakota-rivitys? (:pakota-rivitys? sarake)
                    :otsikkorivi-luokka (str (:otsikkorivi-luokka sarake)
-                                            (case (:tasaa-otsikko sarake)
-                                              :keskita " grid-header-keskita"
-                                              :oikea " grid-header-oikea"
-                                              ""))
+                                         (case (:tasaa-otsikko sarake)
+                                           :keskita " grid-header-keskita"
+                                           :oikea " grid-header-oikea"
+                                           ""))
+                   :solun-luokka (fn [arvo _rivi]
+                                   ;; Jos rivi on tässä nimiavaruudessa määritetty komponentti, rivin optioissa voi
+                                   ;; olla avain :varoitus?, jolloin piirretään solu punaisella taustalla ja tekstillä.
+                                   (str
+                                     (when (:varoitus? (and (vector? arvo) (second arvo)))
+                                       " solu-varoitus ")
+                                     (when (:korosta-hennosti? (and (vector? arvo) (second arvo)))
+                                       " hennosti-korostettu-solu ")
+                                     (when (true? (:ala-korosta? (and (vector? arvo) (second arvo))))
+                                       " solun-korostus-estetty ")))
+                   :luokka (:sarakkeen-luokka sarake)
                    :nimi (str "sarake" i)
                    :fmt format-fn
                    ;; Valtaosa raporttien sarakkeista on puhdasta tekstiä, poikkeukset komponentteja
-                   :tyyppi (if raporttielementteja?
-                             :komponentti
-                             :string)
+                   :tyyppi (cond
+                             (= (:tyyppi sarake) :vetolaatikon-tila) :vetolaatikon-tila
+                             (= (:tyyppi sarake) :avattava-rivi) :avattava-rivi
+                             raporttielementteja? :komponentti
+                             :else :string)
                    :tasaa (if (or (oikealle-tasattavat-kentat i)
-                                  (raportti-domain/numero-fmt? (:fmt sarake)))
+                                (raportti-domain/numero-fmt? (:fmt sarake)))
                             :oikea
                             (:tasaa sarake))}
                  (when raporttielementteja?
@@ -142,9 +197,11 @@
                                       (if (map? rivi)
                                         [(:rivi rivi) rivi]
                                         [rivi {}])
+                                      isanta-rivin-id (:isanta-rivin-id optiot)
                                       lihavoi? (:lihavoi? optiot)
                                       korosta? (:korosta? optiot)
                                       korosta-hennosti? (:korosta-hennosti? optiot)
+                                      rivin-luokka (:rivin-luokka optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
                                                         rivi)
@@ -161,7 +218,13 @@
                                           (assoc :korosta true)
 
                                           lihavoi?
-                                          (assoc :lihavoi true))))))
+                                          (assoc :lihavoi true)
+
+                                          rivin-luokka
+                                          (assoc :rivin-luokka rivin-luokka)
+
+                                          isanta-rivin-id
+                                          (assoc :isanta-rivin-id isanta-rivin-id))))))
                data)))]))
 
 
@@ -173,6 +236,11 @@
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
   [:p {:style {:color (when vari vari)}} teksti
+   (when infopallura (muodosta-html [:infopallura infopallura]))])
+
+(defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
+  [:p {:style {:font-weight 700
+               :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]

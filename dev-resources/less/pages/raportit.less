@@ -1,3 +1,4 @@
+@import "../yleiset";
 /**********************************
  *            Yleiset
  **********************************/
@@ -21,12 +22,6 @@
                 color: @black-default;
                 font-weight: 600;
                 font-size: 12px;
-                &:first-child {
-                    border-left: 1px solid @raportin-tehostevari;
-                }
-                &:last-child {
-                    border-right: 1px solid @raportin-tehostevari;
-                }
             }
         }
         > tr:first-child {
@@ -65,6 +60,21 @@
         border-bottom: 2px solid @raportin-tehostevari;
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
+    }
+    
+    td, th {
+        &.hennosti-korostettu-solu {
+            background-color: @hento-korostusvari;
+        }
+       
+        &.solun-korostus-estetty {
+            background-color: @harmaa15;
+            font-weight: normal;
+        }
+
+        &.solu-varoitus {
+            background-color: @red-lighter;
+        }
     }
 }
 .tyomaakokous {
@@ -188,10 +198,32 @@
     }
 }
 
+.raporttitieto {
+    > .flex {
+        display: flex;
+        margin-top: @valistys-32;
+        flex-wrap: wrap;
+    }
+    .raporttitietojen-grid {
+        .livi-grid {
+            max-width: 450px;
+            margin-right: @valistys-32;
+        }
+    }
+}
 /**********************************
  *     Raporttien komponentit
  **********************************/
 
 .osuus {
     font-size: @fontin-koko-taulukko-pienempi;
+}
+
+.teksti-ja-info .info {
+  color: @blue-dark;
+ 
+    // Toistaiseksi ei haluta paddingia muualle.
+    .tooltip-inner {
+        padding: @valistys-16;
+    }
 }

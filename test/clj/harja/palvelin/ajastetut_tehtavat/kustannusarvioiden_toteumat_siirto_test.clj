@@ -1,4 +1,4 @@
-(ns harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat-test
+(ns harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat-siirto-test
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]

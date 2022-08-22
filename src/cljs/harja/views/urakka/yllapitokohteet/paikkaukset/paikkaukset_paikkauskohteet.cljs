@@ -273,7 +273,7 @@
                 [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
            [liitteet/lataa-tiedosto
-            (-> @tila/tila :yleiset :urakka :id)
+            {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
             {:nappi-teksti "Tuo kohteet excelistä"
              :nappi-luokka "napiton-nappi"
              :url "lue-paikkauskohteet-excelista"

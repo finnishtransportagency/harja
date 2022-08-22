@@ -33,7 +33,7 @@
 
 (deftest tarkista-yllapitokohteen-lahetys
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
         url (tee-url)
@@ -104,7 +104,7 @@
 
 (deftest tarkista-yllapitokohteen-lahetys-pot2
   (let [kohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         ;; Kohteen vuosi ei muutu vuoden vaihtuessa, joten tehdään kova koodaatuna
         vuosi-nyt  2021 #_ (pvm/vuosi (pvm/nyt))
@@ -344,7 +344,7 @@
 
 (deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))

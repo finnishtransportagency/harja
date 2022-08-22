@@ -108,7 +108,7 @@
                     {:ns :runkoaine}))})
 
 (def urakan-testimassa
-  {::pot2-domain/urakka-id (hae-utajarven-paallystysurakan-id)
+  {::pot2-domain/urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
    ::pot2-domain/nimen-tarkenne "Tarkenne"
    ::pot2-domain/tyyppi (:koodi (first paallystys-ja-paikkaus-domain/+paallystetyypit+)) ;; Harjan vanhassa kielenkäytössä nämä on päällystetyyppejä
    ::pot2-domain/max-raekoko (first pot2-domain/massan-max-raekoko)
@@ -183,7 +183,7 @@
 
 ;; MURSKEIDEN TESTIT
 (def urakan-testimurske
-  #:harja.domain.pot2{:esiintyma "Kankkulan Kaivo 2", :nimen-tarkenne "LJYR", :iskunkestavyys "LA35", :tyyppi 1, :rakeisuus "0/56", :dop-nro "1234567-dope", :murske-id 1 :urakka-id (hae-utajarven-paallystysurakan-id)})
+  #:harja.domain.pot2{:esiintyma "Kankkulan Kaivo 2", :nimen-tarkenne "LJYR", :iskunkestavyys "LA35", :tyyppi 1, :rakeisuus "0/56", :dop-nro "1234567-dope", :murske-id 1 :urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})
 
 (defn- tallenna-murske-fn
   [http-palvelin payload]
@@ -241,7 +241,7 @@
 
 (deftest muun-tyyppisen-murskeen-insert-test
   (let [muun-tyypin-id (ffirst (q " SELECT koodi FROM pot2_mk_mursketyyppi where nimi = 'Muu';"))
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         uusi-id (+ 1 (ffirst (q " SELECT max (id) FROM pot2_mk_urakan_murske;")))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :tallenna-urakan-murske
@@ -305,6 +305,114 @@
                (tallenna-murske-fn (:http-palvelin jarjestelma) (merge urakan-testimurske
                                                                        {::pot2-domain/rakeisuus "0/666"})))))
 
+(def oletetut-massat-utajarvi '({:harja.domain.pot2/dop-nro "1234567"
+                                 :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                               :kohteiden-lkm 1
+                                                               :nimi "Tärkeä kohde mt20"
+                                                               :rivityyppi "paallyste"
+                                                               :tila "aloitettu"}
+                                                              {:kohdenumero "L42"
+                                                               :kohteiden-lkm 2
+                                                               :nimi "Tärkeä kohde mt20"
+                                                               :rivityyppi "alusta"
+                                                               :tila "aloitettu,aloitettu"})
+                                 :harja.domain.pot2/kuulamyllyluokka "AN14"
+                                 :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
+                                                                 :lisaaine/pitoisuus 0.5M
+                                                                 :lisaaine/tyyppi 2
+                                                                 ::pot2-domain/massa-id 1})
+                                 :harja.domain.pot2/litteyslukuluokka "FI15"
+                                 :harja.domain.pot2/max-raekoko 16
+                                 :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 1
+                                                                  :runkoaine/esiintyma "Kaiskakallio"
+                                                                  :runkoaine/id 1
+                                                                  :runkoaine/kuulamyllyarvo 10.0M
+                                                                  :runkoaine/kuvaus "Kelpo runkoaine tämä."
+                                                                  :runkoaine/litteysluku 9.5M
+                                                                  :runkoaine/massaprosentti 52.0M
+                                                                  :runkoaine/tyyppi 1}]
+                                 :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 1
+                                                                 :sideaine/id 1
+                                                                 :sideaine/lopputuote? true
+                                                                 :sideaine/pitoisuus 4.8M
+                                                                 :sideaine/tyyppi 6})
+                                 :harja.domain.pot2/tyyppi 12
+                                 ::pot2-domain/massa-id 1}
+                                {:harja.domain.pot2/dop-nro "987654331-2"
+                                 :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
+                                                               :kohteiden-lkm 1
+                                                               :nimi "Tärkeä kohde mt20"
+                                                               :rivityyppi "paallyste"
+                                                               :tila "aloitettu"})
+                                 :harja.domain.pot2/kuulamyllyluokka "AN7"
+                                 :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
+                                                                 :lisaaine/pitoisuus 0.5M
+                                                                 :lisaaine/tyyppi 1
+                                                                 ::pot2-domain/massa-id 2})
+                                 :harja.domain.pot2/litteyslukuluokka "FI20"
+                                 :harja.domain.pot2/max-raekoko 16
+                                 :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 2
+                                                                  :runkoaine/esiintyma "Sammalkallio"
+                                                                  :runkoaine/id 2
+                                                                  :runkoaine/kuulamyllyarvo 9.2M
+                                                                  :runkoaine/kuvaus "Jämäkkä runkoaine."
+                                                                  :runkoaine/litteysluku 6.5M
+                                                                  :runkoaine/massaprosentti 85.0M
+                                                                  :runkoaine/tyyppi 1}
+                                                                 {::pot2-domain/massa-id 2
+                                                                  :runkoaine/esiintyma "Sammalkallio"
+                                                                  :runkoaine/fillerityyppi "Kalkkifilleri (KF)"
+                                                                  :runkoaine/id 3
+                                                                  :runkoaine/kuvaus "Oiva Filleri."
+                                                                  :runkoaine/massaprosentti 3.0M
+                                                                  :runkoaine/tyyppi 3}
+                                                                 {::pot2-domain/massa-id 2
+                                                                  :runkoaine/esiintyma "Sammalkallio"
+                                                                  :runkoaine/id 4
+                                                                  :runkoaine/kuulamyllyarvo 11.2M
+                                                                  :runkoaine/kuvaus "Rouhea aine."
+                                                                  :runkoaine/litteysluku 4.5M
+                                                                  :runkoaine/massaprosentti 5.0M
+                                                                  :runkoaine/tyyppi 2}]
+                                 :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 2
+                                                                 :sideaine/id 2
+                                                                 :sideaine/lopputuote? true
+                                                                 :sideaine/pitoisuus 5.5M
+                                                                 :sideaine/tyyppi 5})
+                                 :harja.domain.pot2/tyyppi 14
+                                 ::pot2-domain/massa-id 2}))
+
+(def oletetut-murskeet-utajarvi '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
+                                                                                                                                                                                                                   :kohteiden-lkm 1
+                                                                                                                                                                                                                   :nimi "Tärkeä kohde mt20"
+                                                                                                                                                                                                                   :tila "aloitettu"})}))
+
+(def oletettu-testimassa-vastauksessa
+  '(#:harja.domain.pot2{:dop-nro "12345abc"
+                        :kaytossa ()
+                        :kuulamyllyluokka "AN5"
+                        :lisaaineet ({:harja.domain.pot2/massa-id 5
+                                      :lisaaine/id 5
+                                      :lisaaine/pitoisuus 1.5M
+                                      :lisaaine/tyyppi 1})
+                        :litteyslukuluokka "FI15"
+                        :massa-id 5
+                        :max-raekoko 5
+                        :nimen-tarkenne "Tarkenne"
+                        :runkoaineet [{:harja.domain.pot2/massa-id 5
+                                       :runkoaine/esiintyma "Zatelliitti"
+                                       :runkoaine/id 7
+                                       :runkoaine/kuulamyllyarvo 12.1M
+                                       :runkoaine/litteysluku 4.1M
+                                       :runkoaine/massaprosentti 34.0M
+                                       :runkoaine/tyyppi 1}]
+                        :sideaineet ({:harja.domain.pot2/massa-id 5
+                                      :sideaine/id 5
+                                      :sideaine/lopputuote? true
+                                      :sideaine/pitoisuus 10.6M
+                                      :sideaine/tyyppi 1})
+                        :tyyppi 1}))
+
 (deftest hae-urakan-pot2-massat
   (let [_ (kutsu-palvelua (:http-palvelin jarjestelma)
                           :tallenna-urakan-massa
@@ -312,113 +420,9 @@
         {massat :massat murskeet :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-urakan-massat-ja-murskeet
-                        +kayttaja-jvh+ {:urakka-id (hae-utajarven-paallystysurakan-id)})
-        oletetut-massat '({:harja.domain.pot2/dop-nro "1234567"
-                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
-                                                         :kohteiden-lkm 1
-                                                         :nimi "Tärkeä kohde mt20"
-                                                         :rivityyppi "paallyste"
-                                                         :tila "aloitettu"}
-                                                        {:kohdenumero "L42"
-                                                         :kohteiden-lkm 2
-                                                         :nimi "Tärkeä kohde mt20"
-                                                         :rivityyppi "alusta"
-                                                         :tila "aloitettu,aloitettu"})
-                           :harja.domain.pot2/kuulamyllyluokka "AN14"
-                           :harja.domain.pot2/lisaaineet ({:lisaaine/id 1
-                                                           :lisaaine/pitoisuus 0.5M
-                                                           :lisaaine/tyyppi 2
-                                                           ::pot2-domain/massa-id 1})
-                           :harja.domain.pot2/litteyslukuluokka "FI15"
-                           :harja.domain.pot2/max-raekoko 16
-                           :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 1
-                                                            :runkoaine/esiintyma "Kaiskakallio"
-                                                            :runkoaine/id 1
-                                                            :runkoaine/kuulamyllyarvo 10.0M
-                                                            :runkoaine/kuvaus "Kelpo runkoaine tämä."
-                                                            :runkoaine/litteysluku 9.5M
-                                                            :runkoaine/massaprosentti 52.0M
-                                                            :runkoaine/tyyppi 1}]
-                           :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 1
-                                                           :sideaine/id 1
-                                                           :sideaine/lopputuote? true
-                                                           :sideaine/pitoisuus 4.8M
-                                                           :sideaine/tyyppi 6})
-                           :harja.domain.pot2/tyyppi 12
-                           ::pot2-domain/massa-id 1}
-                          {:harja.domain.pot2/dop-nro "987654331-2"
-                           :harja.domain.pot2/kaytossa ({:kohdenumero "L42"
-                                                         :kohteiden-lkm 1
-                                                         :nimi "Tärkeä kohde mt20"
-                                                         :rivityyppi "paallyste"
-                                                         :tila "aloitettu"})
-                           :harja.domain.pot2/kuulamyllyluokka "AN7"
-                           :harja.domain.pot2/lisaaineet ({:lisaaine/id 2
-                                                           :lisaaine/pitoisuus 0.5M
-                                                           :lisaaine/tyyppi 1
-                                                           ::pot2-domain/massa-id 2})
-                           :harja.domain.pot2/litteyslukuluokka "FI20"
-                           :harja.domain.pot2/max-raekoko 16
-                           :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 2
-                                                            :runkoaine/esiintyma "Sammalkallio"
-                                                            :runkoaine/id 2
-                                                            :runkoaine/kuulamyllyarvo 9.2M
-                                                            :runkoaine/kuvaus "Jämäkkä runkoaine."
-                                                            :runkoaine/litteysluku 6.5M
-                                                            :runkoaine/massaprosentti 85.0M
-                                                            :runkoaine/tyyppi 1}
-                                                           {::pot2-domain/massa-id 2
-                                                            :runkoaine/esiintyma "Sammalkallio"
-                                                            :runkoaine/fillerityyppi "Kalkkifilleri (KF)"
-                                                            :runkoaine/id 3
-                                                            :runkoaine/kuvaus "Oiva Filleri."
-                                                            :runkoaine/massaprosentti 3.0M
-                                                            :runkoaine/tyyppi 3}
-                                                           {::pot2-domain/massa-id 2
-                                                            :runkoaine/esiintyma "Sammalkallio"
-                                                            :runkoaine/id 4
-                                                            :runkoaine/kuulamyllyarvo 11.2M
-                                                            :runkoaine/kuvaus "Rouhea aine."
-                                                            :runkoaine/litteysluku 4.5M
-                                                            :runkoaine/massaprosentti 5.0M
-                                                            :runkoaine/tyyppi 2}]
-                           :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 2
-                                                           :sideaine/id 2
-                                                           :sideaine/lopputuote? true
-                                                           :sideaine/pitoisuus 5.5M
-                                                           :sideaine/tyyppi 5})
-                           :harja.domain.pot2/tyyppi 14
-                           ::pot2-domain/massa-id 2}
-                          {:harja.domain.pot2/dop-nro "12345abc"
-                           ::pot2-domain/kaytossa ()
-                           :harja.domain.pot2/kuulamyllyluokka "AN5"
-                           :harja.domain.pot2/lisaaineet ({:lisaaine/id 3
-                                                           :lisaaine/pitoisuus 1.5M
-                                                           :lisaaine/tyyppi 1
-                                                           ::pot2-domain/massa-id 3})
-                           :harja.domain.pot2/litteyslukuluokka "FI15"
-                           :harja.domain.pot2/max-raekoko 5
-                           :harja.domain.pot2/nimen-tarkenne "Tarkenne"
-                           :harja.domain.pot2/runkoaineet [{::pot2-domain/massa-id 3
-                                                            :runkoaine/esiintyma "Zatelliitti"
-                                                            :runkoaine/id 5
-                                                            :runkoaine/kuulamyllyarvo 12.1M
-                                                            :runkoaine/litteysluku 4.1M
-                                                            :runkoaine/massaprosentti 34.0M
-                                                            :runkoaine/tyyppi 1}]
-                           :harja.domain.pot2/sideaineet ({::pot2-domain/massa-id 3
-                                                           :sideaine/id 3
-                                                           :sideaine/lopputuote? true
-                                                           :sideaine/pitoisuus 10.6M
-                                                           :sideaine/tyyppi 1})
-                           :harja.domain.pot2/tyyppi 1
-                           ::pot2-domain/massa-id 3})
-        oletetut-murskeet '(#:harja.domain.pot2{:esiintyma "Kankkulan Kaivo", :nimen-tarkenne "LJYR", :iskunkestavyys "LA30", :tyyppi 1, :rakeisuus "0/40", :dop-nro "1234567-dop", :murske-id 1 :kaytossa ({:kohdenumero "L42"
-                                                                                                                                                                                                             :kohteiden-lkm 1
-                                                                                                                                                                                                             :nimi "Tärkeä kohde mt20"
-                                                                                                                                                                                                             :tila "aloitettu"})})]
-    (is (= massat oletetut-massat))
-    (is (= murskeet oletetut-murskeet))))
+                        +kayttaja-jvh+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})]
+    (is (= massat (concat oletetut-massat-utajarvi oletettu-testimassa-vastauksessa)))
+    (is (= murskeet oletetut-murskeet-utajarvi))))
 
 (deftest hae-pot2-koodistot-test
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -463,6 +467,356 @@
     (is (= (count (:verkon-sijainnit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_sijainti"))))
     (is (= (count (:verkon-tarkoitukset vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tarkoitus"))))
     (is (= (count (:verkon-tyypit vastaus)) (ffirst (q "SELECT count(*) FROM pot2_verkon_tyyppi"))))
-    )
+    ))
 
-  )
+(deftest hae-vastuuhenkilon-muut-urakat-joissa-materiaaleja
+  (let [muut-urakat
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")})
+        oletetut (list {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+                        :nimi "Utajärven päällystysurakka"})]
+    (is (= muut-urakat oletetut) "Muut urakat oikein")))
+
+
+(deftest hae-paakayttajan-muut-urakat-joissa-materiaaleja
+  (let [muut-urakat
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-paakayttaja-skanska+ {:urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")})
+        oletetut (list {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+                        :nimi "Utajärven päällystysurakka"})
+        muut-urakat-paikkausurakasta (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-muut-urakat-joissa-materiaaleja
+                                                     +kayttaja-paakayttaja-skanska+ {:urakka-id (hae-urakan-id-nimella "Muhoksen paikkausurakka")})
+        oletetut-paikkausurakasta (list {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+                                         :nimi "Muhoksen päällystysurakka"}
+                                        {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+                                         :nimi "Utajärven päällystysurakka"})]
+    (is (= muut-urakat oletetut) "Muut urakat oikein")
+    (is (= muut-urakat-paikkausurakasta oletetut-paikkausurakasta)) "Muut urakat oikein"))
+
+(deftest laadunvalvojalla-ei-lukuoikeutta
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-muut-urakat-joissa-materiaaleja
+                                         +kayttaja-laadunvalvoja-kemi+ {:urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")}))))
+
+
+;; JVH näkee kaikki urakat, mutta vain sen urakoitsijan materiaalit mikä urakka on valittuna.
+;; Tämä on tärkeää, jotta missään tilanteessa kukaan käyttäjä ei pysty viemään eri urakoitsijan materiaalia toiselle urakoitsijalle
+(deftest jvh-nakee-kaikista-muista-urakoista
+  (let [muut-urakat-kemi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-muut-urakat-joissa-materiaaleja
+                                         +kayttaja-jvh+ {:urakka-id (hae-kemin-paallystysurakan-2019-2023-id)})
+        muut-urakat-muhos (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-jvh+ {:urakka-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)})
+        muut-urakat-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-muut-urakat-joissa-materiaaleja
+                        +kayttaja-jvh+ {:urakka-id (hae-oulun-alueurakan-2014-2019-id)})
+        oletetut-kemin-urakoitsija (list) ;; Tällä urakoitsijalla ei materiaaleja
+        oletetut-skanska (list {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+                                :nimi "Muhoksen päällystysurakka"}
+                               {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+                                :nimi "Utajärven päällystysurakka"}
+                               )
+        oletetut-yit (list {:id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")
+                            :nimi "Aktiivinen Oulu Päällystys Testi"})]
+    (is (= muut-urakat-kemi oletetut-kemin-urakoitsija) "Muut urakat oikein")
+    (is (= muut-urakat-muhos oletetut-skanska) "Muut urakat oikein")
+    (is (= muut-urakat-oulu oletetut-yit) "Muut urakat oikein")))
+
+(deftest hae-urakan-massat-ja-murskeet-eri-kayttajilla
+  (doseq [kayttaja [+kayttaja-vastuuhlo-muhos+
+                  +kayttaja-paakayttaja-skanska+
+                  +kayttaja-jvh+]]
+    (let [{massat :massat murskeet :murskeet}
+          (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :hae-urakan-massat-ja-murskeet
+                          kayttaja {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})]
+      (is (= oletetut-massat-utajarvi massat) "Oletetut massat Utajärven urakasta")
+      (is (= oletetut-murskeet-utajarvi murskeet) "Oletetut murskeet Utajärven urakasta"))))
+
+(deftest hae-urakan-massat-ja-murskeet-laadunvalvoja-ei-nakyvyytta
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-urakan-massat-ja-murskeet
+                                         +kayttaja-laadunvalvoja-kemi+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")}))))
+
+
+(deftest hae-urakan-massat-ja-murskeet-ei-onnistu-eri-urakoitsijan-urakasta
+  (doseq [kayttaja [+kayttaja-vastuuhlo-muhos+
+                    +kayttaja-paakayttaja-skanska+]]
+    (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                                           :hae-urakan-massat-ja-murskeet
+                                           kayttaja {:urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")})) (str "Ei pidä onnistua käyttäjällä " kayttaja))))
+
+(def oletetut-massat-oulun-paallystysurakassa
+  '(#:harja.domain.pot2{:dop-nro "34567"
+                        :kaytossa ()
+                        :kuulamyllyluokka "AN14"
+                        :lisaaineet ({:harja.domain.pot2/massa-id 4
+                                      :lisaaine/id 4
+                                      :lisaaine/pitoisuus 0.2M
+                                      :lisaaine/tyyppi 2})
+                        :litteyslukuluokka "FI15"
+                        :massa-id 4
+                        :max-raekoko 16
+                        :runkoaineet [{:harja.domain.pot2/massa-id 4
+                                       :runkoaine/esiintyma "Kolokallio"
+                                       :runkoaine/id 6
+                                       :runkoaine/kuulamyllyarvo 12.0M
+                                       :runkoaine/kuvaus "Kelpo runkoaine tämäkin."
+                                       :runkoaine/litteysluku 8.5M
+                                       :runkoaine/massaprosentti 55.0M
+                                       :runkoaine/tyyppi 1}]
+                        :sideaineet ({:harja.domain.pot2/massa-id 4
+                                      :sideaine/id 4
+                                      :sideaine/lopputuote? true
+                                      :sideaine/pitoisuus 3.8M
+                                      :sideaine/tyyppi 6})
+                        :tyyppi 12}))
+
+(def oletetut-murskeet-oulun-paallystysurakassa (list ))
+
+(deftest hae-urakan-massat-ja-murskeet-ei-onnistu-eri-urakoitsijan-urakasta-jvh
+  (let [{massat :massat murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-jvh+ {:urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")})]
+    (is (= oletetut-massat-oulun-paallystysurakassa massat) "Oletetut massat Oulun urakasta")
+    (is (= oletetut-murskeet-oulun-paallystysurakassa murskeet) "Oletetut murskeet Oulun urakasta")))
+
+(deftest tuo-materiaalit-utajarvi->porvoo
+  (let [{massat :massat murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})
+        urakka-id (hae-urakan-id-nimella "Porvoon päällystysurakka")
+        massa-idt (map ::pot2-domain/massa-id massat)
+        murske-idt (map ::pot2-domain/murske-id murskeet)
+        runkoaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_runkoaine;"))
+        sideaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_sideaine;"))
+        lisaaine-max-id (ffirst (q "SELECT max (id) FROM pot2_mk_massan_lisaaine;"))
+        {tuodut-massat :massat tuodut-murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt massa-idt
+                                                     :murske-idt murske-idt})
+        alkuperainen-massa-dop-1234567 (first (filter #(= "1234567" (::pot2-domain/dop-nro %)) massat))
+        alkuperaisen-runkoaineet (::pot2-domain/runkoaineet alkuperainen-massa-dop-1234567)
+        alkuperaisen-sideaineet (::pot2-domain/sideaineet alkuperainen-massa-dop-1234567)
+        alkuperaisen-lisaaineet (::pot2-domain/lisaaineet alkuperainen-massa-dop-1234567)
+        monistettu-dop-1234567 (first (filter #(= "1234567" (::pot2-domain/dop-nro %)) tuodut-massat))
+        monistettu-dop-1234567-massa-id (::pot2-domain/massa-id monistettu-dop-1234567)
+        monistettu-1234567-dop-murske (first (filter #(= "1234567-dop" (::pot2-domain/dop-nro %)) tuodut-murskeet))
+        ;; koska luodaan runkoaineista kopio, niiden id:t saavat sekvenssistä max:ia seuraavan arvon
+        odotetut-runkoaineet (map #(-> %
+                                       (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                       (assoc :runkoaine/id (+ 1 runkoaine-max-id)))
+                                  alkuperaisen-runkoaineet)
+        odotetut-sideaineet (map #(-> %
+                                      (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                      (assoc :sideaine/id (+ 1 sideaine-max-id)))
+                                 alkuperaisen-sideaineet)
+        odotetut-lisaaineet (map #(-> %
+                                      (assoc ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+                                      (assoc :lisaaine/id (+ 1 lisaaine-max-id)))
+                                 alkuperaisen-lisaaineet)]
+
+
+
+    ;; vertaillaan alkuperäiseen massaan, siten että id:t korvataan monistetun massan id:illä
+    ;; assertoidaan ensin massan perustiedot, myöhemmin erillisesti runko-, side- ja lisäaineet
+    (is (= (-> alkuperainen-massa-dop-1234567
+               (assoc ::pot2-domain/kaytossa (list)
+                      ::pot2-domain/massa-id monistettu-dop-1234567-massa-id)
+               (dissoc ::pot2-domain/runkoaineet
+                       ::pot2-domain/sideaineet
+                       ::pot2-domain/lisaaineet))
+           ;; assertoidaan runko-, side- ja lisäaineet erikseen
+           (dissoc monistettu-dop-1234567 ::pot2-domain/runkoaineet
+                   ::pot2-domain/sideaineet
+                   ::pot2-domain/lisaaineet)) "Tuodut massat")
+
+    (is (= odotetut-runkoaineet (::pot2-domain/runkoaineet monistettu-dop-1234567)) "Runkoaineet monistettu oikein")
+    (is (= odotetut-sideaineet (::pot2-domain/sideaineet monistettu-dop-1234567)) "Sideaineet monistettu oikein")
+    (is (= odotetut-lisaaineet (::pot2-domain/lisaaineet monistettu-dop-1234567)) "Lisäaineet monistettu oikein")
+    (is (= (-> (first murskeet)
+               (assoc ::pot2-domain/kaytossa (list)
+                      ::pot2-domain/murske-id (::pot2-domain/murske-id monistettu-1234567-dop-murske)))
+           monistettu-1234567-dop-murske) "Murskeet monistettu oikein")))
+
+
+(deftest hae-materiaalit-utajarvi->oulun-alueurakka-epaonnistuu
+  ;; Oulun urakan vastuuhenkilö (yit uuvh) koettaa hakea Utajärven materiaaleja eikä saa onnistua
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakan-massat-ja-murskeet
+                               +kayttaja-yit_uuvh+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")}))))
+
+(deftest tuo-materiaalit-utajarvi->oulun-alueurakka-epaonnistuu
+  (let [{massat :massat murskeet :murskeet}
+        ;; tässä teeskennellään että ensin jostain syystä (JVH:n avulla) saataisiin materiaalit haettua...
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-jvh+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        massa-idt (map ::pot2-domain/massa-id massat)
+        murske-idt (map ::pot2-domain/murske-id murskeet)]
+    (is (thrown? Exception
+                 ;; ... jolloin vasta tämän palvelukutsun oikeustarkistus pääsee ajoon asti ja feilaa
+                 ;; eli ei pidäkään voida hakea materiaaleja toisen urakoitsijan urakasta
+                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :tuo-materiaalit-toisesta-urakasta
+                                +kayttaja-yit_uuvh+ {:urakka-id urakka-id
+                                                      :massa-idt massa-idt
+                                                      :murske-idt murske-idt})))))
+
+(deftest kaytossa-olevaa-massaa-ei-voi-poistaa
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '1234567';")))]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-vastuuhlo-muhos+ {:id massan-id})))))
+
+(deftest kaytossa-olevaa-mursketta-ei-voi-poistaa
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '1234567-dop';")))]
+    (is (thrown? SecurityException
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})))))
+
+(deftest massan-poisto-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        {massat-ennen :massat murskeet-ennen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id urakka-id})
+
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '764567-dop';")))
+        {massat-jalkeen :massat murskeet-jalkeen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :poista-urakan-massa
+                        +kayttaja-vastuuhlo-muhos+ {:id massan-id})]
+    (is (not (empty? massat-ennen)))
+    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Mmurskeisiin ei koskettu")
+    (is (not-empty (filter #(= massan-id (::pot2-domain/massa-id %))
+                           massat-ennen)))
+    (is (empty? (filter #(= massan-id (::pot2-domain/massa-id %))
+                        massat-jalkeen)))
+    (is (empty? massat-jalkeen))))
+
+(deftest murskeen-poisto-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        {massat-ennen :massat murskeet-ennen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id urakka-id})
+
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '3524534-dop';")))
+        {massat-jalkeen :massat murskeet-jalkeen :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :poista-urakan-murske
+                        +kayttaja-vastuuhlo-muhos+ {:id murskeen-id})]
+    (is (= 1 (count massat-ennen) (count massat-jalkeen)) "Massoihin ei koskettu")
+    (is (= 2 (count murskeet-ennen)))
+    (is (not-empty (filter #(= murskeen-id (::pot2-domain/murske-id %))
+                        murskeet-ennen)))
+    (is (= 1 (count murskeet-jalkeen)))
+    (is (empty? (filter #(= murskeen-id (::pot2-domain/murske-id %))
+                 murskeet-jalkeen)))))
+
+(deftest massaa-jolle-ei-loydy-urakkaa-heittaa-poikkeuksen
+  (is (thrown? AssertionError
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :poista-urakan-massa
+                               +kayttaja-vastuuhlo-muhos+ {:id 4231234234}))))
+
+(deftest eri-urakoitsija-ei-saa-poistaa-massaa
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
+                                  urakka-id
+                                  " AND dop_nro = '764567-dop';")))]
+    (is (thrown? Throwable
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-massa
+                                 +kayttaja-yit_uuvh+ {:id massan-id})))))
+
+(deftest eri-urakoitsija-ei-saa-poistaa-mursketta
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
+                                    urakka-id
+                                    " AND dop_nro = '3524534-dop';")))]
+    (is (thrown? Throwable
+                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :poista-urakan-murske
+                                 +kayttaja-yit_uuvh+ {:id murskeen-id})))))
+
+(deftest nimen-tarkenne-erottelee-jos-tuodaan-sama-massa-tai-murske-useampaan-kertaan
+  (let [{massat :massat murskeet :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-massat-ja-murskeet
+                        +kayttaja-vastuuhlo-muhos+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})
+        urakka-id (hae-urakan-id-nimella "Porvoon päällystysurakka")
+        tuotavan-massan-id (reduce min (map ::pot2-domain/massa-id massat))
+        tuotavan-murskeen-id (mapv ::pot2-domain/murske-id murskeet)
+        {tuodut-massat-eka :massat tuodut-murskeet-eka :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt [tuotavan-massan-id]
+                                                     :murske-idt tuotavan-murskeen-id})
+        {tuodut-massat-toka :massat tuodut-murskeet-toka :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt [tuotavan-massan-id]
+                                                     :murske-idt tuotavan-murskeen-id})
+        {tuodut-massat-kolmas :massat tuodut-murskeet-kolmas :murskeet}
+        (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tuo-materiaalit-toisesta-urakasta
+                        +kayttaja-vastuuhlo-porvoo+ {:urakka-id urakka-id
+                                                     :massa-idt [tuotavan-massan-id]
+                                                     :murske-idt tuotavan-murskeen-id})
+        toinen-kopioimalla-luotu-massa (first (filter #(not= (::pot2-domain/massa-id  %)
+                                                             (-> tuodut-massat-eka first ::pot2-domain/massa-id))
+                                                      tuodut-massat-toka))
+        toinen-kopioimalla-luotu-murske (first (filter #(not= (::pot2-domain/murske-id  %)
+                                                             (-> tuodut-murskeet-eka first ::pot2-domain/murske-id))
+                                                      tuodut-murskeet-toka))
+        kolmas-kopioimalla-luotu-massa (first (filter #(not-any? (fn [toiset-massat]
+                                                                   (= (::pot2-domain/massa-id %)
+                                                                      (::pot2-domain/massa-id toiset-massat)))
+                                                                 tuodut-massat-toka)
+                                                      tuodut-massat-kolmas))
+        kolmas-kopioimalla-luotu-murske (first (filter #(not-any? (fn [toiset-murskeet]
+                                                                    (= (::pot2-domain/murske-id %)
+                                                                       (::pot2-domain/murske-id toiset-murskeet)))
+                                                                  tuodut-murskeet-toka)
+                                                       tuodut-murskeet-kolmas))]
+    (is (nil? (::pot2-domain/nimen-tarkenne (first tuodut-massat-eka))) "Ensi tuonnin jälkeen massan nimi")
+    (is (= " 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-massa)) "Toisen tuonnin jälkeen massan nimi")
+    (is (= " 3" (::pot2-domain/nimen-tarkenne kolmas-kopioimalla-luotu-massa)) "Kolmannen tuonnin jälkeen massan nimi")
+
+    (is (= "LJYR" (::pot2-domain/nimen-tarkenne (first tuodut-murskeet-eka))) "Ensi tuonnin jälkeen murskeen nimi")
+    (is (= "LJYR 2" (::pot2-domain/nimen-tarkenne toinen-kopioimalla-luotu-murske)) "Toisen tuonnin jälkeen murskeen nimi")
+    (is (= "LJYR 3" (::pot2-domain/nimen-tarkenne kolmas-kopioimalla-luotu-murske)) "Kolmannen tuonnin jälkeen murskeen nimi")))
+
+(deftest tarkenne-kayttaa-juoksevaa-numerointia-jos-sama-nimi
+  (is (= (pot2/paivita-tarkennetta nil) " 2"))
+  (is (= (pot2/paivita-tarkennetta "") " 2"))
+  (is (= (pot2/paivita-tarkennetta " ") "  2"))
+  (is (= (pot2/paivita-tarkennetta "abc") "abc 2"))
+  (is (= (pot2/paivita-tarkennetta "abc 2") "abc 3"))
+  (is (= (pot2/paivita-tarkennetta "abc 3") "abc 4")))

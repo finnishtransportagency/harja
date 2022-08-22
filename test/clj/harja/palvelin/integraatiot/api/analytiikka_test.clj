@@ -54,8 +54,8 @@
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
           ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
-        alkuaika "2005-01-01T00:00:00+03"
-        loppuaika "2005-12-31T21:00:00+03"
+        alkuaika "2015-01-19T00:00:00+03"
+        loppuaika "2015-01-19T21:00:00+03"
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))]
     (is (= 200 (:status @vastaus)))
     (sisaltaa-perustiedot (:body @vastaus))))
@@ -91,7 +91,8 @@
         ;; Merkitään kaikki saman aikavälin toteumat poistetuiksi ja tehdään uusi haku
         _ (u (str "UPDATE toteuma SET poistettu = true WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
         poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
-        _ (u (str "UPDATE toteuma SET poistettu = false WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))]
+        _ (u (str "UPDATE toteuma SET poistettu = false WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
+        _ (Thread/sleep 3500)]
     (is (= 200 (:status @vastaus)))
     (is (= 200 (:status @poistetut)))
     (sisaltaa-perustiedot (:body @vastaus))

@@ -81,7 +81,7 @@
                                             {:status 200
                                              :header "jotain"
                                              :body onnistunut-kuittaus})]
-    (let [urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
           ilmoitus-id 123456789]
       (tloik-apurit/tee-testipaivystys urakka-id)
       ;; Lähetä t-loikista jonoihin ilmoitus - ilmoitusid 123456789
@@ -149,8 +149,8 @@
         x 4492320.265
         y 3458642.657
         eri-x 4492320.300
-        vaara-urakka-id (hae-rovaniemen-maanteiden-hoitourakan-id)
-        oikea-urakka-id (hae-oulun-valaistusurakan-id)]
+        vaara-urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+        oikea-urakka-id (hae-urakan-id-nimella "Oulun valaistuksen palvelusopimus 2013-2050")]
 
     (with-redefs
             [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] lokaali-sahkopostipalvelin)
@@ -219,13 +219,17 @@
                   vaara-urakka-email-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja portti sposti_xml nil true))
                   _ (odota-ehdon-tayttymista #(realized? vaara-urakka-email-vastaus) "Saatiin väärä urakka vastaus." 5000)
                   _ (async/<!! (async/timeout odota-tausta-ajoa))
+
                   ;; 4. Harja käsittelee "Väärä urakka" viestin ja lähettää siitä T-LOIKille ilmoituksen
                   ;; Me voidaan tarkistaa integraatioviesteistä, että näin on todella tapahtunut
                   uusi-valaistusilmoitus (tloik-apurit/testi-valaistusilmoitus-sanoma-eri-sijaintiin viesti-id ilmoitus-id nyt-185 nyt-180 815 eri-x y)
                   _ (jms/laheta (:itmf jarjestelma) tloik-apurit/+tloik-ilmoitusviestijono+ uusi-valaistusilmoitus)
-                  _ (async/<!! (async/timeout odota-tausta-ajoa))
-                  ;; Koska jenkinssillä saattaa kestää hetki, ennenkuin kaikki taustaprosessit on simuloitu, niin odotellaan vielä hetki
-                  _ (Thread/sleep 5000)
+                  ;; Koska ci-putkella saattaa kestää hetki, ennenkuin kaikki taustaprosessit on simuloitu, niin odotellaan vielä hetki
+                  tarkista-ilmoituksen-saapuminen (fn []
+                                                    (let [viestit (hae-kaikki-integraatioviestit)]
+                                                      (< 8 (count viestit))))
+                  _ (odota-ehdon-tayttymista #(tarkista-ilmoituksen-saapuminen) "Saatiin vastaus ilmoitushakuun." 10000)
+                  _ (async/<!! (async/timeout 5000))
                   integraatioviestit (hae-kaikki-integraatioviestit)
                   ;; Varmistetaan, että ilmoitus löytyy tietokannasta, ja tarkistetaan sen urakka
                   uusi-ilmoitus-db (first (q-map (format "select id, urakka from ilmoitus where ilmoitusid = %s" ilmoitus-id)))]

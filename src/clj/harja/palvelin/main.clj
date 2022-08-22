@@ -141,13 +141,14 @@
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
-    [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
+    [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
+    [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
@@ -432,7 +433,7 @@
                           [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
+                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :excel-vienti])
       :pot2 (component/using
               (pot2/->POT2)
               [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
@@ -735,6 +736,10 @@
       (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
         [:http-palvelin :db])
 
+      :analytiikan-toteumien-ajastus
+      (component/using (analytiikan-toteumat/->AnalytiikanToteumat)
+        [:http-palvelin :db])
+
       :mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
@@ -749,7 +754,13 @@
       :urakan-lupausmuistutukset
       (component/using
         (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
-        [:db :api-sahkoposti :sonja-sahkoposti :fim]))))
+        [:db :api-sahkoposti :sonja-sahkoposti :fim])
+
+      :yleiset-ajastukset
+      (component/using
+        (yleiset-ajastukset/->YleisetAjastuket)
+        [:db])
+      )))
 
 (defonce harja-jarjestelma nil)
 

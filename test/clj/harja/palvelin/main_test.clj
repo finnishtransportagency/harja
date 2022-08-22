@@ -154,6 +154,7 @@
     :yha-paikkauskomponentti
     :pot2
     :kustannusarvioiduntyontoteumien-ajastus
+    :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
     :itmf
@@ -161,7 +162,8 @@
     :valikatselmukset
     :lupaukset
     :urakan-lupausmuistutukset
-    :api-analytiikka})
+    :api-analytiikka
+    :yleiset-ajastukset})
 
 (def ei-statusta
   #{:metriikka
@@ -214,6 +216,7 @@
     :tieluvat
     :paikkaukset
     :kustannusarvioiduntyontoteumien-ajastus
+    :analytiikan-toteumien-ajastus
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2
@@ -222,7 +225,8 @@
     :valikatselmukset
     :lupaukset
     :urakan-lupausmuistutukset
-    :api-analytiikka})
+    :api-analytiikka
+    :yleiset-ajastukset})
 
 (def hidas-ok-status #{:sonja :itmf})
 

@@ -52,7 +52,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest hairiotilanteiden-haku
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         lisasopimus-id (hae-saimaan-kanavaurakan-lisasopimuksen-id)
         saimaan-kaikki-hairiot (ffirst (q "SELECT COUNT(*) FROM kan_hairio WHERE urakka = " urakka-id ";"))]
 
@@ -132,7 +132,7 @@
            saimaan-kaikki-hairiot))))
 
 (deftest hairiotilanteiden-haku-ilman-oikeuksia
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         args {::hairiotilanne/urakka-id urakka-id}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -143,7 +143,7 @@
 (defn tallennuksen-argumentit [{:keys [id urakka-id kohde-id kohdeosa-id syy naulan-kulutus amparin-kulutus]}]
   (let [naulan-kulutus (or naulan-kulutus 0)
         amparin-kulutus (or amparin-kulutus 0)
-        urakka-id (or urakka-id (hae-saimaan-kanavaurakan-id))
+        urakka-id (or urakka-id (hae-urakan-id-nimella "Saimaan kanava"))
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         syy (or syy "")
         kohde-id (or kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id))
@@ -184,7 +184,7 @@
     (defn tallennuksen-parametrit [{:keys [naulan-kulutus amparin-kulutus]}]
       (let [naulan-kulutus (or naulan-kulutus 0)
             amparin-kulutus (or amparin-kulutus 0)
-            urakka-id (hae-saimaan-kanavaurakan-id)
+            urakka-id (hae-urakan-id-nimella "Saimaan kanava")
             sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
             kohde-id (hae-saimaan-kanavan-tikkalasaaren-sulun-kohde-id)]
         {::hairiotilanne/hairiotilanne {::hairiotilanne/sopimus-id sopimus-id
@@ -215,7 +215,7 @@
          ::vv-materiaali/poista-materiaalikirjauksia []}))))
 
 (deftest hairiotilanteen-materiaalin-kulutus
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         ;; pistetään häiriötilanne id atomiin, niin voidaan käsitellä samaa häiriötilannetta
         ;; materiaalin poisto ja lisäys testeissä
         hairiotilanne-id (atom nil)
@@ -385,7 +385,7 @@
 
 (deftest hairiotilanteen-tallennus-vaaraan-kohteeseen
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        urakka-id (hae-saimaan-kanavaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         kohde-id 66666
         parametrit (tallennuksen-argumentit {:kohde-id kohde-id
                                              :syy syy
@@ -398,7 +398,7 @@
 
 (deftest hairiotilanteen-tallennus-vaaraan-kohdeosaan
   (let [syy (str "hairiotilanteen-tallennus-testi-" (UUID/randomUUID))
-        urakka-id (hae-saimaan-kanavaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         kohde-id (ffirst (q (str "SELECT \"kohde-id\" FROM kan_kohde_urakka WHERE \"urakka-id\" = " urakka-id ";")))
         kohdeosa-id (ffirst (q (str "SELECT id FROM kan_kohteenosa WHERE \"kohde-id\" != " kohde-id ";")))
         parametrit (tallennuksen-argumentit {:kohde-id kohde-id

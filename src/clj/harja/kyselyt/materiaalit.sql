@@ -9,7 +9,7 @@ SELECT
 FROM materiaalikoodi;
 
 -- name: hae-materiaalikoodit-ilman-talvisuolaa
--- Hakee kaikki paitsi talvisuola tyyppiset materiaalikoodit
+-- Hakee kaikki paitsi talvisuola tyyppiset materiaalikoodit (erityisalue lasketaan talvisuolaksi)
 SELECT
   id,
   nimi,
@@ -17,11 +17,12 @@ SELECT
   urakkatyyppi,
   kohdistettava
 FROM materiaalikoodi
-WHERE materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI
+WHERE materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI)
 ORDER BY jarjestys;
 
 -- name: hae-urakan-materiaalit
 -- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
+-- Jätetaan materiaalityypiltään talvisuola tyyppiset materiaalit pois. Eli talvisuola ja erityisalue
 SELECT
   mk.id,
   mk.alkupvm,
@@ -33,15 +34,16 @@ SELECT
   m.yksikko AS materiaali_yksikko
 FROM materiaalin_kaytto mk
   LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
-WHERE mk.urakka = :urakka AND
-      mk.poistettu = FALSE AND
-      m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI;
+WHERE mk.urakka = :urakka
+  AND mk.poistettu = FALSE
+  AND m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
 
 -- name: hae-urakassa-kaytetyt-materiaalit
 -- Hakee urakassa käytetyt materiaalit, palauttaen yhden rivin jokaiselle materiaalille,
 -- laskien samalla yhteen kuinka paljon materiaalia on käytetty. Palauttaa myös käytetyt
 -- materiaalit, joille ei ole riviä materiaalin_kaytto taulussa (eli käytetty sopimuksen ulkopuolella)
 -- määrä = suunniteltu määrä. kokonaismäärä = toteutunut määrä
+-- Jätetään talvisuolaksi laskettavat talvisuola ja erityisalue materiaalityypit pois
 SELECT mat.*
 FROM
   (SELECT
@@ -61,7 +63,7 @@ FROM
             (alkupvm BETWEEN :alku AND :loppu) AND
             sopimus = :sopimus)     AS kokonaismaara
    FROM materiaalikoodi m
-   WHERE m.materiaalityyppi != 'talvisuola' :: MATERIAALITYYPPI) AS mat
+   WHERE m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI)) AS mat
 WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 
 -- name: paivita-sopimuksen-materiaalin-kaytto
@@ -323,7 +325,7 @@ ORDER BY pvm DESC;
 -- name: hae-suolamateriaalit
 SELECT *
 FROM materiaalikoodi
-WHERE materiaalityyppi = 'talvisuola' :: MATERIAALITYYPPI;
+WHERE materiaalityyppi IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
 
 -- name: hae-kaikki-materiaalit
 SELECT

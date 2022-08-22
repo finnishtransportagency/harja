@@ -316,7 +316,7 @@
                                                          :tallenna-luvatut-pisteet +kayttaja-jvh+
                                                          {:id @iin-maanteiden-hoitourakan-lupaussitoutumisen-id
                                                           :pisteet 167
-                                                          :urakka-id (hae-muhoksen-paallystysurakan-id)})))]))
+                                                          :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
   (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]

@@ -370,7 +370,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :laatupoikkeamaraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
                                               :loppupvm (c/to-date (t/local-date 2018 7 31))}})
         otsikko "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL, Laatupoikkeamaraportti ajalta 01.08.2017 - 31.07.2018"

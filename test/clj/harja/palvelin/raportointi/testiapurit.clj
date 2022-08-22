@@ -30,7 +30,10 @@
 (defn raporttisolun-arvo [solu]
   (if (raporttisolu? solu)
     (let [solun-asetukset (second solu)]
-      (or (:arvo solun-asetukset) solun-asetukset))
+      (cond
+        (nil? (:arvo solun-asetukset)) nil
+        solun-asetukset (:arvo solun-asetukset)
+        :else solu))
     solu))
 
 (defn tyhja-raporttisolu? [solu]

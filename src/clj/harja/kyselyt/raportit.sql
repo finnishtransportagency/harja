@@ -1,5 +1,16 @@
 -- name: hae-raporttien-suoritustiedot
-select *, extract(epoch from rs.suoritus_valmis - rs.luotu) as kesto from raportti_suoritustieto;
+SELECT count(raportti),
+       raportti
+  FROM raportti_suoritustieto
+ WHERE suoritus_alkuaika
+     BETWEEN :alkupvm AND :loppupvm  AND
+     (raportti = :raportti::TEXT OR :raportti::TEXT IS NULL) AND
+     (:rooli::TEXT IS NULL OR rooli ILIKE concat('%', :rooli::TEXT, '%')) AND
+     (:urakkarooli::TEXT IS NULL OR urakkarooli ILIKE concat('%', :urakkarooli::TEXT, '%')) AND
+     (:organisaatiorooli::TEXT IS NULL OR organisaatiorooli ILIKE concat('%', :organisaatiorooli::TEXT, '%')) AND
+     (suoritustyyppi = :formaatti::TEXT OR :formaatti::TEXT IS NULL)
+ GROUP BY raportti
+ ORDER BY count(raportti) DESC;
 
 -- name: luo-suoritustieto<!
 insert into 

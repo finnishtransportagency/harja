@@ -157,7 +157,7 @@
         (do
           (reset! varusteet-kartalla/karttataso-varusteet [])
           (-> app
-              (assoc :haku-paalla true)
+              (assoc :haku-paalla true :varusteet [])
               (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
                                  {:urakka-id (get-in app [:urakka :id])
                                   :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
@@ -174,15 +174,19 @@
                                   :epaonnistui ->HaeVarusteetEpaonnistui}))))))
 
   HaeVarusteetOnnistui
-  (process-event [{:keys [vastaus] :as jotain} app]
+  (process-event [{:keys [vastaus]} app]
     (reset! varusteet-kartalla/karttataso-varusteet
-            (map (fn [t] {:sijainti (:sijainti t)}) (:toteumat vastaus)))
+      (map (fn [t]
+             (assoc t :tr-osoite (muodosta-tr-osoite t)
+                      :toimenpide (toteuma->toimenpide (:toteuma t))
+                      :varustetyyppi (tietolaji->varustetyyppi (:tietolaji t))))
+        (:toteumat vastaus)))
     (-> app
-        (assoc :haku-paalla false)
-        (assoc :varusteet (:toteumat vastaus))))
+      (assoc :haku-paalla false)
+      (assoc :varusteet (:toteumat vastaus))))
 
   HaeVarusteetEpaonnistui
-  (process-event [{:keys [vastaus] :as jotain-muuta} app]
+  (process-event [_ app]
     (reset! varusteet-kartalla/karttataso-varusteet nil)
     (viesti/nayta! "Varusteiden haku epäonnistui!" :danger)
     (-> app

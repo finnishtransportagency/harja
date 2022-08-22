@@ -113,6 +113,7 @@
 
 (def testipaallystysilmoitus
   {:tila "valmis",
+   :vuodet 2022
    :kohdenimi "Testikohde 1",
    :kohdeosa_tie 66,
    :kohdeosa_let 0,
