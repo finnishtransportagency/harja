@@ -106,18 +106,27 @@ SELECT
 
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  JOIN urakka u ON lp.urakka = u.id
   JOIN kayttaja k ON lp.luoja = k.id
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE
   lp.urakka = :urakka
   AND lp.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
-  AND s.perintapvm >= :alku AND s.perintapvm <= :loppu
-  -- Ei kuulu poistettuun ylläpitokohteeseen
-  AND (lp.yllapitokohde IS NULL
-      OR
-      lp.yllapitokohde IS NOT NULL AND
-        (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+  AND (s.perintapvm >= :alku AND s.perintapvm <= :loppu
+   -- VHAR-5849 halutaan että urakan päättymisen jälkeiset sanktiot näkyvät viimeisen hoitokauden listauksessa
+   OR
+        (CASE
+                    date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
+                AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+             WHEN TRUE THEN s.perintapvm > u.loppupvm
+             ELSE FALSE
+            END))
+        -- Ei kuulu poistettuun ylläpitokohteeseen
+        AND (lp.yllapitokohde IS NULL
+        OR
+             lp.yllapitokohde IS NOT NULL AND
+             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
