@@ -29,16 +29,19 @@
 (defrecord TeeSiirtoOnnistui [vastaus])
 (defrecord TeeSiirtoEpaonnistui [vastaus])
 
+(defn- hae-pohjavesialueiden-urakat []
+  (tuck-apurit/post! :hae-pohjavesialueurakat
+    {}
+    {:onnistui ->HaePohjavesialueurakatOnnistui
+     :epaonnistui ->HaePohjavesialueurakatEpaonnistui
+     :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
 
   ;; Haetaan urakat, joilla on olemassa pohjavesialueille tehtyjä rajoituksia
   HaePohjavesialueurakat
   (process-event [_ app]
-    (let [_ (tuck-apurit/post! :hae-pohjavesialueurakat
-              {}
-              {:onnistui ->HaePohjavesialueurakatOnnistui
-               :epaonnistui ->HaePohjavesialueurakatEpaonnistui
-               :paasta-virhe-lapi? true})]
+    (let [_ (hae-pohjavesialueiden-urakat)]
       (assoc app :urakkahaku-kaynnissa? true)))
 
   HaePohjavesialueurakatOnnistui
@@ -123,6 +126,7 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "TeeSiirtoOnnistui :: vastaus" (pr-str vastaus))
+      (hae-pohjavesialueiden-urakat) ;; Päivitetään vielä listaus, jotta jo siirretyt poistuvat
       (-> app
         (assoc :jotain vastaus)
         (assoc :siirto-kaynnissa? false))))
