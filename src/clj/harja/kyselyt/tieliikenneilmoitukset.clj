@@ -7,5 +7,12 @@
 (defn ilmoitukselle-olemassa-vastaanottokuittaus? [db ilmoitusid]
   (not (empty? (onko-ilmoitukselle-vastaanottokuittausta db ilmoitusid))))
 
-(defn ilmoitus-loytyy-viesti-idlla? [db ilmoitusid viesti-id]
-  (:exists (first (ilmoitus-loytyy-viesti-idlla db ilmoitusid viesti-id))))
+(defn ilmoitus-loytyy-idlla? [db ilmoitusid]
+  (:exists (first (ilmoitus-loytyy-idlla db ilmoitusid))))
+
+(defn ilmoitus-on-lahetetty-urakalle? [db ilmoitusid urakkaid]
+  (:exists (first (ilmoitus-on-lahetetty-urakalle db {:ilmoitusid ilmoitusid
+                                                      :urakkaid urakkaid}))))
+
+(defn paivita-ilmoituksen-urakka [db ilmoitusid urakkaid]
+  (paivita-ilmoituksen-urakka! db ilmoitusid urakkaid))

@@ -45,10 +45,36 @@
         (assoc-in [henkiloavain :tyopuhelin] (:tyopuhelin henkilo))
         (assoc-in [henkiloavain :email] (:sahkoposti henkilo)))))
 
+(defn rakenna-kuittaukset [ilmoitus]
+  (let [kuittaukset
+        (mapv (fn [kuittaus]
+                {:kuittaus (-> kuittaus
+                             (assoc-in [:kuittaaja :etunimi] (:kuittaaja_henkilo_etunimi kuittaus))
+                             (assoc-in [:kuittaaja :sukunimi] (:kuittaaja_henkilo_sukunimi kuittaus))
+                             (assoc-in [:kuittaajaorganisaatio :nimi] (:kuittaaja_organisaatio_nimi kuittaus))
+                             (assoc-in [:kuittaajaorganisaatio :ytunnus] (:kuittaaja_organisaatio_ytunnus kuittaus))
+                             (dissoc :kuittaaja_henkilo_sukunimi)
+                             (dissoc :kuittaaja_henkilo_etunimi)
+                             (dissoc :kuittaaja_organisaatio_nimi)
+                             (dissoc :kuittaaja_organisaatio_ytunnus))})
+          (:kuittaukset ilmoitus))]
+    ;; Muokkaa kuittauksia ainoastaan, jos niitä on
+    (if (and kuittaukset (not (empty? kuittaukset)))
+      (-> ilmoitus
+        (dissoc :kuittaukset)
+        (assoc :kuittaukset kuittaukset))
+      ilmoitus)))
+
+(defn muokkaa-alueurakkanro [ilmoitus]
+  (if (:alueurakkanumero ilmoitus)
+    (assoc ilmoitus :alueurakkanumero (Integer/parseInt (:alueurakkanumero ilmoitus)))
+    ilmoitus))
+
 (defn rakenna-ilmoitus [ilmoitus]
   {:ilmoitus (-> ilmoitus
-                 (dissoc :tila)
-                 rakenna-selitteet
-                 (rakenna-henkilo :ilmoittaja)
-                 (rakenna-henkilo :lahettaja)
-                 rakenna-sijanti)})
+               rakenna-selitteet
+               (rakenna-henkilo :ilmoittaja)
+               (rakenna-henkilo :lahettaja)
+               rakenna-sijanti
+               (rakenna-kuittaukset)
+               muokkaa-alueurakkanro)})

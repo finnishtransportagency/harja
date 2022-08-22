@@ -95,10 +95,10 @@
                  :sheet-nimi raportin-nimi}
       [{:leveys 10 :otsikko "Päivämäärä" :fmt :pvm}
        {:leveys 5 :otsikko "Klo"}
-       {:leveys 5 :otsikko "Tie"}
-       {:leveys 5 :otsikko "Aosa"}
-       {:leveys 5 :otsikko "Aet"}
-       {:leveys 5 :otsikko "Losa"}
+       {:leveys 5 :otsikko "Tie" :tasaa :oikea}
+       {:leveys 5 :otsikko "Aosa" :tasaa :oikea}
+       {:leveys 5 :otsikko "Aet" :tasaa :oikea}
+       {:leveys 5 :otsikko "Losa" :tasaa :oikea}
        {:leveys 5 :otsikko "Let"}
        {:leveys 5 :otsikko "Ajo\u00ADsuun\u00ADta"}
        {:leveys 5 :otsikko "Hoi\u00ADto\u00ADluok\u00ADka"}

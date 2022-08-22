@@ -1,10 +1,14 @@
 @import "colors.less";
 
 .input-yhteiset-arvot() {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   background-color: @white;
-  height: 40px;
-  outline-style: solid;
+  height: 36px;
+  width: 100%;
+  //outline-style: solid;
+  border-style: solid;
+  border-radius: 4px;
+  box-sizing: border-box;
 }
 .select-button-yhteiset-arvot() {
   display: flex;
@@ -14,14 +18,25 @@
   align-items: center;
   height: 100%;
   border: none;
+  border-radius:4px;
+  width: 100%;
+  background-color: @white;
 }
 .select-ul-yhteiset-arvot() {
+    margin-top:8px;
+  min-width: 100%;
+  width: fit-content;
+  white-space: nowrap;
   list-style: none;
   padding-left: 0px;
+  position: relative;
+  z-index:200;
   background-color: @white;
 }
 .select-li-yhteiset-arvot () {
-  height: 40px;
+  height: fit-content;
+  min-height: 40px;
+  line-height: 1rem;
 }
 .font-yhteiset-arvot() {
   font-family: "Open Sans", sans-serif;
@@ -29,6 +44,17 @@
   font-weight: normal;
   font-size: 0.75rem;
   color: @gray25;
+}
+
+.outlinet-ja-borderit(@vari, @leveys, @inner, @offsetti) {
+  //outline-color: @vari;
+  //outline-width: @leveys;
+  //outline-offset: @offsetti;
+
+  box-shadow: 0 0 0 @inner inset @vari;
+
+  border-color: @vari;
+  border-width: @leveys;
 }
 
 label {
@@ -42,29 +68,26 @@ label {
       color: @gray100;
     }
     &-error {
-      color: @red;
+      color: @red-default;
     }
   }
 }
 .error-message {
   .font-yhteiset-arvot();
-  color: @red;
+  color: @red-default;
 }
 
 .input- {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
+
 
     &-nakoinen {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @gray200;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
       display: flex;
       > * {
@@ -73,23 +96,17 @@ label {
       }
     }
 
-    &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+    &:hover, &.hoveroi {
+      .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
     }
 
-    &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+    &:focus, &.fokusoi {
+      .outlinet-ja-borderit(@focus-color, 1px, .5px, -3px);
     }
 
-    &:disabled {
+    &:disabled, &.disabloi {
       background-color: @gray225;
-      outline-color: @gray200;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
     }
   }
 
@@ -97,17 +114,17 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
 
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width:3px;
       }
     }
   }
@@ -117,23 +134,73 @@ label {
   &-default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
+    &.open {
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+        > button {
+            .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            &:hover {
+                .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+            }
+        }
+    }
+    &.open:hover {
+        .outlinet-ja-borderit(@focus-color, 1px, .5px, -2px);
+    }
     > button {
       .select-button-yhteiset-arvot();
+      &:hover {
+          .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
+      }
+      > .livicon-chevron-down {
+        color: @sininen5;
+      }
+      > .livicon-chevron-up {
+        color: @sininen5;
+      }
+      > .valittu {
+        display: inline-block;
+        overflow-x: hidden;
+        padding-right: 15px;
+        text-align: left;
+        vertical-align: middle;
+        white-space: nowrap;
+        //width: 100%;
+      }
     }
     > ul {
       .select-ul-yhteiset-arvot();
-
-      > li {
+      border: solid 1px black;
+      border-radius: 4px;
+     > li,
+      > div > li {
         .select-li-yhteiset-arvot();
         display: flex;
+        border-bottom: 1px solid @gray230;
+        span.listan-arvo-valittu {
+          display: flex;
+          align-items: center;
+          padding-left: 8px;
+        }
+        &:first-child {
+            border-radius:4px;
+        }
+        &:last-child {
+            border-radius:4px;
+        }
         > * {
           align-self: center;
-          padding-left: 10px;
+          padding-left: 8px;
+          padding-right: 8px;
           flex: 1;
-          line-height: 40px;
+          display: flex;
+          min-height: 30px;
+          justify-content: space-between;
         }
         a {
           color: inherit;
+          display: flex;
+          align-items: center;
+          width: 100%;
           &:hover {
             color:inherit;
             text-decoration: none;
@@ -149,26 +216,20 @@ label {
       }
     }
     position: relative;
-    z-index: 100;
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px, 0, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      //.outlinet-ja-borderit(@gray200, 1.5px, .5px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
     }
 
     &:disabled {
       background-color: @gray225;
       outline-color: @gray200;
+      border-color: @gray200;
     }
   }
 
@@ -178,21 +239,50 @@ label {
       .input-yhteiset-arvot();
       > button {
         .select-button-yhteiset-arvot();
+        > .livicon-chevron-down {
+          color: @sininen5;
+        }
+        > .livicon-chevron-up {
+          color: @sininen5;
+        }
+        > .valittu {
+          display: inline-block;
+          overflow-x: hidden;
+          padding-right: 15px;
+          text-align: left;
+          vertical-align: middle;
+          white-space: nowrap;
+          width: 100%;
+        }
       }
       > ul {
         .select-ul-yhteiset-arvot();
-
-        > li {
+        z-index: 201;
+        margin-left: -1px;
+        margin-right: -1px;
+        border: solid 1px black;
+        > li,
+        > div > li {
           .select-li-yhteiset-arvot();
           display: flex;
+          border-bottom: 1px solid @gray230;
+          span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+          }
           > * {
             align-self: center;
             padding-left: 10px;
             flex: 1;
-            line-height: 40px;
+            height: 30px;
+            justify-content: space-between;
           }
           a {
             color: inherit;
+            display: flex;
+            align-items: center;
+            width: 100%;
             &:hover {
               color:inherit;
               text-decoration: none;
@@ -208,17 +298,16 @@ label {
         }
       }
       position: relative;
-      z-index: 100;
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
-        outline-width: 3px;
-        outline-offset: -3px;
+        outline-width: 2px;
+        outline-offset: -2px;
+        border-width: 2px;
       }
     }
   }
@@ -228,25 +317,20 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px,0, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 1px,.5px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@gray200, 1px,.5px, -3px);
     }
 
     &:disabled {
       background-color: @gray225;
       outline-color: @gray200;
+      border-color: @gray200;
     }
   }
 
@@ -254,16 +338,16 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width: 3px;
       }
     }
   }
@@ -273,20 +357,14 @@ label {
   &default {
     .font-yhteiset-arvot();
     .input-yhteiset-arvot();
-    outline-color: @gray200;
-    outline-width: 1px;
-    outline-offset: -1px;
+    .outlinet-ja-borderit(@gray200, 1px,0, -1px);
 
     &:hover {
-      outline-color: @gray200;
-      outline-width: 2px;
-      outline-offset: -2px;
+      .outlinet-ja-borderit(@gray200, 1px, .5px, -2px);
     }
 
     &:focus {
-      outline-color: @focus-color;
-      outline-width: 3px;
-      outline-offset: -3px;
+      .outlinet-ja-borderit(@focus-color, 1px, .5px, -3px);
     }
 
     &:disabled {
@@ -299,18 +377,26 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(@red-default, 1px,0, -1px);
 
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
+        border-width: 2px;
       }
       &:focus {
         outline-width: 3px;
         outline-offset: -3px;
+        border-width:3px;
       }
     }
+  }
+}
+
+.alasvedon-otsikko {
+  &-vayla {
+    color: @harmaa-tumma;
+    font-weight: normal;
+    margin-bottom: 5px
   }
 }

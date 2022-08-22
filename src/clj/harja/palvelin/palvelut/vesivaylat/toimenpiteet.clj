@@ -4,7 +4,7 @@
             [taoensso.timbre :as log]
             [clojure.core.async :as async]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.vesivaylat.toimenpide :as to]
             [harja.domain.urakka :as ur]

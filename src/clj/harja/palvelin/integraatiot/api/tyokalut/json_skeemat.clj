@@ -82,12 +82,12 @@
 
 (def +tyokoneenseuranta-kirjaus+ "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json")
 (def tyokoneenseuranta-kirjaus (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-request.schema.json"))
+(def +tyokoneenseuranta-kirjaus-viivageometrialla+ "api/schemas/tyokoneenseurannan-kirjaus-viivageometrialla-request.schema.json")
+(def tyokoneenseuranta-kirjaus-viivageometrialla (tee-validaattori "api/schemas/tyokoneenseurannan-kirjaus-viivageometrialla-request.schema.json"))
 
 (def +urakan-yllapitokohteiden-haku-vastaus+ "api/schemas/urakan-yllapitokohteet-response.schema.json")
 (def urakan-yllapitokohteiden-haku-vastaus (tee-validaattori +urakan-yllapitokohteiden-haku-vastaus+))
 
-(def +paallystysilmoituksen-kirjaus+ "api/schemas/paallystysilmoituksen-kirjaus-request.schema.json")
-(def paallystysilmoituksen-kirjaus (tee-validaattori +paallystysilmoituksen-kirjaus+))
 
 (def +paallystyksen-aikataulun-kirjaus+ "api/schemas/paallystyksen-aikataulun-kirjaus-request.schema.json")
 (def paallystyksen-aikataulun-kirjaus (tee-validaattori +paallystyksen-aikataulun-kirjaus+))
@@ -134,3 +134,6 @@
 
 (def +paikkausten-poisto-request+ "api/schemas/paikkausten-poisto-request.schema.json")
 (def paikkausten-poisto-request (tee-validaattori +paikkausten-poisto-request+))
+
+(def +analytiikkaportaali-toteuma-vastaus+ "api/schemas/entities/analytiikkaportaali.schema.json")
+(def analytiikkaportaali-toteuma-vastaus (tee-validaattori +analytiikkaportaali-toteuma-vastaus+))

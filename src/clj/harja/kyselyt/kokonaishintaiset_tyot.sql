@@ -64,4 +64,5 @@ SET likainen = TRUE,
 WHERE maksuera IN (SELECT m.numero
                    FROM maksuera m
                      JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id IN (:toimenpideinstanssit));
+                   WHERE m.tyyppi = 'kokonaishintainen' AND tpi.id IN (:toimenpideinstanssit) AND
+                       tpi.id IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months'));

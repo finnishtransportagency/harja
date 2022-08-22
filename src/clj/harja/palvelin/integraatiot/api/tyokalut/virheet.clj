@@ -45,6 +45,7 @@
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
 (def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
+(def +virhe-tietolajin-arvojen-versiossa+ "virhe-tietolajin-arvojen-versiossa")
 (def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
 
 (defn heita-poikkeus
@@ -57,6 +58,8 @@
                :virheet virheet}
               parametrit)))))
 
+;; TODO tämä ei heitä IllegalArgumentException, vaikka pitäisi
+
 (defn heita-viallinen-apikutsu-poikkeus
   ([virheet] (heita-viallinen-apikutsu-poikkeus virheet nil))
   ([virheet parametrit]
@@ -65,7 +68,7 @@
 (defn heita-sisainen-kasittelyvirhe-poikkeus
   ([virheet] (heita-sisainen-kasittelyvirhe-poikkeus virheet nil))
   ([virheet parametrit]
-   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet)))
+   (heita-poikkeus +sisainen-kasittelyvirhe-koodi+ virheet parametrit)))
 
 (defn heita-ulkoinen-kasittelyvirhe-poikkeus
   ([virheet] (heita-ulkoinen-kasittelyvirhe-poikkeus virheet nil))

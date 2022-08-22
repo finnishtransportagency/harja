@@ -5,51 +5,44 @@
             [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]))
 
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy napit]}]
+(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka]}]
   "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
 
   Parametrimap:
   :otsikko = dialogin otsikko
   :sisalto = dialogin sisältö
   :hyvaksy = hyväksyntäpainikkeen teksti tai elementti
+  :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
-  (let [napit (or napit [:peruuta :hyvaksy])]
+  (let [napit (or napit [:hyvaksy :peruuta])]
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
                             (doall
                               (for [tyyppi napit]
                                 (with-meta
                                   (case tyyppi
-                                    :peruuta [napit/peruuta "Peruuta" #(modal/piilota!)]
                                     :hyvaksy [napit/hyvaksy hyvaksy #(do
                                                                        (modal/piilota!)
-                                                                       (toiminto-fn))]
-                                    :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)]
+                                                                       (toiminto-fn))
+                                              {:luokka "pull-left"}]
                                     :poista [napit/poista hyvaksy #(do
                                                                      (modal/piilota!)
-                                                                     (toiminto-fn))]
+                                                                     (toiminto-fn))
+                                             {:luokka "pull-left"}]
+                                    :peruuta [napit/peruuta (or peruuta-txt "Peruuta") #(modal/piilota!)
+                                              {:luokka "pull-right"}]
+                                    :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
+                                               {:luokka "pull-right"}]
                                     nil)
-                                  {:key (str "varmistus-nappi-" tyyppi)})))]}
+                                  {:key (str "varmistus-nappi-" tyyppi)})))]
+                   :modal-luokka modal-luokka}
                   sisalto)))
 
-(defn modal-muut-vastaanottajat [muut-vastaanottajat muutos-fn]
-  {:otsikko "Muut vastaanottajat"
-   :nimi :muut-vastaanottajat
-   :uusi-rivi? true
-   :palstoja 2
-   :tyyppi :komponentti
-   :komponentti (fn [_]
-                  [grid/muokkaus-grid
-                   {:tyhja "Ei vastaanottajia."
-                    :voi-muokata? true
-                    :voi-kumota? false ; Turhahko nappi näin pienessä gridissä
-                    :muutos muutos-fn}
-                   [{:otsikko "Sähköpostiosoite"
-                     :nimi :sahkoposti
-                     :tyyppi :email
-                     :leveys 1}]
-                   (atom muut-vastaanottajat)])})
+(def modal-muut-vastaanottajat
+  {:otsikko "Muut sähköpostiosoitteet pilkulla eroteltuna"
+   :nimi :muut-vastaanottajat :tyyppi :email :palstoja 3
+   :validoi [[:email]]})
 
 (def modal-saateviesti {:otsikko "Vapaaehtoinen saateviesti, joka liitetään sähköpostiin"
                         :koko [90 8]

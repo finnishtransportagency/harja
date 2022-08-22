@@ -369,7 +369,7 @@
                               (this trt-kasattu))))
             tr-tiedot (mapcat #(-> % second yhdista-trt)
                               tr-tiedot-ryhmiteltyna)]
-        (log/debug (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
+        (log/info (str "Tuodaan laajennettua tieosoiteverkkoa kantaan tiedostosta " csv))
         (k/tuhoa-laajennettu-tien-osien-tiedot! db)
         (doseq [tr-tieto tr-tiedot]
           (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))

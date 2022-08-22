@@ -29,12 +29,13 @@
     (komp/lippu tiedot/kustannukset-valilehti-nakyvissa?)
     (fn [urakka raportin-parametrit-atom raportin-tiedot-atom]
       (let []
-        [:div
-         [valinnat/urakan-hoitokausi urakka]
-         [valinnat/hoitokauden-kuukausi]
+        [:div.tiemerkinnan-kustannukset
+         [:div.flex-row.alkuun
+          [valinnat/urakan-hoitokausi urakka]
+          [valinnat/hoitokauden-kuukausi]
 
-         (when-let [parametrit @raportin-parametrit-atom]
-           [upotettu-raportti/raportin-vientimuodot parametrit])
+          (when-let [parametrit @raportin-parametrit-atom]
+            [upotettu-raportti/raportin-vientimuodot parametrit])]
 
          (if-let [raportti @raportin-tiedot-atom]
            [muodosta-html (assoc-in raportti [1 :tunniste] :tiemerkinnan-kustannusyhteenveto)]

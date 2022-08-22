@@ -25,7 +25,7 @@
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+    [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
     [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
@@ -42,18 +42,18 @@
   (laheta-varustetoteuma [this varusteoteuma-id]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
-                           "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
-                           "tl504" "tl198" "tl518" "tl514" "tl509" "tl515"
-                           "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"
-                           "tl323" "tl524"})
+                           "tl522" "tl513" "tl520" "tl505"
+                           "tl504" "tl518" "tl514" "tl509"
+                           "tl515" "tl503" "tl510" "tl512" "tl516"
+                           "tl511" "tl524"})
 
 (defn validoi-tietolajitunniste [tunniste]
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
   (when (not
           (contains? tietolajitunnisteet tunniste))
     (throw+ {:type virheet/+viallinen-kutsu+ :virheet
-             [{:koodi :tuntematon-tietolaji
-               :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
+                   [{:koodi  :tuntematon-tietolaji
+                     :viesti (str "Tietolajia ei voida hakea. Tuntematon tietolaji: " tunniste)}]})))
 
 (defn varusteen-tiedot [{:keys [henkilo
                                 organisaatio
@@ -66,33 +66,33 @@
                                 tietolaji
                                 arvot]}]
   (let [formatoi-pvm #(when % (.format (SimpleDateFormat. "yyyy-MM-dd") %))
-        tekija {:henkilo henkilo
-                :jarjestelma "Harja"
+        tekija {:henkilo      henkilo
+                :jarjestelma  "Harja"
                 :organisaatio organisaatio
-                :yTunnus ytunnus}]
-    {:lisaaja tekija
-     :poistaja tekija
-     :tarkastaja tekija
-     :paivittaja tekija
-     :tietue {:tunniste tunniste
-              :alkupvm (formatoi-pvm alkupvm)
-              :loppupvm (formatoi-pvm loppupvm)
-              :sijainti {:tie
-                         {:numero (:numero tr)
-                          :aet (:alkuetaisyys tr)
-                          :aosa (:alkuosa tr)
-                          :losa (:loppuosa tr)
-                          :let (:loppuetaisyys tr)
-                          :ajr (:ajorata tr)
-                          :puoli (:puoli tr)
-                          :tilannepvm (formatoi-pvm luotu)}}
-              :tietolaji {:tietolajitunniste tietolaji
-                          :arvot arvot}}
+                :yTunnus      ytunnus}]
+    {:lisaaja           tekija
+     :poistaja          tekija
+     :tarkastaja        tekija
+     :paivittaja        tekija
+     :tietue            {:tunniste  tunniste
+                         :alkupvm   (formatoi-pvm alkupvm)
+                         :loppupvm  (formatoi-pvm loppupvm)
+                         :sijainti  {:tie
+                                     {:numero     (:numero tr)
+                                      :aet        (:alkuetaisyys tr)
+                                      :aosa       (:alkuosa tr)
+                                      :losa       (:loppuosa tr)
+                                      :let        (:loppuetaisyys tr)
+                                      :ajr        (:ajorata tr)
+                                      :puoli      (:puoli tr)
+                                      :tilannepvm (formatoi-pvm luotu)}}
+                         :tietolaji {:tietolajitunniste tietolaji
+                                     :arvot             arvot}}
      :tietolajitunniste tietolaji
-     :lisatty (formatoi-pvm luotu)
-     :paivitetty (formatoi-pvm luotu)
-     :poistettu (formatoi-pvm luotu)
-     :tunniste tunniste}))
+     :lisatty           (formatoi-pvm luotu)
+     :paivitetty        (formatoi-pvm luotu)
+     :poistettu         (formatoi-pvm luotu)
+     :tunniste          tunniste}))
 
 (defn laheta-varustetoteuma-tierekisteriin [this varustetoteuma-id]
   (log/debug (format "Lähetetään varustetoteuma (id: %s) Tierekisteriin" varustetoteuma-id))
@@ -125,7 +125,7 @@
       (log/warn e (format "Varustetoteuman (id :%s) lähetys Tierekisteriin epäonnistui." varustetoteuma-id)))))
 
 (defn laheta-varustetoteumat [this]
-  (log/debug "Lähetetään epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
+  (log/debug "Lähetetään tuoreet, epäonnistuneet varustetoteumat uudestaan Tierekisteriin")
   (let [varustetoteuma-idt (map :id (toteumat-q/hae-epaonnistuneet-varustetoteuman-lahetykset (:db this)))]
     (doseq [varustetoteuma-id varustetoteuma-idt]
       (laheta-varustetoteuma-tierekisteriin this varustetoteuma-id)))
@@ -136,7 +136,7 @@
     (do
       (log/debug (format "Ajastetaan varustetoteumien uudelleenlähetys %s minuutin välein" aikavali-minuutteina))
       (ajastettu-tehtava/ajasta-minuutin-valein
-        aikavali-minuutteina 17 ;; aikaväliajastus alkaen 17 sekuntia käynnistyksestä
+        aikavali-minuutteina 17                             ;; aikaväliajastus alkaen 17 sekuntia käynnistyksestä
         (fn [_] (laheta-varustetoteumat this))))
     (fn [])))
 
@@ -148,8 +148,8 @@
       this))
   (stop [this]
     (when (ominaisuus-kaytossa? :tierekisteri)
-      (:uudelleenlahetys-tehtava this))
-    this)
+      ((:uudelleenlahetys-tehtava this)))
+    (dissoc this :uudelleenlahetys-tehtava))
 
   TierekisteriPalvelut
   (hae-tietolaji

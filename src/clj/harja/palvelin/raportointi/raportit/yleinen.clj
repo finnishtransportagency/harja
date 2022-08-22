@@ -13,6 +13,9 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
+(def materiaalitoteumien-paivitysinfo
+  "Ympäristö- ja materiaaliraporttien laskelmat päivitetään kerran vuorokaudessa raporttien nopeuttamiseksi. Laskenta tehdään öisin, eli uudet arvot näkyvät raportilla seuraavana päivänä. Jos haluat tarkistaa tänään syötettyjä arvoja, voit tehdä sen Toteumat-osion välilehdiltä Suola ja Materiaalit.")
+
 (defn raportin-otsikko
   [konteksti nimi alkupvm loppupvm]
   (let [kk-vali? (and (and alkupvm loppupvm)
@@ -226,3 +229,12 @@
                      %
                      [%])
                   (drop 2 raportti))))
+
+(def ei-tuloksia-aikavalilla-str
+  "Tietoja ei löytynyt valitulta aikaväliltä.")
+
+(defn raportti-tiedostonimi [raportin-tunnistetiedot]
+  (str/join ", "
+    ((juxt :raportin-nimi :urakka (fn [rivi]
+                                    (str (:alkupvm rivi) "-" (:loppupvm rivi))))
+     (:raportin-yleiset-tiedot raportin-tunnistetiedot))))

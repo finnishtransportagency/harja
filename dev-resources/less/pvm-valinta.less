@@ -1,14 +1,26 @@
+@import "grid";
+
 .pvm-valinta {
+  border: 1px solid @harmaa-vaalea;
+  padding: 0;
   position: absolute;
   z-index: 2000;
   text-align: center;
   min-width: 200px;
   max-width: 200px;
-
   background-color: #ffffff;
-  .pvm-controllit {
-    background-color: #fafafa;
+  table-layout: unset;
+
+  .pvm-kontrollit, .pvm-paivat {
+    tr {
+      td, th {
+        height: @kalenterin-pvm-korkeus;
+        vertical-align: middle;
+      }
+      height: @kalenterin-pvm-korkeus;
+    }
   }
+
   .pvm-valittu {
     font-weight: bold;
   }
@@ -17,25 +29,71 @@
     cursor: pointer;
   }
 
-  .pvm-paiva {
+  td.pvm-paiva {
+    border: 1px solid @harmaa-vaalea;
+    padding: @kalenterin-pvm-padding;
+    word-break: normal;
     &:hover {
       background-color: wheat;
     }
+    &.pvm-tanaan {
+      background-color: @harmaa13;
+    }
   }
+
   .pvm-muu-kk-paiva {
     background-color: @harmaa10;
   }
+
   .pvm-viikonpaivat {
     font-size: 85%;
-    background-color: @sininen6;
+    td {
+      padding: 0;
+    }
   }
+
   .pvm-disabloitu {
     background-color: @harmaa6;
   }
-
-  border: solid 1px black;
-  border-top: none;
 }
-.pvm-tanaan {
-  background-color: yellow;
+
+
+.kalenteri-kontti {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+  text-align: center;
+  font-size: 14px;
+  line-height:29px;
+  color: @gray100;
+
+  &.auki {
+    z-index: 2000;
+  }
+
+  .calendar-default {
+    background-color:white;
+    min-height: 300px;
+    width:100%;
+    border: 1px solid @gray200;
+    position: absolute;
+    z-index:1;
+  }
+
+  .calendar-header-row {
+    background: @gray230;
+    padding: 16px;
+  }
+
+  .calendar-cell {
+    background: white;
+    &:hover {
+      background-color: @gray245;
+    }
+
+    &.pvm-disabloitu {
+      background-color: @gray200;
+    }
+  }
 }

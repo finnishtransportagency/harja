@@ -16,7 +16,7 @@
             [clojure.core.async :refer [go]]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tr]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
@@ -85,6 +85,16 @@
     (let [kohteen-urakka (:id (first (q/hae-yllapitokohteen-urakka-id db {:id yllapitokohde-id})))]
       (when (not= kohteen-urakka urakka-id)
         (throw (SecurityException. (str "Ylläpitokohde " yllapitokohde-id " ei kuulu valittuun urakkaan "
+                                        urakka-id " vaan urakkaan " kohteen-urakka)))))))
+
+(defn vaadi-paikkauskohde-kuuluu-urakkaan
+  [db urakka-id paikkauskohde-id]
+  "Tarkistaa, että paikkauskohde kuuluu annettuun urakkaan. Jos ei kuulu, heittää poikkeuksen."
+  (assert urakka-id "Urakka-id puuttuu")
+  (when (id/id-olemassa? paikkauskohde-id)
+    (let [kohteen-urakka (:id (first (q/hae-paikkauskohteen-urakka-id db {:id paikkauskohde-id})))]
+      (when (not= kohteen-urakka urakka-id)
+        (throw (SecurityException. (str "Paikkauskohde " paikkauskohde-id " ei kuulu valittuun urakkaan "
                                         urakka-id " vaan urakkaan " kohteen-urakka)))))))
 
 (defn lukuoikeus-paallystys-tai-tiemerkintaurakan-aikatauluun? [db user yllapitokohde-id]
@@ -203,16 +213,16 @@
     (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
     (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
     (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
-    (map #(konv/string-polusta->keyword % [:paikkausilmoitus-tila]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
 
-(defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
+(defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi vain-yha-kohteet?]}]
   (let [yllapitokohteet (into []
                               urakan-yllapitokohde-xf
                               (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                            :sopimus sopimus-id
-                                                                           :vuosi vuosi}))
+                                                                           :vuosi vuosi
+                                                                           :vain_yha_kohteet vain-yha-kohteet?}))
         idt (map :id yllapitokohteet)
         yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet :id)
         osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
@@ -232,11 +242,12 @@
                                             (:muokattu (etsi-yllapitokohde (:id %))))))]
     (vec yllapitokohteet)))
 
-(defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi vain-yha-kohteet?]}]
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (let [yllapitokohteet (hae-urakan-yllapitokohteet* db {:urakka-id urakka-id
                                                          :sopimus-id sopimus-id
-                                                         :vuosi vuosi})
+                                                         :vuosi vuosi
+                                                         :vain-yha-kohteet? vain-yha-kohteet?})
         yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)]
     (vec yllapitokohteet)))
 

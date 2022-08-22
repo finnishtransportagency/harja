@@ -6,6 +6,8 @@ INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
   ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 'liikennepaivystaja');
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('antero','Antero','Asfalttimies','antero@example.com','0401111111', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('veeti','Veeti','Velmu','vetsku@example.com','0401111523', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('paajehu','Pekka','Pääjehu','paajehu@example.com','0401112345', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('ulle', 'Ulle', 'Urakoitsija', 'ulle@example.org', 123123123, (SELECT id FROM organisaatio WHERE nimi='Destia Oy'));
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('yit_pk','Yitin', 'Pääkäyttäjä', 'yit_pk@example.org', 43223123, (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'));
@@ -27,3 +29,16 @@ INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
   ((SELECT id FROM kayttaja WHERE kayttajanimi='oletus-kaytto-oikeudet'), 'liikennepaivystaja');
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES ('seppo','Seppo','Taalasmalli','seppo@example.com', '040123456789', NULL);
+
+-- Kemin alueurakan Urakan laadunvalvoja, jonka käyttöoikeuksia on rajoitettu
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
+  ('KeminLaatu','Keppi','Laatujärvi','keppi.laatujarvi@example.com', '123123123',
+   (SELECT id  FROM organisaatio  WHERE nimi = 'Kemin Alueurakoitsija Oy'));
+-- Kemin alueurakan Urakan urakanvalvoja ELY-keskusksesta, jonka käyttöoikeuksia on rajoitettu
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
+('ELYKeminLaatu','ELYKeppi','ELYLappi','elykeppi@example.com', '123123123',
+ (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));
+-- Lapin elyn tilaajakäyttäjä, joka vio tilata testeissä paikkauskohteita lapin alueella
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin, organisaatio) VALUES
+('tilaaja','ELY','tilaaja','tilaaja@example.org', '434532345',
+ (SELECT id  FROM organisaatio  WHERE lyhenne = 'LAP'));

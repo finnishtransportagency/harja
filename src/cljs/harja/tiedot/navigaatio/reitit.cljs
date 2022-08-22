@@ -13,12 +13,12 @@
          :toteumat :kokonaishintaiset-tyot
          :toimenpiteet :kokonaishintaiset-toimenpiteet
          :toteutus :kokonaishintaiset-tyot
-         :laskutus :laskutusyhteenveto
+         :laskutus :kohdistetut-kulut
          :hallinta :indeksit
          :vesivayla-hallinta :vesivaylasopimuksien-luonti
          :laadunseuranta :tarkastukset
          :kohdeluettelo-paallystys :paallystyskohteet
-         :kohdeluettelo-paikkaus :paikkauskohteet
+         :kohdeluettelo-paikkaukset :paikkauskohteet
          :raportit nil
          :tilannekuva :nykytilanne
          :ilmoitukset :tieliikenne}))

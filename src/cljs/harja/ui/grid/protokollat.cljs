@@ -69,6 +69,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
+  (avattavat-rivit-auki? [this id] "Tarkista onko avattavat-rivit auki annetulla rivin id:llä.")
+
+  (avaa-avattavat-rivit! [this id] "Avaa avattavat-rivit rivin id:llä.")
+
+  (sulje-avattavat-rivit! [this id] "sulje avattavat-rivit rivin id:llä.")
+
   (aseta-virhe! [this rivin-id kentta virheteksti] "Asettaa ulkoisesti virheen rivin kentälle")
   (poista-virhe! [this rivin-id kentta] "Poistaa rivin kentän virheen ulkoisesti")
   (validoi-grid [this] "Validoi gridin"))
@@ -119,6 +125,15 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
 
+      (avattavat-rivit-auki? [_ id]
+        (avattavat-rivit-auki? @gridi id))
+
+      (avaa-avattavat-rivit! [_ id]
+        (avaa-avattavat-rivit! @gridi id))
+
+      (sulje-avattavat-rivit! [_ id]
+        (sulje-avattavat-rivit! @gridi id))
+
       (aseta-virhe! [_ rivin-id kentta virheteksti]
         (aseta-virhe! @gridi rivin-id kentta virheteksti))
       (poista-virhe! [_ rivin-id kentta]
@@ -149,14 +164,39 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
     (sulje-vetolaatikko! g id)
     (avaa-vetolaatikko! g id)))
 
-(defn vetolaatikon-tila [ohjaus vetolaatikot id]
+(defn avaa-tai-sulje-avattavat-rivit!
+  "Vaihtaa avattavien rivien tilaa. Avaa avattavat rivit, jos se on suljettu, muuten sulkee sen."
+  [g id]
+  (if (avattavat-rivit-auki? g id)
+    (sulje-avattavat-rivit! g id)
+    (avaa-avattavat-rivit! g id)))
+
+(defn vetolaatikon-tila [ohjaus vetolaatikot id luokat]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td.vetolaatikon-tila.klikattava {:on-click (when vetolaatikko?
-                                                   #(do (.preventDefault %)
-                                                        (.stopPropagation %)
-                                                        (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
+    [:td {:class luokat
+          :on-click (when vetolaatikko?
+                      #(do (.preventDefault %)
+                           (.stopPropagation %)
+                           (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
-       (if (vetolaatikko-auki? ohjaus id)
-         (ikonit/livicon-chevron-down)
-         (ikonit/livicon-chevron-right)))]))
+       [:div.vetolaatikon-sailio
+        [:div.inline-block.vetolaatikon-pylvas]
+        (if (vetolaatikko-auki? ohjaus id)
+          [ikonit/navigation-ympyrassa :down]
+          [ikonit/navigation-ympyrassa :right])])]))
+
+(defn avattavat-rivi-tila [ohjaus avattavat-rivit id luokat]
+  (let [avattava-rivi? (contains? avattavat-rivit id)]
+    ^{:key (str "avattava-rivi-tila" id)}
+    [:td {:class (str luokat (when avattava-rivi? " klikattava "))
+          :on-click (when avattava-rivi?
+                      #(do (.preventDefault %)
+                           (.stopPropagation %)
+                           (avaa-tai-sulje-avattavat-rivit! ohjaus id)))}
+     (when avattava-rivi?
+       [:div.vetolaatikon-sailio
+        [:div.inline-block.vetolaatikon-pylvas]
+        (if (avattavat-rivit-auki? ohjaus id)
+          [ikonit/navigation-ympyrassa :down]
+          [ikonit/navigation-ympyrassa :right])])]))

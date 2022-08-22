@@ -11,6 +11,11 @@
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
       "required": true
     },
+    "alueurakkanumero": {
+      "id": "urn:harja/ilmoitukset/0/ilmoitus/alueurakkanumero",
+      "type": "integer",
+      "required": false
+    },
     "sopimusId": {
       "id": "urn:harja/toteumat/0/toteuma/sopimusId",
       "type": "integer"
@@ -54,6 +59,11 @@
         "vahinkojen-korjaukset"
       ]
     },
+    "lisatieto": {
+      "id": "urn:harja/toteumat/0/toteuma/lisatieto",
+      "type": "string",
+      "required": false
+    },
     "tehtavat": {
       "id": "urn:harja/toteumat/0/toteuma/tehtavat/",
       "type": "object",
@@ -65,6 +75,23 @@
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json"
+    },
+    "tiesijainti": {
+      "id": "urn:harja/toteumat/0/toteuma/muutostiedot/",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
+    },
+    "muutostiedot": {
+      "id": "urn:harja/toteumat/0/toteuma/muutostiedot/",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/muutostiedot.schema.json"
+    },
+    "poistettu": {
+      "id": "urn:harja/toteumat/0/toteuma/poistettu",
+      "type": "boolean",
+      "required": false
     }
   }
 }

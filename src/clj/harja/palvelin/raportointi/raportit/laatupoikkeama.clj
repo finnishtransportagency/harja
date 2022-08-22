@@ -81,7 +81,9 @@
   (let [urakkatyyppi (when urakkatyyppi
                        (if (= urakkatyyppi :vesivayla)
                          (into [] urakka/vesivayla-urakkatyypit)
-                         [urakkatyyppi]))
+                         (if (= urakkatyyppi :hoito)
+                           [:hoito :teiden-hoito]
+                           [urakkatyyppi])))
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)

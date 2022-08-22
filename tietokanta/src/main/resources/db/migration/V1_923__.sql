@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS liite_urakka_idx on liite (urakka);

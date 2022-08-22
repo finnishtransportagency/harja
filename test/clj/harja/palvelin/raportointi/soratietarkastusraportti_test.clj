@@ -62,15 +62,20 @@
                      [{:leveys 8
                        :otsikko "Päi­vä­mää­rä"}
                       {:leveys 5
-                       :otsikko "Tie"}
+                       :otsikko "Tie"
+                       :tasaa :oikea}
                       {:leveys 6
-                       :otsikko "Aosa"}
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
                       {:leveys 6
-                       :otsikko "Aet"}
+                       :otsikko "Aet"
+                       :tasaa :oikea}
                       {:leveys 6
-                       :otsikko "Losa"}
+                       :otsikko "Losa"
+                       :tasaa :oikea}
                       {:leveys 6
-                       :otsikko "Let"}
+                       :otsikko "Let"
+                       :tasaa :oikea}
                       {:leveys 5
                        :otsikko "Hoi­to­luok­ka"}
                       {:leveys 8

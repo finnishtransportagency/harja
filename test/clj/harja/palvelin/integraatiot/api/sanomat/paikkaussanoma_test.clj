@@ -30,14 +30,14 @@
                          :kuulamylly "AN5"
                          :raekoko 1
                          :tyomenetelma "massapintaus"
-                         :massatyyppi "asfalttibetoni"
+                         :massatyyppi "AB, Asfalttibetoni"
                          :tunniste {:id 123}}
         odotettu {:harja.domain.paikkaus/alkuaika #inst "2018-01-30T12:00:00.000-00:00"
                   :harja.domain.paikkaus/kuulamylly "AN5"
                   :harja.domain.paikkaus/leveys 10M
                   :harja.domain.paikkaus/loppuaika #inst "2018-01-30T18:00:00.000-00:00"
                   :harja.domain.paikkaus/massamenekki 12
-                  :harja.domain.paikkaus/massatyyppi "asfalttibetoni"
+                  :harja.domain.paikkaus/massatyyppi "AB, Asfalttibetoni"
                   :harja.domain.paikkaus/materiaalit [{:harja.domain.paikkaus/esiintyma "testi"
                                                        :harja.domain.paikkaus/kuulamylly-arvo "testi"
                                                        :harja.domain.paikkaus/lisa-aineet "lisäaineet"

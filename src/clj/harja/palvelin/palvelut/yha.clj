@@ -12,15 +12,18 @@
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
             [slingshot.slingshot :refer [try+]]
             [clj-time.core :as t]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
+            [harja.palvelin.palvelut.yha-apurit :as yha-apurit]
             [clojure.string :as str]
-            [harja.domain.tierekisteri :as tr-domain]))
+            [clojure.set :as set]
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]))
 
 (defn lukitse-urakan-yha-sidonta [db urakka-id]
   (log/info "Lukitaan urakan " urakka-id " yha-sidonta.")
@@ -88,17 +91,6 @@
              kohteet-yhasta)))
 
 
-(defn- hae-yha-kohteet
-  "Hakee kohteet YHA:sta ja palauttaa vain uudet, Harjasta puuttuvat kohteet."
-  [db yha user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (log/debug "Haetaan kohteet yhasta")
-  (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
-        _ (log/debug "Kohteita löytyi " (count yha-kohteet) " kpl.")
-        uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
-        _ (log/debug "Uusia kohteita oli " (count uudet-kohteet) " kpl.")]
-    uudet-kohteet))
-
 (defn- merkitse-urakan-kohdeluettelo-paivitetyksi [db user harja-urakka-id]
   (log/debug "Merkitään urakan " harja-urakka-id " kohdeluettelo päivitetyksi")
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
@@ -107,7 +99,7 @@
 (defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
                                                           tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
                                                           nimi] :as kohde}]
-  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id)
+  (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
   (let [kohde (yha-q/luo-yllapitokohde<!
                 db
                 {:urakka urakka-id
@@ -160,57 +152,105 @@
                                             (map :syy kohdeosien-validointi)))))))
     kohteet))
 
-(defn- tallenna-uudet-yha-kohteet
-  "Tallentaa YHA:sta tulleet ylläpitokohtetierekistet. Olettaa, että ollaan tallentamassa vain
-  uusia kohteita eli jo olemassa olevat on suodatettu joukosta pois."
-  [db user {:keys [urakka-id kohteet] :as tiedot}]
-  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (jdbc/with-db-transaction [db db]
-    (let [kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db kohteet)
-          validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
-          epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)]
-      ;; Tallennetaan vain sellaiset YHA-kohteet, joiden osoite oli
-      ;; validi Harjan tieverkolla. Virheelliset kohteet palautetaan takaisin UI:lle.
-      (log/debug "Tallennetaan " (count validit-kohteet) " yha-kohdetta")
-      (doseq [kohde validit-kohteet]
-        (tallenna-kohde-ja-alikohteet db urakka-id kohde))
-      (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
-      (log/debug "YHA-kohteet tallennettu, päivitetään urakan geometria")
-      (yy/paivita-yllapitourakan-geometria db urakka-id)
-      (log/debug "Urakan geometria päivitetty.")
-      {:yhatiedot (hae-urakan-yha-tiedot db urakka-id)
-       :tallentamatta-jaaneet-kohteet (vec epavalidit-kohteet)})))
+(defn kohteen-tunnus [kohde teksti]
+  (str "kohde-" (:yha-id kohde) (when teksti "-") teksti))
 
-(defn- tarkista-lahetettavat-kohteet
-  "Tarkistaa, että kaikki annetut kohteet ovat siinä tilassa, että ne voidaan lähettää.
-   Jos ei ole, heittää poikkeuksen."
-  [db kohde-idt]
-  (doseq [kohde-id kohde-idt]
-    (let [paallystysilmoitus (first (into []
-                                          (comp (map konv/alaviiva->rakenne)
-                                                (map #(konv/string-poluista->keyword
-                                                        %
-                                                        [[:tekninen-osa :paatos]
-                                                         [:tila]])))
-                                          (paallystys-q/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella
-                                            db
-                                            {:paallystyskohde kohde-id})))]
-      (when-not (and (= :hyvaksytty (get-in paallystysilmoitus [:tekninen-osa :paatos]))
-                     (or (= :valmis (:tila paallystysilmoitus))
-                         (= :lukittu (:tila paallystysilmoitus))))
-        (throw (SecurityException. (str "Kohteen " kohde-id " päällystysilmoituksen lähetys ei ole sallittu.")))))))
+(defn alikohteen-tunnus [kohde alikohde teksti]
+  (str "alikohde-" (:yha-id kohde) "-" (:yha-id alikohde) (when teksti "-") teksti))
+
+(defn paivita-osoitteen-osa [kohde osoite avain]
+  (assoc-in kohde [:tierekisteriosoitevali avain]
+    (or (get osoite avain)
+      (get-in kohde [:tierekisteriosoitevali avain]))))
+
+(defn hae-vkm-osoite [vkm-kohteet hakutunnus]
+  (first (filter #(= (:yha-id %) hakutunnus) vkm-kohteet)))
+
+(defn paivita-kohde [kohde osoite]
+  (if (some? (:virheet osoite))
+    (assoc kohde :virheet (:virheet osoite))
+    (-> kohde
+      (paivita-osoitteen-osa osoite :tienumero)
+      (paivita-osoitteen-osa osoite :ajorata)
+      (paivita-osoitteen-osa osoite :aet)
+      (paivita-osoitteen-osa osoite :aosa)
+      (paivita-osoitteen-osa osoite :let)
+      (paivita-osoitteen-osa osoite :losa))))
+
+(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
+  (mapv (fn [kohde]
+          (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id kohde))]
+            (-> kohde
+              (paivita-kohde osoite)
+              (assoc :alikohteet
+                     (mapv
+                       (fn [alikohde]
+                         (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id alikohde))]
+                           (paivita-kohde alikohde osoite)))
+                       (:alikohteet kohde))))))
+    yha-kohteet))
+
+(defn- paivita-yha-kohteet
+  "Hakee uudet kohteet YHAsta, käyttää ne viitekehysmuuntimen läpi ja tallentaa ne harjan kantaan.
+   Vaaditut tiedot:
+   urakka-id:     urakan id
+   tilannepvm:    pvm, jos a kohde muutetaan toiselle päivälle, esim. harjan karttapvm.
+   kohdepvm:      pvm, johon kohde muutetaan viitekehysmuuntimella. Valinnainen, oletuksena nykyinen pvm.
+   "
+  [db yha vkm user {:keys [urakka-id tilannepvm kohdepvm]}]
+  (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
+  (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
+        uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
+        tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet
+                       (or
+                         tilannepvm
+                         (:karttapaivamaara (:tierekisteriosoitevali (first uudet-kohteet))))
+                       (or kohdepvm (pvm/nyt)))
+        vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet)
+        yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-kohteet vkm-kohteet)
+        kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db yhdistetyt-kohteet)
+        validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
+        epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)
+        vkm-virheet (filterv :virheet yhdistetyt-kohteet)
+        vkm-virheita? (not (empty? vkm-virheet))
+        yha-virheita? (not (empty? epavalidit-kohteet))]
+    (doseq [kohde validit-kohteet]
+      (tallenna-kohde-ja-alikohteet db urakka-id kohde))
+    (merkitse-urakan-kohdeluettelo-paivitetyksi db user urakka-id)
+    (yy/paivita-yllapitourakan-geometria db urakka-id)
+    {:status (if (or vkm-virheita? yha-virheita?)
+               :error
+               :ok)
+     :yhatiedot (hae-urakan-yha-tiedot db urakka-id)
+     :tallentamatta-jaaneet-kohteet (vec epavalidit-kohteet)
+     :epaonnistuneet-vkm-muunnokset vkm-virheet
+     :uudet-kohteet validit-kohteet
+     :koodi (cond
+              (and vkm-virheita? yha-virheita?)
+              :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain
+
+              vkm-virheita?
+              :vkm-muunnos-epaonnistui-osittain
+
+              yha-virheita?
+              :kohteiden-tallentaminen-epaonnistui-osittain
+
+              :default
+              :kohteet-tallennettu)}))
 
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet teknisine tietoineen YHAan."
   [db yha user {:keys [urakka-id sopimus-id kohde-idt vuosi]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
-  (tarkista-lahetettavat-kohteet db kohde-idt)
+  (yha-apurit/tarkista-lahetettavat-kohteet db kohde-idt)
   (log/debug (format "Lähetetään kohteet: %s YHAan" kohde-idt))
   (let [lahetys (try+ (yha/laheta-kohteet yha urakka-id kohde-idt)
                       (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                         virheet))
         lahetys-onnistui? (not (contains? lahetys :virhe))
-        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db urakka-id sopimus-id vuosi)]
+        paivitetyt-ilmoitukset (paallystys-q/hae-urakan-paallystysilmoitukset-kohteineen db {:urakka-id urakka-id 
+                                                                                             :sopimus-id sopimus-id 
+                                                                                             :vuosi vuosi})]
     (merge
       {:paallystysilmoitukset paivitetyt-ilmoitukset}
       (when-not lahetys-onnistui?
@@ -221,19 +261,17 @@
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)
-          yha (:yha-integraatio this)]
+          yha (:yha-integraatio this)
+          vkm (:vkm this)]
       (julkaise-palvelu http :sido-yha-urakka-harja-urakkaan
                         (fn [user tiedot]
                           (sido-yha-urakka-harja-urakkaan db user tiedot)))
       (julkaise-palvelu http :hae-urakat-yhasta
                         (fn [user tiedot]
                           (hae-urakat-yhasta db yha user tiedot)))
-      (julkaise-palvelu http :hae-yha-kohteet
-                        (fn [user tiedot]
-                          (hae-yha-kohteet db yha user tiedot)))
-      (julkaise-palvelu http :tallenna-uudet-yha-kohteet
-                        (fn [user tiedot]
-                          (tallenna-uudet-yha-kohteet db user tiedot)))
+      (julkaise-palvelu http :paivita-yha-kohteet
+        (fn [user tiedot]
+          (paivita-yha-kohteet db yha vkm user tiedot)))
       (julkaise-palvelu http :laheta-kohteet-yhaan
                         (fn [user data]
                           (laheta-kohteet-yhaan db yha user data))))
@@ -243,7 +281,6 @@
       (:http-palvelin this)
       :sido-yha-urakka-harja-urakkaan
       :hae-urakat-yhasta
-      :hae-yha-kohteet
-      :tallenna-uudet-yha-kohteet
+      :paivita-yha-kohteet
       :laheta-kohteet-yhaan)
     this))

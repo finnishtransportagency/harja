@@ -66,3 +66,12 @@ SELECT paivita_pohjavesialueet();
 
 -- name: paivita-pohjavesialue-kooste
 SELECT paivita_pohjavesialue_kooste();
+
+-- name: hae-pohjavesialueen-tiedot
+SELECT
+    sum(st_length(pv.alue)) / 1000 AS pituus_km,
+    talvisuolaraja as talvisuolan_kayttoraja
+FROM pohjavesialue pv
+       LEFT JOIN pohjavesialue_talvisuola ts ON pv.tunnus = ts.pohjavesialue
+WHERE tunnus = :pohjavesialue
+GROUP BY pv.tunnus, ts.talvisuolaraja;

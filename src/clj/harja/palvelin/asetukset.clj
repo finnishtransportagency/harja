@@ -13,7 +13,8 @@
                  :portti s/Int
                  (s/optional-key :yhteyspoolin-koko) s/Int
                  :kayttaja s/Str
-                 :salasana s/Str})
+                 :salasana s/Str
+                 :julkaise-tila? s/Bool})
 (def Asetukset
   "Harja-palvelinasetuksien skeema"
   {(s/optional-key :sahke-headerit) {s/Str {s/Str s/Str}}
@@ -21,11 +22,14 @@
                    :url s/Str
                    (s/optional-key :threads) s/Int
                    (s/optional-key :max-body-size) s/Int
-                   (s/optional-key :anti-csrf-token) s/Str}
+                   (s/optional-key :anti-csrf-token) s/Str
+                   (s/optional-key :salli-oletuskayttaja?) s/Bool
+                   (s/optional-key :dev-resources-path) s/Str}
    :kehitysmoodi Boolean
    (s/optional-key :testikayttajat) [{:kayttajanimi s/Str :kuvaus s/Str}]
    :tietokanta Tietokanta
    :tietokanta-replica Tietokanta
+   :tarkkailija {:loop-odotus s/Int}
    :fim {:url s/Str
          (s/optional-key :tiedosto) s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
@@ -46,18 +50,33 @@
          (s/optional-key :email) {:taso s/Keyword
                                   :palvelin s/Str
                                   :vastaanottaja [s/Str]}
-         (s/optional-key :testidata?) s/Bool}
+         (s/optional-key :testidata?) s/Bool
+         (s/optional-key :ei-logiteta) #{s/Str}}
    (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
    (s/optional-key :sonja) {:url s/Str
                             :kayttaja s/Str
                             :salasana s/Str
-                            (s/optional-key :tyyppi) s/Keyword}
+                            (s/optional-key :tyyppi) s/Keyword
+                            :julkaise-tila? s/Bool}
+   (s/optional-key :api-sahkoposti) {:vastausosoite s/Str
+                                     :suora? s/Bool
+                                     :sahkoposti-lahetys-url s/Str
+                                     :sahkoposti-ja-liite-lahetys-url s/Str
+                                     :palvelin s/Str
+                                     :kayttajatunnus s/Str
+                                     :salasana s/Str}
+
+   ;; Lisään vielä hetkeksi tämän takaisin. Saa poistaa, kunhan api-sahkoposti on otettu käyttöön.
+   ;; Tämän ennen aikainen poistaminen on jotanut turhiin virheisiin Harjan käynnistyksessä
    (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
                                        (s/optional-key :suora?) s/Bool
                                        (s/optional-key :palvelin) s/Str
                                        :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
                                                (s/optional-key :sahkoposti-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str}}
+                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
+                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
+
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -65,6 +84,11 @@
                             :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :itmf) {:url s/Str
+                           :kayttaja s/Str
+                           :salasana s/Str
+                           (s/optional-key :tyyppi) s/Keyword
+                           :julkaise-tila? s/Bool}
    (s/optional-key :tloik) {:ilmoitusviestijono s/Str
                             :ilmoituskuittausjono s/Str
                             :toimenpideviestijono s/Str
@@ -87,6 +111,7 @@
                                            (s/optional-key :tieosoiteverkon-shapefile) s/Str
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
+                                           (s/optional-key :laajennetun-tieosoiteverkon-tiedot) s/Str
                                            (s/optional-key :pohjavesialueen-shapefile) s/Str
                                            (s/optional-key :pohjavesialueen-osoite) s/Str
                                            (s/optional-key :pohjavesialueen-tuontikohde) s/Str
@@ -129,7 +154,17 @@
                           :salasana s/Str}
 
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
-                            :autorisaatio s/Str}
+                            :token-url s/Str
+                            :kayttajatunnus s/Str
+                            :salasana s/Str
+                            :varuste-api-juuri-url s/Str
+                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str
+                            :varuste-urakka-oid-url s/Str
+                            :varuste-urakka-kohteet-url s/Str}
+
+   (s/optional-key :yha-velho) {}
 
    (s/optional-key :labyrintti) {:url s/Str
                                  :kayttajatunnus s/Str
@@ -146,9 +181,6 @@
                                           (s/optional-key :kayttajatunnus) s/Str
                                           (s/optional-key :salasana) s/Str}
 
-   (s/optional-key :sonja-jms-yhteysvarmistus) {(s/optional-key :ajovali-minuutteina) s/Int
-                                                (s/optional-key :jono) s/Str}
-
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
    (s/optional-key :sahke) {:lahetysjono s/Str
@@ -164,7 +196,7 @@
 
    (s/optional-key :kanavasillat) {:geometria-url s/Str
                                    :paivittainen-tarkistusaika [s/Num]
-                                   :paivitysvali-paivissa s/Num}
+                                   :paivitysvali-paivissa s/Any}
 
    (s/optional-key :tyotunti-muistutukset) {:paivittainen-aika [s/Num]}
 
@@ -174,18 +206,16 @@
 
    (s/optional-key :reimari) {:url s/Str
                               :kayttajatunnus s/Str
-                              :salasana s/Str
-                              (s/optional-key :toimenpidehakuvali) s/Int
-                              (s/optional-key :komponenttityyppihakuvali) s/Int
-                              (s/optional-key :turvalaitekomponenttihakuvali) s/Int
-                              (s/optional-key :vikahakuvali) s/Int
-                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
+                              :salasana s/Str}
 
 
-   (s/optional-key :ais-data) {:url s/Str
-                               :sekunnin-valein s/Int}
-
-   (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}})
+   (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
+   :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}
+                        :itmf {:paivitystiheys-ms s/Int}
+                        :db {:paivitystiheys-ms s/Int
+                             :kyselyn-timeout-ms s/Int}
+                        :db-replica {:paivitystiheys-ms s/Int
+                                     :replikoinnin-max-viive-ms s/Int}}})
 
 (def oletusasetukset
   "Oletusasetukset paikalliselle dev-serverille"
@@ -213,6 +243,16 @@
 (defn tarkista-asetukset [asetukset]
   (s/check Asetukset asetukset))
 
+(defn tarkista-ymparisto! []
+  (let [env-muuttujat (with-open [rdr (io/reader ".harja_env")]
+                        (reduce (fn [tulos rivi]
+                                  (conj tulos (str/trim rivi)))
+                                []
+                                (line-seq rdr)))]
+    (doseq [env-muuttuja env-muuttujat]
+      (when (nil? (System/getenv env-muuttuja))
+        (log/error (str "Ympäristömuuttujaa " env-muuttuja " ei ole asetettu!"))))))
+
 (defn lue-asetukset
   "Lue Harja palvelimen asetukset annetusta tiedostosta ja varmista, että ne ovat oikeat"
   [tiedosto]
@@ -221,6 +261,18 @@
        read-string
        (yhdista-asetukset oletusasetukset)))
 
+(defonce pois-kytketyt-ominaisuudet (atom #{}))
+
+(defn ominaisuus-kaytossa? [k]
+  (let [pko @pois-kytketyt-ominaisuudet]
+    (if (nil? pko)
+      false
+      (not (contains? pko k)))))
+
+(defn aseta-kaytettavat-ominaisuudet! [pois-kytketyt-ominaisuudet-joukko]
+  (reset! pois-kytketyt-ominaisuudet pois-kytketyt-ominaisuudet-joukko))
+
+
 (defn crlf-filter [msg]
   (assoc msg :vargs (mapv (fn [s]
                             (if (string? s)
@@ -228,22 +280,30 @@
                               s))
                           (:vargs msg))))
 
+(defn- logituksen-tunnus [msg]
+  (let [ensimmainen-arg (-> msg :vargs first)
+        tunnus (when (string? ensimmainen-arg)
+                 (second
+                   (re-find #"^\[([^\]]*)\]"
+                            ensimmainen-arg)))]
+    (when tunnus
+      (str/lower-case tunnus))))
+
 (defn logitetaanko
   "Tämän palauttama middleware on hyödyllinen, jos testidatan puuttellisuus aiheuttaa suuret määrät logitusta turhaan.
    Esimerkiksi siltojen tuonnissa halutaan logittaa, jos datassa on jotain ongelmia tuotannossa, mutta testidatan
    kanssa tämä logitus aiheuttaa tuhansia logituksia turhaan."
-  [testidata?]
+  [{:keys [testidata? ei-logiteta]}]
   (fn [msg]
-    (let [ensimmainen-arg (-> msg :vargs first)
-          ei-logiteta? (and (keyword? ensimmainen-arg)
-                            (= :ei-logiteta_ ensimmainen-arg))]
-      (if ei-logiteta?
-        (when-not testidata?
-          (update msg :vargs #(vec (rest %))))
+    (let [ei-logiteta? (when-let [tunnus (logituksen-tunnus msg)]
+                         (and (contains? ei-logiteta tunnus)
+                              testidata?))]
+      (when-not ei-logiteta?
         msg))))
 
 (defn konfiguroi-lokitus [asetukset]
-  (log/merge-config! {:middleware [(logitetaanko (-> asetukset :log :testidata?)) crlf-filter]})
+  (log/merge-config! {:middleware [(logitetaanko (:log asetukset))
+                                   crlf-filter]})
 
   (when-not (:kehitysmoodi asetukset)
     (log/merge-config! {:appenders {:println {:min-level :info}}}))

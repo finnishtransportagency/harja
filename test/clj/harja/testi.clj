@@ -4,37 +4,84 @@
     [clojure.test :refer :all]
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
+    [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.komponentit.liitteet :as liitteet]
+    [tarkkailija.palvelin.komponentit
+     [event-tietokanta :as event-tietokanta]
+     [tapahtumat :as tapahtumat]
+     [jarjestelma-rajapinta :as rajapinta]
+     [uudelleen-kaynnistaja :as uudelleen-kaynnistaja]]
+    [tarkkailija.palvelin.palvelut.tapahtuma :as tapahtuma]
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
-    [clojure.core.async :as async]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
     [harja.kyselyt.konversio :as konv]
     [harja.pvm :as pvm]
-    [clj-gatling.core :as gatling])
-  (:import (java.util Locale))
-  (:import (org.postgresql.util PSQLException)))
+    [clj-gatling.core :as gatling]
+    [clojure.java.jdbc :as jdbc]
+    [harja.tyokalut.env :as env]
+    [slingshot.slingshot :refer [throw+ try+]])
+  (:import (org.postgresql.util PSQLException)
+           (java.util Locale)
+           (java.lang Boolean Exception)
+           (java.util.concurrent TimeoutException)
+           (java.sql Statement)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def jarjestelma nil)
 
+(defn <!!-timeout [kanava timeout]
+  (let [[arvo valmistunut-kanava] (async/alts!! [kanava
+                                                 (async/timeout timeout)])]
+    (if (not= valmistunut-kanava kanava)
+      (throw (TimeoutException. (str "Ei saatu arvoa ajassa " timeout)))
+      arvo)))
+
 (Locale/setDefault (Locale. "fi" "FI"))
 
-(defn ollaanko-jenkinsissa? []
-  (= "harja-jenkins.solitaservices.fi"
-     (.getHostName (java.net.InetAddress/getLocalHost))))
+(def ^{:dynamic true
+       :doc "Jos käytössä on oikea JMS komponentti, pitää se aloittaa ennen testien ajoa. Anna lista JMS clienttejä"} *aloitettavat-jmst* nil)
+(def ^{:dynamic true
+       :doc "Jos halutaan testissä lisätä kuuntelijoita, pitää ne lisätä ennen kunntelun aloitusta."} *lisattavia-kuuntelijoita?* false)
+(def ^{:dynamic true
+       :doc "Callback sen jälkeen kun on jms(t) käynnistetty. Hyvä paikka purgeta jonoja."} *jms-kaynnistetty-fn* nil)
+(def ^{:dynamic true
+       :doc "Tänne mapissa kanavan nimi funktio pareja, joiden pitäs olla testissä käytössä.
+             Tällä on vaikutusta vain jos *lisattavia-kuuntelijoita?* on truthy"} *lisattavat-kuuntelijat* nil)
+(def ^:dynamic *kaynnistyksen-jalkeen-hook* nil)
+(def ^:dynamic *ennen-sulkemista-hook* nil)
+
+(def sonja-aloitus-go (atom nil))
+
+(defn lisaa-kuuntelijoita!
+  "Helpperi funktio, jolla voi lisätä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  [kuuntelijat]
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))
+         (map? kuuntelijat)]}
+  (async/>!! *lisattavat-kuuntelijat* kuuntelijat)
+  (async/<!! @sonja-aloitus-go))
+
+(defn ei-lisattavia-kuuntelijoita! []
+  "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
+   on lisätty oikea sonja"
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))
+         (not (nil? @sonja-aloitus-go))]}
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa)
+  (async/<!! @sonja-aloitus-go))
 
 (defn circleci? []
-  (not (str/blank? (System/getenv "CIRCLE_BRANCH"))))
+  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
@@ -43,31 +90,31 @@
    {:println
     {:min-level
      (cond
-       (or (ollaanko-jenkinsissa?)
-           (circleci?)
-           (= "true" (System/getenv "NOLOG")))
+       (env/env "HARJA_NOLOG" false)
        :fatal
 
        :default
        :debug)}}})
 
-(def testitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                  "172.17.238.100"
-                                  "localhost")
-                      :portti 5432
+(def testitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                      :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                       :tietokanta "harjatest"
                       :kayttaja "harjatest"
-                      :salasana nil})
+                      :salasana nil
+                      :tarkkailun-timeout-arvot {:paivitystiheys-ms 3000
+                                                 :kyselyn-timeout-ms 10000}
+                      :tarkkailun-nimi :db})
 
 ; temppitietokanta jonka omistaa harjatest. käytetään väliaikaisena tietokantana jotta templatekanta
 ; (harjatest_template) ja testikanta (harjatest) ovat vapaina droppausta ja templaten kopiointia varten.
-(def temppitietokanta {:palvelin (if (ollaanko-jenkinsissa?)
-                                   "172.17.238.100"
-                                   "localhost")
-                       :portti 5432
+(def temppitietokanta {:palvelin (env/env "HARJA_TIETOKANTA_HOST" "localhost")
+                       :portti (env/env "HARJA_TIETOKANTA_PORTTI" 5432)
                        :tietokanta "temp"
                        :kayttaja "harjatest"
-                       :salasana nil})
+                       :salasana nil
+                       :tarkkailun-timeout-arvot {:paivitystiheys-ms 3000
+                                                  :kyselyn-timeout-ms 10000}
+                       :tarkkailun-nimi :db-temppi})
 
 (defn odota-ehdon-tayttymista [ehto-fn viesti max-aika-ms]
   (loop [max-ts (+ max-aika-ms (System/currentTimeMillis))]
@@ -88,10 +135,10 @@
    @atom))
 
 (defn luo-testitietokanta []
-  (tietokanta/luo-tietokanta testitietokanta))
+  {:datasource (tietokanta/luo-yhteyspool testitietokanta)})
 
 (defn luo-temppitietokanta []
-  (tietokanta/luo-tietokanta temppitietokanta))
+  {:datasource (tietokanta/luo-yhteyspool temppitietokanta)})
 
 (defn luo-liitteidenhallinta []
   (liitteet/->Liitteet nil))
@@ -164,8 +211,41 @@
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
 
+(defn i
+  "Tee SQL insert Harjan kantaan yksikkötestauksen yhteydessä, ja palauta generoitu id"
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql) Statement/RETURN_GENERATED_KEYS)]
+    (.executeUpdate ps)
+    (let [generated-keys (.getGeneratedKeys ps)
+          next? (.next generated-keys)]
+      (when next?
+        (.getLong generated-keys 1)))))
+
 (defn- tapa-backend-kannasta [ps kanta]
-  (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()")))
+  (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
+    ;; Jos rs ei sisällä rivejä, kanta on jo tapettu
+    (when (.next rs)
+      (let [kanta-tapettu-onnistuneesti? (.getBoolean rs 1)]
+        (when-not kanta-tapettu-onnistuneesti?
+          (throw+ {:type :virhe-kannan-tappamisessa
+                   :viesti (str "Kantaa " kanta " ei saatu kiinni.")}))))))
+
+(defn odota-etta-kanta-pystyssa [db]
+  (let [timeout-s 10]
+    (jdbc/with-db-connection [db db]
+                             (with-open [c (jdbc/get-connection db)
+                                         stmt (jdbc/prepare-statement c
+                                                                      "SELECT 1;"
+                                                                      {:timeout timeout-s
+                                                                       :result-type :forward-only
+                                                                       :concurrency :read-only})
+                                         rs (.executeQuery stmt)]
+                               (let [kanta-ok? (if (.next rs)
+                                                 (= 1 (.getObject rs 1))
+                                                 false)]
+                                 (when-not kanta-ok?
+                                   (log/error (str "Ei saatu kantaan yhteyttä " timeout-s " sekunnin kuluessa"))))))))
 
 (defn- luo-kannat-uudelleen []
   (alter-var-root #'db (fn [_]
@@ -177,22 +257,156 @@
                                (com.mchange.v2.c3p0.DataSources/destroy temppidb)
                                (:datasource (luo-temppitietokanta)))))
 
+(defn arvo-vapaa-portti
+  "Arpoo vapaan portinnumeron ja palauttaa sen"
+  []
+  (let [s (doto (java.net.ServerSocket. 0)
+            (.setReuseAddress true))]
+    (try
+      (.getLocalPort s)
+      (finally (.close s)))))
+
+(defn yrita-querya
+  ([f n] (yrita-querya f n true nil))
+  ([f n log?] (yrita-querya f n log? nil))
+  ([f n log? param?]
+   (loop [n-kierros 0]
+     (if (= n-kierros n)
+       (throw (Exception. "Queryn yrittäminen epäonnistui"))
+       (let [tulos (try+
+                     (when (> n-kierros 0)
+                       (println "yrita-querya: yritys" n-kierros))
+
+                     (if param?
+                       (f n-kierros)
+                       (f))
+                     (catch [:type :virhe-kannan-tappamisessa] {:keys [viesti]}
+                       (println "yrita-querya: virhe kannan tappamisesssa:" viesti)
+                       (Thread/sleep 500)
+                       (when log?
+                         (log/warn viesti))
+                       ::virhe)
+                     (catch PSQLException e
+                       (println "yrita-querya: psql:" e)
+                       (Thread/sleep 500)
+                       (when log?
+                         (log/warn e "- yritetään uudelleen, yritys" n-kierros))
+                       ::virhe))
+             virhe? (= tulos ::virhe)]
+         (if virhe?
+           (recur (inc n-kierros))
+           tulos))))))
+
+(defonce ^:private testikannan-luonti-lukko (Object.))
+
+
+(def testikanta-yritysten-lkm 15)
 (defn pudota-ja-luo-testitietokanta-templatesta
   "Droppaa tietokannan ja luo sen templatesta uudelleen"
   []
-  (with-open [c (.getConnection temppidb)
-              ps (.createStatement c)]
+  (locking testikannan-luonti-lukko
+    (with-open [c (.getConnection temppidb)
+                ps (.createStatement c)]
 
-    (tapa-backend-kannasta ps "harjatest_template")
-    (tapa-backend-kannasta ps "harjatest")
-    (dotimes [n 5]
-      (try
-        (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
-        (catch PSQLException e
-          (Thread/sleep 500)
-          (log/warn e "- yritetään uudelleen, yritys" n))))
-    (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
-  (luo-kannat-uudelleen))
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest_template")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [] (tapa-backend-kannasta ps "harjatest")) testikanta-yritysten-lkm true)
+      (yrita-querya (fn [n]
+                      (.executeUpdate ps "DROP DATABASE IF EXISTS harjatest")
+                      (async/<!! (async/timeout (* n 1000)))
+                      (.executeUpdate ps "CREATE DATABASE harjatest TEMPLATE harjatest_template"))
+                    testikanta-yritysten-lkm
+                    true
+                    true))
+    (luo-kannat-uudelleen)
+    (odota-etta-kanta-pystyssa {:datasource db})
+    (odota-etta-kanta-pystyssa {:datasource temppidb})))
+
+(defn katkos-testikantaan!
+  "Varsinaisen katkoksen tekeminen ilman system komentoja ei oikein onnistu, joten pudotetaan
+   kanta pois ja luodaan se uusiksi.
+
+   Tämä palauttaa kanavan, josta pitää ensin lukea arvo ulos. Tämä arvo indikoi, että nyt on yhteys
+   kantaan poikki. Sen jälkeen testissä voipi tehdä mitä haluaa katkoksen aikana. Testin tulee antaa kanavaan
+   takaisin jokin arvo, jotta kanta luodaan taas uusiksi merkkaamaan katkoksen päätöstä. Tämän jälkeen
+   ei ole pakko lukea kanavasta enää arvoja ulos, mutta sinne laitetaan vielä yksi arvo merkkaamaan, että
+   kanta on valmis.
+
+   Jos tämä prosessi ei onnistu 30 sekunnin kuluessa, kanava suljetaan."
+  []
+  (let [kanava (async/chan)
+        db-name (:tietokanta testitietokanta)
+        timeout (* 30 1000)
+        testikanta-data-placeholder (str (gensym "kanta"))
+        kanta-asetukset {:dbtype "postgresql"
+                         :classname "org.postgresql.Driver"
+                         :dbname (:tietokanta testitietokanta)
+                         :host (System/getenv "HARJA_TIETOKANTA_HOST")
+                         :port (:portti testitietokanta)
+                         :user (:kayttaja testitietokanta)
+                         :password (:salasana testitietokanta)}
+        tmpkanta-asetukset {:dbtype "postgresql"
+                            :classname "org.postgresql.Driver"
+                            :dbname (:tietokanta temppitietokanta)
+                            :host (System/getenv "HARJA_TIETOKANTA_HOST")
+                            :port (:portti temppitietokanta)
+                            :user (:kayttaja temppitietokanta)
+                            :password (:salasana temppitietokanta)}
+        kierroksia 5
+        tapa-kanta (fn [kanta-asetukset db-name]
+                     (yrita-querya (fn [n-kierros]
+                                     (try
+                                       (jdbc/with-db-connection [db kanta-asetukset]
+                                                                (with-open [c (jdbc/get-connection db)
+                                                                            ps (.createStatement c)]
+                                                                  (.executeUpdate ps (str "UPDATE pg_database SET datallowconn = 'false' WHERE datname = '" db-name "'"))
+                                                                  (tapa-backend-kannasta ps db-name)
+                                                                  #_(with-open [rs (tapa-backend-kannasta ps db-name)]
+                                                                      (if (.next rs)
+                                                                        (let [tulos (.getObject rs 1)]
+                                                                          (when-not (and (instance? Boolean
+                                                                                                    tulos)
+                                                                                         (= "true" (.toString tulos)))
+                                                                            (throw (Exception. (str "Ei saatu kiinni. Tulos: " tulos " type: " (type tulos))))))
+                                                                        (throw (Exception. "Ei saatu kiinni. koska yhteys ei palauttanut mitään"))))))
+                                       (catch Exception e
+                                         (when (= n-kierros kierroksia)
+                                           (throw e)))))
+                                   kierroksia true true))]
+    (go (let [[arvo _] (async/alts!! [(go (jdbc/with-db-connection [db tmpkanta-asetukset]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE USER " testikanta-data-placeholder " WITH SUPERUSER"))))
+                                          (tapa-kanta tmpkanta-asetukset db-name)
+                                          (jdbc/with-db-connection [db {:datasource temppidb}]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE DATABASE " testikanta-data-placeholder " OWNER " testikanta-data-placeholder " TEMPLATE " db-name))
+                                                                     (.executeUpdate ps (str "DROP DATABASE IF EXISTS " db-name))))
+                                          (async/>! kanava :katkos-kaynnissa)
+                                          ;; Odotetaan, että saadaan laittaa kanta takaisin pystyyn
+                                          (async/<! kanava)
+                                          (println "------------------------------------")
+                                          (println "---> KÄYNNISTEÄÄN UUSIKSI")
+                                          (tapa-kanta tmpkanta-asetukset testikanta-data-placeholder)
+                                          (jdbc/with-db-connection [db tmpkanta-asetukset]
+                                                                   (with-open [c (jdbc/get-connection db)
+                                                                               ps (.createStatement c)]
+                                                                     (.executeUpdate ps (str "CREATE DATABASE " db-name " OWNER " db-name " TEMPLATE " testikanta-data-placeholder ""))))
+                                          (println "---> KÄYNNISTETTY"))
+                                      (go (async/<! (async/timeout timeout))
+                                          ::timeout)])]
+          (jdbc/with-db-connection [db kanta-asetukset]
+                                   (with-open [c (jdbc/get-connection db)
+                                               ps (.createStatement c)]
+                                     #_(yrita-querya (fn [] (tapa-backend-kannasta ps testikanta-data-placeholder)) 5 false)
+                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP DATABASE IF EXISTS " testikanta-data-placeholder))) 5)
+                                     (yrita-querya (fn [] (.executeUpdate ps (str "DROP USER IF EXISTS " testikanta-data-placeholder))) 5)))
+          (println "---> TMP KANTA TAPETTU")
+          (async/put! kanava :kanta-uudetaan-kaynnissa)
+          (async/close! kanava)
+          (when (= ::timeout arvo)
+            (throw (TimeoutException. (str "Possukaktkoksen käsittely timeouttas " timeout " ms jälkeen"))))))
+    kanava))
 
 (defprotocol FeikkiHttpPalveluKutsu
   (kutsu-palvelua
@@ -218,13 +432,18 @@
 (defn- post-kutsu? [f]
   (= 2 (arg-count f)))
 
+(defn- heita-jos-ei-ole-validi [spec palvelun-nimi payload]
+  (when-not (s/valid? spec payload)
+    (throw (Exception. (str "Palvelun " palvelun-nimi " ei ole validi.
+    Riippuen testista, tämä voi olla sekä odotettu tila että virhe!
+    Payload: " payload "
+    Spec selitys: " (s/explain-str spec payload))))))
+
 (defn- wrap-validointi [nimi palvelu-fn {:keys [kysely-spec vastaus-spec]}]
   (as-> palvelu-fn f
         (if kysely-spec
           (fn [user payload]
-            (testing (str "Palvelun " nimi " kysely on validi")
-              (is (s/valid? kysely-spec payload)
-                  (s/explain-str kysely-spec payload)))
+            (heita-jos-ei-ole-validi kysely-spec (str nimi " kysely") payload)
             (f user payload))
           f)
 
@@ -232,16 +451,12 @@
           (if (post-kutsu? f)
             (fn [user payload]
               (let [v (f user payload)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v))
 
             (fn [user]
               (let [v (f user)]
-                (testing (str "Palvelun " nimi " vastaus on validi")
-                  (is (s/valid? vastaus-spec v)
-                      (s/explain-str vastaus-spec v)))
+                (heita-jos-ei-ole-validi vastaus-spec (str nimi " vastaus") v)
                 v)))
           f)))
 
@@ -275,11 +490,11 @@
 
       (kutsu-karttakuvapalvelua [_ nimi kayttaja payload koordinaatti extent]
         ((get @palvelut :karttakuva-klikkaus)
-          kayttaja
-          {:parametrit (assoc payload "_" nimi)
-           :koordinaatti koordinaatti
-           :extent (or extent
-                       [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+         kayttaja
+         {:parametrit (assoc payload "_" nimi)
+          :koordinaatti koordinaatti
+          :extent (or extent
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]
@@ -316,21 +531,17 @@
         haku))
 
 
+(defn hae-urakan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = '" nimi "';"))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]
    (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja))
   ([nimi kayttaja payload]
    (kutsu-palvelua (:http-palvelin jarjestelma) nimi kayttaja payload)))
-
-(defn arvo-vapaa-portti
-  "Arpoo vapaan portinnumeron ja palauttaa sen"
-  []
-  (let [s (doto (java.net.ServerSocket. 0)
-            (.setReuseAddress true))]
-    (try
-      (.getLocalPort s)
-      (finally (.close s)))))
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
@@ -349,32 +560,17 @@
 (def muhoksen-paallystysurakan-paasopimuksen-id (atom nil))
 (def muhoksen-paikkausurakan-id (atom nil))
 (def muhoksen-paikkausurakan-paasopimuksen-id (atom nil))
+(def kemin-alueurakan-2019-2023-id (atom nil))
+(def iin-maanteiden-hoitourakan-2021-2026-id (atom nil))
+(def iin-maanteiden-hoitourakan-lupaussitoutumisen-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
+(def kemin-aluerakennus-id (atom nil))
+
+(def paikkauskohde-tyomenetelmat (atom nil))
 
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
-
-(defn hae-oulun-alueurakan-2005-2012-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
-
-
-(defn hae-tampereen-alueurakan-2017-2022-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
-
-(defn hae-helsingin-vesivaylaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
-
-(defn hae-pyhaselan-vesivaylaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Pyhäselän urakka';"))))
 
 (defn hae-merivaylien-hallintayksikon-id []
   (ffirst (q (str "SELECT id
@@ -385,16 +581,6 @@
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
                    WHERE  nimi = 'Sisävesiväylät';"))))
-
-(defn hae-saimaan-kanavaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Saimaan kanava';"))))
-
-(defn hae-joensuun-kanavaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Joensuun kanava';"))))
 
 (defn hae-saimaan-kanavaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
@@ -469,7 +655,7 @@
    (let [haku-fn (if q-map? q-map q)]
      (haku-fn (str "SELECT id, toimenpidekoodi, tyyppi
            FROM kan_toimenpide
-           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))))
+           WHERE urakka=" (hae-urakan-id-nimella "Saimaan kanava"))))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
@@ -582,24 +768,35 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-kemin-paallystysurakan-2019-2023-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Kemin päällystysurakka'"))))
+
+(defn hae-aktiivinen-oulu-testi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Testi'"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
 
+(defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Iin MHU 2021-2026'"))))
+
+(defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
+  (ffirst (q (str "SELECT id
+                   FROM   lupaus_sitoutuminen
+                   WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024')"))))
-
-(defn hae-rovaniemen-maanteiden-hoitourakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))))
-(defn hae-ivalon-maanteiden-hoitourakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'"))))
 
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
@@ -613,6 +810,9 @@
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
+
+(defn hae-kemin-aluerakennus-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Kemin Alueurakoitsija Oy'"))))
 
 (defn hae-kajaanin-alueurakan-2014-2019-id []
   (ffirst (q (str "SELECT id
@@ -685,19 +885,23 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
+(defn hae-toimenpideinstanssi-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   toimenpideinstanssi
+                      WHERE  nimi = '%s'"
+                     nimi))))
+
+(defn hae-kittila-mhu-talvihoito-tpi-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
+
+(defn hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Hallinnolliset toimenpiteet TP"))
+
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
   FROM toimenpidekoodi
   WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
   emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
-
-(defn hae-yha-paallystysurakan-id []
-  (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'")))
-
-(defn hae-muhoksen-paallystysurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
 (defn hae-muhoksen-paallystysurakan-tpi-id []
   (ffirst (q (str "SELECT id
@@ -707,35 +911,17 @@
 (defn hae-muhoksen-paallystysurakan-testikohteen-id []
   (ffirst (q (str "SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi'"))))
 
-(defn hae-utajarven-paallystysurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Utajärven päällystysurakka'"))))
-
-(defn hae-oulun-tiemerkintaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2018'"))))
-
-(defn hae-lapin-tiemerkintaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
+(defn hae-muhoksen-paallystysurakan-testipaikkauskohteen-id []
+  (ffirst (q (str "SELECT id FROM paikkauskohde WHERE nimi = 'Testikohde Muhoksen paallystysurakassa'"))))
 
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2018'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
 
-(defn hae-muhoksen-paikkausurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Muhoksen paikkausurakka'"))))
-
-(defn hae-pudasjarven-alueurakan-id []
-  (ffirst (q (str "SELECT id        x
-                   FROM   urakka
-                   WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
+(defn hae-pudasjarven-alueurakan-paasopimuksen-id []
+  (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
+                           (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null)"))))
 
 (defn hae-oulun-alueurakan-2005-2010-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
@@ -766,15 +952,9 @@
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
-(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
-
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
+                   WHERE nimi = 'Ouluntie' AND
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Utajärven päällystysurakka')
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)
                    AND poistettu IS FALSE"))))
@@ -797,32 +977,11 @@
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
-(defn hae-yllapitokohde-nakkilan-ramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Nakkilan ramppi';"))))
-
-(defn hae-yllapitokohde-oulaisten-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulaisten ohitusramppi';"))))
-
-(defn hae-yllapitokohde-oulun-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulun ohitusramppi';"))))
-
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    nimi = 'Kuusamontien testi'
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
-
-(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   tr_numero = 20
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -831,6 +990,56 @@
 (defn hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa [tiemerkintaurakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
+
+(defn hae-yllapitokohteen-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
+
+(defn hae-lupaus-vaihtoehdot [lupaus-id]
+  (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
+
+(defn hae-pot2-testi-idt []
+  (let [{kohde-id :id pot2-id :pot2-id} (first
+                                          (q-map (str "SELECT k.id,
+                                                              p.id as \"pot2-id\"
+                                                         FROM yllapitokohde k
+                                                         JOIN paallystysilmoitus p ON p.paallystyskohde = k.id
+                                                        WHERE nimi = 'Tärkeä kohde mt20'")))
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")]
+    [kohde-id pot2-id urakka-id]))
+
+(defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
+  (u (str "UPDATE paallystysilmoitus
+              SET paatos_tekninen_osa = 'hyvaksytty',
+                  tila = 'valmis'
+            WHERE paallystyskohde = " kohde-id ";"))
+  (u (str "UPDATE yllapitokohde
+              SET velho_lahetyksen_aika = NULL,
+                  velho_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE id = " kohde-id ";"))
+  (u (str "UPDATE pot2_paallystekerros
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE jarjestysnro = 1 AND
+                    pot2_id = " pot2-id ";"))
+  (u (str "UPDATE pot2_alusta
+              SET velho_lahetyksen_aika = NULL,
+                  velho_rivi_lahetyksen_tila = 'ei-lahetetty',
+                  velho_lahetyksen_vastaus = NULL
+              WHERE pot2_id = " pot2-id ";")))
+
+(defn poista-paallystysilmoitus-paallystyskohtella [paallystyskohde-id]
+  (u (str "DELETE FROM pot2_paallystekerros
+            WHERE pot2_id = (SELECT id FROM paallystysilmoitus
+                              WHERE paallystyskohde = " paallystyskohde-id ");"))
+  (u (str "DELETE FROM pot2_alusta
+            WHERE pot2_id = (SELECT id FROM paallystysilmoitus
+                              WHERE paallystyskohde = " paallystyskohde-id ");"))
+  (u (str "DELETE FROM paallystysilmoitus WHERE paallystyskohde = " paallystyskohde-id ";")))
 
 (defn pura-tr-osoite [[numero aosa aet losa loppuet kaista ajorata]]
   {:numero numero
@@ -851,6 +1060,11 @@
     pura-tr-osoite
     (q (str "SELECT tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_kaista, tr_ajorata
              FROM yllapitokohdeosa WHERE yllapitokohde = " kohde-id ";"))))
+
+(defn pvm-vali-sql-tekstina
+  [sarakkeen-nimi between-str]
+  (str " AND " sarakkeen-nimi
+       " BETWEEN " between-str))
 
 ;; Määritellään käyttäjiä, joita testeissä voi käyttää
 ;; HUOM: näiden pitää täsmätä siihen mitä testidata.sql tiedostossa luodaan.
@@ -881,6 +1095,9 @@
                             :organisaatioroolit (or kayttajan-organisaatioroolit {})
                             :organisaation-urakat (or organisaation-urakat #{}))))
 
+(defn hae-paikkauskohde-tyomenetelmat []
+  (q "select id, nimi, lyhenne from paikkauskohde_tyomenetelma;"))
+
 ;; id:1 Tero Toripolliisi, POP ELY aluevastaava
 
 (def +kayttaja-tero+ (hae-testi-kayttajan-tiedot {:etunimi "Tero" :sukunimi "Toripolliisi" :roolit #{"ELY_Urakanvalvoja"}}))
@@ -889,11 +1106,19 @@
 
 (def +kayttaja-jvh+ (hae-testi-kayttajan-tiedot {:etunimi "Jalmari" :sukunimi "Järjestelmävastuuhenkilö" :roolit #{"Jarjestelmavastaava"}}))
 
+;; Organisaation 14 = Destian urakoitsija
+(def +kayttaja-uuno+ (hae-testi-kayttajan-tiedot {:etunimi "Uuno" :sukunimi "Urakoitsija"}))
+
 (def +kayttaja-yit_uuvh+ (hae-testi-kayttajan-tiedot {:etunimi "Yitin" :sukunimi "Urakkavastaava"}))
 
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
+(def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"}))
+
+(def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"}))
+
+(def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
 ;; Sepolla ei ole oikeutta mihinkään. :(
 
@@ -924,30 +1149,41 @@
   (pudota-ja-luo-testitietokanta-templatesta)
   (testit))
 
-(defn urakkatieto-fixture [testit]
-  (pudota-ja-luo-testitietokanta-templatesta)
+(defn urakkatieto-alustus! []
   (reset! testikayttajien-lkm (hae-testikayttajat))
-  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
+  (reset! oulun-alueurakan-2005-2010-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012"))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-paallystysurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
-  (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
+  (reset! muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
-  (reset! muhoksen-paikkausurakan-id (hae-muhoksen-paikkausurakan-id))
+  (reset! muhoksen-paikkausurakan-id (hae-urakan-id-nimella "Muhoksen paikkausurakka"))
   (reset! muhoksen-paikkausurakan-paasopimuksen-id (hae-muhoksen-paikkausurakan-paasopimuksen-id))
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id))
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
-  (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
+  (reset! pudasjarven-alueurakan-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012"))
   (reset! yit-rakennus-id (hae-yit-rakennus-id))
-  (testit)
+  (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
+  (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat))
+  (reset! iin-maanteiden-hoitourakan-2021-2026-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
+  (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)))
+
+(defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id nil)
   (reset! pudasjarven-alueurakan-id nil))
+
+(defn urakkatieto-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
+  (urakkatieto-alustus!)
+  (testit)
+  (urakkatieto-lopetus!))
 
 (use-fixtures :once urakkatieto-fixture)
 
@@ -995,6 +1231,38 @@
    :organisaation-urakat #{@oulun-alueurakan-2014-2019-id}
    :organisaatioroolit {}
    :urakkaroolit {@oulun-alueurakan-2014-2019-id #{"laadunvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-laadunvalvoja []
+  {:sahkoposti "keppi.laatujarvih@example.com", :kayttajanimi "KeminLaatu", :puhelin 123123123, :sukunimi "Laatujärvi",
+   :roolit #{"Laadunvalvoja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id, :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {} #_{@kemin-aluerakennus-id #{"laadunvalvoja"}}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Laadunvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "ely@example.org", :kayttajanimi "ely-kemin-urakanvalvoja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 417,
+   :organisaatio {:id 10, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
+
+(defn kemin-alueurakan-2019-2023-paakayttaja []
+  {:sahkoposti "keppi.paajarvi@example.com", :kayttajanimi "KeminPaa", :puhelin 123123123, :sukunimi "Pääjärvi",
+   :roolit #{"Paakayttaja"}, :id 18, :etunimi "Keppi",
+   :organisaatio {:id @kemin-aluerakennus-id :nimi "Kemin Aluerakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
+
+(defn lapin-paallystyskohteiden-tilaaja []
+  {:sahkoposti "tilaaja@example.org", :kayttajanimi "tilaaja",
+   :roolit #{"ELY_Urakanvalvoja"}, :id 20,
+   :organisaatio {:id 13, :nimi "Lappi", :tyyppi "hallintayksikko"},
+   :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
+   :organisaatioroolit {}
+   :urakkaroolit {@kemin-alueurakan-2019-2023-id, #{"ELY_Urakanvalvoja"}}})
 
 (defn ei-ole-oulun-urakan-urakoitsijan-urakkavastaava []
   {:sahkoposti "yit_uuvh@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
@@ -1074,9 +1342,71 @@
 (def portti nil)
 (def urakka nil)
 
-(def testi-pois-kytketyt-ominaisuudet (component/using
-                                        (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                        [:http-palvelin]))
+(def harja-tarkkailija nil)
+(def ^:dynamic *uudelleen-kaynnistaja-mukaan?* false)
+
+(defn lopeta-harja-tarkkailija! []
+  (alter-var-root #'harja-tarkkailija component/stop))
+
+(defn pystyta-harja-tarkkailija! []
+  (alter-var-root #'harja-tarkkailija
+                  (fn [tarkkailija]
+                    (when tarkkailija
+                      (component/stop tarkkailija))
+                    (component/start
+                      (component/system-map
+                        :db-event (event-tietokanta/luo-tietokanta testitietokanta)
+                        :klusterin-tapahtumat (component/using
+                                                (tapahtumat/luo-tapahtumat {:loop-odotus 100})
+                                                {:db :db-event})
+                        :tapahtuma (component/using
+                                     (tapahtuma/->Tapahtuma)
+                                     [:klusterin-tapahtumat :rajapinta])
+                        :rajapinta (rajapinta/->Rajapintakasittelija)
+                        :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}
+                                                                                                :itmf {:paivitystiheys-ms (* 1000 10)}}
+                                                                                               (atom nil))
+                                                 (reify component/Lifecycle
+                                                   (start [this]
+                                                     this)
+                                                   (stop [this]
+                                                     this))))))))
+
+(defn jms-kasittely [kuuntelijoiden-lopettajat]
+  (when *aloitettavat-jmst*
+    (let [jms-kaynnistaminen! (fn []
+                                (when (contains? *aloitettavat-jmst* "sonja")
+                                  (<!! (jms/aloita-jms (:sonja jarjestelma))))
+                                (when (contains? *aloitettavat-jmst* "itmf")
+                                  (<!! (jms/aloita-jms (:itmf jarjestelma))))
+                                (when *jms-kaynnistetty-fn*
+                                  (*jms-kaynnistetty-fn*)))]
+      (if *lisattavia-kuuntelijoita?*
+        (reset! sonja-aloitus-go
+                (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
+                                                      (timeout 5000)])
+                          sonja-kuuntelijat (get jms-kuuntelijat "sonja")
+                          itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
+                      (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))
+                        (doseq [[kanava f] sonja-kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
+                      (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
+                        (doseq [[kanava f] itmf-kuuntelijat]
+                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
+                      (jms-kaynnistaminen!))))
+        (jms-kaynnistaminen!)))))
+
+(defn tietokantakomponentti-fixture [testit]
+  #_(pystyta-harja-tarkkailija!)
+  (alter-var-root #'jarjestelma
+                  (fn [_]
+                    (component/start
+                      (component/system-map
+                        :db (tietokanta/luo-tietokanta testitietokanta)))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop)
+  #_(lopeta-harja-tarkkailija!))
 
 (defmacro laajenna-integraatiojarjestelmafixturea
   "Integraatiotestifixturen rungon rakentava makro. :db, :http-palvelin ja :integraatioloki
@@ -1085,22 +1415,21 @@
   `(fn [testit#]
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
+     (pystyta-harja-tarkkailija!)
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
                          (component/system-map
                            :db (tietokanta/luo-tietokanta testitietokanta)
                            :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                           :klusterin-tapahtumat (component/using
-                                                   (tapahtumat/luo-tapahtumat)
-                                                   [:db])
 
                            :todennus (component/using
                                        (todennus/http-todennus)
-                                       [:db :klusterin-tapahtumat])
+                                       [:db])
                            :http-palvelin (component/using
                                             (http/luo-http-palvelin portti true)
-                                            [:todennus])
+                                            [:db :todennus])
                            :integraatioloki (component/using
                                               (integraatioloki/->Integraatioloki nil)
                                               [:db])
@@ -1108,18 +1437,26 @@
                            :liitteiden-hallinta (component/using
                                                   (liitteet/->Liitteet nil)
                                                   [:db])
-                           :pois-kytketyt-ominaisuudet (component/using
-                                                         (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet #{})
-                                                         [:http-palvelin])
 
                            ~@omat))))
-
+     (when *kaynnistyksen-jalkeen-hook*
+       (*kaynnistyksen-jalkeen-hook*))
      (alter-var-root #'urakka
                      (fn [_#]
                        (ffirst (q (str "SELECT id FROM urakka WHERE urakoitsija=(SELECT organisaatio FROM kayttaja WHERE kayttajanimi='" ~kayttaja "') "
                                        " AND tyyppi='hoito'::urakkatyyppi ORDER BY id")))))
-     (testit#)
-     (alter-var-root #'jarjestelma component/stop)))
+     ;; aloita-sonja palauttaa kanavan.
+     (binding [*lisattavat-kuuntelijat* (chan)]
+       (let [kuuntelijoiden-lopettajat# (atom [])]
+         (jms-kasittely kuuntelijoiden-lopettajat#)
+         (testit#)
+         (when (not (empty? @kuuntelijoiden-lopettajat#))
+           (doseq [lopetus-fn# @kuuntelijoiden-lopettajat#]
+             (lopetus-fn#)))))
+     (when *ennen-sulkemista-hook*
+       (*ennen-sulkemista-hook*))
+     (alter-var-root #'jarjestelma component/stop)
+     (lopeta-harja-tarkkailija!)))
 
 (defn =marginaalissa?
   "Palauttaa ovatko kaksi lukua samat virhemarginaalin sisällä. Voi käyttää esim. doublelaskennan
@@ -1234,8 +1571,7 @@
             {:timeout-in-ms 10
              :concurrency (count kutsut)
              :requests (count kutsut)}
-            (when (and (false? aja-raportti?)
-                       (false? (ollaanko-jenkinsissa?)))
+            (when (env/env "HARJA_AJA_GATLING_RAPORTTI" false)
               ;; Oletuksena ei haluta kirjoittaa levylle raportteja,
               ;; eli luodaan oma raportteri, joka ei tee mitään
               {:reporter {:writer (fn [_ _ _])
@@ -1251,17 +1587,48 @@
   (let [testattava_ (gensym "testattava")
         f_ (gensym "f")
         loput_ (gensym "loput")]
-     `(list
-       ~@(let [testattava_ testattava]
-          (loop [[f_ & loput_] fn-listat
-                 iss# []]
-            (if (nil? f_)
-              iss#
-              (let [msg?# (string? (first loput_))
-                    is-lause# (if msg?#
-                                `(is (list ~f_ ~testattava_) (first '~loput_))
-                                `(is (list ~f_ ~testattava_)))]
-                (recur (if msg?#
-                         (rest loput_)
-                         loput_)
-                       (conj iss# is-lause#)))))))))
+    `(let [~testattava_ ~testattava]
+       ~@(loop [[f_ & loput_] fn-listat
+                iss# []]
+           (if (nil? f_)
+             iss#
+             (let [msg?# (string? (first loput_))
+                   is-lause# (if msg?#
+                               `(is (~f_ ~testattava_) ~(first loput_))
+                               `(is (~f_ ~testattava_)))]
+               (recur (if msg?#
+                        (rest loput_)
+                        loput_)
+                      (conj iss# is-lause#))))))))
+
+(defn onnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn epaonnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn hae-ulos-lahtevat-integraatiotapahtumat []
+  (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+          FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
+
+(defn hae-kaikki-integraatioviestit []
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
+                      osoite, kasitteleva_palvelin
+                 FROM integraatioviesti;")))
+
+(defn nykyhetki-iso8061-formaatissa-menneisyyteen
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 86400 1000)))))
+
+(defn nykyhetki-iso8061-formaatissa-tulevaisuuteen
+  "Anna määrä parametriin, että montako päivää siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
+

@@ -5,9 +5,11 @@
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuera]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 ;; Jos summa on 0 euroa, summaksi asetetaan 1 euro. Sampo-järjestelmän vaatimus.
 (deftest tarkista-kokonaishintaisten-vuosisummien-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         odotettu [{:alkupvm "2014-01-01T00:00:00.0", :loppupvm "2014-12-31T00:00:00.0", :summa 10500M}
                   {:alkupvm "2015-01-01T00:00:00.0", :loppupvm "2015-12-31T00:00:00.0", :summa 31510M}
                   {:alkupvm "2016-01-01T00:00:00.0", :loppupvm "2016-12-31T00:00:00.0", :summa 1}
@@ -24,28 +26,8 @@
     (is (= 6 (count vuosittaiset-summat)))
     (is (= odotettu vuosittaiset-summat))))
 
-;; Jos summa on 0 euroa,  summaksi asetetaan 1 euro. Sampo-järjestelmän vaatimus.
-(deftest tarkista-yksikkohintaisten-vuosisummien-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
-        odotettu [{:alkupvm "2014-01-01T00:00:00.0", :loppupvm "2014-12-31T00:00:00.0", :summa 300M}
-                  {:alkupvm "2015-01-01T00:00:00.0", :loppupvm "2015-12-31T00:00:00.0", :summa 900M}
-                  {:alkupvm "2016-01-01T00:00:00.0", :loppupvm "2016-12-31T00:00:00.0", :summa 1}
-                  {:alkupvm "2017-01-01T00:00:00.0", :loppupvm "2017-12-31T00:00:00.0", :summa 1}
-                  {:alkupvm "2018-01-01T00:00:00.0", :loppupvm "2018-12-31T00:00:00.0", :summa 1}
-                  {:alkupvm "2019-01-01T00:00:00.0", :loppupvm "2019-12-31T00:00:00.0", :summa 1}]
-        numero (ffirst (q "SELECT numero
-                           FROM maksuera
-                           WHERE nimi = 'Oulu Talvihoito TP ME 2014-2019' AND
-                                 tyyppi = 'yksikkohintainen';"))
-        maksuera (hae-maksueran-tiedot db numero)
-        vuosittaiset-summat (tee-vuosittaiset-summat db numero maksuera)]
-
-    (is (= 6 (count vuosittaiset-summat)))
-    (is (= odotettu vuosittaiset-summat))))
-
-
 (deftest tarkista-muiden-maksuerien-vuosisummien-muodostus
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         odotettu [{:alkupvm "2014-01-01T00:00:00.0"
                    :loppupvm "2014-12-31T00:00:00.0"
                    :summa 1}

@@ -1,11 +1,13 @@
 (ns harja.views.urakka.laadunseuranta
   (:require [reagent.core :refer [atom]]
+            [tuck.core :as tuck]
             [harja.ui.bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
+            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeama-tiedot]
             [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
@@ -14,6 +16,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.urakka :as urakka]))
 
@@ -42,7 +45,7 @@
                     (istunto/ominaisuus-kaytossa? :vesivayla)
                     (urakka/vesivaylaurakka? urakka)
                     (oikeudet/urakat-laadunseuranta-sanktiot id)))
-    :siltatarkastukset (and (= :hoito tyyppi)
+    :siltatarkastukset (and (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
                             (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
     :mobiilityokalu (not (urakka/vesivaylaurakka? urakka))))
 
@@ -61,16 +64,14 @@
 
        "Laatupoikkeamat" :laatupoikkeamat
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
-         [laatupoikkeamat/laatupoikkeamat {:nakyma tyyppi :urakka ur}])
+         [tuck/tuck tila/laatupoikkeamat laatupoikkeamat/laatupoikkeamat])
 
        (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
          [sanktiot/sanktiot])
 
        "Siltatarkastukset" :siltatarkastukset
-       (when (and (= :hoito tyyppi)
-                  (valilehti-mahdollinen? :siltatarkastukset ur)
-                  (oikeudet/urakat-laadunseuranta-siltatarkastukset id))
+       (when (valilehti-mahdollinen? :siltatarkastukset ur)
          ^{:key "siltatarkastukset"}
          [siltatarkastukset/siltatarkastukset])
 

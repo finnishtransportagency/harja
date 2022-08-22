@@ -6,10 +6,20 @@
             [harja.kyselyt.integraatiot :as q]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
-            [harja.palvelin.komponentit.tapahtumat :refer [Kuuntele]]
+            [harja.palvelin.tapahtuma-protokollat :refer [Kuuntele]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [throw+]]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:import (java.util UUID)))
+
+(def ^:const +xsd-polku+ "xsd/sahkoposti/")
+(def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")
+
+(defn validoi-sahkoposti [xml-viesti]
+  (when-not (xml/validi-xml? +xsd-polku+ +sahkoposti-xsd+ xml-viesti)
+    (log/error "Lähetettävä sähköposti XML-tiedosto ei ole sahkoposti.xsd skeeman mukainen.")
+    {:type virheet/+invalidi-xml+}))
 
 (defn- lokittaja [{il :integraatioloki db :db} nimi]
   (integraatioloki/lokittaja il db "sonja" nimi))
@@ -62,7 +72,9 @@
     ((:saapuva this))
     ((:lahteva this))
     ((:lahteva-sahkoposti-ja-liite-kuittauskuuntelija this))
-    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija))
+    (reset! kuuntelijat #{})
+    (reset! kuittaus-kuuntelijat {})
+    (dissoc this :saapuva :lahteva :lahteva-sahkoposti-ja-liite-kuittauskuuntelija :jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite))
 
   Sahkoposti
   (rekisteroi-kuuntelija! [this kuuntelija-fn]
@@ -70,11 +82,17 @@
     #(swap! kuuntelijat disj kuuntelija-fn))
 
   (laheta-viesti! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
-    (let [viesti-id (str (UUID/randomUUID))
+    (let [_ (log/info "SonjaSahkoposti :: laheta-viesti! - Lähetettiin sähköposti. Tarkista tietokannasta yksityiskohdat.")
+          _ (log/debug "SonjaSahkoposti :: laheta-viesti! Lähettäjä:" (pr-str lahettaja) "Vastaanottaja:" (pr-str vastaanottaja))
+          viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
-          viesti (xml/tee-xml-sanoma sahkoposti)]
-      {:jms-message-id (jms-lahettaja viesti viesti-id)
-       :viesti-id viesti-id}))
+          viesti (xml/tee-xml-sanoma sahkoposti)
+          ;; Valitoidaan viesti
+          virhe (validoi-sahkoposti viesti)]
+      (if (nil? virhe)
+        {:jms-message-id (jms-lahettaja viesti viesti-id)
+         :viesti-id viesti-id}
+        (throw+ virhe))))
 
   (laheta-viesti-ja-liite! [{jms-lahettaja :jms-lahettaja-sahkoposti-ja-liite} lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))

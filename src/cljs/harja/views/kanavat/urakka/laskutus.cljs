@@ -48,10 +48,11 @@
 
 (defn laskutusyhteenveto []
   [:span.laskutusyhteenveto
-   [valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
+   [:div.flex-row.alkuun
+    [valinnat/urakan-hoitokausi-ja-kuukausi @nav/valittu-urakka]
 
-   (when-let [p @laskutuksen-parametrit]
-     [upotettu-raportti/raportin-vientimuodot p])
+    (when-let [p @laskutuksen-parametrit]
+      [upotettu-raportti/raportin-vientimuodot p])]
 
    (if-let [tiedot @laskutus-tiedot]
      [muodosta-html (assoc-in tiedot [1 :tunniste] :laskutus-kanavat)]

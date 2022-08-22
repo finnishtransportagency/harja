@@ -1,3 +1,4 @@
+
 # Väylän Harja-järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
@@ -8,6 +9,19 @@ Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
 Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
+
+Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa sijaita sellaisen kansion alla, jonka nimessä on - -merkki. 
+Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä. 
+Esimerkiksi näin:
+```
+~/work ❯❯❯ tree -aL 1 harjaroot
+harjaroot
+├── .harja
+├── harja
+├── harja-infra
+├── harja-jenkins
+└── harja-testidata
+```
 
 Harja repon hakemistorakenne:
 
@@ -37,71 +51,140 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
+- .circleci/                (CircleCi konfiguraatio, mm. docker [imaget](.circleci/README.md) käytössä CircleCi ymperistössä)
+
 ## Kehitysympäristön pystyttäminen
 
-### Kehitystyökalut
+#### Paikallisesti
 
-Asenna Leiningen:
-http://leiningen.org/
+1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
+2. Asenna Docker: www.docker.com/
+3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
 
-Asenna tarvittavat kehitystyökalut: vagrant, ansible, virtualbox, Java 8.
-Vaihtoehtoisesti voit käyttää dockeria.
+    `sh devdb_up.sh`
 
-### VirtualBox
+4. Asenna tarvittavat työkalut `npm install`
+5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
-Käynnistä VirtualBox<br/>
-<code>
-cd vagrant<br/>
-vagrant up
-</code>
+    `lein do clean, compile, repl`
 
-Jos vagrant up epäonnistuu, aja ensin:<br/>
-<code>
-vagrant box add geerlingguy/centos7 https://github.com/tommy-muehle/puppet-vagrant-boxes/releases/download/1.1.0/centos-7.0-x86_64.box
-</code>
+7. Käännä frontend ja käynnistä Figwheel:
 
-VirtualBoxissa pyörii tietokantapalvelin. Harjan kehitysympäristössä on kaksi eri kantaa:
-- **harja** - Varsinaista kehitystyötä varten
-- **harjatest** - Testit ajetaan tätä kantaa vasten
+    `sh kaynnista_harja_front_dev.sh`
 
-Testidata löytyy tiedostosta testidata.sql, joka ajetaan molempiin kantoihin.
+Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
+Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
+Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
+ja restartoida backend `lein repl` kommennolla. 
 
-### Tunnukset ulkoisiin järjestelmiin
+8. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
+Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
 
-Hae harja-testidata repositoriosta .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+9. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6., 7. ja 8.
+   askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
 
-### Kääntäminen
+   `sh kaynnista_cypress.sh`
 
-Siirry projektin juureen. Käännä backend & käynnistä REPL:<br/>
-<code>
-lein do clean, compile, repl
-</code>
 
-Käännä frontend ja käynnistä Figwheel:<br/>
-<code>
-lein figwheel
-</code>
 
-Harjan pitäisi olla käynnissä ja vastata osoitteesta localhost:8000 tai localhost:3000
+#### Docker compose
 
-### Kehitystyötä helpottavat työkalut
+1. Asenna docker ja docker compose
+2. Jos olet linuxilla, niin lisää itsesi `docker` ryhmään, jos näin ei jo ole. Lisää tietoja
+   [täältä](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
+3. Aja `bash sh/dc/aja-harja-dokkerissa.sh`
 
-- **unit.sh** ajaa testit ja näyttää tulokset kehittäjäystävällisessä muodossa
+## Kirjautuminen ja ModHeader
 
-### Docker paikallinen kehitysympäristö
+Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
+Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä, pyydä apua tiimiläiseltä pikaviestimen kautta miten homma tehdään.
 
-Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää myös dockerilla.
-Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita, mutta sovellus
-logittaa virheitä jos JMS brokeriin ei saada yhteyttä.
+Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
+Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
+Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä frontissa että backissä. Frontissa yleensä
+piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
+luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
-* Tietokanta: ks. tietokanta/devdb_up.sh ja tietokanta/devdb_down.sh
-* ActiveMQ: docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+Lisätietoa käyttäjärooleista ohjelmistokehittäjän näkökulmasta löytyy Knowledgesta otsikolla Autentikointi ja autorisointi
+
+Seuraavat headerit tuettuna:
+
+* OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
+* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
+    * Järjestelmävastaava: Jarjestelmavastaava
+    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
+    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
+    * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
+* OAM_ORGANIZATION: Organisaation nimi, esim. "Väylä" tai "YIT Rakennus Oy"
+* OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
+* OAM_USER_FIRST_NAME: Etunimi
+* OAM_USER_LAST_NAME: Sukunimi
+* OAM_USER_MAIL: Sähköpostiosoite
+* OAM_USER_MOBILE: Puhelinnumero
+
+Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
+jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
+
+## Docker - paikallinen kehitysympäristö
+
+Kannan restart 
+
+```bash
+sh devdb_restart.sh
+```
+
+Kanta alas 
+
+```bash
+sh devdb_down.sh
+```
+
+Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
+Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
+ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
+
+Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
+
+* Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
+* ActiveMQ: `docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
 
 Kantaimagen päivitys: docker pull solita/harjadb
 
-Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up.
+Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up. (käytä mieluummin ym. sh devdb_* skriptejä.)
+
+## Docker compose - paikallinen kehitysympäristö
+
+Docker compose:n konfiguroimisessa on käytetty versiota kaksi kolmosen sijasta, koska kakkonen sopii paikalliseen devaukseen
+paremmin. 
+
+- https://github.com/docker/compose/issues/4513
+- https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/#_cpu
+
+MAC käyttäjillä saattaa olla hieman hankaluuksia Docker composen hitauden kanssa, koska datan siirtäminen hostin (Macin) ja
+konttien välillä on melkoisen hidasta, mutta tämä ongelma saatetaan korjata joskus
+ 
+- https://www.amazee.io/blog/post/docker-on-mac-performance-docker-machine-vs-docker-for-mac
+- https://docs.docker.com/docker-for-mac/osxfs-caching/
+
+
+Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC käyttäjille tämän hitauden takia.
+
+- Käytetään `delegated` voluumia docker composessa
+- Kakutetaan leiningenin trampoliinit käyttämällä `LEIN_FAST_TRAMPOLINE` env muuttujaa
+  - https://github.com/technomancy/leiningen/wiki/Faster
+
+#### Ongelmia
+
+- Uudet konfiguraatiot ei heijastu konteissa.
+  - Kokeile poistaa trampoliini cachet. Ovat kansiossa `target/trampolines`
 
 ## Dokumentaatio
+
+### Uuden kehittäjän ohjeet
+
+ - Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
+ - Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
 
 ### Tietokanta
 
@@ -120,6 +203,9 @@ Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1
 
 Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
 
+#### Tietokantataulujen nimeäminen
+Sovittiin tiimin kesken, että uusien isompien kokonaisuuksien osalta nimetään osa-alueen taulut yhteisellä etuliitteellä. Esimerkiksi pot2_, pot2_mk_ sekä lupaus_. Näin on helppo löytää kaikki tiettyyn osa-alueeseen liittyvät taulut.
+
 ### Namespacet
 Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Olemassa olon syy?
@@ -127,15 +213,61 @@ Jokaisen namespacen alkuun kirjataan seuraavat asiat:
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
+### Tiedostojen nimeäminen
+Tiimin päätös 9/2021:
+- Alkuosa: ominaisuuden nimi, mielellään yksikössä
+- Loppuosa: kerroksen nimi
+
+esim.
+
+```
+lupaus_palvelu.clj
+lupaus_kyselyt.clj
+lupaus_domain.cljc
+
+lupaus_palvelu_test.clj
+lupaus_domain_test.clj
+
+lupaus_kyselyt.sql
+lupaus_testidata.sql
+
+lupaus_tiedot.cljs
+lupaus_nakyma.cljs
+lupaus_tyylit.less
+
+valikatselmus_palvelu.clj
+...
+```
+
+#### Miksi?
+
+Uniikit nimet helpottavat tiedostojen etsimistä.
+
+Nimeä voi käyttää sellaisenaan require-aliaksena ilman törmäyksiä:
+```
+(:require
+  [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
+  [harja.domain.lupaus-domain :as lupaus-domain]
+  [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
+```
+Ehdotan, että uudet ominaisuudet nimetään tällä tavalla.
+Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan toiminnallisuuteen.
+
 ## Testaus
 
 Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja
-e2e testit (erillisessä projektissa).
+e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä tehtyjä e2e-testejä, joita on hyvä suosia. Uusia Selenium-testejä ei kannata enää kirjoitella.
 
 ### Fronttitestit
 
-Fronttitestit ajetaan komennolla: lein doo phantom test
-Laadunseurantatyökalun testit ajetaan komennolla: lein doo phantom laadunseuranta-test
+Fronttitestit ajetaan komennolla: `lein doo phantom test`
+Taikka näin:  `lein with-profile +test doo phantom test once`
+
+Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
+
+Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
+Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
 
 Odotetaan, että kaikilla frontin nimiavaruuksilla on testitiedosto ja vähintään yksi
 testi.
@@ -148,7 +280,7 @@ Täysiä työnkulkuja, joissa on useita komponentteja, ei tarvitse tässä test 
 
 Testaa UI tilassa reaktioiden oikea toiminta ja tuck event käsittely.
 
-### Backend testit
+### Backend-testit
 
 Backend testit testaavat harjan palvelinta ja käytössä on oikea tietokanta.
 Kaikille palveluille on syytä tehdä testi, joka testaa vähintään onnistuvan
@@ -156,10 +288,12 @@ tapauksen ja mielellään myös virheellisen kutsun.
 
 Pyritään testaamaan kaikki CRUD operaatiot.
 
-Oikeustarkistuksien olemassaolo varmistetaan automaattisesti palvelukutsuissa,
-mutta eri käyttäjien pääsy tiettyyn palveluun on syytä testata sen palvelun testeissä.
+Oikeustarkistuksien olemassaolo varmistetaan palvelukutsuissa, ja puuttuva oikeustarkistus lokitetaan varoitustasolla.
+Kehitystiimin linja on, että jokaisen HTTP-palvelun tulee vaatia joko luku- tai kirjoitusoikeus käyttäjältä.
+
+Eri käyttäjien pääsy tiettyyn palveluun on syytä testata myös sen palvelun testeissä.
 Testaa palvelukutsuja ainakin kahdella käyttäjällä: sellaisella joka pääsee ja sellaisella
-joka ei.
+joka ei pääse.
 
 ### End-to-end testit
 
@@ -170,11 +304,32 @@ oikein eikä harja räsähdä.
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
 
+### Tievelho
+
+Testiajoja voi suorittaa kutsumalla REPL:ssa:
+```
+(in-ns 'harja.palvelin.integraatiot.velho.velho-komponentti)
+(def j harja.palvelin.main/harja-jarjestelma)
+(def asetukset (get-in j [:velho-integraatio :asetukset]))
+(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
+(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset)
+```
+
+Kannattaa huomata, että localhostilla ei löydy kovin montaa MHU:ta, joten iso osa kohteiste ei
+kohdistu urakoihin oikein ja siitä aiheutuu virheitä.
+
+Pitää myös katsoa `varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle` aikaleimoja, jos haluaa
+hakujen kohdistuvan tietyn päivämäärän jälkeisiin Velhon muutoksiin.
+
+## Debug lokituksen näyttäminen
+
+Muokkaa asetukset.edn:aa ja muuta rivillä: 
+
+
 ## Tietokanta
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
 
-Ohjeet kehitysympäristön tietokannan pystytykseen Vagrantilla löytyvät tiedostosta `vagrant/README.md`
 
 ## Staging tietokannan sisällön muokkaus
 
@@ -195,80 +350,10 @@ ssh -L7777:localhost:5432 harja-db1-stg
  * Luo yhteys esim. käyttämäsi IDE:n avulla,
     * tietokanta: harja, username: flyway salasana: kysy tutuilta
 
-## Autogeneroi nuolikuvat SVG:nä
-Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
-Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
-puhtaat -namespacessa määriteltyihin.
-
-(def varit {"punainen" "rgb(255,0,0)"
-            "oranssi" "rgb(255,128,0)"
-            "keltainen" "rgb(255,255,0)"
-            "lime" "rgb(128,255,0)"
-	    "vihrea" "rgb(0,255,0)"
- 	    "turkoosi" "rgb(0,255,128)"
- 	    "syaani" "rgb(0,255,255)"
- 	    "sininen" "rgb(0,128,255)"
- 	    "tummansininen" "rgb(0,0,255)"
- 	    "violetti" "rgb(128,0,255)"
- 	    "magenta" "rgb(255,0,255)"
- 	    "pinkki" "rgb(255,0,128)"})
-
-(for [[vari rgb] varit]
-  (spit (str "resources/public/images/nuoli-" vari ".svg")
-  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
-   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
-</svg>")))
-
-## Konvertoi SVG kuvia PNG:ksi
-
-Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
-> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
-
-Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
-
-kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
-
-> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
-
-## Aja cloveragelle testikattavuusraportti
-Hae työkalu: https://github.com/jarnovayrynen/cloverage
-Työkalun cloverage/cloverage kansiossa aja "lein install"
-Harjan juuressa aja "env CLOVERAGE_VERSION=1.0.8-SNAPSHOT lein cloverage"
 
 ## Tieverkon tuonti kantaan
 
 Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
-
-
-## Kirjautuminen
-
-Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
-Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä.
-
-Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
-Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
-Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä frontissa että backissä. Frontissa yleensä
-piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
-luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
-
-Seuraavat headerit tuettuna:
-
-* OAM_REMOTE_USER: käyttäjätunnus, esim. LX123123
-* OAM_GROUPS: pilkulla erotettu lista ryhmistä (roolit ja niiden linkit). Esim:
-    * Järjestelmävastaava: Jarjestelmavastaava
-    * ELY urakanvalvoja: <urakan-SAMPO-ID>_ELY_Urakanvalvoja
-    * Urakoitisijan laatupäällikkö: <urakoitsijan-ytunnus>_Laatupaallikko
-    * Urakan vastuuhenkilö: <urakan-sampoid>_vastuuhenkilo
-* OAM_ORGANIZATION: Organisaation nimi, esim. "Väylä" tai "YIT Rakennus Oy"
-* OAM_DEPARTMENTNUMBER: Organisaation ELYNUMERO, esim. 12 (POP ELY)
-* OAM_USER_FIRST_NAME: Etunimi
-* OAM_USER_LAST_NAME: Sukunimi
-* OAM_USER_MAIL: Sähköpostiosoite
-* OAM_USER_MOBILE: Puhelinnumero
-
-Staging-ympäristössä voidaan lisäksi testata eri rooleja testitunnuksilla,
-jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja repoon).
 
 ## Labyrintin SMS-gateway
 
@@ -300,9 +385,7 @@ upstream sms-kasittelija {
 
 Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
 
-Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja:
-
-    lein figwheel laadunseuranta-dev
+Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja: ks. sh kaynnista_harja_front_dev.sh
 
 Avaa selain http://localhost:3000/laadunseuranta/
 
@@ -350,7 +433,67 @@ Oikean FIM:n testikäyttö:
 
 ## Active MQ
 Käynnistys docker imagesta:
-docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 rmohr/activemq
+`docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8162:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
+Jos container on jo käytössä/tehty, niin käynnistä se:
+`docker start harja_activemq`
+Jos container ei suostu käynnistymään, poista se ja koita uudestaan - aja:
+`docker rm harja_activemq`
+
+Harjassa pyörii tällä hetkellä kaksi JMS-brokeria. Jos haluat käynnistää molemmat eri porttiin, esim ITMF:n eri portissa, saat ActiveMQ konsolin porttiin 8171 ja TCP-portin 61626 kuunteluun näin:
+`docker run -p 127.0.0.1:61626:61626 -p 127.0.0.1:8171:8171 --env UI_PORT=8171 --env TCP_PORT=61626 --name harja_activemq_itmf -dit solita/harja-activemq:5.15.9`
 
 URL konsoliin:
-localhost:8161/admin/queues.jsp (admin/admin)
+localhost:8162/admin/queues.jsp (admin/admin)
+
+
+
+# Harvoin tarvittavaa (jos koskaan)
+
+## Autogeneroi nuolikuvat SVG:nä
+Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
+Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
+puhtaat -namespacessa määriteltyihin.
+
+(def varit {"punainen" "rgb(255,0,0)"
+            "oranssi" "rgb(255,128,0)"
+            "keltainen" "rgb(255,255,0)"
+            "lime" "rgb(128,255,0)"
+	    "vihrea" "rgb(0,255,0)"
+ 	    "turkoosi" "rgb(0,255,128)"
+ 	    "syaani" "rgb(0,255,255)"
+ 	    "sininen" "rgb(0,128,255)"
+ 	    "tummansininen" "rgb(0,0,255)"
+ 	    "violetti" "rgb(128,0,255)"
+ 	    "magenta" "rgb(255,0,255)"
+ 	    "pinkki" "rgb(255,0,128)"})
+
+(for [[vari rgb] varit]
+  (spit (str "resources/public/images/nuoli-" vari ".svg")
+  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
+   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
+</svg>")))
+
+## Konvertoi SVG kuvia PNG:ksi
+
+Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
+> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
+
+Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
+
+kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
+
+> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+
+## Lisääminen `.harja` hakemistoon 
+
+Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
+salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
+* Tee muutoksia `.harja` hakemistoon, `harja-testidata` Internal [*1](#*1) repossa
+* Päivitä `harja-app` hakemisto, `harja-docker` OnPrem [*1](#*1) repossa. Sieltä löytyvät ohjeet. Muista buildata
+  "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
+* Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
+  mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
+  ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
+
+<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)

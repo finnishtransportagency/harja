@@ -43,7 +43,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :laaduntarkastusraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                 :urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))}})]
     (is (vector? vastaus))
@@ -59,15 +59,20 @@
                       {:leveys 2
                        :otsikko "Klo"}
                       {:leveys 2
-                       :otsikko "Tie"}
+                       :otsikko "Tie"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aosa"}
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aet"}
+                       :otsikko "Aet"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Losa"}
+                       :otsikko "Losa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Let"}
+                       :otsikko "Let"
+                       :tasaa :oikea}
                       {:leveys 3
                        :otsikko "Tar­kas­taja"}
                       {:leveys 8
@@ -117,15 +122,20 @@
                       {:leveys 2
                        :otsikko "Klo"}
                       {:leveys 2
-                       :otsikko "Tie"}
+                       :otsikko "Tie"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aosa"}
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aet"}
+                       :otsikko "Aet"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Losa"}
+                       :otsikko "Losa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Let"}
+                       :otsikko "Let"
+                       :tasaa :oikea}
                       {:leveys 3
                        :otsikko "Tar­kas­taja"}
                       {:leveys 8
@@ -161,15 +171,20 @@
                       {:leveys 2
                        :otsikko "Klo"}
                       {:leveys 2
-                       :otsikko "Tie"}
+                       :otsikko "Tie"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aosa"}
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Aet"}
+                       :otsikko "Aet"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Losa"}
+                       :otsikko "Losa"
+                       :tasaa :oikea}
                       {:leveys 2
-                       :otsikko "Let"}
+                       :otsikko "Let"
+                       :tasaa :oikea}
                       {:leveys 3
                        :otsikko "Tar­kas­taja"}
                       {:leveys 8

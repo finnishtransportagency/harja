@@ -5,8 +5,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.kyselyt.tarkastukset :as q-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-tarkastukselle]]))
-
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
@@ -67,7 +66,7 @@
                                              alitus))
                            :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))})
                      liitteet (:liitteet tarkastus)]
-                 (tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
+                 (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
                  (when-not tr-osoite
                    (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
@@ -76,4 +75,3 @@
          (catch Throwable t
            (log/warn t "Virhe tarkastuksen lisäämisessä")
            (throw t)))))))
-

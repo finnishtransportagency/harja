@@ -38,33 +38,33 @@ VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (S
        ((SELECT alkupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 'ha', 100.0, (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null));
 
 -- Suolauksen toteuma (materiaalitoteuma)
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
      VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
              (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
              '2015-02-19 10:23:54+02', '2015-02-18 00:00:00+02', '2015-02-18 02:00:00+02',
-             'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+             'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1800);
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 1800, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Talvisuola', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Talvisuola'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola'), 200);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 200, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
-INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
+INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
         '2015-02-20 10:23:54+02', '2015-02-19 00:00:00+02', '2015-02-19 02:00:00+02',
-        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Natriumformiaatti');
+        'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'LYV-toteuma Natriumformiaatti', (SELECT id FROM kayttaja where kayttajanimi = 'jvh'));
 -- Formiaatit eivät ole (enää) talvisuolaa, eli ei saa vaikuttaa suolasakkoon, lisätään siksi tähän paljon sitä.
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 2000);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Natriumformiaatti'), 2000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
@@ -119,38 +119,38 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019') AND paasopimus IS null),
    '2015-08-24 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Antti Ahertaja', '1524792-1', 'lyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta');
 
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara)
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id)
 VALUES
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu_eka'), '2015-08-02 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_elokuu_eka'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_akillinen_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10),
-  ((SELECT id from toteuma where lisatieto = 'lyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10);
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot1')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot2')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot_heinakuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu_eka'), '2015-08-02 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot_elokuu_eka')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot_elokuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot_elokuu2')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_muutostyo_tot_heinakuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_muutostyo_tot_elokuu_eka'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_muutostyo_tot_elokuu_eka')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_lisatyo_tot_elokuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_akillinen_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_akillinen_tot_heinakuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_akillinen_tot_elokuu')),
+  ((SELECT id from toteuma where lisatieto = 'lyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'));
 
 -- Poistettu toteuma_tehtava (ei saa vaikuttaa laskutusyhteenvedon summiin)
-INSERT INTO toteuma_tehtava (poistettu, toteuma, luotu, toimenpidekoodi, maara)
+INSERT INTO toteuma_tehtava (poistettu, toteuma, luotu, toimenpidekoodi, maara, urakka_id)
 VALUES
-  (TRUE, (SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 02:20.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10);
+  (TRUE, (SELECT id from toteuma where lisatieto = 'lyv_yht_tot_elokuu'), '2015-08-19 02:20.00', (SELECT id FROM toimenpidekoodi WHERE taso=4 AND nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'lyv_yht_tot_elokuu'));
 
-INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi)
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi, urakka_id)
 VALUES
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false);
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_heinakuu_paivanhinta')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_muutostyo_tot_elokuu_eka_paivanhinta')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_1')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_lisatyo_tot_elokuu_paivanhinta_2')),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'lyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'lyv_akillinen_tot_elokuu_paivanhinta'));
 
 --Erilliskustannukset
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
@@ -227,61 +227,20 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 -- Maksuerät ja kustannussuunnitelmat Oulun teiden hoidon urakkaan (MHU)
 
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP'), 'kokonaishintainen', 'Oulu MHU Talvihoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP'), 'akillinen-hoitotyo', 'Oulu MHU Talvihoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP'), 'muu', 'Oulu MHU Talvihoito' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP'), 'kokonaishintainen', 'Oulu MHU Liikenneympäristön hoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP'), 'akillinen-hoitotyo', 'Oulu MHU Liikenneympäristön hoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP'), 'muu', 'Oulu MHU Liikenneympäristön hoito' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'), 'kokonaishintainen', 'Oulu MHU Soratien hoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'), 'akillinen-hoitotyo', 'Oulu MHU Soratien hoito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP'), 'muu', 'Oulu MHU Soratien hoito' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), 'kokonaishintainen', 'Oulu MHU Hallinnolliset toimenpiteet' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), 'akillinen-hoitotyo', 'Oulu MHU Hallinnolliset toimenpiteet' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'), 'muu', 'Oulu MHU Hallinnolliset toimenpiteet' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP'), 'kokonaishintainen', 'Oulu MHU Päällystepaikkaukset' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP'), 'akillinen-hoitotyo', 'Oulu MHU Päällystepaikkaukset' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP'), 'muu', 'Oulu MHU Päällystepaikkaukset' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP'), 'kokonaishintainen', 'Oulu MHU MHU Ylläpito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP'), 'akillinen-hoitotyo', 'Oulu MHU MHU Ylläpito' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP'), 'muu', 'Oulu MHU MHU Ylläpito' );
-
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP'), 'kokonaishintainen', 'Oulu MHU MHU Korvausinvestointi' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP'), 'akillinen-hoitotyo', 'Oulu MHU MHU Korvausinvestointi' );
-INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP'), 'muu', 'Oulu MHU MHU Korvausinvestointi' );
-
 
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Liikenneympäristön hoito TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Soratien hoito TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU Päällystepaikkaukset TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Ylläpito TP') AND tyyppi = 'muu'));
-
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP') AND tyyppi = 'kokonaishintainen'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP') AND tyyppi = 'akillinen-hoitotyo'));
-INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Oulu MHU MHU Korvausinvestointi TP') AND tyyppi = 'muu'));
 
 
 
@@ -307,3 +266,6 @@ VALUES
 INSERT INTO sanktio (poistettu, sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 VALUES
   (TRUE, 'A'::sanktiolaji, 1000000, '2015-08-12 06:06.37', 'MAKU 2010', (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Poistettu laatupoikkeama 1'), (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Talvihoito TP 2014-2019'), (SELECT id FROM sanktiotyyppi WHERE nimi = 'Talvihoito, päätiet (talvihoitoluokat Is ja I)'), false, 2);
+
+-- suola- ja materiaalitoteumain testit tarkastetlavat tätä aika-aluetta...
+SELECT * FROM paivita_materiaalin_kaytto_hoitoluokittain_aikavalille('2014-10-01', '2015-09-30');

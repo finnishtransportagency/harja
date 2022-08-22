@@ -155,13 +155,16 @@ pienemmällä zindexillä." :const true}
   [{c :coordinates}]
   (ol.geom.Point. (clj->js c)))
 
-(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor] :as merkki}]
+(defmethod luo-feature :merkki [{:keys [coordinates img scale zindex anchor color] :as merkki}]
   (doto (ol.Feature. #js {:geometry (luo-geometria merkki)})
     (.setStyle (ol.style.Style.
-                 #js {:image  (ol.style.Icon.
-                                #js {:src    (str img)
-                                     :anchor (or (clj->js anchor) #js [0.5 1])
-                                     :scale  (or scale 1)})
+                 #js {:image (ol.style.Icon.
+                               (clj->js
+                                 (merge
+                                   (when color {:color color})
+                                   {:src (str img)
+                                    :anchor (or (clj->js anchor) #js [0.5 1])
+                                    :scale (or scale 1)})))
                       :zIndex (or zindex oletus-zindex)}))))
 
 

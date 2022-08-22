@@ -110,7 +110,7 @@
         hallintayksikot (into #{} (map first (apurit/taulukon-rivit taulukko)))]
     (= hallintayksikot #{"Uusimaa" "Varsinais-Suomi" "Kaakkois-Suomi"
                          "Pirkanmaa" "Pohjois-Savo" "Keski-Suomi"
-                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa ja Kainuu"
+                         "Etelä-Pohjanmaa" "Pohjois-Pohjanmaa"
                          "Lappi" "Koko maa"})
     (apurit/tarkista-taulukko-sarakkeet taulukko
                                         {:otsikko "Hallintayksikkö"}
@@ -140,7 +140,7 @@
 
 (deftest raportin-suoritus-vesivayla-urakalle-toimii
   (let [konteksti "urakka"
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         alkupvm [2017 1 1]
         loppupvm [2017 12 31]
         urakkatyyppi :vesivayla

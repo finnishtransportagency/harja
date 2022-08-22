@@ -30,6 +30,27 @@
                    [harja.makrot :refer [fnc]]
                    [harja.tyokalut.ui :refer [for*]]))
 
+(def tiiviin-tyylin-sarakemaara 15)
+(def melko-tiiviin-tyylin-sarakemaara 8)
+
+(defn tiivis-tyyli
+  ([skeema]
+   (tiivis-tyyli skeema false))
+  ([skeema esta-tiivis-grid?]
+   (cond
+     
+     esta-tiivis-grid?
+     ""
+     
+     (> (count skeema) tiiviin-tyylin-sarakemaara)
+     "tiivis"
+
+     (> (count skeema) melko-tiiviin-tyylin-sarakemaara)
+     "melko-tiivis"
+
+     :else
+     "")))
+
 (defn tayta-tiedot-alas
   "Täyttää rivin tietoja alaspäin käyttäen tayta-fn funktiota."
   [rivit sarake lahtorivi tayta-fn rivi-index]

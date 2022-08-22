@@ -1,0 +1,28 @@
+@import "colors.less";
+@import "typography.less";
+@import "../styles.less";
+
+#vayla {
+  display: flex;
+  flex-direction: column;
+
+  .body-text();
+
+  > * {
+    margin-bottom: 15px;
+
+    &:last-child {
+      margin-bottom: inherit;
+    }
+  }
+
+  div, span {
+    word-break: normal;
+  }
+
+}
+
+.leveys-80 { width: 80%; }
+.leveys-70 { width: 70%; }
+.leveys-15 { width: 15%; }
+.leveys-10 { width: 10%; }

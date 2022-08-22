@@ -4,31 +4,26 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.testi :refer :all]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.integraatiot.sampo
              [tyokalut :as sampo-tk]
              [sampo-komponentti :as sampo]
              [vienti :as vienti]]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
-            [harja.palvelin.main :as sut]
-            [harja.palvelin.komponentit.sonja :as sonja]
-            [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
-            [harja.palvelin.integraatiot.sonja.tyokalut :as s-tk]
-            [harja.data.hoito.kustannussuunnitelma :as ks-data]))
+            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.integraatiot.jms.tyokalut :as s-tk]
+            [harja.data.hoito.kustannussuunnitelma :as ks-data]
+            [harja.pvm :as pvm]))
 
-(defonce asetukset {:sonja {:url "tcp://localhost:61617"
-                            :kayttaja ""
-                            :salasana ""
-                            :tyyppi :activemq}
-                    :sampo {:lahetysjono-sisaan sampo-tk/+lahetysjono-sisaan+
-                            :kuittausjono-sisaan sampo-tk/+kuittausjono-sisaan+
-                            :lahetysjono-ulos sampo-tk/+lahetysjono-ulos+
-                            :kuittausjono-ulos sampo-tk/+kuittausjono-ulos+
-                            :paivittainen-lahetysaika nil}})
+(defonce asetukset {:sonja integraatio/sonja-asetukset
+                    :sampo integraatio/integraatio-sampo-asetukset})
 
 (defonce ai-port 8162)
 
 (defn jarjestelma-fixture [testit]
+  (pystyta-harja-tarkkailija!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -40,35 +35,32 @@
                                  [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :sampo (component/using (let [sampo (:sampo asetukset)]
                                                   (sampo/->Sampo (:lahetysjono-sisaan sampo)
                                                                  (:kuittausjono-sisaan sampo)
                                                                  (:lahetysjono-ulos sampo)
                                                                  (:kuittausjono-ulos sampo)
                                                                  (:paivittainen-lahetysaika sampo)))
-                                                [:sonja :db :integraatioloki :pois-kytketyt-ominaisuudet])
-                        :klusterin-tapahtumat (component/using
-                                                (tapahtumat/luo-tapahtumat)
-                                                [:db])))))
+                                                [:sonja :db :integraatioloki])))))
   ;; aloita-sonja palauttaa kanavan.
-  (<!! (sut/aloita-sonja jarjestelma))
+  (<!! (jms/aloita-jms (:sonja jarjestelma)))
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.
   ;; Mikäli joku testi riippuu siitä, että testidataa ei olla merkattu lähetetyksi, tämä aiheuttaa
   ;; sen epäonnistumisen
   (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
   (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
   (testit)
-  (alter-var-root #'jarjestelma component/stop))
+  (alter-var-root #'jarjestelma component/stop)
+  (lopeta-harja-tarkkailija!))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(deftest merkataan-budjettitavotteita-likaiseksi-ja-lähetetään-ne-Sampoon
-  (let [{urakka-id :id} (first (q-map (str "SELECT id, alkupvm
+(deftest merkataan-budjettitavotteita-likaiseksi-ja-lahetetaan-ne-Sampoon
+  (let [{urakka-id :id alkupvm :alkupvm} (first (q-map (str "SELECT id, alkupvm
                                             FROM   urakka
                                             WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'")))
         kiinteahintaiset-data (ks-data/tallenna-kiinteahintaiset-tyot-data urakka-id)
-        jhk-data (ks-data/tallenna-johto-ja-hallintokorvaus-data urakka-id)
+        jhk-data (ks-data/tallenna-johto-ja-hallintokorvaus-data urakka-id (pvm/vuosi alkupvm))
         kustannusarvioitu-data (ks-data/tallenna-kustannusarvioitu-tyo-data-juuri-alkaneelle-urakalle urakka-id)
 
         kokonaishintainen-maksuerantyyppi #{:toimenpiteen-maaramitattavat-tyot
@@ -76,17 +68,6 @@
                                             :hoidonjohtopalkkio
                                             :toimistokulut
                                             :erillishankinnat}
-        poista-dublikaatti-kokonaishintaiset (fn [kustannusarvioitu-data]
-                                               (first (reduce (fn [[pidettava-data kasiteltava-data] {:keys [toimenpide-avain tallennettava-asia] :as data}]
-                                                                (if (and (kokonaishintainen-maksuerantyyppi tallennettava-asia)
-                                                                         (some (fn [{kasiteltava-tpa :toimenpide-avain kasiteltava-ta :tallennettava-asia}]
-                                                                                 (and (= kasiteltava-tpa toimenpide-avain)
-                                                                                      (kokonaishintainen-maksuerantyyppi kasiteltava-ta)))
-                                                                               kasiteltava-data))
-                                                                  [pidettava-data (rest kasiteltava-data)]
-                                                                  [(conj pidettava-data data) (rest kasiteltava-data)]))
-                                                              [[] (rest kustannusarvioitu-data)] kustannusarvioitu-data)))
-
         kiinteahintaisten-toimenpideinstanssit (flatten
                                                   (q (str "WITH toimenpide_idt AS (
                                                              SELECT id
@@ -143,8 +124,8 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (+ (count kiinteahintaisten-toimenpideinstanssit)
-                  1 ;; mhu-johto toimenpideinstanssi
+        (is (= (+ (count kiinteahintaisten-toimenpideinstanssit) ;; vain kustannussuunnitelmat
+                  1 ;; mhu-johto toimenpideinstanssi (sekä kustannussuunnitelma että maksuerä)
                   )
                viestit-jonossa)
             "Sampoon ei siirry kaikki likaisiksi merkatut kiinteättyöt sekä johto- ja hallintokorvaustyöt")))
@@ -157,24 +138,9 @@
                                                  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                                                WHERE tpi.id IN (" (apply str (interpose ", " (conj kiinteahintaisten-toimenpideinstanssit mhu-johto-toimenpideinstanssi))) ") AND
                                                      ks.likainen IS TRUE;"))]
+        (println "KUSTANNUSSUUNNITELMAT " kustannussuunnitelmat)
         (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
-        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
-               (count kustannussuunnitelmat)))
-        (is (= (count (filter #(= "kokonaishintainen" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(kokonaishintainen-maksuerantyyppi (:tallennettava-asia %))
-                              (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'kokonaishintainen' on väärä määrä")
-        (is (= (count (filter #(= "akillinen-hoitotyo" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(= :akilliset-hoitotyot (:tallennettava-asia %))
-                              kustannusarvioitu-data)))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'akillinen-hoitotyo' on väärä määrä")
-        (is (= (count (filter #(= "muu" (:tyyppi %))
-                              kustannussuunnitelmat))
-               (count (filter #(= :kolmansien-osapuolten-aiheuttamat-vahingot (:tallennettava-asia %))
-                              kustannusarvioitu-data)))
-            "Kustannusarviotuja töitä maksuerän tyypillä 'muu' on väärä määrä")
+        (is (= 7 (count kustannussuunnitelmat))) ;; MHU-urakoissa on seitsemän toimenpideinstainssia ja niillä kullakin yksi kustannussuunnitelma
         (is (every? :likainen kustannussuunnitelmat))))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kustannusarvioitu)"
       (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
@@ -185,6 +151,5 @@
                                                   :enqueue-count)
                                (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
                                                   :dequeue-count))]
-        (is (= (count (poista-dublikaatti-kokonaishintaiset kustannusarvioitu-data))
-               viestit-jonossa)
+        (is (= 7 viestit-jonossa)
             "Sampoon ei siirry kaikki likaisiksi merkatut kustannusarvioidut työt")))))

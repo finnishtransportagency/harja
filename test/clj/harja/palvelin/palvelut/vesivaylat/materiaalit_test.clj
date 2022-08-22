@@ -1,8 +1,9 @@
 (ns harja.palvelin.palvelut.vesivaylat.materiaalit-test
   (:require [harja.palvelin.palvelut.vesivaylat.materiaalit :as sut]
             [clojure.test :as t :refer [deftest is]]
-            [harja.testi :refer [jarjestelma kutsu-palvelua q-map] :as testi]
+            [harja.testi :refer :all :as testi]
             [com.stuartsierra.component :as component]
+            [harja.integraatio :as integraatio]
             [harja.kyselyt.vesivaylat.materiaalit :as vvm-q]
             [harja.palvelin.palvelut.vesivaylat.materiaalit :as vv-materiaalit]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -15,13 +16,14 @@
             [clj-time.core :as time]
             [harja.pvm :as pvm]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.jms :as jms])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -31,23 +33,21 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testi/testitietokanta)
                         :http-palvelin (testi/testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi/testi-pois-kytketyt-ominaisuudet
                         :fim (component/using
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :sonja (feikki-jms "sonja")
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :vv-materiaalit (component/using
                                           (vv-materiaalit/->Materiaalit)
-                                          [:db :http-palvelin :fim :sonja-sahkoposti])))))
+                                          [:db :http-palvelin :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -106,14 +106,14 @@
             (recur (dec testauskerrat) (conj generoidut-materiaalit m))))))))
 
 (deftest materiaalen-haku-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-vesivayla-materiaalilistaus
                                            testi/+kayttaja-ulle+
                                            {::m/urakka-id urakka-id})))))
 
 (deftest materiaalen-kirjaus-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :kirjaa-vesivayla-materiaali
                                            testi/+kayttaja-ulle+
@@ -124,7 +124,7 @@
                                             ::m/yksikko "kpl"})))))
 
 (deftest materiaalien-poisto
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         poistettava-materiaali-ennen (first (q-map "SELECT id, poistettu FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1"))
         materiaalien-lkm-ennen (:maara (first (q-map "SELECT COUNT(*) as maara FROM vv_materiaali WHERE poistettu IS NOT TRUE")))
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -143,7 +143,7 @@
     (is (= materiaalien-lkm-ennen (+ materiaalien-lkm-jalkeen 1)))))
 
 (deftest materiaalen-poisto-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :poista-materiaalikirjaus
                                            testi/+kayttaja-ulle+
@@ -151,7 +151,7 @@
                                             ::m/id 666})))))
 
 (deftest materiaalen-poisto-eri-urakasta
-  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         poistettava-materiaali-id (:id (first (q-map "SELECT id FROM vv_materiaali WHERE poistettu IS NOT TRUE LIMIT 1")))]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :poista-materiaalikirjaus
@@ -160,7 +160,7 @@
                                                     ::m/id poistettava-materiaali-id})))))
 
 (deftest materiaalien-maaran-ja-yksikon-muokkaus
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         materiaali-nimi "Hiekkasäkki"
         uusi-alkuperainen-maara 48598
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
@@ -192,7 +192,7 @@
     (is (= (::m/halytysraja hiekkasakki) uusi-halytysraja))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-ilman-oikeutta
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         uusi-alkuperainen-maara 48598
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
@@ -207,7 +207,7 @@
                                                                          ::m/alkuperainen-maara uusi-alkuperainen-maara}]})))))
 
 (deftest materiaalien-alkuperaisen-maaran-muokkaus-eri-urakkaan
-  (let [urakka-id (testi/hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         materiaalilistaukset (testi/hae-helsingin-vesivaylaurakan-materiaalit)
         hiekkasakin-id (some #(when (= "Hiekkasäkki" (:nimi %))
                                 (get-in % [:muutokset 0 :id]))
@@ -233,24 +233,23 @@
     (is (= 0 rivi-lkm))))
 
 (deftest materiaalin-halytysrajan-alitus
-  (let [urakka-id (testi/hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         materiaali-halytysrajalla (first (q-map "SELECT nimi, maara, halytysraja FROM vv_materiaali WHERE \"urakka-id\"=" urakka-id " AND halytysraja IS NOT NULL ORDER BY nimi, \"urakka-id\""))
         {nimi :nimi
          aloitus-maara :maara
          halytysraja :halytysraja
          yksikko :yksikko} materiaali-halytysrajalla
-        sahkoposti-valitetty (atom false)
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-helsingin-vesivaylaurakan-kayttajat.xml"))
 
         materiaalin-vahennys {::m/urakka-id urakka-id
                               ::m/nimi nimi
                               ::m/maara (- (- (+ aloitus-maara 1) halytysraja))
                               ::m/pvm (pvm/nyt)
-                              ::m/yksikko yksikko}]
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+                              ::m/yksikko yksikko}
+        viesti-id (str (UUID/randomUUID))]
     (with-fake-http
-      [+testi-fim+ fim-vastaus]
+      [+testi-fim+ fim-vastaus
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (testi/kutsu-http-palvelua :kirjaa-vesivayla-materiaali testi/+kayttaja-jvh+ materiaalin-vahennys))
 
-    (testi/odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 10000)
-    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
+    (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))

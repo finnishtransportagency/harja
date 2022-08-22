@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki raksiboksi
+            [harja.ui.yleiset :refer [ajax-loader linkki
                                       alasveto-ei-loydoksia livi-pudotusvalikko]
              :as yleiset]
             [harja.visualisointi :as vis]
@@ -127,8 +127,8 @@
 (defn kokonaishintaiset-tyot-tehtavalista [tehtavat tpi]
   [:div
    [grid/grid {:otsikko "Raportoitavat kokonaishintaiset tehtävät"}
-    [{:otsikko "Tehtävä" :nimi :nimi :leveys 9}
-     {:otsikko "Yksikkö" :nimi :yksikko :leveys 1}]
+    [{:otsikko "Tehtävä" :nimi :nimi :leveys 8}
+     {:otsikko "Yksikkö" :nimi :yksikko :leveys 2}]
 
     (map #(nth % 3)
          (filter (fn [[_ _ t3 _]]
@@ -441,10 +441,10 @@
                :muokkaa-footer (fn [g]
                                  (when-not @prosenttijako?
                                    [:div.kok-hint-muokkaa-footer
-                                    [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
-                                                 :toiminto #(swap! tuleville? not)
-                                                 :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                                                 :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
+                                    [kentat/raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi @urakka))
+                                                        :toiminto #(swap! tuleville? not)
+                                                        :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                                        :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
                                      @tuleville?]]))
                :rivi-jalkeen-fn (when @prosenttijako?
                                   (fn [rivit]

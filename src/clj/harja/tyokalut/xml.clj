@@ -7,7 +7,8 @@
             [hiccup.core :refer [html]]
             [clj-time.format :as f]
             [clj-time.coerce :as tc]
-            [clojure.data.zip.xml :as z])
+            [clojure.data.zip.xml :as z]
+            [clojure.string :as str])
   (:import (javax.xml.validation SchemaFactory)
            (javax.xml XMLConstants)
            (javax.xml.transform.stream StreamSource)
@@ -22,7 +23,7 @@
 (defn validoi-xml
   "Validoi annetun XML sisällön vasten annettua XSD-skeemaa."
   [xsd-skeema-polku xsd-skeema-tiedosto xml-sisalto]
-  (log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
+  ;(log/debug "Validoidaan XML käyttäen XSD-skeemaa:" xsd-skeema-tiedosto ". XML:n sisältö on:" xml-sisalto)
   (let [virheet (atom [])
         schema-factory (SchemaFactory/newInstance XMLConstants/W3C_XML_SCHEMA_NS_URI)]
     (.setResourceResolver schema-factory
@@ -78,9 +79,16 @@
             nil)))))
 
 (defn luetun-xmln-tagi
-  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa ensimmäisen tagin, jonka nimi on annettu keyword"
+  "Ottaa Clojure-muotoon muunnetun XML-sisällön ja palauttaa ensimmäisen tagin, jonka nimi on annettu keyword.
+   Tagi voi olla keyword joka on tagin nimi tai mappi {:tagi <tagi> :positio <positio>} niin että voi osoittaa
+   mitä vaan XML seq:n elementit"
   [luettu-xml tagi]
-  (first (filter #(= tagi (:tag %)) luettu-xml)))
+  (let [[tagi-nimi positio] (if (keyword? tagi)
+                              [tagi 0]
+                              [(:tagi tagi) (:positio tagi)])
+        elementit (filter #(= tagi-nimi (:tag %)) luettu-xml)]
+    (when (seq elementit)
+      (nth elementit positio))))
 
 (defn luetun-tagin-sisalto
   "Ottaa Clojure-muotoon muunnetun XML-tagin ja palauttaa sen sisällön"
@@ -203,6 +211,13 @@
     (tee-c-data-elementti sisalto)
     sisalto))
 
+(defn escape-xml-varten [data]
+  "Palauttaa merkit &, < ja > xml-ystävällisessä muodossa.
+  Jos data on nil, palauttaa tyhjän merkkijonon."
+  (str/escape (or data "") {\& "&amp;"
+                            \> "&gt;"
+                            \< "&lt;"}))
+
 (defn lue-attribuutit
   "Lukee annetusta XML zipper objektista attribuutit. Palauttaa mäpin, jossa
   luetut attribuuttien arvot. Avain-fn muuntaa attr-map olevan avaimen (XML attribuutin nimi)
@@ -230,3 +245,4 @@
   (when timestamp
     (let [format (SimpleDateFormat. "yyyy-MM-dd") ]
       (.format format timestamp))))
+

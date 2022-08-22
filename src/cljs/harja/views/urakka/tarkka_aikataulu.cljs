@@ -34,7 +34,7 @@
      :leveys 10
      :nimi :toimenpide
      :tyyppi :valinta
-     :validoi [[:ei-tyhja "Anna toimenpiode"]]
+     :validoi [[:ei-tyhja "Anna toimenpide"]]
      :valinnat ypk/tarkan-aikataulun-toimenpiteet
      :valinta-nayta #(if % (ypk/tarkan-aikataulun-toimenpide-fmt %) "- valitse -")
      :fmt ypk/tarkan-aikataulun-toimenpide-fmt

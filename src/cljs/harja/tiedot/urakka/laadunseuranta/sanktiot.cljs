@@ -18,10 +18,9 @@
 (defn uusi-sanktio [urakkatyyppi]
   {:suorasanktio true
    :laji (cond
-           (= :hoito urakkatyyppi) :A
+           (#{:hoito :teiden-hoito} urakkatyyppi) :A
            (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-           ;; Luultavasti ylläpidon urakka
-           :default :yllapidon_sakko)
+           :else :yllapidon_sakko)
    :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                           (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
