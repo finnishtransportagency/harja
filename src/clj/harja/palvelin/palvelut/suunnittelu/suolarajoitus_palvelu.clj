@@ -12,8 +12,7 @@
             [taoensso.timbre :as log]
             [clj-time.coerce :as c]
             [harja.pvm :as pvm]
-            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
-            [slingshot.slingshot :refer [throw+ try+]]))
+            [harja.tyokalut.big :as big]))
 
 (defn pituuden-laskennan-data-validi?
   [{:keys [tie aosa losa aet let] :as suolarajoitus}]
@@ -314,47 +313,27 @@
                                   (fn [alueet]
                                     (mapv
                                       #(konv/pgobject->map % :tunnus :string :nimi :string)
-                                      (konv/pgarray->vector alueet))))
-                                (update :suolatoteumat
-                                  (fn [toteumat]            ;materiaali_id, maara
-                                    (if-not (= "(,)" (.getValue toteumat))
-                                      (konv/pgobject->map toteumat
-                                        :materiaali_id :long
-                                        :maara :double)
-                                      nil)))
-                                (update :formiaattitoteumat
-                                  (fn [toteumat]            ;materiaali_id, maara
-                                    (if-not (= "(,)" (.getValue toteumat))
-                                      (konv/pgobject->map toteumat
-                                        :materiaali_id :long
-                                        :maara :double)
-                                      nil)))))
+                                      (konv/pgarray->vector alueet))))))
                         suolatoteumat)
+
+        _ (log/debug "suolatoteumat" suolatoteumat)
         suolatoteumat (mapv (fn [rivi]
-                              (-> rivi
-                                (assoc :talvisuolan-kokonaismaara
-                                       (if
-                                         (some #(= % (:materiaali_id (:suolatoteumat rivi))) talvisuolaidt)
-                                         (:maara (:suolatoteumat rivi))
-                                         0))
-                                (assoc :formiaatin-kokonaismaara (:maara (:formiaattitoteumat rivi)))))
-                        suolatoteumat)
-        suolatoteumat (mapv (fn [rivi]
-                              (-> rivi
-                                (assoc :formiaatit_t_per_ajoratakm (if (and
-                                                                         (not (nil? (:formiaatin-kokonaismaara rivi)))
-                                                                         (not (nil? (:ajoratojen_pituus rivi)))
-                                                                         (> (:formiaatin-kokonaismaara rivi) 0)
-                                                                         (> (:ajoratojen_pituus rivi) 0))
-                                                                     (/ (:formiaatin-kokonaismaara rivi) (:ajoratojen_pituus rivi))
-                                                                     -1))
-                                (assoc :talvisuola_t_per_ajoratakm (if (and
-                                                                         (not (nil? (:talvisuolan-kokonaismaara rivi)))
-                                                                         (not (nil? (:ajoratojen_pituus rivi)))
-                                                                         (> (:talvisuolan-kokonaismaara rivi) 0)
-                                                                         (> (:ajoratojen_pituus rivi) 0))
-                                                                     (/ (:talvisuolan-kokonaismaara rivi) (:ajoratojen_pituus rivi))
-                                                                     -1))))
+                              (cond-> rivi
+                                true (konv/decimal->double rivi :suolatoteumat :formiaattitoteumat :ajoratojen_pituus)
+                                (and
+                                  (not (nil? (:formiaattitoteumat rivi)))
+                                  (not (nil? (:ajoratojen_pituus rivi)))
+                                  (> (:formiaattitoteumat rivi) 0)
+                                  (> (:ajoratojen_pituus rivi) 0))
+                                (assoc :formiaatit_t_per_ajoratakm
+                                       (with-precision 3 (/ (:formiaattitoteumat rivi) (:ajoratojen_pituus rivi))))
+                                (and
+                                  (not (nil? (:suolatoteumat rivi)))
+                                  (not (nil? (:ajoratojen_pituus rivi)))
+                                  (> (:suolatoteumat rivi) 0)
+                                  (> (:ajoratojen_pituus rivi) 0))
+                                (assoc :talvisuola_t_per_ajoratakm
+                                       (with-precision 4 (/ (:suolatoteumat rivi) (:ajoratojen_pituus rivi))))))
                         suolatoteumat)]
     suolatoteumat))
 

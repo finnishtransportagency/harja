@@ -120,8 +120,8 @@
                                   [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                             pohjavesialueet))
                         "-"))
-       :leveys 1}
-      {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 1}
+       :leveys 1.7}
+      {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.8}
       {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :fmt fmt/pyorista-ehka-kolmeen
        :tasaa :oikea :leveys 1}
       {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm
