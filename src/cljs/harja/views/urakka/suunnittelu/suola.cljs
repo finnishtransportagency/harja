@@ -392,8 +392,8 @@
                                              rajoitukset))))}
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
-    {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.8}
-    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :tasaa :oikea :leveys 0.8}
+    {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.5}
+    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :tasaa :oikea :leveys 0.75}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
      :luokka "sarake-pohjavesialueet"
      :tyyppi :komponentti
@@ -403,8 +403,8 @@
                         (mapv (fn [alue]
                                 [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                           pohjavesialueet))
-                      "-"))
-     :leveys 1.4}
+                      [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
+     :leveys 2}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea
      :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 0.8}
     {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 0.8}]
