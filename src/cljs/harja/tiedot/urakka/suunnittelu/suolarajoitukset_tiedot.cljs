@@ -8,7 +8,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
-            [clojure.set :as set]))
+            [clojure.set :as set]
+            [taoensso.timbre :as log]))
 
 ;;Validoinnit
 (def lomake-atom (atom {}))
@@ -76,7 +77,7 @@
 (defrecord TallennaLomakeOnnistui [vastaus])
 (defrecord TallennaLomakeEpaonnistui [vastaus])
 ;; Poista
-(defrecord PoistaSuolarajoitus [parametrit])
+(defrecord PoistaSuolarajoitus [rajoitusalue_id kopioidaan-tuleville-vuosille? hoitokauden-alkuvuosi])
 (defrecord PoistaSuolarajoitusOnnistui [vastaus])
 (defrecord PoistaSuolarajoitusEpaonnistui [vastaus])
 
@@ -271,8 +272,9 @@
   ;; Päivitetään lomakkeen sisältö app-stateen, mutta ei serverille
   PaivitaLomake
   (process-event [{lomake :lomake tarkista-tierekisteri? :tarkista-tierekisteri?} app]
-    (let [_ (js/console.log "PaivitaLomake")
-          urakka-id (-> @tila/yleiset :urakka :id)
+    (log/debug "PaivitaLomake")
+
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
           vanha-tierekisteri (into #{} (select-keys (:lomake app) [:tie :aosa :aet :losa :let]))
           uusi-tierekisteri (into #{} (select-keys lomake [:tie :aosa :aet :losa :let]))
           _ (reset! lomake-atom lomake)
@@ -405,14 +407,17 @@
     (assoc app :tallennus-kaynnissa? false))
 
   PoistaSuolarajoitus
-  (process-event [{parametrit :parametrit} app]
-    (let [hoitokauden-alkuvuosi (pvm/vuosi (first @urakka/valittu-hoitokausi))
-          urakka-id (-> @tila/yleiset :urakka :id)
+  (process-event [{:keys [rajoitusalue_id kopioidaan-tuleville-vuosille? hoitokauden-alkuvuosi]} app]
+    (log/debug "PoistaSuolarajoitus -> "
+      "rajoitusalue_id:" rajoitusalue_id
+     "kopioidaan-tuleville-vuosille?:" kopioidaan-tuleville-vuosille? "hoitokauden-alkuvuosi:" hoitokauden-alkuvuosi)
+
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
           _ (tuck-apurit/post! :poista-suolarajoitus
-              {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+              {:rajoitusalue_id rajoitusalue_id
                :urakka_id urakka-id
-               :rajoitusalue_id (:rajoitusalue_id parametrit)
-               :kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? parametrit)}
+               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+               :kopioidaan-tuleville-vuosille? kopioidaan-tuleville-vuosille?}
               {:onnistui ->PoistaSuolarajoitusOnnistui
                :epaonnistui ->PoistaSuolarajoitusEpaonnistui
                :paasta-virhe-lapi? true})]
