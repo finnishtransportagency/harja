@@ -221,8 +221,11 @@
       {:ei-borderia? true
        :voi-muokata? true
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :otsikko (when muokkaustila?
-                  (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+       :otsikko [:div (when muokkaustila?
+                        (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+                 [:div.small-text.harmaa
+                  (str (urakka/hoitokauden-jarjestysnumero valittu-hoitovuosi (:loppupvm urakka)) ". hoitovuosi"
+                    " (" (pvm/hoitokausi-str-alkuvuodesta valittu-hoitovuosi) ")")]]
        ;; TODO: Muokkaus
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
