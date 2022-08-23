@@ -71,8 +71,8 @@
 (def karttataso-suolatoteumat (atom false))
 
 (defn hae-toteuman-sijainti [toteuma]
-  
-  (:sijainti toteuma))
+  (some #(when (= (:tid toteuma) (:id %))
+           (:sijainti %)) @valitut-toteumat-kartalla))
 
 (def suolatoteumat-kartalla
   (reaction
