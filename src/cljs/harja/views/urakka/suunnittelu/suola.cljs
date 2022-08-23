@@ -169,11 +169,14 @@
          {:nimi :pohjavesialueet
           :otsikko "Pohjavesialue"
           :tyyppi :komponentti
-          :komponentti (fn [data]
-                         (mapcat (fn [rivi]
-                                   [^{:key (hash rivi)}
-                                    [:div (str (:nimi rivi) " (" (:tunnus rivi) ")")]])
-                           (:pohjavesialueet (:data data))))
+          :komponentti (fn [{{:keys [pohjavesialueet]} :data}]
+                         (if (seq pohjavesialueet)
+                           (into [:div]
+                             (mapv (fn [alue]
+                                     ^{:key (hash alue)}
+                                     [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
+                               pohjavesialueet))
+                           [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
 
 
           ;:tarkkaile-ulkopuolisia-muutoksia? true
