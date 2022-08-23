@@ -60,23 +60,10 @@
                {:tallennusmuoto "paivitetty" :esitysmuoto "Päivitetty"}
                {:tallennusmuoto "poistettu" :esitysmuoto "Poistettu"}])
 
-(defn hakuparametrit [{:keys [valinnat urakka] :as app}]
-  {:urakka-id (get-in app [:urakka :id])
-   :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
-   :kuukausi (:hoitokauden-kuukausi valinnat)
-   :tie (:tie valinnat)
-   :aosa (:aosa valinnat)
-   :aeta (:aeta valinnat)
-   :losa (:losa valinnat)
-   :leta (:leta valinnat)
-   :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))
-   :kuntoluokat (:kuntoluokat valinnat)
-   :toteuma (:toteuma valinnat)}
-  #_(merge
-    (select-keys valinnat [:tie :aosa :aeta :losa :leta :kuntoluokat :toteuma])
+(defn hakuparametrit [{:keys [valinnat urakka]}]
+  (merge
+    (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
     {:urakka-id (:id urakka)
-     :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
-     :kuukausi (:hoitokauden-kuukausi valinnat)
      :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))}))
 
 (defn hae-kentta
@@ -183,7 +170,6 @@
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (println "jere testaa::" vastaus)
     (reset! varusteet-kartalla/karttataso-varusteet
       (map (fn [t]
              (assoc t :tr-osoite (muodosta-tr-osoite t)

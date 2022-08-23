@@ -29,7 +29,6 @@
 
 (defn vie-ulkoiset-varusteet-exceliin
   [db workbook user {:keys [urakka-id hoitovuosi tietolajit kuntoluokat kuukausi] :as tiedot}]
-  (println tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
@@ -55,8 +54,7 @@
                                 :raportin-yleiset-tiedot {:raportin-nimi "Varustetoimenpiteet"
                                                           :urakka (:nimi urakka)
                                                           :alkupvm (if kuukausi (pvm/paiva-kuukausi kuukausi-pvm) (pvm/pvm hoitokauden-alkupvm))
-                                                          :loppupvm (if kuukausi (pvm/pvm (pvm/kuukauden-viimeinen-paiva kuukausi-pvm)) (pvm/pvm hoitokauden-loppupvm))
-                                                          }
+                                                          :loppupvm (if kuukausi (pvm/pvm (pvm/kuukauden-viimeinen-paiva kuukausi-pvm)) (pvm/pvm hoitokauden-loppupvm))}
                                 :orientaatio :landscape}]
                         taulukot))]
     (excel/muodosta-excel taulukko workbook)))
