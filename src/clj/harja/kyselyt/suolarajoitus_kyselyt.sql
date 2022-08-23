@@ -355,7 +355,7 @@ INSERT INTO suolasakko (maara, urakka, hoitokauden_alkuvuosi, kaytossa, tyyppi, 
 VALUES (:sanktio_ylittavalta_tonnilta, :urakka-id, :hoitokauden-alkuvuosi, :kaytossa, 'rajoitusalue'::suolasakko_tyyppi, :indeksi, NOW(), :kayttaja-id);
 
 -- name: onko-tierekisteriosoite-paallekainen
-SELECT ra.id, rr.id, rr.suolarajoitus, rr.hoitokauden_alkuvuosi, ra.pituus, ra.ajoratojen_pituus, ra.urakka_id,
+SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoitokauden_alkuvuosi, ra.pituus, ra.ajoratojen_pituus, ra.urakka_id,
        (ra.tierekisteriosoite).tie, (ra.tierekisteriosoite).aosa, (ra.tierekisteriosoite).aet, (ra.tierekisteriosoite).losa, (ra.tierekisteriosoite).let
   FROM rajoitusalue ra
       JOIN rajoitusalue_rajoitus rr ON rr.rajoitusalue_id = ra.id AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
@@ -370,10 +370,12 @@ SELECT ra.id, rr.id, rr.suolarajoitus, rr.hoitokauden_alkuvuosi, ra.pituus, ra.a
 
    AND (
        -- Annettu alkuosa osuu kannassa olevan väliin
-       (:aosa != :losa AND ((ra.tierekisteriosoite).aosa BETWEEN :aosa AND :losa))
+         (:aosa != :losa AND (((ra.tierekisteriosoite).aosa BETWEEN :aosa AND :losa)
+             AND (:aosa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet > :aet)))
         OR
         -- Annettu loppuosa osuu kannassa olevan väliin
-        (:aosa != :losa AND ((ra.tierekisteriosoite).losa BETWEEN :aosa AND :losa))
+        (:aosa != :losa AND (((ra.tierekisteriosoite).losa BETWEEN :aosa AND :losa)
+            AND (:losa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).losa < :losa)))
        -- Alkuosa ja loppuosa on samat, tarkista etäisyydet
        OR
        -- Alkuosa ja loppuosa on samat ja ne täsmää kannassa jo olevaan alkuosaan,
