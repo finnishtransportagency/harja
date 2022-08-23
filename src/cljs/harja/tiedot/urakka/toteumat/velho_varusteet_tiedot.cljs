@@ -63,6 +63,12 @@
                {:tallennusmuoto "puhdistus" :esitysmuoto "Puhdistettu"}
                {:tallennusmuoto "korjaus" :esitysmuoto "Korjattu"}])
 
+(defn hakuparametrit [{:keys [valinnat urakka]}]
+  (merge
+    (select-keys valinnat [:tie :aosa :aeta :losa :leta :hoitokauden-alkuvuosi :hoitovuoden-kuukausi :kuntoluokat :toteuma])
+    {:urakka-id (:id urakka)
+     :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))}))
+
 (defn hae-kentta
   "Hakee `joukko` taulukosta alkion, jonka `kentta-avain` kentällä on haettu `arvo`
   ja palauttaa sen alkion `kentta-tulos` arvon.
@@ -153,28 +159,17 @@
       (assoc-in app [:valinnat :toteuma] toteuma)))
 
   HaeVarusteet
-  (process-event [_ {:keys [valinnat] :as app}]
-    (do
-      (if (:haku-paalla app)
-        app
-        (do
-          (reset! varusteet-kartalla/karttataso-varusteet [])
-          (-> app
-              (assoc :haku-paalla true :varusteet [])
-              (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
-                                 {:urakka-id (get-in app [:urakka :id])
-                                  :hoitovuosi (:hoitokauden-alkuvuosi valinnat)
-                                  :kuukausi (:hoitokauden-kuukausi valinnat)
-                                  :tie (:tie valinnat)
-                                  :aosa (:aosa valinnat)
-                                  :aeta (:aeta valinnat)
-                                  :losa (:losa valinnat)
-                                  :leta (:leta valinnat)
-                                  :tietolajit (map varustetyyppi->tietolaji (:varustetyypit valinnat))
-                                  :kuntoluokat (:kuntoluokat valinnat)
-                                  :toteuma (:toteuma valinnat)}
-                                 {:onnistui ->HaeVarusteetOnnistui
-                                  :epaonnistui ->HaeVarusteetEpaonnistui}))))))
+  (process-event [_ {:keys [haku-paalla] :as app}]
+    (if haku-paalla
+      app
+      (do
+        (reset! varusteet-kartalla/karttataso-varusteet [])
+        (-> app
+          (assoc :haku-paalla true :varusteet [])
+          (tuck-apurit/post! :hae-urakan-varustetoteuma-ulkoiset
+            (hakuparametrit app)
+            {:onnistui ->HaeVarusteetOnnistui
+             :epaonnistui ->HaeVarusteetEpaonnistui})))))
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
