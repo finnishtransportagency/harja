@@ -417,7 +417,7 @@
                  :muokkaaja {:kayttajanimi "migraatio"}
                  :oid "1.2.246.578.4.3.1.501.10091440"
                  :alkaen "2009-06-23"
-                 :muutoksen-lahde-oid "1.2.3.4.1236"
+                 :muutoksen-lahde-oid "1.2.246.578.8.1.2436498421.1886759677"
                  :muokattu "2022-06-29T14:23:14Z"})
 
 (deftest point-geometria-konvertoituu-integraatiossa
