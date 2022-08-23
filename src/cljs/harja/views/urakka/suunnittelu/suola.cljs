@@ -225,7 +225,7 @@
                         (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
                  [:div.small-text.harmaa
                   (str (urakka/hoitokauden-jarjestysnumero valittu-hoitovuosi (:loppupvm urakka)) ". hoitovuosi"
-                    " (" (pvm/hoitokausi-str-alkuvuodesta valittu-hoitovuosi) ")")]]
+                    " (" (pvm/hoitokausi-str-alkuvuodesta-vuodet valittu-hoitovuosi) ")")]]
        ;; TODO: Muokkaus
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
