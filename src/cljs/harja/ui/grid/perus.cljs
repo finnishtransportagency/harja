@@ -310,7 +310,7 @@
 
 (defn- muokkauspaneeli [{:keys [nayta-otsikko? muokataan tallenna tiedot muuta-gridia-muokataan?
                                 tallennus-ei-mahdollinen-tooltip muokattu? voi-lisata? ohjaus opts
-                                custom-toiminto
+                                custom-toiminto paneelikomponentit
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
@@ -392,7 +392,12 @@
             (if (and (= :ei-mahdollinen tallenna)
                      tallennus-ei-mahdollinen-tooltip)
               [yleiset/tooltip {} muokkaa-nappi tallennus-ei-mahdollinen-tooltip]
-              muokkaa-nappi))))]
+              muokkaa-nappi))))
+      (when paneelikomponentit
+        (map-indexed (fn [i komponentti]
+                       ^{:key i}
+                       [komponentti])
+          paneelikomponentit))]
      [:span.pull-right.muokkaustoiminnot
       (when voi-kumota?
         [:button.nappi-toissijainen
@@ -725,7 +730,7 @@
   :voi-lisata?                          voiko rivin lisätä (boolean)
   :voi-kumota?                          Jos false, ei näytetä kumoa-nappia. Oletus: true.
   :custom-toiminto                      Muokkauspaneeliin vietävä custom-toiminto
-  :tunniste                             rivin tunnistava kenttä, oletuksena :id
+  :paneelikomponentit                   vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.\n  :tunniste                             rivin tunnistava kenttä, oletuksena :id
   :esta-poistaminen?                    funktio, joka ottaa rivin ja palauttaa true tai false.
                                         Jos palauttaa true, roskakori disabloidaan erikseen annetun tooltipin kera.
   :esta-poistaminen-tooltip             funktio, joka palauttaa tooltipin. ks. ylempi.
@@ -1098,7 +1103,7 @@
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
                     validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?
-                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava?] :as opts}
+                    esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava? paneelikomponentit] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
               skeema (skeema/laske-sarakkeiden-leveys (keep identity skeema))
@@ -1145,6 +1150,7 @@
                                :nollaa-muokkaustiedot! nollaa-muokkaustiedot!
                                :aloita-muokkaus! aloita-muokkaus! :peru! peru! :voi-kumota? voi-kumota?
                                :peruuta peruuta :otsikko otsikko :custom-toiminto custom-toiminto
+                               :paneelikomponentit paneelikomponentit
                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit

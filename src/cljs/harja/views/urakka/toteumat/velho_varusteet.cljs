@@ -42,7 +42,9 @@
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck])
+            [harja.asiakas.kommunikaatio :as k]
+            [tuck.core :as tuck]
+            [harja.transit :as transit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -172,10 +174,15 @@
                         (e! (v/->HaeToteumat)))
       :otsikkorivi-klikattu (fn [opts]
                               (e! (v/->JarjestaVarusteet (:nimi opts))))
-      :custom-toiminto {:teksti "Vie Exceliin"
-                        :toiminto (constantly nil) 
-                        :opts {:ikoni [ikonit/harja-icon-action-upload]
-                               :luokka "nappi-reunaton"}}
+      :paneelikomponentit [(fn [] [:span.inline-block
+                                   [:form {:style {:margin-left "auto"}
+                                           :target "_blank" :method "POST"
+                                           :action (k/excel-url :varusteet-ulkoiset-excel)}
+                                    [:input {:type "hidden" :name "parametrit"
+                                             :value (transit/clj->transit (v/hakuparametrit app))}]
+                                    [:button {:type "submit"
+                                              :class #{"nappi-toissijainen nappi-reunaton"}}
+                                     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]])]
       :voi-lisata? false :voi-kumota? false
       :voi-poistaa? (constantly false) :voi-muokata? true}
      [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
