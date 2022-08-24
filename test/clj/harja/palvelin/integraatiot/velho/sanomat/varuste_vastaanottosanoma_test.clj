@@ -248,9 +248,15 @@
         muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2019-10-15")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
         poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
+        tarkastettu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp01"])
+        puhdistettu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp02"])
+        korjattu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp07"])
         kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
                                   {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty"}
-                                  {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}]
+                                  {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}
+                                  {:kohde tarkastettu-kohde :odotettu-toteumatyyppi "tarkastus"}
+                                  {:kohde puhdistettu-kohde :odotettu-toteumatyyppi "puhdistus"}
+                                  {:kohde korjattu-kohde :odotettu-toteumatyyppi "korjaus"}]
         db (:db jarjestelma)
         urakka-id-fn (partial varusteet/urakka-id-kohteelle db)
         urakka-pvmt-idlla-fn (partial varusteet/urakka-pvmt-idlla db)
