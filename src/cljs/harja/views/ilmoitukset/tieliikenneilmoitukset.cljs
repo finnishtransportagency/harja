@@ -15,7 +15,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.kentat :refer [tee-kentta] :as kentat]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
@@ -33,10 +33,10 @@
             [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.ui.debug :as debug])
+            [harja.ui.debug :as debug]
+            [harja.loki :as loki])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -119,13 +119,12 @@
   [lomake/lomake
    {:luokka :horizontal
     :muokkaa! #(e! (v/->AsetaValinnat %))}
-
-   [(valinnat/aikavalivalitsin "Ilmoitettu aikavälillä"
+   [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
                                tiedot/aikavalit
                                valinnat-nyt
-                               {:vakioaikavali :ilmoitettu-vakioaikavali
-                                :alkuaika :ilmoitettu-alkuaika
-                                :loppuaika :ilmoitettu-loppuaika})
+                               {:vakioaikavali :valitetty-urakkaan-vakioaikavali
+                                :alkuaika      :valitetty-urakkaan-alkuaika
+                                :loppuaika     :valitetty-urakkaan-loppuaika})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
                                tiedot/toimenpiteiden-aikavalit
                                valinnat-nyt
@@ -256,18 +255,20 @@
                                                                            (:urakka rivi))]
                             [:span (when liidosta-tullut?
                                      {:title tiedot/vihje-liito})
-                             [:input {:type "checkbox"
-                                      :disabled (or liidosta-tullut?
-                                                    (not kirjoitusoikeus?))
-                                      :checked (valitut-ilmoitukset rivi)}]]))
-           :leveys 1})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 5
+                             [kentat/raksiboksi {:disabled (or liidosta-tullut?
+                                                               (not kirjoitusoikeus?))
+                                                 :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
+                                                                      (nil? pikakuittaus))
+                                                             #(valitse-ilmoitus! rivi))}
+                              (boolean (valitut-ilmoitukset rivi))]]))
+           :leveys 2})
+        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
         {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
          :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
-        {:otsikko "Ilmoitettu" :nimi :ilmoitettu
-         :hae (comp pvm/pvm-aika :ilmoitettu) :leveys 6}
+        {:otsikko "Tiedotettu urakkaan" :nimi :valitetty-urakkaan
+         :hae (comp pvm/pvm-aika :valitetty-urakkaan) :leveys 6}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
@@ -275,7 +276,7 @@
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
          :tyyppi :pvm-aika
-         :leveys 7}
+         :leveys 5}
 
         {:otsikko "Selitteet" :nimi :selitteet
          :tyyppi :komponentti
@@ -286,7 +287,7 @@
          :komponentti (partial kuittauslista e! pikakuittaus)
          :leveys 8}
 
-        {:otsikko "Tila" :nimi :tila :leveys 5 
+        {:otsikko "Tila" :nimi :tila :leveys 5
            :hae #(let [selite (tilan-selite (:tila %))]
                  (if (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
@@ -299,7 +300,7 @@
                        {:lihavoi true})
                      (when (= (:id %) (:edellinen-valittu-ilmoitus-id ilmoitukset))
                        {:korosta-hennosti true}))
-             
+
              haetut-ilmoitukset)]]]))
 
 (defn- ilmoitukset* [e! ilmoitukset]

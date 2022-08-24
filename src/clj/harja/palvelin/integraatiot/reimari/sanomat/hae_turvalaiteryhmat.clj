@@ -36,7 +36,7 @@
            :turvalaiteryhma
            lue-turvalaiteryhma
            ))
-    (log/error "Reimarin turvalaiteryhmähaun vastaus ei sisällä :HaeTurvalaiteRyhmat -elementtiä")))
+    (log/warn "Reimarin turvalaiteryhmähaun vastaus ei sisällä :HaeTurvalaiteRyhmat -elementtiä")))
 
 (defn lue-hae-turvalaiteryhmat-vastaus [xml]
   (hae-turvalaiteryhmat-vastaus (xml/lue xml "UTF-8")))

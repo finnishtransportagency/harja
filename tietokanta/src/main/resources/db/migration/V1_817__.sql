@@ -1,0 +1,1 @@
+ALTER TYPE sanktiolaji ADD VALUE 'arvonvahennyssanktio';

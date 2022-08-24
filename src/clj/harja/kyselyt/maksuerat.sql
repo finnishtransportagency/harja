@@ -63,66 +63,53 @@ FROM (SELECT
 GROUP BY tpi_id;
 
 -- name: hae-teiden-hoidon-urakan-maksuerien-summat
--- Hakee id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
--- Jokaiselle toimenpideinstanssille palautetaan id sekä sarakkeet kaikille
--- eri maksuerätyypeille.
--- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain kolme.
-SELECT
-  tpi_id,
-  :urakka_id as urakka_id,
-  SUM(kokonaishintaisten_summa)  AS kokonaishintainen,
-  SUM(akilliset_hoitotyot_summa) AS "akillinen-hoitotyo",
-  SUM(muut_summa)                AS muu
+-- Hakee urakan id:n perusteella maksuerien lähettämiseen tarvittavat tiedot.
+-- Jokaiselle toimenpideinstanssille palautetaan id sekä maksuerän summa.
+-- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain yksi (kokonaishintainen).
+SELECT tpi_id,
+       :urakka_id                       as urakka_id,
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden viimeisenä päivänä.
 FROM (SELECT
-        SUM((laskutusyhteenveto_teiden_hoito).kht_laskutettu +
-            (laskutusyhteenveto_teiden_hoito).kht_laskutetaan)                 AS kokonaishintaisten_summa,
-        SUM((laskutusyhteenveto_teiden_hoito).yht_laskutettu +
-            (laskutusyhteenveto_teiden_hoito).akilliset_hoitotyot_laskutetaan) AS akilliset_hoitotyot_summa,
-        SUM((laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutettu +
-            (laskutusyhteenveto_teiden_hoito).vahinkojen_korjaukset_laskutetaan) AS muut_summa,
-        (laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id,
-        lyht.alkupvm,
-        lyht.loppupvm
+          SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu) AS kokonaishintaisten_summa,
+          lyht.alkupvm,
+          lyht.loppupvm,
+          (mhu_laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id
       FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
-             SELECT
-               hk.alkupvm,
-               hk.loppupvm,
-               laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
-                                  date_trunc('month', hk.loppupvm) :: DATE,
-                                  (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
-                                  :urakka_id :: INTEGER)
-             FROM (SELECT *
-                   FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
-                   WHERE loppupvm < now()) AS hk
-             UNION ALL -- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
-             SELECT
-               hk.alkupvm,
-               hk.loppupvm,
-               laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
-                                  date_trunc('month', now()) :: DATE,
-                                  (date_trunc('month', now()) + INTERVAL '1 month') :: DATE, :urakka_id :: INTEGER)
-             FROM (SELECT *
-                   FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
-                   WHERE alkupvm < now() AND loppupvm > now()) AS hk
+               SELECT
+                   hk.alkupvm,
+                   hk.loppupvm,
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', hk.loppupvm) :: DATE,
+                                                       (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
+                                                       :urakka_id :: INTEGER)
+               FROM (SELECT *
+                     FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                     WHERE loppupvm < now()::DATE) AS hk
+               UNION ALL -- laskutusyhteenvedot kuluvalle hoitokaudelle
+               SELECT
+                   hk.alkupvm,
+                   hk.loppupvm,
+                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                                                       date_trunc('month', now()::DATE) ::DATE,
+                                                       (SELECT CASE
+                                                                   WHEN
+                                                                       (now()::DATE =
+                                                                        (SELECT (date_trunc('MONTH', now()::DATE) +
+                                                                                 INTERVAL '1 MONTH - 1 day')::DATE))
+                                                                       THEN
+                                                                       now()::DATE
+                                                                   ELSE
+                                                                       (date_trunc('month', now()::DATE) - INTERVAL '1 day')::DATE
+                                                                   END)                       ,
+                                                       :urakka_id :: INTEGER)
+               FROM (SELECT *
+                     FROM urakan_hoitokaudet(:urakka_id :: INTEGER)
+                     WHERE alkupvm < now()::DATE AND loppupvm > now()::DATE) AS hk
            ) AS lyht
       GROUP BY tpi_id, lyht.alkupvm, lyht.loppupvm) AS maksuerat
 GROUP BY tpi_id;
 
--- name: hae-teiden-hoidon-urakan-maksuerien-summat-vanha
-SELECT m.numero                       as "maksueranumero",
-       m.tyyppi                       as "maksueratyyppi",
-       tpi.id                         as "toimenpideinstanssi",
-       lk.summa                       as "summa",
-       EXTRACT(month from l.erapaiva) as "kuukausi"
-FROM lasku_kohdistus lk
-       JOIN lasku l ON l.id = lk.lasku
-       JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.urakka = :urakka
-       left JOIN toimenpidekoodi tpk ON lk.tehtava = tpk.id
-       JOIN maksuera m ON lk.toimenpideinstanssi = m.toimenpideinstanssi AND lk.maksueratyyppi = m.tyyppi AND
-                          tpi.id = m.toimenpideinstanssi AND m.likainen IS TRUE
-ORDER BY m.numero;
-
--- name: hae-urakan-maksuerat
+-- name: hae-hoitourakan-maksuerat
 -- Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
 -- Huom! Maksuerän summat haetaan hae-urakan-maksueratiedot kyselyllä, joka
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
@@ -190,6 +177,59 @@ FROM maksuera m
   JOIN kustannussuunnitelma k ON m.numero = k.maksuera
   JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
 WHERE tpi.urakka = :urakkaid;
+
+-- name: hae-teiden-hoidon-urakan-maksuerat
+-- (MHU) Hakee id:n perusteella maksueran lähettämiseen tarvittavat tiedot.
+-- Huom! Maksuerän summat haetaan hae-teiden-hoidon-urakan-maksueratiedot kyselyllä, joka
+-- muodostaa ne laskutusyhteenvetoa kutsumalla.
+SELECT
+    m.numero                 AS numero,
+    m.tyyppi                 AS maksuera_tyyppi,
+    m.nimi                   AS maksuera_nimi,
+    m.tila                   AS maksuera_tila,
+    m.lahetetty              AS maksuera_lahetetty,
+    tpi.id                   AS toimenpideinstanssi_id,
+    tpi.nimi                 AS toimenpideinstanssi_nimi,
+    tpi.alkupvm              AS toimenpideinstanssi_alkupvm,
+    tpi.loppupvm             AS toimenpideinstanssi_loppupvm,
+    s.sampoid                AS sopimus_sampoid,
+    k.tila                   AS kustannussuunnitelma_tila,
+    k.lahetetty              AS kustannussuunnitelma_lahetetty,
+    -- Tuotenumero
+    (SELECT emo.tuotenumero
+     FROM toimenpidekoodi emo
+     WHERE emo.id = tpk.emo) AS tuotenumero,
+    -- Kustannussuunnitelman summa
+    COALESCE((SELECT SUM(COALESCE(summa_indeksikorjattu, summa, 0))
+                FROM kiinteahintainen_tyo
+               WHERE toimenpideinstanssi = tpi.id), 0)
+        +
+    COALESCE((SELECT SUM(COALESCE(summa_indeksikorjattu, summa, 0))
+                FROM kustannusarvioitu_tyo
+               WHERE toimenpideinstanssi = tpi.id), 0)
+        +
+    CASE
+        -- Otetaan johto- ja hallintokorvaus summa mukaan ainoastaan MHU Hoidonjohto-toimenpiteelle.
+        WHEN tpk.koodi = '23151'
+            THEN
+            COALESCE((SELECT SUM(CASE
+                                     WHEN tuntipalkka_indeksikorjattu IS NOT NULL
+                                         THEN COALESCE((tunnit * tuntipalkka_indeksikorjattu * "osa-kuukaudesta"), 0)
+                                     ELSE COALESCE((tunnit * tuntipalkka * "osa-kuukaudesta"), 0)
+                END)
+                        FROM johto_ja_hallintokorvaus
+                       WHERE "urakka-id" = u.id), 0)
+        ELSE 0
+        END
+        AS kustannussuunnitelma_summa
+FROM maksuera m
+         JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
+         JOIN urakka u ON u.id = tpi.urakka
+         JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+         JOIN kustannussuunnitelma k ON m.numero = k.maksuera
+         JOIN toimenpidekoodi tpk ON tpi.toimenpide = tpk.id
+WHERE tpi.urakka = :urakkaid;
+
 
 -- name: hae-lahetettava-maksuera
 -- Hakee numeron perusteella maksueran lähettämiseen tarvittavat tiedot
@@ -268,7 +308,7 @@ SELECT
 FROM maksuera m
   JOIN toimenpideinstanssi tpi ON m.toimenpideinstanssi = tpi.id
   JOIN urakka u ON tpi.urakka = u.id
-WHERE m.likainen = TRUE;
+WHERE m.likainen IS TRUE;
 
 -- name: lukitse-maksuera!
 -- Lukitsee maksuerän lähetyksen ajaksi
@@ -296,17 +336,19 @@ SET tila = 'virhe', lukko = NULL, lukittu = NULL
 WHERE numero = :numero;
 
 -- name: merkitse-tyypin-maksuerat-likaisiksi!
--- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi
+-- Merkitsee kaikki annetun tyypin mukaiset maksuerät likaisi. Vain voimassaolevat tai ne joiden vanhenemisesta on alle 3 kk.
 UPDATE maksuera
 SET likainen = TRUE
-WHERE tyyppi = :tyyppi :: maksueratyyppi;
+WHERE tyyppi = :tyyppi :: maksueratyyppi AND
+      toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');
 
 -- name: merkitse-toimenpiteen-maksuerat-likaisiksi!
--- Merkitsee kaikki annetun toimenpiteen mukaiset maksuerät likaisi
+-- Merkitsee kaikki annetun toimenpiteen mukaiset maksuerät likaisi, jos toimenpideinstanssi on voimassa tai sen vanhenemisesta on alle 3 kk.
 UPDATE maksuera
 SET likainen = TRUE,
 muokattu = CURRENT_TIMESTAMP
-WHERE toimenpideinstanssi = :tpi;
+WHERE toimenpideinstanssi = :tpi AND
+    toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months');;
 
 -- name: luo-maksuera<!
 -- Luo uuden maksuerän.

@@ -5,7 +5,6 @@
             [harja.geo :as geo]
             [harja.kyselyt.pohjavesialueet :as q]
             [harja.kyselyt.materiaalit :as m]
-
             [harja.domain.oikeudet :as oikeudet]))
 
 
@@ -17,10 +16,16 @@
 (defn hae-urakan-pohjavesialueet [db user urakka-id]
   (into [] (q/hae-urakan-pohjavesialueet db urakka-id)))
 
-(defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialue alkupvm loppupvm]
-  (into [] (m/hae-pohjavesialueen-suolatoteuma db {:pohjavesialue pohjavesialue
-                                                   :alkupvm alkupvm
-                                                   :loppupvm loppupvm})))
+(defn hae-pohjavesialueen-suolatoteuma [db user pohjavesialueen-tunnus alkupvm loppupvm]
+  (let [suolatoteuma (first (m/hae-pohjavesialueen-suolatoteuma db {:pohjavesialue pohjavesialueen-tunnus
+                                                                    :alkupvm       alkupvm
+                                                                    :loppupvm      loppupvm}))
+        pohjavesialue (first (q/hae-pohjavesialueen-tiedot db {:pohjavesialue pohjavesialueen-tunnus}))]
+    (into [] (list {:yhteensa       (:maara_yhteensa suolatoteuma)
+                    :kayttoraja     (:talvisuolan_kayttoraja pohjavesialue)
+                    :pituus         (:pituus_km pohjavesialue)
+                    :maara_t_per_km (/ (or (:maara_yhteensa suolatoteuma) 0)
+                                       (or (:pituus_km pohjavesialue) 0))}))))
 
 (defrecord Pohjavesialueet []
   component/Lifecycle

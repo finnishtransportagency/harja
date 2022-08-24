@@ -1,5 +1,6 @@
 (ns harja.kyselyt.kanavat.kanavan-toimenpide-test
   (:require [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.kyselyt.kanavat.kanavan-toimenpide :as kanava-q]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
@@ -8,11 +9,13 @@
             [harja.pvm :as pvm]
             [specql.op :as op]))
 
+(use-fixtures :once tietokantakomponentti-fixture)
+
 (deftest hae-kanavan-toimenpiteet
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         vastaus (kanava-q/hae-kanavatomenpiteet-jeesql
                   db
-                  {:urakka (hae-saimaan-kanavaurakan-id)
+                  {:urakka (hae-urakan-id-nimella "Saimaan kanava")
                    :sopimus (hae-saimaan-kanavaurakan-paasopimuksen-id)
                    :alkupvm (harja.pvm/luo-pvm 2016 1 1)
                    :loppupvm (harja.pvm/luo-pvm 2018 1 1)
@@ -26,7 +29,7 @@
 
 
 (deftest tallenna-kanavan-toimenpide
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
+  (let [db (:db jarjestelma)
         hae-maara #(count (q "select id from kan_toimenpide where poistettu is not true"))
         maara-alussa (hae-maara)
         kayttaja-id (ffirst (q "select id from kayttaja limit 1"))

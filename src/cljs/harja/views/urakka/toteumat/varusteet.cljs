@@ -95,9 +95,7 @@
      {:otsikko "Yleinen kuntoluokitus" :nimi :kuntoluokka :tyyppi :positiivinen-numero :leveys 10}
      {:otsikko "Lähetys Tierekisteriin" :nimi :lahetyksen-tila :tyyppi :komponentti :leveys 9
       :komponentti #(nayta-varustetoteuman-lahetyksen-tila %)
-      :fmt pvm/pvm-aika}
-     {:otsikko "Varustekortti" :nimi :varustekortti :tyyppi :komponentti
-      :komponentti (fn [rivi] (varustekortti-linkki rivi)) :leveys 10}]
+      :fmt pvm/pvm-aika}]
     (take nayta-max-toteumaa toteumat)]
    (when (> (count toteumat) nayta-max-toteumaa)
      [:div.alert-warning
@@ -114,6 +112,13 @@
    [harja.ui.valinnat/varustetoteuman-tyyppi
     (r/wrap (:tyyppi valinnat)
             #(e! (v/->ValitseVarusteToteumanTyyppi %)))]
+   [yleiset/pudotusvalikko
+    "Lähetyksen tila"
+    {:valinta (:virheelliset-ainoastaan? valinnat)
+     :format-fn #(if % "Vain virheelliset" "Kaikki")
+     :valitse-fn #(e! (v/->ValitseVarusteNaytetaanVirheelliset %))}
+    [false true]]
+
    [:span
     [:div.label-ja-alasveto
      [:span.alasvedon-otsikko "Tietolaji"]
@@ -230,6 +235,8 @@
          :otsikko "Tien puoli"
          :tyyppi :valinta
          :valinnat (tierekisteri-varusteet/tien-puolet tietolaji)
+         :valinta-nayta (fn [arvo]
+                          (str arvo " " (tierekisteri-varusteet/puoli->selitys arvo)))
          :pituus 1
          :pakollinen? muokattava?
          :muokattava? (constantly muokattava?)})
@@ -337,14 +344,8 @@
 
 (defn varustehakulomake [e! nykyiset-valinnat naytettavat-toteumat app]
   [:span
-   (when (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
-     [:div.sisalto-container
-      [:h1 "Varusteet Tierekisterissä"]
-      (when (oikeus-varusteiden-muokkaamiseen?)
-        [napit/uusi "Lisää uusi varuste" #(e! (v/->UusiVarusteToteuma :lisatty nil)) {:disabled (not (istunto/ominaisuus-kaytossa? :tierekisteri))}])
-      [varustehaku e! app]])
    [:div.sisalto-container
-    [:h1 "Varustekirjaukset Harjassa"]
+    [:h1 "Vanhat varustekirjaukset Harjassa"]
     [valinnat e! nykyiset-valinnat]
     [toteumataulukko e! naytettavat-toteumat]]])
 
@@ -415,13 +416,14 @@
 
       [:span
        [debug/debug app]
+       [yleiset/info-laatikko :neutraali "Varusteiden syöttäminen Harjan kautta päättyy" "Varusteet syötetään jatkossa urakoitsijoiden omien järjestelmien kautta.
+        Siirtymävaiheessa varustekirjaukset voidaan kirjata urakoitsijan järjestelmään tai Velhon excel-lomakkeella.
+        Vanhat varustekirjaukset löytyvät Harjasta edelleen, mutta varusteiden yksityiskohtaisia tietoja ei voida tarkastella.
+        Velhon varustetiedot tulevat Harjaan näkyviin kesällä 2022." "100%"]
        (when virhe
          (yleiset/virheviesti-sailio virhe (fn [_] (e! (v/->VirheKasitelty)))))
        [kartta/kartan-paikka]
-
-       (if varustetoteuma
-         [varustetoteumalomake e! nykyiset-valinnat varustetoteuma]
-         [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat app])])))
+       [varustehakulomake e! nykyiset-valinnat naytettavat-toteumat app]])))
 
 (defn varusteet []
   [tuck varustetiedot/varusteet varusteet*])

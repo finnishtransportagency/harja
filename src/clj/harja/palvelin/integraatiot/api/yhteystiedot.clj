@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [compojure.core :refer [GET]]
+            [clojure.string :refer [upper-case]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -22,11 +23,11 @@
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
                         :viesti (format "Käyttäjällä ei oikeuksia urakkaan: %s" urakkanro)}]}))
-  (when-not (urakat/onko-olemassa-urakkanro? db urakkanro)
-    (log/error (format "Yritettiin hakea yhteystiedot tuntemattomalle urakalle: %s." urakkanro))
+  (when-not (urakat/onko-kaynnissa-urakkanro? db urakkanro)
+    (log/warn (format "Yritettiin hakea yhteystiedot tuntemattomalle tai päättyneelle urakalle: %s." urakkanro))
     (throw+ {:type virheet/+viallinen-kutsu+
              :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
-                        :viesti (format "Urakkanumerolla: %s ei löydy urakkaa Harjassa." urakkanro)}]})))
+                        :viesti (format "Urakkanumerolla: %s ei löydy voimassa olevaa urakkaa Harjassa." urakkanro)}]})))
 
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
@@ -42,7 +43,7 @@
         fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
         fim-yhteyshenkilot (map
                              (fn [fy]
-                               (let [hy (first (filter (fn [hy] (= (:kayttajatunnus hy) (:kayttajatunnus fy)))
+                               (let [hy (first (filter (fn [hy] (= (upper-case (:kayttajatunnus hy)) (upper-case(:kayttajatunnus fy))))
                                                        harja-vastuuhenkilot))]
                                  (assoc fy :vastuuhenkilo (:vastuuhenkilo hy)
                                            :varahenkilo (:varahenkilo hy))))

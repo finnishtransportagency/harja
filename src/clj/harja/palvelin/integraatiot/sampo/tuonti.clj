@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.sampo.tuonti
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.sanomat.sampo-sanoma :as sampo-sanoma]
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-sampoon-sanoma :as kuittaus-sampoon-sanoma]
             [harja.palvelin.integraatiot.sampo.kasittely.hankkeet :as hankkeet]
@@ -18,7 +18,7 @@
 
 (defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id lisatietoja]
   (log/debug "Lähetetään kuittaus Sampon jonoon:" kuittaus)
-  (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id})
+  (jms/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id})
   (integraatioloki/kirjaa-lahteva-jms-kuittaus
     integraatioloki
     kuittaus
@@ -62,8 +62,7 @@
                                                                  viestin-sisalto
                                                                  kuittausjono)]
     (try+
-      (let [tuonti (fn [] (kasittele-sisaanluku db viestin-sisalto))
-            kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
+      (let [kuittaukset (kasittele-sisaanluku db viestin-sisalto)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}

@@ -30,7 +30,7 @@ BEGIN
   pisteita := array_length(rpt, 1);
   FOR i IN 1..pisteita LOOP
     rp := rpt[i];
-    etaisyys := ST_Distance(piste, rp.sijainti::geometry);
+    etaisyys := ST_Distance84(piste, rp.sijainti::geometry);
     IF min_etaisyys IS NULL OR etaisyys < min_etaisyys THEN
       lahin := i;
       min_etaisyys := etaisyys;
@@ -45,11 +45,11 @@ BEGIN
   seuraava_et := NULL;
   IF lahin > 1 THEN
     edellinen := rpt[lahin-1];
-    edellinen_et := ST_Distance(piste, edellinen.sijainti::GEOMETRY);
+    edellinen_et := ST_Distance84(piste, edellinen.sijainti::GEOMETRY);
   END IF;
   IF lahin < pisteita THEN
     seuraava := rpt[lahin+1];
-    seuraava_et := ST_Distance(piste, seuraava.sijainti::GEOMETRY);
+    seuraava_et := ST_Distance84(piste, seuraava.sijainti::GEOMETRY);
   END IF;
   -- Valitaan alku ja loppu edellisen ja seuraavan pisteen etäisyyden perusteella
   IF edellinen_et IS NULL THEN

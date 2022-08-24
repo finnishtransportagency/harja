@@ -45,7 +45,7 @@
           :HaeViatResponse
           :vika
           lue-vika))
-    (log/error "Reimarin vikahaun vastaus ei sisällä :HaeViat -elementtiä")))
+    (log/warn "Reimarin vikahaun vastaus ei sisällä :HaeViat -elementtiä")))
 
 (defn lue-hae-viat-vastaus [xml]
   (hae-viat-vastaus (xml/lue xml "UTF-8")))

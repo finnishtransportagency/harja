@@ -1,10 +1,6 @@
 @import "livi_tyylit";
+@import "./yleiset";
 /* Geneerinen editoitava gridi */
-
-/*
-font: #191919
-border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa background-even: #e1e1e1
-*/
 
 .virhe-tai-varoitus-grid (@taustavari, @vari) {
   background-color: @taustavari;
@@ -15,32 +11,36 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   width: 100%;
 }
 
-@livitaulukon-input-korkeus: 22px;
-@livitaulukon-rivi-korkeus: 24px;
-@livi-taulukon-padding: 3px;
-@livi-taulukon-padding-muokatessa: 0;
+@livitaulukon-input-korkeus: @input-korkeus;
+@taulukon-vertical-padding: 8px;
+@taulukon-vertical-padding-muokattava-kentta: 4px;
+@livi-taulukon-padding: @taulukon-vertical-padding 16px;
+@livi-taulukon-padding-tiivis: @taulukon-vertical-padding 4px;
+@livi-taulukon-padding-melko-tiivis: @taulukon-vertical-padding 12px;
+@kalenterin-pvm-padding: 0 10px;
+@kalenterin-pvm-korkeus: 36px;
 @infolaatikko-leveys: 300px;
-@hento-korostusvari: #dee7fb;
+@hento-korostusvari: @blue-lighter;
 
 .vihje-hento-korostus {
   background-color: @hento-korostusvari;
 }
 
-.livi-taulukon-reunat {
-  border: 1px solid @harmaa7;
-}
-
 .livi-grid {
   color: @harmaa1;
+  &.panel {
+    margin-bottom: 34px;
+  }
   // pienen napin sisässä on pientä tekstiä, tämä estää esim. panel headerin kasvattamasta ikoneita
   // tämähän on vähän nastya, vaihtoehtona poistaa bs:n panel-heading luokka gridistä.
   .panel-heading {
-    h6 {
+    h2, h6 {
       display: inline;
     }
     // anna padding top ja bottom tulla BS:stä
     padding-left: 0;
     padding-right: 0;
+    margin-bottom: 16px;
     button {
       padding: 4px 8px;
     }
@@ -54,14 +54,23 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   div.panel-body {
     padding: 0;
   }
-  table {
+  div.livi-grid-reunaviiva {
+      border-left: 3px solid #0066CC;
+      padding-left: 16px;
+      margin-left: 16px;
+  }
+  table:not(.pvm-valinta) {
     font-size: @fontin-koko-taulukko;
     word-break: break-all;
+    th {
+      font-size: @fontin-koko-taulukko-th;
+      font-weight: 600;
+    }
     td {
+      vertical-align: top;
       input:not([type="checkbox"]), select {
         width: 100%;
         z-index: 10;
-        height: @livitaulukon-input-korkeus;
       }
       input[type="radio"] {
         width: auto;
@@ -82,19 +91,47 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
         word-break: break-word;
       }
       .varoitus {
-        .virhe-tai-varoitus-grid(@varoitus, @valkoinen);
+        .virhe-tai-varoitus-grid(@varoitus, @white-default);
       }
       .virhe {
-        .virhe-tai-varoitus-grid(@vaara, @valkoinen);
+        .virhe-tai-varoitus-grid(@vaara, @white-default);
       }
       .huomautus {
-        .virhe-tai-varoitus-grid(@huomautus, @valkoinen);
+        .virhe-tai-varoitus-grid(@huomautus, @white-default);
       }
+    }
+    .gridin-collapsoitava-valiotsikko > td {
+      padding: @kalenterin-pvm-padding;
     }
 
     thead {
-      background-color: @harmaa8;
+      background-color: @harmaa13;
       word-break: normal;
+    }
+    tbody {
+      > tr:not(.valiotsikko) td {
+        border-bottom: 1px solid @harmaa-vaalea;
+      }
+
+      // Häkki, jolla saadaan avattuihin riveihin sininen marginaaliviiva.
+      > tr.avattava-rivi td:first-child {
+        border-bottom: none;
+
+        > div {
+          height: 100%;
+          padding: 8px 0;
+          margin-top: -8px;
+          border-right: 3px solid @blue-default;
+          // Taikanumero, jotta täsmää keskelle.
+          width: 11px;
+          position: absolute;
+        }
+      }
+
+      // Sisennys avatulle riville
+      > tr.avattava-rivi td:nth-child(2) {
+        padding-left: @valistys-48;
+      }
     }
 
     td:hover {
@@ -102,7 +139,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       > .virheet,
       > .huomautukset {
           display: block;
-	  
+
 	  > .varoitus,
 	  > .virhe,
 	  > .huomautus {
@@ -115,6 +152,15 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     width: 100%;
     border-collapse: collapse;
     table-layout: fixed;
+
+    .radio, .checkbox {
+      margin-bottom: 0;
+      margin-top: 0;
+
+      label {
+        padding-left: 30px;
+      }
+    }
   }
 
   table.grid tr.vetolaatikko-auki {
@@ -130,15 +176,59 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   tr.vetolaatikko-kiinni {
     display: none;
   }
-  td.vetolaatikon-tila {
-    text-align: center;
+  // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
+  // käytetään ns. general sibling selectoria (~)
+  tr.gridin-collapsoitava-valiotsikko ~ tr {
+    td.vetolaatikon-tila {
+      text-align: center;
+      .vetolaatikon-sailio {
+        display: flex;
+        height: 100%;
+        .vetolaatikon-pylvas {
+          position: relative;
+          width: 3px;
+          left: 9px;
+          top: 0px;
+          bottom: 0px;
+          background: @blue-default;
+        }
+        > .navigation-ympyrassa {
+          position: relative;
+          top: 0;
+          left: 16px;
+        }
+      }
+    }
   }
+
   tr, td, th {
     padding: @livi-taulukon-padding;
-    .livi-taulukon-reunat;
+    &.tiivis {
+      padding: @livi-taulukon-padding-tiivis;
+    } 
+    &.melko-tiivis {
+      padding: @livi-taulukon-padding-melko-tiivis;
+    }
     .pvm-aika-kentta td {
       padding: 0;
     }
+    /* On olemassa soluja, joilla ei saa olla paddingia, mutta ne eivät olet päivämääräkenttiä*/
+    .grid-solu-ei-padding {
+      padding: 0px;
+    }
+    /* On olemassa soluja, joissa on pitkä teksti ja se halutaan rivittää, mutta pitää rivin default
+    korkeus samana*/
+    .grid-solulle-2-rivia {
+      line-height: 120%;
+      padding-top: 4px;
+      padding-bottom: 4px;
+    }
+  }
+  tr#paikkauksien-yhteenveto  {
+      border: none;
+      td, th {
+       border: none;
+     }
   }
 
   th.muokataan {
@@ -158,7 +248,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     margin-bottom: 1px;
   }
   .muokkaustoiminnot {
-    margin-bottom: 1px;
+    margin-bottom: 9px;
     button {
       margin-right: 1em;
     }
@@ -183,7 +273,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
   .panel-title {
     color: @harmaa1;
-    font-size: @fontin-koko-leipateksti;
   }
 
   button.grid-lisaa {
@@ -194,7 +283,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
     display: inline-block;
     .livicon-trash {
       margin-left: 2px;
-      line-height: @livitaulukon-input-korkeus;
     }
   }
 
@@ -205,14 +293,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   div.pvm {
     position: relative;
   }
-  tr.parillinen {
-    background-color: @harmaa10;
-  }
-  tr.pariton {
-    background-color: @harmaa15;
-  }
   tr.rivi-valittu {
-    color: @valkoinen;
+    color: @white-default;
     background-color: @harmaa7;
   }
   tr.yhteenveto {
@@ -229,17 +311,57 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
   }
   tr.klikattava:hover:not(.gridin-collapsoitava-valiotsikko) {
     cursor: pointer;
-    background-color: #D2CFCE;
+    background-color: @blue-lighter;
+  }
+  tr.piilota {
+    display:none;
   }
   .ei-arvoa {
     color: @varoitus;
   }
 
+  tr.valiotsikko {
+      background-color: @harmaa13;
+      border-bottom: none;
+  }
+
   tr.muokataan {
-    height: @livitaulukon-rivi-korkeus;
-    padding: @livi-taulukon-padding-muokatessa;
+    padding: @livi-taulukon-padding-tiivis;
+    &.klikattava:hover td.ei-muokattava,
+    &.klikattava.valittu td.ei-muokattava{
+      background-color: @blue-lighter;
+    }
+    > td.muokattava {
+      padding-top: @taulukon-vertical-padding-muokattava-kentta;
+      padding-bottom: @taulukon-vertical-padding-muokattava-kentta;
+      .valinnan-vierusnappi {
+        border-top: 4px solid transparent;
+        border-bottom: 5px solid transparent;
+        border-left: none;
+        border-right: none;
+      }
+    }
+    &:focus-within {
+      background-color: @blue-lighter;
+      > td.ei-muokattava {
+        background-color: @blue-lighter;
+      }
+      > td.rivinumero {
+        background-color: @blue-lighter;
+      }
+      > td.muokattava {
+        background-color: transparent;
+        .valinnan-vierusnappi {
+          background-color: @white-default;
+        }
+       .alasveto-gridin-kentta > button.nappi-alasveto {
+          padding-top: 2px;
+          border-bottom: 1px solid @white-default;
+          height: 26px;
+        }
+      }
+    }
     &.parillinen {
-      background-color: @harmaa10;
       input[disabled].disabled {
         background-color: @harmaa10;
       }
@@ -253,7 +375,6 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
     }
     &.pariton {
-      background-color: @harmaa13;
       input[disabled].disabled {
         background-color: @harmaa13;
       }
@@ -267,34 +388,68 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       }
     }
     td {
+      background-color: @white-default;
       &.ei-muokattava {
-        padding-left: @livi-taulukon-padding;
+        background-color: @harmaa15;
+        padding: @livi-taulukon-padding;
+        .valinta-ja-linkki-container > .valinnan-vierusnappi {
+          border: none;
+        }
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
+        &.melko-tiivis {
+          padding: @livi-taulukon-padding-melko-tiivis;
+        }
       }
       &.ei-muokattava.tasaa-oikealle {
-        padding-right: @livi-taulukon-padding;
+        padding: @livi-taulukon-padding;
+        &.tiivis {
+          padding: @livi-taulukon-padding-tiivis;
+        }
+        &.melko-tiivis {
+          padding: @livi-taulukon-padding-melko-tiivis;
+        }
       }
       &.muokattava > input {
-        padding: 0 0 0 @livi-taulukon-padding;
+        padding: 0 0 0 3px;
       }
       &.muokattava.tasaa-oikealle > input {
-        padding: 0 @livi-taulukon-padding 0 0;
+        padding: 0 3px 0 0;
       }
       &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
-        padding: 0 @livi-taulukon-padding 0 0;
+        padding: 0;
       }
-      padding: @livi-taulukon-padding-muokatessa;
-      .livi-taulukon-reunat;
+      .alasveto-gridin-kentta.tasaa-oikealle {
+        .nappi-alasveto {
+          padding: 0;
+          text-align: right;
+          .valittu {
+            padding-right: 30px;
+            text-align: right;
+          }
+          .livicon-chevron-down, .livicon-chevron-up {
+            right: 2px;
+          }
+        }
+      }
       > input {
         border: none;
       }
       > span.grid-kentta-wrapper input {
-        border: none;
+        border-top: 4px solid @white-default;
+        border-bottom: 5px solid @white-default;
+        border-left: none;
+        border-right: none;
       }
       .nappi-alasveto {
         border: none;
       }
       .pvm-aika-kentta td {
         padding: 0;
+      }
+      &.toiminnot {
+        padding: @livi-taulukon-padding-tiivis;
       }
     }
     .checkbox-rivina {
@@ -304,7 +459,7 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 
   tr.disabloitu-rivi {
     background-color: @harmaa6 !important;
-    color: @valkoinen;
+    color: @harmaa6;
 
     input {
       color: initial;
@@ -320,9 +475,80 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
       margin-bottom: 3px;
     }
   }
+
+  tr.tyhja {
+    text-align: center;
+  }
   // Tämä on sitä varten, että grid laitetaan toisen gridin sisälle
   tr:not(.vetolaatikko) .livi-grid {
     margin-bottom: 0px;
+  }
+
+  .grid-otsikkokomponentti {
+    background-color: @harmaa9;
+    border: none;
+    tr, td, th {
+      border: none;
+    }
+  }
+
+  &.skrollattava {
+    .panel-body {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      // Ei haluta pakottaa koko ruudun levyiseksi, vaan skrollataan.
+      min-width: 100%;
+      width: auto;
+
+      tr, td {
+        // Ei rikota tekstiä useammalle riville taulukossa.
+        white-space: pre;
+      }
+    }
+
+    .sticky(@taustavari: initial, @vasemmalta: 0) {
+      position: sticky;
+      left: @vasemmalta;
+      z-index: 1;
+      background-color: @taustavari;
+
+    }
+
+    &.ensimmainen-sarake-sticky {
+      th:first-child {
+        .sticky(@harmaa13);
+      }
+
+      th:nth-child(2) {
+        .sticky(@harmaa13, 52px);
+      }
+
+      tr.hennosti-korostettu-rivi td:nth-child(-n+2) {
+        background-color: @hento-korostusvari;
+      }
+
+      td:first-child {
+        .sticky(@harjan-taustavari);
+        min-width: 52px;
+
+        &:hover {
+          // Tämä on pakollinen, koska mahdolliset tooltipit jäävät ensimmäisten rivien alle.
+          z-index: 1070;
+        }
+      }
+
+      td:nth-child(2) {
+        .sticky(@harjan-taustavari, 52px);
+
+        &:hover {
+          // Tämä on pakollinen, koska mahdolliset tooltipit jäävät ensimmäisten rivien alle.
+          z-index: 1070;
+        }
+      }
+    }
   }
 }
 
@@ -388,7 +614,8 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 }
 
 .nappi-toissijainen.nappi-tayta {
-  height: @livitaulukon-input-korkeus;
+  height: 24px;
+  top: 16px;
   margin: 0;
   padding: 1px 4px;
   z-index: 1;
@@ -448,12 +675,25 @@ border: 1px solid #afafaf background-header: #c8c8c8 background-odd: #fafafa bac
 // Gridin väliotsikkotyyli
 tr.otsikko {
   background-color: @harmaa5;
-  color: @valkoinen;
+  color: @white-default;
 
+  &.gridin-collapsoitava-valiotsikko {
+    background-color: @harjan-taustavari;
+    color: @blue-dark;
+    .valiotsikon-teksti {
+      position: relative;
+      top: -9px;
+      .fontti-16();
+      color: @blue-dark;
+      margin-left: @valistys-32;
+      margin-top: @valistys-4;
+      margin-bottom: @valistys-4;
+    }
+  }
   td {
     position: relative;
 
-    span[class^="livicon"] {
+    span[class^="livicon-chevron"] {
       position: absolute;
       left: 5px;
       top: 12px;
@@ -466,14 +706,18 @@ tr.otsikko {
 }
 
 .gridin-collapsoitava-valiotsikko {
-  td {
-    position: relative;
-
+  > td {
+    > .navigation-ympyrassa {
+      position: relative;
+      top: 15px;
+      right: 4px;
+      text-align: center;
+    }
     h5 {
-      margin-left: 20px;
+      margin-left: 30px;
     }
 
-    span[class^="livicon"] {
+    span[class^="livicon-chevron"] {
       position: absolute;
       left: 5px;
       top: 12px;
@@ -508,10 +752,28 @@ tr.otsikko {
   word-break: break-word;
 }
 
+.valinta-ja-linkki-container {
+  display: flex;
+  justify-content: flex-start;
+  &.pot2-materiaalin-tiedot > .valinnan-vierusnappi {
+      height: 100%;
+    }
+  .valinnan-vierusnappi {
+    padding: 0 4px;
+    width: 20px;
+  }
+  .materiaalin-valinta-alasveto {
+    flex-grow: 100;
+  }
+}
+
 .alasveto-gridin-kentta {
   .livi-alasveto(100%, auto, @livitaulukon-input-korkeus);
   .valittu {
     max-height: 100%; //vähän häkki
+  }
+  &.linkin-vieressa > button.nappi-alasveto {
+    padding-left: 0;
   }
 }
 
@@ -532,6 +794,10 @@ tr.otsikko {
 
 .grid-solu-varoitus {
   color: @vaara;
+}
+
+.grid-solu-ei-padding {
+  padding: 0px!important;
 }
 
 .grid-solu-ennustettu { // Kuvaa numerollista kenttää, jonka määrä on ennustettu
@@ -560,4 +826,23 @@ span.ajax-loader-pisteet {
 
 .grid-huomio-varoitus {
   color: @varoitus;
+}
+
+.gridin-fonttikoko {
+  font-size: @fontin-koko-leipateksti;
+}
+.muokkaus-grid-sort-nappi {
+  &.nappi-ikoni {
+    width: unset;
+    border: none;
+  }
+  &.valittu-sort {
+    border: 1px solid @black-default;
+  }
+  padding: 0;
+  margin-left: 8px;
+  > span > img {
+    width: 1rem;
+    height: 1rem;
+  }
 }

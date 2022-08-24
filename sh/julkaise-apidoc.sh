@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo "Julkaistaan uusin Harja API:n dokumentaatio GH.pagesiin (http://finnishtransportagency.github.io/harja/)";
+echo "Julkaistaan uusin Harja API:n dokumentaatio GH.pagesiin (https://finnishtransportagency.github.io/harja/)";
 
 cd ../../harja-sivut/apidoc;
 git pull;
@@ -15,4 +15,4 @@ git add -A
 git commit -m 'Päivitä Harja API dokumentaatio';
 git push;
 
-echo "Uusi Harjan API-dokumentaatio julkaistu GH Pagesiin (http://finnishtransportagency.github.io/harja/apidoc/api.html)";
+echo "Uusi Harjan API-dokumentaatio julkaistu GH Pagesiin (https://finnishtransportagency.github.io/harja/apidoc/api.html)";

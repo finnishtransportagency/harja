@@ -18,6 +18,7 @@
 
 (def +ilmoitustoimenpide+
   {:ilmoitusid 12345,
+   :vakiofraasi "Polanne tasataan"
    :vapaateksti "Soitan kunhan kerkeän <TESTI>",
    :kuittaustyyppi "vastaus",
    :kasittelija
@@ -25,7 +26,7 @@
     :organisaatio "Välittävä Urakoitsija",
     :ytunnus "Y1234",
     :sahkoposti "usko.untamo@valittavaurakoitsija.fi",
-    :etunimi "Usko",
+    :etunimi "Usko<Toivo",
     :sukunimi "Untamo",
     :tyopuhelin "0509288383"},
    :id 2,
@@ -33,7 +34,7 @@
    :kuittaaja
    {:sukunimi "Käsittelijä",
     :tyopuhelin "0509288383",
-    :organisaatio "Organisaatio RY",
+    :organisaatio "Organi & saatio RY",
     :ytunnus "1234567-8",
     :etunimi "Keijo",
     :matkapuhelin "04428121283",
@@ -48,9 +49,14 @@
   (let [xml (html (ilmoitustoimenpide-sanoma/muodosta +ilmoitustoimenpide+ (str (UUID/randomUUID))))
         data (xml-zip (parse (ByteArrayInputStream. (.getBytes xml "UTF-8"))))]
     (is (= "12345" (z/xml1-> data :ilmoitusId z/text)))
+    ;;(is (= "Polanne tasataan" (z/xml1-> data :vakiofraasi z/text)))
     (is (= "Soitan kunhan kerkeän <TESTI>" (z/xml1-> data :vapaateksti z/text)))
     (is (= "vastaus" (z/xml1-> data :tyyppi z/text)))
-    (is (= "UskoUntamo04428121283usko.untamo@valittavaurakoitsija.fiVälittävä UrakoitsijaY1234" (z/xml1-> data :kasittelija z/text)))
-    (is (= "KeijoKäsittelijä04428121283keijo.kasittelija@eioleolemassa.fiOrganisaatio RY1234567-8" (z/xml1-> data :ilmoittaja z/text)))
+    (is (= "Usko<ToivoUntamo04428121283usko.untamo@valittavaurakoitsija.fiVälittävä UrakoitsijaY1234" (z/xml1-> data :kasittelija z/text)))
+    (is (= "KeijoKäsittelijä04428121283keijo.kasittelija@eioleolemassa.fiOrgani & saatio RY1234567-8" (z/xml1-> data :ilmoittaja z/text)))
     (is (= "2005-09-30T21:10:34.500" (z/xml1-> data :aika z/text)))))
 
+(deftest nimen-ja-organisaation-escape-kasittely
+
+
+  )

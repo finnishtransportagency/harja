@@ -5,6 +5,7 @@
             [harja.ui.grid :refer [grid]]
             [harja.ui.kentat :refer [tee-kentta]]
             [harja.ui.debug :as ui-debug]
+            [harja.ui.yleiset :as yleiset]
             [harja.loki :refer [tarkkaile! log]]
             [cljs.pprint :refer [pprint]]
             [harja.tiedot.navigaatio :as nav]
@@ -18,6 +19,11 @@
             [harja.tyokalut.spec-apurit :as spec-apurit])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
+
+#_(defn- debug-state [app]
+  [:span
+   [:div.row
+    [df/DataFriskShell app]]])
 
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
@@ -41,9 +47,9 @@
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus
              tallennus-kaynnissa? :tallennus-kaynnissa?
              kayttajan-urakat :kayttajan-urakat :as app}]
-      [:span
-       [ui-debug/debug @tiedot/tietyoilmoitukset]
+      [:span.tietyoilmoitus-container
        [kartta/kartan-paikka]
+       [yleiset/tietyoilmoitus-siirtynyt-toast]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! app tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))

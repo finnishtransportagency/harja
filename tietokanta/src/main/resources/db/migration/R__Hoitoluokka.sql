@@ -1,13 +1,14 @@
 -- Hoitoluokka taulun hakuja varten
 
 CREATE OR REPLACE FUNCTION hoitoluokka_pisteelle
-  (piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER)
+  (piste geometry, tietolaji hoitoluokan_tietolajitunniste, treshold INTEGER, kielletyt_hoitoluokat INTEGER[])
   RETURNS INTEGER
 AS $$
 SELECT hoitoluokka
   FROM hoitoluokka
  WHERE ST_DWithin(geometria, piste, treshold) AND
-       tietolajitunniste = tietolaji
+       tietolajitunniste = tietolaji AND
+       hoitoluokka != ALL(kielletyt_hoitoluokat)
  ORDER BY ST_Length(ST_ShortestLine(geometria, piste)) ASC
  LIMIT 1;
 $$ LANGUAGE SQL IMMUTABLE;
@@ -20,7 +21,8 @@ CREATE OR REPLACE FUNCTION normalisoi_talvihoitoluokka (talvihoitoluokka INTEGER
 SELECT
   CASE
   WHEN talvihoitoluokka IS NULL THEN 100
-  WHEN talvihoitoluokka > 11 THEN 100
+  WHEN talvihoitoluokka = 99 THEN 99
+  WHEN talvihoitoluokka > 11 AND talvihoitoluokka != 99 THEN 100
   WHEN pvm < '2018-07-02'::TIMESTAMP THEN
     CASE
     WHEN talvihoitoluokka = 0 THEN 1  -- Ise

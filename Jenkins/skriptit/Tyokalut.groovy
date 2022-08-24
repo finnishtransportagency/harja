@@ -160,14 +160,22 @@ def ajaTestiserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_testiserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen")
+        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -175,12 +183,12 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
     try {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/testing/inventory',
-			 playbook    : 'playbooks/nightly.yml',
-			 vaultCredentialsId: 'Vault',
-                         extraVars   : [
-                jenkins_build_number: buildNumber,
-                jenkins_job_name: env.JOB_BASE_NAME
-            ]])
+			             playbook    : 'playbooks/nightly.yml',
+			             vaultCredentialsId: 'Vault',
+                                     extraVars   : [
+                            jenkins_build_number: buildNumber,
+                            jenkins_job_name: env.JOB_BASE_NAME
+                        ]])
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
     } catch (e) {
         hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
@@ -213,14 +221,21 @@ def ajaStagingserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_stagingserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -229,6 +244,7 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/staging/inventory',
                          playbook    : 'playbooks/staging.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
@@ -246,14 +262,21 @@ def ajaTuotantoserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_tuotantoserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TUOTANTOPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
         hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -264,6 +287,7 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
         ansiblePlaybook([installation: 'ansible 2.7',
                          inventory   : 'environments/production/inventory',
                          playbook    : 'playbooks/production.yml',
+                         vaultCredentialsId: 'Vault',
                          extraVars   : [
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME

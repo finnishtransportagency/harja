@@ -7,4 +7,9 @@ SELECT t.reitti,
        (SELECT unnest(reittipisteet) AS rp
           FROM toteuman_reittipisteet rp
          WHERE toteuma = t.id) rp ON true
- WHERE t.id = :toteuma-id
+ WHERE t.id = :toteuma-id;
+
+-- name: hae-tyokonehavainto-reitti
+SELECT ST_Simplify(t.sijainti,0.6,true) as sijainti
+  FROM tyokonehavainto t
+WHERE t.tyokoneid = :tyokoneid;

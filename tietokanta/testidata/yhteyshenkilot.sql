@@ -294,7 +294,7 @@ UPDATE yhteyshenkilo SET organisaatio=(SELECT id FROM organisaatio WHERE ytunnus
 
 -- Päivystykset
 
-INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-01 00:00:00.000000', '2015-11-11 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
+INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-01 00:00:00.000000', '2026-11-11 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'ismoyit@example.org'));
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (false, true, '2015-11-13 00:00:00.000000', '2015-11-30 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'seppoyit@example.org'));
 INSERT INTO paivystys (vastuuhenkilo, varahenkilo, alku, loppu, urakka, yhteyshenkilo) VALUES (true, false, '2015-12-01 00:00:00.000000', '2015-12-06 00:00:00.000000', (SELECT id FROM urakka WHERE nimi ='Oulun alueurakka 2014-2019'), (SELECT id FROM yhteyshenkilo WHERE sahkoposti = 'kyostiyit@example.org'));
 
@@ -311,3 +311,11 @@ INSERT INTO urakanvastuuhenkilo (urakka, rooli, etunimi, sukunimi, puhelin, sahk
 	 'ELY_Urakanvalvoja', 'Max', 'Syöttöpaine', '04087654321','max@example.org','LXSYOTMAX', false),
         ((SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
          'vastuuhenkilo', 'Uuno', 'Urakoitsija','0911223344','uuno@example.org', 'LXUUU', true);
+
+-- Lisätään Kemin päällystysurakkaan yhteyshenkilö
+INSERT INTO yhteyshenkilo (etunimi, sukunimi, kayttajatunnus, tyopuhelin, matkapuhelin, sahkoposti, organisaatio, sampoid, ulkoinen_id) VALUES
+('Tarmo', 'Mourunki', null, '', '', 'tarmolla.onasiaa@example.org',
+ (SELECT id FROM organisaatio where nimi = 'Kemin Alueurakoitsija Oy'), null, null);
+INSERT INTO yhteyshenkilo_urakka (yhteyshenkilo, urakka, rooli) VALUES
+((SELECT id FROM yhteyshenkilo WHERE etunimi = 'Tarmo' AND sukunimi = 'Mourunki' LIMIT 1),
+ (SELECT id FROM urakka WHERE nimi = 'Kemin päällystysurakka'), 'Kunnossapitopäällikkö');

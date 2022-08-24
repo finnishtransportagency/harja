@@ -28,7 +28,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :vv-toimenpiteet (component/using
                                            (vv-toimenpiteet/->Toimenpiteet)
                                            [:db :http-palvelin])))))
@@ -48,7 +47,7 @@
     ::toi/toimenpide-id 1}])
 
 (deftest kok-hint-toimenpiteiden-haku
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id
@@ -79,7 +78,7 @@
     (is (some #(> (count (get-in % [::toi/komponentit])) 0) vastaus))))
 
 (deftest yks-hint-toimenpiteiden-haku
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id
@@ -118,7 +117,7 @@
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
         hintaryhma-idt-ennen (apurit/hae-toimenpiteiden-hintaryhma-idt yksikkohintaiset-toimenpide-idt)
         omat-hinnoittelu-idt-ennen (apurit/hae-toimenpiteiden-omien-hinnoittelujen-idt yksikkohintaiset-toimenpide-idt)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -148,7 +147,7 @@
 
 (deftest siirra-toimenpide-kokonaishintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}]
 
@@ -158,7 +157,7 @@
 
 
 (deftest toimenpiteiden-haku-toimii-urakkafiltterilla
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}
@@ -170,7 +169,7 @@
         "Ei toimenpiteitä Muhoksen urakassa")))
 
 (deftest toimenpiteiden-haku-toimii-sopimusfiltterilla
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-sivusopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}
@@ -182,7 +181,7 @@
         "Ei toimenpiteitä sivusopimuksella")))
 
 (deftest toimenpiteiden-haku-toimii-aikafiltterilla
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id
@@ -197,7 +196,7 @@
 
 (deftest toimenpiteiden-haku-toimii-vaylafiltterilla
   (testing "Väyläfiltteri löytää toimenpiteet"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylanro (hae-vayla-hietarasaari)
           kysely-params {::toi/urakka-id urakka-id
@@ -215,7 +214,7 @@
             muuten ei palaudu mitään"
     ;; Käytännössä tällaista tilannetta ei pitäisi tulla, UI:lta voidaan valita vain
     ;; annetun väylätyypin mukaisia väyliä filtteriksi.
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylanro (hae-vayla-hietarasaari) ;; Tyyppiä kauppamerenkulku
           vaylatyyppi :muu
@@ -231,7 +230,7 @@
 
 
   (testing "Väyläfiltteri suodattaa toimenpiteet"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -244,7 +243,7 @@
 
 (deftest toimenpiteiden-haku-toimii-vaylatyyppifiltterilla
   (testing "Väylätyyppifiltteri löytää toimenpiteet"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylatyyppi :kauppamerenkulku
           kysely-params {::toi/urakka-id urakka-id
@@ -258,7 +257,7 @@
       (is (every? #(= (get-in % [::toi/vayla ::va/tyyppi]) :kauppamerenkulku) vastaus))))
 
   (testing "Väylätyyppifiltteri suodattaa toimenpiteet"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           vaylatyyppi :muu
           kysely-params {::toi/urakka-id urakka-id
@@ -272,7 +271,7 @@
 
 (deftest toimenpiteiden-haku-toimii-turvalaiteifiltterilla
   (testing "Virheellinen turvalaitefiltteri ei löydä mitään"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -286,7 +285,7 @@
 
 (deftest toimenpiteiden-haku-toimii-vikailmoitusfiltterilla
   (testing ":vikailmoitukset? true, vain vikailmoitukselliset palautuu"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -299,7 +298,7 @@
       (is (every? #(true? (::toi/vikakorjauksia? %)) vastaus))))
 
   (testing ":vikailmoitukset? false, palautuu vikailmoitukselliset ja -ilmoituksettomat"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -312,7 +311,7 @@
       (is (>= (count vastaus) 3))))
 
   (testing ":vikailmoitukset? nil, palautuu vikailmoitukselliset ja -ilmoituksettomat"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -325,7 +324,7 @@
 
 (deftest toimenpiteiden-haku-toimii-toimenpidefilttereilla
   (testing "Työlajilla suodatus toimii"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -336,7 +335,7 @@
       (is (>= (count vastaus) 4))
       (is (every? #(= (::toi/tyolaji %) :poijut) vastaus)))
 
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -347,7 +346,7 @@
       (is (= (count vastaus) 0))))
 
   (testing "Työluokalla suodatus toimii"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -358,7 +357,7 @@
       (is (>= (count vastaus) 3))
       (is (every? #(= (::toi/tyoluokka %) :valo-ja-energialaitteet) vastaus)))
 
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -369,7 +368,7 @@
       (is (= (count vastaus) 0))))
 
   (testing "Toimenpiteellä suodatus toimii"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -380,7 +379,7 @@
       (is (>= (count vastaus) 3))
       (is (every? #(= (::toi/toimenpide %) :valo-ja-energialaitetyot) vastaus)))
 
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -391,7 +390,7 @@
       (is (= (count vastaus) 0))))
 
   (testing "Työlajilla, työluokka ja & toimenpide toimivat yhdessä"
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -408,7 +407,7 @@
       (is (every? #(= (::toi/tyoluokka %) :valo-ja-energialaitteet) vastaus))
       (is (every? #(= (::toi/toimenpide %) :valo-ja-energialaitetyot) vastaus)))
 
-    (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+    (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
           kysely-params {::toi/urakka-id urakka-id
                          ::toi/sopimus-id sopimus-id
@@ -421,7 +420,7 @@
       (is (= (count vastaus) 0)))))
 
 (deftest toimenpiteiden-haku-ei-toimi-ilman-oikeuksia
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         sopimus-id (hae-helsingin-vesivaylaurakan-paasopimuksen-id)
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/sopimus-id sopimus-id}]
@@ -433,7 +432,7 @@
 (deftest yksikkohintaisiin-siirto
   (let [kokonaishintaiset-toimenpide-idt (apurit/hae-kokonaishintaiset-toimenpide-idt)
         toimenpiteiden-kiintio-idt-ennen (apurit/hae-toimenpiteiden-kiintio-idt kokonaishintaiset-toimenpide-idt)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt kokonaishintaiset-toimenpide-idt}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -455,7 +454,7 @@
 
 (deftest siirra-toimenpide-yksikkohintaisiin-kun-ei-kuulu-urakkaan
   (let [yksikkohintaiset-toimenpide-idt (apurit/hae-yksikkohintaiset-toimenpide-idt)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/idt yksikkohintaiset-toimenpide-idt}]
 
@@ -468,7 +467,7 @@
         laske-liitteet #(ffirst (q "SELECT COUNT(*) FROM reimari_toimenpide_liite WHERE poistettu = FALSE;"))
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
         liitteet-ennen (laske-liitteet)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}
@@ -497,7 +496,7 @@
 (deftest lisaa-liite-ilman-oikeutta
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]
@@ -509,7 +508,7 @@
 (deftest lisaa-liite-toimenpiteelle-joka-ei-kuulu-urakkaan
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]
@@ -521,7 +520,7 @@
 (deftest poista-liite-ilman-oikeutta
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]
@@ -533,7 +532,7 @@
 (deftest poista-liite-toimenpiteelta-joka-ei-kuulu-urakkaan
   (let [liite-id 1
         kokonaishintaiset-toimenpide-id (first (apurit/hae-kokonaishintaiset-toimenpide-idt))
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/liite-id liite-id
                        ::toi/id kokonaishintaiset-toimenpide-id}]

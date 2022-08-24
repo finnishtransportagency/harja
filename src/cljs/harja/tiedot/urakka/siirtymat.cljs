@@ -11,6 +11,8 @@
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.paallystys :as paallystys]
+            [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset]
             [harja.tiedot.urakka.toteumat.varusteet :as varusteet])
@@ -19,9 +21,10 @@
 (defn- hae-toteuman-siirtymatiedot [toteuma-id]
   (k/post! :siirry-toteuma toteuma-id))
 
-(defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id]}]
+(defn- hae-paallystysilmoituksen-tiedot [{:keys [paallystyskohde-id urakka-id :paikkauskohde?]}]
   (k/post! :urakan-paallystysilmoitus-paallystyskohteella {:paallystyskohde-id paallystyskohde-id
-                                                           :urakka-id urakka-id}))
+                                                           :urakka-id urakka-id
+                                                           :paikkauskohde? paikkauskohde?}))
 
 (defn- odota-arvoa
   "Pollaa annettua atomia 100ms välein kunnes sen arvo on tosi arvo-pred mukaan.
@@ -111,6 +114,10 @@
     (let [{:keys [yllapitokohde-id urakka-id hallintayksikko-id] :as vastaus}
           (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
                                                  :urakka-id kohteen-urakka-id}))
+          pot-versio (:versio vastaus)
+          vastaus (if (= 1 pot-versio)
+                    (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+                    (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
           nykyinen-valilehti-taso1 @nav/valittu-sivu
           nykyinen-valilehti-taso2 (nav/valittu-valilehti :urakat)
           nykyinen-valilehti-taso3 (nav/valittu-valilehti :kohdeluettelo-paallystys)]
@@ -132,15 +139,69 @@
       (when (= paallystyskohde-id yllapitokohde-id) ; estä pääsy toiseen ilmoitukseen esim. spoofaamalla ypk-id
         ;; Deeppi harppuuna: avataan päällystysilmoitus asettamalla päällystystieto ns:n atomiin data
         (swap! paallystys/tila assoc :paallystysilmoitus-lomakedata
-                (assoc vastaus
-                  :kirjoitusoikeus?
-                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                                            valittu-urakka-id)))))))
+               (assoc vastaus
+                 :kirjoitusoikeus?
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                           valittu-urakka-id)))))))
 
-(defn avaa-tietyoilmoitus
-  "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id] :as yllapitokohde} valittu-urakka-id]
+(defn avaa-paikkausten-pot!
+  "Navigoi paikkausten päällystysilmoituksiin ja avaa pot lomake."
+  [{:keys [paallystyskohde-id kohteen-urakka-id valittu-urakka-id] :as tiedot}]
   (go
-    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
+    (let [vastaus (<! (hae-paallystysilmoituksen-tiedot {:paallystyskohde-id paallystyskohde-id
+                                                         :urakka-id kohteen-urakka-id
+                                                         :paikkauskohde? true}))
+          pot-versio (:versio vastaus)
+          vastaus (if (= 1 pot-versio)
+                    (paallystys/muotoile-osoitteet-ja-alustatoimet vastaus)
+                    (pot2-tiedot/pot2-haun-vastaus->lomakedata vastaus kohteen-urakka-id))
+          muut-tiedot (apply dissoc vastaus paallystys/perustiedot-avaimet)
+          vastaus (merge vastaus muut-tiedot)]
+      ;; Aseta oikea välilehti
+      (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :paikkausten-paallystysilmoitukset)
+      ;; Päivitetään app-stateen pot lomakkeen tiedot, jotka on mukiloitu letissä oikeaksi
+      (swap! urakka-tila/paikkauskohteet assoc :paallystysilmoitus-lomakedata
+             (assoc vastaus
+               :kirjoitusoikeus?
+               (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                         valittu-urakka-id))))))
+
+(defn avaa-toteuma-listaus! [{:keys [paikkauskohde-id] :as tiedot}]
+  (go
+    ;; Aseta oikea välilehti
+    (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :toteumat)
+    (swap! urakka-tila/paikkaustoteumat assoc :harja.domain.paikkaus/toteumataulukon-tilat #{paikkauskohde-id})))
+
+(defn avaa-valikatselmus [valittu-hoitokausi]
+  (go
+    (let [app-state {:valikatselmus-auki? true
+                     :hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                     :valittu-hoitokausi valittu-hoitokausi}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :laskutus :kustannusten-seuranta)
+        (nav/aseta-valittu-valilehti! :urakat :laskutus)
+        (swap! urakka-tila/kustannusten-seuranta merge app-state)))))
+
+(defn avaa-lupaukset [hoitokauden-alkuvuosi]
+  (go
+    (let [app-state {:valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                          (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))]}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
+        (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
+        (swap! urakka-tila/lupaukset merge app-state)))))
+
+(defn kustannusten-seurantaan [osio]
+  (go
+    (let [app-state {}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
+        (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
+        (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
+
+(defn paallystysten-kohdeluetteloon
+  []
+  (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))

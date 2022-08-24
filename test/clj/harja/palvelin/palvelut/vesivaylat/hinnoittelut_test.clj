@@ -28,7 +28,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :vv-hinnoittelut (component/using
                                            (hin/->Hinnoittelut)
                                            [:db :http-palvelin])))))
@@ -50,7 +49,7 @@
 
 (deftest tallenna-vv-toimenpiteen-hinta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
         hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
         insert-params {::toi/urakka-id urakka-id
@@ -125,7 +124,7 @@
 (deftest tallenna-toimenpiteelle-tyot
   (testing "Uusien töiden lisäys"
     (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
@@ -184,7 +183,7 @@
 
 (deftest tallenna-vv-toimenpiteen-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        muhos-id (hae-muhoksen-paallystysurakan-id)
+        muhos-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         insert-params {::toi/urakka-id muhos-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat []
@@ -195,7 +194,7 @@
 
 (deftest tallenna-tyot-jotka-eivat-kuulu-toimenpiteeseen
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpidekoodi-id (ffirst (q "SELECT id
                                         FROM toimenpidekoodi
                                         WHERE nimi = 'Henkilöstö: Ammattimies'"))
@@ -215,7 +214,7 @@
 
 (deftest tallenna-vv-toimenpiteen-hinta-ilman-kirjoitusoikeutta
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat []
@@ -227,7 +226,7 @@
 
 (deftest tallenna-vv-toimenpiteen-hinta-kun-toimenpide-ei-kuulu-urakkaan
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat []
@@ -239,7 +238,7 @@
 
 (deftest tallenna-vv-toimenpiteen-hinta-kun-hinnat-eivat-kuulu-toimenpiteeseen
   (let [toimenpide-id (hae-helsingin-reimari-toimenpide-ilman-hinnoittelua)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/urakka-id urakka-id
                        ::toi/id toimenpide-id
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vantaan-vesivaylaurakan-hinta)
@@ -277,7 +276,7 @@
 (deftest tallenna-ryhmalle-hinta
   (testing "Hintojen lisääminen hintaryhmälle"
     (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-          urakka-id (hae-helsingin-vesivaylaurakan-id)
+          urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
           hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu"))
           hinnat-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinta"))
           insert-params {::u/id urakka-id
@@ -337,7 +336,7 @@
 
 (deftest tallenna-ryhmalle-hinta-kun-ryhma-ei-kuulu-urakkaan
   (let [hinnoittelu-id (hae-vantaan-vesivaylaurakan-hinnoittelu)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
@@ -356,7 +355,7 @@
 
 (deftest tallenna-ryhmalle-hinta-kun-hinnat-eivat-kuulu-hinnoitteluun
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/id (hae-vantaan-vesivaylaurakan-hinta)
@@ -372,7 +371,7 @@
 
 (deftest tallenna-ryhmalle-hinta-ilman-kirjoitusoikeutta
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::u/id urakka-id
                        ::h/id hinnoittelu-id
                        ::h/tallennettavat-hinnat [{::hinta/otsikko "Testihinta 1"
@@ -390,7 +389,7 @@
                                            kysely-params)))))
 
 (deftest hae-hinnoittelut
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-hintaryhmat +kayttaja-jvh+
@@ -405,14 +404,14 @@
     (is (some #(= (::h/nimi %) "Hietasaaren poijujen korjaus") vastaus))))
 
 (deftest hae-hinnoittelut-ilman-oikeuksia
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-hintaryhmat +kayttaja-tero+
                                            kysely-params)))))
 
 (deftest luo-hinnoittelu
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id
                        ::h/nimi "Testi123"}]
     (testing "Luodaan uusi hinnoittelu"
@@ -441,7 +440,7 @@
         "Hintaryhmän nimi on jo olemassa urakassa, pitäisi tulla poikkeus")))
 
 (deftest luo-hinnoittelu-ilman-oikeuksia
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::u/id urakka-id
                        ::h/nimi "Testi"}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -457,7 +456,7 @@
                                               FROM vv_hinnoittelu_toimenpide
                                               WHERE \"toimenpide-id\" = " toimenpide-id
                                                         "AND poistettu IS NOT TRUE;")))
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         toimenpide-id (hae-reimari-toimenpide-poiujen-korjaus)
         toimenpiteen-hinnoittelu-idt-ennen (hae-toimenpiteen-hinnoittelut-idt toimenpide-id)
         liitettava-hinnoittelu-id (first (map :id (q-map (str "SELECT id FROM vv_hinnoittelu
@@ -489,7 +488,7 @@
 
 (deftest liita-toimenpiteet-hinnoitteluun-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::toi/idt #{1 2 3}
                        ::h/id hinnoittelu-id
                        ::u/id urakka-id}]
@@ -499,7 +498,7 @@
 
 (deftest liita-toimenpiteet-hinnoitteluun-vaaraan-urakkaan
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::toi/idt #{1 2 3}
                        ::h/id hinnoittelu-id
                        ::u/id urakka-id}]
@@ -509,7 +508,7 @@
 
 (deftest poista-hintaryhma
   (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-ei-toimenpiteita))
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         hinnoittelut-ennen (ffirst (q "SELECT COUNT(*) FROM vv_hinnoittelu WHERE poistettu IS NOT TRUE"))
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}
@@ -528,7 +527,7 @@
 
 (deftest poista-hintaryhma-ilman-oikeuksia
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -537,7 +536,7 @@
 
 (deftest poista-hintaryhma-vaarasta-urakkaan
   (let [hinnoittelu-id (hae-helsingin-vesivaylaurakan-hinnoittelu-ilman-hintoja)
-        urakka-id (hae-muhoksen-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -546,7 +545,7 @@
 
 (deftest poista-hintaryhma-jolla-toimenpiteita
   (let [hinnoittelu-id (first (hae-helsingin-vesivaylaurakan-hinnoittelut-jolla-toimenpiteita))
-        urakka-id (hae-helsingin-vesivaylaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         kysely-params {::h/urakka-id urakka-id
                        ::h/idt #{hinnoittelu-id}}]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)

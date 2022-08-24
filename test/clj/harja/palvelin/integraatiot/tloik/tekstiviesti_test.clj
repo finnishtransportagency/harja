@@ -4,7 +4,7 @@
             [clojure.data.zip.xml :as z]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.kyselyt.paivystajatekstiviestit :as paivystajatekstiviestit]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
@@ -12,11 +12,11 @@
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tekstiviestit]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms-util]
             [harja.tyokalut.xml :as xml]
             [clojure.string :as str]))
 
@@ -28,14 +28,12 @@
     kayttaja
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
-                       [:http-palvelin :db :integraatioloki :klusterin-tapahtumat])
-    :sonja (feikki-sonja)
-    :sonja-sahkoposti (component/using
-                        (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                   {:sahkoposti-sisaan-jono "email-to-harja"
-                                                    :sahkoposti-ulos-jono "harja-to-email"
-                                                    :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                        [:sonja :db :integraatioloki])
+                       [:http-palvelin :db :integraatioloki])
+    :sonja (feikki-jms "sonja")
+    :itmf (feikki-jms "itmf")
+    :api-sahkoposti (component/using
+                       (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                       [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/luo-labyrintti
                     {:url +labyrintti-url+
@@ -43,7 +41,7 @@
                   [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :sonja :integraatioloki :klusterin-tapahtumat :labyrintti])))
+             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (defn tekstiviestin-rivit [ilmoitus]
   (into #{} (str/split-lines
@@ -81,7 +79,7 @@
         "Tuntematon viestinumero käsitellään oikein.")
 
     (let [viesti (atom nil)]
-      (sonja/kuuntele! (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
+      (jms-util/kuuntele! (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
 
       (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
              (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
@@ -99,7 +97,7 @@
       (is (ilmoitus-aiheutti-toimenpiteita? (:id ilmoitus)) "Ilmoitus on merkitty aiheuttaneeksi toimenpiteitä"))
 
     (poista-paivystajatekstiviestit)
-    (poista-ilmoitus)))
+    (poista-ilmoitus 123456789)))
 
 (deftest tarkista-ilmoituksen-lahettaminen-tekstiviestilla
   (tuo-ilmoitus)
@@ -125,7 +123,7 @@
         (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
 
       (poista-paivystajatekstiviestit)
-      (poista-ilmoitus))))
+      (poista-ilmoitus 123456789))))
 
 (deftest tekstiviestin-muodostus
   (let [ilmoitus {:tunniste "UV666"

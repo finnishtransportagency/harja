@@ -84,11 +84,11 @@
                  :sheet-nimi raportin-nimi}
       [{:leveys 4 :otsikko "Päivämäärä"}
        {:leveys 2 :otsikko "Klo"}
-       {:leveys 2 :otsikko "Tie"}
-       {:leveys 2 :otsikko "Aosa"}
-       {:leveys 2 :otsikko "Aet"}
-       {:leveys 2 :otsikko "Losa"}
-       {:leveys 2 :otsikko "Let"}
+       {:leveys 2 :otsikko "Tie" :tasaa :oikea}
+       {:leveys 2 :otsikko "Aosa" :tasaa :oikea}
+       {:leveys 2 :otsikko "Aet" :tasaa :oikea}
+       {:leveys 2 :otsikko "Losa" :tasaa :oikea}
+       {:leveys 2 :otsikko "Let" :tasaa :oikea}
        {:leveys 3 :otsikko "Tar\u00ADkas\u00ADtaja"}
        {:leveys 8 :otsikko "Mittaus"}
        {:leveys 10 :otsikko "Ha\u00ADvain\u00ADnot"}

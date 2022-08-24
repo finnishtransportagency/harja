@@ -16,7 +16,7 @@
 (defn- geolocation-api []
   (.-geolocation js/navigator))
 
-(defn- geolokaatio-tuettu? []
+(defn geolokaatio-tuettu? []
   (not (nil? (geolocation-api))))
 
 (defn- etaisyys

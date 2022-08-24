@@ -4,13 +4,12 @@
             [cljs.core.async :refer [<! >! chan]]
             [clojure.set :as clj-set]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader vihje-elementti ajax-loader-pieni] :as yleiset]
             [harja.tiedot.urakka.paallystys :as paallystys-tiedot]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.paallystys-muut-kustannukset :as muut-kustannukset-view]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [vihje-elementti ajax-loader-pieni]]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
@@ -24,7 +23,11 @@
             [harja.ui.modal :as modal]
             [harja.domain.tierekisteri :as tr]
             [harja.ui.napit :as napit]
-            [harja.tiedot.urakka.paallystys :as paallystys])
+            [harja.ui.ikonit :as ikonit]
+            [harja.transit :as transit]
+            [harja.ui.liitteet :as liitteet]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
@@ -102,6 +105,32 @@
    [napit/peruuta "Peruuta" #(do (modal/piilota!)
                                  (go (>! vastaus-status {:status :ei-paiviteta})))]])
 
+(def nayta-kustannusexcelin-tuonti-alkaen-vuodesta 2022)
+
+(defn excel-toiminnot [tiedot]
+  [:div.paallystyskustannusten-toiminnot-container
+   [:div.paallystyskustannusten-toiminnot
+    [:span.inline-block
+     [:form {:style {:margin-left "auto"}
+             :target "_blank" :method "POST"
+             :action (k/excel-url :paallystyskohteet-excel)}
+      [:input {:type "hidden" :name "parametrit"
+               :value (transit/clj->transit tiedot)}]
+      [:button {:type "submit"
+                :class #{"nappi-toissijainen napiton-nappi"}}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
+    (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
+      [liitteet/lataa-tiedosto
+       {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+        :vuosi (:vuosi tiedot)}
+       {:nappi-teksti "Tuo kustannukset excelistä"
+        :nappi-luokka "napiton-nappi"
+        :url "tuo-paallystyskustannukset-excelista"
+        :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
+        :tiedosto-ladattu #(do
+                             (paallystys-tiedot/paivita-yllapitokohteet!)
+                             (viesti/nayta! "Kustannukset päivitetty." :success))}])]])
+
 (defn paallystyskohteet [ur]
   (let [tallennus-gif? (atom false)
         hae-tietoja (fn [urakan-tiedot]
@@ -159,7 +188,10 @@
                               :paikkaus
                               #(reset! paallystys-tiedot/yllapitokohteet %) ;; TODO TESTI TÄLLE TALLENNUKSELLE (backend)
                               #(constantly nil)))
-        yha-kohteet-otsikko "YHA:sta tuodut päällystyskohteet"]
+        yha-kohteet-otsikko (fn [vuosi]
+                              (if (< vuosi 2020)
+                                "YHA:sta tuodut päällystyskohteet (kaistatiedot edeltävät kaistauudistusta)"
+                                "YHA:sta tuodut päällystyskohteet"))]
     (hae-tietoja ur)
     (komp/kun-muuttuu (hae-tietoja ur))
     (komp/luo
@@ -185,48 +217,58 @@
                                                                                                        :tr-alkuosa pienin-tarvittava-osa
                                                                                                        :tr-loppuosa suurin-tarvittava-osa})))))))))))
                        #(remove-watch paallystys-tiedot/yhan-paallystyskohteet :haetaanko-tr-osia-watch))
-      (fn [ur]
-        [:div.paallystyskohteet
-         [kartta/kartan-paikka]
+     (fn [ur]
+       (let [vuosi @urakka/valittu-urakan-vuosi
+             [sopimus-id _] @urakka/valittu-sopimusnumero]
+         [:div.paallystyskohteet
+          [kartta/kartan-paikka]
 
-         [valinnat/urakan-vuosi ur]
-         [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
+          [valinnat/urakan-vuosi ur {:vayla-tyyli? true}]
+          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
+          [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
 
-         [validointivirheet-modal]
+          [validointivirheet-modal]
+          [excel-toiminnot {:urakka-id (:id ur)
+                            :sopimus-id sopimus-id
+                            :vuosi vuosi
+                            :vain-yha-kohteet? true}]
+          [yllapitokohteet-view/yllapitokohteet
+           ur
+           paallystys-tiedot/yhan-paallystyskohteet
+           {:otsikko (if @tallennus-gif?
+                       [ajax-loader-pieni (yha-kohteet-otsikko vuosi)]
+                       (yha-kohteet-otsikko vuosi))
+            :kohdetyyppi :paallystys
+            :yha-sidottu? true :valittu-vuosi vuosi
+            :piilota-tallennus? (when (< vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
+            :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+                        tallenna-kohde)
+            :kun-onnistuu kohteen-tallennus-onnistui}]
 
-         [yllapitokohteet-view/yllapitokohteet
-          ur
-          paallystys-tiedot/yhan-paallystyskohteet
-          {:otsikko (if @tallennus-gif?
-                      [ajax-loader-pieni yha-kohteet-otsikko]
-                      yha-kohteet-otsikko)
-           :kohdetyyppi :paallystys
-           :yha-sidottu? true
-           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-                       tallenna-kohde)
-           :kun-onnistuu kohteen-tallennus-onnistui}]
+          [yllapitokohteet-view/yllapitokohteet
+           ur
+           paallystys-tiedot/muut-kuin-yha-kohteet
+           {:otsikko (if (< vuosi 2020)
+                       "Muut kohteet (kaistatiedot edeltävät kaistauudistusta)"
+                       "Muut kohteet")
+            :kohdetyyppi :paikkaus
+            :yha-sidottu? false :valittu-vuosi vuosi
+            :piilota-tallennus? (when (< vuosi 2020) true) ;; 2020 kaistamuutosta edeltäviä kohteita ei saa enää muokata.
+            :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
+                        tallenna-muukohde)}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
 
-         [yllapitokohteet-view/yllapitokohteet
-          ur
-          paallystys-tiedot/harjan-paikkauskohteet
-          {:otsikko      "Harjan paikkauskohteet ja muut kohteet"
-           :kohdetyyppi  :paikkaus
-           :yha-sidottu? false
-           :tallenna     (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-kohdeluettelo-paallystyskohteet (:id ur))
-                           tallenna-muukohde)}] ;; Paikakuskohteet eivät sisällä validointeja palvelinpäässä
+          [muut-kustannukset-view/muut-kustannukset ur]
 
-         [muut-kustannukset-view/muut-kustannukset ur]
+          [yllapitokohteet-view/yllapitokohteet-yhteensa
+           paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys
+                                             :valittu-vuosi vuosi}]
 
-         [yllapitokohteet-view/yllapitokohteet-yhteensa
-          paallystys-tiedot/kaikki-kohteet {:nakyma :paallystys}]
+          [vihje-elementti [:span
+                            [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
+                            [:span.grid-solu-ennustettu "sinisellä"]
+                            [:span "."]]]
+          [indeksitiedot]
 
-         [vihje-elementti [:span
-                           [:span "Huomioi etumerkki hinnanmuutoksissa. Ennustettuja määriä sisältävät kentät on värjätty "]
-                           [:span.grid-solu-ennustettu "sinisellä"]
-                           [:span "."]]]
-         [indeksitiedot]
-
-         [:div.kohdeluettelon-paivitys
-          [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
-          [yha/kohdeluettelo-paivitetty ur]]]))))
+          [:div.kohdeluettelon-paivitys
+           [yha/paivita-kohdeluettelo ur oikeudet/urakat-kohdeluettelo-paallystyskohteet]
+           [yha/kohdeluettelo-paivitetty ur]]])))))

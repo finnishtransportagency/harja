@@ -25,6 +25,7 @@
       "alkanut": "2016-01-30T12:00:00Z",
       "paattynyt": "2016-01-30T14:00:00Z",
       "toteumatyyppi": "kokonaishintainen",
+      "lisatieto": "Normisuolaus",
       "tehtavat": [
         {
           "tehtava": {
@@ -41,6 +42,15 @@
             "maara": {
               "yksikko": "km",
               "maara": 123
+            }
+          }
+        },
+        {
+          "tehtava": {
+            "id": 987654,
+            "maara": {
+              "yksikko": "kpl",
+              "maara": 1
             }
           }
         }
@@ -73,6 +83,11 @@
               "tehtava": {
                 "id": 1363
               }
+            },
+            {
+              "tehtava": {
+                "id": 987654
+              }
             }
           ],
           "materiaalit": [
@@ -103,6 +118,15 @@
               "tehtava": {
                 "id": 1363
               }
+            },
+            {
+              "tehtava": {
+                "id": 987654,
+                "maara": {
+                  "yksikko": "kpl",
+                  "maara": 1
+                }
+              }
             }
           ],
           "materiaalit": [
@@ -132,6 +156,15 @@
             {
               "tehtava": {
                 "id": 1363
+              }
+            },
+            {
+              "tehtava": {
+                "id": 987654,
+                "maara": {
+                  "yksikko": "kpl",
+                  "maara": 4
+                }
               }
             }
           ],

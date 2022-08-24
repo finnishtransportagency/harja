@@ -1,8 +1,7 @@
 @kartan-transition-kesto: .1s;
 #kartta {
-  border: @primaari-sininen 1px ridge;
   &.piilossa {
-    border: @primaari-sininen 0 ridge;
+    border: @black-default 0 ridge;
   }
   -webkit-backface-visibility: hidden;
   -moz-transition: height @kartan-transition-kesto ease;
@@ -26,7 +25,7 @@
   }
   > .ol-zoom-in,
   > .ol-zoom-out {
-    background-color: @primaari-sininen;
+    background-color: @blue-default;
     &:hover,
     &:active,
     &.active {

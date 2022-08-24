@@ -170,8 +170,8 @@ WHERE id = (SELECT yhteyshenkilo
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan
 INSERT INTO paivystys
-(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id, luoja)
-VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id, :kayttaja_id);
+(alku, loppu, urakka, yhteyshenkilo, varahenkilo, vastuuhenkilo, ulkoinen_id, luoja, luotu)
+VALUES (:alku, :loppu, :urakka, :yhteyshenkilo, :varahenkilo, :vastuuhenkilo, :ulkoinen_id, :kayttaja_id, current_timestamp);
 
 -- name: hae-paivystyksen-yhteyshenkilo-id
 -- Hakee annetun urakan päivystyksen yhteyshenkilön id:n
@@ -182,7 +182,7 @@ WHERE id = :id AND urakka = :urakka;
 -- name: paivita-paivystys!
 -- Päivittää päivystyksen tiedot
 UPDATE paivystys
-SET alku = :alku, loppu = :loppu, vastuuhenkilo = :vastuuhenkilo, varahenkilo = :varahenkilo
+SET alku = :alku, loppu = :loppu, vastuuhenkilo = :vastuuhenkilo, varahenkilo = :varahenkilo, muokkaaja = :kayttaja_id, muokattu = current_timestamp
 WHERE id = :id AND urakka = :urakka;
 
 -- name: paivita-paivystys-yhteyshenkilon-idlla<!
@@ -191,7 +191,9 @@ UPDATE paivystys
 SET alku        = :alku,
   loppu         = :loppu,
   varahenkilo   = :varahenkilo,
-  vastuuhenkilo = :vastuuhenkilo
+  vastuuhenkilo = :vastuuhenkilo,
+  muokkaaja     = :kayttaja_id,
+  muokattu      = current_timestamp
 WHERE yhteyshenkilo = :yhteyshenkilo_id;
 
 -- name: paivita-paivystys-ulkoisella-idlla<!
@@ -201,9 +203,11 @@ SET alku        = :alku,
   loppu         = :loppu,
   varahenkilo   = :varahenkilo,
   vastuuhenkilo = :vastuuhenkilo,
-  yhteyshenkilo = :yhteyshenkilo_id
+  yhteyshenkilo = :yhteyshenkilo_id,
+  muokkaaja     = :kayttaja_id,
+  muokattu      = current_timestamp
 WHERE ulkoinen_id = :ulkoinen_id AND
-      luoja = :kayttaja_id;
+      urakka = :urakka;
 
 -- name: liita-sampon-yhteyshenkilo-urakkaan<!
 -- Liittää yhteyshenkilön urakkaan Sampo id:llä
@@ -252,7 +256,7 @@ SELECT exists(
     SELECT id
     FROM paivystys
     WHERE ulkoinen_id = :ulkoinen_id AND
-          luoja = :luoja_id);
+          urakka = :urakka);
 
 -- name: hae-urakan-taman-hetkiset-paivystajat
 SELECT
@@ -306,7 +310,8 @@ FROM yhteyshenkilo y
   LEFT JOIN organisaatio o ON o.id = y.organisaatio
 WHERE p.urakka = :urakka AND
       -- Tarvitaan jotta voidaan hakea esim. muodossa Erkki Esimerkki <erkki.esimerkki@example.com>
-      :sahkoposti ILIKE (SELECT '%' || y.sahkoposti || '%');
+      :sahkoposti ILIKE (SELECT '%' || y.sahkoposti || '%') AND
+      y.sahkoposti IS NOT NULL AND y.sahkoposti != '';
 
 -- name: hae-yhteyshenkilo
 SELECT
@@ -382,3 +387,9 @@ SELECT exists(SELECT p.id
                 urakka = :urakkaid AND
                 ((now() BETWEEN p.alku AND p.loppu) OR
                  (now() <= p.alku AND loppu IS NULL)));
+
+-- name: hae-paivystyksen-alkupvm-idlla
+-- single?: true
+SELECT alku
+  FROM paivystys
+ WHERE id = :id;

@@ -17,6 +17,7 @@
 (defrecord TyhjennaValittuToteuma [])
 
 (defrecord ValitseVarusteToteumanTyyppi [tyyppi])
+(defrecord ValitseVarusteNaytetaanVirheelliset [virheelliset-ainoastaan?])
 
 ;; Ala luomaan uutta varustetoteumaa käyttöliittymästä
 (defrecord UusiVarusteToteuma [toiminto varuste])

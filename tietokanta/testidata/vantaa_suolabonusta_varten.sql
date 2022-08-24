@@ -23,6 +23,6 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka
         (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
         '2016-02-19 10:23:54+02', '2016-02-18 00:00:00+02', '2016-02-18 02:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '6153860-9', 'VAN-SS-toteuma');
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-SS-toteuma'), '2016-02-19 10:23:54+02',
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 842.6);
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 842.6, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));

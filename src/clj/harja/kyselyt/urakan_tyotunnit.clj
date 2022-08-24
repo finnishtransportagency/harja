@@ -35,7 +35,7 @@
   (first (hae-urakan-tyotunnit db (merge {::ut/urakka-id urakka-id} (ut/kuluva-vuosikolmannes)))))
 
 (defn hae-lahettamattomat-tai-epaonnistuneet-tyotunnit [db]
-  (fetch db ::ut/urakan-tyotunnit-vuosikolmanneksittain ut/kaikki-kentat
+  (fetch db ::ut/urakan-tyotunnit ut/kaikki-kentat
          (op/or {::ut/lahetetty op/null?}
                 {::ut/lahetys-onnistunut false})))
 

@@ -1,8 +1,12 @@
 (ns harja.ui.debug
   "UI komponentti datan inspectointiin"
   (:require [harja.ui.yleiset :as yleiset]
+            [harja.df-data :as dfd]
             [harja.loki :refer [log]]
-            [reagent.core :as r]))
+            [reagent.core :as r]
+            [datafrisk.core :as d]
+            [harja.ui.komponentti :as komp]
+            [goog.events.EventType :as event-type]))
 
 (defonce kehitys? true)
 
@@ -44,7 +48,7 @@
   [:table.debug-coll
    (when (:otsikko options)
      [:caption (:otsikko options)])
-   [:thead [:th "#"] [:th " "] [:th "Value"]]
+   [:thead [:tr [:th "#"] [:th " "] [:th "Value"]]]
    [:tbody
     (doall
      (map-indexed
@@ -85,3 +89,40 @@
     (fn [item]
       [:div.debug
        [debug-show item [] @open-paths toggle! options]])))
+
+(defn sticky-debug
+  "Mukana skrollaava debug, voidaan togglettaa sivun vasempaan laitaan jäävällä napilla.
+  Hyödyllinen pitkillä sivuilla"
+  [_ _] (let [debug-piilossa? (r/atom true)]
+          (fn [item options]
+            [:div.debug-wrapper
+             {:style {:position :sticky
+                      :top "50%"
+                      :background "white"
+                      :z-index 100
+                      :height 0
+                      :display :flex
+                      :align-items :center}}
+             [:<>
+              [:button {:on-click #(swap! debug-piilossa? not)} ">"]
+              [:div {:style {:background "white"
+                             :display (if @debug-piilossa? :none :initial)}} [debug item options]]]])))
+
+(defn df-shell [data]
+  [d/DataFriskShell data])
+
+(defn df-shell-kaikki
+  []
+  (let [nakyva?-atom (r/atom false)]
+    (komp/luo
+      (komp/dom-kuuntelija js/window event-type/KEYDOWN
+        (fn [this event]
+          ;; Ctrl + B tai META + B
+          (when (and (= "b" (.-key event))
+                  (or (.-ctrlKey event) (.-metaKey event)))
+            (.stopPropagation event)
+            (.preventDefault event)
+            (swap! nakyva?-atom not))))
+      (fn []
+        (when @nakyva?-atom
+          [df-shell @dfd/data])))))

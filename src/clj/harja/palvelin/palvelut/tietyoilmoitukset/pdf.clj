@@ -80,8 +80,8 @@
            sisalto))])
 
 (defn- ilmoitus-koskee [ilm]
-  (let [muokattu? (::m/muokattu ilm)
-        valinnat #{(if muokattu?
+  (let [lahetetty? (:lahetetty? ilm)
+        valinnat #{(if lahetetty?
                      :korjaus
                      :ensimmainen)
                    (if (::t/paatietyoilmoitus ilm)

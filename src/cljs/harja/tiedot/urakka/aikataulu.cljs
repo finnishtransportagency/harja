@@ -76,6 +76,11 @@ kohteiden-sahkopostitiedot (atom nil))
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (hae-aikataulu valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(defn- aikataulun-sort-fn-kentan-mukaan
+  [kentta-kw]
+  (assert (keyword? kentta-kw) "Kentän oltava keyword")
+  (juxt #(nil? (kentta-kw %)) kentta-kw))
+
 (def aikataulurivit-suodatettu-jarjestetty
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   kohdenumero @yllapito-tiedot/kohdenumero
@@ -88,7 +93,16 @@ kohteiden-sahkopostitiedot (atom nil))
                     (sort-by (case jarjestys
                                :tr tr-domain/tieosoitteen-jarjestys
                                :kohdenumero #(yllapitokohde-domain/kohdenumero-str->kohdenumero-vec (:kohdenumero %))
-                               :aika (juxt #(nil? (:aikataulu-paallystys-alku %)) :aikataulu-paallystys-alku ))
+                               :tiemerkinnan-alku (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-alku)
+                               :tiemerkinnan-loppu (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-loppu)
+                               :tiemerkinnan-voidaan-aloittaa (aikataulun-sort-fn-kentan-mukaan :valmis-tiemerkintaan)
+                               :tiemerkinnan-valmis-viimeistaan (aikataulun-sort-fn-kentan-mukaan :aikataulu-tiemerkinta-takaraja)
+                               :aika (aikataulun-sort-fn-kentan-mukaan :aikataulu-paallystys-alku)
+                               :paallystyskohde-valmis (aikataulun-sort-fn-kentan-mukaan :aikataulu-kohde-valmis)
+                               :paallystyksen-loppu (aikataulun-sort-fn-kentan-mukaan :aikataulu-paallystys-loppu)
+
+                               ;; defaultiksi päällystyksen alku. Älä poista default-arvoa, koska valinnat ovat käyttäjien selaimen local storagessa, ja siellä voi olla vanhoja arvoja, joista voi aiheutua no matching clause.
+                               (aikataulun-sort-fn-kentan-mukaan :aikataulu-paallystys-alku))
                              kohteet))))))
 (defonce tiemerkinnan-suorittavat-urakat
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -137,6 +151,27 @@ kohteiden-sahkopostitiedot (atom nil))
                                           (pvm/nyt))
             aikataulurivit))
 
+(defn aikapohjainen-jarjestys-valittu?
+  "Palauttaa totuudellisen arvon, jos valinta on jokin aikaan perustuva järjestyssuodatin."
+  [valinta]
+  (#{:aika
+     :tiemerkinnan-alku
+     :tiemerkinnan-loppu
+     :tiemerkinnan-valmius
+     :tiemerkinnan-takaraja
+     :paallystyksen-loppu} valinta))
+
+(defn muunna-aikataulurivit-tallennukseen
+  "Muuntaa aikataulurivit tallennusta varten"
+  [kohteet]
+  (mapv #(assoc % :aikataulu-tiemerkinta-merkinta
+                  (when-not (= "ei valittu" (:aikataulu-tiemerkinta-merkinta %))
+                    (:aikataulu-tiemerkinta-merkinta %))
+                  :aikataulu-tiemerkinta-jyrsinta
+                  (when-not (= "ei valittu" (:aikataulu-tiemerkinta-jyrsinta %))
+                    (:aikataulu-tiemerkinta-jyrsinta %)))
+        kohteet))
+
 (defn- tallenna-yllapitokohteiden-aikataulu
   [{:keys [urakka-id sopimus-id vuosi kohteet onnistui-fn epaonnistui-fn]}]
   (go
@@ -144,7 +179,7 @@ kohteiden-sahkopostitiedot (atom nil))
                                {:urakka-id urakka-id
                                 :sopimus-id sopimus-id
                                 :vuosi vuosi
-                                :kohteet kohteet}))]
+                                :kohteet (muunna-aikataulurivit-tallennukseen kohteet)}))]
       (if (k/virhe? vastaus)
         (epaonnistui-fn)
         (onnistui-fn vastaus)))))

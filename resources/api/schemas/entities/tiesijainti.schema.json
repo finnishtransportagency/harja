@@ -43,7 +43,6 @@
     "kaista": {
       "id": "urn:harja/sijainti/tie/kaista",
       "enum": [
-        1,
         11,
         12,
         13,
@@ -61,7 +60,8 @@
         26,
         27,
         28,
-        29
+        29,
+        31
       ]
     },
     "puoli": {

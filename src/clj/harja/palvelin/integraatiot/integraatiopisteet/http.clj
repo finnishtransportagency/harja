@@ -13,17 +13,22 @@
 
 (def timeout-aika-ms 60000)
 
-(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit kayttajatunnus salasana kutsudata timeout palautusarvo-tyyppina]}]
+(defn rakenna-http-kutsu [{:keys [metodi otsikot parametrit httpkit-asetukset
+                                  kayttajatunnus salasana kutsudata lomakedatana? timeout
+                                  palautusarvo-tyyppina]}]
   (let [kutsu {}]
     (-> kutsu
         (cond-> (not-empty otsikot) (assoc :headers otsikot)
                 (not-empty parametrit) (assoc :query-params parametrit)
+                (not-empty httpkit-asetukset) (merge httpkit-asetukset)
                 (and (not-empty kayttajatunnus)) (assoc :basic-auth [kayttajatunnus salasana])
-                (or (= metodi :post) (= metodi :put)) (assoc :body kutsudata)
+                (or (= metodi :post) (= metodi :put)) (assoc (if lomakedatana? :form-params :body) kutsudata)
                 (not (nil? palautusarvo-tyyppina)) (assoc :as palautusarvo-tyyppina)
                 timeout (assoc :timeout timeout)))))
 
-(defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata]
+(defn tee-http-kutsu [lokittaja tapahtuma-id url metodi otsikot
+                      parametrit kayttajatunnus salasana kutsudata
+                      lomakedatana? httpkit-asetukset]
   (try
     (let [kutsu (rakenna-http-kutsu {:metodi metodi
                                      :otsikot otsikot
@@ -31,6 +36,8 @@
                                      :kayttajatunnus kayttajatunnus
                                      :salasana salasana
                                      :kutsudata kutsudata
+                                     :lomakedatana? lomakedatana?
+                                     :httpkit-asetukset httpkit-asetukset
                                      :timeout timeout-aika-ms})]
       (case metodi
         :post @(http/post url kutsu)
@@ -60,7 +67,7 @@
                                       "<|||glogglog||||Graylog>")}]
                 :tekstikentta (str "Kutsu palveluun: " url " epäonnistui.|||"
                                    "Virhe: " error "|||"
-                                   "Statuskoodi: " status)}))
+                                   "Statuskoodi: " status)})
   (lokittaja :epaonnistunut lokiviesti (str "Virhe: " error ", statuskoodi: %s" status) tapahtuma-id)
   ;; Virhetilanteissa Httpkit ei heitä kiinni otettavia exceptioneja, vaan palauttaa error-objektin.
   ;; Siksi erityyppiset virheet käsitellään instance-tyypin selvittämisellä.
@@ -72,17 +79,17 @@
         :default
         (throw+ {:type virheet/+ulkoinen-kasittelyvirhe-koodi+
                  :virheet [{:koodi :ulkoinen-jarjestelma-palautti-virheen :viesti
-                            (format "Kommunikoinnissa ulkoisen järjestelmän (url: %s) kanssa tapahtui odottamaton virhe.
-                                     Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s."
-                                    url status error)}]})))
+                            (format "Kommunikoinnissa ulkoisen järjestelmän kanssa tapahtui odottamaton virhe.
+                            Ulkoinen järjestelmä palautti statuskoodin: %s ja virheen: %s." status error)}]}))))
 
-(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers response->loki]
+(defn kasittele-onnistunut-kutsu [lokittaja lokiviesti tapahtuma-id url body headers status response->loki]
   (log/debug (format "Kutsu palveluun: %s onnistui." url))
   (lokittaja :onnistunut (update lokiviesti :sisalto (or response->loki identity)) nil tapahtuma-id)
-  {:body body :headers headers})
+  {:body body :headers headers :status status})
 
 (defn laheta-kutsu
-  [lokittaja tapahtuma-id url metodi otsikot parametrit {:keys [kayttajatunnus salasana response->loki]} kutsudata]
+  [lokittaja tapahtuma-id url metodi otsikot parametrit
+   {:keys [kayttajatunnus salasana response->loki httpkit-asetukset]} lomakedatana? kutsudata]
   (nr/with-newrelic-transaction
     "HTTP integraatiopiste"
     (str ":http-integraatiopiste-" (lokittaja :avain))
@@ -91,28 +98,30 @@
      :otsikot otsikot
      :parametrit parametrit}
     #(do
-      (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s"
-                         metodi url metodi (fmt/merkkijonon-alku kutsudata 800) otsikot parametrit))
+      (log/debug (format "Lähetetään HTTP %s -kutsu: osoite: %s, metodi: %s, data: %s, otsikkot: %s, parametrit: %s, lomakedatana?: %s"
+                   metodi url metodi (fmt/merkkijonon-alku (str kutsudata) 800) otsikot parametrit lomakedatana?))
 
       (let [sisaltotyyppi (get otsikot " Content-Type ")]
         (lokittaja :rest-viesti tapahtuma-id "ulos" url sisaltotyyppi kutsudata otsikot (str parametrit))
 
         (let [{:keys [status body error headers]}
-              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot parametrit kayttajatunnus salasana kutsudata)
+              (tee-http-kutsu lokittaja tapahtuma-id url metodi otsikot
+                              parametrit kayttajatunnus salasana kutsudata
+                              lomakedatana? httpkit-asetukset)
               lokiviesti (integraatioloki/tee-rest-lokiviesti "sisään" url sisaltotyyppi body headers nil)]
 
           (if (or error
                   (not (= 200 status)))
-            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url error status)
-            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers response->loki)))))))
+            (kasittele-virhe lokittaja lokiviesti tapahtuma-id url (or error body) status)
+            (kasittele-onnistunut-kutsu lokittaja lokiviesti tapahtuma-id url body headers status response->loki)))))))
 
 (defprotocol HttpIntegraatiopiste
   (GET
     [this url]
     [this url otsikot parametrit])
   (POST
-    [this url kutsudata]
-    [this url otsikot parametrit kutsudata])
+    [this url lomakedatana? kutsudata]
+    [this url otsikot parametrit lomakedatana? kutsudata])
   (HEAD
     [this url]
     [this url otsikot parametrit])
@@ -123,25 +132,25 @@
   HttpIntegraatiopiste
 
   (GET [_ url]
-    (laheta-kutsu lokittaja tapahtuma-id url :get nil nil asetukset nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :get nil nil asetukset nil nil))
 
   (GET [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :get otsikot parametrit asetukset nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :get otsikot parametrit asetukset nil nil))
 
-  (POST [_ url kutsudata]
-    (laheta-kutsu lokittaja tapahtuma-id url :post nil nil asetukset kutsudata))
+  (POST [_ url lomakedatana? kutsudata]
+    (laheta-kutsu lokittaja tapahtuma-id url :post nil nil asetukset lomakedatana? kutsudata))
 
-  (POST [_ url otsikot parametrit kutsudata]
-    (laheta-kutsu lokittaja tapahtuma-id url :post otsikot parametrit asetukset kutsudata))
+  (POST [_ url otsikot parametrit lomakedatana? kutsudata]
+    (laheta-kutsu lokittaja tapahtuma-id url :post otsikot parametrit asetukset lomakedatana? kutsudata))
 
   (HEAD [_ url]
-    (laheta-kutsu lokittaja tapahtuma-id url :head nil nil asetukset nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :head nil nil asetukset nil nil))
 
   (HEAD [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit asetukset nil))
+    (laheta-kutsu lokittaja tapahtuma-id url :head otsikot parametrit asetukset nil nil))
 
   (DELETE [_ url otsikot parametrit]
-    (laheta-kutsu lokittaja tapahtuma-id url :delete otsikot parametrit asetukset nil)))
+    (laheta-kutsu lokittaja tapahtuma-id url :delete otsikot parametrit asetukset nil nil)))
 
 (defn luo-integraatiopiste
   ([lokittaja tapahtuma-id]

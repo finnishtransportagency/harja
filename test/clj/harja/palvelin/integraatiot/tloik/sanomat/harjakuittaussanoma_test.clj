@@ -17,27 +17,43 @@
 (defn parsi-paivamaara [teksti]
   (.parse (SimpleDateFormat. "dd.MM.yyyy") teksti))
 
+(defn urakan-tiedot [nimi]
+  {:loppupvm "2016-02-11T08:59:30.035Z"
+             :urakoitsija_nimi "YIT Rakennus Oy"
+             :alueurakkanumero 1238
+             :takuu_loppupvm nil
+             :nimi nimi
+             :indeksi "MAKU 2005"
+             :id 4
+             :urakoitsija_ytunnus "1565583-5"
+             :alkupvm "2016-02-11T08:59:30.035Z"
+             :tyyppi "hoito"})
+
+(defn paivystajat [sukunimi]
+  [{:etunimi "Pentti"
+    :sukunimi sukunimi
+    :matkapuhelin "0987654346789"
+    :sahkoposti "pentti@example.com"}])
 (deftest tarkista-sanoman-validius
   (let [xml (html (harja-kuittaus-sanoma/muodosta
                     (str (UUID/randomUUID))
                     123456789
                     "2016-02-11T08:59:30.035Z"
                     "valitetty"
-                    {:loppupvm "2016-02-11T08:59:30.035Z"
-                     :urakoitsija_nimi "YIT Rakennus Oy"
-                     :alueurakkanumero 1238
-                     :takuu_loppupvm nil
-                     :nimi "Oulun alueurakka 2014-2019"
-                     :indeksi "MAKU 2005"
-                     :id 4
-                     :urakoitsija_ytunnus "1565583-5"
-                     :alkupvm "2016-02-11T08:59:30.035Z"
-                     :tyyppi "hoito"}
-                    [{:etunimi "Pentti"
-                      :sukunimi "Päivystäjä"
-                      :matkapuhelin "0987654346789"
-                      :sahkoposti "pentti@example.com"}]
+                    (urakan-tiedot "Oulun alueurakka 2014-2019")
+                    (paivystajat "Päivystäjä")
                     nil))
         xsd "harja-tloik.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 
+(deftest tarkista-sanoman-validius-harvinaisilla-merkeilla
+  (let [xml (html (harja-kuittaus-sanoma/muodosta
+                    (str (UUID/randomUUID))
+                    123456789
+                    "2016-02-11T08:59:30.035Z"
+                    "valitetty"
+                    (urakan-tiedot "Oulun alueurakka & < 2014-2019")
+                    (paivystajat "Päivystäjä > < &")
+                    nil))
+        xsd "harja-tloik.xsd"]
+    (is (xml/validi-xml? +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))

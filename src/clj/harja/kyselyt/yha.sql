@@ -79,13 +79,14 @@ WHERE yt.yhaid IN (:yhaidt);
 
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
-(urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+(urakka, sopimus, yha_tr_osoite, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
  tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, nimi, vuodet)
 VALUES (
   :urakka,
   (SELECT id
    FROM sopimus
    WHERE paasopimus IS NULL AND urakka = :urakka),
+  ROW(:tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys, NULL) :: tr_osoite,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -141,9 +142,10 @@ SET
 WHERE urakka = :urakka;
 
 -- name: luo-paallystysilmoitus<!
+-- TODO ehkä versio pitäisi tulla parametrina
 INSERT INTO paallystysilmoitus
-(paallystyskohde, ilmoitustiedot, luotu, luoja)
-VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja);
+(paallystyskohde, ilmoitustiedot, luotu, luoja, versio)
+VALUES (:paallystyskohde, :ilmoitustiedot :: JSONB, NOW(), :luoja, 1);
 
 -- name: lukitse-urakan-yha-sidonta<!
 UPDATE yhatiedot
@@ -155,9 +157,3 @@ DELETE FROM paallystysilmoitus
 WHERE paallystyskohde IN (SELECT id
                           FROM yllapitokohde
                           WHERE urakka = :urakka);
-
--- name: poista-urakan-paikkausilmoitukset!
-DELETE FROM paikkausilmoitus
-WHERE paikkauskohde IN (SELECT id
-                        FROM yllapitokohde
-                        WHERE urakka = :urakka);

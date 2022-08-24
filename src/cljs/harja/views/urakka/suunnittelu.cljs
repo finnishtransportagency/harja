@@ -12,7 +12,7 @@
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
             [harja.views.urakka.suunnittelu.suola :as suola]
             [harja.views.urakka.suunnittelu.materiaalit :as mat]
-            [harja.views.urakka.suunnittelu.kustannussuunnitelma :as kustannussuunnitelma]
+            [harja.views.urakka.suunnittelu.kustannussuunnitelma.kustannussuunnitelma-view :as kustannussuunnitelma]
             [harja.views.vesivaylat.urakka.suunnittelu.kiintiot :as kiintiot]
             [harja.loki :refer [log]]
             [harja.ui.debug :as debug]
@@ -26,18 +26,17 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
-  ;; TODO, kun on tarkoitus näyttää MHU urakat loppukäyttäjille,
-  ;; muuta '(if debug/kehitys? :teiden-hoito ::foo)' => ':teiden-hoito'
-  (case valilehti
-    :materiaalit (and (not (#{(if debug/kehitys? :teiden-hoito ::foo) :paallystys :tiemerkinta} tyyppi))
-                      (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-    :tehtavat (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :suola (#{:hoito (if debug/kehitys? :teiden-hoito ::foo)} tyyppi)
-    :muut (not (ur/vesivaylaurakkatyyppi? tyyppi))
-    :kiintiot (= tyyppi :vesivayla-hoito)
-    :kokonaishintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :yksikkohintaiset (not= tyyppi (if debug/kehitys? :teiden-hoito ::foo))
-    :kustannussuunnitelma (= tyyppi (if debug/kehitys? :teiden-hoito ::foo))))
+      (case valilehti
+            :materiaalit (and (not (#{ :teiden-hoito  :paallystys :tiemerkinta} tyyppi))
+                              (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+            :tehtavat (= tyyppi  :teiden-hoito )
+            :suola (#{:hoito  :teiden-hoito } tyyppi)
+            :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+                            (not= tyyppi :teiden-hoito))
+            :kiintiot (= tyyppi :vesivayla-hoito)
+            :kokonaishintaiset (not= tyyppi  :teiden-hoito )
+            :yksikkohintaiset (not= tyyppi  :teiden-hoito )
+            :kustannussuunnitelma (= tyyppi  :teiden-hoito )))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -56,7 +55,7 @@
             ^{:key "kustannussuunnitelma"}
             [kustannussuunnitelma/kustannussuunnitelma])
 
-          "Tehtävät"
+          "Tehtävät ja määrät"
           :tehtavat
           (when (and (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
                      (valilehti-mahdollinen? :tehtavat ur)

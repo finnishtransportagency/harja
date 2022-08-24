@@ -120,8 +120,14 @@
                       "Sampo yhteyshenkilö",
                       "Kunnossapitopäällikkö",
                       "Sillanvalvoja",
-                      "Kelikeskus",
-                      "Tieliikennekeskus"
+                      "Tieliikennekeskus",
+                      "Viranomais- ja vahingonkorvausasiat",
+                      "Työmaavalvoja",
+                      "Työmaavalvojan sijainen",
+                      "Vastuunalainen työnjohtaja",
+                      "Päätoiminen apulainen",
+                      "Apulainen/Työnjohtaja/Vipa-tehtävät",
+                      "Viherhoidosta vastaava henkilö"
                     ]
                   },
                   "vastuuhenkilo": {

@@ -202,7 +202,8 @@
 
 (defn liikennemerkkijarjestelyt [jarjestelyt]
   (mapv (fn [{jarjestely :jarjestely}]
-          (merge {::tielupa/alkuperainen-nopeusrajoitus (:alkuperainen-nopeusrajoitus jarjestely)
+          (merge {::tielupa/liikennemerkki (:liikennemerkki jarjestely)
+                  ::tielupa/alkuperainen-nopeusrajoitus (:alkuperainen-nopeusrajoitus jarjestely)
                   ::tielupa/alennettu-nopeusrajoitus (:alennettu-nopeusrajoitus jarjestely)
                   ::tielupa/nopeusrajoituksen-pituus (:nopeusrajoituksen-pituus jarjestely)}
                  (sijainti (:sijainti jarjestely))))

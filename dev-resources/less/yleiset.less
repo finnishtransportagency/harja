@@ -92,6 +92,23 @@ button > .ajax-loader {
   width: 25px;
 }
 
+.himmennys-wrapper {
+  position: relative;
+}
+
+.himmennys {
+  background-color: white;
+  opacity: 0.5;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
 // yleisluokka, jonka voi lisätä mihin vain klikattavaan
 // tämä tarvitaan usein mobiiliselaimia varten, että ne tajuavat muiden
 // kuin linkkien ja buttonien olevan klikattavia.
@@ -152,18 +169,19 @@ button > .ajax-loader {
 
 .label-ja-vali-tpl (@leveys: @valintakontrollin-leveys, @margin: 5px) {
   display: inline-block;
-  vertical-align: top;
   margin: @margin;
   max-width: 100%;
   width: @leveys;
-
-  .aikavali-valinnat {
-    text-align: center;
+  &.ei-marginia {
+      margin: 0;
   }
-
   .pvm-kentta {
     width: 46%;
   }
+  
+  .input-default {
+      padding: 8px;
+  } 
 
   .numerovali-kentta {
     display: inline-block;
@@ -183,7 +201,7 @@ button > .ajax-loader {
 
   }
 
-  .pvm {
+  .pvm, .aika-input {
     height: @valintakontrollin-korkeus;
     max-width: 100%;
     position: relative;
@@ -193,6 +211,9 @@ button > .ajax-loader {
 
 .label-ja-aikavali {
   .label-ja-vali-tpl(@valintakontrollin-leveys);
+  &.ei-tiukkaa-leveytta {
+      width:fit-content;
+  }
 }
 .label-ja-aikavali-lyhyt {
   .label-ja-vali-tpl(85px);
@@ -337,7 +358,7 @@ button > .ajax-loader {
 }
 
 .border-bottom {
-   border-bottom: solid 1px @primaari-sininen;
+   border-bottom: solid 1px @blue-default;
 }
 @nayta-kartta-napin-margin-bottom: 5px;
 .pystyvali-karttanapille {
@@ -350,8 +371,22 @@ button > .ajax-loader {
 .yleinen-pikkuvihje {
   .vihjeen-sisalto {
     margin: 5px 0;
+    padding: @valistys-4;
+    svg {
+      vertical-align: middle;
+    }
     .livicon-info-circle {
       color: @sininen5;
+    }
+    > span > span {
+      margin-left: 8px;
+      position: relative;
+      top: 2px;
+      // tämän säännön on tarkoitus estää mahdollista ikonia siirtymässä vahingossa alaspäin. Usein ikoni on svg,
+      // mutta toisinaan jokin livicon, kuten toastin varoituskolmiossa
+      &[class*='livicon-'] {
+        top: 0;
+      }
     }
   }
   margin-right: 1em;
@@ -359,6 +394,11 @@ button > .ajax-loader {
   .vihjeen-lisarivi {
     margin-left: 15px;
   }
+}
+
+.checkboxin-vihje {
+  margin-top: 4px;
+  margin-left: 35px; // Tulee checkboxin leveydestä (23px) + marginista (12px)
 }
 
 .vastuuhenkilo {
@@ -396,4 +436,368 @@ button > .ajax-loader {
     justify-content: space-between;
     align-items: center;
   }
+}
+
+.valistys(@valistys) {
+    & > * {
+        &:not(:last-child) {
+            margin-right:@valistys;
+        }
+        &:first-child:last-child {
+            margin:0;
+        }
+    }
+}
+
+.tierekisteriosoite-flex { 
+    display: flex;
+    & > div {
+      width:58px;
+      height:36px;
+    }
+    .tr-numero {
+        border-radius: 4px 0 0 4px;
+        border-right: 0;
+    }
+    .tr-loppuosa, .tr-alkuetaisyys, .tr-alkuosa {
+        border-radius: 0;
+        border-right: 0;
+    }
+    .tr-loppuetaisyys {
+        border-radius: 0 4px 4px 0;
+    }
+}
+
+.varusteet {
+  &.tr-osoite-wrap {
+    display: inline-block;
+    margin: 5px;
+    &.col-md-1, &.col-md-2, &.col-md-3 {
+      padding: 0;
+      > label {
+        margin-top: 0;
+      }
+    }
+    .otsikko {
+      color: @black-light;
+      font-weight: normal;
+      margin-bottom: 5px
+    }
+  }
+  &.tr-osoite-flex {
+    display: flex;
+    & > div {
+      height: 31px;
+      width: 20%;
+    }
+    input.tr-numero {
+      border-radius: 4px 0 0 4px;
+      border-right: 0;
+    }
+    input.tr-loppuosa, input.tr-alkuetaisyys, input.tr-alkuosa {
+      border-radius: 0;
+      border-right: 0;
+    }
+    input.tr-loppuetaisyys {
+      border-radius: 0 4px 4px 0;
+    }
+    .ala-otsikko {
+      padding-left: 7px;
+      padding-right: 7px;
+      color: @black-light;
+      font-weight: normal;
+      margin-top: 5px
+    }
+  }
+  &.alasveto-erotin {
+    border-top: 1px solid @black-light;
+  }
+}
+
+.tila-ympyra(@vari: @green-dark) {
+  background: @vari;
+  border: 0.1875em solid @vari;
+}
+
+.kartta-nappeli {
+    font-family: Open Sans;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 14px;
+    line-height: 20px;
+    /* Blue/Dark */
+    fill: #004d99;
+    color: #004D99;
+    align-self: flex-end;
+    padding-bottom:8px;
+}
+
+.ikoni-input {
+    display: flex;
+    flex-direction: row;
+    width: 196px;
+    padding: 4px;
+    align-items: center;
+    & > input {
+        outline: none;
+        border: 0;
+        width: 100%;
+        &:hover, &:focus {
+            outline: none;
+            border: 0;
+        }
+    }
+    & > .glyphicon {
+        color: #004D99;
+        padding: 8px;
+        top:0;
+    }
+}
+
+.pvm-kentta .ikoni-input {
+    min-width: 120px;
+    max-width: 150px;
+}
+
+.flex-lista {
+    display:flex;
+    flex-direction:column;
+}
+
+.flex-row {
+  display:flex;
+  flex-direction:row;
+  justify-content: space-between;
+  align-items:center;
+  width:100%;
+  &.lapsille-nolla-margin {
+      & > * {
+          margin:0;
+      }
+  }
+  &.sisallon-leveys {
+    width:auto;
+  }
+  &.alkuun {
+    justify-content: flex-start;
+  }
+  &.keskita {
+    justify-content: center;
+  }
+  &.tasaa-alas {
+    align-items: flex-end;
+  }
+  &.tasaa-alkuun {
+    align-items: flex-start;
+  }
+  &.venyta {
+    align-items: stretch;
+  }
+  &.poista-leveys {
+      width: unset;
+  }
+  &.valistys48 {
+      .valistys(@valistys-48);
+  }
+  &.valistys16 {
+      .valistys(@valistys-16);
+  }
+  .col-mimic {
+// it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
+    padding: 0 15px;
+  }
+
+  &.padding16 {
+      padding: 16px;
+  }
+
+  & > * {
+      &.oikealle {
+          margin-left:auto;
+      }
+  }
+}
+
+.flex-wrap {
+  flex-flow: wrap;
+}
+
+.map-lista {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  padding-top: 10px;
+  &:last-child {
+    padding-bottom: 10px;
+  }
+  > * {
+    &:nth-child(1) {
+      flex: 1;
+    }
+    &:nth-child(2) {
+      flex: 1;
+    }
+  }
+}
+.placeholder {
+  color: @harmaa5;
+}
+
+.solujen-valistys-8 {
+    td {
+        padding-right: 8px;
+        min-width: 64px;
+    }
+}
+/*
+.margin-top-4 {
+  margin-top: 4px;
+}
+
+.margin-top-8 {
+  margin-top: 8px;
+}
+
+.margin-top-16 {
+  margin-top: 16px;
+}
+
+.margin-top-32 {
+  margin-top: 32px;
+}
+
+.margin-top-64 {
+  margin-top: 64px;
+}
+
+.margin-right-32 {
+  margin-right: 32px;
+}
+
+.margin-right-64 {
+  margin-right: 64px;
+}*/
+
+.disabloitu-linkki {
+    color: @black-lighter;
+}
+
+.tee-marginit(@n, @i:4) when (@i =< @n) {
+    .margin-top-@{i} {
+        margin-top: (@i / 16rem);
+    }
+
+    .margin-right-@{i} {
+        margin-right: (@i / 16rem);
+    }
+
+    .tee-marginit(@n, @i * 2);
+}
+
+.tee-marginit(64); // kerrotaan aina kahdella -> 4, 8, 16, 32, 64
+
+.ei-marginia {
+  margin: 0;
+}
+
+.tee-sisennykset(@i:1) when (@i =< length(@laskettavat-sisennykset)) {
+    @nykyinen-arvo: extract(@laskettavat-sisennykset, @i);
+    .padding-horizontal-@{nykyinen-arvo} {
+        padding-left: (@nykyinen-arvo / 16rem);
+        padding-right: (@nykyinen-arvo / 16rem);
+    }
+  
+    .padding-vertical-@{nykyinen-arvo} {
+      padding-top: (@nykyinen-arvo / 16rem);
+      padding-bottom: (@nykyinen-arvo / 16rem);
+    }
+  
+    .padding-@{nykyinen-arvo} {
+      padding: (@nykyinen-arvo / 16rem)
+    }
+    .tee-sisennykset(@i + 1);
+}
+
+@laskettavat-sisennykset: 4, 8, 12, 16, 24, 32, 48, 64; // käytetyt arvot
+
+.tee-sisennykset();
+/*
+  Design libraryn välistykset remeinä
+  Designissa välistykset merkataan pikseleinä, mutta devauksessa halutaan käyttää mieluummin remejä,
+  mobiililaitteiden skaalauksen ja yleisten käytäntöjen ylläpitämisen vuoksi.
+
+  Remit laskettu oletuspikselikoon 16px perusteella.
+ */
+
+@valistys-4: 0.25rem;
+@valistys-8: 0.5rem;
+@valistys-12: 0.75rem;
+@valistys-16: 1rem;
+@valistys-24: 1.5rem;
+@valistys-32: 2rem;
+@valistys-48: 3rem;
+@valistys-64: 4rem;
+@valistys-128: 8rem;
+
+// joskus tarpeen, mutta ei kuulu välistyskokoihin
+@koko-20px: 1.25rem;
+
+// Varjot, Design librarystä Elevation
+.elevation-1 {
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2), 0 1px 1px rgba(0, 0, 0, 0.2);
+}
+.elevation-2 {
+  box-shadow: 0 2px 1px rgba(0, 0, 0, 0.2), 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+.elevation-3 {
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+.elevation-4 {
+  box-shadow: 0 6px 6px rgba(0, 0, 0, 0.1), 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.infolaatikko {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 2px 8px;
+
+  border-radius: 4px;
+
+  font-family: Open Sans;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 20px;
+
+  & > * {
+    //flex: none;
+    //order: 1;
+    //flex-grow: 0;
+    margin: 0 4px;
+  }
+
+  &.huomio {
+    border: 1px solid #E0E0e0;
+    background: #E0E0e0;
+    color: #4d4D4d;
+  }
+  &.info {
+    border: 1px solid #E0EDF9;
+    background: #E0EDF9;
+    color: #004D99;
+
+  }
+  &.ok {
+    border: 1px solid #E7F9E7;
+    background: #E7F9E7;
+    color: #1c891C;
+  }
+}
+
+.overflow-ellipsis {
+  text-overflow: ellipsis;
 }

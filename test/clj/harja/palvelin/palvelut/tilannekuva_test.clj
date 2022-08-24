@@ -9,17 +9,15 @@
             [harja.domain.oikeudet :as oikeudet]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.kyselyt.konversio :as konv]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
             [harja.domain.tilannekuva :as tk]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [clojure.java.io :as io]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.transit :as transit]
-            [harja.domain.ely :as ely])
+            [clojure.core.async :refer [<!!]])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -159,19 +157,24 @@
                                             transit/clj->transit
                                             (java.net.URLEncoder/encode))}}))))
 
+(deftest hae-tietyoilmoitukset
+  (let [vastaus (hae-tk hakuargumentit-laaja-historia)]    
+    ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
+    (is (= (count (:tietyoilmoitukset vastaus)) 4))))
+
 (deftest hae-asioita-tilannekuvaan
   (let [vastaus (hae-tk hakuargumentit-laaja-historia)]
-    (is (>= (count (:toteumat vastaus)) 1))
+    (is (= (count (:toteumat vastaus)) 2))
     ;; Testaa, että toteuma selitteissä on enemmän kuin 1 toimenpidekoodi
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
-    (is (>= (count (:turvallisuuspoikkeamat vastaus)) 1))
+    (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (>= (count (:laatupoikkeamat vastaus)) 1))
-    (is (>= (count (:paikkaus vastaus)) 1))
-    (is (>= (count (:paallystys vastaus)) 1))
-    (is (>= (count (:ilmoitukset vastaus)) 1))
-    (is (>= (count (:tietyomaat vastaus)) 1))
-    (is (>= (count (:tietyoilmoitukset vastaus)) 1))))
+    (is (= (count (:laatupoikkeamat vastaus)) 48))
+    (is (= (count (:paallystys vastaus)) 1))
+    (is (= (count (:paikkaus vastaus)) 11))
+    (is (= (count (:ilmoitukset vastaus)) 48))
+    (is (= (count (:tietyomaat vastaus)) 1))
+    (is (= (count (:tietyoilmoitukset vastaus)) 4))))
 
 (deftest ala-hae-laatupoikkeamia
   (let [parametrit (aseta-filtterit-falseksi hakuargumentit-laaja-historia :laatupoikkeamat)
@@ -329,20 +332,9 @@
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? (map
                                                        #(assoc % :tyyppi-kartalla (:ilmoitustyyppi %))
                                                        (:ilmoitukset vastaus))))
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-            :paikkaus
-            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :laatupoikkeama (:laatupoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :turvallisuuspoikkeama (:turvallisuuspoikkeamat vastaus)))
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tietyoilmoitus (:tietyoilmoitukset vastaus)))))
-
-  (testing "Päällystys / paikkaus haku nykytilanteeseen"
-    ;; Käyttää eri SQL-kyselyä historian ja nykytilanteen hakuun, joten hyvä testata erikseen vielä nykytilanne
-    (let [vastaus (hae-tk parametrit-laaja-nykytilanne)]
-
-      (is (paneeli/skeeman-luonti-onnistuu-kaikille?
-            :paikkaus
-            (into [] yllapitokohteet-domain/yllapitokohde-kartalle-xf (:paikkaus vastaus))))))
 
   (testing "Infopaneeli saadaan luotua myös palvelimella piirretyille asioille."
     (let [toteuma (kutsu-karttakuvapalvelua
@@ -391,9 +383,23 @@
 
     (is (paneeli/skeeman-luonti-onnistuu-kaikille? loytyy-vastaus))))
 
+(defn- poista-urakan-alue
+  "Poistaa Tilannekuvan aluekokonaisuudesta geometrian, jotta nopeampi assertoida."
+  [aluekokonaisuudet]
+  (map
+    (fn [aluekokonaisuus]
+      (assoc aluekokonaisuus
+        :urakat (map (fn [u]
+                       (dissoc u :alue))
+                     (:urakat aluekokonaisuus))))
+    aluekokonaisuudet))
+
 (deftest hae-urakat-tilannekuvaan-jvh
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-jvh+ hakuargumentit-laaja-historia)
-        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))]
+        elynumerot (set (distinct (keep #(get-in % [:hallintayksikko :elynumero]) vastaus)))
+        ;; Tämä mäp pitäisi muuttaa joka kerta, kun urakoita lisätään testitiedostoihin. Korjaa, kun ehdit
+        odotettu-ilman-alueita '({:tyyppi :paallystys, :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}, :urakat ({:id 19, :nimi "Tienpäällystysurakka KAS ELY 1 2015", :urakkanro "TIEPAA124"})} {:tyyppi :paallystys, :hallintayksikko {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero 12}, :urakat ({:id 5, :nimi "Muhoksen päällystysurakka", :urakkanro "muho1"} {:id 8, :nimi "YHA-päällystysurakka", :urakkanro "YHA1"} {:id 7, :nimi "Utajärven päällystysurakka", :urakkanro "uta1"} {:id 28, :nimi "Aktiivinen Oulu Päällystys Testi", :urakkanro "ouluPaa"} {:id 24, :nimi "Oulun päällystyksen palvelusopimus", :urakkanro "3003"} {:id 10, :nimi "YHA-päällystysurakka (sidottu)", :urakkanro "YHA3"})} {:tyyppi :hoito, :hallintayksikko {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero 12}, :urakat ({:id 1, :nimi "Oulun alueurakka 2005-2012", :urakkanro "1250"} {:id 4, :nimi "Oulun alueurakka 2014-2019", :urakkanro "1238"} {:id 36, :nimi "Iin MHU 2021-2026", :urakkanro "1248"} {:id 27, :nimi "Aktiivinen Kajaani Testi", :urakkanro "12502"} {:id 35, :nimi "Oulun MHU 2019-2024", :urakkanro "1238"} {:id 26, :nimi "Aktiivinen Oulu Testi", :urakkanro "12501"} {:id 21, :nimi "Kajaanin alueurakka 2014-2019", :urakkanro "1236"} {:id 2, :nimi "Pudasjärven alueurakka 2007-2012", :urakkanro "1229"})} {:tyyppi :valaistus, :hallintayksikko {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero 12}, :urakat ({:id 16, :nimi "Kempeleen valaistusurakka", :urakkanro "valai1"} {:id 20, :nimi "Tievalaistuksen palvelusopimus 2015-2020", :urakkanro "TIEVALAISTUS"} {:id 13, :nimi "Oulun valaistuksen palvelusopimus 2013-2050", :urakkanro "9991"})} {:tyyppi :paallystys, :hallintayksikko {:id 6, :nimi "Varsinais-Suomi", :elynumero 2}, :urakat ({:id 11, :nimi "Porintien päällystysurakka", :urakkanro "PORI"})} {:tyyppi :tiemerkinta, :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}, :urakat ({:id 18, :nimi "Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017", :urakkanro "TIE600"})} {:tyyppi :hoito, :hallintayksikko {:id 8, :nimi "Pirkanmaa", :elynumero 4}, :urakat ({:id 25, :nimi "Tampereen alueurakka 2017-2022", :urakkanro "tre123"})} {:tyyppi :paikkaus, :hallintayksikko {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero 12}, :urakat ({:id 9, :nimi "YHA-paikkausurakka", :urakkanro "YHA2"} {:id 17, :nimi "Muhoksen paikkausurakka", :urakkanro "muho2"})} {:tyyppi :tiemerkinta, :hallintayksikko {:id 13, :nimi "Lappi", :elynumero 14}, :urakat ({:id 38, :nimi "Lapin tiemerkintäurakka", :urakkanro "TIEM1"} {:id 15, :nimi "Lapin tiemerkinnän palvelusopimus 2013-2018", :urakkanro "LAPPI123"})} {:tyyppi :tiemerkinta, :hallintayksikko {:id 8, :nimi "Pirkanmaa", :elynumero 4}, :urakat ({:id 14, :nimi "Pirkanmaan tiemerkinnän palvelusopimus 2013-2018", :urakkanro "tiem1"})} {:tyyppi :hoito, :hallintayksikko {:id 13, :nimi "Lappi", :elynumero 14}, :urakat ({:id 39, :nimi "Kittilän MHU 2019-2024", :urakkanro "1436"} {:id 34, :nimi "Ivalon MHU testiurakka (uusi)", :urakkanro "13374"} {:id 33, :nimi "Kemin MHU testiurakka (5. hoitovuosi)", :urakkanro "13373"} {:id 32, :nimi "Pellon MHU testiurakka (3. hoitovuosi)", :urakkanro "13372"} {:id 31, :nimi "Rovaniemen MHU testiurakka (1. hoitovuosi)", :urakkanro "13371"})} {:tyyppi :vesivayla-hoito, :hallintayksikko {:id 3, :nimi "Meriväylät", :elynumero nil}, :urakat ({:id 40, :nimi "Vantaan väyläyksikön väylänhoito ja -käyttö, Itäinen SL", :urakkanro "1"} {:id 41, :nimi "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL", :urakkanro "2"})} {:tyyppi :vesivayla-hoito, :hallintayksikko {:id 2, :nimi "Sisävesiväylät", :elynumero nil}, :urakat ({:id 44, :nimi "Pyhäselän urakka", :urakkanro "3"} {:id 45, :nimi "Rentoselän urakka", :urakkanro "4"})} {:tyyppi :tekniset-laitteet, :hallintayksikko {:id 8, :nimi "Pirkanmaa", :elynumero 4}, :urakat ({:id 30, :nimi "PIR RATU IHJU", :urakkanro "3007"})} {:tyyppi :paallystys, :hallintayksikko {:id 5, :nimi "Uusimaa", :elynumero 1}, :urakat ({:id 6, :nimi "Porvoon päällystysurakka", :urakkanro "por1"})} {:tyyppi :hoito, :hallintayksikko {:id 5, :nimi "Uusimaa", :elynumero 1}, :urakat ({:id 22, :nimi "Vantaan alueurakka 2009-2019", :urakkanro "131"} {:id 23, :nimi "Espoon alueurakka 2014-2019", :urakkanro "130"})} {:tyyppi :siltakorjaus, :hallintayksikko {:id 7, :nimi "Kaakkois-Suomi", :elynumero 3}, :urakat ({:id 29, :nimi "KAS siltojen ylläpidon palvelusopimus Etelä-Karjala", :urakkanro "5003"})} {:tyyppi :hoito, :hallintayksikko {:id 6, :nimi "Varsinais-Suomi", :elynumero 2}, :urakat ({:id 3, :nimi "Porin alueurakka 2007-2012", :urakkanro "pori666"})} {:tyyppi :paallystys, :hallintayksikko {:id 13, :nimi "Lappi", :elynumero 14}, :urakat ({:id 37, :nimi "Kemin päällystysurakka", :urakkanro "LAP1"})} {:tyyppi :vesivayla-kanavien-hoito, :hallintayksikko {:id 1, :nimi "Kanavat ja avattavat sillat", :elynumero nil}, :urakat ({:id 46, :nimi "Saimaan kanava", :urakkanro "089123"} {:id 47, :nimi "Joensuun kanava", :urakkanro "089123"})} {:tyyppi :tiemerkinta, :hallintayksikko {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero 12}, :urakat ({:id 12, :nimi "Oulun tiemerkinnän palvelusopimus 2013-2022", :urakkanro "OULU_TIE"})})]
+    (is (= (poista-urakan-alue vastaus) odotettu-ilman-alueita))
     (is (>= (count elynumerot) 6)
         "JVH:n pitäisi nähdä kaikki ELY:t")))
 
@@ -484,3 +490,15 @@
                    #{"tilaajan laadunvalvonta"}))
     (is (not (contains? (get-in vastaus-urakoitsijalle [:tyokoneet :tehtavat])
                         #{"tilaajan laadunvalvonta"})))))
+
+
+;; tuotannossa (ja singletonia vasten) tuotti bugin ERROR: Relate Operation called with a LWGEOMCOLLECTION type.  This is unsupported.
+;                                     Hint: Change argument 2: 'GEOMETRYCOLLECTION(POINT(449110.781 6788879.145))'
+#_(def haku-params-vhar-1815
+  {:kuva [256.0 256.0], :extent [440848.0 6787072.0 454944.0 6882976.0], :resoluutio 16.0, :parametrit {:aikavalinta 504, "ind" "n1587995345871", :ilmoitukset {}, :yllapito #{17}, :urakat #{275 65 377 281 363 314 313 258 125 158 378 14 326 147 362}, :nykytilanne? true}})
+
+;; Ei ole tarkoituskaan ajaa CI:ssä, vaan voi todeta ettei enää tule poikkeusta db-singletonia vasten
+#_(deftest hae-paallystysten-reitit-kartalle-test
+  (let [vastaus (<!! (hae-paallystysten-sijainnit-kartalle (:db harja.palvelin.main/harja-jarjestelma)
+                                                           +kayttaja-jvh+
+                                                           haku-params-vhar-1815))]))

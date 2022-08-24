@@ -1,0 +1,4 @@
+-- Poistetaan constraintit suortuskyvyn parantamiseksi
+ALTER TABLE tyokonehavainto
+DROP CONSTRAINT tyokonehavainto_organisaatio_fkey,
+DROP CONSTRAINT tyokonehavainto_urakkaid_fkey;

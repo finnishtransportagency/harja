@@ -3,7 +3,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.testi :refer :all]
+            [harja.testi :refer :all :as testi]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-lyhenne-ja-nimi +ilmoitustilat+]]
@@ -38,14 +38,80 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
-
-(deftest hae-ilmoitukset-raportille-test
-  (let [db (tietokanta/luo-tietokanta testitietokanta)
-        [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2016"))
-        ilmoitukset
-        (ilmoitusraportti/hae-ilmoitukset-raportille
-          db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
-                             :urakoitsija nil :urakkatyyppi :kaikki
-                             :alkupvm alkupvm :loppupvm loppupvm})]
-    (is (not (empty? ilmoitukset)))
-    (is (= (count ilmoitukset) 7))))
+;
+;(deftest hae-ilmoitukset-raportille-koko-maa-test
+;  (let [db (:db jarjestelma)
+;        [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.11.2016"))
+;        ilmoitukset
+;        (ilmoitusraportti/hae-ilmoitukset-raportille
+;          db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
+;                             :urakoitsija nil :urakkatyyppi :kaikki
+;                             :alkupvm alkupvm :loppupvm loppupvm})]
+;    (is (not (empty? ilmoitukset)))
+;    (is (= (count ilmoitukset) 7))))
+;
+;(deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-test
+;  (let [db (:db jarjestelma)
+;        odotettu-urakasta-26 {:kuittaus {:kuittaustyyppi nil},
+;                              :sijainti nil,
+;                              :ilmoitustyyppi :kysely,
+;                              :urakka 26,
+;                              :hallintayksikko
+;                              {:id 12, :nimi "Pohjois-Pohjanmaa", :elynumero "12"},
+;                              :selitteet [],
+;                              :urakkatyyppi nil,
+;                              :ilmoittaja {:tyyppi nil}}
+;        [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+;        ilmoitukset
+;        (ilmoitusraportti/hae-ilmoitukset-raportille
+;          db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
+;                             :urakoitsija nil :urakkatyyppi :hoito
+;                             :alkupvm alkupvm :loppupvm loppupvm})]
+;    (is (= 7 (count ilmoitukset)))
+;    (is (= odotettu-urakasta-26 (dissoc
+;                                  (first (filter #(= 26 (:urakka %))
+;                                                ilmoitukset))
+;                                  :ilmoitettu :valitetty :valitetty-urakkaan)))
+;    (is (not (empty? ilmoitukset)))
+;    (is (= (count ilmoitukset) 7))))
+;
+;(deftest hae-ilmoitukset-raportille-hoito-ja-teiden-hoito-laaja-aikavali-test
+;  (let [db (:db jarjestelma)
+;        [alkupvm loppupvm] [(pvm/->pvm "1.1.2015") (pvm/nyt)]
+;        ilmoitukset
+;        (ilmoitusraportti/hae-ilmoitukset-raportille
+;          db +kayttaja-jvh+ {:hallintayksikko-id  nil :urakka-id nil
+;                             :urakoitsija nil :urakkatyyppi :hoito
+;                             :alkupvm alkupvm :loppupvm loppupvm})]
+;    (is (not (empty? ilmoitukset)))
+;    (is (= (count ilmoitukset) 32))))
+;
+;
+;(deftest hae-ilmoitukset-raportille-organisaatio-seka-urakka-id-test
+;  (let [db (:db jarjestelma)
+;        [alkupvm loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
+;        rovaniemen-urakan-id (testi/hae-rovaniemen-maanteiden-hoitourakan-id)
+;        lapin-elyn-id (->
+;                        (testi/q "SELECT id FROM organisaatio WHERE nimi = 'Lappi'")
+;                        ffirst)
+;        ilmoitukset
+;        (ilmoitusraportti/hae-ilmoitukset-raportille
+;          db +kayttaja-jvh+ {:hallintayksikko-id lapin-elyn-id :urakka-id rovaniemen-urakan-id
+;                             :urakoitsija nil :urakkatyyppi :kaikki
+;                             :alkupvm alkupvm :loppupvm loppupvm})]
+;    (is (not (empty? ilmoitukset)))
+;    (is (= (count ilmoitukset) 6))))
+;
+;(deftest hae-ilmoitukset-raportille-pelkka-organisaatio-test
+;  (let [db (:db jarjestelma)
+;        [alkupvm loppupvm] [(pvm/->pvm "1.1.2015") (pvm/nyt)]
+;        elyn-id (->
+;                  (testi/q "SELECT id FROM organisaatio WHERE nimi = 'Pohjois-Pohjanmaa'")
+;                  ffirst)
+;        ilmoitukset
+;        (ilmoitusraportti/hae-ilmoitukset-raportille
+;          db +kayttaja-jvh+ {:hallintayksikko-id elyn-id :urakka-id nil
+;                             :urakoitsija nil :urakkatyyppi :kaikki
+;                             :alkupvm alkupvm :loppupvm loppupvm})]
+;    (is (not (empty? ilmoitukset)))
+;    (is (= (count ilmoitukset) 26))))

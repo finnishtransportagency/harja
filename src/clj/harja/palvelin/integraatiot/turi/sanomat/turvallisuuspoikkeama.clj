@@ -130,25 +130,27 @@
    [:tilaajanvastuuhenkiloetunimi tilaajanvastuuhenkilo-etunimi]
    [:tilaajanvastuuhenkilosukunimi tilaajanvastuuhenkilo-sukunimi]
    [:tilaajanvastuuhenkilosposti tilaajanvastuuhenkilo-sposti]
-   [:sampourakkanimi urakka-nimi]
+   [:sampourakkanimi (xml/escape-xml-varten urakka-nimi)]
    [:sampourakkaid urakka-sampoid]
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (urakan-vaylamuoto vaylamuoto)]
-   [:urakkatyyppi urakka-tyyppi]
+   [:urakkatyyppi (if (= urakka-tyyppi "teiden-hoito")
+                    "hoito"
+                    urakka-tyyppi)]
    (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
    [:alueurakkanro alueurakkanro]
    (poikkeamatyypit->numerot tyyppi)
    [:tapahtumapvm (xml/formatoi-paivamaara tapahtunut)]
    [:tapahtumaaika (xml/formatoi-kellonaika tapahtunut)]
-   [:kuvaus kuvaus]])
+   [:kuvaus (xml/escape-xml-varten kuvaus)]])
 
 (defn- tapahtumapaikka [{sijainti :sijainti
                         tieosoite :tr
                         paikan-kuvaus :paikan-kuvaus}]
   (let [[x y] (some-> sijainti geo/pisteet first)]
     [:tapahtumapaikka
-     [:paikka paikan-kuvaus]
+     [:paikka (xml/escape-xml-varten paikan-kuvaus)]
      (when y [:eureffinn y])
      (when x [:eureffine x])
      (when (:numero tieosoite) [:tienumero (:numero tieosoite)])
@@ -165,19 +167,19 @@
    (list (when juurisyy1
            [:juurisyy1 (turpodomain/juurisyyn-koodi juurisyy1)])
          (when (and juurisyy1 juurisyy1-selite)
-           [:juurisyy1selite juurisyy1-selite])
+           [:juurisyy1selite (xml/escape-xml-varten juurisyy1-selite)])
          (when juurisyy2
            [:juurisyy2 (turpodomain/juurisyyn-koodi juurisyy2)])
          (when (and juurisyy2 juurisyy2-selite)
-           [:juurisyy2selite juurisyy2-selite])
+           [:juurisyy2selite (xml/escape-xml-varten juurisyy2-selite)])
          (when juurisyy3
            [:juurisyy3 (turpodomain/juurisyyn-koodi juurisyy3)])
          (when (and juurisyy3 juurisyy3-selite)
-           [:juurisyy3selite juurisyy3-selite]))))
+           [:juurisyy3selite (xml/escape-xml-varten juurisyy3-selite)]))))
 
 (defn- syyt-ja-seuraukset [data]
   [:syytjaseuraukset
-   [:seuraukset (:seuraukset data)]
+   [:seuraukset (xml/escape-xml-varten(:seuraukset data))]
    (when (ammatti->numero (:tyontekijanammatti data)) [:ammatti (ammatti->numero (:tyontekijanammatti data))])
    (when-let [ammatti-muu (:tyontekijanammattimuu data)]
      [:ammattimuutarkenne ammatti-muu])
@@ -190,7 +192,7 @@
 
 (defn- tapahtumakasittely [{:keys [tapahtuman-otsikko luotu tila]}]
   [:tapahtumankasittely
-   [:otsikko tapahtuman-otsikko]
+   [:otsikko (xml/escape-xml-varten tapahtuman-otsikko)]
    [:luontipvm (xml/formatoi-paivamaara luotu)]
    [:tila (turvallisuuspoikkeaman-tila tila)]])
 
@@ -200,19 +202,19 @@
                 vastuuhenkilosukunimi vastuuhenkilosposti
                 toteuttaja tila]} korjaavat-toimenpiteet]
     [:poikkeamatoimenpide
-     [:otsikko otsikko]
-     [:kuvaus kuvaus]
-     [:vastuuhenkilokayttajatunnus vastuuhenkilokayttajatunnus]
+     [:otsikko (xml/escape-xml-varten otsikko)]
+     [:kuvaus (xml/escape-xml-varten kuvaus)]
+     [:vastuuhenkilokayttajatunnus (xml/escape-xml-varten vastuuhenkilokayttajatunnus)]
      [:vastuuhenkiloetunimi vastuuhenkiloetunimi]
      [:vastuuhenkilosukunimi vastuuhenkilosukunimi]
      [:vastuuhenkilosposti vastuuhenkilosposti]
-     [:toteuttaja toteuttaja]
+     [:toteuttaja (xml/escape-xml-varten toteuttaja)]
      [:tila (korjaava-toimenpide-tila->numero tila)]]))
 
 (defn- poikkeamaliite [{:keys [liitteet]}]
   (for [{:keys [nimi data]} liitteet]
     [:poikkeamaliite
-     [:tiedostonimi nimi]
+     [:tiedostonimi (xml/escape-xml-varten nimi)]
      [:tiedosto (String. (liitteet/enkoodaa-base64 data))]]))
 
 (defn- turvallisuuspoikkeamaviesti [turvallisuuspoikkeama]
@@ -230,22 +232,11 @@
   Palauttaa XML-viestin merkkijonona."
   [turvallisuuspoikkeama]
   (let [sisalto (turvallisuuspoikkeamaviesti turvallisuuspoikkeama)
+        _ (println "SISÄLTÖ " sisalto)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml +xsd-polku+ "poikkeama-rest.xsd" xml)]
-      (let [virheviesti (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
-                                 Validointivirheet: %s\n
-                                 Muodostettu sanoma:\n
-                                 %s"
-                                virheet
-                                (xml/tee-xml-sanoma
-                                  ;; Poistetaan tiedoston logitus sen takia, kun sen logitus voi jumittaa koko prosessin
-                                  (walk/prewalk (fn [osa]
-                                                  (if (and (vector? osa)
-                                                           (= :tiedosto (first osa)))
-                                                    [:tiedosto "<<EI LOKITETA TIEDOSTOA>>"]
-                                                    osa))
-                                                sisalto)))]
-        (log/error virheviesti)
+      (let [lokitettava-virhe (format "Turvallisuuspoikkeaman TURI-lähetyksen XML ei ole validia.\n
+      Validointivirheet: %s" virheet)]
         (throw+ {:type :invalidi-turvallisuuspoikkeama-xml
-                 :error virheviesti}))
+                 :error lokitettava-virhe}))
       xml)))

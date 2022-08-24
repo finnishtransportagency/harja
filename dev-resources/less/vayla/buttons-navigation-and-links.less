@@ -1,13 +1,25 @@
 @import "colors.less";
 .yhteiset-arvot() {
   color: @white;
-  height: 40px;
+  height: 36px;
   outline-style: solid;
+  border-style: solid;
 
   font-family: "Open Sans", sans-serif;
   font-style: normal;
   font-weight: normal;
   font-size: 0.75rem;
+
+  padding: 8px 12px;
+
+  &.medium {
+    height: 36px;
+    min-width: 90px;
+  }
+  &.suuri {
+    width:160px;
+  }
+
 }
 
 .yhteiset-navigaatio-arvot() {
@@ -20,6 +32,32 @@
   font-size: 0.75rem;
 }
 
+.yhteiset-teksti-arvot() {
+  background-color: transparent;
+  height: 40px;
+  outline-style: none;
+  border:none;
+
+  font-family: "Open Sans", sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 0.75rem;
+
+  &.suuri {
+    width:160px;
+  }
+}
+
+.outlinet-ja-borderit(@vari, @leveys, @offsetti) {
+  outline-color: @vari;
+  outline-width: @leveys;
+  outline-offset: @offsetti;
+
+  border-radius: 4px;
+  border-color: @vari;
+  border-width: @leveys;
+}
+
 /*--------------------------*\
 |       PRIMARY BUTTONS      |
 \*--------------------------*/
@@ -28,117 +66,154 @@
   &primary- {
     &default {
       .yhteiset-arvot();
-      background-color: @blue;
-      outline-color: @blue;
-      outline-width: 1px;
-      outline-offset: -1px;
+      background-color: @blue-default;
+      .outlinet-ja-borderit(@blue-default, 1px, -1px);
+
+      &:hover {
+        .yhteiset-arvot();
+        background-color: @blue-dark;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
+      }
+      &:focus {
+        .yhteiset-arvot();
+        background-color: @blue-dark;
+        .outlinet-ja-borderit(@white, 2px, -2px);
+        outline-style: dashed;
+      }
+      &:active {
+        .yhteiset-arvot();
+        background-color: @blue-darker;
+        .outlinet-ja-borderit(@blue-darker, 3px, -3px);
+      }
+      &:disabled {
+        .yhteiset-arvot();
+        background-color: @gray225;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
+      }
     }
-    &hover {
-      .yhteiset-arvot();
-      background-color: @blue-dark;
-      outline-color: @blue-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-    }
-    &focus {
-      .yhteiset-arvot();
-      background-color: @blue-dark;
-      outline-color: @white;
-      outline-width: 2px;
-      outline-offset: -2px;
-      outline-style: dashed;
-    }
-    &active {
-      .yhteiset-arvot();
-      background-color: @blue-darker;
-      outline-color: @blue-darker;
-      outline-width: 3px;
-      outline-offset: -3px;
-    }
-    &disabled {
-      .yhteiset-arvot();
-      background-color: @gray225;
-      outline-color: @gray225;
-      outline-width: 1px;
-      outline-offset: -1px;
+    &text {
+      .yhteiset-teksti-arvot();
+      color: @blue-default;
+
+      &:hover {
+        .yhteiset-teksti-arvot();
+        color: @blue-dark;
+      }
+      &:focus {
+        .yhteiset-teksti-arvot();
+        color: @blue-dark;
+      }
+      &:active {
+        .yhteiset-teksti-arvot();
+        color: @blue-darker;
+      }
+      &:disabled {
+        .yhteiset-teksti-arvot();
+        color: @gray225;
+      }
     }
   }
 
   &positive- {
     &default {
       .yhteiset-arvot();
-      background-color: @green;
-      outline-color: @green;
-      outline-width: 1px;
-      outline-offset: -1px;
+      background-color: @green-default;
+      .outlinet-ja-borderit(@green-default, 1px, -1px);
+
+      &:hover {
+        .yhteiset-arvot();
+        background-color: @green-dark;
+        .outlinet-ja-borderit(@green-dark, 2px, -2px);
+      }
+      &:focus {
+        .yhteiset-arvot();
+        background-color: @green-dark;
+        .outlinet-ja-borderit(@white, 2px, -2px);
+        outline-style: dashed;
+      }
+      &:active {
+        .yhteiset-arvot();
+        background-color: @green-darker;
+        .outlinet-ja-borderit(@green-darker, 3px, -3px);  // TODO specissä 2 ja -2. TARKASTA
+      }
+      &:disabled {
+        .yhteiset-arvot();
+        background-color: @gray225;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
+      }
     }
-    &hover {
-      .yhteiset-arvot();
-      background-color: @green-dark;
-      outline-color: @green-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-    }
-    &focus {
-      .yhteiset-arvot();
-      background-color: @green-dark;
-      outline-color: @white;
-      outline-width: 2px;
-      outline-offset: -2px;
-      outline-style: dashed;
-    }
-    &active {
-      .yhteiset-arvot();
-      background-color: @green-darker;
-      outline-color: @green-darker;
-      outline-width: 3px; // TODO specissä 2. TARKASTA
-      outline-offset: -3px; // TODO specissä -2. TARKASTA
-    }
-    &disabled {
-      .yhteiset-arvot();
-      background-color: @gray225;
-      outline-color: @gray225;
-      outline-width: 1px;
-      outline-offset: -1px;
+
+    &text {
+      .yhteiset-teksti-arvot();
+      color: @green-default;
+
+      &:hover {
+        .yhteiset-teksti-arvot();
+        color: @green-dark;
+      }
+      &:focus {
+        .yhteiset-teksti-arvot();
+        color: @green-dark;
+      }
+      &:active {
+        .yhteiset-teksti-arvot();
+        color: @green-darker;
+      }
+      &:disabled {
+        .yhteiset-teksti-arvot();
+        color: @gray225;
+      }
     }
   }
 
   &negative- {
     &default {
       .yhteiset-arvot();
-      background-color: @red;
-      outline-color: @red;
-      outline-width: 1px;
-      outline-offset: -1px;
+      background-color: @red-default;
+      .outlinet-ja-borderit(@red-default, 1px, -1px);
+      &:hover {
+        .yhteiset-arvot();
+        background-color: @red-dark;
+        .outlinet-ja-borderit(@red-dark, 2px, -2px);
+      }
+      &:focus {
+        .yhteiset-arvot();
+        background-color: @red-dark;
+        .outlinet-ja-borderit(@white, 2px, -2px);
+        outline-style: dashed;
+      }
+      &:active {
+        .yhteiset-arvot();
+        background-color: @red-darker;
+        .outlinet-ja-borderit(@red-darker, 3px, -3px);  // TODO specissä 2 ja -2. TARKASTA
+      }
+      &:disabled {
+        .yhteiset-arvot();
+        background-color: @gray225;
+        .outlinet-ja-borderit(@gray225, 1px, -1px);
+      }
     }
-    &hover {
-      .yhteiset-arvot();
-      background-color: @red-dark;
-      outline-color: @red-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-    }
-    &focus {
-      .yhteiset-arvot();
-      background-color: @red-dark;
-      outline-color: @white;
-      outline-width: 2px;
-      outline-offset: -2px;
-      outline-style: dashed;
-    }
-    &active {
-      .yhteiset-arvot();
-      background-color: @red-darker;
-      outline-color: @red-darker;
-      outline-width: 3px; // TODO specissä 2. TARKASTA
-      outline-offset: -3px; // TODO specissä -2. TARKASTA
-    }
-    &disabled {
-      .yhteiset-arvot();
-      background-color: @gray225;
-      outline-color: @gray225;
-      outline-width: 1px;
-      outline-offset: -1px;
+
+    &text {
+      .yhteiset-teksti-arvot();
+      color: @red-default;
+
+      &:hover {
+        .yhteiset-teksti-arvot();
+        color: @red-dark;
+      }
+      &:focus {
+        .yhteiset-teksti-arvot();
+        color: @red-dark;
+      }
+      &:active {
+        .yhteiset-teksti-arvot();
+        color: @red-darker;
+      }
+      &:disabled {
+        .yhteiset-teksti-arvot();
+        color: @gray225;
+      }
     }
   }
 }
@@ -149,91 +224,94 @@
 \*--------------------------*/
 
 .button- {
-  &psecondary- {
+  &secondary- {
     &default {
       .yhteiset-arvot();
-      color: @blue;
-      background-color: @white;
-      outline-color: @blue;
-      outline-width: 1px;
-      outline-offset: -1px;
+      color: @blue-default;
+      background-color: @white-hack;
+      .outlinet-ja-borderit(@blue-default, 1px, -1px);
+
+      &:hover {
+        .yhteiset-arvot();
+        color: @blue-dark;
+        background-color: @white-hack;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
+      }
+      &:focus {
+        .yhteiset-arvot();
+        color: @blue-dark;
+        background-color: @white-hack;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
+        outline-style: dashed;
+      }
+      &:active {
+        .yhteiset-arvot();
+        color: @blue-darker;
+        background-color: @white-hack;
+        .outlinet-ja-borderit(@blue-darker, 3px, -3px);
+      }
+      &:disabled {
+        .yhteiset-arvot();
+        color: @gray200;
+        background-color: @white-hack;
+        .outlinet-ja-borderit(@gray200, 1px, -1px);
+      }
     }
-    &hover {
-      .yhteiset-arvot();
-      color: @blue-dark;
-      background-color: @white;
-      outline-color: @blue-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-    }
-    &focus {
-      .yhteiset-arvot();
-      color: @blue-dark;
-      background-color: @white;
-      outline-color: @blue-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-      outline-style: dashed;
-    }
-    &active {
-      .yhteiset-arvot();
-      color: @blue-darker;
-      background-color: @white;
-      outline-color: @blue-darker;
-      outline-width: 3px;
-      outline-offset: -3px;
-    }
-    &disabled {
-      .yhteiset-arvot();
-      color: @gray200;
-      background-color: @white;
-      outline-color: @gray200;
-      outline-width: 1px;
-      outline-offset: -1px;
+    &text {
+      .yhteiset-teksti-arvot();
+      color: @blue-default;
+
+      &:hover {
+        .yhteiset-teksti-arvot();
+        color: @blue-dark;
+      }
+      &:focus {
+        .yhteiset-teksti-arvot();
+        color: @blue-dark;
+      }
+      &:active {
+        .yhteiset-teksti-arvot();
+        color: @blue-darker;
+      }
+      &:disabled {
+        .yhteiset-teksti-arvot();
+        color: @gray225;
+      }
     }
   }
 
   &invisible- {
     &default {
       .yhteiset-arvot();
-      color: @blue;
+      color: @blue-default;
       background-color: transparent;
-      outline-color: transparent;
-      outline-width: 1px;
-      outline-offset: -1px;
-    }
-    &hover {
-      .yhteiset-arvot();
-      color: @blue-dark;
-      background-color: @gray235;
-      outline-color: @gray235;
-      outline-width: 2px;
-      outline-offset: -2px;
-    }
-    &focus {
-      .yhteiset-arvot();
-      color: @blue-dark;
-      background-color: @gray235;
-      outline-color: @blue-dark;
-      outline-width: 2px;
-      outline-offset: -2px;
-      outline-style: dashed;
-    }
-    &active {
-      .yhteiset-arvot();
-      color: @blue-darker;
-      background-color: @gray225;
-      outline-color: @gray225;
-      outline-width: 3px;
-      outline-offset: -3px;
-    }
-    &disabled {
-      .yhteiset-arvot();
-      color: @gray200;
-      background-color: transparent;
-      outline-color: transparent;
-      outline-width: 1px;
-      outline-offset: -1px;
+      .outlinet-ja-borderit(transparent, 1px, -1px);
+
+      &:hover {
+        .yhteiset-arvot();
+        color: @blue-dark;
+        background-color: @gray235;
+        .outlinet-ja-borderit(@gray235, 2px, -2px);
+      }
+      &:focus {
+        .yhteiset-arvot();
+        color: @blue-dark;
+        background-color: @gray235;
+        .outlinet-ja-borderit(@blue-dark, 2px, -2px);
+        outline-style: dashed;
+      }
+      &:active {
+        .yhteiset-arvot();
+        color: @blue-darker;
+        background-color: @gray225;
+        .outlinet-ja-borderit(@gray225, 3px, -3px);
+      }
+      &:disabled {
+        .yhteiset-arvot();
+        color: @gray200;
+        background-color: transparent;
+        .outlinet-ja-borderit(transparent, 1px, -1px);
+      }
     }
   }
 }
@@ -247,12 +325,12 @@
     &default {
       .yhteiset-navigaatio-arvot();
       background-color: @gray25;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &hover {
       .yhteiset-navigaatio-arvot();
       background-color: @gray50;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &focus {
       .yhteiset-navigaatio-arvot();
@@ -265,13 +343,13 @@
     &active {
       .yhteiset-navigaatio-arvot();
       background-color: @gray75;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &disabled {
       .yhteiset-navigaatio-arvot();
       color: @gray75;
       background-color: @gray25;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
   }
 

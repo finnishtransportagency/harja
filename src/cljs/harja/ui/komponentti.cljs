@@ -51,18 +51,18 @@
                                                      (f this old-argv new-argv))
                                                    should-component-update))
                                       true))
-         :component-will-receive-props (fn [this new-argv]
-                                         (doseq [f component-will-receive-props]
-                                           (apply f this new-argv)))
-         :component-will-mount (fn [this]
-                                 (doseq [f component-will-mount]
-                                   (f this)))
+         :UNSAFE_component-will-receive-props (fn [this new-argv]
+                                                (doseq [f component-will-receive-props]
+                                                  (apply f this new-argv)))
+         :UNSAFE_component-will-mount (fn [this]
+                                        (doseq [f component-will-mount]
+                                          (f this)))
          :component-did-mount (fn [this]
                                 (doseq [f component-did-mount]
                                   (f this)))
-         :component-will-update (fn [this new-argv]
-                                  (doseq [f component-will-update]
-                                    (apply f this new-argv)))
+         :UNSAFE_component-will-update (fn [this new-argv]
+                                         (doseq [f component-will-update]
+                                           (apply f this new-argv)))
          :component-did-update (fn [this old-argv]
                                  (doseq [f component-did-update]
                                    (apply f this old-argv)))
@@ -228,6 +228,18 @@
                                (tarkistettu-komponentti-sisalla? this tapahtuma)
                                (dom/sisalla? this (:tapahtuma tapahtuma)))
                      (ulkopuolella-fn)))))))
+
+(defn klikattu-luokan-ulkopuolelle
+  "Kutsuu annettua funktiota, kun klikataan annettujen luokkien ulkopuolelle.
+  Esimerkiksi lupaukset-sivupaneeli suljetaan, kun klikataan minne tahansa paitsi sivupaneeliin,
+  kuukauden valintaan tai varmistusmodaaliin.
+  Luokkaa etsitään klikatusta DOM-nodesta ja siitä ylöspäin (node -> parentNode -> parentNode ...).
+  Jos nodella on joku annetuista luokista, ei kutsuta funktiota."
+  ([{:keys [ulkopuolella-fn luokat]}]
+   (kuuntelija :body-klikkaus
+               (fn [_this tapahtuma]
+                 (when-not (some-> tapahtuma :tapahtuma .-target (dom/luokka-polulla? luokat))
+                   (ulkopuolella-fn {:tapahtuma tapahtuma}))))))
 
 (defn ulos
   "Mixin, joka kutsuu annettua funktiota komponentin poistuessa."

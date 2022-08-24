@@ -1,0 +1,136 @@
+@import "../yleiset";
+
+div.kustannusten-seuranta {
+  padding-top: 1rem;
+
+  .filtterit-container {
+    padding-top: 24px;
+    display: flex;
+
+    .filtteri {
+      height: 69px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin-left: @valistys-16;
+
+      &.kuukausi {
+        width: 25%;
+      }
+    }
+  }
+
+  .otsikkorivi {
+    background-color: @white-dark;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .sivuelementti {
+    padding-top: 24px;
+  }
+
+  span.taso2 {
+    padding-left: 16px;
+    display: inline-block;
+  }
+
+  span.taso2:first-letter {
+    text-transform: uppercase;
+  }
+}
+
+div.header {
+  p.urakka {
+    font-weight: 400;
+    color: @harmaa-tumma;
+  }
+}
+
+table.table-default-header-valkoinen {
+  /* Taulukossa on monta otsikkoa, joten on pakko tiivistää hieman */
+  th,td {
+    padding-left: 4px;
+    padding-right: 4px;
+
+    &.vahvistamatta {
+      background-color: @yellow;
+    }
+  }
+}
+
+span.pilleri {
+  border-radius: 15px;
+  background: @red-lighter;
+  padding: 4px 12px;
+  margin-right: -13px;
+}
+
+/* Kustannusseurannan yhteenvetolaatikko */
+div.yhteenveto {
+
+  .yhteenveto-container & {
+    position: sticky;
+    top: @valistys-32;
+  }
+
+  max-width: 532px;
+  margin-top: @valistys-32;
+  border: 1px solid @harmaa-vaalea;
+  box-sizing: border-box;
+  padding: @valistys-16;
+
+  .valikatselmus {
+    padding: @valistys-16;
+    background: @blue-lighter;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: @valistys-16;
+
+    .nappi-ensisijainen {
+      margin-right: 0;
+    }
+
+    &-tehty {
+      margin-top: @valistys-32
+    }
+  }
+
+  .rivi-yhteiset() {
+    font-size: 14px;
+    line-height: 20px;
+    display: flex;
+    justify-content: space-between;
+
+    span {
+      margin: 0.5rem 0 0.5rem 0;
+    }
+  }
+
+  .rivi {
+    .rivi-yhteiset();
+    padding-left: @valistys-16;
+
+    &-sisempi {
+      .rivi-yhteiset();
+      padding-left: @valistys-32;
+      color: @black-light;
+    }
+  }
+
+  .negatiivinen-numero {
+    color: @red-dark;
+  }
+  .positiivinen-numero {
+    font-weight: bold;
+    color: @green-dark;
+  }
+}
+
+/*Kustannusten seuranta taulukossa on uusin taulukkoelementti ja sen vaatimat muutokset on tässä */
+.paaryhma-center {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
+  text-align: center !important;
+}

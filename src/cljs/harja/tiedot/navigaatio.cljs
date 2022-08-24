@@ -90,7 +90,6 @@
     [{:nimi "Hoito" :arvo :hoito}
      {:nimi "Tiemerkintä" :arvo :tiemerkinta}
      {:nimi "Päällystys" :arvo :paallystys}
-     {:nimi "Paikkaus" :arvo :paikkaus}
      {:nimi "Valaistus" :arvo :valaistus}
      {:nimi "Siltakorjaus" :arvo :siltakorjaus}
      {:nimi "Tekniset laitteet" :arvo :tekniset-laitteet}
@@ -218,7 +217,6 @@
                     :hoito @urk/urakoitsijat-hoito
                     :teiden-hoito @urk/urakoitsijat-hoito
                     :paallystys @urk/urakoitsijat-paallystys
-                    :paikkaus @urk/urakoitsijat-paikkaus
                     :tiemerkinta @urk/urakoitsijat-tiemerkinta
                     :valaistus @urk/urakoitsijat-valaistus
                     :siltakorjaus @urk/urakoitsijat-siltakorjaus
@@ -307,12 +305,6 @@
 (defn valitse-hallintayksikko! [yks]
   (valitse-hallintayksikko-id! (:id yks)))
 
-(defonce ilmoita-hallintayksikkovalinnasta
-         (run! (let [yks @valittu-hallintayksikko]
-                 (if yks
-                   (t/julkaise! (assoc yks :aihe :hallintayksikko-valittu))
-                   (t/julkaise! {:aihe :hallintayksikkovalinta-poistettu})))))
-
 (defn valitse-urakka-id! [id]
   (reset! valittu-urakka-id id)
   (paivita-url))
@@ -321,24 +313,9 @@
   (valitse-urakka-id! (:id ur))
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
-(defonce ilmoita-urakkavalinnasta
-         (run! (let [ur @valittu-urakka]
-                 (if ur
-                   (t/julkaise! (assoc ur :aihe :urakka-valittu))
-                   (t/julkaise! {:aihe :urakkavalinta-poistettu})))))
-
 (defonce urakka-klikkaus-kuuntelija
          (t/kuuntele! :urakka-klikattu
-                      ;; FIXME: tämä pitäisi faktoroida elegantimmaksi
-                      ;; joku tapa pitää olla sanoa, mitä halutaan tapahtuvan kun urakkaa
-                      ;; klikataan
-                      ;;
-                      ;; Ehkä joku pino kartan valintatapahtumien kuuntelijoita, jonne voi lisätä
-                      ;; itsensä ja ne ajettaisiin uusin ensin. Jos palauttaa true, ei ajeta muita.
-                      ;; Silloin komponentti voisi ylikirjoittaa valintatapahtumien käsittelyn.
-
                       (fn [urakka]
-                        ;;(log "KLIKATTU URAKKAA: " (:nimi urakka))
                         (valitse-urakka! urakka))))
 
 ;; Quick and dirty history configuration.
@@ -389,20 +366,21 @@
           v-urk @valittu-urakoitsija
           urakkalista @hallintayksikon-urakkalista
           kayttajan-urakat (set (map key (:urakkaroolit @istunto/kayttaja)))]
-      (into []
-            (comp (filter #(or (= :kaikki v-ur-tyyppi)
-                               (= v-ur-tyyppi (:tyyppi %))
-                               (and (= v-ur-tyyppi :hoito)
-                                    (= (:tyyppi %) :teiden-hoito))
-                               (and (= v-ur-tyyppi :teiden-hoito)
-                                    (= (:tyyppi %) :hoito))
-                               (and (= v-ur-tyyppi :vesivayla)
-                                    (urakka-domain/vesivaylaurakka? %))))
-                  (filter #(or
-                             (kayttajan-urakat (:id %))
-                             (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
-                  (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
-            urakkalista))))
+      (when urakkalista
+        (into []
+              (comp (filter #(or (= :kaikki v-ur-tyyppi)
+                                 (= v-ur-tyyppi (:tyyppi %))
+                                 (and (= v-ur-tyyppi :hoito)
+                                      (= (:tyyppi %) :teiden-hoito))
+                                 (and (= v-ur-tyyppi :teiden-hoito)
+                                      (= (:tyyppi %) :hoito))
+                                 (and (= v-ur-tyyppi :vesivayla)
+                                      (urakka-domain/vesivaylaurakka? %))))
+                    (filter #(or
+                               (kayttajan-urakat (:id %))
+                               (or (nil? v-urk) (= (:id v-urk) (:id (:urakoitsija %))))))
+                    (filter #(oikeudet/voi-lukea? oikeudet/urakat (:id %) @istunto/kayttaja)))
+              urakkalista)))))
 
 (def urakat-kartalla "Sisältää suodatetuista urakoista aktiiviset"
   (reaction (into []
@@ -452,7 +430,7 @@
       (swap! reitit/url-navigaatio
              reitit/tulkitse-polku polku)
       ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
-      (when (and (= polku "hallinta/integraatioloki")
+      (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
                  (.get parametrit "valittu-jarjestelma")
                  (.get parametrit "valittu-integraatio")
                  (.get parametrit "tapahtuma-id")
@@ -503,5 +481,4 @@
 (defn yllapitourakka-valittu? []
   (let [urakkatyyppi (:arvo @urakkatyyppi)]
     (or (= urakkatyyppi :paallystys)
-        (= urakkatyyppi :paikkaus)
         (= urakkatyyppi :tiemerkinta))))

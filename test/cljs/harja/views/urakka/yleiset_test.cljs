@@ -45,12 +45,12 @@
       "Aluksi kolme päivystäjäriviä joista ei yksikään boldattu (koska päivystyksiä ei voimassa)"
       (is (= 3 (count (u/sel [:tbody :tr]))))
       (is (= 0 (count (u/sel [:tbody :tr.bold]))))
-      ;; muutetaan eka päivystäjän loppuajaksi 2020, jotta päivystys voimassa ja boldattu
-      (swap! data assoc-in [0 :loppu] (pvm/->pvm "1.1.2020"))
+      ;; muutetaan eka päivystäjän loppuajaksi 2040, jotta päivystys voimassa ja boldattu
+      (swap! data assoc-in [0 :loppu] (pvm/->pvm "1.1.2040"))
       --
       (is (= 1 (count (u/sel [:tbody :tr.bold]))))
 
-      (swap! data assoc-in [1 :loppu] (pvm/->pvm "1.1.2022"))
+      (swap! data assoc-in [1 :loppu] (pvm/->pvm "1.1.2042"))
       --
       (is (= 2 (count (u/sel [:tbody :tr.bold]))))
 

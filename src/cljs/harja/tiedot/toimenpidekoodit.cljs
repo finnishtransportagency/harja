@@ -9,7 +9,8 @@
                    [reagent.ratom :refer [reaction]]))
 
 (def koodit "id->koodi mäppäys kaikista toimenpidekoodeista" (atom nil))
-
 (defonce koodit-tasoittain (reaction (group-by :taso (sort-by :koodi (vals @koodit)))))
+
+(def tehtavaryhmat "id->nimi mäppäys kaikista tehtäväryhmistä" (atom nil))
 
 (def tyokoneiden-reaaliaikaseuranna-tehtavat "työkoneiden reaaliaikaseurannan seurattavat tehtävät" (atom nil))

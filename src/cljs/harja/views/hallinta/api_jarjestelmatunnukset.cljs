@@ -64,13 +64,13 @@
          :valinta-arvo :id
          :valinnat @tiedot/urakkavalinnat
          :valinta-nayta #(or (:nimi %) "- Valitse urakka -")
-         :leveys 5}
+         :leveys 3}
         {:otsikko "Oikeus"
          :nimi :kuvaus
          :hae (fn [] "Täydet oikeudet")
          :tyyppi :string
          :muokattava? (constantly false)
-         :leveys 15}]
+         :leveys 2}]
        @tunnuksen-oikeudet])))
 
 (defn- jarjestelmatunnuksien-lisaoikeudet [jarjestelmatunnukset-atom]

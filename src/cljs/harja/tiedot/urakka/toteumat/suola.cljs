@@ -18,18 +18,12 @@
 
 (defonce suolatoteumissa? (atom false))
 
-(defonce ui-suodatin-valinnat (atom {:suola "Kaikki"}))
-
 (defonce suodatin-valinnat (atom {:suola "Kaikki"}))
-
-(defonce kasinsyottolomake (atom {}))
 
 (defonce materiaalit
   (reaction<! [hae? @suolatoteumissa?]
               (when hae?
                 (hae-materiaalit))))
-
-(defonce ui-valittu-aikavali (atom nil))
 
 (defonce
   ^{:doc "Valittu aikaväli materiaalien tarkastelulle"}
@@ -150,17 +144,6 @@
              {:urakka-id urakka-id
               :sopimus-id sopimus-id
               :toteumat tallennettavat})))
-
-(defn tallenna-kasinsyotetty-toteuma [urakka-id sopimus-id rivi]
-  {:pre [(int? urakka-id)]}
-  (k/post! :tallenna-kasinsyotetty-suolatoteuma
-           {:urakka-id urakka-id
-            :sopimus-id sopimus-id
-            :toteuma {:pvm (pvm/nyt)
-                      :tierekisteriosoite (:tierekisteriosoite rivi)
-                      :lisatieto (:lisatieto rivi)
-                      :materiaali (:materiaali rivi)
-                      :maara (:maara rivi)}}))
 
 (defn hae-materiaalit []
   (k/get! :hae-suolamateriaalit))

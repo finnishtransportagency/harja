@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.testiapurit
   (:require  [clojure.test :as t :refer [is]]
              [taoensso.timbre :as log]
-             [clojure.core.match :refer [match]]))
+             [clojure.core.match :refer [match]]
+             [harja.domain.raportointi :as domain]))
 
 (defn taulukon-rivit [taulukko] (nth taulukko 3))
 (defn rivin-solu [rivi indeksi]
@@ -24,12 +25,15 @@
 (defn sarakkeiden-otsikot [taulukko]
   (nth taulukko 2))
 
-(def raporttisolu? harja.domain.raportointi/raporttielementti?)
+(def raporttisolu? domain/raporttielementti?)
 
 (defn raporttisolun-arvo [solu]
   (if (raporttisolu? solu)
     (let [solun-asetukset (second solu)]
-      (or (:arvo solun-asetukset) solun-asetukset))
+      (cond
+        (nil? (:arvo solun-asetukset)) nil
+        solun-asetukset (:arvo solun-asetukset)
+        :else solu))
     solu))
 
 (defn tyhja-raporttisolu? [solu]

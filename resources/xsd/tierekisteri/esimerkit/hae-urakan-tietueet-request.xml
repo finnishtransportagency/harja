@@ -1,5 +1,5 @@
 <hae:haeUrakanTietueet xmlns:hae="http://www.solita.fi/harja/tierekisteri/haeUrakanTietueet">
     <urakka-id>string</urakka-id>
     <tilannepvm>2008-09-29</tilannepvm>
-    <tietolaji>tl519</tietolaji>
+    <tietolaji>tl509</tietolaji>
 </hae:haeUrakanTietueet>

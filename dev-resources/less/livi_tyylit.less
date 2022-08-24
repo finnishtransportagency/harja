@@ -4,106 +4,9 @@
  */
 
 @import "gradients";
+@import "vayla/colors.less";
 
-/** VÄRIT */
 
-/** Harmaat */
-@musta:    rgb(0,0,0);
-@harmaa1: rgb(25,25,25);
-@harmaa2: rgb(50,50,50);
-@harmaa3: rgb(75,75,75);
-@harmaa4: rgb(100,100,100);
-@harmaa5: rgb(125,125,125);
-@harmaa6: rgb(150,150,150);
-@harmaa7: rgb(175,175,175);
-@harmaa8: rgb(200,200,200);
-@harmaa9: rgb(220,220,220);
-@harmaa10: rgb(225,225,225);
-@harmaa11: rgb(230,230,230);
-@harmaa12: rgb(235,235,235);
-@harmaa13: rgb(240,240,240);
-@harmaa14: rgb(245,245,245);
-@harmaa15: rgb(250,250,250);
-@valkoinen: rgb(255,255,255);
-
-/** Harmaat gradientit */
-.harmaa-gradientti1() { #gradient > .vertical(@start-color:  @harmaa3; @end-color: @harmaa1); }
-.harmaa-gradientti2() { #gradient > .vertical(@start-color:  @harmaa4; @end-color: @harmaa2); }
-.harmaa-gradientti3() { #gradient > .vertical(@start-color:  @harmaa5; @end-color: @harmaa3); }
-.harmaa-gradientti4() { #gradient > .vertical(@start-color:  @harmaa6; @end-color: @harmaa4); }
-.harmaa-gradientti5() { #gradient > .vertical(@start-color:  @harmaa7; @end-color: @harmaa5); }
-.harmaa-gradientti6() { #gradient > .vertical(@start-color:  @harmaa8; @end-color: @harmaa6); }
-.harmaa-gradientti7() { #gradient > .vertical(@start-color:  @harmaa10; @end-color: @harmaa7); }
-.harmaa-gradientti8() { #gradient > .vertical(@start-color: @harmaa15; @end-color: @harmaa8); }
-
-/** Siniset */
-@sininen1: #0000cc;
-@sininen2: #0022cc;
-@sininen3: #0044cc;
-@sininen4: #0066cc;
-@sininen5: #0088cc;
-@sininen6: #00aacc;
-@primaari-sininen: @sininen4;
-@primaari-sininen-valittuna: @sininen5;
-
-/** Siniset gradientit */
-.sininen-gradientti1() { #gradient > .vertical(@start-color:  @sininen4; @end-color: @sininen2); }
-.sininen-gradientti2() { #gradient > .vertical(@start-color:  @sininen5; @end-color: @sininen3); }
-
-/** Vihreät */
-@vihrea1: #003300;
-@vihrea2: #005500;
-@vihrea3: #007700;
-@vihrea4: #009900;
-@vihrea5: #00bb00;
-@vihrea6: #00dd00;
-
-/** Vihreät gradientit */
-.vihrea-gradientti1() { #gradient > .vertical(@start-color:  @vihrea4; @end-color: @vihrea2); }
-.vihrea-gradientti2() { #gradient > .vertical(@start-color:  @vihrea5; @end-color: @vihrea3); }
-
-/** Punaiset */
-@punainen1: #770000;
-@punainen2: #990000;
-@punainen3: #bb0000;
-@punainen4: #dd0000;
-@punainen5: #ff0000;
-@punainen6: #ff2200;
-@punainen7: #ff4400;
-
-/** Punaiset gradientit */
-.punainen-gradientti1() { #gradient > .vertical(@start-color:  @punainen4; @end-color: @punainen2); }
-.punainen-gradientti2() { #gradient > .vertical(@start-color:  @punainen5; @end-color: @punainen3); }
-
-/** Pinkit **/
-@pinkki: rgb(255,0,85);
-@pinkki-kevyt: rgb(255,51,119);
-@pinkki-kevyempi: rgb(255,102,153);
-
-/** Oranssit **/
-@oranssi: rgb(255,136,0);
-@oranssi-kevyt: rgb(255,160,51);
-@oranssi-kevyempi: rgb(255,184,102);
-
-/** Violetit **/
-@violetti: rgb(153,0,221);
-@violetti-kevyt: rgb(173,51,221);
-@violetti-kevyempi: rgb(194,102,235);
-
-/** Syaanit **/
-@syaani: rgb(0,170,187);
-@syaani-kevyt: rgb(51,187,201);
-@syaani-kevyempi: rgb(102,204,214);
-
-/** Huomiovärit */
-@onnistuminen: @vihrea4;
-@varoitus:     #ff9900;
-@vaara:        @punainen4;
-@muu:          #660099;
-@huomautus:    @sininen5;
-@raportin-tehostevari: @primaari-sininen;
-
-@harjan-taustavari: @harmaa15;
 @harja-nappien-valinen-etaisyys: 10px;
 @harja-myont-ja-kielt-napin-etaisyys: 100px;
 @valintakontrollin-leveys: 300px;
@@ -115,6 +18,7 @@
 /** INPUT */
 @input-korkeus: 28px;
 @input-korkeus-matalampi: calc(@input-korkeus * 0.85);
+@input-korkeus-korkea: 38px;
 @valintakontrollin-korkeus: @input-korkeus;
 
 /** TEKSTIT */
@@ -157,115 +61,14 @@
 @fontin-korostus-osoitettu-linkki:  underline;
 
 
-@fontin-koko-taulukko: @fontin-koko-leipateksti;
-@fontin-koko-taulukko-pienempi: 0.675rem; // käytä jos hyvin paljon sarakkeita, esim. Kohdeluettelo
-@fontin-koko-raportti-pienempi:     0.6rem;
-
+@fontin-koko-taulukko: 0.875 * @fontin-pohjakoko;
+@fontin-koko-taulukko-pienempi: 0.75 * @fontin-pohjakoko;
+@fontin-koko-taulukko-th: @fontin-koko-taulukko-pienempi;
+@fontin-vari-harmaa: @harmaa-tumma;
 
 /** PALKIT */
 
 @palkin-korkeus: 40px;
-
-#palkit {
-    .navigaatio {
-        .harmaa-gradientti1();
-        color: @valkoinen;
-        border-left:  1px solid @harmaa4;
-        border-right: 1px solid @musta;
-
-        &:hover {
-            .harmaa-gradientti2();
-            border-left:  1px solid @harmaa5;
-            border-right: 1px solid @harmaa1;
-        }
-        a {
-            color: @valkoinen;
-        }
-    }
-
-    .haitari1 {
-        .harmaa-gradientti2();
-        color: @valkoinen;
-        border-left:  1px solid @harmaa5;
-        border-right: 1px solid @harmaa1;
-
-        .panel-title,
-        .panel-title h2,
-        .panel-title h3 {
-            text-transform: uppercase;
-            font-size: @fontin-koko-h2;
-            font-weight: 400;
-        }
-
-        &:hover {
-            .harmaa-gradientti3();
-            border-left:  1px solid @harmaa6;
-            border-right: 1px solid @harmaa2;
-        }
-        a {
-            color: @valkoinen;
-        }
-    }
-    .haitari2 {
-        .harmaa-gradientti3();
-        color: @valkoinen;
-        border-left:  1px solid @harmaa6;
-        border-right: 1px solid @harmaa2;
-
-        .panel-title,
-        .panel-title h3 {
-            font-size: @fontin-koko-leipateksti;
-        }
-
-        &:hover {
-            .harmaa-gradientti4();
-            border-left:  1px solid @harmaa7;
-            border-right: 1px solid @harmaa3;
-        }
-        a {
-            color: @valkoinen;
-        }
-    }
-    .haitari3 {
-        .harmaa-gradientti4();
-        color: @valkoinen;
-        border-left:  1px solid @harmaa7;
-        border-right: 1px solid @harmaa8;
-
-        .panel-title,
-        .panel-title h3 {
-            font-size: @fontin-koko-leipateksti;
-        }
-
-        &:hover {
-            .harmaa-gradientti4();
-            border-left:  1px solid @harmaa8;
-            border-right: 1px solid @harmaa4;
-        }
-        a {
-            color: @valkoinen;
-        }
-    }
-    .header-toiminto {
-        .sininen-gradientti1();
-        color: @valkoinen;
-        border-left:  1px solid @sininen5;
-        border-right: 1px solid @sininen1;
-
-        &:hover, &:focus
-        & > a:hover, & > a:focus {
-            .sininen-gradientti2();
-            border-left:  1px solid @sininen6;
-            border-right: 1px solid @sininen2;
-        }
-        &.open > a {
-            .sininen-gradientti2();
-        }
-        a {
-            color: @valkoinen;
-        }
-    }
-}
 
 /** TAULUKOT */
 table.table-striped {
@@ -292,10 +95,10 @@ table.table-striped {
 
 .livi-alasveto.open {
     .nappi-alasveto {
-        border: 1px solid @sininen4;
+        border: 1px solid @black-default;
     }
 }
-.livi-alasveto (@leveys: 200px, @min-leveys: 160px, @input-korkeus: @input-korkeus) {
+.livi-alasveto (@leveys: 200px, @min-leveys: 160px, @i-korkeus: @input-korkeus) {
     min-width: @min-leveys; // 160px on bs:n dropdown-menun minimiarvo
     max-width: 100%;
     width: @leveys;
@@ -306,18 +109,19 @@ table.table-striped {
     }
 
     .nappi-alasveto {
-        height: @input-korkeus;
+        height: @i-korkeus;
         .valittu {
             display: inline-block;
-            line-height: @input-korkeus - 6;
+            line-height: @i-korkeus - 6;
             overflow-x: hidden;
-            padding-right: 15px;
             text-align: left;
             vertical-align: middle;
             white-space: nowrap;
             width: 100%;
         }
-        .livicon-chevron-down {
+        .livicon-chevron-down,
+        .livicon-chevron-up
+        {
             &.disabled {
                 background: none;
                 background-color: @harmaa10;
@@ -325,8 +129,8 @@ table.table-striped {
             }
             color: @sininen4;
             position: absolute;
-            top: (@input-korkeus / 2) - 5;
-            right: 5px;
+            top: (@i-korkeus / 2) - 5;
+            right: 2px;
 	    width: 25px;
 	    padding-left: 10px;
 	    height: 15px;
@@ -335,6 +139,13 @@ table.table-striped {
     }
     .livi-alasvetolista {
         min-width: @leveys;
+        width: fit-content;
+        white-space: nowrap;
+        span.listan-arvo-valittu {
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+        }
     }
 }
 
@@ -344,7 +155,7 @@ table.table-striped {
 }
 
 .livi-alasvetolista {
-    border: 1px solid @sininen5;
+    border: 1px solid @black-default;
     padding: 0;
 
     li:first-child .checkbox-label-valikko {
@@ -353,38 +164,37 @@ table.table-striped {
 }
 
 .dropdown-menu .harja-alasvetolistaitemi {
-    &.bold > a {
-        font-weight: bold;
+    display: flex;
+    min-height: 40px;
+    line-height: 1rem;
+    border-bottom: 1px solid @gray230;
+    &:hover,
+    &:focus {
+        background-color: @gray245;
     }
-    & > a {
-        background-color: @valkoinen;
+    > span {
+        display: flex;
+        flex: 1;
+        padding-left: 8px;
+        padding-right: 8px;
+    }
+    & > span > a {
+        display: flex;
+        align-items: center;
+        background-color: @white-default;
         border-color: @harmaa7;
-        color: @sininen4;
-        padding: 3px 6px;
+        color: @harmaa1;
+        text-decoration: none;
+        width: 100%;
+
         &:hover,
         &:focus,
         &.focus,
         &:active {
-            background-color: @sininen5;
-            color: @valkoinen;
+            background-color: @table-bg-hover;
+            color: @harmaa1;
         }
     }
-    & > span {
-        padding: 3px 6px;
-        display: block;
-        cursor: default;
-    }
-}
-
-.dropdown-menu .harja-alasvetolista-ryhma:not(:last-child) {
-    border-bottom: 2px solid @sininen5;
-}
-
-.dropdown-menu .harja-alasvetolista-ryhman-otsikko {
-    background-color: @valkoinen;
-    color: @sininen4;
-    font-weight: bold;
-    padding: 3px 6px;
 }
 
 .livi-valittu {

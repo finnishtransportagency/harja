@@ -21,6 +21,8 @@ SET tyyppi          = :tyyppi,
     lakkautuspvm    = :lakkautuspvm,
     muutospvm       = :muutospvm,
     status          = :status,
+    poistettu       = :poistettu,
+    kunnan_vastuulla = :kunnan-vastuulla,
     trex_oid        = :trex-oid,
     urakat          = (SELECT array_agg(a) ::INT[] || '{}' ::INT[] FROM unnest(ARRAY[:urakat] ::INT[]) a WHERE a IS NOT NULL),
     muokattu        = CURRENT_TIMESTAMP,
@@ -49,7 +51,8 @@ UPDATE silta
 SET urakat = array_remove(urakat, :urakka-id)
 WHERE id = :silta-taulun-id
 
--- name: merkkaa-silta-poistetuksi!
+-- name: merkkaa-kunnan-silta-poistetuksi!
 UPDATE silta
-SET poistettu = TRUE
-WHERE id=:silta-id;
+SET poistettu        = TRUE,
+    kunnan_vastuulla = TRUE
+WHERE id = :silta-id;

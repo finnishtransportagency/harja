@@ -3,105 +3,96 @@
             [tuck.core :as tuck]
             [harja.tiedot.navigaatio :as nav]
             [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
             [harja.tyokalut.tuck :as tt]
             [harja.ui.viesti :as viesti]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.tiedot.urakka.urakka :as tila])
   (:require-macros [cljs.core.async.macros :refer [go]]))
-
-(defonce tila (atom nil))
-
-(defn alku-parametrit
-  [{:keys [nakyma palvelukutsu-onnistui-fn]}]
-  (let [tilan-alustus (case nakyma
-                        :toteumat {:itemit-avain :paikkaukset
-                                   :aikavali-otsikko "Alkuaika"
-                                   :voi-valita-trn-kartalta? true
-                                   :palvelukutsu :hae-urakan-paikkauskohteet
-                                   :palvelukutsu-tunniste :hae-paikkaukset-toteumat-nakymaan}
-                        :kustannukset {:itemit-avain :kustannukset
-                                       :aikavali-otsikko "Kirjausaika"
-                                       :voi-valita-trn-kartalta? false
-                                       :palvelukutsu :hae-paikkausurakan-kustannukset
-                                       :palvelukutsu-tunniste :hae-paikkaukset-kustannukset-nakymaan})]
-    (swap! tila #(merge % tilan-alustus {:palvelukutsu-onnistui-fn palvelukutsu-onnistui-fn}))))
 
 (defn nakyman-urakka
   "Saman urakan sisällä kun vaihdetaan toteumista kustannuksiin, ei resetoida hakuehtoja. Mutta jos urakka
    vaihtuu, tulee hakuehdot resetoida."
-  [ur]
+  [tila ur]
   (when (not= (:urakka @tila) ur)
-    (reset! tila {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 7)
-                             :tyomenetelmat #{}}
-                  :urakka ur})))
+    (swap! tila #(merge % {:valinnat {:aikavali (pvm/aikavali-nyt-miinus 28)
+                                      :tyomenetelmat #{}}
+                           :urakka ur}))))
 
 ;; Muokkaukset
-(defrecord PaikkausValittu [paikkauskohde valittu?])
 (defrecord PaivitaValinnat [uudet])
-(defrecord Nakymaan [])
 ;; Haut
-(defrecord HaeItemit [uudet-valinnat])
+(defrecord HaeItemit [])
 (defrecord ItemitHaettu [tulos])
 (defrecord ItemitEiHaettu [])
 (defrecord HaeItemitKutsuLahetetty [])
-(defrecord EnsimmainenHaku [tulos])
+(defrecord PaikkauksetHaettu [tulos])
+;; Työmenetelmät
+(defrecord HaeTyomenetelmat [])
+(defrecord HaeTyomenetelmatOnnistui [vastaus])
+(defrecord HaeTyomenetelmatEpaonnistui [vastaus])
+(defrecord ValitseTyomenetelma [tyomenetelma valittu?])
+(defrecord AvaaToteumaOtsikko [avain])
 
 (defn filtterin-valinnat->kysely-params
   [valinnat]
-  (let [paikkauksien-idt (when (:urakan-paikkauskohteet valinnat)
-                           (into #{} (keep #(when (:valittu? %)
-                                              (:id %))
-                                           (:urakan-paikkauskohteet valinnat))))]
-    (-> valinnat
-        (dissoc :urakan-paikkauskohteet)
-        (assoc :paikkaus-idt paikkauksien-idt)
-        (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id))))
+  (-> valinnat
+      (assoc :tyomenetelmat (:valitut-tyomenetelmat valinnat))
+      (dissoc :valitut-tyomenetelmat)
+      (assoc ::paikkaus/urakka-id @nav/valittu-urakka-id)))
 
 (extend-protocol tuck/Event
-  Nakymaan
-  (process-event [_ {:keys [palvelukutsu valinnat haku-kaynnissa?] :as app}]
-    (-> app
-        (tt/post! palvelukutsu
-                  (merge (filtterin-valinnat->kysely-params valinnat)
-                         {:ensimmainen-haku? true})
-                  {:onnistui ->EnsimmainenHaku
-                   :epaonnistui ->ItemitEiHaettu})
-        (assoc :paikkauksien-haku-kaynnissa? true)))
-  EnsimmainenHaku
-  (process-event [{tulos :tulos} {:keys [palvelukutsu-onnistui-fn itemit-avain valinnat] :as app}]
-    (let [paikkauskohteet (or (:urakan-paikkauskohteet valinnat)
-                              (map #(identity
-                                      {:id (::paikkaus/id %)
-                                       :nimi (::paikkaus/nimi %)
-                                       :valittu? true})
-                                   (:paikkauskohteet tulos)))
-          naytettavat-tulokset (itemit-avain tulos)]
-      (palvelukutsu-onnistui-fn tulos)
-      (-> app
-          (assoc :paikkauksien-haku-kaynnissa? false
-                 :ensimmainen-haku-tehty? true
-                 :urakan-tyomenetelmat (:tyomenetelmat tulos))
-          (update :valinnat (fn [valinnat]
-                              (assoc valinnat
-                                     :urakan-paikkauskohteet paikkauskohteet))))))
+
+  PaikkauksetHaettu
+  (process-event [{tulos :tulos} app]
+    (let [app (assoc app :ensimmainen-haku-tehty? true
+                         :paikkauksien-haku-tulee-olemaan-kaynnissa? false
+                         :paikkauksien-haku-kaynnissa? false
+                         :paikkaukset-grid tulos
+                         :paikkauskohteet tulos
+                         :paikkauket-vetolaatikko tulos)]
+      app))
+
   PaivitaValinnat
   (process-event [{u :uudet} app]
     (let [uudet-valinnat (merge (:valinnat app)
                                 u)
-          haku (tuck/send-async! ->HaeItemit)]
-      (go (haku uudet-valinnat))
+          ;haku (tuck/send-async! ->HaeItemit)
+          ]
+      #_(go (haku uudet-valinnat))
       (assoc app :valinnat uudet-valinnat)))
-  PaikkausValittu
-  (process-event [{{:keys [id]} :paikkauskohde valittu? :valittu?} app]
-    (let [uudet-paikkausvalinnat (map #(if (= (:id %) id)
-                                         (assoc % :valittu? valittu?)
-                                         %)
-                                      (get-in app [:valinnat :urakan-paikkauskohteet]))]
-      (tuck/process-event (->PaivitaValinnat {:urakan-paikkauskohteet uudet-paikkausvalinnat}) app)
-      (assoc-in app [:valinnat :urakan-paikkauskohteet] uudet-paikkausvalinnat)))
+
+  ;; TODO: Tämä on hyvin samanlainen kuin paikkauskohteissa. Voisi yhdistää
+  ValitseTyomenetelma
+  (process-event [{tyomenetelma :tyomenetelma valittu? :valittu?} app]
+    (let [valitut-tyomenetelmat (get-in app [:valinnat :valitut-tyomenetelmat])
+          menetelmat (cond
+                       ;; Valitaan joku muu kuin "kaikki"
+                       (and valittu? (not= "Kaikki" (:nimi tyomenetelma)))
+                       (-> valitut-tyomenetelmat
+                           (conj (:id tyomenetelma))
+                           (disj "Kaikki"))
+
+                       ;; Valitaan "kaikki"
+                       (and valittu? (= "Kaikki" (:nimi tyomenetelma)))
+                       #{"Kaikki"} ;; Palautetaan kaikki valinnalla
+
+                       ;; Poistetaan "kaikki" valinta
+                       (and (not valittu?) (= "Kaikki" (:nimi tyomenetelma)))
+                       (disj valitut-tyomenetelmat "Kaikki")
+
+                       ;; Poistetaan joku muu kuin "kaikki" valinta
+                       (and (not valittu?) (not= "Kaikki" (:nimi tyomenetelma)))
+                       (disj valitut-tyomenetelmat (:id tyomenetelma)))
+          ;haku (tuck/send-async! ->HaeItemit) -- Testataan hakunapin toimintaa käyttäjillä, joten ei haeta vaihdon yhteydessä
+          app (assoc-in app [:valinnat :valitut-tyomenetelmat] menetelmat)]
+      ;(go (haku (:valinnat app)))
+      app))
+
   HaeItemit
-  (process-event [{:keys [uudet-valinnat]} {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
+  (process-event [_ {:keys [palvelukutsu palvelukutsu-tunniste valinnat haku-kaynnissa?] :as app}]
     (if-not haku-kaynnissa?
-      (let [params (filtterin-valinnat->kysely-params uudet-valinnat)]
+      (let [params (filtterin-valinnat->kysely-params valinnat)]
         (-> app
             (tt/post! palvelukutsu
                       params
@@ -112,18 +103,58 @@
                        :epaonnistui ->ItemitEiHaettu})
             (assoc :paikkauksien-haku-tulee-olemaan-kaynnissa? true)))
       app))
+
   HaeItemitKutsuLahetetty
   (process-event [_ app]
     (assoc app :paikkauksien-haku-kaynnissa? true))
+
   ItemitHaettu
   (process-event [{tulos :tulos} {palvelukutsu-onnistui-fn :palvelukutsu-onnistui-fn :as app}]
-    (palvelukutsu-onnistui-fn tulos)
-    (assoc app
-           :paikkauksien-haku-kaynnissa? false
-           :paikkauksien-haku-tulee-olemaan-kaynnissa? false))
+    (assoc app :ensimmainen-haku-tehty? true
+               :paikkauksien-haku-tulee-olemaan-kaynnissa? false
+               :paikkauksien-haku-kaynnissa? false
+               :paikkaukset-grid tulos
+               :paikkauskohteet tulos
+               :paikkauket-vetolaatikko tulos))
+
   ItemitEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Paikkauksien haku epäonnistui! " :danger)
-    (assoc app
-           :paikkauksien-haku-kaynnissa? false
-           :paikkauksien-haku-tulee-olemaan-kaynnissa? false)))
+    (-> app
+        (dissoc :paikkaukset-grid
+                :paikkauskohteet
+                :paikkauket-vetolaatikko)
+        (assoc :paikkauksien-haku-kaynnissa? false)
+        (assoc :paikkauksien-haku-tulee-olemaan-kaynnissa? false)))
+
+  HaeTyomenetelmat
+  (process-event [_ app]
+    (do
+      (tt/post! app
+                :hae-paikkauskohteiden-tyomenetelmat
+                {}
+                {:onnistui ->HaeTyomenetelmatOnnistui
+                 :epaonnistui ->HaeTyomenetelmatEpaonnistui
+                 :paasta-virhe-lapi? true})
+      app))
+
+  HaeTyomenetelmatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc-in app [:valinnat :tyomenetelmat] vastaus))
+
+  HaeTyomenetelmatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Paikkauskohteiden tyomenetelmien haku epäonnistui" :varoitus viesti/viestin-nayttoaika-aareton)
+      app))
+
+  AvaaToteumaOtsikko
+  (process-event [{avain :avain} app]
+    (let [avoimet-otsikot (if (::paikkaus/toteumataulukon-tilat app)
+                            (into #{} (::paikkaus/toteumataulukon-tilat app))
+                            #{})
+          avoimet-otsikot (if (contains? avoimet-otsikot avain)
+                            (into #{} (disj avoimet-otsikot avain))
+                            (into #{} (cons avain avoimet-otsikot)))]
+      (assoc app ::paikkaus/toteumataulukon-tilat avoimet-otsikot)))
+  )
