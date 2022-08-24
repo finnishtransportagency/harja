@@ -70,7 +70,7 @@
    ["tiemerkinnan-kustannusyhteenveto" "Tiemerkinnän kustannusyhteenveto"]
    ["toimenpidepaivat" "Toimenpidepäivät"]
    ["toimenpideajat" "Toimenpideajat"]
-   ["yks-hint-tyot" "Yksiskköhintaiset työt"]
+   ["yks-hint-tyot" "Yksikköhintaiset työt"]
    ["soratietarkastusraportti" "Soratietarkastusraportti"]
    ["vesivaylien-laskutusyhteenveto" "Vesiväylien laskutusyhteenveto"]
    ["sanktioraportti-yllapito" "Sanktioraportti yllapito"]

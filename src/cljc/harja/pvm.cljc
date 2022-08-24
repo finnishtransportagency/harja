@@ -1101,7 +1101,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (cons alku
             (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
 
-(defn paivat-valissa [alku loppu]
+(defn paivat-valissa
+  "Palauttaa laiskan seqin päivistä org.joda.time.DateTime muodossa"
+  [alku loppu]
   (paivat-valissa* (d alku) (d loppu)))
 
 (defn vuodet-valissa [alku loppu]
@@ -1187,6 +1189,24 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                 myohaisin-aika
                 aika))
             ajat)))
+
+(defn hoitokauden-alkuvuosi-kk->pvm
+  "Muuttaa hoitokauden alkuvuoden ja kuukauden päivämääräksi oikealla vuodella, kk ensimmäiselle päivälle."
+  [hoitokauden-alkuvuosi kk]
+  (luo-pvm-dec-kk
+    (if (>= 9 kk)
+      (inc hoitokauden-alkuvuosi)
+      hoitokauden-alkuvuosi)
+    kk
+    1))
+
+(defn urakan-kuukausi-str
+  "Palauttaa kuukauden nimen ja vuoden kuukauden numeron ja hoitokauden alkuvuoden perusteella
+  esim. (urakan-kuukausi-str 11 2019) => Marraskuu 2020"
+  [kk hoitokauden-alkuvuosi]
+  (str (kuukauden-nimi kk true) " "
+    (cond-> hoitokauden-alkuvuosi
+      (>= 9 kk) inc)))
 
 #?(:clj
    (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm [pvm kk-maara]

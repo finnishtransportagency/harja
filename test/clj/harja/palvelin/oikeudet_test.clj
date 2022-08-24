@@ -134,19 +134,16 @@
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot 2 ur-uvh)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot 2 ur-uvh))))
 
-(deftest urakoitsija-uvh-voi-lukea-oman-urakan-maksuerat
-  ;; oman urakan maksuerät voi lukea
-  (is (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat 1 ur-uvh))
-
-  ;; oman urakan ulkopuolelta ei saa lukea
+(deftest urakoitsijalla-ei-ole-maksuera-nakymaa
+  ;; oman urakan maksuerä-näkymä ei näy urakoitsijalle
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat 1 ur-uvh)))
+  (doseq [u [1 2 3]]
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat u ur-pk)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat u ur-pk))))
+  ;; muiden urakoiden maksuerät eivät näy urakoitsijalle
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat 2 ur-uvh)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat 1 ur-uvh)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat 2 ur-uvh))))
-
-(deftest urakoitsijan-pk-voi-lukea-oman-org-urakoiden-maksuerat
-  (doseq [u [1 2 3]]
-    (is (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat u ur-pk))
-    (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat u ur-pk)))))
 
 (deftest vain-jvh-nakee-hallinnan
   (is (oikeudet/voi-lukea? oikeudet/hallinta nil jvh))

@@ -154,6 +154,7 @@
     :yha-paikkauskomponentti
     :pot2
     :kustannusarvioiduntyontoteumien-ajastus
+    :analytiikan-toteumien-ajastus
     :kustannusten-seuranta
     :komponenttien-tila
     :itmf
@@ -215,6 +216,7 @@
     :tieluvat
     :paikkaukset
     :kustannusarvioiduntyontoteumien-ajastus
+    :analytiikan-toteumien-ajastus
     :jarjestelman-tila
     :yha-paikkauskomponentti
     :pot2

@@ -36,6 +36,9 @@
 (def oulun-mhu-urakka-2020-04 (atom []))
 (def oulun-mhu-urakka-2020-06 (atom []))
 
+(def hallinnolliset-toimenpiteet-tpi-id
+  (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'"))))
+
 (defn hae-2020-03-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
     (:db jarjestelma)
@@ -123,25 +126,6 @@
 
       (is (= (:sakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
 
-(deftest mhu-laskutusyhteenvedon-suolasanktiot-joissa-indeksikorotus
-  (testing "mhu-laskutusyhteenvedon-suolasanktiot-joissa-indeksikorotus"
-    (let [_ (when (= (empty? @oulun-mhu-urakka-2020-06))
-              (reset! oulun-mhu-urakka-2020-06 (hae-2020-06-tiedot)))
-          talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-06))
-          hoitokauden-suolasakko (first (laskutusyhteenveto-kyselyt/hoitokauden-suolasakko
-                                          (:db jarjestelma)
-                                          {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                           :hoitokauden_alkupvm (pvm/->pvm "1.10.2019")
-                                           :hoitokauden_loppupvm (pvm/->pvm "30.9.2020")}))
-          sanktiosumma-indeksikorotettuna (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
-                                                   (:db jarjestelma)
-                                                   {:hoitokauden-alkuvuosi 2019
-                                                    :indeksinimi "MAKU 2015"
-                                                    :summa (:hoitokauden_suolasakko hoitokauden-suolasakko)
-                                                    :perusluku (:perusluku talvihoito)}))]
-
-      (is (= (:suolasakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
-
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-bonukset
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-bonukset"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
@@ -149,12 +133,12 @@
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
           lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           (tyyppi = 'lupausbonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
-          AND toimenpideinstanssi = 48
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
           AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           alihankinta-ja-tavoitepalkkio (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           ( tyyppi = 'alihankintabonus' OR tyyppi = 'tavoitepalkkio' )
-          AND toimenpideinstanssi = 48
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id  "
           AND poistettu IS NOT TRUE
           AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
@@ -181,13 +165,13 @@
 
           vaihtosanktio (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
           sakkoryhma = 'vaihtosanktio'
-          AND toimenpideinstanssi = 48
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
           AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
 
           arvonvahennys (ffirst (q (str "SELECT SUM(maara) FROM sanktio WHERE
           sakkoryhma = 'arvonvahennyssanktio'
-          AND toimenpideinstanssi = 48
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
           AND perintapvm >= '2019-10-01'::DATE AND perintapvm <= '2019-10-31'::DATE")))
 
@@ -210,19 +194,19 @@
           poikkeukset (ffirst (q (str "SELECT SUM(kk.summa)
           FROM kulu_kohdistus kk
           WHERE kk.kulu IN (select id from kulu where tyyppi = 'laskutettava' AND erapaiva >= '2020-04-01' AND erapaiva <= '2020-04-30')
-          AND kk.toimenpideinstanssi = 48")))
+          AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id)))
 
           db_hallinto (ffirst (q (str "SELECT SUM(kk.summa)
           FROM kulu k, kulu_kohdistus kk
           WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-21')
-          AND kk.toimenpideinstanssi = 48
+          AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Johto- ja hallintokorvaus (J)')
           AND k.erapaiva = '2020-04-21'::DATE")))
 
           db_erillis (ffirst (q (str "SELECT SUM(kk.summa)
           FROM kulu k, kulu_kohdistus kk
           WHERE kk.kulu = (select id from kulu where kokonaissumma = 10.20 AND tyyppi = 'laskutettava' AND erapaiva = '2020-04-22')
-          AND kk.toimenpideinstanssi = 48
+          AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'Erillishankinnat (W)')
           AND k.erapaiva = '2020-04-22'::DATE")))]
 
@@ -238,7 +222,6 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
-          hallinnolliset-toimenpiteet-tpi-id (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'")))
           tehtavaryhma-id (ffirst (q (str "select id from tehtavaryhma where nimi = 'Hoidonjohtopalkkio (G)';")))
           urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           sopimuksen-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)

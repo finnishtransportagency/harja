@@ -15,10 +15,10 @@
 (defn tienumero
   ([tienumero-atom] (tienumero tienumero-atom nil {}))
   ([tienumero-atom toiminta-f] (tienumero tienumero-atom toiminta-f {}))
-  ([tienumero-atom toiminta-f {:keys [kentan-parametrit komponentin-optiot] :as optiot}]
+  ([tienumero-atom toiminta-f {:keys [otsikon-luokka kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    (merge 
-      {:otsikko "Tienumero"
+    (merge
+      {:otsikko "Tienumero" :otsikon-luokka otsikon-luokka
        :kentta-params (merge {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f} kentan-parametrit)
        :arvo-atom tienumero-atom
        :luokka "label-ja-kentta-puolikas"}

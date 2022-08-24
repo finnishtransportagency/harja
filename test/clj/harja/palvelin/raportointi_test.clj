@@ -11,7 +11,8 @@
             [clojure.test :refer [deftest is testing] :as t]
             [clj-time.coerce :as c]
             [clj-time.core :as time]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.excel :as excel]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -265,3 +266,14 @@
            (-> laskutusyhteenveto-hoito-raportti
                second
                :nimi)) "On hoito-tyypin laskutusyhteenveto")))
+
+(deftest parsi-excelin-rivinumero
+  (is (= 1 (excel/parsi-rivinumero "A1")) "A1 parsitaan rivi 1")
+  (is (= 12 (excel/parsi-rivinumero "AC12")) "AC12 parsitaan rivi 12")
+  (is (= 665 (excel/parsi-rivinumero "G665")) "G665 parsitaan rivi 665"))
+
+(deftest parsi-excelin-sarakekirjain
+  (is (= "A" (excel/parsi-sarakekirjain "A1")) "A1 parsitaan A")
+  (is (= "AC" (excel/parsi-sarakekirjain "AC12")) "AC12 parsitaan AC")
+  (is (= "ACHHHH" (excel/parsi-sarakekirjain "ACHHHH12")) "ACHHHH12 parsitaan ACHHHH")
+  (is (= "G" (excel/parsi-sarakekirjain "G665")) "G665 parsitaan G"))

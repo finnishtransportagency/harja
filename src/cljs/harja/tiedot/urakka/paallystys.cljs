@@ -76,6 +76,7 @@
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
     :yha-tr-osoite :muokattu
+    :kokonaishinta-ilman-maaramuutoksia :maaramuutokset
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
@@ -137,6 +138,9 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(defn paivita-yllapitokohteet! []
+  (harja.atom/paivita! yllapitokohteet))
+
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
@@ -157,17 +161,17 @@
 
 (def tr-osien-tiedot (atom nil))
 
-(def harjan-paikkauskohteet
+(def muut-kuin-yha-kohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
-          harjan-paikkauskohteet (when kohteet
+          muut-kuin-yha-kohteet (when kohteet
                                    (yllapitokohteet/suodata-yllapitokohteet
                                      kohteet
-                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
+                                     {:yha-kohde? false}))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat muut-kuin-yha-kohteet))))
 
 (def kaikki-kohteet
-  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet (when muut-kustannukset/kohteet
+  (reaction (concat @yhan-paallystyskohteet @muut-kuin-yha-kohteet (when muut-kustannukset/kohteet
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
@@ -353,6 +357,7 @@
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord SuljePaallystysilmoitus [])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
@@ -569,6 +574,9 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  SuljePaallystysilmoitus
+  (process-event [_ app]
+    (assoc app :paallystysilmoitus-lomakedata nil))
   TallennaHistoria
   (process-event [{polku :polku} app]
     (let [vanha-arvo (get-in app polku)]

@@ -519,7 +519,7 @@
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1154, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1154], :rivinumero 3, :tmid 25, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 27, :lukumaara 1, :koneellinen false, :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
 
 
 

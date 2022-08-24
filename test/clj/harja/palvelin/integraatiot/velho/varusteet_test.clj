@@ -32,7 +32,9 @@
 (def +velho-urakka-oid-url+ (str +velho-api-juuri+ "/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"))
 (def +velho-urakka-kohde-url+ (str +velho-api-juuri+ "hallintorekisteri/api/v1/kohteet"))
 
-(def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",\"oid\":\"1.2.3.4.5\"}]")
+(def +ylimaarainen-54321-kohde+ "[{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"osa\":5,\"etaisyys\":4139},
+\"oid\":\"5.4.3.2.1\"},{\"kohdeluokka\":\"varusteet/kaiteet\",{\"sijainti\":{\"tie\":22,\"enkoodattu\":1682900006324,\"osa\":5,\"etaisyys\":4139},
+\"oid\":\"1.2.3.4.5\"}]")
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -80,6 +82,19 @@
                   varusteet/lokita-ja-tallenna-hakuvirhe (partial tallentava-fn vanha-funktio)]
       (testattava-funktio))
     @loki))
+
+(defn kutsu-ja-laske-jasennykset
+  [testattava-funktio]
+  (let [jasennys-lkm (atom 0)
+        laskuri-fn (fn [alkuperainen-fn db kohde]
+                     (swap! jasennys-lkm inc)
+                     (alkuperainen-fn db kohde))
+        vanha-fn varusteet/jasenna-ja-tarkasta-varustetoteuma
+        loki (with-redefs [varusteet/virhe-oidit (fn [db]
+                                                   (varusteet/virhe-oidit-set db))
+                           varusteet/jasenna-ja-tarkasta-varustetoteuma (partial laskuri-fn vanha-fn)]
+               (testattava-funktio))]
+    {:loki loki :jasennykset @jasennys-lkm}))
 
 (defn feikkaa-ja-kutsu-varusteintegraatiota
   "Feikkaa http-palvelut ja kutsuu `tuo-uudet-varustetoteumat-velhosta`"
@@ -259,7 +274,7 @@
         kohdeluokka (str (nth url-osat 7) "/" (nth url-osat 8))]
     {:palvelu palvelu :api-versio api-versio :kohdeluokka kohdeluokka}))
 
-(deftest varuste-hae-varusteet-kayttaa-osajoukkoja-test
+(deftest varuste-tuonti-kayttaa-osajoukkoja-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "osajoukkoja-test"
@@ -332,7 +347,7 @@
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
-(deftest varuste-hae-varusteet-onnistuneet-test
+(deftest varuste-tuonti-onnistuneet-test
   (u "DELETE FROM varustetoteuma_ulkoiset")
   ; ASETA
   (let [testitunniste "onnistuneet-test"
@@ -384,8 +399,8 @@
 
     (is (= @odotettu-tyhja-oid-vastaus @saatu-tyhja-oid-vastaus) "Odotettiin samaa määrää tyhjiä oid-listoja, kuin fake-velho palautti.")
 
-    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)   ; TODO tarkista, että kannassa oid-lista vastaa testissä syötettyjä
-          expected-varustetoteuma-maara 4]
+    (let [kaikki-varustetoteumat (kaikki-varustetoteumat)
+          expected-varustetoteuma-maara 5]
       (is (= expected-varustetoteuma-maara (count kaikki-varustetoteumat))
           (str "Odotettiin " expected-varustetoteuma-maara " varustetoteumaa tietokannassa testin jälkeen")))))
 
@@ -586,54 +601,24 @@
   (u "DELETE FROM varustetoteuma_ulkoiset")
   (u "DELETE FROM varustetoteuma_ulkoiset_virhe")
   (let [db (:db jarjestelma)
-        oid "1.2.3.4.5"
         ii-oid "1.2.3.4.5.6"
         ii-muutoksen-lahde-oid "1.2.3.4.1234"               ; Urakka Velhossa
         a {:tie 22 :osa 5 :etaisyys 4355}
-        b {:tie 22 :osa 5 :etaisyys 4555}
-        tuntematon-sijainti {:sijainti {:tie -1 :osa -1 :etaisyys -1}}
-        varuste-oulussa-sijainti {:sijainti a}
-        kaide-oulussa-sijainti {:alkusijainti a :loppusijainti b}
         varuste-iissa-sijainti {:sijainti a}                ; Sijainti ei saa vaikuttaa, kun Iissa varusteella on muutoksen-lahde-oid
-        ennen-urakoiden-alkuja-pvm "2000-01-01T00:00:00Z"
-        oulun-MHU-urakka-2019-2024-alkupvm "2019-10-01T00:00:00Z"
-        oulun-MHU-urakka-2019-2024-loppupvm "2024-09-30T00:00:00Z"
-        aktiivinen-oulu-urakka-alkupvm "2020-10-22T00:00:00Z"
-        aktiivinen-oulu-urakka-loppupvm "2024-10-22T00:00:00Z"
         aktiivinen-ii-urakka-alkupvm "2021-10-01T00:00:00Z"
-        odotettu-aktiivinen-oulu-urakka-id (hae-aktiivinen-oulu-testi-id)
-        odotettu-oulu-MHU-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         odotettu-ii-MHU-urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         lisaa-muutoksen-lahde (fn [kohde muutoksen-lahde-oid]
                                 (assoc kohde :muutoksen-lahde-oid muutoksen-lahde-oid))
         lisaa-pakolliset (fn [kohde oid muokattu] (-> kohde
                                                       (assoc :oid oid :muokattu muokattu)
-                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))
-        suoritettava-fn (fn [sijainti alkupvm] (varusteet/urakka-id-kohteelle db
-                                        (lisaa-pakolliset sijainti oid alkupvm)))]
-    (is (nil? (suoritettava-fn tuntematon-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
-        "Urakkaa ei pidä löytyä tuntemattomalle sijainnille")
-    (is (nil? (suoritettava-fn varuste-oulussa-sijainti ennen-urakoiden-alkuja-pvm))
-        "Urakkaa ei pidä löytyä tuntemattomalle ajalle")
-    (is (= odotettu-oulu-MHU-urakka-id (suoritettava-fn varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-alkupvm))
-        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= odotettu-oulu-MHU-urakka-id
-           (suoritettava-fn varuste-oulussa-sijainti oulun-MHU-urakka-2019-2024-loppupvm))
-        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= odotettu-oulu-MHU-urakka-id
-           (suoritettava-fn varuste-oulussa-sijainti aktiivinen-oulu-urakka-alkupvm))
-        (str "Odotettiin Oulun MHU urakka id: " odotettu-oulu-MHU-urakka-id ", koska tyyppi = 'teiden-hoito' on uudempi (parempi) kuin 'hoito'"))
-    (is (= odotettu-aktiivinen-oulu-urakka-id (suoritettava-fn varuste-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))
-        (str "Odotettiin aktiivinen oulu urakka, koska Oulun MHU on tässä ajankohdassa jo loppunut. Muuten olisi suosittu MHU:ta."))
-    (is (= odotettu-aktiivinen-oulu-urakka-id (suoritettava-fn kaide-oulussa-sijainti aktiivinen-oulu-urakka-loppupvm))
-        (str "Odotettiin aktiivinen oulu urakka, koska Oulun MHU on tässä ajankohdassa jo loppunut. Muuten olisi suosittu MHU:ta."))
+                                                      (assoc-in [:version-voimassaolo :alku] (first (str/split muokattu #"T")))))]
     (is (= odotettu-ii-MHU-urakka-id
            (varusteet/urakka-id-kohteelle
              db
              (-> varuste-iissa-sijainti
                  (lisaa-pakolliset ii-oid aktiivinen-ii-urakka-alkupvm)
                  (lisaa-muutoksen-lahde ii-muutoksen-lahde-oid))))
-        "muutoksen-lahde-oid on enemmän merkitsevä kuin sijanti")))
+        "kohteen pitää saada urakka muutoksen-lahde-oidn avulla")))
 
 (deftest sijainti-kohteelle-test
   (let [db (:db jarjestelma)
@@ -693,6 +678,22 @@
         odotettu-oid-lista #{}
         lokiteksti (kutsu-ja-palauta-varusteiden-loki #(feikkaa-ja-kutsu-varusteintegraatiota odotettu-oidit-vastaus odotettu-kohteet-vastaus))]
     (is (not (str/includes? lokiteksti "ERROR")))
+    (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
+
+(deftest virheillytta-kohdetta-ei-tuoda-kahdesti
+  (u "DELETE FROM varustetoteuma_ulkoiset")
+  (let [odotettu-oidit-vastaus "[\"1.2.246.578.4.3.1.501.158276054\"]"
+        odotettu-kohteet-vastaus (slurp "test/resurssit/velho/varusteet/virheelliset/varusterekisteri_api_v1_historia_kohteet-virhe.jsonl")
+        odotettu-oid-lista #{}
+        {lokiteksti :loki, jasennykset :jasennykset} (kutsu-ja-laske-jasennykset
+                                                       (fn [] (kutsu-ja-palauta-varusteiden-loki
+                                                                (fn [] (str
+                                                                         (feikkaa-ja-kutsu-varusteintegraatiota
+                                                                           odotettu-oidit-vastaus odotettu-kohteet-vastaus)
+                                                                         (feikkaa-ja-kutsu-varusteintegraatiota
+                                                                           odotettu-oidit-vastaus odotettu-kohteet-vastaus))))))]
+    (is (= 1 jasennykset) "Kohteen tuontia ei saa tehdä, jos on tallessa virhe ko. oidilla.")
+    (is (str/includes? lokiteksti "virhe"))
     (is (= odotettu-oid-lista (kaikki-varustetoteuma-oidt)))))
 
 (deftest varuste-varmista-tietokannan-kohdeluokkien-lista-vastaa-koodissa-olevaa-test

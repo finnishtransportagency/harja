@@ -655,7 +655,10 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
   ([teksti luokka]
    (let [ikoni-fn (if (vector? teksti)
                     ikonit/ikoni-ja-elementti
-                    ikonit/ikoni-ja-teksti)]
+                    ikonit/ikoni-ja-teksti)
+         ikoni (if (= "varoitus" luokka)
+                 (ikonit/livicon-warning-sign)
+                 (ikonit/status-info-inline-svg +vari-lemon-dark+))]
      [:div {:class
             (luokat
               "yleinen-pikkuvihje"
@@ -663,8 +666,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
               (viesti/+toast-viesti-luokat+ :neutraali)
               (or luokka ""))}
       [:div.vihjeen-sisalto
-       (ikoni-fn (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                 teksti)]])))
+       (ikoni-fn ikoni teksti)]])))
 
 (def tietyoilmoitus-siirtynyt-txt
   [:div.inline-block.tietyo-info
@@ -744,25 +746,31 @@ jatkon."
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
 
-(defn- tooltip-sisalto [auki? sisalto]
+(defn- tooltip-sisalto [opts auki? sisalto]
   (let [x (atom nil)]
     (komp/luo
       (komp/piirretty
         #(let [n (r/dom-node %)
                rect (aget (.getClientRects n) 0)
                parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
-           (reset! x
-                   (+ (/ (.-width rect) -2)
-                      (/ (.-width parent-rect) 2)))))
-      (fn [auki? sisalto]
-        (let [s-pituus (count (str sisalto))]
-          [:div.tooltip.bottom {:class (when auki? "in")
-                                :style {:position "absolute"
-                                        :min-width (if (< 150 s-pituus)
-                                                     300
-                                                     150)
-                                        :left (when-let [x @x]
-                                                x)}}
+           (when (and rect parent-rect)
+             (reset! x
+               (+ (/ (.-width rect) -2)
+                 (/ (.-width parent-rect) 2))))))
+      (fn [opts auki? sisalto]
+        (let [s-pituus (count (str sisalto))
+              suunta (case (:suunta opts)
+                       :vasen "left"
+                       :oikea "right"
+                       :ylos "top"
+                       "bottom")]
+          [:div.tooltip {:class [suunta (when auki? "in")
+                                 (or (:leveys opts)
+                                   (if (< 150 s-pituus)
+                                     "levea"
+                                     "ohut"))]
+                         :style {:left (when-let [x @x]
+                                         x)}}
            [:div.tooltip-arrow]
            [:div.tooltip-inner
             sisalto]])))))
@@ -778,7 +786,7 @@ jatkon."
           :on-mouse-leave #(reset! tooltip-nakyy? false)}
          komponentti
 
-         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+         [tooltip-sisalto opts @tooltip-nakyy? tooltipin-sisalto]]))))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
@@ -869,8 +877,8 @@ jatkon."
   luokka määrittäää tekstiosan tyylin"
   ([tila]
    (tila-indikaattori tila {}))
-  ([tila {:keys [fmt-fn class-skeema luokka]}]
-   [:div
+  ([tila {:keys [fmt-fn class-skeema luokka wrapper-luokka]}]
+   [:div {:class wrapper-luokka}
     [:div {:class (str "circle "
                     (if class-skeema
                       (or (get class-skeema tila)

@@ -1,3 +1,4 @@
+
 # Väylän Harja-järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
@@ -180,6 +181,11 @@ Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC k
 
 ## Dokumentaatio
 
+### Uuden kehittäjän ohjeet
+
+ - Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
+ - Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
+
 ### Tietokanta
 
 Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
@@ -300,19 +306,20 @@ sivun rakenteesta.
 
 ### Tievelho
 
-Jos halutaan kokeilla toimiiko varusteiden noutaminen Tievelhosta pitää paikallisessa kehitysympäsitössä
-asettaa urakka, jolle kaikki mahdolliset saapuvat varusteet osuvat. Tämän voi tehdä muuttamalla Oulun MHU 2019-2024 
-urakkaa kattamaan koko Suomi ja muuttamalla sen aikaväliä kattamaan kaikkien varusteiden kirjauspäivät.
-
+Testiajoja voi suorittaa kutsumalla REPL:ssa:
 ```
-UPDATE urakka
-SET alkupvm='2017-10-01' 
-    alue = st_makepolygon(st_geometryfromtext('LINESTRING(5744 7821230, 879959 7821230, 879959 6536352, 5744 6536352, 5744 7821230)'))
-WHERE id = 35;
+(in-ns 'harja.palvelin.integraatiot.velho.velho-komponentti)
+(def j harja.palvelin.main/harja-jarjestelma)
+(def asetukset (get-in j [:velho-integraatio :asetukset]))
+(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
+(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset)
 ```
 
-Testiajon voi toistaiseksi suorittaa kutsumalla POST palvelua osoitteessa: 
-   http://localhost:3000/_/petrisi-manuaalinen-testirajapinta-varustetoteumat
+Kannattaa huomata, että localhostilla ei löydy kovin montaa MHU:ta, joten iso osa kohteiste ei
+kohdistu urakoihin oikein ja siitä aiheutuu virheitä.
+
+Pitää myös katsoa `varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle` aikaleimoja, jos haluaa
+hakujen kohdistuvan tietyn päivämäärän jälkeisiin Velhon muutoksiin.
 
 ## Debug lokituksen näyttäminen
 

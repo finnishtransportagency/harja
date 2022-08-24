@@ -248,11 +248,10 @@
                  [:span])
            [yleiset/valitys-vertical]
            [lisatiedot e! perustiedot pot2-tiedot/lisatiedot-atom]
-           [:hr]
            (when-not (empty? @pot2-tiedot/kohdeosat-atom)
              [:span
               [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! pot2-validoinnit huomautukset]
-              [:hr]])
+              [yleiset/valitys-vertical]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
                                                    :valmis-tallennettavaksi? valmis-tallennettavaksi?

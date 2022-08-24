@@ -12,4 +12,4 @@
     (do (log/warn (str "[JÄRJESTELMÄRAJAPINTA] Kutsuttiin järjestelmäpalvelua " palvelu ", mutta sitä ei ole määritetty"))
         (throw+ {:type :jarjestelma-rajapinta
                  :virheet [{:koodi :rajapintaa-ei-maaritetty
-                            :viesti (str "Rjapintaa ei määritelty palvelulle " palvelu)}]}))))
+                            :viesti (str "Rajapintaa ei määritelty palvelulle " palvelu)}]}))))

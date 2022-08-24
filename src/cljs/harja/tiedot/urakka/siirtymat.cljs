@@ -201,3 +201,7 @@
         (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
         (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
         (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
+
+(defn paallystysten-kohdeluetteloon
+  []
+  (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))

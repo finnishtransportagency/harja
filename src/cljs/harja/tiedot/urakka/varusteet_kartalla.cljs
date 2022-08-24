@@ -1,42 +1,28 @@
 (ns harja.tiedot.urakka.varusteet-kartalla
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.kartta.ikonit :as kartta-ikonit]
-            [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.kartta.varit.alpha :as alpha])
+  (:require [reagent.core :refer [atom]]
+            [harja.tiedot.urakka.urakka :refer [velho-varusteet]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [reagent.ratom :refer [reaction]]))
-
-(def toteuma-vari {"lisatty" alpha/fig-default
-                   "paivitetty" alpha/lemon-default
-                   "poistettu" alpha/eggplant-default
-                   "tarkastus" alpha/pitaya-default
-                   "korjaus" alpha/pea-default
-                   "puhdistus" alpha/black-light})
 
 (def karttataso-varusteet (atom []))
 
 (defonce karttataso-nakyvissa? (atom true))
 
+(def varuste-klikattu-fn (atom (constantly nil)))
+
+(def varuste-kartalle-xf
+  (comp
+    (map
+      (fn [varuste] (assoc varuste :tyyppi-kartalla :varusteet-ulkoiset
+                                   :on-item-click #(@varuste-klikattu-fn varuste)
+                                   :avaa-paneeli? false)))))
+
 (defonce varusteet-kartalla
-         (reaction
-           (let [kohteet @karttataso-varusteet]
-             (when (and (not-empty kohteet) @karttataso-nakyvissa?)
-               (with-meta (mapv (fn [{:keys [toteuma] :as kohde}]
-                                  (when (:sijainti kohde)
-                                    (let [vari (get toteuma-vari toteuma "white")]
-                                      {:alue (merge {:stroke {:width 8
-                                                              :color vari}}
-                                                    (:sijainti kohde))
-                                       :selite {:teksti toteuma
-                                                :img (kartta-ikonit/pinni-ikoni "sininen")}
-                                       :ikonit [{:tyyppi :merkki
-                                                 :paikka [:loppu]
-                                                 :zindex 21
-                                                 :img (kartta-ikonit/pinni-ikoni "sininen")}]})))
-                                kohteet)
-                          {:selitteet [{:teksti "Lisätty" :vari puhtaat/fig-default}
-                                       {:teksti "Poistettu" :vari puhtaat/eggplant-default}
-                                       {:teksti "Tarkistettu" :vari puhtaat/pitaya-default}
-                                       {:teksti "Puhdistettu" :vari puhtaat/black-light}
-                                       {:teksti "Korjattu" :vari puhtaat/pea-default}
-                                       {:teksti "Päivitetty" :vari puhtaat/lemon-default}]})))))
+  (reaction
+    (let [kohteet @karttataso-varusteet]
+      (when (and (not-empty kohteet) @karttataso-nakyvissa?)
+        (kartalla-esitettavaan-muotoon
+          kohteet
+          #(= (:ulkoinen-oid %) (:ulkoinen-oid (:valittu-varuste @velho-varusteet)))
+          varuste-kartalle-xf)))))
 

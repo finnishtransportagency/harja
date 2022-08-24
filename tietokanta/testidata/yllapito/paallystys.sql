@@ -438,7 +438,6 @@ VALUES ((SELECT id
         'POISTETTU TYÖ EI SAA NÄKYÄ TAI TULLA LASKUIHIN', 'kg', 99999, 1, 9999, (SELECT id
                                                                                  FROM kayttaja
                                                                                  WHERE kayttajanimi = 'jvh'), true);
-
 -- Päällystysilmoitukset
 
 -- Leppäjärven ilmoitustiedoissa on kirjattu tietoja olemattomalle kohdeosalle (osa on ehkä myöhemmin poistettu)
@@ -838,7 +837,7 @@ INSERT INTO yllapitokohde
 (urakka, sopimus, yha_kohdenumero, kohdenumero, nimi, yllapitokohdetyyppi, yllapitokohdetyotyyppi, yhaid,
  yha_tr_osoite,
  tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista,
- suorittava_tiemerkintaurakka, vuodet, poistettu)
+ suorittava_tiemerkintaurakka, vuodet, poistettu, tunnus)
 VALUES
   ((SELECT id
     FROM urakka
@@ -851,7 +850,7 @@ VALUES
    111, 'L11', 'Ouluntie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13371,
    NULL,
-   22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2020}', FALSE),
+   22, 12, 4336, 12, 9477, NULL, NULL, NULL, '{2020}', FALSE, NULL),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -863,7 +862,7 @@ VALUES
    112, 'L12', 'Kirkkotie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13372,
    NULL,
-   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2020}', FALSE),
+   18642, 1, 13, 1, 493, NULL, NULL, NULL, '{2020}', FALSE, NULL),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -875,7 +874,7 @@ VALUES
    113, 'L13', 'Puolangalle menevä (EI SAA NÄKYÄ)', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13373,
    NULL,
-   837, 1, 136, 1, 546, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), TRUE),
+   837, 1, 136, 1, 546, NULL, NULL, NULL, (SELECT ARRAY[date_part('year', now())]), TRUE, NULL),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -887,7 +886,7 @@ VALUES
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
    NULL,
-   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'), (SELECT ARRAY[date_part('year', now())]), FALSE),
+   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'), (SELECT ARRAY[date_part('year', now())]), FALSE, 'A'),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -899,7 +898,7 @@ VALUES
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
     NULL,
-    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022') , (SELECT ARRAY[date_part('year', now())]), FALSE),
+    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022') , (SELECT ARRAY[date_part('year', now())]), FALSE, NULL),
   -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
       FROM urakka
@@ -915,7 +914,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE),
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE, NULL),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -927,7 +926,7 @@ VALUES
    117, 'L43', 'Aloittamaton kohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13377,
    NULL,
-   20, 3, 1, 3, 5000, NULL, NULL, NULL, '{2021}', FALSE),
+   20, 3, 1, 3, 5000, NULL, NULL, NULL, '{2021}', FALSE, NULL),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -939,7 +938,7 @@ VALUES
    116, 'L62', '0-ajoratainen testikohde mt20', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 527823070,
    ROW(4, 226, 60, 226, 197, NULL)::tr_osoite,
-   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE),
+   4, 226, 60, 226, 197, NULL, NULL, NULL, '{2021}', FALSE, NULL),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -954,7 +953,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2022}', FALSE);
+                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2022}', FALSE, 'B');
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -1044,7 +1043,9 @@ UPDATE yllapitokohteen_aikataulu
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
 VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
        ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0);
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
@@ -1100,7 +1101,7 @@ VALUES ((SELECT id
 DO $$
 DECLARE
 BEGIN
- FOR i IN 0..32 LOOP
+ FOR i IN 0..24 LOOP
    INSERT INTO yllapitokohdeosa (yllapitokohde, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                                  tr_ajorata, tr_kaista, sijainti)
      VALUES ((SELECT id
@@ -1162,3 +1163,5 @@ VALUES (1, (SELECT id
             ]
           }',
         NULL, 'Tekninen osa ok!', make_date((SELECT date_part('year', now())::INT), 5, 21));
+
+INSERT INTO yllapitokohteen_maaramuutos (yllapitokohde, tyon_tyyppi, tyo, yksikko, tilattu_maara, toteutunut_maara, yksikkohinta, poistettu, luoja, luotu, muokkaaja, muokattu, jarjestelma, ulkoinen_id, ennustettu_maara) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 'ajoradan_paallyste', 'lisätietoa', 't', 10, 14, 5, false, (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), '2022-06-30 10:50:52.873903', NULL, NULL, NULL, NULL, 12);
