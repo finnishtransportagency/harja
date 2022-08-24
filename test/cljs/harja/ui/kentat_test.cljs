@@ -41,7 +41,7 @@
    (is (some? (u/sel1 :div.dropdown.open)))
 
    "Valitaan kissa kävelee"
-   (u/click ".harja-alasvetolistaitemi:nth-child(2) > a")
+   (u/click ".harja-alasvetolistaitemi:nth-child(2) > span > a")
    --
    (is (= "kissa kävelee" (u/text :.valittu)))
    (is (= @data "kissa kävelee"))
@@ -179,8 +179,8 @@
 
 (deftest pvm-aika
   (let [data (r/atom nil)
-        pvm-kentta "tr td:nth-child(1) input"
-        aika-kentta "tr td:nth-child(2) input"
+        pvm-kentta "span.pvm-aika-kentta div:nth-child(1) input"
+        aika-kentta "span.pvm-aika-kentta div:nth-child(2) input"
         pvm! #(do (u/change pvm-kentta %)
                   (u/blur pvm-kentta))
         pvm #(.-value (u/sel1 pvm-kentta))
@@ -231,46 +231,6 @@
      --
      (is (= @data (pvm/aikana (pvm/nyt) 12 34 0 0))))))
 
-(deftest pvm-aika-wrap
-  (let [data (r/atom {:pvm-aika nil})
-        pvm-kentta "tr td:nth-child(1) input"
-        aika-kentta "tr td:nth-child(2) input"
-        pvm! #(do (u/change pvm-kentta %)
-                  (u/blur pvm-kentta))
-        pvm #(.-value (u/sel1 pvm-kentta))
-        aika #(.-value (u/sel1 aika-kentta))
-        aika! #(do (u/change aika-kentta %)
-                   (u/blur aika-kentta))
-        p (fn [pp kk vvvv tt mm]
-            (pvm/aikana (pvm/luo-pvm vvvv (dec kk) pp)
-                        tt mm 0 0))]
-    (komponenttitesti
-     [kentat/tee-kentta {:tyyppi :pvm-aika} (r/wrap (:pvm-aika @data)
-                                                    #(swap! data assoc :pvm-aika %))]
-
-     "Alkutilanteessa tyhjä"
-     (is (= "" (pvm)))
-     (is (= "" (aika)))
-
-     "Päivämäärän ja ajan kirjoittaminen asettaa arvon"
-     (aika! "12:34")
-     (pvm! "6.6.2016")
-     --
-     (is (= @data {:pvm-aika (p 6 6 2016 12 34)}))
-
-     "Ohjelmallinen muuttaminen reflektoituu kenttiin"
-     (swap! data assoc :pvm-aika (p 7 7 2017 17 57))
-     --
-     (is (= "07.07.2017" (pvm)))
-     (is (= "17:57" (aika)))
-
-     "Ohjelmallinen tyhjentäminen reflektoituu kenttiin"
-     (swap! data assoc :pvm-aika nil)
-     --
-     (is (= "" (pvm)))
-     (is (= "" (aika)))
-     )))
-
 
 (def +tie20-osa1-alkupiste+ {:type :point, :coordinates [426938.1807000004 7212765.558800001]})
 (def +tr-vastaukset+
@@ -304,7 +264,6 @@
         hae-tr-viivaksi (fake-palvelukutsu
                          :hae-tr-viivaksi
                          (fn [payload]
-                           (.log js/console ":hae-tr-viivaksi => " payload)
                            (get +tr-vastaukset+ payload)))]
     (komponenttitesti
      [kentat/tee-kentta {:tyyppi :tierekisteriosoite :sijainti sijainti} data]

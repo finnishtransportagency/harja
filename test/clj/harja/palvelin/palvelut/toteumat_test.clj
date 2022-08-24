@@ -6,12 +6,14 @@
              [pvm :as pvm]
              [testi :refer :all]]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toteumat :refer :all]
             [harja.tyokalut.functor :refer [fmap]]
             [taoensso.timbre :as log]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.palvelut.toteumat :as toteumat]
+            [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
@@ -40,7 +42,10 @@
                                           [:db :integraatioloki])
                           :toteumat (component/using
                                       (toteumat/->Toteumat)
-                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri]))))))
+                                      [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
+                          :tehtavamaarat (component/using
+                                           (tehtavamaarat/->Tehtavamaarat)
+                                           [:http-palvelin :db]))))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -57,8 +62,8 @@
         res (kutsu-palvelua (:http-palvelin jarjestelma)
                             :urakan-erilliskustannukset +kayttaja-jvh+
                             {:urakka-id @oulun-alueurakan-2005-2010-id
-                             :alkupvm alkupvm
-                             :loppupvm loppupvm})
+                             :alkupvm   alkupvm
+                             :loppupvm  loppupvm})
         oulun-alueurakan-toiden-lkm (ffirst (q
                                               (str "SELECT count(*)
                                                        FROM erilliskustannus
@@ -71,12 +76,12 @@
         hoitokauden-loppupvm (pvm/luo-pvm 2006 10 30)       ;;30.9.2006
         toteuman-pvm (pvm/luo-pvm 2005 11 12)
         toteuman-lisatieto "Testikeissin lisätieto"
-        ek {:urakka-id @oulun-alueurakan-2005-2010-id
-            :alkupvm hoitokauden-alkupvm
-            :loppupvm hoitokauden-loppupvm
-            :pvm toteuman-pvm :rahasumma 20000.0
+        ek {:urakka-id     @oulun-alueurakan-2005-2010-id
+            :alkupvm       hoitokauden-alkupvm
+            :loppupvm      hoitokauden-loppupvm
+            :pvm           toteuman-pvm :rahasumma 20000.0
             :indeksin_nimi "MAKU 2005" :toimenpideinstanssi 1 :sopimus 1
-            :tyyppi "asiakastyytyvaisyysbonus" :lisatieto toteuman-lisatieto}
+            :tyyppi        "asiakastyytyvaisyysbonus" :lisatieto toteuman-lisatieto}
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                        FROM erilliskustannus
@@ -133,13 +138,13 @@
         hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1)        ; 1.10.2005
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)       ;30.9.2006
         toteuman-lisatieto "Testikeissin lisätieto2"
-        tyo {:urakka-id @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
+        tyo {:urakka-id             @oulun-alueurakan-2005-2010-id :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+             :alkanut               tyon-pvm :paattynyt tyon-pvm
              :hoitokausi-aloituspvm hoitokausi-aloituspvm :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :muutostyo
-             :lisatieto toteuman-lisatieto
-             :tehtava {:paivanhinta 456, :maara 2, :toimenpidekoodi 1368}}
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :muutostyo
+             :lisatieto             toteuman-lisatieto
+             :tehtava               {:paivanhinta 456, :maara 2, :toimenpidekoodi 1368}}
         maara-ennen-lisaysta (ffirst (q
                                        (str "SELECT count(*)
                                                FROM toteuma
@@ -203,24 +208,24 @@
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)       ;30.9.2006
         urakka-id @oulun-alueurakan-2005-2010-id
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id urakka-id
-             :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            @oulun-alueurakan-2005-2010-paasopimuksen-id
+             :alkanut               tyon-pvm :paattynyt tyon-pvm
              :hoitokausi-aloituspvm hoitokausi-aloituspvm
              :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :yksikkohintainen
-             :toteuma-id nil
-             :lisatieto toteuman-lisatieto
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :yksikkohintainen
+             :toteuma-id            nil
+             :lisatieto             toteuman-lisatieto
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 333}]}
         hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :urakan-toteumien-tehtavien-summat
                                          +kayttaja-jvh+
-                                         {:urakka-id urakka-id
+                                         {:urakka-id  urakka-id
                                           :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                          :alkupvm hoitokausi-aloituspvm
-                                          :loppupvm hoitokausi-lopetuspvm
-                                          :tyyppi :yksikkohintainen})
+                                          :alkupvm    hoitokausi-aloituspvm
+                                          :loppupvm   hoitokausi-lopetuspvm
+                                          :tyyppi     :yksikkohintainen})
                          (group-by :tpk_id)
                          (fmap first))
 
@@ -228,7 +233,8 @@
 
     (is (not (contains? summat-ennen-lisaysta 1368)))
 
-    (let [lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
+          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                   +kayttaja-jvh+ tyo)
           summat-lisayksen-jalkeen (hae-summat)]
@@ -252,13 +258,13 @@
             toteuma (kutsu-palvelua (:http-palvelin jarjestelma)
                                     :urakan-toteuma
                                     +kayttaja-jvh+
-                                    {:urakka-id urakka-id
+                                    {:urakka-id  urakka-id
                                      :toteuma-id toteuma-id})
             muokattu-tyo (assoc tyo
                            :toteuma-id toteuma-id
                            :tehtavat [{:toimenpidekoodi 1369 :maara 666
-                                       :tehtava-id (get-in toteuma
-                                                           [:tehtavat 0 :tehtava-id])}])
+                                       :tehtava-id      (get-in toteuma
+                                                                [:tehtavat 0 :tehtava-id])}])
             muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
                                      :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
                                      +kayttaja-jvh+ muokattu-tyo)
@@ -290,18 +296,123 @@
           (str "DELETE FROM toteuma
                     WHERE id = " toteuma-id))))))
 
+(deftest tallenna-yksikkohintainen-toteuma-ja-poista-tehtava-testi
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
+        hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1)        ; 1.10.2005
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30)       ;30.9.2006
+        urakka-id @oulun-alueurakan-2005-2010-id
+        toteuman-lisatieto "Testikeissin lisätieto4"
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            @oulun-alueurakan-2005-2010-paasopimuksen-id
+             :alkanut               tyon-pvm :paattynyt tyon-pvm
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :yksikkohintainen
+             :toteuma-id            nil
+             :lisatieto             toteuman-lisatieto
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 333}]}
+        hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :urakan-toteumien-tehtavien-summat
+                           +kayttaja-jvh+
+                           {:urakka-id  urakka-id
+                            :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+                            :alkupvm    hoitokausi-aloituspvm
+                            :loppupvm   hoitokausi-lopetuspvm
+                            :tyyppi     :yksikkohintainen})
+                      (group-by :tpk_id)
+                      (fmap first))
+
+        summat-ennen-lisaysta (hae-summat)]
+
+    (is (not (contains? summat-ennen-lisaysta 1368)))
+
+    (let [_ (println "tyo ::::::::::::::::." (pr-str tyo))
+          lisatty (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                    +kayttaja-jvh+ tyo)
+          summat-lisayksen-jalkeen (hae-summat)]
+
+      (is (= (get-in lisatty [:toteuma :alkanut]) tyon-pvm) "Tallennetun työn alkanut pvm")
+      (is (= (get-in lisatty [:toteuma :paattynyt]) tyon-pvm) "Tallennetun työn paattynyt pvm")
+      (is (= (get-in lisatty [:toteuma :lisatieto]) toteuman-lisatieto) "Tallennetun työn lisätieto")
+      (is (= (get-in lisatty [:toteuma :suorittajan-nimi]) "Alihankkijapaja Ky") "Tallennetun työn suorittajan nimi")
+      (is (= (get-in lisatty [:toteuma :suorittajan-ytunnus]) "123456-Y") "Tallennetun työn suorittajan y-tunnus")
+      (is (= (get-in lisatty [:toteuma :urakka-id]) urakka-id) "Tallennetun työn urakan id")
+      (is (= (get-in lisatty [:toteuma :sopimus-id]) @oulun-alueurakan-2005-2010-paasopimuksen-id) "Tallennetun työn pääsopimuksen id")
+      (is (= (get-in lisatty [:toteuma :tehtavat 0 :toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+      (is (= (get-in lisatty [:toteuma :tehtavat 0 :maara]) 333) "Tallennetun työn tehtävän määrä")
+      (is (= (get-in lisatty [:toteuma :tyyppi]) :yksikkohintainen) "Tallennetun työn toteuman tyyppi")
+
+      (is (== 333 (get-in summat-lisayksen-jalkeen [1368 :maara])))
+
+      ;; Testaa päivitys ja tehtävän poisto
+
+      (let [toteuma-id (get-in lisatty [:toteuma :toteuma-id])
+            toteuma (kutsu-palvelua (:http-palvelin jarjestelma) :urakan-toteuma +kayttaja-jvh+
+                      {:urakka-id  urakka-id :toteuma-id toteuma-id})
+            muokattu-tyo (assoc tyo
+                           :toteuma-id toteuma-id
+                           :tehtavat [{:toimenpidekoodi 1368 :maara 333 :poistettu true
+                                       :tehtava-id      (get-in toteuma
+                                                          [:tehtavat 0 :tehtava-id])}
+                                      {:toimenpidekoodi 1369 :maara 333}])
+            muokattu (kutsu-palvelua (:http-palvelin jarjestelma)
+                       :tallenna-urakan-toteuma-ja-yksikkohintaiset-tehtavat
+                       +kayttaja-jvh+ muokattu-tyo)
+            summat-muokkauksen-jalkeen (hae-summat)]
+
+        (is (= (get-in muokattu [:toteuma :tehtavat 1 :toimenpidekoodi]) 1369))
+        (is (= (get-in muokattu [:toteuma :tehtavat 1 :maara]) 333))
+        (is (not (contains? summat-muokkauksen-jalkeen 1368)))
+        (is (== 333 (get-in summat-muokkauksen-jalkeen [1369 :maara])))
+        ;; Siivoa roskat
+        (u (str "DELETE FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";"))
+        (u (str "DELETE FROM toteuma WHERE id = " toteuma-id))))))
+
+(deftest tallenna-kokonaishintainen-toteuma-testi
+  (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2020
+        hoitokausi-aloituspvm (pvm/luo-pvm 2020 9 1)        ; 1.10.2020
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2021 8 30)       ;30.9.2021
+        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+             :alkanut               tyon-pvm :paattynyt tyon-pvm
+             :reitti                {:type  :multiline
+                                     :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :kokonaishintainen
+             :toteuma-id            nil
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 333}]}
+        lisatty (some #(when (= (:toimenpidekoodi %) 1368) %)
+                      (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                                      +kayttaja-jvh+ {:toteuma        tyo
+                                                      :hakuparametrit {:urakka-id  urakka-id
+                                                                       :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+                                                                       :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                       :toimenpide nil :tehtava nil}}))]
+    (is (= (get-in lisatty [:pvm]) tyon-pvm) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
+
 (deftest hae-urakan-toteuma-kun-toteuma-ei-kuulu-urakkaan
   (let [toteuma-id (ffirst (q "SELECT id FROM toteuma WHERE urakka != " @oulun-alueurakan-2014-2019-id
                               " AND tyyppi = 'yksikkohintainen' LIMIT 1;"))]
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :urakan-toteuma
                                                    +kayttaja-jvh+
-                                                   {:urakka-id @oulun-alueurakan-2014-2019-id
+                                                   {:urakka-id  @oulun-alueurakan-2014-2019-id
                                                     :toteuma-id toteuma-id})))))
 
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
   (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka=" @oulun-alueurakan-2005-2010-id)))
-        toteuma (atom {:id -5, :urakka urakka :sopimus sopimus :alkanut (pvm/luo-pvm 2005 11 24) :paattynyt (pvm/luo-pvm 2005 11 24)
+        toteuma (atom {:id     -5, :urakka urakka :sopimus sopimus :alkanut (pvm/luo-pvm 2005 11 24) :paattynyt (pvm/luo-pvm 2005 11 24)
                        :tyyppi "yksikkohintainen" :suorittajan-nimi "UNIT TEST" :suorittajan-ytunnus 1234 :lisatieto "Unit test teki tämän"})
         tmt (atom [{:id -1 :materiaalikoodi 1 :maara 192837} {:materiaalikoodi 1 :maara 192837}])
         sopimuksen-kaytetty-materiaali-ennen (q (str "SELECT alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus))]
@@ -310,15 +421,16 @@
                            ((set [[#inst "2005-09-30T21:00:00.000-00:00" 1 7M]
                                   [#inst "2005-09-30T21:00:00.000-00:00" 4 9M]
                                   [#inst "2005-09-30T21:00:00.000-00:00" 2 4M]
-                                  [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]]) %))
+                                  [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]
+                                  [#inst "2004-10-19T21:00:00.000-00:00" 5 25M]]) %))
                         sopimuksen-kaytetty-materiaali-ennen)))
     (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS NOT TRUE"))))
     (is (= 0 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
     (is (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
-                              {:toteuma @toteuma
+                              {:toteuma            @toteuma
                                :toteumamateriaalit @tmt
                                ;pvm/luo-pvm 2006 8 30)]
-                               :sopimus sopimus})))
+                               :sopimus            sopimus})))
     (let [tmidt (flatten (q "SELECT id FROM toteuma_materiaali WHERE maara=192837"))
           tid (ffirst (q "SELECT id from toteuma WHERE suorittajan_nimi='UNIT TEST'"))
           uusi-lisatieto "NYT PITÄIS OLLA MUUTTUNUT."
@@ -329,6 +441,7 @@
                                     [#inst "2005-09-30T21:00:00.000-00:00" 4 9M]
                                     [#inst "2005-09-30T21:00:00.000-00:00" 2 4M]
                                     [#inst "2005-09-30T21:00:00.000-00:00" 3 3M]
+                                    [#inst "2004-10-19T21:00:00.000-00:00" 5 25M]
                                     [#inst "2005-12-23T22:00:00.000-00:00" 1 385674M]]) %))
                           sopimuksen-kaytetty-materiaali-jalkeen)))
 
@@ -345,10 +458,10 @@
                           (assoc :lisatieto uusi-lisatieto)))
 
       (is (not (nil? (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
-                                     {:toteuma @toteuma
+                                     {:toteuma            @toteuma
                                       :toteumamateriaalit @tmt
-                                      :hoitokausi [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]
-                                      :sopimus sopimus}))))
+                                      :hoitokausi         [(pvm/luo-pvm 2005 9 1) (pvm/luo-pvm 2006 8 30)]
+                                      :sopimus            sopimus}))))
 
       (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma WHERE suorittajan_nimi='UNIT TEST' AND poistettu IS NOT TRUE"))))
       (is (= 1 (ffirst (q "SELECT count(*) FROM toteuma_materiaali WHERE maara=192837 AND poistettu IS TRUE"))))
@@ -360,6 +473,100 @@
       (u "DELETE FROM toteuma_materiaali WHERE id in (" (clojure.string/join "," tmidt) ")")
       (u "DELETE FROM toteuma WHERE id=" tid))))
 
+(deftest materiaalin-pvm-muuttuu-cachet-pysyy-jiirissa
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                       [2 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+        hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                               [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
+                                                 [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
+                                                 [#inst "2015-02-13T22:00:00.000-00:00" 16 99 4 2100M]])
+        sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                                 (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
+        hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                             (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";")))
+        toteuman-id (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti';")))
+        tm-id (ffirst (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))
+
+
+        toteuma {:id toteuman-id, :urakka urakka-id :sopimus sopimus-id
+                 :alkanut (pvm/->pvm "14.02.2015") :paattynyt (pvm/->pvm "14.02.2015")
+                 :tyyppi "materiaali" :suorittajan-nimi "Ahkera hommailija" :suorittajan-ytunnus 1234 :lisatieto "Pvm muutos ja cachet toimii"}
+        tmt [{:id tm-id :materiaalikoodi 16 :maara 2100 :toteuma toteuman-id}]]
+    ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
+    (is (= sopimuksen-kaytetty-mat-ennen-odotettu sopimuksen-mat-kaytto-ennen ) "sopimuksen materiaalin käyttö cache ennen muutosta")
+    (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen ) "hoitoluokittaisten cache ennen muutosta")
+
+    ;; kyseessä päivitys, löytyvät kannasta jo ennen palvelukutsua
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id " AND poistettu IS NOT TRUE;")))))
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id " AND poistettu IS NOT TRUE;")))))
+
+    (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+                    {:toteuma toteuma
+                     :toteumamateriaalit tmt
+                     :hoitokausi [#inst "2014-09-30T21:00:00.000-00:00" #inst "2015-09-30T20:59:59.000-00:00"]
+                     :sopimus sopimus-id})
+    ;; lisäyksen jälkeenkin jutut löytyvät kannasta yhden kerran...
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))))
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id " AND poistettu IS NOT TRUE;")))))
+
+    (let [sopimuksen-mat-kaytto-jalkeen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                                     (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
+          hoitoluokittaiset-jalkeen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                                 (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";")))]
+
+      ;; lisäyksen jälkeen cachet päivittyvät oikein, vanhalla pvm:llä ollut määrä poistuu, ja uusi määrä uudelle päivällä
+      (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen ) "sopimuksen materiaalin käyttö cache jalkeen muutoksen")
+      (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
+
+
+(deftest uusi-materliaali-cachet-pysyy-jiirissa
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
+        hoitoluokittaiset-ennen-odotettu (set [])
+        hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 99 4 200M]])
+        sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                                 (pvm-vali-sql-tekstina "alkupvm" "'2011-02-01' AND '2011-02-28'") ";")))
+        hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                             (pvm-vali-sql-tekstina "pvm" "'2011-02-01' AND '2011-02-28'") ";")))
+        toteuman-id nil ;; koska uusi
+        tm-id nil  ;; koska uusi
+        toteuma {:id toteuman-id, :urakka urakka-id :sopimus sopimus-id
+                 :alkanut (pvm/->pvm "14.02.2011") :paattynyt (pvm/->pvm "14.02.2011")
+                 :tyyppi "materiaali" :suorittajan-nimi "Ahkera hommailija" :suorittajan-ytunnus 1234 :lisatieto "Täysin uusi jiirijutska"}
+        tmt [{:id tm-id :materiaalikoodi 16 :maara 200 :toteuma toteuman-id}]]
+    ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
+    (is (= sopimuksen-kaytetty-mat-ennen-odotettu sopimuksen-mat-kaytto-ennen ) "sopimuksen materiaalin käyttö cache ennen muutosta")
+    (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen ) "hoitoluokittaisten cache ennen muutosta")
+
+    (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+                    {:toteuma toteuma
+                     :toteumamateriaalit tmt
+                     :hoitokausi [#inst "2010-09-30T21:00:00.000-00:00" #inst "2011-09-30T20:59:59.000-00:00"]
+                     :sopimus sopimus-id})
+
+    (let [toteuman-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto='Täysin uusi jiirijutska';")))]
+      (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id-jalkeen ";")))))
+      (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id-jalkeen " AND poistettu IS NOT TRUE;"))))))
+
+    (let [sopimuksen-mat-kaytto-jalkeen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                                     (pvm-vali-sql-tekstina "alkupvm" "'2011-02-01' AND '2011-02-28'") ";")))
+          hoitoluokittaiset-jalkeen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                                 (pvm-vali-sql-tekstina "pvm" "'2011-02-01' AND '2011-02-28'") ";")))]
+
+      ;; lisäyksen jälkeen cachet päivittyvät oikein, vanhalla pvm:llä ollut määrä poistuu, ja uusi määrä uudelle päivällä
+      (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen ) "sopimuksen materiaalin käyttö cache jalkeen muutoksen")
+      (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen ) "hoitoluokittaisten cache jalkeen muutoksen"))))
+
 (deftest varustetoteumat-haettu-oikein
   (let [alkupvm (pvm/luo-pvm 2005 9 1)
         loppupvm (pvm/luo-pvm 2017 10 30)
@@ -367,42 +574,44 @@
         varustetoteumat (with-fake-http [(str +testi-tierekisteri-url+ "/haetietolaji") hae-tietolaji-xml]
                                         (kutsu-palvelua (:http-palvelin jarjestelma)
                                                         :urakan-varustetoteumat +kayttaja-jvh+
-                                                        {:urakka-id @oulun-alueurakan-2005-2010-id
+                                                        {:urakka-id  @oulun-alueurakan-2005-2010-id
                                                          :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-                                                         :alkupvm alkupvm
-                                                         :loppupvm loppupvm
+                                                         :alkupvm    alkupvm
+                                                         :loppupvm   loppupvm
                                                          :tietolajit (into #{} (keys varusteet-domain/tietolaji->selitys))}))]
     (is (>= (count varustetoteumat) 3))
     (is (contains? (first varustetoteumat) :sijainti))))
 
 ;; circleci:stä ei saane yhteyttä +oikea-testi-tierekisteri-url+
-(when (not (circleci?))
+;; Otetaan pois siksi aikaa, että on saatu muutokset tierekisteriin liittyen tuotantoon asti
+;; - myöskään jenkinsistä ei saada yhteyttä joten disabloitu kunnes saadaan korjattua
+(when false                                                 ;; (not (circleci?))
   (deftest varusteiden-testit
     ;; Tässä haetaan liikennemerkin tiedot tierekisterin testipuolelta. Tierekisterikomponentti kakuttaa tuloksen, niin
     ;; tallennuksen aikana ei tarvitse enään tehdä uutta kutsua (jos tehtäisiin, niin se epäonnistuisi, koska annetun tierekisterikomponentin url
     ;; on tekaistu)
     (tierekisteri/hae-tietolaji (assoc (:tierekisteri jarjestelma) :tierekisteri-api-url +oikea-testi-tierekisteri-url+) "tl506" nil)
-    (let [toteuma {:ajorata 0
-                   :kuntoluokitus nil
+    (let [toteuma {:ajorata            0
+                   :kuntoluokitus      nil
                    :sijainti
-                   {:type :point :coordinates [428024.7622351866 7210432.45750019]}
+                                       {:type :point :coordinates [428024.7622351866 7210432.45750019]}
                    :tierekisteriosoite {:numero 22 :alkuosa 1 :alkuetaisyys 3}
-                   :urakka-id 4
-                   :loppupvm nil
-                   :arvot {:x 428025 :y 7210432 :lmnumero "11"}
-                   :puoli 1
-                   :tietolaji "tl506"
-                   :id nil
-                   :uusi-liite nil
-                   :toiminto :lisatty
-                   :alkupvm (pvm/luo-pvm 2018 6 11)
-                   :tunniste nil
-                   :lisatieto nil}
-          hakuehdot {:urakka-id 4
+                   :urakka-id          4
+                   :loppupvm           nil
+                   :arvot              {:x 428025 :y 7210432 :asetusnr "11"}
+                   :puoli              1
+                   :tietolaji          "tl506"
+                   :id                 nil
+                   :uusi-liite         nil
+                   :toiminto           :lisatty
+                   :alkupvm            (pvm/luo-pvm 2018 6 11)
+                   :tunniste           nil
+                   :lisatieto          nil}
+          hakuehdot {:urakka-id  4
                      :sopimus-id 2
-                     :alkupvm (pvm/luo-pvm 2017 9 30)
-                     :loppupvm (pvm/luo-pvm 3018 9 29)
-                     :tienumero nil}
+                     :alkupvm    (pvm/luo-pvm 2017 9 30)
+                     :loppupvm   (pvm/luo-pvm 3018 9 29)
+                     :tienumero  nil}
           toteumien-maara (atom (count (q "SELECT id FROM toteuma;")))
           ;; Tämä kopio tarvitaan, jotta sitä voidaan käyttää with-redefs funktiossa. Tarkoitus on vain muuttaa vastaus-saatu
           ;; atomin arvo todeksi, kun tallennusoperaatio on suoritettu, sillä se suoritetaan omassa säikeessään.
@@ -514,14 +723,14 @@
                              :siirry-toteuma
                              %
                              toteuma-id)
-        ok-tulos {:alkanut #inst "2008-09-08T21:10:00.000000000-00:00"
-                  :urakka-id 2
-                  :tyyppi "kokonaishintainen"
+        ok-tulos {:alkanut            #inst "2008-09-08T21:10:00.000000000-00:00"
+                  :urakka-id          2
+                  :tyyppi             "kokonaishintainen"
                   :hallintayksikko-id 12
-                  :aikavali {:alku #inst "2007-09-30T21:00:00.000-00:00"
-                             :loppu #inst "2008-09-29T21:00:00.000-00:00"}
+                  :aikavali           {:alku  #inst "2007-09-30T21:00:00.000-00:00"
+                                       :loppu #inst "2008-09-29T21:00:00.000-00:00"}
                   :tehtavat
-                  [{:toimenpidekoodi 1350, :toimenpideinstanssi "10100"}]}
+                                      [{:toimenpidekoodi 1350, :toimenpideinstanssi "10100"}]}
         ei-ok-tulos nil]
 
     (is (some? toteuma-id))
@@ -534,3 +743,132 @@
 
     ;; Toteuman urakan urakoitsijan käyttäjä näkee siirtymätiedot
     (tarkista-map-arvot ok-tulos (hae +kayttaja-ulle+))))
+
+(deftest toteuman-paivitys-sama-partitiolle
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
+        toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
+        uusi-tyon-pvm-samassa-partitiossa (konv/sql-timestamp (pvm/luo-pvm 2009 11 24)) ;;24.12.2009
+        hoitokausi-aloituspvm (pvm/luo-pvm 2008 9 1)        ; 1.10.2016
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2010 8 30)       ;30.9.2017
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            sopimus-id
+             :alkanut               uusi-tyon-pvm-samassa-partitiossa :paattynyt uusi-tyon-pvm-samassa-partitiossa
+             :reitti                {:type  :multiline
+                                     :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :kokonaishintainen
+             :lisatieto             "Tämä on käsin tekaistu juttu"
+             :toteuma-id            toteuma-id
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 333 :tehtava-id toteuma-tehtava-id}]}
+        lisatty (first (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                                       +kayttaja-jvh+ {:toteuma        tyo
+                                                       :hakuparametrit {:urakka-id  urakka-id
+                                                                        :sopimus-id sopimus-id
+                                                                        :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                        :toimenpide nil :tehtava nil}}))
+        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
+
+    (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-samassa-partitiossa) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 333M) "Tallennetun työn tehtävän määrä")))
+
+
+(deftest toteuman-paivitys-siirtaa-eri-partitiolle
+  (let [urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))
+        toteuma-tehtava-id (ffirst (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id ";")))
+        uusi-tyon-pvm-eri-partitiossa (konv/sql-timestamp (pvm/luo-pvm 2020 11 24)) ;;24.12.2020
+        hoitokausi-aloituspvm (pvm/luo-pvm 2020 9 1)
+        hoitokausi-lopetuspvm (pvm/luo-pvm 2021 8 30)       ;30.9.2017
+        tyo {:urakka-id             urakka-id
+             :sopimus-id            sopimus-id
+             :alkanut               uusi-tyon-pvm-eri-partitiossa :paattynyt uusi-tyon-pvm-eri-partitiossa
+             :reitti                {:type  :multiline
+                                     :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+             :hoitokausi-aloituspvm hoitokausi-aloituspvm
+             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+             :suorittajan-nimi      "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+             :tyyppi                :kokonaishintainen
+             :lisatieto             "Tämä on käsin tekaistu juttu"
+             :toteuma-id            toteuma-id
+             :tehtavat              [{:toimenpidekoodi 1368 :maara 444 :tehtava-id toteuma-tehtava-id}]}
+        kaikki (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :tallenna-urakan-toteuma-ja-kokonaishintaiset-tehtavat
+                               +kayttaja-jvh+ {:toteuma        tyo
+                                               :hakuparametrit {:urakka-id  urakka-id
+                                                                :sopimus-id sopimus-id
+                                                                :alkupvm    hoitokausi-aloituspvm :loppupvm hoitokausi-lopetuspvm
+                                                                :toimenpide nil :tehtava nil}})
+        lisatty (some #(when (= (:toimenpidekoodi %) 1368) %) kaikki)
+        toteuma-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
+    (is (= toteuma-id toteuma-id-jalkeen) "Toteuman id ei saa muuttua")
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:pvm]) uusi-tyon-pvm-eri-partitiossa) "Tallennetun työn alkanut pvm")
+    (is (= (get-in lisatty [:jarjestelmanlisaama]) false))
+    (is (= (get-in lisatty [:nimi]) "Pistehiekoitus"))
+    (is (= (get-in lisatty [:yksikko]) "tiekm") "Yksikkö")
+    (is (= (get-in lisatty [:toimenpidekoodi]) 1368) "Tallennetun työn tehtävän toimenpidekoodi")
+    (is (= (get-in lisatty [:maara]) 444M) "Tallennetun työn tehtävän määrä")))
+
+(defn luo-testitoteuma [urakka-id sopimus-id alkanut toteuma-id]
+  {:sopimus       sopimus-id
+   :alkanut       (konv/sql-date alkanut) :paattynyt (konv/sql-date alkanut)
+   :reitti        {:type  :multiline
+                   :lines [{:type :line, :points [[426948.180407029 7212765.48225361] [430650.8691 7212578.8262]]}]}
+   :id            toteuma-id
+   :alkuosa       1
+   :numero        4
+   :alkuetaisyys  1
+   :kayttaja      1
+   :ytunnus       "123456-Y"
+   :urakka        urakka-id
+   :suorittaja    "Alihankkijapaja Ky"
+   :loppuetaisyys 2
+   :loppuosa      2
+   :tyyppi        "kokonaishintainen"
+   :lisatieto     "Tämä on käsin tekaistu juttu"})
+
+(deftest toteuman-paivitys-ei-muuta-lukumaaraa
+  (let [toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))
+        urakka-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012")
+        sopimus-id (hae-pudasjarven-alueurakan-paasopimuksen-id)
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))]
+
+    ;; Satunnaisia päivämääriä vuosina 2000-2030... (myös eri partitiolle)
+    (doseq [alkanut (map #(pvm/->pvm (str (rand-int 28) "."
+                                          (rand-int 170) "."
+                                          %))
+                         (range 2000 2030))]
+      (do
+        (toteumat-q/paivita-toteuma<! (:db jarjestelma)
+                                      (luo-testitoteuma urakka-id sopimus-id alkanut toteuma-id))
+        (is (= toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma id ei saa muuttua.")
+        (is (= alkanut (ffirst (q (str "SELECT alkanut FROM toteuma WHERE urakka = " urakka-id " AND lisatieto = 'Tämä on käsin tekaistu juttu'")))) "Toteuma alkanut OK")
+        (is (= toteuma-count (ffirst (q (str "SELECT count(id) FROM toteuma")))) "Toteuma count ei saa muuttua.")))))
+
+(deftest hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        talvihoito-tpi-id (hae-oulun-alueurakan-talvihoito-tpi-id)
+        odotettu [{:pvm #inst "2017-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 666M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}
+                  {:pvm #inst "2015-01-31T22:00:00.000-00:00", :toimenpidekoodi 1369, :maara 123M, :jarjestelmanlisaama true, :nimi "Suolaus", :yksikko "tiekm"}]
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat
+                                +kayttaja-jvh+ {:urakka-id urakka-id
+                                                :sopimus-id sopimus-id
+                                                :alkupvm (pvm/->pvm "1.10.2014")
+                                                :loppupvm (pvm/->pvm "1.1.2018")
+                                                :toimenpide talvihoito-tpi-id
+                                                :tehtava nil})]
+    (is (= odotettu vastaus) "hae-urakan-kokonaishintaisten-toteumien-tehtavien-paivakohtaiset-summat oikein")))

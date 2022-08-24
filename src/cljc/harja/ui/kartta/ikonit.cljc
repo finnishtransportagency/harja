@@ -52,3 +52,10 @@
 (defn pinni-ikoni [vari-str]
   (assertoi-ikonin-vari vari-str)
   (karttakuva (str ikonikansio"pinnit/pinni-"vari-str)))
+
+(defn vesipisara-pinni-ikoni 
+  "Palauttaa uudemman tyylisen pinni-ikonin, jonka voi värjätä joustavasti asettamalla hexadesimaali-väri kun
+  käytetään icon-tyyppistä featurea. 
+  Toisin kuin muut ikonit, tätä ei palauteta koskaan SVG:nä, koska selaintuki on parantunut huomattavasti."
+  []
+  (str ikonikansio "pinnit/pinni-vesipisara.svg"))

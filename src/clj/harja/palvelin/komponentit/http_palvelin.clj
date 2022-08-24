@@ -21,6 +21,8 @@
             [harja.transit :as transit]
             [harja.domain.roolit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut]
+            [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [clj-time.core :as time]
             [harja.fmt :as fmt]
 
@@ -38,6 +40,9 @@
     :headers {"Content-Type" "application/transit+json"}
     :body (transit/clj->transit data)
     :vastaus data}))
+
+(def mittarit-alkuarvo {:aktiiviset_pyynnot 0
+                        :pyyntoja_palveltu 0})
 
 (defrecord AsyncResponse [channel])
 
@@ -86,7 +91,7 @@
       (when (= polku (:uri req))
         (kasittelija-fn req)))))
 
-(defn- validoi-vastaus! [spec data]
+(defn- validoi-vastaus [spec data]
   (when spec
     (log/debug "VALIDOI VASTAUS: " spec)
     (when (not (s/valid? spec data))
@@ -133,18 +138,21 @@
                   (http/with-channel req channel
                                      (async/go
                                        (let [vastaus (async/<! (:channel palvelu-vastaus))]
-                                         (validoi-vastaus! (:vastaus-spec optiot) (:vastaus vastaus))
+                                         (validoi-vastaus (:vastaus-spec optiot) (:vastaus vastaus))
                                          (http/send! channel vastaus)
                                          (http/close channel))))
                   (do
-                    (validoi-vastaus! (:vastaus-spec optiot) palvelu-vastaus)
+                    (validoi-vastaus (:vastaus-spec optiot) palvelu-vastaus)
                     (transit-vastaus palvelu-vastaus))))
               (catch harja.domain.roolit.EiOikeutta eo
                 ;; Valutetaan oikeustarkistuksen epäonnistuminen frontille asti
                 (transit-vastaus 403 eo))
+              (catch IllegalArgumentException e
+                (log/warn e "Virhe POST pyynnössä " nimi ", payload: " (pr-str kysely))
+                (transit-vastaus 400 {:virhe (.getMessage e)}))
               (catch Throwable e
                 (log/error e "Virhe POST palvelussa " nimi ", payload: " (pr-str kysely))
-                {:virhe (.getMessage e)}))))))))
+                (transit-vastaus 500 {:virhe (.getMessage e)})))))))))
 
 (def muokkaus-pvm-muoto "EEE, dd MMM yyyy HH:mm:ss zzz")
 
@@ -165,17 +173,24 @@
                    if-modified-since
                    (not (.after last-modified if-modified-since)))
             {:status 304}
-            (let [vastaus (palvelu-fn (:kayttaja req))]
-              (validoi-vastaus! (:vastaus-spec optiot) vastaus)
-              {:status 200
-               :headers (merge {"Content-Type" "application/transit+json"}
-                               (if last-modified
-                                 {"cache-control" "private, max-age=0, must-revalidate"
-                                  "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
-                                 {"cache-control" "no-cache"}))
-               :body (with-open [out (ByteArrayOutputStream.)]
-                       (t/write (t/writer out :json) vastaus)
-                       (ByteArrayInputStream. (.toByteArray out)))})))))))
+            (try+
+              (let [vastaus (palvelu-fn (:kayttaja req))]
+                (validoi-vastaus (:vastaus-spec optiot) vastaus)
+                {:status 200
+                 :headers (merge {"Content-Type" "application/transit+json"}
+                                 (if last-modified
+                                   {"cache-control" "private, max-age=0, must-revalidate"
+                                    "Last-Modified" (.format (SimpleDateFormat. muokkaus-pvm-muoto) last-modified)}
+                                   {"cache-control" "no-cache"}))
+                 :body (with-open [out (ByteArrayOutputStream.)]
+                         (t/write (t/writer out :json) vastaus)
+                         (ByteArrayInputStream. (.toByteArray out)))})
+              (catch IllegalArgumentException e
+                (log/error e "Virhe GET pyynnössä " nimi ", polku " (pr-str polku))
+                (transit-vastaus 400 {:virhe (.getMessage e)}))
+              (catch Throwable e
+                (log/error e "Virhe GET palvelussa " nimi ", polku: " (pr-str polku))
+                (transit-vastaus 500 {:virhe (.getMessage e)})))))))))
 
 (defprotocol HttpPalvelut
   "Protokolla HTTP palveluiden julkaisemiseksi."
@@ -185,7 +200,9 @@
     [this nimi palvelu-fn optiot]
     "Julkaise uusi palvelu HTTP palvelimeen. Nimi on keyword, ja palvelu-fn on funktio joka ottaa
      sisään käyttäjätiedot sekä sisään tulevan datan (POST body transit muodossa parsittu) ja palauttaa Clojure
-     tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi.
+     tietorakenteen, joka muunnetaan transit muotoon asiakkaalle lähetettäväksi. Funktion täytyy heittää
+     poikkeuksen jos tapahtuu virhe. IllegalArgumentException kertoo http-palvelin:lle että täytyy palauta
+     status 400, kaikki muut poikkeus tyypit palauttavat status 500.
      Jos funktio tukee yhden parametrin aritya, voidaan sitä kutsua myös GET metodilla. Palvelu julkaistaan
      polkuun /edn/nimi (ilman keywordin kaksoispistettä).
 
@@ -206,13 +223,6 @@
 
   (poista-palvelu [this nimi]
     "Poistaa nimetyn palvelun käsittelijän."))
-
-(defn- arityt
-  "Palauttaa funktion eri arityt. Esim. #{0 1} jos funktio tukee nollan ja yhden parametrin arityjä."
-  [f]
-  (->> f class .getDeclaredMethods
-       (map #(-> % .getParameterTypes alength))
-       (into #{})))
 
 (defn index-kasittelija [db oam-kayttajanimi kehitysmoodi anti-csrf-token-secret-key req]
   (let [uri (:uri req)]
@@ -299,19 +309,19 @@
     kutsu))
 
 (defrecord HttpPalvelin [asetukset kasittelijat sessiottomat-kasittelijat
-                         lopetus-fn kehitysmoodi
+                         http-server kehitysmoodi
                          mittarit]
   component/Lifecycle
   (start [{metriikka :metriikka db :db :as this}]
-    (log/info "HttpPalvelin käynnistetään portissa " (:portti asetukset))
     (when metriikka
       (metriikka/lisaa-mittari! metriikka "http" mittarit))
     (let [todennus (:todennus this)
+          portti (or (:portti asetukset) asetukset)
           anti-csrf-token-secret-key (:anti-csrf-token asetukset)
           resurssit (route/resources "")
           dev-resurssit (when kehitysmoodi
-                          (route/files "" {:root "dev-resources"}))]
-      (swap! lopetus-fn
+                          (route/files "" {:root (:dev-resources-path asetukset)}))]
+      (swap! http-server
              (constantly
                (http/run-server
                  (cookies/wrap-cookies
@@ -350,7 +360,6 @@
                                           (conj ui-kasittelija))
                                       true)))
                        (catch [:virhe :todennusvirhe] _
-                         (log/warn "Ei voitu todentaa tunnusta -> palautetaan 403")
                          {:status 403 :body "Todennusvirhe"})
 
                        (finally
@@ -358,20 +367,30 @@
                                            :aktiiviset_pyynnot dec
                                            :pyyntoja_palveltu inc)))))
 
-                 {:port (or (:portti asetukset) asetukset)
+                 {:port portti
                   :thread (or (:threads asetukset) 8)
+                  :legacy-return-value? false
                   :max-body (or (:max-body-size asetukset) (* 1024 1024 8))
                   :max-line 40960})))
       this))
   (stop [this]
     (log/info "HttpPalvelin suljetaan")
-    (@lopetus-fn :timeout 100)
+    @(http/server-stop! @http-server {:timeout 100})
+    (reset! kasittelijat [])
+    (reset! sessiottomat-kasittelijat [])
+    (reset! http-server nil)
+    (dosync (ref-set mittarit mittarit-alkuarvo))
     this)
+  kp/IStatus
+  (-status [this]
+    (let [status (-> this (get :http-server) deref http/server-status)]
+      {::kp/kaikki-ok? (= status :running)
+       ::kp/tiedot status}))
 
   HttpPalvelut
   (julkaise-palvelu [http-palvelin nimi palvelu-fn] (julkaise-palvelu http-palvelin nimi palvelu-fn nil))
   (julkaise-palvelu [http-palvelin nimi palvelu-fn optiot]
-    (let [ar (arityt palvelu-fn)
+    (let [ar (tyokalut/arityt palvelu-fn)
           transaktio-fn (if (get optiot :trace true)
                           (fn [& args]
                             (nr/with-newrelic-transaction
@@ -410,12 +429,12 @@
 
 (defn luo-http-palvelin [asetukset kehitysmoodi]
   (->HttpPalvelin asetukset (atom []) (atom []) (atom nil) kehitysmoodi
-                  (metriikka/luo-mittari-ref {:aktiiviset_pyynnot 0
-                                              :pyyntoja_palveltu 0})))
+                  (metriikka/luo-mittari-ref mittarit-alkuarvo)))
 
 (defn julkaise-reitti
   ([http nimi reitti] (julkaise-reitti http nimi reitti true))
   ([http nimi reitti ei-todennettava?]
+   (log/debug (str "[HTTP-PALVELIN] ei-todennettava? " ei-todennettava?))
    (julkaise-palvelu http nimi (wrap-params reitti)
                      {:ring-kasittelija? true
                       :tarkista-polku? false

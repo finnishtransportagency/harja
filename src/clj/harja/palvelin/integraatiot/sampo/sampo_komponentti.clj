@@ -3,27 +3,28 @@
             [hiccup.core :refer [html]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.sampo.tuonti :as tuonti]
             [harja.palvelin.integraatiot.sampo.vienti :as vienti]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.maksuerat :as q-maksuerat]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.pvm :as pvm]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
 
 (defn tee-sonja-viestikuuntelija [{:keys [db integraatioloki sonja]} lahetysjono-sisaan kuittausjono-sisaan]
   (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
-  (sonja/kuuntele! sonja lahetysjono-sisaan
+  (jms/kuuntele! sonja lahetysjono-sisaan
                   (fn [viesti]
                     (tuonti/kasittele-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [{:keys [db integraatioloki sonja]} kuittausjono-ulos]
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
-  (sonja/kuuntele! sonja kuittausjono-ulos
+  (jms/kuuntele! sonja kuittausjono-ulos
                   (fn [viesti]
                     (vienti/kasittele-kuittaus integraatioloki db viesti kuittausjono-ulos))))
 
@@ -34,7 +35,9 @@
                  paivittainen-lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
-        (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos))))
+        (do
+          (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Alkaa " (pvm/nyt))
+          (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos)))))
     (constantly nil)))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
@@ -55,7 +58,7 @@
         (poista-viestikuuntelija)
         (poista-kuittauskuuntelija)
         (poista-paivittainen-lahetys-tehtava)))
-    this)
+    (dissoc this :sonja-viestikuuntelija :sonja-kuittauskuuntelija :paivittainen-lahetys-tehtava))
 
   Maksueralahetys
   (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]

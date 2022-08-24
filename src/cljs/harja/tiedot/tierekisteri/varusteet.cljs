@@ -38,19 +38,30 @@
       :uusi-liite uusi-liite
       :tunniste tunniste})))
 
+(defonce varusteen-tietiedot (comp :tie :sijainti :tietue :varuste))
+
 (defn hakutulokset
   ([app] (hakutulokset app nil nil))
-  ([app tietolaji varusteet]
-   (varuste-tiedot/kartalle
-     (-> app
-         (assoc-in [:tierekisterin-varusteet :varusteet] varusteet)
-         (assoc-in [:tierekisterin-varusteet :tietolaji] tietolaji)
-         (assoc-in [:tierekisterin-varusteet :listaus-skeema]
-                   (into varusteet/varusteen-perustiedot-skeema
-                         (comp (filter varusteet/kiinnostaa-listauksessa?)
-                               (map varusteet/varusteominaisuus->skeema))
-                         (:ominaisuudet tietolaji)))
-         (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false)))))
+  ([app tietolajit varusteet]
+   (let [perustieto-skeema varusteet/varusteen-perustiedot-skeema
+         tietolaji (first tietolajit)
+         skeema (if (= (get-in tietolaji [:tietolaji :tunniste]) "tl506")
+                  (conj perustieto-skeema (varusteet/varusteen-liikennemerkki-skeema tietolaji))
+                  perustieto-skeema)
+         palauta-varusteen-tietieto #((comp %1 varusteen-tietiedot) %2)
+         varusteet-jarjestetty (sort-by (fn [varuste]
+                                          (mapv #(palauta-varusteen-tietieto % varuste) [:tie :aosa :aet :puoli]))
+                                        varusteet)]
+     (varuste-tiedot/kartalle
+       (-> app
+           (assoc-in [:tierekisterin-varusteet :varusteet] varusteet-jarjestetty)
+           (assoc-in [:tierekisterin-varusteet :tietolajit] tietolajit)
+           (assoc-in [:tierekisterin-varusteet :listaus-skeema]
+                     (into skeema
+                           (comp (filter varusteet/kiinnostaa-listauksessa?)
+                                 (map varusteet/varusteominaisuus->skeema))
+                           (:ominaisuudet tietolaji)))
+           (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] false))))))
 
 (defn hae-varuste [app tunniste tie]
   (let [arvot (first (filter #(and (= tunniste (get-in % [:varuste :tunniste]))
@@ -99,7 +110,7 @@
           (log "[TR] Varustehaun vastaus: " (pr-str vastaus))
           (if (or (k/virhe? vastaus) (false? (:onnistunut vastaus)))
             (virhe! vastaus)
-            (tulos! vastaus))))
+            (tulos! vastaus hakuehdot))))
       (-> app
           (assoc-in [:tierekisterin-varusteet :varusteet] nil)
           (assoc-in [:tierekisterin-varusteet :hakuehdot :haku-kaynnissa?] true))))
@@ -111,8 +122,8 @@
         (update :tierekisterin-varusteet #(dissoc % :listaus-skeema))))
 
   VarusteHakuTulos
-  (process-event [{tietolaji :tietolaji varusteet :varusteet} app]
-    (hakutulokset app tietolaji varusteet))
+  (process-event [{tietolajit :tietolajit varusteet :varusteet} app]
+    (hakutulokset app tietolajit varusteet))
 
   VarusteHakuEpaonnistui
   (process-event [{virhe :virhe :as vastaus} app]
@@ -158,7 +169,7 @@
   AloitaVarusteenTarkastus
   (process-event [{:keys [tunniste tietolaji tie]} app]
     (let [varuste (hae-varuste app tunniste tie)]
-      (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolaji tietolaji})))
+      (assoc-in app [:tierekisterin-varusteet :tarkastus] {:varuste varuste :tunniste tunniste :tietolajit tietolaji})))
 
   PeruutaVarusteenTarkastus
   (process-event [_ app]

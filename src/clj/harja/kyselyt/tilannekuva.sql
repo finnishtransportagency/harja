@@ -9,6 +9,7 @@ SELECT
   i.tunniste,
   i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -214,7 +215,7 @@ FROM tarkastus t
 WHERE sijainti IS NOT NULL AND
       ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
-      ST_Distance(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
+      ST_Distance84(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
 t.tyyppi :: TEXT IN (:tyypit) AND
 (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
@@ -245,7 +246,7 @@ WHERE sijainti IS NOT NULL AND
        (t.urakkaid IS NULL AND
         (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
       (t.lahetysaika BETWEEN :alku AND :loppu) AND
-      ST_Distance(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
+      ST_Distance84(t.sijainti :: GEOMETRY, ST_MakePoint(:x, :y)::geometry) < :toleranssi
 GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi, t.urakkaid, o.nimi, u.nimi;
 
 -- name: hae-turvallisuuspoikkeamat
@@ -293,7 +294,7 @@ SELECT ypk.id,
   FROM yllapitokohde ypk
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN yllapitokohdeosa ypko ON (ypk.id = ypko.yllapitokohde AND ypko.poistettu IS NOT TRUE)
- WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ypko.sijainti)
+ WHERE ST_Intersects(ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax), ST_CollectionHomogenize(ypko.sijainti))
    AND ypk.poistettu IS NOT TRUE
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
@@ -350,7 +351,7 @@ SELECT ypko.id,
        LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
        JOIN urakka u ON ypk.urakka = u.id
        JOIN organisaatio o ON u.urakoitsija = o.id
- WHERE ST_Distance(ypko.sijainti, ST_MakePoint(:x,:y)) < :toleranssi
+ WHERE ST_Distance84(ypko.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
    AND ypk.yllapitokohdetyotyyppi = 'paallystys'
    AND ypk.urakka IN (:urakat)
    AND ((:nykytilanne AND
@@ -375,8 +376,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
@@ -403,16 +402,12 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND ypk.urakka IN (:urakat)
-      AND (pai.tila :: TEXT != 'valmis' OR
-           (now() - pai.valmispvm_kohde) < INTERVAL '7 days');
+      AND ypk.urakka IN (:urakat);
 
 -- name: hae-paikkaukset-historiakuvaan
 -- Hakee historiakuvaan kaikki paikkauskohteet, jotka ovat olleet aktiivisia
@@ -421,8 +416,6 @@ SELECT
   ypk.id,
   pi.id                                 AS "paallystysilmoitus-id",
   pi.tila                               AS "paallystysilmoitus-tila",
-  pai.id                                AS "paikkausilmoitus-id",
-  pai.tila                              AS "paikkausilmoitus-tila",
   ypk.kohdenumero,
   ypk.nimi,
   ypk.nykyinen_paallyste                AS "nykyinen-paallyste",
@@ -449,15 +442,25 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN paallystysilmoitus pi ON pi.paallystyskohde = ypk.id
                                      AND pi.poistettu IS NOT TRUE
-  LEFT JOIN paikkausilmoitus pai ON pai.paikkauskohde = ypk.id
-                                    AND pai.poistettu IS NOT TRUE
   LEFT JOIN urakka u ON ypk.urakka = u.id
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = ypk.urakka) = o.id
 WHERE ypk.poistettu IS NOT TRUE
       AND ypk.yllapitokohdetyotyyppi = 'paikkaus'
-      AND ypk.urakka IN (:urakat)
-      AND (pai.aloituspvm < :loppu AND (pai.valmispvm_kohde IS NULL OR pai.valmispvm_kohde > :alku));
+      AND ypk.urakka IN (:urakat);
+
+-- name: hae-paikkauskohteet-tilannekuvaan
+SELECT
+    pk.id,
+    pk.nimi,
+    'paikkaus' AS yllapitokohdetyotyyppi,
+    o.nimi                                AS "urakoitsija",
+    u.nimi AS "urakka"
+  FROM paikkauskohde pk
+           LEFT JOIN urakka u ON pk."urakka-id" = u.id
+           LEFT JOIN organisaatio o ON (SELECT urakoitsija FROM urakka WHERE id = pk."urakka-id") = o.id
+ WHERE pk."urakka-id" IN (:urakat)
+   AND pk.poistettu IS NOT TRUE;
 
 -- name: hae-toteumat
 -- fetch-size: 64
@@ -535,7 +538,7 @@ FROM toteuma_tehtava tt
 WHERE (t.urakka IN (:urakat) OR t.urakka IS NULL)
                     AND (t.alkanut BETWEEN :alku::DATE - interval '1 day' AND :loppu) -- nopeutus ks. selitys ed. SQL
                     AND (t.alkanut, t.paattynyt) OVERLAPS (:alku, :loppu)
-                    AND ST_Distance(t.reitti, ST_MakePoint(:x,:y)) < :toleranssi;
+                    AND ST_Distance84(t.reitti, ST_MakePoint(:x, :y)) < :toleranssi;
 
 -- name: osoite-reittipisteille
 -- Palauttaa tierekisteriosoitteen
@@ -563,7 +566,7 @@ SELECT
   t.tehtavat,
   MAX(t.lahetysaika) AS viimeisin
 FROM tyokonehavainto t
-WHERE ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+WHERE ST_Distance84(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -585,7 +588,7 @@ SELECT
   ST_MakeLine(array_agg(t.sijainti ORDER BY t.lahetysaika ASC)::GEOMETRY[]) AS reitti
 FROM tyokonehavainto t
 WHERE
-  ST_distance(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+  ST_Distance84(t.sijainti::GEOMETRY, st_makepoint(:keskipiste_x, :keskipiste_y)) < :sade AND
 (t.urakkaid IN (:urakat) OR
 -- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
 (t.urakkaid IS NULL AND
@@ -593,9 +596,31 @@ WHERE
 -- Rajaa toimenpiteellä
 (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
 -- Rajaa ajalla
-(t.lahetysaika BETWEEN :alku AND :loppu)
-GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi;
-
+(t.lahetysaika BETWEEN :alku AND :loppu) AND
+-- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
+(st_geometrytype(sijainti) = 'ST_Point' OR
+(st_geometrytype(sijainti) = 'ST_LineString' AND st_numpoints(sijainti) = 1))
+GROUP BY t.tyokoneid, t.jarjestelma, t.tehtavat, t.tyokonetyyppi
+UNION
+SELECT
+    t.tyokoneid,
+    t.jarjestelma,
+    t.tehtavat,
+    t.tyokonetyyppi,
+    sijainti               as reitti
+FROM tyokonehavainto t
+WHERE
+        ST_Distance84(t.sijainti::GEOMETRY, ST_MakePoint(:keskipiste_x, :keskipiste_y)) < :sade AND
+    (t.urakkaid IN (:urakat) OR
+-- Jos urakkatietoa ei ole, näytetään vain oman organisaation (tai tilaajalle kaikki)
+     (t.urakkaid IS NULL AND
+      (:nayta-kaikki OR t.organisaatio = :organisaatio))) AND
+-- Rajaa toimenpiteellä
+    (t.tehtavat && :toimenpiteet :: suoritettavatehtava []) AND
+-- Rajaa ajalla
+    (t.lahetysaika BETWEEN :alku AND :loppu) AND
+-- Vain pisteet yhdistetään viivaksi, viivoja ei yhdistetä toisiinsa
+    st_geometrytype(sijainti) = 'ST_LineString' AND st_numpoints(sijainti) > 1;
 
 -- name: hae-toimenpidekoodit
 SELECT
@@ -665,8 +690,10 @@ FROM urakka u
   LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
 WHERE hal.id IN (:hallintayksikot);
 
--- name: hae-valittujen-urakoiden-viimeisin-toteuma
+-- name: hae-viimeisin-toteuma
+-- VHAR-2590 urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
+-- Tilannekuva tsekkaa tämän nykyisellään kerran minuutissa, joten voidaan hakea uudet
+-- toteumat aina jos Harjaan on tullut uusi toteuma ed. tarkistuksen jälkeen. Se on
+-- pienempi paha kuin täysin jumiutuva max(id) kysely.
 -- single?: true
-SELECT max(id)
-  FROM toteuma
- WHERE urakka in (:urakat);
+SELECT max(id) FROM toteuma;

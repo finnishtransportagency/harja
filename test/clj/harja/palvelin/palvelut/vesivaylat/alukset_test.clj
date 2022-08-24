@@ -27,7 +27,6 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :vv-alukset (component/using
                                       (vv-alukset/->Alukset)
                                       [:db :http-palvelin])))))
@@ -39,7 +38,7 @@
                       urakkatieto-fixture))
 
 (deftest hae-urakoitsijan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         args {::alus/urakoitsija-id urakoitsija-id
               ::urakka/id urakka-id}
@@ -53,7 +52,7 @@
     (is (some #(= (::alus/nimi %) "Rohmu") tulos))))
 
 (deftest hae-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :hae-urakoitsijan-alukset +kayttaja-ulle+
@@ -61,7 +60,7 @@
                                             ::urakka/id urakka-id})))))
 
 (deftest tallenna-urakoitsijan-alukset
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus")))
         alukset-kaytossa (set (map ::mmsi (q-map "SELECT alus FROM vv_alus_urakka WHERE urakka = " urakka-id ";")))
@@ -95,7 +94,7 @@
     (is (some #(= (::alus/urakan-aluksen-kayton-lisatiedot %) "Kerrassaan upea alus, otetaan urakkaan heti!") vastaus))))
 
 (deftest tallenna-urakoitsijan-alukset-ilman-oikeutta
-  (let [urakka-id (hae-helsingin-vesivaylaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
         urakoitsija-id (hae-helsingin-vesivaylaurakan-urakoitsija)
         uudet-alukset []
         args {::alus/urakoitsija-id urakoitsija-id
@@ -117,7 +116,7 @@
                                            args)))))
 
 (deftest tallenna-eri-urakoitsijan-alukset
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         urakoitsija-id (hae-oulun-alueurakan-2005-2012-urakoitsija)
         alus-mmsit (set (map :mmsi (q-map "SELECT mmsi FROM vv_alus WHERE urakoitsija != " urakoitsija-id ";")))
         uudet-alukset [{::alus/mmsi (first alus-mmsit)
@@ -147,6 +146,8 @@
                  (= #{::alus/sijainti ::alus/alus-mmsi} (into #{} (keys t)))))
           tulos)))
 
+  ;; Jos ihmettelet tämän testin hajoamista, niin voi johtua siitä, että testiaineisto on voitu luoda liian aikaisin.
+  ;; Kun default alkuajalla haetaan, niin käytetään nyt -2pv. Joten restarttaa tietokanta ja kaikki toimii taas.
   (let [args {:alukset #{230111580} :alku nil :loppu nil}
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                               :hae-alusten-reitit +kayttaja-jvh+

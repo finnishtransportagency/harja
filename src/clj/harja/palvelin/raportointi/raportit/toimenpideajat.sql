@@ -16,7 +16,7 @@ SELECT
  WHERE (t.alkanut BETWEEN :alkupvm AND :loppupvm)
    AND t.poistettu IS NOT TRUE
    AND ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
-   AND u.tyyppi = :urakkatyyppi::urakkatyyppi
+   AND u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])
    AND (:urakka::integer IS NULL OR u.id = :urakka)
    AND u.urakkanro IS NOT NULL
    AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
@@ -40,7 +40,7 @@ FROM toteuma t
 WHERE ((select normalisoi_talvihoitoluokka(rp.talvihoitoluokka, t.alkanut)) IN (:hoitoluokat) OR rp.talvihoitoluokka IS NULL)
       AND (t.alkanut BETWEEN :alku AND :loppu)
       AND t.poistettu IS NOT TRUE
-      AND u.tyyppi = :urakkatyyppi::urakkatyyppi
+      AND u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])
       AND (:urakka::integer IS NULL OR u.id = :urakka)
       AND u.urakkanro IS NOT NULL
       AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)

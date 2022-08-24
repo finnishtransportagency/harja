@@ -35,35 +35,37 @@
         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
         [:span
          [yleiset/tietoja {}
-          "Urakka: " (:urakkanimi ilmoitus)
-          "Id: " (:ilmoitusid ilmoitus)
-          "Tunniste: " (:tunniste ilmoitus)
-          "Ilmoitettu: " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
-          "Yhteydenottopyyntö:" (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
-          "Sijainti: " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
-          "Otsikko: " (:otsikko ilmoitus)
-          "Paikan kuvaus: " (:paikankuvaus ilmoitus)
-          "Lisatieto:  " (when (:lisatieto ilmoitus)
+          "Urakka " (:urakkanimi ilmoitus)
+          "Id " (:ilmoitusid ilmoitus)
+          "Tunniste " (:tunniste ilmoitus)
+          "Ilmoitettu " (pvm/pvm-aika-sek (:ilmoitettu ilmoitus))
+          "Tiedotettu HARJAan " (pvm/pvm-aika-sek (:valitetty ilmoitus))
+          "Tiedotettu urakkaan " (pvm/pvm-aika-sek (:valitetty-urakkaan ilmoitus))
+          "Yhteydenottopyyntö " (if (:yhteydenottopyynto ilmoitus) "Kyllä" "Ei")
+          "Sijainti " (tr-domain/tierekisteriosoite-tekstina (:tr ilmoitus))
+          "Otsikko " (:otsikko ilmoitus)
+          "Paikan kuvaus " (:paikankuvaus ilmoitus)
+          "Lisatieto " (when (:lisatieto ilmoitus)
                            [yleiset/pitka-teksti (:lisatieto ilmoitus)])
-          "Selitteet: " [selitelista ilmoitus]
-          "Toimenpiteet aloitettu: " (when (:toimenpiteet-aloitettu ilmoitus)
+          "Selitteet " [selitelista ilmoitus]
+          "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus)
                                        (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
-          "Aiheutti toimenpiteitä:" (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
+          "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
          [:br]
          [yleiset/tietoja {}
-          "Ilmoittaja:" (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
+          "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
                               tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
                           (if (and henkilo tyyppi)
                             (str henkilo ", " tyyppi)
                             (str (or henkilo tyyppi))))
-          "Puhelinnumero: " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
+          "Puhelinnumero " (parsi-puhelinnumero (:ilmoittaja ilmoitus))
+          "Sähköposti " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
 
          [:br]
          [yleiset/tietoja {}
-          "Lähettäjä:" (nayta-henkilo (:lahettaja ilmoitus))
-          "Puhelinnumero: " (parsi-puhelinnumero (:lahettaja ilmoitus))
-          "Sähköposti: " (get-in ilmoitus [:lahettaja :sahkoposti])]
+          "Lähettäjä " (nayta-henkilo (:lahettaja ilmoitus))
+          "Puhelinnumero " (parsi-puhelinnumero (:lahettaja ilmoitus))
+          "Sähköposti " (get-in ilmoitus [:lahettaja :sahkoposti])]
 
          [:br]
          (when (and

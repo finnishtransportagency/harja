@@ -65,27 +65,27 @@ div.valilehti {
 }
 
 .haku-lista {
-  border: 1px solid @sininen5;
+  border: 1px solid @black-default;
   overflow-y: auto;
   padding: 0;
 }
 
 .haku-lista-item-nimi {
-  background-color: @valkoinen;
+  background-color: @white-default;
   border-color: @harmaa7;
-  color: @sininen4;
+  color: @harmaa1;
   padding: 3px 6px;
   &:hover,
   &:focus,
   &.focus,
   &:active {
-    background-color: @sininen5;
-    color: @valkoinen;
+    background-color: @table-bg-hover;
+    color: @harmaa1;
   }
 }
 
 .haku-lista-ryhma {
-  border: 1px solid @sininen5;
+  border: 1px solid @black-default;
   .haku-lista {
     border: none;
     margin-bottom: 0;
@@ -93,15 +93,15 @@ div.valilehti {
 }
 
 .haku-vinkki {
-  background-color: @valkoinen;
-  border: 1px solid @sininen5;
-  color: @sininen4;
+  background-color: @white-default;
+  border: 1px solid @black-default;
+  color: @harmaa1;
   padding: 3px 6px;
 }
 
 .haku-lista-ryhman-otsikko {
-  background-color: @valkoinen;
-  color: @sininen4;
+  background-color: @white-default;
+  color: @black-default;
   font-weight: bold;
   padding: 3px 6px;
 }
@@ -166,14 +166,40 @@ tr.uusitehtavakoodi td {
   padding-top: 10px;
 }
 
-.label-ja-alasveto {
+.label-ja-alasveto-grid {
   display: inline-block;
   margin: 5px;
+  & > div {
+    height: 31px;
+    & > div {
+      height: 31px;
+    }
+  }
   .alasvedon-otsikko {
     display: inline-block;
     font-weight: bold;
   }
+
+  &.col-md-1, &.col-md-2, &.col-md-3 {
+    padding: 0;
+
+    > label {
+      margin-top: 0;
+    }
+  }
+}
+
+.label-ja-alasveto {
+  display: inline-block;
+  margin: 5px;
+
+  .alasvedon-otsikko {
+    display: inline-block;
+    font-weight: bold;
+  }
+
   .livi-alasveto(@valintakontrollin-leveys);
+
   &.sopimusnumero {
     .livi-alasveto(@alasvedon-leveys-sop);
   }
@@ -205,6 +231,153 @@ tr.uusitehtavakoodi td {
   left: 15%;
   width: 60%;
   z-index: 10000;
+}
+
+
+@keyframes toast-liuku-vasemmalta {
+  from {
+    transform: translateX(calc(-100% - 20px));
+  }
+
+  to {
+    transform: translateX(0%);
+  }
+}
+
+.vertical-center {
+  margin: 0;
+  position: absolute;
+  top: 50%;
+  -ms-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.toast-viesti-container {
+  position: fixed;
+  bottom: 10px;
+  left: 20px;
+  width: 350px;
+  z-index: 10000;
+  animation: toast-liuku-vasemmalta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
+  cursor: pointer;
+  min-height: 40px;
+
+  .livicon-delete {
+    position: absolute;
+    right: 10%;
+    top: 50%;
+    bottom: 50%;
+    transform: translateY(-50%);
+    height: fit-content;
+  }
+}
+
+.toast-viesti {
+  padding-left: 12px;
+  padding-right: 12px;
+  font-weight: 600;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+
+  &.onnistunut {
+    background: @green-lighter;
+    border-radius: 4px;
+    border: 1px solid @green-light;
+    span.livicon-check {
+      color: @green-dark;
+      font-size: 24px;
+    }
+  }
+
+  &.neutraali {
+    background: @lemon-light;
+    border-radius: 4px;
+    border: 1px solid @lemon-default;
+
+    span.livicon-check {
+      color: @harmaa2;
+      font-size: 24px;
+    }
+  }
+
+  &.varoitus {
+    background: @red-lighter;
+    border-radius: 4px;
+    border: 1px solid @red-light;
+    span.livicon-exclamation-triangle {
+      color: @red-dark;
+      font-size: 24px;
+    }
+  }
+}
+
+.info-laatikko {
+  max-width: 900px;
+  &.varoitus {
+    background: @red-lighter;
+    border: 1px solid @red-light;
+    span.livicon-exclamation-triangle {
+      color: @red-dark;
+    }
+  }
+  &.onnistunut {
+    background: @green-lighter;
+    border: 1px solid @green-dark;
+    span.livicon-check {
+      color: @green-dark;
+    }
+  }
+  &.neutraali {
+    background: @lemon-light;
+    border: 1px solid @lemon-default;
+    svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+  > .infolaatikon-ikoni {
+    font-size: 18px;
+    padding-top: 14px;
+  }
+  padding-left: 16px;
+  padding-right: 16px;
+  margin-top: 8px;
+  font-weight: 600;
+  display: flex;
+  align-items: flex-start;
+  border-radius: 4px;
+}
+
+.varoitus-kentta {
+  background: @red-lighter;
+  &:hover,
+  &:focus,
+  &.focus,
+  &:active {
+    background-color: @table-bg-hover;
+    color: @harmaa1;
+  }
+}
+
+.green-dark {
+  color: @green-dark;
+}
+
+.red-dark {
+  color: @red-dark;
+}
+
+.red-lighter {
+  color: @red-lighter;
+}
+
+.blue-dark {
+  color: @blue-dark;
+}
+
+.black-lighter {
+  color: @black-lighter;
 }
 
 .hoitokauden-kustannukset {
@@ -263,14 +436,20 @@ tr.uusitehtavakoodi td {
 }
 .virheviesti-sailio {
   background-color: @vaara;
-  color: @valkoinen;
+  color: @white-default;
   padding: 5px;
 }
-
+.onnistunut-sailio {
+  background-color: @vihrea4;
+  color: @white-default;
+  padding: 5px;
+}
 .raksiboksi {
   background-color: @harjan-taustavari;
-  margin: 10px 0;
   width: 315px;
+  > div {
+    margin: 8px 0;
+  }
   .input-group-addon {
     background-color: @harjan-taustavari;
     border: none;
@@ -299,4 +478,8 @@ tr.uusitehtavakoodi td {
 .tooltip {
  // ei anneta tooltipin (joka ei näy) ottaa hiirieventtejä
   pointer-events: none;
+}
+
+.col-xs-offset-1-right {
+    margin-right: 8.33333333%;
 }

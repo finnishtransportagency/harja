@@ -1,4 +1,4 @@
-{:kehitysmoodi true
+{:kehitysmoodi #=(eval (harja.tyokalut.env/env "HARJA_DEV_YMPARISTO" true))
 
  :testikayttajat [{:kayttajanimi "tero" :kuvaus "Tero Toripolliisi, POP ely"}
                   {:kayttajanimi "yit_pk" :kuvaus "YIT:n pääkäyttäjä"}
@@ -6,7 +6,8 @@
 
  :http-palvelin {:threads 16
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
-                 :salli-oletuskayttaja? false}
+                 :salli-oletuskayttaja? #=(eval (harja.tyokalut.env/env "HARJA_SALLI_OLETUSKAYTTAJA" false))
+                 :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
 
  ;; käytetään, jos http-palvelimen "salli-oletuskayttaja?" (yllä) on päällä
  :sahke-headerit {"oletus-kaytto-oikeudet" {"oam_remote_user" "oletus-kaytto-oikeudet"
@@ -16,19 +17,21 @@
                                             "oam_groups" "Jarjestelmavastaava"
                                             "oam_organization" "Liikennevirasto"}}
 
-
- :tietokanta {:palvelin "localhost"
+ :tietokanta {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
               :tietokanta "harja"
-              :portti 5432
+              :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
               :yhteyspoolin-koko 16
               :kayttaja "harja"
-              :salasana "harja"}
- :tietokanta-replica {:palvelin "localhost"
+              :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
+              :julkaise-tila? true}
+ :tietokanta-replica {:palvelin #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_HOST" "localhost"))
                       :tietokanta "harja"
-                      :portti 5432
+                      :portti #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_PORTTI" 5432))
                       :yhteyspoolin-koko 16
                       :kayttaja "harja"
-                      :salasana "harja"}
+                      :salasana #=(eval (harja.tyokalut.env/env "HARJA_TIETOKANTA_SALASANA" "harja"))
+                      :julkaise-tila? true}
+ :tarkkailija {:loop-odotus 100}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
        :tiedosto "dev-resources/fim.edn"}
@@ -47,24 +50,42 @@
        ;;         :vastaanottaja [;;"sinunmailisi@example.org"
        ;;                         ]}
        :testidata? true
+       :ei-logiteta #{"http-palvelin"
+                      "ajastettu-geometriapaivitys"
+                      "komponentti-event"
+                      "sillat"}
        }
 
  :sonja
- {:url "tcp://localhost:61617"
+ {:url #=(eval (str "tcp://"
+                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616)))
   :kayttaja ""
   :salasana ""
-  :tyyppi :activemq}
+  :tyyppi :activemq
+  :julkaise-tila? true}
+
+ :itmf
+ {:url #=(eval (str "tcp://"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                 ":"
+                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+  :kayttaja ""
+  :salasana ""
+  :tyyppi :activemq
+  :julkaise-tila? true}
 
 
  ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
  ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
  ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika [16 44 0 ]}
+ ;        :paivittainen-lahetysaika [16 44 0]}
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
- ;        :ilmoituskuittausjono "Harja.T-LOIKToHarja.Ack"
+ ;        :ilmoituskuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
- ;        :toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"
+ ;        :toimenpidekuittausjono "Harja.T-LOIKToHarja.Ack"
  ;        :ilmoitukset {:google-static-maps-key #=(slurp "../.harja/google-static-maps-key")}
  ;        :uudelleenlahetysvali-minuuteissa 30}
 
@@ -73,7 +94,7 @@
         :urakan-tyotunnit-url "https://harja-test.solitaservices.fi/harja/integraatiotesti/turi/tyotuntiTuonti"
         :kayttajatunnus "Harja"
         :salasana #=(slurp "../.harja/turi-salasana")
-        :paivittainen-lahetysaika [0 0 0 ]}
+        :paivittainen-lahetysaika [0 0 0]}
 
  :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
                     :suora? true
@@ -88,7 +109,16 @@
                      ;; :palvelin "solita-service-1.solita.fi"
                      }
 
- :tierekisteri {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/tierekisteri"
+ :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
+                  :vastausosoite "harja-ala-vastaa@vayla.fi"
+                  :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                  :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                  ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
+                  :palvelin "http://localhost:8084"
+                  :kayttajatunnus "harja"
+                  :salasana #=(slurp "../.harja/api-sahkoposti-salasana")}
+
+ :tierekisteri {:url ""
                 :uudelleenlahetys-aikavali-minuutteina 60}
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
@@ -103,7 +133,7 @@
                         :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20190226.csv"
+                        :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
                         :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"
@@ -121,10 +151,10 @@
                         :siltojen-osoite "https://ava.vayla.fi/harja/PTV.tl261_H.shz"
                         :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
 
-                       ; Inspire-asetukset
-                       ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
-                       ; :siltojen-osoite "https://julkinen.vayla.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
-                       ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
+                        ; Inspire-asetukset
+                        ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
+                        ; :siltojen-osoite "https://julkinen.vayla.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
+                        ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
                         :urakoiden-osoite "https://ava.vayla.fi/harja/[AINEISTO].shz"
@@ -159,8 +189,17 @@
        :kayttajatunnus "restusr"
        :salasana #=(slurp "../.harja/yha-salasana")}
 
- :velho {:paallystetoteuma-url ""
-         :autorisaatio ""}
+ :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
+         :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
+         :kayttajatunnus "udqtidknab4bbr8uruua44mql"
+         :salasana #=(slurp "../.harja/velho-salasana")
+         :varuste-api-juuri-url "https://api-v2.stg.velho.vayla.fi"
+         :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
+         :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")
+         :varuste-urakka-oid-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
+         :varuste-urakka-kohteet-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/kohteet"}
+
+ :yha-velho {}
 
  ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
  :labyrintti {:url "http://localhost:28080/sendsms"
@@ -185,44 +224,46 @@
  ;; :vesivayla
  ;; :fileyard
  ;; :varuste-api
+ ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
- ;; :ais-data
  ;; :reittitarkistukset
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
-                               :ais-data
+                               :varusteet-ulkoiset
+                               :itmf
+                               :sonja-uudelleen-kaynnistys
+                               :itmf-uudelleen-kaynnistys
+                               :sonja-sahkoposti
                                :reittitarkistukset
                                :tiedostopesula}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
- :reimari {;:url "https://www.example.com/HarjaWebService"
-           ;:kayttajatunnus "reimaritunnus"
-           ;:salasana "reimarisalasana"
-           ;; :toimenpidehakuvali 60
-           ;; :komponenttityyppihakuvali 60
-           ;; :turvalaitekomponenttihakuvali 60
-           ;; :vikahakuvali 60
-           ;; :turvalaiteryhmahakuaika [15 57 0]
-           }
-
- :ais-data {:url "https://meri.digitraffic.fi/api/v1/locations/latest"
-            :sekunnin-valein 60}
+ :reimari {:url "https://www.example.com/HarjaWebService"
+           :kayttajatunnus "reimaritunnus"
+           :salasana "reimarisalasana"}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]
           :paivitysvali-paivissa 60}
 
  :kanavasillat {:geometria-url "https://modoc.demo.solita.fi/paakayttaja/rajapinta/tierekisteri/rakenteet/uusin?sivu=%1&tuloksia-per-sivu=1000"
-                :paivittainen-tarkistusaika [12 17 00]
-                :paivitysvali-paivissa 60}
+                :paivittainen-tarkistusaika []
+                :paivitysvali-paivissa nil}
 
 
  :tyotunti-muistutukset {:paivittainen-aika nil}
 
- :vkm {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/vkm/muunnos"}
+ :vkm {:url "https://avoinapi.testivaylapilvi.fi/viitekehysmuunnin/"}
 
  :liitteet {:fileyard-url "http://localhost:3333/"}
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
+
+ :komponenttien-tila {:sonja {:paivitystiheys-ms 10000}
+                      :itmf {:paivitystiheys-ms 10000}
+                      :db {:paivitystiheys-ms 10000
+                           :kyselyn-timeout-ms 20000}
+                      :db-replica {:paivitystiheys-ms 10000
+                                   :replikoinnin-max-viive-ms 100000}}
  }

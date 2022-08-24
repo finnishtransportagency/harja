@@ -1,7 +1,26 @@
-<b>Nykyinen versio: 1.0.44</b>
-<b>Julkaistu: 12.2.2019</b>
+<b>Nykyinen versio: 1.0.56</b>
+<b>Julkaistu: 14.4.2022</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.56 Julkaistu 14.4.2022
+      - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
+      - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
+      - Poistettu varusterajapinta käytöstä.
+- Versionumero 1.0.55 Julkaistu 24.2.2022
+      - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
+- Versionumero 1.0.54 Julkaistu 26.1.2022
+      - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
+- Versionumero 1.0.53 Julkaistu 24.2.2021
+      - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
+- Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020
+- Versionumero 1.0.51 Julkaistu 11.9.2020
+    - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
+- Versionumero 1.0.50 Julkaistu 11.9.2020
+    - Paikkausrajapinnan enumeraatioon lisätty arvoja.
+- Versionumero 1.0.48 Julkaistu 9.6.2020
+    - Ilmoitusrajapinta palauttaa uusia arvoja. Ilmoituksen tila palautetaan aina. Ilmoituksesta palautetaan relevantit aikaleimat: ilmoitettu, valitetty-harjaan, vastaanotettu-harjaan ja mikäli kyseessä on päivitetty ilmoitus paivitetty-harjaaan. Aiheutti-toimenpiteita palautuu vain, jos ilmoitus aiheutti toimenpiteitä.
+- Versionumero 1.0.47 Julkaistu 1.4.2020
+    - Yhteystietorajapinnan roolienumeraatioon kolme uutta roolia: Viranomais- ja vahingonkorvausasiat, Työmaavalvoja ja Työmaavalvojan sijainen.
 - Versionumero 1.0.46 Julkaistu 22.11.2019
     - Työkoneseurantarajapintaan alfanumeerinen tieto: tunnus. Tunnus yksilöi käytetyn työkoneen.
 - Versionumero 1.0.45 Julkaistu 4.6.2019

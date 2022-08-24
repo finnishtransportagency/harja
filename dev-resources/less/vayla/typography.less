@@ -1,22 +1,131 @@
 @import "colors.less";
+@import "../yleiset";
 
-.lihavoitu {
-  font-weight: 700;
-}
 .teksti {
   color: @gray25;
 }
+
 .small-text {
-  font-family:  "Open Sans", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
   font-size: 0.75rem;
   font-weight: 400;
   line-height: 1.5;
   color: @gray25;
 }
+.vihje-teksti {
+  .small-text();
+  color: @harmaa-tumma;
+}
 .body-text {
-  font-family:  "Open Sans", Arial, sans-serif;
+  font-family: "Open Sans", Arial, sans-serif;
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.5;
   color: @gray25;
+
+  &.strong {
+    font-weight: 600;
+  }
+}
+
+.semibold {
+  font-weight: 600;
+}
+
+.caption {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 0.875rem;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 16px;
+  letter-spacing: 0;
+  text-align: left;
+  color: @black-light;
+}
+
+.small-caption {
+  .caption();
+  font-size: 0.775rem;
+}
+
+.lihavoitu {
+  font-weight: 700;
+}
+
+.semibold {
+  font-weight: 600;
+}
+
+.harmaa {
+  color: @gray92;
+}
+
+.musta {
+  color: @gray25;
+}
+
+// Design libraryn mukaiset headingit (katso figma)
+
+.header-yhteiset(@koko, @korkeus) {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: @koko;
+  line-height: @korkeus;
+  margin: @valistys-16 0 @valistys-16 0;
+}
+
+// Title
+h1 {
+  .header-yhteiset(1.75rem, 2rem);
+}
+
+// Heading
+h2 {
+  .header-yhteiset(1.25rem, 1.5rem);
+}
+
+// Heading small
+h3 {
+  .header-yhteiset(1rem, 1.25rem);
+}
+
+// Subheading
+h4 {
+  .header-yhteiset(0.75rem, 1.25rem);
+  text-transform: uppercase;
+}
+
+// Allaolevat on vayla/common.less - tiedostosta.
+h5 {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.25;
+  color: @gray25;
+  margin-bottom: 23px;
+}
+
+h6 {
+  .header-yhteiset(1rem, 1.25rem);
+}
+
+label {
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 0.75rem;
+  line-height: 1.5rem;
+
+  /* gray25 */
+
+  color: @gray25;
+  margin-bottom: 0;
+  margin-top: 1rem;
+}
+
+.tiiviit-labelit {
+  label {
+    margin-top: 0.25rem;
+  }
 }

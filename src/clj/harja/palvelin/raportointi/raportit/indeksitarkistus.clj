@@ -1,6 +1,5 @@
 (ns harja.palvelin.raportointi.raportit.indeksitarkistus
-  (:require [harja.palvelin.raportointi.raportit.laskutusyhteenveto
-             :refer [hae-laskutusyhteenvedon-tiedot]]
+  (:require [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
             [harja.pvm :as pvm]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [taoensso.timbre :as log]
@@ -73,7 +72,7 @@
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (let [urakat (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
                                                   :hallintayksikko hallintayksikko-id
-                                                  :urakkatyyppi "hoito"
+                                                  :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                   :alku alkupvm :loppu loppupvm})
         haettu-urakka (when urakka-id (first (urakat-q/hae-urakka db urakka-id)))
         urakka-idt (mapv :urakka-id urakat)
@@ -82,7 +81,7 @@
                                        (map
                                          (fn [[alku loppu]]
                                            (->> urakka-idt
-                                                (mapcat #(hae-laskutusyhteenvedon-tiedot
+                                                (mapcat #(lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                                           db user {:urakka-id %
                                                                    :alkupvm alku
                                                                    :loppupvm loppu}))))

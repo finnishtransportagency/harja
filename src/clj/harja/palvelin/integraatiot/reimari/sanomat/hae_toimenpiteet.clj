@@ -130,7 +130,7 @@
           :HaeToimenpiteetResponse
           :toimenpide
           lue-toimenpide))
-    (log/error "Reimarin toimenpidehaun vastaus ei sisällä :HaeToimenpiteet -elementtiä")))
+    (log/warn "Reimarin toimenpidehaun vastaus ei sisällä :HaeToimenpiteet -elementtiä")))
 
 (defn lue-hae-toimenpiteet-vastaus [xml]
   (hae-toimenpiteet-vastaus (xml/lue xml "UTF-8")))

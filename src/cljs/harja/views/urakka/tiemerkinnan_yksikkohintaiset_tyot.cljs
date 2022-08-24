@@ -1,7 +1,7 @@
 (ns harja.views.urakka.tiemerkinnan-yksikkohintaiset-tyot
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.grid :as grid]
-            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki raksiboksi
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader linkki
                                                   alasveto-ei-loydoksia livi-pudotusvalikko vihje]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]

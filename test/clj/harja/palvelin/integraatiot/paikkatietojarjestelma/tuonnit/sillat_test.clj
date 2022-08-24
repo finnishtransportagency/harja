@@ -52,6 +52,7 @@
           :tr_numero 22
           :status 1
           :siltaid 123
+          :poistettu false
           :urakat (vec (first (q "SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'")))
           :siltanro 123
           :telipaino nil
@@ -59,8 +60,8 @@
           :tr_alkuetaisyys 0
           :tyyppi "Jämäkkä silta"
           :muokattu nil
-          :poistettu false
-          :tr_alkuosa 1}))
+          :tr_alkuosa 1
+          :kunnan_vastuulla false}))
 
 (deftest luo-ja-paivita-silta
   (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta;"))]
@@ -68,7 +69,8 @@
       (let [lisaa-silta (-> (sillat/vie-silta-entry ds silta-tuonti)
                             (update :alue #(geo/pg->clj %))
                             (update :urakat #(konv/pgarray->vector %))
-                            (dissoc :luotu :id))
+                            (dissoc :luotu :id)
+                            )
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta;"))]
         (is (= lisaa-silta odotettu-vastaus))
         (is (= sillat-ennen (dec sillat-jalkeen)))))

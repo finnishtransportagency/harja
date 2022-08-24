@@ -1,8 +1,16 @@
 .nappi(@vari, @tausta, @reunus: @tausta,
        @vari-osoitettaessa: @vari, @tausta-osoitettaessa: @tausta,
-       @reunus-osoitettaessa: @reunus, @fontin-paino: normal) {
+       @reunus-osoitettaessa: @reunus, @fontin-paino: normal,
+       @vari-disabled: @harmaa7, @tausta-disabled: @harmaa10, @reunus-disabled: @harmaa7) {
     .btn();
 
+    &.keskitettava {
+        display: block;
+        margin: 0 auto;
+    }
+    &.pull-right {
+        margin-right: 0;
+    }
     /* Erilaiset koko-variantit */
     &.btn-xs { .btn-xs(); }
     &.btn-sm { .btn-sm(); }
@@ -28,41 +36,60 @@
         &:hover,
         &:active,
         &.active {
-            background-color: @harmaa10;
-            border-color: @harmaa7;
-            color: @harmaa7;
+            background-color: @tausta-disabled;
+            border-color: @reunus-disabled;
+            color: @vari-disabled;
         }
     }
     &.input-group-addon {
         display: table-cell;
     }
-
+    border-radius: 3px;
     margin-right: 5px;
 }
 
 /* Ensisijaista toimintoa indikoiva nappi. */
 .nappi-ensisijainen {
-    .nappi(@vari:                 @valkoinen;
-    @tausta:               @primaari-sininen;
-    @tausta-osoitettaessa: @primaari-sininen-valittuna);
+    .nappi(@vari:          @white-default;
+    @tausta:               @blue-default;
+    @tausta-osoitettaessa: @primaari-sininen-valittuna;
+    @fontin-paino:         600;);
 }
+
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
-    @vari:                 @primaari-sininen;
-    @vari-osoitettaessa:   @valkoinen;
-    @tausta:               @valkoinen;
+    @vari:                 @blue-default;
+    @vari-osoitettaessa:   @white-default;
+    @tausta:               @white-default;
     @tausta-osoitettaessa: @primaari-sininen-valittuna;
-    @reunus:               @primaari-sininen;
+    @reunus:               @blue-default;
+    @fontin-paino:         600;
     );
 }
+
+/* Design Libraryn reunaton nappi (ghost). */
+.nappi-reunaton {
+    .nappi(
+        @vari:                 @blue-dark;
+        @vari-osoitettaessa:   @blue-dark;
+        @tausta:               rgba(0,0,0,0);
+        @tausta-osoitettaessa: @blue-lighter;
+        @reunus:               rgba(0,0,0,0);
+        @fontin-paino:         600;
+        @vari-disabled:        #858585;
+        @tausta-disabled:      rgba(0,0,0,0);
+        @reunus-disabled:      rgba(0,0,0,0);
+    );
+}
+
 /* Myönteinen toiminto */
 .nappi-myonteinen {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @onnistuminen;
     @tausta:               @onnistuminen;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @onnistuminen;
     );
 }
@@ -70,10 +97,10 @@
 /* Kielteinen toiminto */
 .nappi-kielteinen {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @vaara;
     @tausta:               @vaara;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @vaara;
     );
 }
@@ -81,10 +108,10 @@
 /* Varoitus-toiminto */
 .nappi-varoitus {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @brand-warning;
     @tausta:               @brand-warning;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @brand-warning;
     );
 }
@@ -92,14 +119,14 @@
 // Harja spesifinen
 .nappi-alasveto {
     color:                 @harmaa1;
-    background-color:      @valkoinen;
+    background-color:      @white-default;
     border:                1px solid @harmaa7;
     font-weight:           normal;
     padding-bottom:        2px;
     width:                 100%;
     &:active,
     &:focus {
-        border: 1px solid @primaari-sininen;
+        border: 1px solid @blue-default;
         outline: none;
     }
     &[disabled] {
@@ -113,7 +140,7 @@
     vertical-align: top;
     width: 32px;
     .livicon-chevron-down {
-        color: @primaari-sininen;
+        color: @blue-default;
         position: relative;
         top: 2px;
     }
@@ -151,4 +178,20 @@
 
 .nappi-ikoni {
     width: 36px;
+}
+.napiton-nappi {
+    background-color: inherit;
+    border: none;
+    color: #0066cc;
+    &.punainen {
+        color: #B40A14;
+        font-weight: 600;
+    }
+    &.tumma {
+        color: @blue-dark;
+    }
+}
+
+.nappi-korkeus-36 {
+    height: 36px;
 }

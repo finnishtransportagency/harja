@@ -11,10 +11,6 @@
   - Mahdollistaa ylläpitokohteen sijainnin ja sen alikohteiden päivittämisen. Alikohteet poistetaan aina kutsun
     yhteydessä ja uudet kohteet vedetään vanhojen päälle.
 
-  PÄÄLLYSTYSILMOITUKSEN KIRJAUS KOHTEELLE
-  - Kirjaa kohteelle päällystysilmoituksen tekniset tiedot. Samanaikaisesti päivittää kohteen ja sen alikohteiden
-    sijainnit.
-
   KOHTEEN PÄÄLLYSTYSAIKATAULUN KIRJAUS
   - Kirjaa päällystyksen aikataulun tarkemmat tiedot, kuten esim. milloin työt on aloitettu ja milloin kohde on valmis
     tiemerkintään
@@ -52,18 +48,18 @@
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.kyselyt.tietyomaat :as q-tietyomaat]
             [harja.kyselyt.tieverkko :as q-tieverkko]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.kasittely.paallystysilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.palvelin.integraatiot.api.kasittely.yllapitokohteet :as kasittely]
-            [harja.kyselyt.paallystys :as paallystys-q]
+            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
             [harja.kyselyt.tarkastukset :as tarkastukset-q]
             [harja.palvelin.integraatiot.api.kasittely.tarkastukset :as tarkastukset]
@@ -140,10 +136,13 @@
         alikohteet))
 
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
-                     urakka-id
-                     kohde-id
-                     kayttaja))
+  ;; Oletamme että rajapintaa ei käytetä. Jos ao. varoitusviesti ilmestyy Graylogiin, voidaan ohjata
+  ;; ensin käyttäjä tekemään tarvittava muutos käyttöliittymältä. Sitten on vielä tehtävä VKM-rajapinnan muuttumiseen liittyviä tehtäviä VHAR-5246 mukaisesti
+  (log/warn "Rajapintaa paivita-yllapitokohde kutsuttiin.")
+  (log/info (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
+                    urakka-id
+                    kohde-id
+                    kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -190,54 +189,6 @@
         (yy/paivita-yllapitourakan-geometria db urakka-id))
       (tee-kirjausvastauksen-body
        {:ilmoitukset (str "Ylläpitokohde päivitetty onnistuneesti")}))))
-
-(defn kirjaa-paallystysilmoitus [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Kirjataan urakan (id: %s) kohteelle (id: %s) päällystysilmoitus käyttäjän: %s toimesta"
-                     urakka-id
-                     kohde-id
-                     kayttaja))
-  (jdbc/with-db-transaction [db db]
-    (let [urakka-id (Integer/parseInt urakka-id)
-          kohde-id (Integer/parseInt kohde-id)
-          kohteen-vuodet (map :vuodet (into []
-                                            (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
-                                            (q-yllapitokohteet/hae-yllapitokohteen-vuodet db {:id kohde-id})))
-          vuosi (ffirst kohteen-vuodet)
-          paallystysilmoitus (:paallystysilmoitus data)
-          kohde (first (q-yllapitokohteet/hae-yllapitokohde db {:id kohde-id}))
-          kohteen-tienumero (:tr_numero (first (q-yllapitokohteet/hae-kohteen-tienumero db {:kohdeid (:id kohde)})))
-          alikohteet (mapv #(assoc-in (:alikohde %)
-                                      [:sijainti :numero]
-                                      (get-in % [:alikohde :sijainti :numero]
-                                              (get-in % [:alikohde :sijainti :tie]
-                                                      kohteen-tienumero)))
-                           (get-in paallystysilmoitus [:yllapitokohde :alikohteet]))
-
-          tr-osoite (clj-set/rename-keys (get-in paallystysilmoitus [:yllapitokohde :sijainti])
-                                         {:numero :tr-numero
-                                          :aosa :tr-alkuosa
-                                          :aet :tr-alkuetaisyys
-                                          :let :tr-loppuetaisyys
-                                          :losa :tr-loppuosa})
-          ali-ja-muut-kohteet (map #(let [tr (:sijainti %)]
-                                      (assoc % :tr-numero (:numero tr)
-                                             :tr-ajorata (:ajr tr)
-                                             :tr-kaista (:kaista tr)
-                                             :tr-alkuosa (:aosa tr)
-                                             :tr-alkuetaisyys (:aet tr)
-                                             :tr-loppuosa (:losa tr)
-                                             :tr-loppuetaisyys (:let tr)))
-                                   alikohteet)
-          alustatoimet nil]
-      (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-      (validointi/tarkista-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
-
-      (validointi/tarkista-paallystyskohde db kohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)
-
-      (let [id (ilmoitus/kirjaa-paallystysilmoitus vkm db kayttaja urakka-id kohde-id data)]
-        (tee-kirjausvastauksen-body
-          {:ilmoitukset (str "Päällystysilmoitus kirjattu onnistuneesti.")
-           :id (str id)})))))
 
 (defn- paivita-paallystyksen-aikataulu [{:keys [db fim email kayttaja kohde-id aikataulu]}]
   (let [vanha-tiemerkintapvm (c/from-sql-date (:valmis-tiemerkintaan
@@ -499,7 +450,8 @@
                        kayttaja
                        data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id ulkoiset-idt)]
+    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)
+          poistettujen-liitteiden-maara (tarkastukset-q/poista-poistetut-liitteet! db {:urakka-id urakka-id})]
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
                           "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
@@ -546,13 +498,6 @@
     :vastaus-skeema json-skeemat/kirjausvastaus
     :kasittely-fn (fn [parametrit data kayttaja db]
                     (paivita-yllapitokohde vkm db kayttaja parametrit data))}
-   {:palvelu :kirjaa-paallystysilmoitus
-    :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/paallystysilmoitus"
-    :tyyppi :POST
-    :kutsu-skeema json-skeemat/paallystysilmoituksen-kirjaus
-    :vastaus-skeema json-skeemat/kirjausvastaus
-    :kasittely-fn (fn [parametrit data kayttaja db]
-                    (kirjaa-paallystysilmoitus vkm db kayttaja parametrit data))}
    {:palvelu :kirjaa-paallystyksen-aikataulu
     :polku "/api/urakat/:urakka-id/yllapitokohteet/:kohde-id/aikataulu-paallystys"
     :tyyppi :POST
@@ -629,11 +574,12 @@
            db :db
            integraatioloki :integraatioloki
            fim :fim
-           email :sonja-sahkoposti
            liitteiden-hallinta :liitteiden-hallinta
            vkm :vkm
            :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email :vkm vkm
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                                                                            (:sonja-sahkoposti this)
+                                                                            (:api-sahkoposti this)) :vkm vkm
                                                           :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]

@@ -95,7 +95,8 @@
 
 (deftest tallenna-turvallisuuspoikkeama
   (let [ulkoinen-id 757577
-        urakka (hae-oulun-alueurakan-2005-2012-id)
+        urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
+        liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
         tp-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM turvallisuuspoikkeama;")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                          kayttaja portti
@@ -168,7 +169,11 @@
                                            (.replace "__TAPAHTUMAPAIVAMAARA__" "2016-01-30T12:00:00Z")))
             uusin-paivitetty-tp (hae-turvallisuuspoikkeama-ulkoisella-idlla ulkoinen-id)
             turpo-id (first uusin-paivitetty-tp)
-            korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)]
+            korjaavat-toimenpiteet (hae-korjaavat-toimenpiteet turpo-id)
+            liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
+
+        ;; Varmistetaan, ettei liitteet tule tuplana päivityksen yhteydessä
+        (is (= (+ 1 liitteiden-maara-ennen) liitteiden-maara-jalkeen))
 
         (is (= (nth uusin-paivitetty-tp 30) "Liukas tie metsän reunalla."))
         ;; Halutaan, että vanhoja korjaavia toimenpiteitä ei poisteta, vaan uudet lisätään
@@ -183,7 +188,7 @@
     (u "DELETE FROM turvallisuuspoikkeama WHERE ulkoinen_id = " ulkoinen-id ";")))
 
 (deftest tallenna-turvallisuuspoikkeama-tulevaisuuteen-kaatuu
-  (let [urakka (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/turvallisuuspoikkeama"]
                                          kayttaja portti
                                          (-> "test/resurssit/api/turvallisuuspoikkeama.json"

@@ -1,0 +1,1 @@
+CREATE INDEX paikkauksen_tienkohta_paikkaus_idx ON paikkauksen_tienkohta ("paikkaus-id");

@@ -33,7 +33,7 @@
                                                       :hallintayksikko hallintayksikko-id
                                                       :alku alkupvm
                                                       :loppu loppupvm
-                                                      :urakkatyyppi "hoito"})
+                                                      :urakkatyyppi #{"hoito" "teiden-hoito"}})
         urakat-aikavalin-sisalla (filter
                                    #(not (suolasakko-ei-osu-aikavalille? loppupvm %))
                                    urakat)
@@ -146,4 +146,7 @@
                  (reduce + (keep :suolasakko raportin-data))
                  (reduce + (keep :korotus raportin-data))
                  (reduce + (keep :korotettuna raportin-data))])))]
+     (when-not (= konteksti :urakka)
+       [:varillinen-teksti {:arvo "Suolasakkoraportti huomioi toistaiseksi vain ns. vanhat hoidon alueurakat. MHU-urakoiden osalta asia on työn alla."
+                            :tyyli :virhe}])
      [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä. Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön."]]))

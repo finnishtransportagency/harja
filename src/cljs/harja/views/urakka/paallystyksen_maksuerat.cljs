@@ -5,7 +5,6 @@
             [harja.ui.komponentti :as komp]
             [harja.loki :refer [log tarkkaile!]]
             [cljs.core.async :refer [<!]]
-            [harja.tiedot.urakka.paikkaus :as paikkaus]
             [harja.tiedot.urakka.paallystyksen-maksuerat :as tiedot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
@@ -39,9 +38,9 @@
             voi-tayttaa-maksueratunnuksen?
             (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)]
         [:div.paallystyksen-maksuerat
-         [valinnat/urakan-vuosi valittu-urakka]
+         [valinnat/urakan-vuosi valittu-urakka {:vayla-tyyli? true}]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
          [grid/grid
           {:otsikko "Maksuerät"
            :tyhja (if (nil? maksuerat)
@@ -85,7 +84,5 @@
 
 (defn maksuerat []
   (komp/luo
-    (komp/lippu paikkaus/paikkausilmoitukset-nakymassa?)
-
     (fn []
       [tuck tiedot/tila maksuerat*])))

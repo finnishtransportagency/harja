@@ -73,7 +73,7 @@
 
 (defn poista-tp-taulusta
   [kuvaus]
-  (log/debug "Poistetaan testi-turpo")
+  ;(log/debug "Poistetaan testi-turpo")
   (let [id (ffirst (q (str "SELECT id FROM turvallisuuspoikkeama WHERE kuvaus='" kuvaus "'")))]
     (u (str "DELETE FROM korjaavatoimenpide WHERE turvallisuuspoikkeama=" id))
     (u (str "DELETE FROM turvallisuuspoikkeama_kommentti WHERE turvallisuuspoikkeama=" id))
@@ -157,6 +157,7 @@
             :tyyppi #{:tyotapaturma}
             :otsikko "Kävi möhösti"
             :tila :suljettu
+            :juurisyy1 :muu
             :vahinkoluokittelu #{:ymparistovahinko}
             :vaaralliset-aineet #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}
             :sijainti {:type :point :coordinates [0 0]}

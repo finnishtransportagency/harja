@@ -5,7 +5,8 @@
             [clj-time.core :refer [weeks months ago]]
             [harja.kyselyt.konversio :as konversio]
             [com.stuartsierra.component :as component]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm])
   (:import (java.net InetAddress)))
 
 (defprotocol IntegraatiolokiKirjaus
@@ -25,14 +26,16 @@
       (log/debug "Ajastetaan integraatiolokin puhdistus ajettavaksi joka päivä kello: " paivittainen-puhdistusaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-puhdistusaika
-        (fn [_]
-          (let [aikarajaus-api (konversio/sql-timestamp (.toDate (-> 2 weeks ago)))
-                aikarajaus-muut (konversio/sql-timestamp (.toDate (-> 3 months ago)))]
-            (log/debug "Poistetaan API:n integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-api)
-            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
+        (do
+          (log/info "ajasta-paivittain :: integraatiolokin puhdistus :: Alkaa " (pvm/nyt))
+          (fn [_]
+              (let [aikarajaus-api (konversio/sql-timestamp (.toDate (-> 2 weeks ago)))
+                    aikarajaus-muut (konversio/sql-timestamp (.toDate (-> 3 months ago)))]
+                (log/debug "Poistetaan API:n integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-api)
+                (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-api "api")
 
-            (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
-            (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut nil)))))
+                (log/debug "Poistetaan muut integraatiotapahtumat, jotka ovat alkaneet ennen:" aikarajaus-muut)
+                (integraatioloki/poista-ennen-paivamaaraa-kirjatut-tapahtumat! (:db this) aikarajaus-muut nil))))))
     (fn [] ())))
 
 (defn tee-jms-lokiviesti [suunta sisalto otsikko jono]

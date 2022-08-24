@@ -34,20 +34,6 @@
             "selite": "Liikennejärjestelyt",
             "hinta": 2000
           }}
-        ],
-        "yksikkohintaiset-kustannukset": [
-          { "yksikkohintainen-kustannus": {
-            "selite": "asfaltti",
-            "yksikko": "t",
-            "yksikkohinta": 200,
-            "maara": 12.5
-          }},
-          {"yksikkohintainen-kustannus": {
-            "selite": "bitumi",
-            "yksikko": "kg",
-            "yksikkohinta": 20.40,
-            "maara": 14.5
-          }}
         ]
       }
     }

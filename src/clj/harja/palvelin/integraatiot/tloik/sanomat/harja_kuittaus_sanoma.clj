@@ -21,19 +21,19 @@
   (when urakka
     [:urakka
      [:id (:id urakka)]
-     [:nimi (merkkijono/leikkaa 256 (:nimi urakka))]
+     [:nimi (merkkijono/leikkaa 256 (xml/escape-xml-varten (:nimi urakka)))]
      [:tyyppi (urakkatyyppi (:tyyppi urakka))]]))
 
 (defn rakenna-urakoitsija [urakka]
   (when urakka
     [:urakoitsija
-     [:nimi (merkkijono/leikkaa 128 (:urakoitsija_nimi urakka))]
+     [:nimi (merkkijono/leikkaa 128 (xml/escape-xml-varten (:urakoitsija_nimi urakka)))]
      [:ytunnus (merkkijono/leikkaa 9 (:urakoitsija_ytunnus urakka))]]))
 
 (defn rakenna-paivystaja [{:keys [etunimi sukunimi matkapuhelin tyopuhelin sahkoposti]}]
   [:paivystaja
-   [:etunimi (merkkijono/leikkaa 32 etunimi)]
-   [:sukunimi (merkkijono/leikkaa 32 sukunimi)]
+   [:etunimi (xml/escape-xml-varten (merkkijono/leikkaa 32 etunimi))]
+   [:sukunimi (xml/escape-xml-varten (merkkijono/leikkaa 32 sukunimi))]
    [:matkapuhelin (merkkijono/leikkaa 32 (or matkapuhelin tyopuhelin))]
    [:sahkoposti (merkkijono/leikkaa 64 sahkoposti)]])
 
@@ -58,6 +58,6 @@
     (if (xml/validi-xml? +xsd-polku+ "harja-tloik.xsd" xml)
       xml
       (do
-        (log/error (format "Kuittausta T-LOIK:n ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi. XML: %s"
-                           viesti-id xml))
+        (log/error (format "Kuittausta T-LOIK:n ei voida lähettää viesti id:lle %s. Kuittaus XML ei ole validi."
+                           viesti-id))
         nil))))

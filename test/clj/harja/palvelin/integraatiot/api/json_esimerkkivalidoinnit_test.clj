@@ -50,12 +50,11 @@
   (is (nil? (validoi json-skeemat/paivystajatietojen-haku-vastaus json-esimerkit/+paivystajatietojen-haku-vastaus+)))
 
   (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus json-esimerkit/+tyokoneenseuranta-kirjaus+)))
+  (is (nil? (validoi json-skeemat/tyokoneenseuranta-kirjaus-viivageometrialla json-esimerkit/+tyokoneenseuranta-kirjaus-viivageometrialla+)))
 
   (is (nil? (validoi json-skeemat/paivystyksen-poisto json-esimerkit/+paivystyksen-poisto-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/urakan-yllapitokohteiden-haku-vastaus json-esimerkit/+urakan-yllapitokohteiden-haku+)))
-
-  (is (nil? (validoi json-skeemat/paallystysilmoituksen-kirjaus json-esimerkit/+paallystysilmoituksen-kirjaus+)))
 
   (is (nil? (validoi json-skeemat/paallystyksen-aikataulun-kirjaus json-esimerkit/+paallystyksen-aikataulun-kirjaus+)))
   (is (nil? (validoi json-skeemat/tiemerkinnan-aikataulun-kirjaus json-esimerkit/+tiemerkinnan-aikataulun-kirjaus+)))

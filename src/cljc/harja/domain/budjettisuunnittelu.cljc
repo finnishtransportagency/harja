@@ -17,26 +17,28 @@
   ["kustannusarvioitu_tyo" ::kustannusarvioitu-tyo
    {"kuukausi" ::smallint-kk
     "vuosi" ::smallint-v
+    "summa_indeksikorjattu" ::summa-indeksikorjattu
     ::tyyppi (specql.transform/transform (specql.transform/to-keyword))
     ::tpi-id (specql.rel/has-one ::toimenpideinstanssi
                                  ::tpi/toimenpideinstanssi
                                  ::tpi/id)}
-   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
+   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::summa-indeksikorjattu (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["kiinteahintainen_tyo" ::kiinteahintainen-tyo
    {"kuukausi" ::smallint-kk
-    "vuosi" ::smallint-v}
-   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
+    "vuosi" ::smallint-v
+    "summa_indeksikorjattu" ::summa-indeksikorjattu}
+   #?(:clj {::summa (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::summa-indeksikorjattu (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["johto_ja_hallintokorvaus_toimenkuva" ::johto-ja-hallintokorvaus-toimenkuva]
-  ["johto_ja_hallintokorvaus_ennen_urakkaa" ::johto-ja-hallintokorvaus-ennen-urakkaa
-   #?(:clj {::kk-v (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})]
   ["johto_ja_hallintokorvaus" ::johto-ja-hallintokorvaus
-   {::maksukausi (specql.transform/transform (specql.transform/to-keyword))
+   {"tuntipalkka_indeksikorjattu" ::tuntipalkka-indeksikorjattu
+    ::maksukausi (specql.transform/transform (specql.transform/to-keyword))
     ::toimenkuva (specql.rel/has-one ::toimenkuva-id
                                      ::johto-ja-hallintokorvaus-toimenkuva
-                                     ::id)
-    ::ennen-urakkaa (specql.rel/has-one ::ennen-urakkaa-id
-                                        ::johto-ja-hallintokorvaus-ennen-urakkaa
-                                        ::id)}
+                                     ::id)}
    #?(:clj {::tunnit (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
-            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
+            ::tuntipalkka (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::tuntipalkka-indeksikorjattu (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))
+            ::osa-kuukaudesta (specql.transform/transform (harja.kyselyt.specql/->NumberTransform))})])
 

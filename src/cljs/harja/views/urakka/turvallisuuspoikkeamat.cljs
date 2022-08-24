@@ -201,14 +201,17 @@
           :tyyppi :komponentti
           :komponentti (fn [_]
                          [yleiset/vihje
-                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman."])}
+                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman. Juurisyy on pakollinen tieto, kun poikkeama on työtapaturma"])}
          (remove
            nil?
            (mapcat
              (fn [n]
                (let [avain (keyword (str "juurisyy" n))
-                     selite-avain (keyword (str "juurisyy" n "-selite"))]
+                     selite-avain (keyword (str "juurisyy" n "-selite"))
+                     pakollinen? (and (= n 1)
+                                      (contains? (:tyyppi turvallisuuspoikkeama) :tyotapaturma))]
                  [{:tyyppi :valinta
+                   :pakollinen? pakollinen?
                    :uusi-rivi? true
                    :otsikko (str n ". juurisyy")
                    :valinnat (into [nil] turpodomain/juurisyyt)
@@ -222,289 +225,298 @@
 (defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
         toimenpiteet-virheet (atom nil)
+        turvallisuupoikkeama-liite-latautumassa? (atom false)
+        kommentti-liite-latautumassa? (atom false)
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
     (fnc [urakka]
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
-                                         ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
+                                      ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
             vaaralliset-aineet-disablointi-fn (fn [valitut vaihtoehto]
                                                 (and
                                                   (= vaihtoehto :vaarallisten-aineiden-vuoto)
                                                   (not (valitut :vaarallisten-aineiden-kuljetus))))]
-        [:div
-         [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
-         (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
-           (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:iin epäonnistui "
-                                         (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
-         [lomake/lomake
-          {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
-           :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
-                                                     (assoc % :vaaralliset-aineet #{})
-                                                     %)]
-                        (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
-           :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-           :footer-fn (fn [tp]
-                        [:div
-                         [napit/palvelinkutsu-nappi
-                          "Tallenna turvallisuuspoikkeama"
-                          #(tiedot/tallenna-turvallisuuspoikkeama (lomake/ilman-lomaketietoja tp))
-                          {:luokka "nappi-ensisijainen"
-                           :ikoni (ikonit/tallenna)
-                           :kun-onnistuu #(do
-                                            (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
-                                            (reset! tiedot/valittu-turvallisuuspoikkeama nil))
-                           :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
-                           :disabled (and (not (voi-tallentaa? tp @toimenpiteet-virheet))
-                                          (not (:uusi-liite tp)))}]
-                         [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
-                         [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
-          [{:otsikko "Tapahtuman otsikko"
-            :nimi :otsikko
-            :tyyppi :string
-            :pituus-max 1024
-            :pakollinen? true
-            :validoi [[:ei-tyhja "Anna otsikko"]]
-            :palstoja 1}
-           {:otsikko "Tapahtunut" :pakollinen? true
-            :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-            :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
-                      [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
-            :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
-           (lomake/ryhma {:rivi? true}
-                         {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
-                          :pakollinen? true
-                          :vaihtoehto-nayta turpodomain/turpo-tyypit
-                          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
-                          :vaihtoehdot (keys turpodomain/turpo-tyypit)}
-                         {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
-                          :pakollinen? true
-                          :vaihtoehto-nayta #(turpodomain/vahinkoluokittelu-tyypit %)
-                          :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
-                          :vaihtoehdot (keys turpodomain/vahinkoluokittelu-tyypit)}
-                         {:otsikko "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
-                          :pakollinen? true
-                          :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
-                          :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
-                          :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
-                          :vihje-leijuke [:div
-                                          [:p "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma."]
-                                          [:p "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma."]
-                                          [:p "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen."]]})
-           (if vesivaylaurakka?
-             {:nimi :sijainti
-              :otsikko "Sijainti"
-              :tyyppi :sijaintivalitsin
-              :paikannus? false
+        (yleiset/himmennys
+          {:himmenna? (or @turvallisuupoikkeama-liite-latautumassa? @kommentti-liite-latautumassa? false)
+           :himmennyksen-sisalto [yleiset/ajax-loader]}
+          [:div
+           [napit/takaisin "Takaisin luetteloon" #(reset! tiedot/valittu-turvallisuuspoikkeama nil)]
+           (when (false? (:lahetysonnistunut @turvallisuuspoikkeama))
+             (lomake/yleinen-varoitus (str "Turvallisuuspoikkeaman lähettäminen TURI:iin epäonnistui "
+                                        (pvm/pvm-aika (:lahetetty @turvallisuuspoikkeama)))))
+           [lomake/lomake
+            {:otsikko (if (:id @turvallisuuspoikkeama) "Muokkaa turvallisuuspoikkeamaa" "Luo uusi turvallisuuspoikkeama")
+             :muokkaa! #(let [tarkistettu-lomakedata (if (= (:vaaralliset-aineet %) #{:vaarallisten-aineiden-vuoto})
+                                                       (assoc % :vaaralliset-aineet #{})
+                                                       %)]
+                          (reset! turvallisuuspoikkeama tarkistettu-lomakedata))
+             :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
+             :footer-fn (fn [tp]
+                          [:div
+                           [napit/palvelinkutsu-nappi
+                            "Tallenna turvallisuuspoikkeama"
+                            #(tiedot/tallenna-turvallisuuspoikkeama (lomake/ilman-lomaketietoja tp))
+                            {:luokka "nappi-ensisijainen"
+                             :ikoni (ikonit/tallenna)
+                             :kun-onnistuu #(do
+                                              (tiedot/turvallisuuspoikkeaman-tallennus-onnistui %)
+                                              (reset! tiedot/valittu-turvallisuuspoikkeama nil))
+                             :virheviesti "Turvallisuuspoikkeaman tallennus epäonnistui."
+                             :disabled (and (not (voi-tallentaa? tp @toimenpiteet-virheet))
+                                         (not (:uusi-liite tp)))}]
+                           [:div [lomake/nayta-puuttuvat-pakolliset-kentat tp]]
+                           [yleiset/vihje "Turvallisuuspoikkeama lähetetään automaattisesti TURI:iin aina tallentaessa"]])}
+            [{:otsikko "Tapahtuman otsikko"
+              :nimi :otsikko
+              :tyyppi :string
+              :pituus-max 400
               :pakollinen? true
-              ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
-              ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
-              ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
-              ;;                                                         (.-latitude coords)])]
-              ;;                         (swap! turvallisuuspoikkeama assoc :sijainti
-              ;;                                {:type :point :coordinates [(aget latlon 1)
-              ;;                                                            (aget latlon 0)]}))
-              ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
-              :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
-             {:otsikko "Tierekisteriosoite"
-              :nimi :tr
-              :pakollinen? true
-              :tyyppi :tierekisteriosoite
-              :ala-nayta-virhetta-komponentissa? true
-              :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
-              :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
-                                #(swap! turvallisuuspoikkeama assoc :sijainti %))})
-           {:otsikko "Paikan kuvaus"
-            :nimi :paikan-kuvaus
-            :tyyppi :string
-            :pituus-max 200
-            :palstoja 1}
-           {:uusi-rivi? true
-            :otsikko "Tila"
-            :nimi :tila
-            :pakollinen? true
-            :validoi [[:ei-tyhja "Valitse tila"]
-                      [:ei-avoimia-korjaavia-toimenpiteitä
-                       "Voidaan merkitä suljetuksi tai käsitellyksi
-                       vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
-            :tyyppi :valinta
-            :valinta-nayta #(or (turpodomain/kuvaa-turpon-tila %)
-                                "- valitse -")
-            :valinnat [:avoin :kasitelty :taydennetty :suljettu]
-            :palstoja 1}
-           {:otsikko "Tapahtuman kuvaus"
-            :nimi :kuvaus
-            :tyyppi :text
-            :koko [80 :auto]
-            :palstoja 1
-            :pakollinen? true
-            :pituus-max 2000
-            :validoi [[:ei-tyhja "Anna kuvaus"]]}
-           {:otsikko "Aiheutuneet seuraukset"
-            :nimi :seuraukset
-            :tyyppi :text
-            :koko [80 :auto]
-            :palstoja 1}
-           {:otsikko "Toteuttaja"
-            :nimi :toteuttaja
-            :tyyppi :string
-            :palstoja 1}
-           {:otsikko "Tilaaja"
-            :nimi :tilaaja
-            :tyyppi :string
-            :palstoja 1}
-           {:otsikko "Laatija"
-            :nimi :laatija
-            :leveys 20
-            :tyyppi :string
-            :muokattava? (constantly false)
-            :fmt (fn [_] (if (:uusi? (meta @turvallisuuspoikkeama))
-                           ;; Laatijaksi tullaan liittämään nykyinen käyttäjä
-                           (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
-                           (str (:laatija-etunimi @turvallisuuspoikkeama)
-                                " " (:laatija-sukunimi @turvallisuuspoikkeama))))}
-           {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
-            :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
-            :disabloi vaaralliset-aineet-disablointi-fn
-            :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
-           {:otsikko "Liitteet" :nimi :liitteet
-            :palstoja 2
-            :tyyppi :komponentti
-            :komponentti
-            (fn [_]
-              [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
-               {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
-                                         #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
-                :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
-                :salli-poistaa-lisatty-liite? true
-                :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)
-                :salli-poistaa-tallennettu-liite? true
-                :poista-tallennettu-liite-fn
-                (fn [liite-id]
-                  (liitteet/poista-liite-kannasta
-                    {:urakka-id (:id urakka)
-                     :domain :turvallisuuspoikkeama
-                     :domain-id (:id @turvallisuuspoikkeama)
-                     :liite-id liite-id
-                     :poistettu-fn (fn []
-                                     (swap! turvallisuuspoikkeama assoc :liitteet
-                                            (filter (fn [liite]
-                                                      (not= (:id liite) liite-id))
-                                                    (:liitteet @turvallisuuspoikkeama))))}))}])}
-           (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
-                          :uusi-rivi? true}
-                         {:otsikko "Etunimi"
-                          :nimi :turvallisuuskoordinaattorietunimi
-                          :tyyppi :string
-                          :palstoja 1}
-                         {:otsikko "Sukunimi"
-                          :nimi :turvallisuuskoordinaattorisukunimi
-                          :tyyppi :string
-                          :palstoja 1})
-           (when henkilovahinko-valittu?
-             (lomake/ryhma
-               "Henkilövahingon tiedot"
-               {:otsikko "Työntekijän ammatti"
-                :nimi :tyontekijanammatti
-                :tyyppi :valinta
+              :validoi [[:ei-tyhja "Anna otsikko"]]
+              :palstoja 1}
+             {:otsikko "Tapahtunut" :pakollinen? true
+              :nimi :tapahtunut :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+              :validoi [[:ei-tyhja "Aseta päivämäärä ja aika"]
+                        [:ei-tulevaisuudessa "Päivämäärä ei voi olla tulevaisuudessa"]]
+              :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+             (lomake/ryhma {:rivi? true}
+               {:otsikko "Tyyppi" :nimi :tyyppi :tyyppi :checkbox-group
                 :pakollinen? true
-                :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
-                :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
+                :vaihtoehto-nayta turpodomain/turpo-tyypit
+                :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman tyyppi")]
+                :vaihtoehdot (keys turpodomain/turpo-tyypit)}
+               {:otsikko "Vahinkoluokittelu" :nimi :vahinkoluokittelu :tyyppi :checkbox-group
+                :pakollinen? true
+                :vaihtoehto-nayta #(turpodomain/vahinkoluokittelu-tyypit %)
+                :validoi [#(when (empty? %) "Anna turvallisuuspoikkeaman vahinkoluokittelu")]
+                :vaihtoehdot (keys turpodomain/vahinkoluokittelu-tyypit)}
+               {:otsikko "Vakavuusaste" :nimi :vakavuusaste :tyyppi :radio-group
+                :pakollinen? true
+                :vaihtoehto-nayta #(turpodomain/turpo-vakavuusasteet %)
+                :validoi [#(when (nil? %) "Anna turvallisuuspoikkeaman vakavuusaste")]
+                :vaihtoehdot (keys turpodomain/turpo-vakavuusasteet)
+                :vihje-leijuke [:div
+                                [:p "Vakavaksi työtapaturmaksi katsotaan tilanne, jonka seurauksena on kuolema, yli 30 päivän poissaolo työstä tai vaikealaatuinen vamma."]
+                                [:p "Vakavaksi vaaratilanteeksi katsotaan tilanne, jonka seurauksena olisi voinut aiheutua vakava työtapaturma."]
+                                [:p "Vakavaksi ympäristövahingoksi katsotaan tilanne, jonka seurauksena paikalle joudutaan pyytämään pelastusviranomainen."]]})
+             (if vesivaylaurakka?
+               {:nimi :sijainti
+                :otsikko "Sijainti"
+                :tyyppi :sijaintivalitsin
+                :paikannus? false
+                :pakollinen? true
+                ;; FIXME Paikannus olisi kiva, mutta konversio kaatuu. LS-työkalussa sama kutsu toimii!?
+                ;;:paikannus-onnistui-fn #(let [coords (.-coords %)
+                ;;                             latlon (geo/wgs84->etrsfin [(.-longitude coords)
+                ;;                                                         (.-latitude coords)])]
+                ;;                         (swap! turvallisuuspoikkeama assoc :sijainti
+                ;;                                {:type :point :coordinates [(aget latlon 1)
+                ;;                                                            (aget latlon 0)]}))
+                ;;:paikannus-epaonnistui-fn #(viesti/nayta! "Paikannus epäonnistui!" :danger)
+                :karttavalinta-tehty-fn #(swap! turvallisuuspoikkeama assoc :sijainti %)}
+               {:otsikko "Tierekisteriosoite"
+                :nimi :tr
+                :pakollinen? true
+                :tyyppi :tierekisteriosoite
+                :ala-nayta-virhetta-komponentissa? true
+                :validoi [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
+                :sijainti (r/wrap (:sijainti @turvallisuuspoikkeama)
+                            #(swap! turvallisuuspoikkeama assoc :sijainti %))})
+             {:otsikko "Paikan kuvaus"
+              :nimi :paikan-kuvaus
+              :tyyppi :string
+              :pituus-max 200
+              :palstoja 1}
+             {:uusi-rivi? true
+              :otsikko "Tila"
+              :nimi :tila
+              :pakollinen? true
+              :validoi [[:ei-tyhja "Valitse tila"]
+                        [:ei-avoimia-korjaavia-toimenpiteitä
+                         "Voidaan merkitä suljetuksi tai käsitellyksi
+                         vasta kun kaikki korjaavat toimenpiteet on toteutettu"]]
+              :tyyppi :valinta
+              :valinta-nayta #(or (turpodomain/kuvaa-turpon-tila %)
+                                "- valitse -")
+              :valinnat [:avoin :kasitelty :taydennetty :suljettu]
+              :palstoja 1}
+             {:otsikko "Tapahtuman kuvaus"
+              :nimi :kuvaus
+              :tyyppi :text
+              :koko [80 :auto]
+              :palstoja 1
+              :pakollinen? true
+              :pituus-max 2000
+              :validoi [[:ei-tyhja "Anna kuvaus"]]}
+             {:otsikko "Aiheutuneet seuraukset"
+              :nimi :seuraukset
+              :tyyppi :text
+              :koko [80 :auto]
+              :palstoja 1}
+             {:otsikko "Toteuttaja"
+              :nimi :toteuttaja
+              :tyyppi :string
+              :palstoja 1}
+             {:otsikko "Tilaaja"
+              :nimi :tilaaja
+              :tyyppi :string
+              :palstoja 1}
+             {:otsikko "Laatija"
+              :nimi :laatija
+              :leveys 20
+              :tyyppi :string
+              :muokattava? (constantly false)
+              :fmt (fn [_] (if (:uusi? (meta @turvallisuuspoikkeama))
+                             ;; Laatijaksi tullaan liittämään nykyinen käyttäjä
+                             (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
+                             (str (:laatija-etunimi @turvallisuuspoikkeama)
+                               " " (:laatija-sukunimi @turvallisuuspoikkeama))))}
+             {:otsikko "Vaaralliset aineet" :nimi :vaaralliset-aineet :tyyppi :checkbox-group
+              :vaihtoehto-nayta turpodomain/turpo-vaaralliset-aineet
+              :disabloi vaaralliset-aineet-disablointi-fn
+              :vaihtoehdot #{:vaarallisten-aineiden-kuljetus :vaarallisten-aineiden-vuoto}}
+             {:otsikko "Liitteet" :nimi :liitteet
+              :palstoja 2
+              :tyyppi :komponentti
+              :komponentti
+              (fn [_]
+                [liitteet/liitteet-ja-lisays (:id @nav/valittu-urakka) (:liitteet @turvallisuuspoikkeama)
+                 {:uusi-liite-atom (r/wrap (:uusi-liite @turvallisuuspoikkeama)
+                                     #(swap! turvallisuuspoikkeama assoc :uusi-liite %))
+                  :uusi-liite-teksti "Lisää liite turvallisuuspoikkeamaan"
+                  :salli-poistaa-lisatty-liite? true
+                  :poista-lisatty-liite-fn #(swap! turvallisuuspoikkeama dissoc :uusi-liite)
+                  :salli-poistaa-tallennettu-liite? true
+                  :latausta-ennen-fn #(reset! turvallisuupoikkeama-liite-latautumassa? true) ;; Asetetaan latausatomi päälle
+                  :latausta-jalkeen-fn #(reset! turvallisuupoikkeama-liite-latautumassa? false) ;; Resetoidaan latausatomi
+                  :poista-tallennettu-liite-fn
+                  (fn [liite-id]
+                    (liitteet/poista-liite-kannasta
+                      {:urakka-id (:id urakka)
+                       :domain :turvallisuuspoikkeama
+                       :domain-id (:id @turvallisuuspoikkeama)
+                       :liite-id liite-id
+                       :poistettu-fn (fn []
+                                       (swap! turvallisuuspoikkeama assoc :liitteet
+                                         (filter (fn [liite]
+                                                   (not= (:id liite) liite-id))
+                                           (:liitteet @turvallisuuspoikkeama))))}))}])}
+             (lomake/ryhma {:otsikko "Turvallisuuskoordinaattori"
+                            :uusi-rivi? true}
+               {:otsikko "Etunimi"
+                :nimi :turvallisuuskoordinaattorietunimi
+                :tyyppi :string
+                :palstoja 1}
+               {:otsikko "Sukunimi"
+                :nimi :turvallisuuskoordinaattorisukunimi
+                :tyyppi :string
+                :palstoja 1})
+             (when henkilovahinko-valittu?
+               (lomake/ryhma
+                 "Henkilövahingon tiedot"
+                 {:otsikko "Työntekijän ammatti"
+                  :nimi :tyontekijanammatti
+                  :tyyppi :valinta
+                  :pakollinen? true
+                  :valinnat (sort (keys turpodomain/turpo-tyontekijan-ammatit))
+                  :valinta-nayta #(or (turpodomain/turpo-tyontekijan-ammatit %) "- valitse -")
+                  :uusi-rivi? true}
+                 (when (= :muu_tyontekija (:tyontekijanammatti @turvallisuuspoikkeama))
+                   {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
+                 (lomake/ryhma {:rivi? true}
+                   {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
+                    :tyyppi :positiivinen-numero :kokonaisluku? true
+                    :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                   {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
+                    :tyyppi :positiivinen-numero :kokonaisluku? true
+                    :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
+                   {:nimi :sairauspoissaolojatkuu
+                    :palstoja 1
+                    :tyyppi :checkbox
+                    :teksti "Sairauspoissaolo jatkuu"})
+                 {:otsikko "Vamma"
+                  :nimi :vammat
+                  :uusi-rivi? true
+                  :palstoja 1
+                  :tyyppi :valinta
+                  :valinnat turpodomain/vammat-avaimet-jarjestyksessa
+                  :valinta-nayta #(or (turpodomain/vammat %) "- valitse -")}
+                 {:otsikko "Vahingoittunut ruumiinosat"
+                  :nimi :vahingoittuneetruumiinosat
+                  :palstoja 1
+                  :tyyppi :valinta
+                  :valinnat turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
+                  :valinta-nayta #(or (turpodomain/vahingoittunut-ruumiinosa %) "- valitse -")}))
+             {:otsikko "Kommentit" :nimi :uusi-kommentti
+              :tyyppi :komponentti
+              :palstoja 2
+              :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                             [kommentit/kommentit {:voi-kommentoida? true
+                                                   :voi-liittaa? true
+                                                   :salli-poistaa-lisatty-liite? true
+                                                   :salli-poistaa-tallennettu-liite? true
+                                                   :liitteen-latausta-ennen-fn #(reset! kommentti-liite-latautumassa? true) ;; Asetetaan latausatomi päälle
+                                                   :liitteen-latausta-jalkeen-fn #(reset! kommentti-liite-latautumassa? false) ;; Resetoidaan latausatomi
+                                                   :poista-tallennettu-liite-fn
+                                                   (fn [liite-id]
+                                                     (let [liitteen-kommentti (kommentti/liitteen-kommentti
+                                                                                (:kommentit @turvallisuuspoikkeama)
+                                                                                liite-id)
+                                                           kommentit-ilman-poistettua-liitetta
+                                                           (map (fn [kommentti]
+                                                                  (if (= (get-in kommentti [:liite :id]) liite-id)
+                                                                    (dissoc kommentti :liite)
+                                                                    kommentti))
+                                                             (:kommentit @turvallisuuspoikkeama))]
+                                                       (liitteet/poista-liite-kannasta
+                                                         {:urakka-id (:id urakka)
+                                                          :domain :turvallisuuspoikkeama-kommentti-liite
+                                                          :domain-id (:id @turvallisuuspoikkeama)
+                                                          :liite-id liite-id
+                                                          :poistettu-fn (fn []
+                                                                          (swap! turvallisuuspoikkeama assoc :kommentit
+                                                                            kommentit-ilman-poistettua-liitetta))})))
+                                                   :liita-nappi-teksti "Lisää liite kommenttiin"
+                                                   :placeholder "Kirjoita kommentti..."
+                                                   :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
+                                                                     #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
+                              (:kommentit @turvallisuuspoikkeama)])}
+             (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
+               {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
+                :muokattava? (constantly false)
                 :uusi-rivi? true}
-               (when (= :muu_tyontekija (:tyontekijanammatti @turvallisuuspoikkeama))
-                 {:otsikko "Muu ammatti" :nimi :tyontekijanammattimuu :tyyppi :string :palstoja 1})
-               (lomake/ryhma {:rivi? true}
-                             {:otsikko "Sairaalavuorokaudet" :nimi :sairaalavuorokaudet :palstoja 1
-                              :tyyppi :positiivinen-numero :kokonaisluku? true
-                              :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
-                             {:otsikko "Sairauspoissaolopäivät" :nimi :sairauspoissaolopaivat :palstoja 1
-                              :tyyppi :positiivinen-numero :kokonaisluku? true
-                              :validoi [[:rajattu-numero 0 10000 "Anna arvo väliltä 0 - 10 000"]]}
-                             {:nimi :sairauspoissaolojatkuu
-                              :palstoja 1
-                              :tyyppi :checkbox
-                              :teksti "Sairauspoissaolo jatkuu"})
-               {:otsikko "Vamma"
-                :nimi :vammat
+               {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
+                :palstoja 2
                 :uusi-rivi? true
-                :palstoja 1
-                :tyyppi :valinta
-                :valinnat turpodomain/vammat-avaimet-jarjestyksessa
-                :valinta-nayta #(or (turpodomain/vammat %) "- valitse -")}
-               {:otsikko "Vahingoittunut ruumiinosat"
-                :nimi :vahingoittuneetruumiinosat
-                :palstoja 1
-                :tyyppi :valinta
-                :valinnat turpodomain/vahingoittunut-ruumiinosa-avaimet-jarjestyksessa
-                :valinta-nayta #(or (turpodomain/vahingoittunut-ruumiinosa %) "- valitse -")}))
-           {:otsikko "Kommentit" :nimi :uusi-kommentti
-            :tyyppi :komponentti
-            :palstoja 2
-            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                           [kommentit/kommentit {:voi-kommentoida? true
-                                                 :voi-liittaa? true
-                                                 :salli-poistaa-lisatty-liite? true
-                                                 :salli-poistaa-tallennettu-liite? true
-                                                 :poista-tallennettu-liite-fn
-                                                 (fn [liite-id]
-                                                   (let [liitteen-kommentti (kommentti/liitteen-kommentti
-                                                                              (:kommentit @turvallisuuspoikkeama)
-                                                                              liite-id)
-                                                         kommentit-ilman-poistettua-liitetta
-                                                         (map (fn [kommentti]
-                                                                (if (= (get-in kommentti [:liite :id]) liite-id)
-                                                                  (dissoc kommentti :liite)
-                                                                  kommentti))
-                                                              (:kommentit @turvallisuuspoikkeama))]
-                                                     (liitteet/poista-liite-kannasta
-                                                       {:urakka-id (:id urakka)
-                                                        :domain :turvallisuuspoikkeama-kommentti-liite
-                                                        :domain-id (:id @turvallisuuspoikkeama)
-                                                        :liite-id liite-id
-                                                        :poistettu-fn (fn []
-                                                                        (swap! turvallisuuspoikkeama assoc :kommentit
-                                                                               kommentit-ilman-poistettua-liitetta))})))
-                                                 :liita-nappi-teksti "Lisää liite kommenttiin"
-                                                 :placeholder "Kirjoita kommentti..."
-                                                 :uusi-kommentti (r/wrap (:uusi-kommentti @turvallisuuspoikkeama)
-                                                                         #(muokkaa-lomaketta (assoc data :uusi-kommentti %)))}
-                            (:kommentit @turvallisuuspoikkeama)])}
-           (lomake/ryhma {:otsikko "Poikkeaman käsittely"}
-                         {:otsikko "Poikkeama kirjattu" :nimi :luotu :fmt pvm/pvm-aika-opt :tyyppi :string
-                          :muokattava? (constantly false)
-                          :uusi-rivi? true}
-                         {:otsikko "Korjaavat toimenpiteet" :nimi :korjaavattoimenpiteet :tyyppi :komponentti
-                          :palstoja 2
-                          :uusi-rivi? true
-                          :komponentti (fn [{:keys [muokkaa-lomaketta]}]
-                                         [korjaavattoimenpiteet
-                                          (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)
-                                          turvallisuuspoikkeama
-                                          toimenpiteet-virheet
-                                          muokkaa-lomaketta])}
-                         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
-                           {:otsikko (let [kolmannes (ut/kuluva-vuosikolmannes)]
-                                       (str "Urakan työtunnit ("
-                                            (case (::ut/vuosikolmannes kolmannes)
-                                              1 "tammikuu - huhtikuu"
-                                              2 "toukokuu - elokuu"
-                                              3 "syyskuu - joulukuu"
-                                              :else "")
-                                            " "
-                                            (::ut/vuosi kolmannes)
-                                            ")"))
-                            :nimi :urakan-tyotunnit
-                            :tyyppi :positiivinen-numero
-                            :kokonaisluku? true})
-                         {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
-                          :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
+                :komponentti (fn [{:keys [muokkaa-lomaketta]}]
+                               [korjaavattoimenpiteet
+                                (rakenna-korjaavattoimenpiteet turvallisuuspoikkeama)
+                                turvallisuuspoikkeama
+                                toimenpiteet-virheet
+                                muokkaa-lomaketta])}
+               (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+                 {:otsikko (let [kolmannes (ut/kuluva-vuosikolmannes)]
+                             (str "Urakan työtunnit ("
+                               (case (::ut/vuosikolmannes kolmannes)
+                                 1 "tammikuu - huhtikuu"
+                                 2 "toukokuu - elokuu"
+                                 3 "syyskuu - joulukuu"
+                                 :else "")
+                               " "
+                               (::ut/vuosi kolmannes)
+                               ")"))
+                  :nimi :urakan-tyotunnit
+                  :tyyppi :positiivinen-numero
+                  :kokonaisluku? true})
+               {:otsikko "Ilmoitukset lähetetty" :nimi :ilmoituksetlahetetty :fmt pvm/pvm-aika-opt :tyyppi :pvm-aika
+                :validoi [[:pvm-kentan-jalkeen :tapahtunut "Ei voi päättyä ennen tapahtumisaikaa"]]}
 
-                         {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
-                                                                               (pvm/pvm-aika-opt %)
-                                                                               "Ei")
-                          :tyyppi :pvm-aika
-                          :muokattava? (constantly false)})
+               {:otsikko "Loppuunkäsitelty" :nimi :kasitelty :fmt #(if %
+                                                                     (pvm/pvm-aika-opt %)
+                                                                     "Ei")
+                :tyyppi :pvm-aika
+                :muokattava? (constantly false)})
 
-           (juurisyy-ryhma @turvallisuuspoikkeama)]
-          @turvallisuuspoikkeama]]))))
+             (juurisyy-ryhma @turvallisuuspoikkeama)]
+            @turvallisuuspoikkeama]])))))
 
 (defn valitse-turvallisuuspoikkeama [urakka-id turvallisuuspoikkeama-id]
   (go
@@ -555,11 +567,9 @@
                                       (:id @nav/valittu-urakka) (:id turpo)))
                                   :teksti "Avaa turvallisuuspoikkeama"}})
       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
-    (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :M))
-                      #(do
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+    (komp/sisaan #(do
+                    (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                    (nav/vaihda-kartan-koko! :M)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn [urakka]
       [:span

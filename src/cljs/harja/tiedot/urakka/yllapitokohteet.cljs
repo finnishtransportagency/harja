@@ -16,6 +16,10 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
+(def hint-pilko-osoitevali "Pilko paalu\u00ADväli kahdeksi eri kohteeksi")
+(def hint-poista-rivi "Poista rivi")
+(def hint-lisaa-osa "Lisää osa")
+
 (defn yha-kohde? [kohde]
   (some? (:yhaid kohde)))
 
@@ -74,7 +78,42 @@
 (def alku (juxt :tr-alkuosa :tr-alkuetaisyys))
 (def loppu (juxt :tr-loppuosa :tr-loppuetaisyys))
 
-(defn lisaa-uusi-kohdeosa
+(defn lisaa-uusi-pot2-alustarivi
+  "Lisää uuden POT2-alustarivin annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
+  jälkeen tulevien osien avaimia yhdellä suuremmaksi."
+  [kohdeosat key yllapitokohde]
+  (let [rivi (get kohdeosat key)
+        ;; Jos ennestään ei yhtään kohdeosaa täytetään ajorata ja kaista pääkohteelta
+        rivi (if rivi
+               rivi
+               {:tr-numero (:tr-numero yllapitokohde)
+                :tr-ajorata (:tr-ajorata yllapitokohde)
+                :tr-kaista (:tr-kaista yllapitokohde)})
+        avaimet-jalkeen (filter #(> % key) (keys kohdeosat))
+        uusi-rivi {:tr-numero (:tr-numero rivi)
+                   :tr-alkuosa nil
+                   :tr-alkuetaisyys nil
+                   :tr-loppuosa (:tr-loppuosa rivi)
+                   :tr-loppuetaisyys (:tr-loppuetaisyys rivi)
+                   :tr-ajorata (:tr-ajorata rivi)
+                   :tr-kaista (:tr-kaista rivi)
+                   :toimenpide nil}]
+    (if (empty? kohdeosat)
+      {key uusi-rivi}
+      (-> kohdeosat
+          (assoc-in [key :tr-loppuosa] nil)
+          (assoc-in [key :tr-loppuetaisyys] nil)
+          (assoc (inc key) uusi-rivi)
+          (merge (zipmap (map inc avaimet-jalkeen)
+                         (map #(get kohdeosat %) avaimet-jalkeen)))))))
+
+(defn lisaa-paallystekohdeosa
+  "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle)."
+  [kohdeosat key yllapitokohde]
+  (-> kohdeosat
+      (assoc (inc key) {:tr-numero (:tr-numero yllapitokohde)})))
+
+(defn pilko-paallystekohdeosa
   "Lisää uuden kohteen annetussa indeksissä olevan kohteen perään (alapuolelle). Muuttaa kaikkien
   jälkeen tulevien osien avaimia yhdellä suuremmaksi."
   [kohdeosat key yllapitokohde]

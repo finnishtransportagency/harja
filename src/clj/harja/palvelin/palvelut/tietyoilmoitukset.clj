@@ -22,15 +22,16 @@
     [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
     [harja.kyselyt.yhteyshenkilot :as q-yhteyshenkilot]
     [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+    [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.komponentit.fim :as fim]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut async]]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-    [harja.palvelin.komponentit.tapahtumat :as tapahtumat]
+    [harja.palvelin.tapahtuma-protokollat :as tapahtumat]
     [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as ominaisuudet]
+    [harja.palvelin.asetukset :as asetukset]
     [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
     [harja.palvelin.palvelut.tietyoilmoitukset.pdf :as pdf]
     [harja.palvelin.palvelut.viestinta :as viestinta]
@@ -176,10 +177,16 @@
       :sahkopostilahetys-epaonnistui)))
 
 (defn tietyoilmoitus-pdf [db user params]
-  (pdf/tietyoilmoitus-pdf
-    (first (fetch db ::t/ilmoitus+pituus
-                  q-tietyoilmoitukset/ilmoitus-pdf-kentat
-                  {::t/id (:id params)}))))
+  (let [{ilmoituksen-emailit ::t/email-lahetykset}
+        (first (q-tietyoilmoitukset/hae-sahkopostitiedot db {::t/id (:id params)}))]
+    (pdf/tietyoilmoitus-pdf
+      (assoc
+        (first (fetch db ::t/ilmoitus+pituus
+                      q-tietyoilmoitukset/ilmoitus-pdf-kentat
+                      {::t/id (:id params)}))
+        ;; Vasta kun Tieliikennekeskuksesta on tullut kuittaus, että ilmoitus on kertaalleen tullut perille,
+        ;; voidaan jatkossa PDF:ssä käyttää ilmoituksessa termiä Muutos aiempaan VHAR-2465
+        :lahetetty? (boolean (some :harja.domain.tietyoilmoituksen-email/kuitattu ilmoituksen-emailit))))))
 
 (defn tallenna-tietyoilmoitus [tloik db email pdf user ilmoitus sahkopostitiedot]
   (log/debug "PALVELU: Tallenna tietyöilmoitus" ilmoitus " sahkopostitiedot " sahkopostitiedot " email " email)
@@ -208,7 +215,7 @@
                               ilmoituksen-sahkopostitiedot (hae-ilmoituksen-sahkopostitiedot db user (select-keys tallennettu [::t/urakka-id ::t/id]))]
                           (merge tallennettu {::t/email-lahetykset ilmoituksen-sahkopostitiedot})))]
       (when (and (not (empty? sahkopostitiedot))
-                 (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
+                 (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys))
         (async/thread
           (let [{pdf-bytet :tiedosto-bytet
                  tiedostonimi :tiedostonimi} (pdf-vienti/luo-pdf pdf :tietyoilmoitus user {:id (::t/id tallennettu)})
@@ -307,9 +314,10 @@
            db :db
            http :http-palvelin
            pdf :pdf-vienti
-           fim :fim
-           email :sonja-sahkoposti
-           :as this}]
+           fim :fim :as this}]
+    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
@@ -336,7 +344,7 @@
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
-    (when (ominaisuudet/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+    #_ (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
       (tapahtumat/kuuntele! email
                             (-> email :jonot :sahkoposti-ja-liite-ulos-kuittausjono)
                             (fn [{:keys [viesti-id aika onnistunut]} _ _]
@@ -345,7 +353,7 @@
                                                                                               (when-not onnistunut
                                                                                                 {::tietyoilmoituksen-e/lahetysvirhe aika}))
                                                                                        {::tietyoilmoituksen-e/lahetysid viesti-id}))))
-    this)
+    this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)

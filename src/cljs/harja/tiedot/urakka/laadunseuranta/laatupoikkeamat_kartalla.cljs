@@ -10,7 +10,7 @@
 
 (defonce laatupoikkeamat-kartalla
   (reaction
-   (let [laatupoikkeamat @laatupoikkeamat/urakan-laatupoikkeamat
+   (let [laatupoikkeamat @laatupoikkeamat/laatupoikkeamat-kartalla
          valittu-laatupoikkeama-id (:id @laatupoikkeamat/valittu-laatupoikkeama)]
      (when @karttataso-laatupoikkeamat
        (kartalla-esitettavaan-muotoon

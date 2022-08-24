@@ -122,8 +122,8 @@
 (defn tallenna-pohjavesialue-talvisuola
   "Päivittää pohjavesialueen talvisuolarajan, tai luo uuden jos rajaa ei ole"
   [db user urakka hoitokauden-alkuvuosi pohjavesialue talvisuolaraja tie]
-  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue tie))
-    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue tie)))
+  (when (zero? (q/paivita-pohjavesialue-talvisuola! db talvisuolaraja (:id user) urakka hoitokauden-alkuvuosi pohjavesialue tie))
+    (q/tallenna-pohjavesialue-talvisuola<! db talvisuolaraja urakka hoitokauden-alkuvuosi pohjavesialue tie (:id user))))
 
 (defn tallenna-suolasakko-ja-pohjavesialueet
   [db user {:keys [hoitokauden-alkuvuosi urakka suolasakko pohjavesialue-talvisuola] :as tiedot}]

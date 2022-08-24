@@ -208,7 +208,9 @@
 
   disabled?                 Nappi disabloitu, true tai false.
   lisaa-usea-liite?         Jos true, komponentilla voi lisätä useita liitteitä.
-  nayta-lisatyt-liitteet?   Näyttää juuri lisätyt liitteet, oletus true."
+  nayta-lisatyt-liitteet?   Näyttää juuri lisätyt liitteet, oletus true.
+  latausta-ennen-fn         Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
+  latausta-jalkeen-fn       Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi."
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil) ; Jos komponentilla lisätään vain yksi liite
@@ -217,7 +219,7 @@
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled? lisaa-usea-liite?
                            nayta-lisatyt-liitteet? salli-poistaa-lisatty-liite?
-                           poista-lisatty-liite-fn] :as opts}]
+                           poista-lisatty-liite-fn latausta-ennen-fn latausta-jalkeen-fn] :as opts}]
       (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)
             poista-liite (fn [liite-id]
                            (reset! tiedostot (filter #(not= (:id %) liite-id) @tiedostot))
@@ -261,10 +263,14 @@
                                (loop [ed (<! ch)]
                                  (if (number? ed)
                                    (do (reset! edistyminen ed)
+                                       (when latausta-ennen-fn (latausta-ennen-fn))
+                                       (when (:latauksen-seuranta-atom opts)
+                                         (reset! (:latauksen-seuranta-atom opts) ed))
                                        (recur (<! ch)))
                                    (if (and ed (not (k/virhe? ed)))
                                      (do
                                        (reset! edistyminen nil)
+                                       (when latausta-jalkeen-fn (latausta-jalkeen-fn))
                                        (reset! virheviesti nil)
                                        (when liite-ladattu
                                          (if lisaa-usea-liite?
@@ -275,6 +281,7 @@
                                      (do
                                        (log "Virhe: " (pr-str ed))
                                        (reset! edistyminen nil)
+                                       (when latausta-jalkeen-fn (latausta-jalkeen-fn))
                                        (reset! virheviesti (str "Liitteen lisääminen epäonnistui"
                                                                 (if (:viesti ed)
                                                                   (str " (" (:viesti ed) ")"))))))))))}]]
@@ -306,11 +313,14 @@
                                        Oletus false.
    poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi.
    palautetut-liitteet                 Kokoelma liitteitä, jotka on tallennettu local storageen ja tulisi sen takia
-                                       näkyä käyttäjälle."
+                                       näkyä käyttäjälle.
+   latausta-ennen-fn                   Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
+   latausta-jalkeen-fn                 Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
-                                          poista-lisatty-liite-fn palautetut-liitteet]}]
+                                          poista-lisatty-liite-fn palautetut-liitteet latauksen-seuranta-atom
+                                          latausta-ennen-fn latausta-jalkeen-fn]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -328,7 +338,9 @@
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)
      (when uusi-liite-atom
-       [lisaa-liite urakka-id {:liite-ladattu #(reset! uusi-liite-atom %)
+       [lisaa-liite urakka-id {:latausta-ennen-fn latausta-ennen-fn
+                               :latausta-jalkeen-fn latausta-jalkeen-fn
+                               :liite-ladattu #(reset! uusi-liite-atom %)
                                :nappi-teksti uusi-liite-teksti
                                :grid? grid?
                                :lisaa-usea-liite? lisaa-usea-liite?
@@ -337,3 +349,36 @@
                                :poista-lisatty-liite-fn poista-lisatty-liite-fn
                                :disabled? disabled?
                                :palautetut-liitteet palautetut-liitteet}]))])
+
+(defn lataa-tiedosto
+  "Ladataan käyttäjän valitsema tiedosto palvelimelle (file input) komponentti yhden tiedoston lataamiselle.
+  Lataa tiedoston serverille ja palauttaa callbackille tiedon onnistuneesta
+  tiedoston lataamisesta.
+
+  HUOM! Oikeustarkistuksen tekeminen on kutsujan vastuulla!
+
+  Optiot voi sisältää:
+  url                       Backend osoite, johon tiedosto lähetetään
+  grid?                     Jos true, optimoidaan näytettäväksi gridissä.
+  nappi-teksti              Teksti, joka napissa näytetään (vakiona 'Lataa tiedosto')
+  lataus-onnistui           Funktio, jota kutsutaan, kun tiedosto on ladattu onnistuneesti.
+  lataus-epaonnistui        Funktio, jota kutsutaan, kun tiedoston lataus ei onnistunut.
+  disabled?                 Nappi disabloitu, true tai false.
+  nappi-luokka              Voidaan tällä hetkellä tehdä napiton-nappi"
+  [params-map opts]
+  (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
+    [:span
+     [:span.liitekomponentti
+      [:div {:class (str "file-upload nappi-toissijainen "
+                         (when grid? "nappi-grid ")
+                         (when disabled? "disabled ")
+                         (when nappi-luokka (str nappi-luokka " ")))
+             :on-click #(.stopPropagation %)}
+       [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) (or nappi-teksti "Lataa tiedosto")]
+       [:input.upload
+        {:type "file"
+         :on-input #(do
+                      (k/laheta-tiedosto! url (.-target %) params-map tiedosto-ladattu lataus-epaonnistui)
+                      ;; Tyhjennä arvo latauksen jälkeen, jotta samanniminen tiedosto voidaan tarvittaessa lähettää
+                      ;; uudestaan.
+                      (set! (.-value (.-target %)) nil))}]]]]))

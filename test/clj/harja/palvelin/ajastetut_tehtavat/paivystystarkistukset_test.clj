@@ -15,6 +15,7 @@
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
+  (pudota-ja-luo-testitietokanta-templatesta)
   (alter-var-root
     #'jarjestelma
     (fn [_]
@@ -31,7 +32,7 @@
   (alter-var-root #'jarjestelma component/stop))
 
 
-(use-fixtures :once (compose-fixtures tietokanta-fixture jarjestelma-fixture))
+(use-fixtures :once jarjestelma-fixture)
 
 (def ilmoituksien-saajat
   [{:etunimi "Erkki"
@@ -56,35 +57,33 @@
     :tunniste nil}])
 
 (deftest urakoiden-paivystajien-haku-toimii
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
                                  testitietokanta
                                  (t/local-date 2016 10 1))]
     ;; Oulun alueurakka 2014-2019 löytyy 3 päivystystä
-    (is (= (count (filter
+    (is (= 3 (count (filter
                     #(= (:urakka-nimi %) "Oulun alueurakka 2014-2019")
-                    paivystykset)))
-        3)
+                    paivystykset))))
     ;; Muhoksen urakassa on yksi päivystys
-    (is (= (count (filter
+    (is (= 1 (count (filter
                     #(= (:urakka-nimi %) "Muhoksen päällystysurakka")
-                    paivystykset)))
-        1)))
+                    paivystykset))))))
 
 (deftest hae-kaynnissa-olevat-urakat-paivystystarkistukseen-toimii
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2016 1 1))]
     (is (= (count urakat) 18))
     urakat))
 
 (deftest hae-kaynnissa-olevat-urakat-paivystystarkistukseen-toimii
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta (t/local-date 2007 1 1))]
     (is (= (count urakat) 1))
     urakat))
 
 (defn- hae-urakat-ilman-paivystysta [pvm]
-  (let [testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+  (let [testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         paivystykset (paivystajatarkistukset/hae-voimassa-olevien-urakoiden-paivystykset
                        testitietokanta
@@ -97,20 +96,23 @@
 
 (deftest muhoksen-urakan-paivystys-loytyy
   (let [pvm (t/local-date 2016 1 1)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
-    ;; Muhoksen urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
+    ;; Muhoksen ja Oulun urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                   #(= (:nimi %) "Muhoksen päällystysurakka")
                   urakat-ilman-paivystysta))))
+    (is (nil? (first (filter
+                       #(= (:nimi %) "Oulun alueurakka 2014-2019")
+                       urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
 
 (deftest oulun-urakan-paivystys-loytyy
   (let [pvm (t/local-date 2015 11 2)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
@@ -123,7 +125,7 @@
 
 (deftest oulun-urakan-paivystys-loytyy-paivystyksen-alkupaivana
   (let [pvm (t/local-date 2015 11 1)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 urakalla päivitys alkaa samana päivänä, eli ei sisälly joukkoon "urakat ilman päivystystä"
@@ -136,7 +138,7 @@
 
 (deftest oulun-ja-muhoksen-paivystys-loytyy
   (let [pvm (t/local-date 2015 12 5)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
     ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
@@ -152,7 +154,7 @@
 
 (deftest kaikki-urakat-listataan-ilman-paivystysta
   (let [pvm (t/local-date 2060 1 1)
-        testitietokanta (tietokanta/luo-tietokanta testitietokanta)
+        testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta (t/local-date 2060 1 1))]
     ;; Ei urakoita käynnissä tänä aikana, mitään ei palaudu

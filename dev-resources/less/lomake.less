@@ -1,5 +1,7 @@
+@import "./livi_tyylit";
+
 .virhe-tai-varoitus-lomake (@taustavari, @vari) {
-  background-color: @taustavari;
+  //background-color: @taustavari;
   bottom: 0;
   color: @vari;
   padding: 5px;
@@ -21,18 +23,53 @@
   border: solid 1px @harmaa7;
   .lomake-otsikko, .lomake-ryhman-otsikko {
     margin-left: 1em;
+    margin-bottom: 1rem;
   }
-
+  label:not(.checkbox-label) {
+    color: @black-light;
+    font-family: 'Open Sans', serif;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 16px;
+  }
+  &.lukutila {
+    .lomake-arvo {
+      color: @black-default;
+      font-family: 'Open Sans', serif;
+      font-style: normal;
+      font-weight: normal;
+      font-size: 14px;
+      line-height: 20px;
+      &.harmaa-tumma-teksti {
+          color: @harmaa2;
+      }
+      &.punainen-teksti {
+          color: @red-default;
+      }
+      &.vihrea-teksti {
+          color: @green-default;
+      }
+      &.fontti-20 {
+        .fontti-20();
+      }
+    }
+    .form-group {
+      margin-bottom: 0;
+      hr {
+        margin: 4px 0;
+      }
+    }
+  }
   margin-top: 0.25rem;
 
   .varoitus {
-    .virhe-tai-varoitus-lomake(@varoitus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@white-default, @varoitus);
   }
   .virhe {
-    .virhe-tai-varoitus-lomake(@vaara, @valkoinen);
+    .virhe-tai-varoitus-lomake(@white-default, @vaara);
   }
   .huomautus {
-    .virhe-tai-varoitus-lomake(@huomautus, @valkoinen);
+    .virhe-tai-varoitus-lomake(@white-default, @huomautus);
   }
   .viesti {
     display: inline-block;
@@ -54,6 +91,26 @@
   .kentan-yksikko {
     font-size: (0.8 * @fontin-koko-leipateksti);
     margin-left: 0.5rem;
+  }
+
+  .sisainen-label {
+    position: absolute;
+    margin-left: -20px;
+    margin-top: 12px;
+    min-width: 40px;
+    font-size: @fontin-koko-leipateksti
+  }
+
+  .sisainen-kentta {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .iso-input {
+    input {
+      width: 100%;
+      height: 38px;
+    }
   }
 
   .kentta-ja-yksikko {
@@ -99,9 +156,15 @@
       text-align: center;
       .checkbox {
         padding-top: 0;
+        input[type="checkbox"] {
+          margin-top: 2px;
+        }
       }
       label {
         font-size: @fontin-koko-leipateksti;
+        &.bold {
+          font-weight: bold;
+        }
       }
       padding-right: 2em;
     }
@@ -113,9 +176,14 @@
   }
 
   .lomake-ryhman-otsikko {
-    font-size: @font-size-h3;
     margin: 2px 0 10px;
     padding-left: 15px;
+
+    &.napilla {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+    }
   }
 
   .livi-grid {
@@ -143,10 +211,10 @@
       width: max-content;
     }
   }
-}
 
-.lomake-ilman-borderia{
-  border: none;
+  &.ei-borderia {
+    border: none;
+  }
 }
 
 .lomake-footer {
@@ -228,4 +296,116 @@ fieldset.lomake-osa {
 
 .puuttuvat-pakolliset-kentat {
   color: @vaara;
+}
+
+.lomakepalsta {
+  &:first-child {
+    margin-right:20px;
+  }
+  &:not(:first-child) {
+    &:not(:last-child) {
+      margin-right:20px;
+    }
+  }
+  &:only-child {
+    margin:0px;
+    &.puolikas {
+      max-width: ~"calc(50% - 20px)";
+    }
+  }
+  flex-grow: 1;
+  flex-basis:0;
+  min-width: 100px;
+
+  /* Keskikokoinen näyttö */
+  @media all and (max-width: 800px) {
+    /* Laitetaan elementit alekain ja hieman tyhjää kaikkien ympärille
+    justify-content: space-around;
+    flex-direction: column;*/
+  }
+
+  /* Pienet näytöt */
+  @media all and (max-width: 500px) {
+    /* Pakota elementit alekain
+    flex-direction: column;*/
+
+  }
+}
+
+.lomakepalstat {
+  /* Flex muutos mahdollinen. Koodit jätetty tarkoituksella
+   Flexin kanssa lähinnä ongelmana alasvetovalikkojen laajeneminen liian suuriksi.*/
+
+  display:flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+
+}
+@overlay-leveys: 400px;
+.overlay-oikealla {
+  position: fixed;
+  right: 0;
+  height: 100%;
+  width: @overlay-leveys;
+  margin-top: 0;
+  top: 0;
+  z-index: 1000;/* kartan päälle, joka 900*/
+  background-color: @white-default;
+  box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.15), 0px 4px 12px rgba(0, 0, 0, 0.25);
+  overflow-y: scroll;
+  &.overlay-leveampi {
+    width: 1.5 * @overlay-leveys;
+  }
+}
+.fontti-yhteiset {
+  color: @black-default;
+  font-family: "Open Sans", Arial, sans-serif;
+  font-style: normal;
+  font-weight: normal;
+}
+.fontti-12 {
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+  .fontti-yhteiset();
+}
+.fontti-14 {
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  .fontti-yhteiset();
+}
+.fontti-16 {
+  font-size: 1rem;
+  line-height: 1.25rem;
+  .fontti-yhteiset();
+}
+.fontti-14-vaaleampi {
+  .fontti-14();
+  color: @black-light;
+}
+.fontti-20 {
+  .fontti-yhteiset();
+  font-size: 1.25rem;
+  line-height: 1.5rem;
+  font-weight: 600;
+}
+.lomake-otsikko-pieni {
+  color: @harmaa5;
+  margin: 24px 0 0 15px;
+
+}
+.reunus-alhaalla {
+  /* Käytetään esim. paikkauskohteissa erottimena. */
+  border-bottom: 1px;
+
+}
+
+.harmaa-tumma-teksti {
+  color: @harmaa2;
+}
+.punainen-teksti {
+  color: @red-default;
+}
+.vihrea-teksti {
+  color: @green-default;
 }

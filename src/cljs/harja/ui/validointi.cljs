@@ -8,9 +8,12 @@
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka :as u]
+            #_[harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [cljs-time.core :as t]
-            [harja.domain.tierekisteri :as tr])
+            [harja.domain.tierekisteri :as tr]
+            [clojure.string :as str]
+            [harja.fmt :as fmt])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn ei-hoitokaudella-str [alku loppu]
@@ -63,6 +66,11 @@
         (or viesti
             (ei-hoitokaudella-str (pvm/pvm hoitokausi-alku) (pvm/pvm hoitokausi-loppu)))))))
 
+(defmethod validoi-saanto :manuaalinen-kattohinta [_ _ data rivi _ & [tavoitehinta viesti]]
+  ;; Manuaalisen kattohinnan gridin datasta löytyy tieto, onko rivi indeksikorjattu vai ei.
+  (when (and (= (:rivi rivi) :kattohinta) (<= data tavoitehinta))
+    (or viesti (str "Kattohinnan täytyy olla suurempi kuin tavoitehinta " (fmt/euro-opt tavoitehinta)))))
+
 (defmethod validoi-saanto :valitun-kkn-aikana-urakan-hoitokaudella [_ _ data _ _ & [viesti]]
   (let [urakka @nav/valittu-urakka
         alkupvm (:alkupvm urakka)
@@ -114,6 +122,12 @@
   [_ _ data rivi _ & [toinen-avain viesti]]
   (when (and (str-clj/blank? data)
              (not (toinen-avain rivi)))
+    (or viesti "Anna arvo")))
+
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-ei-joukossa
+  [_ _ data rivi _ & [toinen-avain arvot-jotka-sallivat-tyhja viesti]]
+  (when (and (str-clj/blank? data)
+             (not (contains? (set arvot-jotka-sallivat-tyhja) (toinen-avain rivi))))
     (or viesti "Anna arvo")))
 
 (defmethod validoi-saanto :ei-tulevaisuudessa [_ _ data _ _ & [viesti]]
@@ -222,6 +236,15 @@
                      (= "-" valimerkki)
                      (nil? loppuosa))
        (or viesti "Y-tunnuksen pitää olla 7 numeroa, väliviiva, ja tarkastusnumero.")))))
+
+(defmethod validoi-saanto :email [_ _ data _ _ & [viesti]]
+  (let [osat (str-clj/split data #",")]
+    (when-not
+      (or (empty? data)
+          (every?
+            #(re-matches #"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$" (str-clj/trim %))
+            osat))
+      (or viesti "Kirjoita sähköpostitiedot pilkulla eroteltuna loppuun asti."))))
 
 (defn validoi-saannot
   "Palauttaa kaikki validointivirheet kentälle, jos tyhjä niin validointi meni läpi."
@@ -383,3 +406,25 @@
                                       (get rivi nimi)))))
             s))
         skeema))
+
+;; Harjassa on päällekäin kaksi erilaista validointia
+;; Tämä funktio liittyy monesti mhu tyyppisissä urakoissa käytettyyn validointimalliin
+(defn nayta-virhe? [polku lomake]
+  (let [validi? (cond 
+                  ; jos tyhjä mutta koskettu, niin sitten virhe voidaan näyttää
+                  (and (nil? (get-in lomake polku))
+                       (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :koskettu?]))
+                  (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?])
+
+                  (nil? (get-in lomake polku))
+                  true ;; kokeillaan palauttaa true, jos se on vaan tyhjä. Eli ei näytetä virhettä tyhjälle kentälle
+                  :else
+                  (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :validi?]))]
+    ;; Koska me pohjimmiltaan tarkistetaan, validiutta, mutta palautetaan tieto, että näytetäänkö virhe, niin käännetään
+    ;; boolean ympäri
+    (not validi?)))
+
+;; Näytetään potentiaalisesti virheeseen liittyvä teksti
+(defn nayta-virhe-teksti [polku lomake]
+  (when (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :virheteksti])
+    (get-in lomake [:harja.tiedot.urakka.urakka/validius polku :virheteksti])))
