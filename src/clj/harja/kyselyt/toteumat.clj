@@ -36,13 +36,13 @@
            {::rp/toteuma-id toteuma-id}))
 
 (defn hae-uusimmat-varustetoteuma-ulkoiset
-  [db {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma]}]
-  (let [hoitokauden-alkupvm (pvm/luo-pvm-dec-kk hoitovuosi 10 01)
-        hoitokauden-loppupvm (pvm/luo-pvm-dec-kk (+ 1 hoitovuosi) 9 30)
+  [db {:keys [urakka-id hoitokauden-alkuvuosi hoitovuoden-kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma]}]
+  (let [hoitokauden-alkupvm (pvm/luo-pvm-dec-kk hoitokauden-alkuvuosi 10 01)
+        hoitokauden-loppupvm (pvm/luo-pvm-dec-kk (+ 1 hoitokauden-alkuvuosi) 9 30)
         toteumat (hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
                                                                   :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
                                                                   :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
-                                                                  :kuukausi kuukausi
+                                                                  :kuukausi hoitovuoden-kuukausi
                                                                   :tie tie
                                                                   :aosa aosa
                                                                   :aeta aeta
