@@ -466,7 +466,7 @@
                                     :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
                                     :alkupvm #inst "2018-01-01T00:00:00.000-00:00"
                                     :loppupvm #inst "2018-02-01T00:00:00.000-00:00"})]
-      (is (= 2 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 2 päivälle.")
+      (is (= 3 (count koneellisesti-kirjatut)) "Kirjauksia löytyy 3 päivälle.")
       (let [nacl-kirjaukset (filter #(= "Talvisuolaliuos NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)
             hcoona-kirjaukset (filter #(= "Talvisuola, rakeinen NaCl" (get-in % [:materiaali :nimi])) koneellisesti-kirjatut)]
         (is (= 2 (:lukumaara (first nacl-kirjaukset))) "Talvisuolaliuos NaCl kirjaukset koostuvat 2 toteumasta")
@@ -584,13 +584,25 @@
                    :sopimus-id @oulun-alueurakan-2014-2019-paasopimuksen-id
                    :alkupvm #inst "2015-02-15T00:00:00.000-00:00"
                    :loppupvm #inst "2015-02-19T00:00:00.000-00:00"})
-        odotettu-jalkeen (conj odotettu-ennen lisatty-toteuma)
+        odotettu-yht-rivi {:lukumaara 2
+                           :maara 2000M
+                           :materiaali {:nimi "Yhteenveto"}
+                           :rivinumero 3
+                           :yhteenveto true
+                           :yhteenveto-vayla true}
+        odotettu-yht-rivi-jalkeen {:lukumaara 3
+                                   :maara 2666M
+                                   :materiaali {:nimi "Yhteenveto"}
+                                   :rivinumero 4
+                                   :yhteenveto true
+                                   :yhteenveto-vayla true}
+        odotettu-jalkeen (conj odotettu-ennen lisatty-toteuma odotettu-yht-rivi-jalkeen)
         sopimuksen-mat-kaytto-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
                                               (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";"))
         hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
                                           (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
 
-    (is (= (map #(dissoc % :pvm) ennen) (map #(dissoc % :pvm) odotettu-ennen)) "Suolatoteumat ennen lisäystä")
+    (is (= (map #(dissoc % :pvm) ennen) (map #(dissoc % :pvm) (conj odotettu-ennen odotettu-yht-rivi))) "Suolatoteumat ennen lisäystä")
     (is (= (map #(dissoc % :pvm) jalkeen) (map #(dissoc % :pvm) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
 
     (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
