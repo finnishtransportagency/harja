@@ -76,7 +76,6 @@
                                                      (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
-        ;toteumat (into [nil] (map :tallennusmuoto v/toteumat))
         toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
