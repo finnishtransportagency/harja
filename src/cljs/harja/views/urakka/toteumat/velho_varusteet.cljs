@@ -13,6 +13,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.tierekisteri.varusteet :refer [varusteominaisuus->skeema] :as tierekisteri-varusteet]
+            [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
             [harja.geo :as geo]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
@@ -75,7 +76,8 @@
                                                      (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
-        toteumat (into [nil] (map :tallennusmuoto v/toteumat))
+        ;toteumat (into [nil] (map :tallennusmuoto v/toteumat))
+        toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
@@ -122,7 +124,7 @@
         :vayla-tyyli? true
         :valitse-fn #(e! (v/->ValitseToteuma %))
         :format-fn #(if %
-                      (v/toteuma->toimenpide %)
+                      (varuste-ulkoiset/toteuma->toimenpide %)
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        toteumat]
@@ -190,7 +192,7 @@
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-       :fmt v/toteuma->toimenpide}
+       :fmt varuste-ulkoiset/toteuma->toimenpide}
       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
        :fmt v/tietolaji->varustetyyppi}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
@@ -210,7 +212,7 @@
    [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
      :fmt pvm/fmt-p-k-v-lyhyt}
     {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt v/toteuma->toimenpide}
+     :fmt varuste-ulkoiset/toteuma->toimenpide}
     {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}
