@@ -627,6 +627,15 @@
       "-"
       (hoitokauden-loppupvm-str (inc hk-alkuvuosi)))))
 
+(defn hoitokausi-str-alkuvuodesta-vuodet
+  "Ottaa sisään hoitokauden alkuvuodesta, palauttaa formatoidun hoitokauden muodossa 2021-2022"
+  [hk-alkuvuosi]
+  (when hk-alkuvuosi
+    (str
+      hk-alkuvuosi
+      "-"
+      (inc hk-alkuvuosi))))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]

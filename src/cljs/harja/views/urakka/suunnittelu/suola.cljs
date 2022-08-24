@@ -169,11 +169,14 @@
          {:nimi :pohjavesialueet
           :otsikko "Pohjavesialue"
           :tyyppi :komponentti
-          :komponentti (fn [data]
-                         (mapcat (fn [rivi]
-                                   [^{:key (hash rivi)}
-                                    [:div (str (:nimi rivi) " (" (:tunnus rivi) ")")]])
-                           (:pohjavesialueet (:data data))))
+          :komponentti (fn [{{:keys [pohjavesialueet]} :data}]
+                         (if (seq pohjavesialueet)
+                           (into [:div]
+                             (mapv (fn [alue]
+                                     ^{:key (hash alue)}
+                                     [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
+                               pohjavesialueet))
+                           [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
 
 
           ;:tarkkaile-ulkopuolisia-muutoksia? true
@@ -218,55 +221,56 @@
       {:ei-borderia? true
        :voi-muokata? true
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :otsikko (when muokkaustila?
-                  (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+       :otsikko [:div (when muokkaustila?
+                        (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+                 [:div.small-text.harmaa
+                  (str (urakka/hoitokauden-jarjestysnumero valittu-hoitovuosi (:loppupvm urakka)) ". hoitovuosi"
+                    " (" (pvm/hoitokausi-str-alkuvuodesta-vuodet valittu-hoitovuosi) ")")]]
        ;; TODO: Muokkaus
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
-                    [:div.row
-
-                     [:div.row
-                      [:div.col-xs-7 {:style {:padding-left "0"}}
-                       [napit/tallenna
-                        "Tallenna"
-                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
-                        {:disabled disabled? :paksu? true}]
-                       [napit/tallenna
-                        "Tallenna ja lisää seuraava"
-                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
-                        {:disabled disabled? :paksu? true}]]
-                      [:div.col-xs-5 {:style {:float "right"}}
-                       (when (:rajoitusalue_id lomake-tila)
-                         [napit/poista
-                          "Poista"
-                          #(let [poista-kaikilta-vuosilta?-atom (atom false)]
-                             (modal/nayta!
-                               {:otsikko "Rajoitusalueen poistaminen"
-                                :footer [rajoituksen-poiston-varmistus-modaali-footer e!
-                                         {:varmistus-fn
-                                          (fn []
-                                            (modal/piilota!)
-                                            (e! (suolarajoitukset-tiedot/map->PoistaSuolarajoitus
-                                                  {:rajoitusalue_id (:rajoitusalue_id lomake-tila)
-                                                   :hoitokauden-alkuvuosi (if @poista-kaikilta-vuosilta?-atom
-                                                                            ;; Jos poistetaan kaikilta vuosilta, niin asetetaan alkuvuodeksi
-                                                                            ;; urakan ensimmäinen hoitokausi
-                                                                            (pvm/vuosi (:alkupvm urakka))
-                                                                            (:hoitokauden-alkuvuosi lomake-tila))
-                                                   :kopioidaan-tuleville-vuosille?
-                                                   (or
-                                                     ;; Kun poistetaan kaikilta vuosilta, niin aloitetaan urakan ensimmäisestä hoitokaudesta
-                                                     ;; ja jatketaan myös tuleville vuosille
-                                                     @poista-kaikilta-vuosilta?-atom
-                                                     (:kopioidaan-tuleville-vuosille? lomake-tila))})))}]}
-                               [rajoituksen-poiston-varmistus-modaali e! {:lomake-tila lomake-tila
-                                                                          :poista-kaikilta-vuosilta?-atom poista-kaikilta-vuosilta?-atom
-                                                                          :urakka urakka}]))
-                          {:vayla-tyyli? true}])
-                       [napit/yleinen-toissijainen
-                        "Peruuta"
-                        #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
-                        {:paksu? true}]]]])}
+                    [:div.flex-row
+                     [:div.alkuun {:style {:padding-left "0"}}
+                      [napit/tallenna
+                       "Tallenna"
+                       #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
+                       {:disabled disabled? :paksu? true}]
+                      [napit/tallenna
+                       "Tallenna ja lisää seuraava"
+                       #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
+                       {:disabled disabled? :paksu? true}]]
+                     [:div.loppuun
+                      (when (:rajoitusalue_id lomake-tila)
+                        [napit/poista
+                         "Poista"
+                         #(let [poista-kaikilta-vuosilta?-atom (atom false)]
+                            (modal/nayta!
+                              {:otsikko "Rajoitusalueen poistaminen"
+                               :footer [rajoituksen-poiston-varmistus-modaali-footer e!
+                                        {:varmistus-fn
+                                         (fn []
+                                           (modal/piilota!)
+                                           (e! (suolarajoitukset-tiedot/map->PoistaSuolarajoitus
+                                                 {:rajoitusalue_id (:rajoitusalue_id lomake-tila)
+                                                  :hoitokauden-alkuvuosi (if @poista-kaikilta-vuosilta?-atom
+                                                                           ;; Jos poistetaan kaikilta vuosilta, niin asetetaan alkuvuodeksi
+                                                                           ;; urakan ensimmäinen hoitokausi
+                                                                           (pvm/vuosi (:alkupvm urakka))
+                                                                           (:hoitokauden-alkuvuosi lomake-tila))
+                                                  :kopioidaan-tuleville-vuosille?
+                                                  (or
+                                                    ;; Kun poistetaan kaikilta vuosilta, niin aloitetaan urakan ensimmäisestä hoitokaudesta
+                                                    ;; ja jatketaan myös tuleville vuosille
+                                                    @poista-kaikilta-vuosilta?-atom
+                                                    (:kopioidaan-tuleville-vuosille? lomake-tila))})))}]}
+                              [rajoituksen-poiston-varmistus-modaali e! {:lomake-tila lomake-tila
+                                                                         :poista-kaikilta-vuosilta?-atom poista-kaikilta-vuosilta?-atom
+                                                                         :urakka urakka}]))
+                         {:vayla-tyyli? true}])
+                      [napit/yleinen-toissijainen
+                       "Peruuta"
+                       #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
+                       {:paksu? true}]]])}
 
       (lomake-rajoitusalue-skeema rajoituslomake muokkaustila?)
       rajoituslomake]]))
@@ -392,8 +396,8 @@
                                              rajoitukset))))}
    [{:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.4}
     {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1}
-    {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.8}
-    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :tasaa :oikea :leveys 0.8}
+    {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.5}
+    {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :tasaa :oikea :leveys 0.75}
     {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
      :luokka "sarake-pohjavesialueet"
      :tyyppi :komponentti
@@ -403,8 +407,8 @@
                         (mapv (fn [alue]
                                 [:div (str (:nimi alue) " (" (:tunnus alue) ")")])
                           pohjavesialueet))
-                      "-"))
-     :leveys 1.4}
+                      [:div.grid-solu-varoitus "Tierekisteriosoite ei ole pohjavesialueella, tarkista osoite"]))
+     :leveys 2}
     {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea
      :fmt #(if % (fmt/desimaaliluku % 1) "–") :leveys 0.8}
     {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 0.8}]
