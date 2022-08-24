@@ -35,7 +35,7 @@
    [:sampourakkaid urakka-sampoid]
    [:urakanpaattymispvm (xml/formatoi-paivamaara urakka-loppupvm)]
    [:urakkavaylamuoto (vaylamuoto urakka-tyyppi)]
-   [:urakkatyyppi urakka-tyyppi]
+   [:urakkatyyppi (if (= urakka-tyyppi "teiden-hoito") "hoito" urakka-tyyppi)] ;; Lähetä urakkatyyppi TURIin hoitona, vaikka MHU. Sama käytäntö myös T-LOIK-integraatioissa.
    (when urakka-ely
      [:elyalue (str urakka-ely " ELY")])
    [:alueurakkanro alueurakkanro]
@@ -48,11 +48,9 @@
   (let [sisalto (tyojakso urakka vuosi vuosikolmannes tunnit)
         xml (xml/tee-xml-sanoma sisalto)]
     (if-let [virheet (xml/validoi-xml "xsd/turi/" "tyotunnit-rest.xsd" xml)]
-      (let [virheviesti (format "Työtuntien TURI-lähetyksen XML ei ole validia.\n
-                                 Validointivirheet: %s\n
-                                 Muodostettu sanoma:\n
-                                 %s" virheet xml)]
-        (log/error virheviesti)
+      (let [lokitettava-virhe (format "Työtuntien TURI-lähetyksen XML ei ole validia.\n
+                                 Validointivirheet: %s" virheet)]
+        (log/error lokitettava-virhe)
         (throw+ {:type :invalidi-tyotunti-xml
-                 :error virheviesti}))
+                 :error lokitettava-virhe}))
       xml)))

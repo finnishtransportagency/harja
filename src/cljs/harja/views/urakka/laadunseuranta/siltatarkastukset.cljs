@@ -446,6 +446,7 @@
              :piilota-toiminnot? true
              :voi-lisata?        false
              :voi-poistaa?       (constantly false)
+             :voi-kumota?        false
              :jarjesta           :kohdenro
              :valiotsikot        siltatarkastuksen-valiotsikot
              :muutos             (r/partial (fn [_]

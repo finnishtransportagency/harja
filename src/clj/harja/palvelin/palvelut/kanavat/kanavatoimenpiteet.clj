@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.kanavat.kanavatoimenpiteet
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [clojure.set :as set]
             [taoensso.timbre :as log]
             [specql.core :as specql]
@@ -219,16 +220,17 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
-           fim :fim
-           email :sonja-sahkoposti
-           :as this}]
-    (julkaise-palvelu
-      http
-      :hae-kanavatoimenpiteet
-      (fn [user hakuehdot]
-        (hae-kanavatoimenpiteet db user hakuehdot))
-      {:kysely-spec ::toimenpide/hae-kanavatoimenpiteet-kysely
-       :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
+           fim :fim :as this}]
+    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
+      (julkaise-palvelu
+        http
+        :hae-kanavatoimenpiteet
+        (fn [user hakuehdot]
+          (hae-kanavatoimenpiteet db user hakuehdot))
+        {:kysely-spec ::toimenpide/hae-kanavatoimenpiteet-kysely
+         :vastaus-spec ::toimenpide/hae-kanavatoimenpiteet-vastaus})
     (julkaise-palvelu
       http
       :siirra-kanavatoimenpiteet
@@ -260,7 +262,7 @@
          :materiaalilistaus (q-materiaali/hae-materiaalilistaus db {::materiaali/urakka-id (::toimenpide/urakka-id toimenpide)})})
       {:kysely-spec ::toimenpide/tallenna-kanavatoimenpide-kutsu
        :vastaus-spec ::toimenpide/tallenna-kanavatoimenpide-vastaus})
-    this)
+    this))
 
   (stop [this]
     (poista-palvelut

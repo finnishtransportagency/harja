@@ -1,0 +1,181 @@
+.materiaalikirjasto-modal {
+    .modal-content {
+        height: 100%;
+        max-height: 100%;
+    }
+    .massa-taulukko {
+        margin-bottom: @valistys-48;
+        margin-top: @valistys-48;
+    }
+    .livi-grid.panel.panel-default {
+        background-color: @white;
+        .panel-heading, .panel-body {
+            background-color: @white;
+        }
+    }
+    hr.modal-header-body-space {
+        margin-top: @valistys-16;
+        margin-bottom: 0;
+    }
+    .tooltip {
+        // ei anneta tooltipin (joka ei näy) ottaa hiirieventtejä
+        pointer-events: none;
+        text-align: left;
+        .tooltip-inner {
+            .tooltip-otsikko {
+                color: @harmaa-tumma;
+            }
+        }
+    }
+    .materiaalitoiminnot {
+        div:not(:last-child) > button.nappi-ikoni {
+            margin-right: 4px;
+        }
+        .napiton-nappi {
+            .harja-icon-action-copy,
+            .harja-icon-action-edit,
+            .harja-icon-action-delete {
+                font-size: @koko-20px;
+            }
+            &.disabled {
+                color: @gray-light;
+            }
+        }
+    }
+    .ei-tuotavia-info {
+        .nappi-ensisijainen {
+            margin-top: @valistys-48;
+        }
+    }
+    .tuo-materiaalit-modal {
+        &.matala {
+            height: 200px;
+        }
+        .modal-content {
+            height: unset;
+            max-height: 93%;
+        }
+        .label-ja-kentta {
+            div.kentta {
+                padding-right: 5px;
+            }
+            width: 100%;
+            label.kentan-otsikko {
+                color: @black-light;
+                font-weight: normal;
+            }
+        }
+        .tuo-materiaalit-sisalto {
+            margin-top: @valistys-48;
+            .raksiboksi > div {
+                margin: 0;
+                .vayla-checkbox + label {
+                    margin: 0;
+                }
+            }
+        }
+    }
+}
+// POT2:sta avaamme massa- ja murskelomakkeen myös sivulle overlayhin ilman materiaalikirjaston modaalia
+.massa-lomake, .murske-lomake {
+    .lomake {
+        button.nappi-ensisijainen {
+            margin-right: 24px;
+            margin-bottom: 24px;
+        }
+        border: none;
+        input {
+            height: 40px;
+        }
+        .ainevalinta {
+            background-color: @gray240;
+            border-bottom: solid 4px @white;
+            .checkbox {
+                margin: 0;
+            }
+            &.valittu, .lisaa-sideaine, .poista-sideaine {
+                background-color: @gray225;
+            }
+            .kentat-haitari {
+                margin-top: -12px;
+                margin-left: 47px;
+                margin-bottom: 5px;
+                .select-default > ul {
+                    position: absolute;
+                }
+            }
+        }
+        .mk-aine {
+            &.muokkaustila {
+                > label {
+                    margin-bottom: 24px;
+                    > span > span.kentan-label {
+                        .header-yhteiset(1rem, 1.25rem);
+                    }
+                }
+                > label[for=runkoaineet],
+                label[for=sideaineet] {
+                    span.kentan-label {
+                        &:after {
+                            content: " *";
+                            color: red;
+                            font-size: 1rem;
+                            position: relative;
+                            top: -0.15em;
+                        }
+                    }
+                }
+                .aineiden-muokkaustila {
+                    label.checkbox-label {
+                        .header-yhteiset(0.75rem, 1.25rem);
+                        text-transform: uppercase;
+                    }
+                    .vayla-checkbox:disabled + label {
+                        cursor: default;
+                        color: @black-default;
+                    }
+                }
+            }
+            &.lukutila {
+                background-color: @white-dark;
+                margin-bottom: 8px;
+                > label {
+                    margin-bottom: 12px;
+                    > span > .kentan-label {
+                        color: @black-default;
+                        text-transform: uppercase;
+                    }
+                }
+
+                .ainevalinta-kentat {
+                    .aineiden-lukutila.runkoaineet,
+                    .aineiden-lukutila.sideaineet {
+                        &:not(:last-child) {
+                            margin-bottom: 16px;
+                        }
+                    }
+                }
+                padding: 16px;
+                .aineen-pitoisuus-ja-nimi {
+                    .fontti-14();
+                    .pitoisuus {
+                        display: inline-block;
+                        margin-right: 8px;
+                        vertical-align: top;
+                        width: 50px;
+                    }
+                    .nimi-ja-yksityiskohdat {
+                        display: inline-block;
+                        .massan-yksityiskohdat {
+                            .fontti-12();
+                            color: @black-light;
+                            .yksityiskohta:not(:last-child):after {
+                                content: " \2022  ";
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,4 +1,3 @@
 #!/usr/bin/env bash
 
-docker exec harjadb bash -c 'echo "log_statement = all" >>  /etc/postgresql/9.5/main/postgresql.conf; kill -HUP `cat /run/postgresql/9.5-main.pid`; tail -f /var/log/postgresql/postgresql-9.5-main.log'
-
+docker exec harjadb bash -c 'echo "log_statement = all" >>  /var/lib/pgsql/12/data/postgresql.conf; su - postgres -c "/usr/pgsql-12/bin/pg_ctl reload"; tail -f /var/lib/pgsql/12/data/log/postgresql-$(date +%a).log'

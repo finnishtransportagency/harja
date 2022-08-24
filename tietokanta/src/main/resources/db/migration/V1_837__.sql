@@ -1,0 +1,1 @@
+ALTER TABLE johto_ja_hallintokorvaus_toimenkuva ADD COLUMN maksukuukaudet INTEGER[];

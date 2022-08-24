@@ -100,8 +100,7 @@
 
 (defn ilmoitustaulukon-kentat []
   [{:tyyppi :vetolaatikon-tila :leveys 1}
-   {:otsikko "Urakka" :nimi :urakan-nimi :leveys 5
-    :hae (comp fmt/lyhennetty-urakan-nimi ::t/urakan-nimi)}
+   {:otsikko "Urakka" :nimi ::t/urakan-nimi :leveys 5}
    {:otsikko "Tie" :nimi :tie
     :hae #(str (or (::tr/tie (::t/osoite %)) "(ei tien numeroa)") " " (::t/tien-nimi % "(ei tien nimeä)"))
     :leveys 4}

@@ -11,7 +11,7 @@
 (defn kommentit [{:keys [voi-kommentoida? kommentoi! uusi-kommentti placeholder
                          voi-liittaa? leveys-col liita-nappi-teksti
                          salli-poistaa-tallennettu-liite? poista-tallennettu-liite-fn
-                         salli-poistaa-lisatty-liite?]} kommentit]
+                         salli-poistaa-lisatty-liite? liitteen-latausta-ennen-fn liitteen-latausta-jalkeen-fn]} kommentit]
   [:div.kommentit
    (for [{:keys [aika tekijanimi kommentti tekija liite]} kommentit]
      ^{:key (pvm/millisekunteina aika)}
@@ -37,7 +37,9 @@
          "Tallenna kommentti"])
       (when voi-liittaa? [liitteet/lisaa-liite
                           (:id @nav/valittu-urakka)
-                          {:liite-ladattu #(swap! uusi-kommentti assoc :liite %)
+                          {:latausta-ennen-fn liitteen-latausta-ennen-fn
+                           :latausta-jalkeen-fn liitteen-latausta-jalkeen-fn
+                           :liite-ladattu #(swap! uusi-kommentti assoc :liite %)
                            :nappi-teksti (or liita-nappi-teksti "Lisää liite kommenttiin")
                            :salli-poistaa-lisatty-liite? salli-poistaa-lisatty-liite?
                            :poista-lisatty-liite-fn #(swap! uusi-kommentti dissoc :liite %)}])])])

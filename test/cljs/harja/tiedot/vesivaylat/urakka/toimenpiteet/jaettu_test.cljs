@@ -469,6 +469,7 @@
              :selite {:teksti "", :img "images/tuplarajat/pinnit/pinni-musta.svg"},
              :alue {:scale 1, :img "images/tuplarajat/pinnit/pinni-musta.svg",
                     :type :merkki,
+                    :color nil
                     :coordinates '(367529.053512741 7288034.99009309)}}]
            (:turvalaitteet-kartalla tulos)))))
 

@@ -10,11 +10,10 @@
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
             [harja.views.urakka.yllapitokohteet.paallystyksen-kohdeluettelo :as paallystyksen-kohdeluettelo]
-            [harja.views.urakka.yllapitokohteet.paikkauksen-kohdeluettelo :as paikkauksen-kohdeluettelo]
             [harja.views.urakka.aikataulu :as aikataulu]
-            [harja.views.urakka.valitavoitteet :as valitavoitteet]
+            [harja.views.urakka.lupaus-nakyma :as lupaus-nakyma]
             [harja.views.urakka.tiemerkinnan-kustannukset :as tiemerkinnan-kustannukset]
-            [harja.views.urakka.yllapitokohteet.paikkaukset-kohdeluettelo :as paikkaukset]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-kohdeluettelo :as paikkaukset]
             [harja.tiedot.urakka.suunnittelu.kokonaishintaiset-tyot :as kok-hint-tyot]
             [harja.tiedot.urakka.suunnittelu.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.tiedot.urakka :as u]
@@ -24,7 +23,6 @@
             [harja.views.urakka.laadunseuranta :as laadunseuranta]
             [harja.views.urakka.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
-            [harja.views.vesivaylat.urakka.turvalaitteet :as turvalaitteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
             [harja.views.kanavat.urakka.laskutus :as laskutus-kanavat]
@@ -58,19 +56,15 @@
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
-    :turvalaitteet (and (oikeudet/urakat-vesivayla-turvalaitteet id)
-                        (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                        (istunto/ominaisuus-kaytossa? :vesivayla))
-    :paikkaukset (and (oikeudet/urakat-paikkaukset id)
-                      (#{:hoito :paikkaus :paallystys} tyyppi))
+    :paikkaukset-yllapito (and (oikeudet/urakat-paikkaukset id)
+                               (#{:paallystys :tiemerkinta} tyyppi))
+    :paikkaukset-hoito (and (oikeudet/urakat-paikkaukset id)
+                            (#{:hoito :teiden-hoito} tyyppi))
     :aikataulu (and (oikeudet/urakat-aikataulu id) (or (= tyyppi :paallystys)
                                                        (= tyyppi :tiemerkinta)))
     :kohdeluettelo-paallystys (and (or (oikeudet/urakat-kohdeluettelo-paallystyskohteet id)
                                        (oikeudet/urakat-kohdeluettelo-paallystysilmoitukset id))
                                    (= tyyppi :paallystys))
-    :kohdeluettelo-paikkaus (and (or (oikeudet/urakat-kohdeluettelo-paikkauskohteet id)
-                                     (oikeudet/urakat-kohdeluettelo-paikkausilmoitukset id))
-                                 (= tyyppi :paikkaus))
     :laadunseuranta (or
                       (and (oikeudet/urakat-laadunseuranta id)
                            (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
@@ -99,17 +93,29 @@
 (defn urakka
   "Urakkanäkymä"
   []
-  (let [ur @nav/valittu-urakka
+  (let [ur (dissoc @nav/valittu-urakka :alue)
         _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
+        mhu-urakka? (= :teiden-hoito
+                       (:tyyppi ur))
+        valittu-valilehti (nav/valittu-valilehti :urakat)
+        _ (js/console.log "Urakkanäkymä :: valittu välilehti:" (pr-str valittu-valilehti))
+        _ (js/console.log "Urakkanäkymä :: valittu sivu" (pr-str (nav/valittu-valilehti valittu-valilehti)))
         hae-urakan-tyot (fn [ur]
-                          (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
-                            (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
-                          (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
-                                    (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
-                            (go (reset! u/urakan-yks-hint-tyot
-                                        (s/prosessoi-tyorivit ur
-                                                              (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur))))))))]
+                          ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia tai kustannusten seurantaa. Joten
+                          ;; skipataan töiden haku
+                          ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
+                          (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
+                                        (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
+                                        (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
+                                        )
+                            (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
+                              (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
+                            (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
+                                      (oikeudet/urakat-toteumat-yksikkohintaisettyot (:id ur)))
+                              (go (reset! u/urakan-yks-hint-tyot
+                                          (s/prosessoi-tyorivit ur
+                                                                (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
 
     ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
     @u/valittu-toimenpideinstanssi
@@ -129,6 +135,12 @@
        (when (valilehti-mahdollinen? :suunnittelu ur)
          ^{:key "suunnittelu"}
          [suunnittelu/suunnittelu ur])
+
+       (if mhu-urakka? "Kulut" "Laskutus")
+       :laskutus
+       (when (valilehti-mahdollinen? :laskutus ur)
+         ^{:key "laskutus"}
+         [laskutus/laskutus])
 
        "Toteumat"
        :toteumat
@@ -154,13 +166,6 @@
          ^{:key "vv-materiaalit"}
          [vv-materiaalit/materiaalit ur])
 
-       ;; TODO Enabloi vasta kun tehty kokonaan, ei keskeneräistä kamaa tuotantoon
-       ;;"Turvalaitteet"
-       ;;:turvalaitteet
-       ;;(when (valilehti-mahdollinen? :turvalaitteet ur)
-       ;;  ^{:key "turvalaitteet"}
-       ;;  [turvalaitteet/turvalaitteet ur])
-
        "Toteutus"
        :toteutus
        (when (valilehti-mahdollinen? :toteutus ur)
@@ -173,17 +178,17 @@
          ^{:key "aikataulu"}
          [aikataulu/aikataulu ur {:nakyma (:tyyppi ur)}])
 
-       "Kohdeluettelo"
+       "Päällystykset"
        :kohdeluettelo-paallystys
        (when (valilehti-mahdollinen? :kohdeluettelo-paallystys ur)
-         ^{:key "kohdeluettelo"}
+         ^{:key "paallystykset"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-       "Kohdeluettelo"
-       :kohdeluettelo-paikkaus
-       (when (valilehti-mahdollinen? :kohdeluettelo-paikkaus ur)
-         ^{:key "kohdeluettelo"}
-         [paikkauksen-kohdeluettelo/kohdeluettelo ur])
+       "Paikkaukset"
+       :paikkaukset-yllapito
+       (when (valilehti-mahdollinen? :paikkaukset-yllapito ur)
+         ^{:key "paikkaukset"}
+         [paikkaukset/paikkaukset ur])
 
        "Laadunseuranta"
        :laadunseuranta
@@ -191,29 +196,19 @@
          ^{:key "laadunseuranta"}
          [laadunseuranta/laadunseuranta ur])
 
-       "Välitavoitteet"
+       (if (= (:tyyppi ur) :teiden-hoito)
+         "Lupaukset ja tavoitteet"
+         "Välitavoitteet")
        :valitavoitteet
        (when (valilehti-mahdollinen? :valitavoitteet ur)
          ^{:key "valitavoitteet"}
-         [valitavoitteet/valitavoitteet ur])
+         [lupaus-nakyma/lupaukset-paatason-valilehti ur])
 
        "Turvallisuus"
        :turvallisuuspoikkeamat
        (when (valilehti-mahdollinen? :turvallisuuspoikkeamat ur)
          ^{:key "turvallisuuspoikkeamat"}
          [turvallisuuspoikkeamat/turvallisuuspoikkeamat ur])
-
-       "Paikkaukset"
-       :paikkaukset
-       (when (valilehti-mahdollinen? :paikkaukset ur)
-         ^{:key "paikkaukset"}
-         [paikkaukset/paikkaukset ur])
-
-       "Laskutus"
-       :laskutus
-       (when (valilehti-mahdollinen? :laskutus ur)
-         ^{:key "laskutus"}
-         [laskutus/laskutus])
 
        "Laskutus"
        :laskutus-vesivaylat
@@ -234,6 +229,12 @@
          [tiemerkinnan-kustannukset/kustannukset
           ur
           tiemerkinnan-kustannukset-tiedot/raportin-parametrit
-          tiemerkinnan-kustannukset-tiedot/raportin-tiedot])]
+          tiemerkinnan-kustannukset-tiedot/raportin-tiedot])
+
+       "Paikkaukset"
+       :paikkaukset-hoito
+       (when (valilehti-mahdollinen? :paikkaukset-hoito ur)
+         ^{:key "paikkaukset"}
+         [paikkaukset/paikkaukset ur])]
 
       [ajax-loader "Ladataan urakan tietoja..."])))

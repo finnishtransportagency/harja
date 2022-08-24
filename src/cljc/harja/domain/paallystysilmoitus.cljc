@@ -149,7 +149,8 @@
    {:nimi "26" :koodi 26}
    {:nimi "27" :koodi 27}
    {:nimi "28" :koodi 28}
-   {:nimi "29" :koodi 29}])
+   {:nimi "29" :koodi 29}
+   {:nimi "31" :koodi 31}])
 
 (def +sideainetyypit+
   "Sideainetyypit"
@@ -284,7 +285,7 @@
       vector))
 
 ;; Kantaan tallennettavan päällystysilmoituksen ilmoitustiedot
-(def +paallystysilmoitus+
+(def +paallystysilmoitus-ilmoitustiedot+
   {:osoitteet paallystysilmoitus-osoitteet
    :alustatoimet paallystysilmoitus-alustatoimet})
 
@@ -310,7 +311,8 @@
     "aloitettu"))
 
 (defn arvo-koodilla [koodisto koodi]
-  (:nimi (first (filter #(= (:koodi %) koodi) koodisto))))
+  (:nimi (first (filter #(= (str (:koodi %))
+                            (str koodi)) koodisto))))
 
 (define-tables
   ["paallystystila" ::paallystysilmoitus-tilat (specql.transform/transform (specql.transform/to-keyword))]
@@ -344,3 +346,6 @@
 
 (s/def ::tallenna-paallystysilmoitus-kysely
   (s/keys :req-un [::urakka-id ::sopimus-id ::vuosi ::paallystysilmoitus]))
+
+;; POT2 lomaketta aletaan käyttää kesällä 2021 ja siitä eteenpäin.
+(def pot2-vuodesta-eteenpain 2021)

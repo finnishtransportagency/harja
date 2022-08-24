@@ -25,11 +25,14 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
+            [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
 
@@ -110,16 +113,18 @@
 (defn hae-urakan-sanktiot
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
-
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (log/debug "Hae sanktiot (" urakka-id alku loppu vain-yllapitokohteettomat?")")
   (let [sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
+                             (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
+                                            :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
                              (map konv/alaviiva->rakenne)
                              (map #(konv/decimal->double % :summa))
                              (map #(assoc % :laji (keyword (:laji %)))))
-                       (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)))]
+                       (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                         :alku (konv/sql-timestamp alku)
+                                                         :loppu (konv/sql-timestamp loppu)}))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))
@@ -146,9 +151,14 @@
   [db user {:keys [id perintapvm laji tyyppi summa indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
-  (log/debug "LAJI ON: " (pr-str laji))
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [sanktiotyyppi (if (:id tyyppi)
+  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
+        indeksi (when-not (and
+                            (= (:tyyppi urakan-tiedot) "teiden-hoito")
+                            (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
+                  indeksi)
+        sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
@@ -309,7 +319,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -321,7 +331,10 @@
       :tallenna-laatupoikkeama
       (fn [user laatupoikkeama]
         (tallenna-laatupoikkeama
-          {:db db :user user :fim fim :email sonja-sahkoposti
+          {:db db :user user :fim fim
+           :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                    (:sonja-sahkoposti this)
+                    (:api-sahkoposti this))
            :sms labyrintti :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio

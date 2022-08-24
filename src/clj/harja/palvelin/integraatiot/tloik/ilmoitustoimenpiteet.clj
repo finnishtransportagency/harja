@@ -29,7 +29,7 @@
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)
       (throw e))))
 
-(defn laheta-lahettamattomat-ilmoitustoimenpiteet [jms-lahettaja db]
+(defn laheta-lahettamattomat-ilmoitustoimenpiteet [jms-lahettaja db aikavali-min]
   (lukko/yrita-ajaa-lukon-kanssa
     db
     "tloik-uudelleenlahetys"
@@ -40,7 +40,9 @@
           (try
             (laheta-ilmoitustoimenpide jms-lahettaja db id)
             (catch Exception _))))
-      (log/debug "Ilmoitustoimenpiteiden lähetys T-LOIK:n valmis."))))
+      (log/debug "Ilmoitustoimenpiteiden lähetys T-LOIK:n valmis."))
+    ;; Minuuttia lyhempi lukko kuin ajastuksen aikaväli
+    (* 60 (dec aikavali-min))))
 
 (defn vastaanota-kuittaus [db viesti-id onnistunut]
   (if onnistunut

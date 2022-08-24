@@ -1,5 +1,6 @@
 (ns harja.palvelin.tyokalut.arkisto
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+            [taoensso.timbre :as log])
   (:import (java.util.zip ZipInputStream)
            (java.util.zip GZIPInputStream)
            (org.apache.tools.tar TarInputStream)
@@ -17,7 +18,7 @@
   (let [kohdepolku (.getParent (io/file kohdetiedoston-polku))]
     (with-open [zip-virta (TarInputStream. (GZIPInputStream. (io/input-stream kohdetiedoston-polku)))]
       (doseq [tiedosto (repeatedly #(.getNextEntry zip-virta)) :while tiedosto]
-        (println (.replace (str (.getName tiedosto)) "./._" ""))
+        (log/debug (.replace (str (.getName tiedosto)) "./._" ""))
         (let [tiedostopolku (str kohdepolku "/" (.replace (str (.getName tiedosto)) "./._" ""))]
           (io/copy zip-virta (io/file tiedostopolku)))))))
 

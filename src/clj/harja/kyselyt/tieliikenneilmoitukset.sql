@@ -8,6 +8,7 @@ SELECT
   ulompi_i.ilmoitusid,
   ulompi_i.ilmoitettu,
   ulompi_i.valitetty,
+  ulompi_i."valitetty-urakkaan",
   ulompi_i.yhteydenottopyynto,
   ulompi_i.otsikko,
   ulompi_i.lisatieto,
@@ -39,11 +40,11 @@ WHERE ulompi_i.id IN
        -- Tarkasta että ilmoituksen geometria sopii hakuehtoihin
       (sisempi_i.urakka IS NULL OR sisempi_i.urakka IN (:urakat)) AND
 
-      -- Tarkasta että ilmoituksen ilmoitusajankohta sopii hakuehtoihin
+      -- Tarkasta että ilmoituksen valitysajankohta sopii hakuehtoihin. Tarkastellaan ilmoituksen urakkaan välittymistä.
       ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-       (:loppu_annettu IS FALSE AND sisempi_i.ilmoitettu  >= :alku) OR
-       (:alku_annettu IS FALSE AND sisempi_i.ilmoitettu  <= :loppu) OR
-       (sisempi_i.ilmoitettu  BETWEEN :alku AND :loppu)) AND
+       (:loppu_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  >= :alku) OR
+       (:alku_annettu IS FALSE AND sisempi_i."valitetty-urakkaan"  <= :loppu) OR
+       (sisempi_i."valitetty-urakkaan"  BETWEEN :alku AND :loppu)) AND
 
       -- Tarkasta että ilmoituksen toimenpiteiden aloitus sopii hakuehtoihin
       ((:toimenpiteet_alku_annettu IS FALSE AND :toimenpiteet_loppu_annettu IS FALSE) OR
@@ -78,15 +79,18 @@ WHERE ulompi_i.id IN
 
       -- Rajaa ilmoittajan puhelinnumerolla
       (:ilmoittaja-puhelin::TEXT IS NULL OR
-       sisempi_i.ilmoittaja_matkapuhelin LIKE :ilmoittaja-puhelin)
-       ORDER BY sisempi_i.ilmoitettu DESC
-      LIMIT :max-maara::INTEGER)
-ORDER BY ulompi_i.ilmoitettu DESC, it.kuitattu DESC;
+       sisempi_i.ilmoittaja_matkapuhelin
+           LIKE :ilmoittaja-puhelin)
+       ORDER BY sisempi_i."valitetty-urakkaan" DESC
+       LIMIT :max-maara::INTEGER)
+ORDER BY ulompi_i."valitetty-urakkaan" DESC, it.kuitattu DESC;
 
 -- name: hae-ilmoitukset-raportille
 SELECT
   i.urakka,
   i.ilmoitettu,
+  i.valitetty,
+  i."valitetty-urakkaan",
   i.ilmoitustyyppi,
   hy.id                                                              AS hallintayksikko_id,
   hy.nimi                                                            AS hallintayksikko_nimi,
@@ -102,21 +106,32 @@ WHERE i.id IN
          (x.urakka IS NULL
           OR :urakat_annettu IS FALSE
           OR (:urakat_annettu IS TRUE AND x.urakka IN (:urakat))) AND
-         (:urakkatyyppi_annettu IS FALSE OR u2.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+         (:urakkatyyppi_annettu IS FALSE OR
+         CASE WHEN :urakkatyyppi = 'hoito' THEN -- huomioidaan myös teiden-hoito -urakkatyyppi
+          u2.tyyppi IN  ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+          ELSE u2.tyyppi = :urakkatyyppi::urakkatyyppi END) AND
          (x.urakka IS NULL OR u2.urakkanro IS NOT NULL) AND -- Ei-testiurakka
          -- Tarkasta että ilmoituksen saapumisajankohta sopii hakuehtoihin
          ((:alku_annettu IS FALSE AND :loppu_annettu IS FALSE) OR
-          (:loppu_annettu IS FALSE AND x.ilmoitettu >= :alku) OR
-          (:alku_annettu IS FALSE AND x.ilmoitettu <= :loppu) OR
-          (x.ilmoitettu BETWEEN :alku AND :loppu)))
+          (:loppu_annettu IS FALSE AND x."valitetty-urakkaan" >= :alku) OR
+          (:alku_annettu IS FALSE AND x."valitetty-urakkaan" <= :loppu) OR
+          (x."valitetty-urakkaan" BETWEEN :alku AND :loppu)))
 ORDER by u.nimi;
 
 -- name: hae-ilmoitukset-ilmoitusidlla
 SELECT
   ilmoitusid,
   tunniste,
-  ilmoitettu,
   tila,
+  ilmoitettu,
+  "valitetty-urakkaan",
+  valitetty as "valitetty-harjaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+  ELSE
+      vastaanotettu
+  END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -137,7 +152,8 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE ilmoitusid IN (:ilmoitusidt);
 
@@ -151,6 +167,7 @@ SELECT
   i.ilmoitusid,
   i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -222,6 +239,7 @@ SELECT
   i.urakkatyyppi,
   i.ilmoitettu,
   i.valitetty,
+  i."valitetty-urakkaan",
   i.yhteydenottopyynto,
   i.otsikko,
   i.paikankuvaus,
@@ -274,7 +292,16 @@ WHERE i.id IN (:idt);
 SELECT
   ilmoitusid,
   tunniste,
+  tila,
   ilmoitettu,
+  valitetty as "valitetty-harjaan",
+  "valitetty-urakkaan",
+  "vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+  CASE
+      WHEN ("vastaanotettu-alunperin" = vastaanotettu) THEN NULL
+      ELSE
+          vastaanotettu
+      END as "paivitetty-harjaan",
   yhteydenottopyynto,
   paikankuvaus,
   lisatieto,
@@ -295,15 +322,70 @@ SELECT
   lahettaja_etunimi,
   lahettaja_sukunimi,
   lahettaja_puhelinnumero,
-  lahettaja_sahkoposti
+  lahettaja_sahkoposti,
+  "aiheutti-toimenpiteita"
 FROM ilmoitus
 WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
 
+-- name: hae-ilmoitukset-ytunnuksella
+SELECT
+    i.ilmoitusid,
+    i.tunniste,
+    i.tila,
+    i.ilmoitettu,
+    i.valitetty as "valitetty-harjaan",
+    i."valitetty-urakkaan",
+    i."vastaanotettu-alunperin" as "vastaanotettu-harjaan",
+    CASE
+        WHEN (i."vastaanotettu-alunperin" = i.vastaanotettu) THEN NULL
+        ELSE
+            i.vastaanotettu
+        END as "paivitetty-harjaan",
+    u.urakkanro AS alueurakkanumero,
+    i.ilmoitustyyppi,
+    i.yhteydenottopyynto,
+    i.paikankuvaus,
+    i.lisatieto,
+    i.otsikko,
+    i.selitteet,
+    i.sijainti,
+    i.tr_numero as tienumero,
+    i.ilmoittaja_etunimi,
+    i.ilmoittaja_sukunimi,
+    i.ilmoittaja_tyopuhelin,
+    i.ilmoittaja_matkapuhelin,
+    i.ilmoittaja_sahkoposti,
+    i.lahettaja_etunimi,
+    i.lahettaja_sukunimi,
+    i.lahettaja_puhelinnumero,
+    i.lahettaja_sahkoposti,
+    i."aiheutti-toimenpiteita",
+    json_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
+        it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
+        coalesce(it.kuittaaja_organisaatio_ytunnus, '')))) AS kuittaukset
+FROM ilmoitus i
+    JOIN urakka u ON u.id = i.urakka
+                         -- Haetaan vain käynnissäolevista urakoista
+                         AND ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR (u.loppupvm IS NULL AND u.alkupvm <= NOW()))
+    JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
+    JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+WHERE (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+      OR
+       it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
+ORDER BY i."valitetty-urakkaan" ASC
+LIMIT 10000;
 
 -- name: hae-id-ilmoitus-idlla
--- Hakee id:n ilmoituksen id:llä
+-- Hakee id:n ilmoitus-id:llä
 SELECT id
+FROM ilmoitus
+WHERE ilmoitusid = :ilmoitusid;
+
+-- name: hae-id-ja-urakka-ilmoitus-idlla
+-- Hakee ilmoituksen id:n ja urakan ilmoitus-id:llä
+SELECT id, urakka, "valitetty-urakkaan", valitetty
 FROM ilmoitus
 WHERE ilmoitusid = :ilmoitusid;
 
@@ -324,7 +406,8 @@ INSERT INTO ilmoitus
  tunniste,
  viestiid,
  vastaanotettu,
- "vastaanotettu-alunperin")
+ "vastaanotettu-alunperin",
+ "valitetty-urakkaan")
 VALUES
   (:urakka,
     :ilmoitusid,
@@ -340,26 +423,34 @@ VALUES
    :tunniste,
    :viestiid,
    :vastaanotettu :: TIMESTAMPTZ,
-   :vastaanotettu-alunperin :: TIMESTAMPTZ);
+   :vastaanotettu-alunperin :: TIMESTAMPTZ,
+   :valitetty-urakkaan :: TIMESTAMP);
 
 -- name: paivita-ilmoitus!
 -- Päivittää ilmoituksen
 UPDATE ilmoitus
-SET
-  urakka             = :urakka,
-  ilmoitusid         = :ilmoitusid,
-  ilmoitettu         = :ilmoitettu,
-  valitetty          = :valitetty,
-  yhteydenottopyynto = :yhteydenottopyynto,
-  otsikko            = :otsikko,
-  paikankuvaus       = :paikankuvaus,
-  lisatieto          = :lisatieto,
-  ilmoitustyyppi     = :ilmoitustyyppi :: ILMOITUSTYYPPI,
-  selitteet          = :selitteet :: TEXT [],
-  tunniste           = :tunniste,
-  muokattu           = NOW(),
-  viestiid           = :viestiid
+SET urakka               = :urakka,
+    ilmoitusid           = :ilmoitusid,
+    ilmoitettu           = :ilmoitettu,
+    valitetty            = :valitetty,
+    "valitetty-urakkaan" = :valitetty-urakkaan,
+    vastaanotettu = :vastaanotettu,
+    yhteydenottopyynto = :yhteydenottopyynto,
+    otsikko = :otsikko,
+    paikankuvaus = :paikankuvaus,
+    lisatieto = :lisatieto,
+    ilmoitustyyppi = :ilmoitustyyppi :: ILMOITUSTYYPPI,
+    selitteet = :selitteet :: TEXT [],
+    tunniste = :tunniste,
+    muokattu = NOW(),
+    viestiid = :viestiid
 WHERE id = :id;
+
+-- name: paivita-ilmoituksen-urakka!
+-- Päivittää ilmoitusid:n perusteella urakan. Käytetään, kun on lähetetty ilmoitus ensin väärälle urakalle
+UPDATE ilmoitus
+SET urakka = :urakkaid
+WHERE ilmoitusid = :ilmoitusid;
 
 -- name: paivita-ilmoittaja-ilmoitukselle!
 UPDATE ilmoitus
@@ -508,21 +599,29 @@ WHERE ilmoitusid = :ilmoitusid;
 -- name: hae-ilmoitukset-asiakaspalauteluokittain
 -- Hakee summat kaikille asiakaspalauteluokille jaoteltuina ilmoitustyypeittäin
 SELECT
-  apl.nimi,
-  i.ilmoitustyyppi,
-  (coalesce(SUM(1), 0)) AS numero
+    apl.nimi,
+    i.ilmoitustyyppi,
+    (coalesce(SUM(1), 0)) AS numero
 FROM asiakaspalauteluokka apl
-  JOIN ilmoitus i
-    ON i.selitteet && apl.selitteet AND
-       (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
-       (i.urakka IS NULL OR (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
-       (:urakkatyyppi::urakkatyyppi IS NULL OR (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi) AND
-       (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
-                                                               FROM urakka
-                                                               WHERE hallintayksikko = :hallintayksikko_id)) AND
-       (:alkupvm :: DATE IS NULL OR i.ilmoitettu >= :alkupvm) AND
-       (:loppupvm :: DATE IS NULL OR i.ilmoitettu <= :loppupvm)
-GROUP BY CUBE(apl.nimi, i.ilmoitustyyppi);
+         JOIN ilmoitus i
+              ON i.selitteet && apl.selitteet AND
+                 (:urakka_id :: INTEGER IS NULL OR i.urakka = :urakka_id) AND
+                 (i.urakka IS NULL OR
+                  (SELECT urakkanro FROM urakka WHERE id = i.urakka) IS NOT NULL) AND -- Ei-testiurakka
+                 (:urakkatyyppi::urakkatyyppi IS NULL OR
+                  CASE
+                      WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+                      ELSE
+                                  (SELECT tyyppi FROM urakka WHERE id = i.urakka) = :urakkatyyppi::urakkatyyppi
+                      END
+                     ) AND
+                 (:hallintayksikko_id :: INTEGER IS NULL OR i.urakka IN (SELECT id
+                                                                         FROM urakka
+                                                                         WHERE hallintayksikko = :hallintayksikko_id)) AND
+                 (:alkupvm :: DATE IS NULL OR i."valitetty-urakkaan" >= :alkupvm) AND
+                 (:loppupvm :: DATE IS NULL OR i."valitetty-urakkaan" <= :loppupvm)
+GROUP BY CUBE (apl.nimi, i.ilmoitustyyppi);
 
 -- name: hae-ilmoitukset-aiheutuneiden-toimenpiteiden-mukaan
 SELECT
@@ -537,12 +636,19 @@ FROM
 WHERE
   (:urakka_id :: INTEGER IS NULL OR urakka = :urakka_id) AND
   (ilmoitus.urakka IS NULL OR u.urakkanro IS NOT NULL) AND
-  (:urakkatyyppi::urakkatyyppi IS NULL OR u.tyyppi = :urakkatyyppi::urakkatyyppi) AND
+  (:urakkatyyppi::urakkatyyppi IS NULL OR
+   CASE
+       WHEN :urakkatyyppi = 'hoito' THEN
+           u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
+       ELSE
+           u.tyyppi = :urakkatyyppi::urakkatyyppi
+       END)
+  AND
   (:hallintayksikko_id :: INTEGER IS NULL OR urakka IN (SELECT id
                                                           FROM urakka
                                                           WHERE hallintayksikko = :hallintayksikko_id)) AND
-  (:alkupvm :: DATE IS NULL OR ilmoitettu >= :alkupvm) AND
-  (:loppupvm :: DATE IS NULL OR ilmoitettu <= :loppupvm);
+  (:alkupvm :: DATE IS NULL OR "valitetty-urakkaan" >= :alkupvm) AND
+  (:loppupvm :: DATE IS NULL OR "valitetty-urakkaan" <= :loppupvm);
 
 
 -- name: hae-lahettamattomat-ilmoitustoimenpiteet
@@ -567,14 +673,15 @@ SELECT DISTINCT(urakka) FROM ilmoitus WHERE id IN (:ilmoitusidt);
 
 -- name: ilmoitus-aiheutti-toimenpiteita!
 UPDATE ilmoitus
-SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita
+SET "aiheutti-toimenpiteita" = :aiheutti-toimenpiteita,
+    muokattu = current_timestamp
 WHERE id = :id;
 
--- name: ilmoitus-loytyy-viesti-idlla
-SELECT exists(SELECT
-              FROM ilmoitus
-              WHERE ilmoitusid = :ilmoitusid AND
-                    viestiid = :viestiid);
+-- name: ilmoitus-loytyy-idlla
+SELECT exists(SELECT FROM ilmoitus WHERE ilmoitusid = :ilmoitusid);
+
+-- name: ilmoitus-on-lahetetty-urakalle
+SELECT exists(SELECT FROM ilmoitus i WHERE i.ilmoitusid = :ilmoitusid AND i.urakka = :urakkaid);
 
 -- name: ilmoituksen-alkuperainen-kesto
 SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
@@ -584,11 +691,13 @@ SELECT extract(EPOCH FROM (SELECT vastaanotettu - "vastaanotettu-alunperin"
 -- name: tallenna-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = now(),
-  "aiheutti-toimenpiteita"   = TRUE
+  "aiheutti-toimenpiteita"   = TRUE,
+    muokattu = current_timestamp
 WHERE id in (:idt);
 
 -- name: peruuta-ilmoitusten-toimenpiteiden-aloitukset!
 UPDATE ilmoitus
 SET "toimenpiteet-aloitettu" = null,
-  "aiheutti-toimenpiteita"   = false
+  "aiheutti-toimenpiteita"   = false,
+    muokattu = current_timestamp
 WHERE id in (:idt);

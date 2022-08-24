@@ -244,6 +244,13 @@
          (run! (do @dom/ikkunan-koko
                    (openlayers/invalidate-size!))))
 
+(defn piilota-tai-nayta-kartta-nappula 
+  [optiot]
+  (let [otsikko (if (= :S @nav/kartan-koko) "Näytä kartta" "Piilota kartta")
+        koko (if (= :S @nav/kartan-koko) :L :S)
+        {:keys [luokka] :as optiot} optiot]  
+    [yleiset/linkki otsikko #(nav/vaihda-kartan-koko! koko) (merge optiot {:luokka (conj luokka "kartta-nappeli")} {:ikoni (ikonit/kartta-24 12 12)})]))
+
 (defn kartan-koko-kontrollit
   []
   (let [koko @nav/kartan-koko
@@ -254,7 +261,6 @@
                              :L ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                              :XL ["Pienennä karttaa" (ikonit/livicon-arrow-up)]
                              ["" nil])]
-    ;; TODO: tähän alkaa kertyä näkymäkohtaista logiikkaa, mietittävä vaihtoehtoja.
     [:div.kartan-kontrollit.kartan-koko-kontrollit {:class (when-not @nav/kartan-kontrollit-nakyvissa? "hide")}
 
 

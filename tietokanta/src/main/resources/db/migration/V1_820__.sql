@@ -1,0 +1,1 @@
+alter table lasku_kohdistus add lisatyon_lisatieto text;

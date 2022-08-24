@@ -20,6 +20,7 @@
             (dissoc a :vkm-id)))
         alkuperaiset))
 
+;; FIXME: Käyttää vanhoja VKM-parametreja. Päivitettävä, jos tätä käytetään vielä.
 (defn muunna-yllapitokohteen-tieosoitteet [vkm db kohteen-tienumero karttapvm {:keys [sijainti alikohteet] :as kohde}]
   (if karttapvm
     (let [paakohteen-vkm-id "paakohde"
@@ -36,9 +37,7 @@
                                    (assoc sijainti :vkm-id paakohteen-vkm-id :tie kohteen-tienumero))
           muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
                                 vkm
-                                muunnettavat-sijainnit
-                                (q-geometriapaivitykset/harjan-verkon-pvm db)
-                                karttapvm)
+                                muunnettavat-sijainnit)
           muunnettu-kohteen-sijainti (if (sisaltaa-sijainnin? muunnetut-sijainnit paakohteen-vkm-id)
                                        (merge sijainti (hae-sijainti muunnetut-sijainnit paakohteen-vkm-id))
                                        sijainti)
@@ -47,20 +46,3 @@
           (assoc :sijainti muunnettu-kohteen-sijainti :alikohteet muunnetut-alikohteet)
           (dissoc :vkm-id)))
     kohde))
-
-(defn muunna-alustatoimenpiteiden-tieosoitteet [vkm db kohteen-tienumero karttapvm alustatoimenpiteet]
-  (if karttapvm
-    (let [muunnettevat-alustatoimenpiteet (map-indexed
-                                            (fn [i {sijainti :sijainti :as alikohde}]
-                                              (assoc alikohde
-                                                :vkm-id (str "alustatoimenpide-" i)
-                                                :sijainti (assoc sijainti :tie (:tie sijainti))))
-                                            alustatoimenpiteet)
-          muunnetut-sijainnit (vkm/muunna-tieosoitteet-verkolta-toiselle
-                                vkm
-                                muunnettevat-alustatoimenpiteet
-                                (q-geometriapaivitykset/harjan-verkon-pvm db)
-                                karttapvm)
-          muunnetut-alustatoimenpiteet (yhdista-osoitteet muunnettevat-alustatoimenpiteet muunnetut-sijainnit)]
-      muunnetut-alustatoimenpiteet)
-    alustatoimenpiteet))

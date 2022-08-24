@@ -14,6 +14,7 @@
 ; FIXME Tämä nimiavaruus hallinoi useaa Toteumat-välilehden alivälilehtiä. Pitäisi refactoroida niin, että
 ; jokaisella näkymällä olisi oma tiedot-namespace kaverina.
 
+(def maarien-toteumat-nakymassa? (atom false))
 (defonce erilliskustannukset-nakymassa? (atom false))
 
 (defn hae-urakan-toteuma [urakka-id toteuma-id]

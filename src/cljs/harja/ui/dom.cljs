@@ -3,7 +3,9 @@
   (:require [reagent.core :as r]
             [harja.asiakas.tapahtumat :as t]
             [harja.loki :refer [log]]
-            [cljs.core.async :refer [<! timeout] :as async])
+            [cljs.core.async :refer [<! timeout] :as async]
+            [clojure.string :as str]
+            [clojure.set :as set])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
 
@@ -13,14 +15,41 @@
   ([komponentti tapahtuma {elementti? :elementti?}]
    (let [dom (r/dom-node komponentti)
          elt (if elementti? tapahtuma (.-target tapahtuma))]
-     (loop [ylempi (.-parentNode elt)]
-       (if (or (nil? ylempi)
-               (= ylempi js/document.body))
-         false
-         (if (= dom ylempi)
-           true
-           (recur (.-parentNode ylempi))))))))
+     (when (and (not (nil? elt)) (not (nil? (.-parentNode elt))))
+       (loop [ylempi (.-parentNode elt)]
+         (if (or (nil? ylempi)
+                 (= ylempi js/document.body))
+           false
+           (if (= dom ylempi)
+             true
+             (recur (.-parentNode ylempi)))))))))
 
+(defn polku
+  "Palauttaa laiskan sekvenssin node -> parentNode -> parentNode ...
+  Tällä voidaan kulkea DOM-puussa ylöspäin, ja pysähtyä heti kun joku tietty ehto täyttyy."
+  [node]
+  (let [ylempi (fn [node]
+                 (aget node "parentNode"))
+        seuraavat (fn [node]
+                    [(ylempi node)])]
+    (tree-seq ylempi seuraavat node)))
+
+(defn node->luokat [node]
+  (some-> node (aget "className") (str/split #" ") set))
+
+(defn luokat-polulla
+  "Palauttaa laiskan sekvenssin polulla olevista luokista (node -> parentNode -> parentNode ...)."
+  [node]
+  (->> (polku node)
+       (map node->luokat)))
+
+(defn luokka-polulla?
+  "Etsii annetusta DOM-nodesta ylöspäin (node -> parentNode -> parentNode ...).
+  Palauttaa true, jos nodella on joku annetuista luokista."
+  [node luokat]
+  (->> (luokat-polulla node)
+       (filter #(seq (set/intersection % (set luokat))))
+       first))
 
 (def ie? (let [ua (-> js/window .-navigator .-userAgent)]
            (or (not= -1 (.indexOf ua "MSIE "))

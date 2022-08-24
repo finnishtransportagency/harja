@@ -13,6 +13,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.loki :refer [log tarkkaile!]]
@@ -73,15 +74,21 @@
               ;; Kuuluu aikavälille, lisätään tai päivitetään
               (if (:id laatupoikkeama)
                 ;; Päivitetty olemassaolevaa
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       (fn [laatupoikkeamat]
-                         (mapv (fn [h]
-                                 (if (= (:id h) (:id uusi-laatupoikkeama))
-                                   uusi-laatupoikkeama
-                                   h)) laatupoikkeamat)))
+                (swap! tila/laatupoikkeamat
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)]
+                      (assoc tila :laatupoikkeamat
+                                  (mapv (fn [h]
+                                          (if (= (:id h) (:id uusi-laatupoikkeama))
+                                            uusi-laatupoikkeama
+                                            h)) laatupoikkeamat)))))
                 ;; Luotu uusi
-                (swap! laatupoikkeamat/urakan-laatupoikkeamat
-                       conj uusi-laatupoikkeama)))
+                (swap! tila/laatupoikkeamat
+                  (fn [tila]
+                    (let [laatupoikkeamat (:laatupoikkeamat tila)
+                          laatupoikkeamat (conj laatupoikkeamat uusi-laatupoikkeama)]
+                      (assoc tila :laatupoikkeamat laatupoikkeamat)))
+                  conj uusi-laatupoikkeama)))
             true))))))
 
 (defn laatupoikkeaman-sanktiot
@@ -125,23 +132,24 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                            (if-not (sanktio-domain/sakko? paivitetty)
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
-                :valinnat mahdolliset-sanktiolajit
+                :valinnat (sort mahdolliset-sanktiolajit)
                 :valinta-nayta #(case %
                                   :A "Ryhmä A"
                                   :B "Ryhmä B"
                                   :C "Ryhmä C"
-                                  :muistutus "Muistutus"
                                   :lupaussanktio "Lupaussanktio"
+                                  :muistutus "Muistutus"
                                   :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
                                   :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
                                   :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+                                  :arvonvahennyssanktio "Arvonvähennys"
                                   :yllapidon_muistutus "Muistutus"
                                   :yllapidon_sakko "Sakko"
                                   "- valitse laji -")
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
-                   {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 3
+                   {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 2
                     :tyyppi :valinta
                     :valinta-arvo first
                     :valinta-nayta second
@@ -152,7 +160,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
                    :default
                    ;; hoidossa sanktiotyyppi
-                   {:otsikko "Tyyppi" :nimi :tyyppi :leveys 3
+                   {:otsikko "Tyyppi" :nimi :tyyppi :leveys 2
                     :tyyppi :valinta
                     :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
                              ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
@@ -172,23 +180,23 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :valinta-arvo :tpi_id
               :valinta-nayta :tpi_nimi
               :valinnat-fn #(when (sanktio-domain/sakko? %) urakan-tpit)
-              :leveys 3
+              :leveys 2
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
               :muokattava? sanktio-domain/sakko?}
 
              {:otsikko "Sakko (€)"
               :tyyppi :numero
               :nimi :summa
-              :leveys 1
+              :leveys 1.5
               :validoi [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
               :muokattava? sanktio-domain/sakko?}
 
              (when (urakka/indeksi-kaytossa?)
                {:otsikko "Indeksi"
                 :nimi :indeksi
-                :leveys 1.5
+                :leveys 2
                 :tyyppi :valinta
-                :valinnat ["MAKU 2005" "MAKU 2010"] ;; FIXME: haetaanko indeksit tiedoista?
+                :valinnat sanktio-domain/hoidon-indeksivalinnat
                 :valinta-nayta #(or % "Ei sidota indeksiin")
                 :palstoja 1
                 :muokattava? sanktio-domain/sakko?})]

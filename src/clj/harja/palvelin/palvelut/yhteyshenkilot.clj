@@ -6,7 +6,7 @@
             [harja.kyselyt.urakat :as uq]
 
             [harja.palvelin.komponentit.http-palvelin
-             :refer [julkaise-palvelut poista-palvelut async]]
+             :refer [julkaise-palvelut poista-palvelut async transit-vastaus]]
             [clojure.java.jdbc :as jdbc]
             [taoensso.timbre :as log]
 
@@ -181,51 +181,71 @@
                              paivystajat)]
     paivystajat))
 
+(defn- vaadi-alkuaika-ei-menneisyydessa [{:keys [alku etunimi sukunimi] :as paiv}]
+  (when (pvm/ennen? alku (pvm/paivan-alussa (pvm/nyt)))
+    (throw (IllegalArgumentException. (str "Päivystäjän "
+                                           etunimi " " sukunimi
+                                           " päivystysvuoroa ei saa asettaa alkamaan ennen tätä päivää.")))))
+(defn- vaadi-olemassaolevaa-paivystyksen-alkuhetkea-ei-aikaisteta
+  "Tarkistaa ettei olemassaolevan päivystysvuoron menneisyydessä olevaa alkuhetkeä yritetä jälkikäteen aikaistaa."
+  [vanha-alkuhetki {:keys [alku etunimi sukunimi]}]
+  (when (and (pvm/ennen? alku vanha-alkuhetki)
+             (pvm/ennen? alku (pvm/paivan-alussa (pvm/nyt))))
+    (throw (IllegalArgumentException. (str "Olemassaolevan päivystäjän "
+                                           etunimi " " sukunimi
+                                           " päivystysvuoron alkua ei saa takautuvasti siirtää kauemmaksi menneisyyteen.")))))
 
 (defn tallenna-urakan-paivystajat [db user {:keys [urakka-id paivystajat poistettu] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id)
-  (jdbc/with-db-transaction [c db]
+  (try
+    (jdbc/with-db-transaction [c db]
+      (doseq [id poistettu]
+        (q/poista-paivystaja! c id urakka-id))
 
-    (log/debug "Päivystäjät: " paivystajat)
-    (doseq [id poistettu]
-      (q/poista-paivystaja! c id urakka-id))
+      (doseq [p paivystajat
+              :let [yhteyshenkilo {:etunimi (:etunimi p)
+                                   :sukunimi (:sukunimi p)
+                                   :tyopuhelin (puhelinnumero/kanonisoi (:tyopuhelin p))
+                                   :matkapuhelin (puhelinnumero/kanonisoi (:matkapuhelin p))
+                                   :sahkoposti (:sahkoposti p)
+                                   :organisaatio (:id (:organisaatio p))
+                                   :sampoid nil
+                                   :kayttajatunnus nil
+                                   :ulkoinen_id nil}
+                    paivystys {:alku (Date. (.getTime (:alku p)))
+                               :loppu (Date. (.getTime (:loppu p)))
+                               :urakka urakka-id
+                               :varahenkilo (not (:vastuuhenkilo p))
+                               :vastuuhenkilo (:vastuuhenkilo p)}]]
+        (if (< (:id p) 0)
+          ;; Luodaan uusi yhteyshenkilö
+          (let [_ (vaadi-alkuaika-ei-menneisyydessa p)
+                yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
+            (q/luo-paivystys<! c
+                               (assoc paivystys
+                                 :yhteyshenkilo (:id yht)
+                                 :ulkoinen_id nil
+                                 :kayttaja_id (:id user))))
 
-    (doseq [p paivystajat
-            :let [yhteyshenkilo {:etunimi (:etunimi p)
-                                 :sukunimi (:sukunimi p)
-                                 :tyopuhelin (puhelinnumero/kanonisoi (:tyopuhelin p))
-                                 :matkapuhelin (puhelinnumero/kanonisoi(:matkapuhelin p))
-                                 :sahkoposti (:sahkoposti p)
-                                 :organisaatio (:id (:organisaatio p))
-                                 :sampoid nil
-                                 :kayttajatunnus nil
-                                 :ulkoinen_id nil}
-                  paivystys {:alku (Date. (.getTime (:alku p)))
-                             :loppu (Date. (.getTime (:loppu p)))
-                             :urakka urakka-id
-                             :varahenkilo (not (:vastuuhenkilo p))
-                             :vastuuhenkilo (:vastuuhenkilo p)}]]
-      (if (< (:id p) 0)
-        ;; Luodaan uusi yhteyshenkilö
-        (let [yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
-          (q/luo-paivystys<! c
-                             (assoc paivystys
-                                    :yhteyshenkilo (:id yht)
-                                    :ulkoinen_id nil
-                                    :kayttaja_id (:id user))))
+          ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
+          (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c {:id (:id p)
+                                                                                      :urakka urakka-id})))
+                alkupvm-kannassa-ennen-muutosta (q/hae-paivystyksen-alkupvm-idlla c {:id (:id p)
+                                                                                     :urakka urakka-id})
+                _ (vaadi-olemassaolevaa-paivystyksen-alkuhetkea-ei-aikaisteta alkupvm-kannassa-ennen-muutosta p)]
+            (q/paivita-yhteyshenkilo<! c (assoc yhteyshenkilo
+                                           :id yht-id))
+            (q/paivita-paivystys! c (assoc paivystys
+                                      :id (:id p)
+                                      :yhteyshenkilo yht-id
+                                      :kayttaja_id (:id user))))))
 
-        ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
-        (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c (:id p)
-                                                                                 urakka-id)))]
-          (log/debug "PÄIVITETÄÄN PÄIVYSTYS: " yht-id " => " (pr-str p))
-          (q/paivita-yhteyshenkilo<! c (assoc yhteyshenkilo
-                                              :id yht-id))
-          (q/paivita-paivystys! c (assoc paivystys
-                                         :id (:id p)
-                                         :yhteyshenkilo yht-id)))))
 
-    ;; Haetaan lopuksi uuden päivystäjät
-    (hae-urakan-paivystajat c user urakka-id)))
+      ;; Haetaan lopuksi uuden päivystäjät
+      (hae-urakan-paivystajat c user urakka-id))
+    (catch IllegalArgumentException e
+      (log/warn e "IllegalArgumentException pyynnössä tallenna-urakan-paivystajat " (pr-str e))
+      (transit-vastaus 400 {:virhe (.getMessage e)}))))
 
 (defn hae-urakan-vastuuhenkilot [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)

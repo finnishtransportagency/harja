@@ -7,11 +7,13 @@
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
+            [harja.views.urakka.toteumat.maarien-toteuma-lomake :as akilliset-htyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
+            [harja.views.urakka.toteumat.maarien-toteumat :as maarien-toteumat-nakyma]
             [harja.views.urakka.toteumat.materiaalit :refer [materiaalit-nakyma]]
             [harja.views.urakka.toteumat.varusteet :as varusteet]
             [harja.views.urakka.toteumat.suola :refer [suolatoteumat pohjavesialueen-suola]]
-
+            [harja.views.urakka.toteumat.velho-varusteet :as velho-varusteet]
             [harja.ui.lomake :refer [lomake]]
             [harja.loki :refer [log logt]]
             [cljs.core.async :refer [<! >! chan]]
@@ -20,7 +22,8 @@
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -29,47 +32,62 @@
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (komp/luo
-   (komp/sisaan-ulos #(do
-                        (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                        (nav/vaihda-kartan-koko! :S))
-                     #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
-   (fn [{:keys [id] :as ur}]
-     [bs/tabs {:style :tabs :classes "tabs-taso2"
-               :active (nav/valittu-valilehti-atom :toteumat)}
+  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))]
+    (komp/luo
+      (komp/sisaan-ulos #(do
+                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                           (nav/vaihda-kartan-koko! :S))
+                        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+      (fn [{:keys [id] :as ur}]
+        [bs/tabs {:style :tabs :classes "tabs-taso2"
+                  :active (nav/valittu-valilehti-atom :toteumat)}
 
-      "Kokonaishintaiset työt" :kokonaishintaiset-tyot
-      (when (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
-        [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
+         "Kokonaishintaiset työt" :kokonaishintaiset-tyot
+         (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
+                    (not mhu-urakka?))
+           [kokonaishintaiset-tyot/kokonaishintaiset-toteumat])
 
-      "Yksikköhintaiset työt" :yksikkohintaiset-tyot
-      (when (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
-        [yks-hint-tyot/yksikkohintaisten-toteumat])
+         "Yksikköhintaiset työt" :yksikkohintaiset-tyot
+         (when (and (oikeudet/urakat-toteumat-yksikkohintaisettyot id)
+                    (not mhu-urakka?))
+           [yks-hint-tyot/yksikkohintaisten-toteumat])
 
-      "Muutos- ja lisätyöt" :muut-tyot
-      (when (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
-        [muut-tyot/muut-tyot-toteumat ur])
+         "Tehtävät" :maarien-toteumat
+         (when (and (oikeudet/urakat-toteumat-kokonaishintaisettyot id)
+                    (#{:teiden-hoito} (:tyyppi ur)))
+           [maarien-toteumat-nakyma/maarien-toteumat])
 
-      "Suola" :suola
-      (when (and (oikeudet/urakat-toteumat-suola id)
-                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
-        [suolatoteumat])
+         "Muutos- ja lisätyöt" :muut-tyot
+         (when (and (oikeudet/urakat-toteumat-muutos-ja-lisatyot id)
+                    (not mhu-urakka?))
+           [muut-tyot/muut-tyot-toteumat ur])
 
-      "Pohjavesialueet" :pohjavesialueet
-      (when (and (oikeudet/urakat-toteumat-suola id)
-                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
-        [pohjavesialueen-suola])
-      
-      "Materiaalit" :materiaalit
-      (when (oikeudet/urakat-toteumat-materiaalit id)
-        [materiaalit-nakyma ur])
+         "Suola" :suola
+         (when (and (oikeudet/urakat-toteumat-suola id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [suolatoteumat])
 
-      "Erilliskustannukset" :erilliskustannukset
-      (when (oikeudet/urakat-toteumat-erilliskustannukset id)
-        [erilliskustannukset/erilliskustannusten-toteumat ur])
+         "Pohjavesialueet" :pohjavesialueet
+         (when (and (oikeudet/urakat-toteumat-suola id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [pohjavesialueen-suola])
 
-      "Varusteet" :varusteet
-      (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
-                 (oikeudet/urakat-toteumat-varusteet id)
-                 (#{:hoito :teiden-hoito} (:tyyppi ur)))
-        [varusteet/varusteet])])))
+         "Materiaalit" :materiaalit
+         (when (oikeudet/urakat-toteumat-materiaalit id)
+           [materiaalit-nakyma ur])
+
+         "Erilliskustannukset" :erilliskustannukset
+         (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+           [erilliskustannukset/erilliskustannusten-toteumat ur])
+
+         "Varusteet" :varusteet
+         (when (and (istunto/ominaisuus-kaytossa? :tierekisterin-varusteet)
+                    (oikeudet/urakat-toteumat-varusteet id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [varusteet/varusteet])
+
+         "Varusteet2" :varusteet2
+         (when (and (istunto/ominaisuus-kaytossa? :varusteet-ulkoiset)
+                    (oikeudet/urakat-toteumat-varusteet id)
+                    (#{:hoito :teiden-hoito} (:tyyppi ur)))
+           [velho-varusteet/velho-varusteet ur])]))))

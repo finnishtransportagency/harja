@@ -8,7 +8,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu-async tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.integraatiot.api.varusteet :as varusteet]
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
@@ -90,7 +90,7 @@
         ;; On mahdollista, että sama toteuma ja toimenpide lähetetään Harjaan useaan kertaan. Tässä tilanteessa
         ;; tarkistetaan, onko toimenpide jo lähetetty tierekisteriin. Jos on, sitä ei lähetetä uudelleen."
         (if (toimenpide-lahetetty-tierekisteriin? db toimenpide)
-          (log/debug "Toimenpide on jo lähetetty, ohitetaan.")
+          (log/debug (prn-str "XXXXXXXXX  Toimenpide on jo lähetetty, ohitetaan." toimenpide))
 
           (let [vastaus
                 (case toimenpide-tyyppi
@@ -113,10 +113,12 @@
             ;; mutta kuittausta ei koskaan saada. Tällöin varuste saatetaan kirjata kahdesti jos
             ;; sama payload lähetetään Harjaan uudelleen.
             ;; --> Pitää tutkia mitä tierekisteri palauttaa samalle kutsulle
+            (log/debug "*** Vastaus tierekisteriltä " vastaus)
             (when (:onnistunut vastaus)
               (log/debug "Merkitään toimenpide id:llä " (:varustetoteuma-id toimenpide) " lähetetyksi.")
-              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db (:varustetoteuma-id toimenpide)))))
-
+              (toteumat-q/merkitse-varustetoteuma-lahetetyksi<! db  { :id (:varustetoteuma-id toimenpide)
+                                                                     :tila "lahetetty"
+                                                                     :lahetysvirhe nil}))))
         (when (= toimenpide-tyyppi :varusteen-lisays)
           {:uusi-tunniste tunniste})))
     (get-in varustetoteuma [:varustetoteuma :toimenpiteet])))
@@ -294,7 +296,7 @@
                             :reitti nil)
                   toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma)]
               (log/debug "Toteuman perustiedot tallennettu, toteuma-id: " (pr-str toteuma-id))
-              (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+              (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
               (tallenna-varustetoteuman-geometria db varustetoteuma toteuma-id)
               (let [paivitetyt-toimenpiteet (tallenna-varustetoteuman-toimenpiteet
                                               db
@@ -320,10 +322,11 @@
               lisaystoimenpiteiden-idt))
           varustetoteumat))
 
-(defn- validoi-tehtavat [db varustetoteumat]
+(defn- validoi-tehtavat [db urakka-id varustetoteumat]
   (doseq [varustetoteuma varustetoteumat]
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in varustetoteuma [:varustetoteuma :toteuma :tehtavat])
       (get-in varustetoteuma [:varustetoteuma :toteuma :toteumatyyppi]))))
 
@@ -336,7 +339,7 @@
                " kayttäjän:" (:kayttajanimi kirjaaja)
                " (id:" (:id kirjaaja) " tekemänä.")
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kirjaaja)
-    (validoi-tehtavat db varustetoteumat)
+    (validoi-tehtavat db urakka-id varustetoteumat)
     (let [varustetoteumat (tallenna-toteumat db tierekisteri urakka-id kirjaaja varustetoteumat)
           lisaystoimenpiteiden-idt (laheta-kirjaus-tierekisteriin db tierekisteri otsikko varustetoteumat)]
       (tee-onnistunut-vastaus lisaystoimenpiteiden-idt))))

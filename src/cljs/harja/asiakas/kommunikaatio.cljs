@@ -1,7 +1,7 @@
 (ns harja.asiakas.kommunikaatio
   "Palvelinkommunikaation utilityt, transit lähettäminen."
   (:require [reagent.core :as r]
-            [ajax.core :refer [ajax-request transit-request-format transit-response-format] :as ajax]
+            [ajax.core :refer [POST ajax-request transit-request-format transit-response-format] :as ajax]
             [cljs.core.async :refer [<! >! put! close! chan timeout]]
             [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.pvm :as pvm]
@@ -31,11 +31,22 @@
     (swap! yhteyskatkokset conj {:aika (pvm/nyt)
                                  :palvelu palvelu})))
 
+(defn kehitysymparistossa-yhteiset?
+  [host]
+  (or (gstr/startsWith host "10.")
+    (gstr/contains host "googleusercontent")
+    (gstr/contains host "harja-gc")
+    (#{"localhost" "localhost:3000" "localhost:8000" 
+       "harja-test.solitaservices.fi"} host)))
+
+(defn kehitysymparistossa? []
+  "Tarkistaa ollaanko kehitysympäristössä"
+  (let [host (.-host js/location)]
+    (or (kehitysymparistossa-yhteiset? host)
+        (#{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"} host))))
+
 (def +polku+ (let [host (.-host js/location)]
-               (if (or (gstr/startsWith host "10.")
-                       (#{"localhost" "localhost:3000" "localhost:8000"
-                          "harja-test.solitaservices.fi"} host)
-                       (gstr/contains host "googleusercontent"))
+               (if (kehitysymparistossa-yhteiset? host)
                  "/"
                  "/harja/")))
 (defn polku []
@@ -98,7 +109,12 @@
                  (do (kasittele-istunto-vanhentunut) ; Extranet-kirjautuminen vanhentunut
                      (close! chan))
 
-                 (= (:status vastaus) 403) ; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
+                 ;; Harjan anti-CSRF-sessio vanhentunut (tod.näk)
+                 ;; Käsitellään vain, jos ping-rajapinta palauttaa 403, koska muut rajapinnat
+                 ;; saattavat palauttaa sen oikeastakin syystä.
+                 (and
+                   (= palvelu :ping)
+                   (= (:status vastaus) 403))
                  (do (kasittele-istunto-vanhentunut)
                      (close! chan))
 
@@ -224,6 +240,31 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (.send xhr form-data)
     ch))
 
+(defn- response-handler! [handler]
+  (fn [& args]
+    (when handler
+      (apply handler args))))
+
+(defn- anti-csrf-token-header []
+  {"X-CSRF-Token" (.getAttribute js/document.body "data-anti-csrf-token")})
+
+(defn laheta-tiedosto!
+  "Lähettää tiedoston palvelimelle. Palauttaa kanavan, josta voi lukea edistymisen.
+  Kun tiedosto on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
+  [url input-elementti params-map onnistui-fn epaonnistui-fn]
+  (let [form-data (js/FormData.)
+        files (.-files input-elementti)]
+    (.append form-data "file" (aget files 0))
+    (doseq [[key value] params-map]
+      (.append form-data (name key) value))
+    (POST (str +polku+ "_/" url)
+          {:headers (anti-csrf-token-header)
+           :body form-data
+           :handler (response-handler! onnistui-fn)
+           :error-handler (response-handler! epaonnistui-fn)
+           :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                      :raw true})})))
+
 (defn liite-url [liite-id]
   (str (polku) "lataa-liite?id=" liite-id))
 
@@ -261,7 +302,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (def istunto-vanhentunut? (r/atom false))
 (def pingaus-kaynnissa? (r/atom false))
 (def yhteysvirheiden-lahetys-kaynnissa? (r/atom false))
-(def normaali-pingausvali-millisekunteina (* 1000 20))
+(def normaali-pingausvali-millisekunteina
+  ;; Localhostissta pingi voi tulla 20sek sijasta 200 sek välein.
+  (if kehitysymparistossa?
+    200000
+    20000))
+
 (def yhteys-katkennut-pingausvali-millisekunteina 2000)
 (def nykyinen-pingausvali-millisekunteina (r/atom normaali-pingausvali-millisekunteina))
 
@@ -340,13 +386,3 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (str/replace "<pvm>" (pvm/pvm alkupvm))
     (str/replace "<tietolaji>" tietolaji)
     (str/replace "<tunniste>" tunniste)))
-
-
-(defn kehitysymparistossa? []
-  "Tarkistaa ollaanko kehitysympäristössä"
-  (let [host (.-host js/location)]
-    (or (gstr/startsWith host "10.10.")
-        (#{"localhost" "localhost:3000" "localhost:8000" "harja-c7-dev.lxd:8000"
-           "35.228.43.58:3000" ; GCP harja-test-1 static IP address
-           "harja-test.solitaservices.fi"
-           "testiextranet.vayla.fi"} host))))

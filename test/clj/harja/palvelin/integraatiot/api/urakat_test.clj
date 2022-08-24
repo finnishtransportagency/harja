@@ -47,6 +47,14 @@
     (is (= 200 (:status vastaus)))
     (is (every? #(= urakkatyyppi (get-in % [:urakka :tiedot :tyyppi])) urakat))))
 
+(deftest hae-urakka-idlla
+         (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/1"] "yit-rakennus" portti)
+               encoodattu-body (cheshire/decode (:body vastaus) true)
+               tunnukset (mapv #(get-in % [:tehtava :id]) (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset]))
+               apitunnus 987654]
+         (is (= 200 (:status vastaus)))
+         (is (some #(= % apitunnus) tunnukset) "Tehtävien id on toimenpidekoodi-taulun apitunnus.")))
+
 ;; teiden-hoito urakkatyyppi palautetaan API:ssa hoito-urakkatyyppinä
 (deftest varmista-urakkatyyppien-yhteensopivuus
   (let [json "{

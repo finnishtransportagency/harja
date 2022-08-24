@@ -12,7 +12,8 @@ SELECT s.id,
        s.tr_loppuetaisyys,
        s.tr_numero,
        s.loppupvm,
-       s.lakkautuspvm
+       s.lakkautuspvm,
+       s.kunnan_vastuulla
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
@@ -72,6 +73,7 @@ SELECT s.id,
        s.tr_numero,
        s.loppupvm,
        s.lakkautuspvm,
+       s.kunnan_vastuulla,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
@@ -106,6 +108,7 @@ SELECT s.id,
        s.tr_numero,
        s.loppupvm,
        s.lakkautuspvm,
+       s.kunnan_vastuulla,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
@@ -155,7 +158,10 @@ SELECT (SELECT COUNT(k1.kohde)
        s.tr_alkuetaisyys,
        s.tr_loppuosa,
        s.tr_loppuetaisyys,
-       s.tr_numero
+       s.tr_numero,
+       s.loppupvm,
+       s.lakkautuspvm,
+       s.kunnan_vastuulla
 FROM siltatarkastus st1
        JOIN siltatarkastus st2 ON (st2.silta = st1.silta AND st2.tarkastusaika > st1.tarkastusaika
   AND st2.poistettu = FALSE)

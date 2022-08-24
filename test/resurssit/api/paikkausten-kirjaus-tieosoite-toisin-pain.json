@@ -1,0 +1,57 @@
+{
+  "otsikko": {
+    "lahettaja": {
+      "jarjestelma": "Urakoitsijan järjestelmä",
+      "organisaatio": {
+        "nimi": "Urakoitsija",
+        "ytunnus": "1234567-8"
+      }
+    },
+    "viestintunniste": {
+      "id": 123
+    },
+    "lahetysaika": "2022-01-01T12:00:00Z"
+  },
+  "paikkaukset": [
+    {
+      "paikkaus": {
+        "tunniste": {
+          "id": <PAIKKAUSTUNNISTE>
+        },
+        "paikkauskohde": {
+          "nimi": "Pituuspaikkauskohde",
+          "tunniste": {
+            "id": <KOHDETUNNISTE>
+          }
+        },
+        "alkuaika": "2022-01-05T12:00:00Z",
+        "loppuaika": "2022-01-05T18:00:00Z",
+        "sijainti": {
+          "tie": 20,
+          "aosa": <AOSA>,
+          "aet": 3500,
+          "losa": <LOSA>,
+          "let": 3000
+        },
+        "tyomenetelma": "UREM",
+        "massatyyppi": "AB, Asfalttibetoni",
+        "leveys": 1.6,
+        "massamenekki": 62,
+        "raekoko": 11,
+        "kuulamylly": "AN19",
+        "kivi-ja-sideaineet": [
+          {
+            "kivi-ja-sideaine": {
+              "esiintyma": "testi",
+              "km-arvo": "testi",
+              "muotoarvo": "testi",
+              "sideainetyyppi": "20/30",
+              "pitoisuus": 1.2,
+              "lisa-aineet": "lisäaineet"
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

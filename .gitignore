@@ -8,8 +8,10 @@ target
 .repl/
 dev-resources/js/harja.js
 dev-resources/js/out/
+dev-resources/tmp/*
 logs/
 doc/
+dev/
 harja-stg-dump.sql
 harja-stg-dump
 harja-test-dump.sql
@@ -59,7 +61,13 @@ resources/public/laadunseuranta/css/
 testi.pdf
 checkouts/
 package-lock.json
-package.json
 src/cljs-dev/harja/repl.cljs
 .rebel_readline_history
 *.log
+/.clj-kondo/.cache/
+figwheel_conf/luodut/
+.local_env
+yhdistetty_dc_env
+.lsp/
+lsp/
+.java-version

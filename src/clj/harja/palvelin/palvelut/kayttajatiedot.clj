@@ -106,8 +106,7 @@
                       aluekokonaisuudet)
          urakat-alueineen (into {} (map
                                      (fn [ur]
-                                       [(get-in ur [:urakka :id]) (or (get-in ur [:urakka :alue])
-                                                                      (get-in ur [:alueurakka :alue]))])
+                                       [(get-in ur [:urakka :id]) (get-in ur [:urakka :alue])])
                                      (urakat/urakoiden-alueet
                                        db
                                        user
@@ -201,5 +200,7 @@
   (stop [this]
     (poista-palvelut (:http-palvelin this)
                      :kayttajatiedot
-                     :yhteydenpito-vastaanottajat)
+                     :yhteydenpito-vastaanottajat
+                     :laheta-sahkoposti-kaikille-kayttajille
+                     :kayttajan-urakat)
     this))

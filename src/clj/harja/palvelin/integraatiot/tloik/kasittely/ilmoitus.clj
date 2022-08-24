@@ -5,7 +5,8 @@
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [clojure.string :as str]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.konversio :as konv]
+            [harja.pvm :as pvm]))
 
 (defn urakkatyyppi [urakkatyyppi]
   (case (str/lower-case urakkatyyppi)
@@ -28,11 +29,20 @@
   (ilmoitukset/paivita-lahettaja-ilmoitukselle!
     db (:etunimi lahettaja)
     (:sukunimi lahettaja)
-    (:puhelinnumero lahettaja)
+    (if (:tyopuhelin lahettaja)
+      (:tyopuhelin lahettaja)
+      (:matkapuhelin lahettaja))
     (:sahkoposti lahettaja)
     id))
 
-(defn paivita-ilmoitus [db id urakka-id {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
+(defn valitetty-urakkaan [nykyinen-urakka valitetty-urakkaan valitetty urakka-id]
+      (if (= urakka-id nykyinen-urakka)
+        (if (nil? valitetty-urakkaan)
+          valitetty
+          valitetty-urakkaan)
+        (pvm/nyt)))
+
+(defn paivita-ilmoitus [db id urakka-id valitetty-urakkaan {:keys [ilmoitettu ilmoitus-id ilmoitustyyppi
                                                 valitetty otsikko paikankuvaus lisatieto
                                                 yhteydenottopyynto ilmoittaja lahettaja selitteet
                                                 sijainti vastaanottaja tunniste viesti-id]}]
@@ -42,6 +52,8 @@
      :ilmoitusid ilmoitus-id
      :ilmoitettu ilmoitettu
      :valitetty valitetty
+     :vastaanotettu (pvm/nyt)
+     :valitetty-urakkaan valitetty-urakkaan
      :yhteydenottopyynto yhteydenottopyynto
      :otsikko otsikko
      :paikankuvaus paikankuvaus
@@ -63,21 +75,22 @@
                                                       vastaanotettu]}]
   (let [id (:id (ilmoitukset/luo-ilmoitus<!
                   db
-                  {:urakka urakka-id
-                   :ilmoitusid ilmoitus-id
-                   :ilmoitettu ilmoitettu
-                   :valitetty valitetty
-                   :yhteydenottopyynto yhteydenottopyynto
-                   :otsikko otsikko
-                   :paikankuvaus paikankuvaus
-                   :lisatieto lisatieto
-                   :ilmoitustyyppi ilmoitustyyppi
-                   :selitteet (konv/seq->array (map name selitteet))
-                   :urakkatyyppi urakkatyyppi
-                   :tunniste tunniste
-                   :viestiid viesti-id
-                   :vastaanotettu vastaanotettu
-                   :vastaanotettu-alunperin valitetty}))]
+                  {:urakka                  urakka-id
+                   :ilmoitusid              ilmoitus-id
+                   :ilmoitettu              ilmoitettu
+                   :valitetty               valitetty
+                   :yhteydenottopyynto      yhteydenottopyynto
+                   :otsikko                 otsikko
+                   :paikankuvaus            paikankuvaus
+                   :lisatieto               lisatieto
+                   :ilmoitustyyppi          ilmoitustyyppi
+                   :selitteet               (konv/seq->array (map name selitteet))
+                   :urakkatyyppi            urakkatyyppi
+                   :tunniste                tunniste
+                   :viestiid                viesti-id
+                   :vastaanotettu           (pvm/nyt)
+                   :vastaanotettu-alunperin (pvm/nyt)
+                   :valitetty-urakkaan      (pvm/nyt)}))]
     (paivita-ilmoittaja db id ilmoittaja)
     (paivita-lahettaja db id lahettaja)
     (ilmoitukset/aseta-ilmoituksen-sijainti! db (:tienumero sijainti) (:x sijainti) (:y sijainti) id)
@@ -89,10 +102,16 @@
                      (:viesti-id ilmoitus)
                      urakka-id))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
-        nykyinen-id (:id (first (ilmoitukset/hae-id-ilmoitus-idlla db ilmoitus-id)))
+        nykyinen-ilmoitus (first (ilmoitukset/hae-id-ja-urakka-ilmoitus-idlla db ilmoitus-id))
+        nykyinen-id (:id nykyinen-ilmoitus)
         urakkatyyppi (urakkatyyppi (:urakkatyyppi ilmoitus))
         uusi-id (if nykyinen-id
-                  (paivita-ilmoitus db nykyinen-id urakka-id ilmoitus)
+                  (paivita-ilmoitus db nykyinen-id urakka-id
+                                    (valitetty-urakkaan (:urakka nykyinen-ilmoitus)
+                                                        (:valitetty-urakkaan nykyinen-ilmoitus)
+                                                        (:valitetty nykyinen-ilmoitus)
+                                                        urakka-id)
+                                     ilmoitus)
                   (luo-ilmoitus db urakka-id urakkatyyppi ilmoitus))]
     (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
     (when-not urakka-id

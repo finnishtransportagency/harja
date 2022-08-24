@@ -7,15 +7,16 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
-            [harja.palvelin.komponentit.sonja :as sonja])
+            [harja.palvelin.integraatiot.jms :as jms])
+  (:import (java.util UUID))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -34,23 +35,26 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-sonja)
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :sonja (feikki-jms "sonja")
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                                            :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                                            :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                                                                                            :palvelin "http://localhost:8084"
+                                                                                            :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
                                                                               "testi" "testi" (atom #{}))
                                                      [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :sonja-sahkoposti :labyrintti])))))
+                                          [:http-palvelin :db :fim :api-sahkoposti :labyrintti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
-(use-fixtures :once jarjestelma-fixture)
+(use-fixtures :each jarjestelma-fixture)
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -150,13 +154,15 @@
                         :tekija :tilaaja
                         :kohde "Kohde"}
         tekstiviesti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
        +testi-sms-url+ (fn [_ _ _]
                          (reset! tekstiviesti-valitetty true)
-                         "ok")]
+                         "ok")
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
       (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
       (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
@@ -176,18 +182,16 @@
                         :selvitys-pyydetty true
                         :tekija :tilaaja
                         :kohde "Kohde"}
-        sahkoposti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))]
-
-    (sonja/kuuntele! (:sonja jarjestelma) "harja-to-email" (fn [_] (reset! sahkoposti-valitetty true)))
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
+        viesti-id (str (UUID/randomUUID))]
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       +testi-sms-url+ "ok"]
+       +testi-sms-url+ "ok"
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 
-    (odota-ehdon-tayttymista #(true? @sahkoposti-valitetty) "Sähköposti lähetettiin" 5000)
-    (is (true? @sahkoposti-valitetty) "Sähköposti lähetettiin")))
+    (is (< 0 (count (hae-ulos-lahtevat-integraatiotapahtumat))) "Sähköposti lähetettiin")))
 
 (defn palvelukutsu-tallenna-suorasanktio [kayttaja s lp hk-alkupvm hk-loppupvm]
   (kutsu-http-palvelua
@@ -207,7 +211,7 @@
         muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :summa nil})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -230,23 +234,23 @@
         (is (= 1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
         (is (= -4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
         (is (= nil (:summa lisatty-muistutus)) "Päällystysurakan bonuksen oikea summa")
-        (is (= (hae-muhoksen-paallystysurakan-id) (get-in lisatty-sakko [:laatupoikkeama :urakka])) "Päällystysurakan sanktiorunko oikea summa")
+        (is (= (hae-urakan-id-nimella "Muhoksen päällystysurakka") (get-in lisatty-sakko [:laatupoikkeama :urakka])) "Päällystysurakan sanktiorunko oikea summa")
         (is (= perustelu (get-in lisatty-sakko [:laatupoikkeama :paatos :perustelu])) "Päällystysurakan sanktiorunko oikea summa")))))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
-  (let [perustelu "ABC gorilla gävelee"
+  (let [perustelu "ABC gorilla gävelee hoidon urakka-alueella"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko-hoito {:suorasanktio true
                             :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id)
                             :perintapvm perintapvm}
-        hoidon-sakko (merge sanktiorunko-hoito {:laji :A :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        hoidon-sakko (merge sanktiorunko-hoito {:laji :A :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}
+                                                :indeksi "MAKU 2010"})
         hoidon-muistutus (merge sanktiorunko-hoito {:laji :muistutus :summa nil :tyyppi {:id 2 :nimi "Talvihoito"}})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
                         :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
-
     (testing "Hoitourakan suorasanktion tallennus"
       (let [sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
                                      +kayttaja-jvh+ hoidon-sakko laatupoikkeama hk-alkupvm hk-loppupvm)
@@ -261,23 +265,47 @@
         (is (= :muistutus (:laji lisatty-hoidon-muistutus)) "Hoitourakan muistutuksen oikea sanktiolaji")
         (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-muistutus))) "Hoitourakan bonuksen oikea sanktiotyyppi")
         (is (= 665.9 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
+        (is (= "MAKU 2010" (:indeksi lisatty-hoidon-sakko)) "Indeksi oikein")
         (is (= nil (:summa lisatty-hoidon-muistutus)) "Hoitourakan bonuksen oikea summa")
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
         (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))))
+
+(deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
+  (let [perustelu "ABC koira kävelee MHU-alueella"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
+        sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id 2, :nimi "Talvihoito", :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00"), :urakka (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                 +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+        lisatty-hoidon-sakko (first (filter #(= (get-in % [:laatupoikkeama :paatos :perustelu]) perustelu)
+                                            sanktiot-sakon-jalkeen))]
+    (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
+    (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
+    (is (= "Talvihoito" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
+    (is (= 777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
+    (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
+    (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko {:suorasanktio true
                       :perintapvm perintapvm}
-        hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
+        hoidon-sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 1665.9 :tyyppi {:id 2 :nimi "Talvihoito"}})
         paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
         laatupoikkeama-hoito {:tekijanimi "Järjestelmä Vastaava"
                               :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
                               :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
         laatupoikkeama-paallystys {:tekijanimi "Järjestelmä Vastaava"
                                    :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                                    :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -298,7 +326,7 @@
         paallystys-sakko (merge sanktiorunko {:laji :A :summa 1234 :tyyppi {:id 4 :nimi "Ylläpidon sakko"}})
         laatupoikkeama-paallystys {:tekijanimi "Järjestelmä Vastaava"
                                    :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-muhoksen-paallystysurakan-id),
+                                   :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
                                    :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
@@ -366,7 +394,7 @@
 
 
 (deftest hae-laatupoikkeaman-tiedot
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-laatupoikkeaman-tiedot +kayttaja-jvh+ {:urakka-id urakka-id
                                                                             :laatupoikkeama-id 1})]
@@ -375,7 +403,7 @@
     (is (>= (count (:kuvaus vastaus)) 10))))
 
 (deftest hae-urakan-laatupoikkeamat
-  (let [urakka-id (hae-oulun-alueurakan-2005-2012-id)
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-laatupoikkeamat +kayttaja-jvh+
                                 {:listaus :kaikki
@@ -393,6 +421,27 @@
                                                                      :loppu (pvm/luo-pvm 2016 10 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
+
+(def odotettu-urakan-jalkeinen-sanktio
+  [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
+    :suorasanktio false, :laji :C,
+    :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
+                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
+                     :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
+                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
+                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin,:muukasittelytapa ""}}
+
+  :summa 777.0, :indeksi "MAKU 2010", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
+
+
+(deftest hae-urakan-jalkseiset-sanktiot
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                     :alku (pvm/luo-pvm 2018 10 1)
+                                                                     :loppu (pvm/luo-pvm 2019 10 30)
+                                                                     :vain-yllapitokohteettomat? nil})]
+    (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -440,9 +489,9 @@
            paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
 (deftest vaadi-sanktio-kuuluu-urakkaan-testit
-  (let [kohde-urakka 4
-        kuuluva-sanktio 1
-        kuulumaton-sanktio 9
+  (let [kohde-urakka (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
+        kuuluva-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 1000 AND perintapvm = '2016-10-12';")))
+        kuulumaton-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 10000 AND perintapvm = '2011-10-12';")))
         kutsu (partial ls/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
     (testing "Olemattomat id:t"
       (is (nil? (kutsu -1)) "Uutta sanktiota ei pitäisi validoida")

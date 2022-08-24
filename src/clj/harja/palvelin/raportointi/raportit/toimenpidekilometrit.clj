@@ -54,12 +54,12 @@
         naytettavat-alueet (yleinen/naytettavat-alueet db konteksti
                                                        {:urakka urakka-id
                                                         :hallintayksikko hallintayksikko-id
-                                                        :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                        :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                         :alku alkupvm
                                                         :loppu loppupvm})
         toteumat (hae-kokonaishintaiset-toteumat db {:urakka urakka-id
                                                      :hallintayksikko hallintayksikko-id
-                                                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                                                     :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                      :alku alkupvm
                                                      :loppu loppupvm})
         raportin-nimi "Toimenpidekilometrit"
@@ -74,7 +74,7 @@
                                 (mapcat
                                   (fn [_]
                                     (map (fn [{:keys [nimi]}]
-                                           {:otsikko nimi :tasaa :keskita :fmt :numero})
+                                           {:otsikko nimi :tasaa :oikea :fmt :numero})
                                          talvihoitoluokat))
                                   naytettavat-alueet)))
         datarivit (muodosta-datarivit naytettavat-alueet hoitoluokat toteumat)]

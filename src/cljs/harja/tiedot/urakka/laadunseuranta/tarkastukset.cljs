@@ -79,14 +79,14 @@
   [parametrit]
   (k/post! :hae-urakan-tarkastukset parametrit))
 
-(defn naytettava-aikavali [urakka-kaynnissa? kuukausi aikavali]
+(defn naytettava-aikavali [urakka-kaynnissa? hoitokausi kuukausi aikavali]
   (if urakka-kaynnissa?
     aikavali
-    (or kuukausi aikavali)))
+    (or kuukausi aikavali hoitokausi)))
 
-(defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id kuukausi aikavali tienumero tyyppi
+(defn kasaa-haun-parametrit [urakka-kaynnissa? urakka-id hoitokausi kuukausi aikavali tienumero tyyppi
                              havaintoja-sisaltavat? vain-laadunalitukset? tekija]
-  (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? kuukausi aikavali)
+  (let [[alkupvm loppupvm] (naytettava-aikavali urakka-kaynnissa? hoitokausi kuukausi aikavali)
         tekija (first tekija)]
     {:urakka-id urakka-id
      :alkupvm alkupvm
@@ -103,6 +103,7 @@
 (def urakan-tarkastukset
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                urakka-kaynnissa? @tiedot-urakka/valittu-urakka-kaynnissa?
+               hoitokausi @tiedot-urakka/valittu-hoitokausi
                kuukausi @tiedot-urakka/valittu-hoitokauden-kuukausi
                aikavali @valittu-aikavali
                laadunseurannassa? @laadunseuranta/laadunseurannassa?
@@ -115,6 +116,7 @@
               {:odota 500
                :nil-kun-haku-kaynnissa? true}
               (let [parametrit (kasaa-haun-parametrit urakka-kaynnissa? urakka-id
+                                                      hoitokausi
                                                       kuukausi aikavali tienumero tyyppi
                                                       havaintoja-sisaltavat?
                                                       vain-laadunalitukset?
@@ -129,6 +131,7 @@
   "Päivittää annetun tarkastuksen urakan-tarkastukset listaan, jos se on valitun aikavälin sisällä."
   [{:keys [aika id] :as tarkastus}]
   (let [[alkupvm loppupvm] (naytettava-aikavali @tiedot-urakka/valittu-urakka-kaynnissa?
+                                                @tiedot-urakka/valittu-hoitokausi
                                                 @tiedot-urakka/valittu-hoitokauden-kuukausi
                                                 @tiedot-urakka/valittu-aikavali)
         sijainti-listassa (first (keep-indexed (fn [i {tarkastus-id :id}]

@@ -4,7 +4,6 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.asiakas.tapahtumat :as t]
             [harja.domain.urakka :as urakka]
-            [harja.domain.organisaatio :as organisaatio]
             [harja.domain.vesivaylat.alus :as alus]
             [cljs.core.async :refer [<! >! chan]]
             [harja.loki :refer [log]]
@@ -29,7 +28,9 @@
 
 (def yhteyshenkilotyypit-kaikille-urakoille
   (into [] (sort ["Kunnossapitopäällikkö" "Tieliikennekeskus"
-                  "Viranomais- ja vahingonkorvausasiat" "Työmaavalvoja" "Työmaavalvojan sijainen"])))
+                  "Viranomais- ja vahingonkorvausasiat" "Työmaavalvoja" "Työmaavalvojan sijainen"
+                  "Vastuunalainen työnjohtaja" "Päätoiminen apulainen" "Apulainen/Työnjohtaja/Vipa-tehtävät"
+                  "Viherhoidosta vastaava henkilö"])))
 
 (def yhteyshenkilotyypit-vesivaylat
   (into [] (sort ["Sopimusvastaava"])))

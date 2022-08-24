@@ -64,6 +64,9 @@
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
 
+(defn sama-tr-osoite? [tr1 tr2]
+  (= (normalisoi tr1) (normalisoi tr2)))
+
 (defn ennen?
   "Tarkistaa alkaako tie1 osa ennen tie2 osaa. Osien tulee olla samalla tienumerolla.
   Jos osat ovat eri teilla, palauttaa nil."
@@ -98,22 +101,24 @@
   "Tarkistaa, että annettu osoite on nousevassa järjestyksessä (alku ennen loppua) ja
   kääntää alkuosan ja loppuosan, jos ei ole. Palauttaa mahdollisesti muokatun osoitteen."
   [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as osoite}]
-  (cond
-    (< tr-loppuosa tr-alkuosa)
-    (assoc osoite
-      :tr-alkuosa tr-loppuosa
-      :tr-alkuetaisyys tr-loppuetaisyys
-      :tr-loppuosa tr-alkuosa
-      :tr-loppuetaisyys tr-alkuetaisyys)
+  (select-keys
+    (cond
+     (< tr-loppuosa tr-alkuosa)
+     (assoc osoite
+       :tr-alkuosa tr-loppuosa
+       :tr-alkuetaisyys tr-loppuetaisyys
+       :tr-loppuosa tr-alkuosa
+       :tr-loppuetaisyys tr-alkuetaisyys)
 
-    (and (= tr-loppuosa tr-alkuosa)
-         (< tr-loppuetaisyys tr-alkuetaisyys))
-    (assoc osoite
-      :tr-loppuetaisyys tr-alkuetaisyys
-      :tr-alkuetaisyys tr-loppuetaisyys)
+     (and (= tr-loppuosa tr-alkuosa)
+          (< tr-loppuetaisyys tr-alkuetaisyys))
+     (assoc osoite
+       :tr-loppuetaisyys tr-alkuetaisyys
+       :tr-alkuetaisyys tr-loppuetaisyys)
 
-    :default
-    osoite))
+     :default
+     osoite)
+    [:tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]))
 
 (defn on-alku? [tie]
   (let [tie (normalisoi tie)]
@@ -132,25 +137,36 @@
 (defn laske-tien-pituus
   ([tie] (laske-tien-pituus {} tie))
   ([osien-pituudet {:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys] :as tie}]
-   (when (and (on-alku-ja-loppu? tie)
-              (or (= tr-alkuosa tr-loppuosa)                ;; Pituus voidaan laskean suoraan
-                  (not (empty? osien-pituudet))))           ;; Tarvitaan osien pituudet laskuun
+   (assert (or (map? osien-pituudet)
+               (nil? osien-pituudet)) "osien-pituudet oltava map tai nil")
+   (when (on-alku-ja-loppu? tie)
      (let [{aosa :tr-alkuosa
             alkuet :tr-alkuetaisyys
             losa :tr-loppuosa
             loppuet :tr-loppuetaisyys} (nouseva-jarjestys tie)]
-       (if (= aosa losa)
-         (Math/abs (- loppuet alkuet))
-         (let [max-osa (reduce max 0 (keys osien-pituudet))
-               losa (min losa max-osa)]
-           (loop [pituus (- (get osien-pituudet aosa 0) alkuet)
-                  osa (inc aosa)]
-             (let [osan-pituus (get osien-pituudet osa 0)]
-               (if (>= osa losa)
-                 (+ pituus (min loppuet osan-pituus))
+       (if (not-empty osien-pituudet)
+         (let [a-pituus (get osien-pituudet aosa)
+               l-pituus (get osien-pituudet losa)]
+           (when (and (some? a-pituus)
+                      (some? l-pituus)
+                      (>= a-pituus alkuet)
+                      (>= l-pituus loppuet))
+             (if (= aosa losa)
+               (- loppuet alkuet)
+               (reduce-kv (fn [pituus osa osan-pituus]
+                            (let [p (cond
+                                      (or (< osa aosa)
+                                          (< losa osa)) 0
 
-                 (recur (+ pituus osan-pituus)
-                        (inc osa)))))))))))
+                                      (= aosa osa) (- osan-pituus alkuet)
+
+                                      (= losa osa) loppuet
+
+                                      :else osan-pituus)]
+                              (+ pituus p)))
+                          0 osien-pituudet))))
+         (when (= aosa losa)
+           (Math/abs (- loppuet alkuet))))))))
 
 (defn validi-osoite? [osoite]
   (let [osoite (normalisoi osoite)]

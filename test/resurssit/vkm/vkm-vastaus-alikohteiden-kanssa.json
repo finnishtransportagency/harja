@@ -1,0 +1,107 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[KOHDEID]-alku",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 1,
+        "etaisyys": 0,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[KOHDEID]-loppu",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 3,
+        "etaisyys": 1000,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[ALIKOHDEID1]-alku",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 1,
+        "etaisyys": 0,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[ALIKOHDEID1]-loppu",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 2,
+        "etaisyys": 500,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[ALIKOHDEID2]-alku",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 2,
+        "etaisyys": 500,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": []
+      },
+      "properties": {
+        "tunniste": "[ALIKOHDEID2]-loppu",
+        "tie": 20,
+        "ajorata": 1,
+        "osa": 3,
+        "etaisyys": 1000,
+        "vaylan_luonne": 12,
+        "hallinnollinen_luokka": 1,
+        "vertikaalisuhde": 0
+      }
+    }
+  ]
+}

@@ -2,154 +2,151 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.java.jdbc :as jdbc]
             [specql.op :as op]
+            [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konversio]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.kyselyt.konversio :as konv]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.tieverkko :as tv]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.palvelut.yllapitokohteet.viestinta :as viestinta]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as ypk-yleiset]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
+            [taoensso.timbre :as log]
+            [slingshot.slingshot :refer [try+]]
+            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
+            [specql.core :as specql]
+            [clojure.data.json :as json])
+  (:import (java.text SimpleDateFormat ParseException)
+           (java.sql Date)
+           (java.util TimeZone)))
 
-(defn- muodosta-tr-ehdot
-  "Muodostetaan where-osio specql:lle, jossa etsitään tierekisteriosoite määrritetyltä väliltä.
-   Tässä on aika paljon ehtoja, sillä oletuksena ei ole täydellisesti annettua tr-osiota vaan
-   mikä tahansa osa siitä tai osien kombinaatio kelpaa."
-  [tr]
-  (let [tr (into {} (filter (fn [[_ arvo]] arvo) tr))
-        ;; Täytyy luoda yhteinen pohja, koska nämä kaikki ehdot yhdistetään OR:lla. Tätä pohjaa käytetään kolmessa
-        ;; ensimmäisessä ehdossa, joissa käsitellään ne keissit, kun aosa tai aet tai molemmat ovat annettuna.
-        alun-yhteinen-pohja (cond-> {}
-                                    (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                                    (:loppuetaisyys tr) (assoc ::tierekisteri/let (op/<= (:loppuetaisyys tr)))
-                                    (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                                    (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
-        ;; Jos molemmat, alkuosa ja alkuetaisyys ovat annettuna, tarvitaan ehdot 1 ja 3. Muutenhan nuo voisi yhdistää.
+(defn- kasittele-koko-ja-sijainti
+  "Paikkauskohteiden sisään haetaan siis json objektina paikkaukset. Ja koska kyseessä on json objekti, niin kaikki
+  data on string tyyppistä. Joten sijainnin geometriasta tulee db->clojure muunnoksessa vain PersistentVector eikä
+  geometria MultiLineString. Niinpä tehdään se tässä käsityönä ja hartaudella.
+  Samalla lasketaan paikkauksen pituus ja pita-ala."
+  [db paikkauskohteet]
+  (mapv (fn [kohde]
+          (let [;; Koska tiedetään, että yksi paikkauskohde on aina yhdellä tiellä, niin haetaan jokaista paikkauskohdetta
+                ;; kohti tien osien pituudet vain kerran ja käytetään tätä tietoa laskiessa paikkaus taulun riville (paikkaustoteuma)
+                ;; pituutta. Mutta koska maailma ei ole täydellinen, niin on olemassa paikkauskohteita, joilla ei ole tietä.
+                ;; Näille tie kaivetaan ensimmäisestä paikkaustoteumasta
 
-        ;; Jos alkuosa on annettu ja kannassa oleva tr-osoitteen alkuosa on annettua arvoa isompi, pitää se palauttaa.
-        ;; Palautetaan myös ne arvot kannasta, joissa aosa on yhtäsuuri, jos aet ei ole annettu.
-        ehto-1 (when (:alkuosa tr)
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa ((if (:alkuetaisyys tr)
-                                                                   op/>
-                                                                   op/>=)
-                                                                  (:alkuosa tr))))
-        ;; Jos alkuetaisyys on annettu, kannasas olevan arvon aet tulee olla yhtäsuuri tai suurempi, jotta sen
-        ;; voi palauttaa.
-        ehto-2 (when (:alkuetaisyys tr)
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
-        ;; Jos alkuosa ja alkuetaisyys on annettu, täytyy kannassa olevan arvon aosa olla suurempi kuin määritetyn tai
-        ;; kannassa olevan tr-arvon aosa voi olla yhtäsuuri annetun kanssa, mutta silloin myös aet:in pitää olla
-        ;; suurempi tai yhtäsuuri. Ensimmäinen näistä kahdesta vaihtoehdosta on määrritelty jo ehto-1:ssä, joten
-        ;; tässä ehto-3:ssa otetaan kantaa vain tuohon jälkimmäiseen.
-        ehto-3 (when (and (:alkuosa tr) (:alkuetaisyys tr))
-                 (assoc alun-yhteinen-pohja ::tierekisteri/aosa (:alkuosa tr)
-                                            ::tierekisteri/aet (op/>= (:alkuetaisyys tr))))
+                tie (if (:harja.domain.tierekisteri/tie kohde)
+                      (:harja.domain.tierekisteri/tie kohde)
+                      (:harja.domain.tierekisteri/tie (first (::paikkaus/paikkaukset kohde))))
+                osan-pituudet (tv/hae-osien-pituudet db {:tie tie
+                                                         :aosa (or (:aosa kohde) (::paikkaus/aosa (first (::paikkaus/paikkaukset kohde))))
+                                                         :losa (or (:losa kohde) (::paikkaus/losa (first (::paikkaus/paikkaukset kohde))))})]
+            (if-not (empty? (::paikkaus/paikkaukset kohde))
+              (let [paikkaukset (::paikkaus/paikkaukset kohde)
+                    kohde (-> kohde
+                              (assoc ::paikkaus/paikkaukset
+                                     (mapv
+                                       (fn [p]
+                                         (let [pituus (:pituus (q/laske-tien-osien-pituudet osan-pituudet {:aosa (:harja.domain.tierekisteri/aosa p)
+                                                                                                           :aet (:harja.domain.tierekisteri/aet p)
+                                                                                                           :losa (:harja.domain.tierekisteri/losa p)
+                                                                                                           :let (:harja.domain.tierekisteri/let p)}))
+                                               p (update p ::paikkaus/sijainti (fn [sijainti]
+                                                                                 (let [sijainti (when-not (nil? sijainti)
+                                                                                                  (json/read-str sijainti :key-fn keyword))
+                                                                                       sijainti (if (= "MultiPoint" (:type sijainti))
+                                                                                                  nil
+                                                                                                  sijainti)]
+                                                                                   sijainti)))]
+                                           (cond-> p
+                                                   true (assoc :suirun-pituus pituus)
+                                                   true (assoc :suirun-pinta-ala (if (and pituus (::paikkaus/leveys p))
+                                                                                   (* pituus (::paikkaus/leveys p))
+                                                                                   0))
+                                                   ;; Jos löytyy koordinaatit, niin asetetaan sijainti
+                                                   (get-in p [::paikkaus/sijainti :coordinates]) (assoc ::paikkaus/sijainti
+                                                                                                        {:type :multiline
+                                                                                                         :lines (reduce (fn [a rivi]
+                                                                                                                          (conj a {:type :line
+                                                                                                                                   :points rivi}))
+                                                                                                                        [] (get-in p [::paikkaus/sijainti :coordinates]))}))))
+                                       paikkaukset)))]
+                kohde)
+              kohde)))
+        paikkauskohteet))
 
-        ;; ehdot 4-6 käsittelevät losa:n ja let:n samalla tavalla kuin ehdot 1-3 käsittelevät aosa:n ja aet:in
-        lopun-yhteinen-pohja (cond-> {}
-                                     (:alkuosa tr) (assoc ::tierekisteri/aosa (op/>= (:alkuosa tr)))
-                                     (:alkuetaisyys tr) (assoc ::tierekisteri/aet (op/>= (:alkuetaisyys tr)))
-                                     (:loppuosa tr) (assoc ::tierekisteri/losa (op/<= (:loppuosa tr)))
-                                     (:numero tr) (assoc ::tierekisteri/tie (:numero tr)))
-        ehto-4 (when (:loppuosa tr)
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa ((if (:loppuetaisyys tr)
-                                                                    op/<
-                                                                    op/<=)
-                                                                   (:loppuosa tr))))
-        ehto-5 (when (:loppuetaisyys tr)
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
-        ehto-6 (when (and (:loppuosa tr) (:loppuetaisyys tr))
-                 (assoc lopun-yhteinen-pohja ::tierekisteri/losa (:loppuosa tr)
-                                             ::tierekisteri/let (op/<= (:loppuetaisyys tr))))
-
-        ;; ehto-7 on sitä varten, että jos vain tienumero on annettu eikä mitään muuta.
-        ehto-7 (when (= '(:numero) (keys tr))
-                 {::tierekisteri/tie (:numero tr)})]
-    ;; Yhdistetään kaikki ehdot, jotka eivät ole nillejä.
-    (apply op/or
-           (keep #(when-not (nil? %)
-                    {::paikkaus/tierekisteriosoite %})
-                 [ehto-1 ehto-2 ehto-3 ehto-4 ehto-5 ehto-6 ehto-7]))))
-
-(defn hae-urakan-paikkauskohteet [db user {:keys [aikavali paikkaus-idt tyomenetelmat] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
-  (let [kysely-params-urakka-id (select-keys tiedot #{::paikkaus/urakka-id})
-        kysely-params-aika (if (and aikavali
-                                    (not (and (nil? (first aikavali)) (nil? (second aikavali)))))
-                             (assoc kysely-params-urakka-id ::paikkaus/alkuaika (cond
-                                                                                  (and (first aikavali) (not (second aikavali))) (op/>= (first aikavali))
-                                                                                  (and (not (first aikavali)) (second aikavali)) (op/<= (second aikavali))
-                                                                                  :else (apply op/between aikavali)))
-                             kysely-params-urakka-id)
-        kysely-params (if (not-empty tyomenetelmat)
-                        (assoc kysely-params-aika ::paikkaus/tyomenetelma (op/in tyomenetelmat))
-                        kysely-params-aika)
-        kysely-params-tieosa (when-let [tr (into {} (filter (fn [[_ arvo]] arvo) (:tr tiedot)))]
-                               (when (not (empty? tr))
-                                 (muodosta-tr-ehdot tr)))
-        kysely-params-paikkaus-idt (when paikkaus-idt
-                                     (assoc kysely-params ::paikkaus/paikkauskohde {::paikkaus/id (op/in paikkaus-idt)}))
-        hae-paikkaukset (fn [db]
-                          (let [paikkaus-materiaalit (q/hae-paikkaukset-materiaalit db kysely-params)
-                                paikkaus-paikkauskohde (q/hae-paikkaukset-paikkauskohe db (if kysely-params-paikkaus-idt
-                                                                                            kysely-params-paikkaus-idt
-                                                                                            kysely-params))
-                                paikkaus-tienkohta (q/hae-paikkaukset-tienkohta db (if kysely-params-tieosa
-                                                                                     (op/and kysely-params
-                                                                                             kysely-params-tieosa)
-                                                                                     kysely-params))]
-                            (reduce (fn [kayty paikkaus]
-                                      ;; jos kaikista hauista löytyy kyseinen id, se kuuluu silloin palauttaa
-                                      (let [materiaali (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                                %)
-                                                             paikkaus-materiaalit)
-                                            paikkauskohde (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                                   %)
-                                                                paikkaus-paikkauskohde)
-                                            tienkohta (some #(when (= (::paikkaus/id paikkaus) (::paikkaus/id %))
-                                                               %)
-                                                            paikkaus-tienkohta)]
-                                        (if (and materiaali paikkauskohde tienkohta)
-                                          (conj kayty (merge materiaali paikkauskohde tienkohta))
-                                          kayty)))
-                                    [] (:paikkaukset (max-key :count
-                                                              {:count (count paikkaus-materiaalit)
-                                                               :paikkaukset paikkaus-materiaalit}
-                                                              {:count (count paikkaus-paikkauskohde)
-                                                               :paikkaukset paikkaus-paikkauskohde}
-                                                              {:count (count paikkaus-tienkohta)
-                                                               :paikkaukset paikkaus-tienkohta})))))]
-    (jdbc/with-db-transaction [db db]
-      (if (:ensimmainen-haku? tiedot)
-        (let [paikkaukset (hae-paikkaukset db)
-              paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
-              tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))
-              paikkauksien-tiet (distinct (map #(get-in % [::paikkaus/tierekisteriosoite ::tierekisteri/tie]) paikkaukset))
-              teiden-pituudet (reduce (fn [kayty tie]
-                                        (assoc kayty tie (into {}
-                                                               (map (juxt :osa :pituus))
-                                                               (tv/hae-osien-pituudet db {:tie tie
-                                                                                          :aosa nil :losa nil}))))
-                                      {} paikkauksien-tiet)]
-          {:paikkaukset paikkaukset
-           :paikkauskohteet paikkauskohteet
-           :tyomenetelmat tyomenetelmat
-           :teiden-pituudet teiden-pituudet})
-        {:paikkaukset (hae-paikkaukset db)}))))
+(defn hae-urakan-paikkaukset
+  "Haetaan paikkauskohteet, joita ei ole poistettu ja joiden tila on tilattu/valmis ja joilla ei ole pot raportointitilana.
+  Samalla haetaan paikkauskohteille paikkaus taulusta rivit (eli paikkauksen toteumat, huomaa taulujen nimiöinti) sekä
+  paikkausten materiaalit ja tienkohdat."
+  [db user {:keys [aikavali tyomenetelmat tr nayta] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (or (::paikkaus/urakka-id tiedot)
+                                                                           (:urakka-id tiedot)))
+  (let [urakka-id (or (::paikkaus/urakka-id tiedot)
+                      (:urakka-id tiedot))
+        menetelmat (disj tyomenetelmat "Kaikki")
+        menetelmat (when (> (count menetelmat) 0)
+                     menetelmat)
+        vain-kohteet-joilla-toteumia? (= nayta :kohteet-joilla-toteumia)
+        _ (log/debug "hae-urakan-paikkaukset :: tiedot" (pr-str tiedot) (pr-str (konversio/sql-date (first aikavali))) "tr" (pr-str tr) "vain-kohteet-joilla-toteumia?" vain-kohteet-joilla-toteumia?)
+        paikkauskohteet (q/hae-urakan-paikkauskohteet-ja-paikkaukset db {:urakka-id urakka-id
+                                                                         :alkuaika (when (and aikavali (first aikavali))
+                                                                                     (konversio/sql-date (first aikavali)))
+                                                                         :loppuaika (when (and aikavali (second aikavali))
+                                                                                      (konversio/sql-date (second aikavali)))
+                                                                         :tyomenetelmat menetelmat
+                                                                         :tie (:numero tr)
+                                                                         :aosa (:alkuosa tr)
+                                                                         :aet (:alkuetaisyys tr)
+                                                                         :losa (:loppuosa tr)
+                                                                         :let (:loppuetaisyys tr)})
+        paikkauskohteet (->> paikkauskohteet
+                             (map #(clojure.set/rename-keys % paikkaus/paikkauskohde->specql-avaimet))
+                             (map #(update % :paikkaukset konversio/jsonb->clojuremap))
+                             (mapv #(update % :paikkaukset
+                                            (fn [rivit]
+                                              (let [tulos (keep
+                                                            (fn [r]
+                                                              ;; Haku käyttää paikkausten hakemisessa left joinia, joten on mahdollista, että paikkaus taulusta
+                                                              ;; löytyy nil id
+                                                              (when (not (nil? (:f1 r)))
+                                                                (let [r (-> r
+                                                                            (update :f2 (fn [aika]
+                                                                                          (when aika
+                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                            (update :f3 (fn [aika]
+                                                                                          (when aika
+                                                                                            (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss") aika))))
+                                                                            (clojure.set/rename-keys
+                                                                              paikkaus/db-paikkaus->speqcl-avaimet))]
+                                                                  r)))
+                                                            rivit)]
+                                                tulos))))
+                             (remove #(and vain-kohteet-joilla-toteumia? (empty? (:paikkaukset %))))
+                             (mapv #(clojure.set/rename-keys % {:paikkaukset ::paikkaus/paikkaukset})))
+        ;; Sijainnin ja tien pituuden käsittely - json objekti kannasta antaa string tyyppistä sijaintidataa. Muokataan se tässä käsityönä
+        ;; multiline tyyppiseksi geometriaksi
+        paikkauskohteet (kasittele-koko-ja-sijainti db paikkauskohteet)
+        _ (log/debug "hae-urakan-paikkaukset :: paikkauskohteet kpl:" (pr-str (count paikkauskohteet)))
+        ]
+    paikkauskohteet))
 
 (defn hae-paikkausurakan-kustannukset [db user tiedot]
   (assert (not (nil? (::paikkaus/urakka-id tiedot))) "Urakka-id on nil")
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
   (let [kysely-params-template {:alkuosa nil :numero nil :urakka-id nil :loppuaika nil :alkuaika nil
                                 :alkuetaisyys nil :loppuetaisyys nil :loppuosa nil :paikkaus-idt nil
-                                :tyomenetelmat nil}
+                                :tyomenetelmat nil :tyyppi "kokonaishintainen"}
         kysely-params (assoc (merge kysely-params-template (:tr tiedot))
                         :urakka-id (::paikkaus/urakka-id tiedot)
                         :paikkaus-idt (when-let [paikkaus-idt (:paikkaus-idt tiedot)]
-                                        (konv/seq->array paikkaus-idt))
+                                        (konversio/seq->array paikkaus-idt))
                         :alkuaika (first (:aikavali tiedot))
                         :loppuaika (second (:aikavali tiedot))
                         :tyomenetelmat (when (not-empty (:tyomenetelmat tiedot))
-                                         (konv/seq->array (:tyomenetelmat tiedot))))
+                                         (konversio/seq->array (:tyomenetelmat tiedot))))
         haetaan-nollalla-paikkauksella? (and (not (nil? (:paikkaus-idt tiedot)))
                                              (empty? (:paikkaus-idt tiedot)))]
     ;; Palautetaan tyhjä lista, jos käyttäjä ei ole valinnut yhtäkään paikkauskohdetta. Jos paikkaus-idt on nil,
@@ -158,36 +155,166 @@
     (cond
       (:ensimmainen-haku? tiedot) (jdbc/with-db-transaction [db db]
                                       (let [kustannukset (if haetaan-nollalla-paikkauksella?
-                                                           []
-                                                           (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params))
+                                                []
+                                                (into []
+                                                      (map konversio/alaviiva->rakenne)
+                                                      (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params)))
                                             paikkauskohteet (q/hae-urakan-paikkauskohteet db (::paikkaus/urakka-id tiedot))
                                             tyomenetelmat (q/hae-urakan-tyomenetelmat db (::paikkaus/urakka-id tiedot))]
                                         {:kustannukset kustannukset
                                          :paikkauskohteet paikkauskohteet
                                          :tyomenetelmat tyomenetelmat}))
       haetaan-nollalla-paikkauksella? {:kustannukset []}
-      :else {:kustannukset (q/hae-paikkaustoteumat-tierekisteriosoitteella db kysely-params)})))
+      :else {:kustannukset (into []
+                                 (map konversio/alaviiva->rakenne)
+                                 (q/hae-paikkauskohteen-mahdolliset-kustannukset db kysely-params))})))
+
+(defn- paivita-paikkaustoteuma! [db user rivi]
+  (q/paivita-paikkaustoteuma! db {:hinta (:hinta rivi)
+                                  :poistettu (boolean (:poistettu rivi))
+                                  :poistaja (when (:poistettu rivi)
+                                              (:id user))
+                                  :muokkaaja (:id user)
+                                  :tie (:tie rivi)
+                                  :aosa (:aosa rivi)
+                                  :aet (:aet rivi)
+                                  :losa (:losa rivi)
+                                  :let (:let rivi)
+                                  :tyomenetelma (:tyomenetelma rivi)
+                                  :valmistumispvm (:valmistumispvm rivi)
+                                  :paikkaustoteuma-id (:paikkaustoteuma-id rivi)}))
+
+(defn- luo-paikkaustoteuma! [db user rivi urakka-id]
+  (q/luo-paikkaustoteuma! db {:urakka urakka-id
+                              :paikkauskohde (:paikkauskohde rivi)
+                              :tie (:tie rivi)
+                              :aosa (:aosa rivi)
+                              :aet (:aet rivi)
+                              :losa (:losa rivi)
+                              :let (:let rivi)
+                              :luoja (:id user)
+                              :tyyppi (or (:tyyppi rivi) "kokonaishintainen")
+                              :tyomenetelma (:tyomenetelma rivi)
+                              :valmistumispvm (:valmistumispvm rivi)
+                              :hinta (:hinta rivi)}))
+
+(defn tallenna-paikkauskustannukset!
+  [db user {:keys [hakuparametrit rivit] :as tiedot}]
+  (assert (some? tiedot) "Tallenna-paikkauskustannukset tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  (jdbc/with-db-transaction [db db]
+                            (doseq [rivi rivit]
+                              (let [tyomenetelma (:tyomenetelma rivi)
+                                    rivi (if (string? tyomenetelma)
+                                           (assoc rivi :tyomenetelma (q/hae-tyomenetelman-id db tyomenetelma))
+                                           rivi)]
+                                (assert (:tyomenetelma rivi) "Työmenetelmä puuttuu.")
+                                (assert (:valmistumispvm rivi) "Valmistumispvm puuttuu.")
+                                (assert (:hinta rivi) "Hinta puuttuu.")
+                                (ypk-yleiset/vaadi-paikkauskohde-kuuluu-urakkaan db
+                                                                                 (::paikkaus/urakka-id tiedot)
+                                                                                 (:paikkauskohde rivi))
+                                (if (pos-int? (:paikkaustoteuma-id rivi))
+                                  (paivita-paikkaustoteuma! db user rivi)
+                                  (luo-paikkaustoteuma! db
+                                                        user
+                                                        rivi
+                                                        (::paikkaus/urakka-id tiedot)))))
+
+                            ;; Palautetaan symmetrisesti käyttäjän hakuehtojen mukaisesti urakan kustannukset
+                            (hae-paikkausurakan-kustannukset db user hakuparametrit)))
+
+(defn ilmoita-virheesta-paikkaustiedoissa!
+  [db fim email user {::paikkaus/keys [id nimi urakka-id  pinta-ala-summa massamenekki-summa rivien-lukumaara
+                                       tyomenetelma saate muut-vastaanottajat kopio-itselle?] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-kustannukset user (::paikkaus/urakka-id tiedot))
+  (let [urakka-sampo-id (urakat-q/hae-urakan-sampo-id db urakka-id)
+        paikkauskohde-id (get-in tiedot [::paikkaus/paikkauskohde ::paikkaus/id])
+        response (viestinta/laheta-sposti-urakoitsijalle-paikkauskohteessa-virhe (merge tiedot
+                                                                                          {:email email
+                                                                                           :fim fim
+                                                                                           :kopio-itselle? kopio-itselle?
+                                                                                           :muut-vastaanottajat muut-vastaanottajat
+                                                                                           :urakka-sampo-id urakka-sampo-id
+                                                                                           :tyomenetelma tyomenetelma
+                                                                                           ;:pinta-ala-summa pinta-ala-summa
+                                                                                           ::massamenekki-summa massamenekki-summa
+                                                                                           :rivien-lukumaara rivien-lukumaara
+                                                                                           :saate saate
+                                                                                           :ilmoittaja user}))]
+    (if (not (contains? response :virhe))
+      (q/paivita-paikkauskohteen-ilmoitettu-virhe! db {:id paikkauskohde-id :ilmoitettu-virhe saate}))
+    response
+  ))
+
+(defn- laheta-paikkauskohde-yhaan
+  "Lähettää annetut kohteet teknisine tietoineen YHAan."
+  [db yhap {:keys [urakka-id kohde-id]}]
+  (let [lahetys (try+ (yha-paikkauskomponentti/laheta-paikkauskohde yhap urakka-id kohde-id)
+                      (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                        virheet))
+        lahetys-onnistui? (not (contains? lahetys :virhe))]
+    (merge
+      {:paikkauskohde nil}
+      (when-not lahetys-onnistui?
+        lahetys))))
+
+(defn- paikkaustyomenetelman-koodi->lyhenne [db koodi]
+  (:lyhenne (first (q/hae-paikkauskohteen-tyomenetelma db {:id koodi}))))
+
+(defn- yha-lahetettava? [db paikkauskohde]
+  (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan?
+    (paikkaustyomenetelman-koodi->lyhenne db (::paikkaus/tyomenetelma paikkauskohde))))
+
+(defn merkitse-paikkauskohde-tarkistetuksi!
+  [db yhap user {::paikkaus/keys [urakka-id paikkauskohde hakuparametrit] :as tiedot}]
+  (assert (some? tiedot) "ilmoita-virheesta-paikkaustiedoissa tietoja puuttuu.")
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat user (::paikkaus/urakka-id tiedot))
+  (when (yha-lahetettava? db paikkauskohde)
+    (laheta-paikkauskohde-yhaan db yhap {:urakka-id urakka-id :kohde-id (::paikkaus/id paikkauskohde)}))
+  (let [paikkauskohde-id (::paikkaus/id paikkauskohde)
+        user-id (:id user)]
+    (assert (some? paikkauskohde-id) "Paikkauskohteen tunniste puuttuu")
+    (assert (some? user-id) "Käyttäjän tunniste puuttuu")
+    (q/merkitse-paikkauskohde-tarkistetuksi! db {:id paikkauskohde-id :tarkistaja-id user-id})
+    (hae-urakan-paikkaukset db user hakuparametrit)))
 
 (defrecord Paikkaukset []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
-      (julkaise-palvelu http :hae-urakan-paikkauskohteet
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))
+          fim (:fim this)
+          db (:db this)
+          yha-paikkaus (:yha-paikkauskomponentti this)]
+      (julkaise-palvelu http :hae-urakan-paikkaukset
                         (fn [user tiedot]
-                          (hae-urakan-paikkauskohteet db user tiedot))
-                        {:kysely-spec ::paikkaus/urakan-paikkauskohteet-kysely
-                         :vastaus-spec ::paikkaus/urakan-paikkauskohteet-vastaus})
+                          (hae-urakan-paikkaukset db user tiedot)))
       (julkaise-palvelu http :hae-paikkausurakan-kustannukset
                         (fn [user tiedot]
                           (hae-paikkausurakan-kustannukset db user tiedot))
                         {:kysely-spec ::paikkaus/paikkausurakan-kustannukset-kysely
                          :vastaus-spec ::paikkaus/paikkausurakan-kustannukset-vastaus})
+      (julkaise-palvelu http :tallenna-paikkauskustannukset
+                        (fn [user tiedot]
+                          (tallenna-paikkauskustannukset! db user tiedot)))
+      (julkaise-palvelu http :ilmoita-virheesta-paikkaustiedoissa
+                        (fn [user tiedot]
+                          (ilmoita-virheesta-paikkaustiedoissa! db fim email user tiedot)))
+      (julkaise-palvelu http :merkitse-paikkauskohde-tarkistetuksi
+                        (fn [user tiedot]
+                            (merkitse-paikkauskohde-tarkistetuksi! db yha-paikkaus user tiedot)))
       this))
 
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :hae-urakan-paikkauskohteet
-      :hae-paikkausurakan-kustannukset)
+      :hae-urakan-paikkaukset
+      :hae-paikkausurakan-kustannukset
+      :tallenna-paikkauskustannukset
+      :ilmoita-virheesta-paikkaustiedoissa
+      :merkitse-paikkauskohde-tarkistetuksi)
     this))

@@ -25,7 +25,7 @@
     [harja.kyselyt.toteumat :as toteumat-q]
     [harja.kyselyt.konversio :as konversio]
     [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-    [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+    [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
     [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.text SimpleDateFormat)))
@@ -42,10 +42,10 @@
   (laheta-varustetoteuma [this varusteoteuma-id]))
 
 (def tietolajitunnisteet #{"tl523" "tl501" "tl517" "tl507" "tl508" "tl506"
-                           "tl522" "tl513" "tl196" "tl519" "tl505" "tl195"
-                           "tl504" "tl198" "tl518" "tl514" "tl509" "tl515"
-                           "tl503" "tl510" "tl512" "tl165" "tl516" "tl511"
-                           "tl323" "tl524"})
+                           "tl522" "tl513" "tl520" "tl505"
+                           "tl504" "tl518" "tl514" "tl509"
+                           "tl515" "tl503" "tl510" "tl512" "tl516"
+                           "tl511" "tl524"})
 
 (defn validoi-tietolajitunniste [tunniste]
   (log/debug "Validoidaan tunniste: " (pr-str tunniste))
@@ -148,8 +148,8 @@
       this))
   (stop [this]
     (when (ominaisuus-kaytossa? :tierekisteri)
-      (:uudelleenlahetys-tehtava this))
-    this)
+      ((:uudelleenlahetys-tehtava this)))
+    (dissoc this :uudelleenlahetys-tehtava))
 
   TierekisteriPalvelut
   (hae-tietolaji

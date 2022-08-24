@@ -17,8 +17,13 @@
 (defn erilliskustannuksen-nimi
   [tyyppi]
   (case tyyppi
+    "alihankintabonus" "Alihankinta\u00ADbonus"
     "asiakastyytyvaisyysbonus" "As.tyyt.\u00ADbonus"
-    "muu" "Muu"))
+    "lupausbonus" "Lupaus\u00ADbonus"
+    "muu" "Muu"
+    "tavoitepalkkio" "Tavoite\u00ADpalkkio"
+
+    "Tuntematon kustannustyyppi"))
 
 (defn hae-erilliskustannukset-aikavalille
   [db user urakka-annettu? urakka-id

@@ -1,4 +1,6 @@
 @import "colors.less";
+@import "../livi_tyylit";
+@import "../yleiset";
 
 label.radio- {
     &hover {
@@ -11,98 +13,130 @@ label.radio- {
     }
 }
 
+
+@check-sisapalikan-sivunpituus: 14px;
+
 .vayla-checkbox {
-    display: none;
+  // Läpinäkyväksi ja negatiivinen margin, jotta toimii helposti näppäimistöllä.
+  opacity: 0;
+  margin-right: -13px;
+
+  // Yleiset asetukset checkboxille, sekä checkattu että ei
+  & + label {
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: normal;
+    color: @black-default;
+    margin-top: @valistys-4;
+
+    // ns. välitila checkboksille (osa valittu)
+    &.indeterminate {
+      &:before {
+        content: "\2012";
+        padding-right: 6px;
+        padding-left: 5px;
+      }
+    }
+
+    &:before {
+      content: "\2713";
+      margin-right: 0.75rem;
+      border: 2px solid @blue-default;
+      color: @white-default;
+      background: @white-default;
+      border-radius: 4px;
+      z-index: 1;
+      padding: 0px 4px 0px 4px;
+    }
+  }
+
+  &:hover:not([disabled]) + label,
+  &:focus-visible:not([disabled]) + label {
+    &:before {
+      background: @blue-light;
+    }
+  }
+
+  &:focus-visible:not([disabled]) + label {
+    &:before {
+      border: 2px dashed @blue-default;
+    }
+  }
+
+  // Ei-checkattu checkbox
+  &:not(:checked) {
+    & + label {
+      &:before {
+        color: @white-default;
+        background: @white-default;
+      }
+
+    }
+
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        color: @blue-light;
+      }
+    }
+
+  }
+
+  // Checkattu checkbox
+  &:checked {
 
     & + label {
-        position: relative;
-        cursor: pointer;
-        padding: 0;
-        display: flex;
-        align-items: center;
-
-        font-size: 0.875rem;
-        font-weight: normal;
-        color:@gray25;
-
-        &:before {
-            content: '';
-            margin-right: 0px;
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background: transparent;
-            outline: solid 2px @gray25;
-            outline-offset: -8px;
-        }
+      &:before {
+        color: @white-default;
+        background: @blue-default;
+      }
     }
 
-    &:hover, &:focus {
-        + label:before {
-            background: @gray235;
-            outline-color: @blue-dark;
-            color: @blue-dark;
-        }
-        &:checked + label:after {
-            background: @blue-dark;
-        }
+    &:hover:not([disabled]) + label,
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        background: @blue-dark;
+        color: @white-default;
+      }
     }
 
+    &:focus-visible:not([disabled]) + label {
+      &:before {
+        color: @white-default;
+      }
+    }
+  }
+
+  &:disabled + label {
+    cursor: default;
+    color: @black-lighter;
+
+    &:before {
+      background-color: @white-default;
+      border: 2px solid @white-darker;
+      color: @white-default;
+    }
     &:checked {
-        + label {
-            &:before {
-                outline-color: @focus-color;
-            }
-            &:after {
-                content: '';
-                position: absolute;
-                left: 13px;
-                top: 13px;
-                background: @focus-color;
-                width: 14px;
-                height: 14px;
-            }
-        }
-        &.osittain + label:after {
-            content: '';
-            position: absolute;
-            left: 13px;
-            top: 13px;
-            background: transparent;
-            outline: solid 2px @focus-color;
-            width: 14px;
-            height: 14px;
-        }
+      &:before {
+        background-color: @white-darker;
+      }
     }
+  }
 
-    &:disabled {
-        + label {
-            color: @gray200;
-            cursor: auto;
-            &:before {
-                outline-color: @gray200;
-                background: transparent;
-            }
-        }
-        &:checked {
-            + label {
-                color: @gray200;
-                cursor: auto;
-                &:before {
-                    outline-color: @gray200;
-                    background: transparent;
-                }
-                &:after {
-                    background: @gray200;
-                }
-            }
-            &.osittain {
-                + label:after {
-                    outline-color: @gray200;
-                }
-            }
-        }
+  &:disabled&:checked + label {
+    &:before {
+      background-color: @white-darker;
     }
+  }
+
+  & ~ label.margin-top-16 {
+    margin-top: @valistys-16;
+  }
+
+
+  & ~ label.margin-bottom-8 {
+    margin-bottom: @valistys-8;
+  }
 }
 
 .vayla-radio {
@@ -121,8 +155,11 @@ label.radio- {
 
     &:before {
       content: '';
-      margin-right: 0px;
+      // nollamarginilla pallon ja labelin välissä on 5px,
+      // Lisätään vielä kolme, jotta täsmää ui-speksiin.
+      margin-right: 3px;
       display: inline-block;
+      min-width: 32px;
       width: 32px;
       height: 32px;
       background: transparent;
@@ -131,6 +168,16 @@ label.radio- {
       border-radius: 20px;
     }
   }
+
+  &.tiivis + label {
+    &:before {
+      margin-right: 5px;
+      width: 20px;
+      min-width: 20px;
+      height: 20px;
+      border: 1px solid transparent;
+      box-shadow: inset 0 0 0 1px @gray25;
+    }}
 
   &:hover, &:focus {
     + label:before {
@@ -144,6 +191,12 @@ label.radio- {
     }
   }
 
+  &.tiivis:hover, &.tiivis:focus {
+    + label:before {
+      box-shadow: inset 0 0 0 1px @blue-dark;
+    }
+  }
+
   &:checked {
     + label {
       &:before {
@@ -152,6 +205,7 @@ label.radio- {
       &:after {
         content: '';
         width: 12px;
+        min-width: 12px;
         height: 12px;
         background: @focus-color;
 
@@ -162,9 +216,22 @@ label.radio- {
     }
   }
 
+  &.tiivis:checked {
+    + label {
+      &:before {
+        box-shadow: inset 0 0 0 1px @focus-color;
+      }
+      &:after {
+        width: 8px;
+        min-width: 8px;
+        height: 8px;
+        left: 6px;
+      }
+    }
+  }
+
   &:disabled {
     + label {
-      color: @gray200;
       cursor: auto;
       &:before {
         box-shadow: inset 0 0 0 2px @gray200;
@@ -174,7 +241,6 @@ label.radio- {
     }
     &:checked {
       + label {
-        color: @gray200;
         cursor: auto;
         &:before {
           box-shadow: inset 0 0 0 2px @gray200;
@@ -187,4 +253,24 @@ label.radio- {
       }
     }
   }
+
+  &.tiivis:disabled {
+    + label {
+      &:before {
+        box-shadow: inset 0 0 0 1px @gray200;
+      }
+    }
+    &:checked {
+      + label {
+        &:before {
+          box-shadow: inset 0 0 0 1px @gray200;
+        }
+      }
+    }
+  }
+
+  &-lapsi {
+    margin-left: @valistys-32;
+  }
 }
+

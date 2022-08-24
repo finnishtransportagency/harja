@@ -46,7 +46,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :sanktioraportti-yllapito
                                  :konteksti "urakka"
-                                 :urakka-id (hae-muhoksen-paallystysurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.1.2017")
                                               :urakkatyyppi :paallystys}})

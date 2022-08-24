@@ -13,8 +13,7 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [harja.palvelin.palvelut.sopimukset :as sopimukset]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]))
+            [harja.palvelin.palvelut.sopimukset :as sopimukset]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -23,12 +22,9 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet (component/using
-                                                      (pois-kytketyt-ominaisuudet/->PoisKytketytOminaisuudet nil)
-                                                      [:http-palvelin])
                         :sopimukset (component/using
                                       (sopimukset/->Sopimukset)
-                                      [:db :pois-kytketyt-ominaisuudet :http-palvelin])))))
+                                      [:db :http-palvelin])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))

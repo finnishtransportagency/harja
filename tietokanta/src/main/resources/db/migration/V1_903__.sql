@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS paivita_materiaalin_kaytto_hoitoluokittain_paivalle(pvm_ DATE);

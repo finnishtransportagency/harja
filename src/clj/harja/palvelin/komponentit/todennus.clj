@@ -10,7 +10,6 @@
              [oikeudet :as oikeudet]]
             [harja.kyselyt
              [kayttajat :as q]]
-            [harja.palvelin.komponentit.tapahtumat :refer [kuuntele!]]
             [slingshot.slingshot :refer [throw+ try+]]
             [taoensso.timbre :as log])
   (:import (org.apache.commons.codec.net BCodec)))
@@ -169,7 +168,7 @@ ja palauttaa käyttäjätiedot"
        :as headerit}]
 
   ;; Järjestelmätunnuksilla ei saa kirjautua varsinaiseen Harjaan
-  (println "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
+  (log/debug "onko-jarjestelma?" kayttajanimi "->" (q/onko-jarjestelma? db kayttajanimi))
   (if (q/onko-jarjestelma? db kayttajanimi)
     (throw+ todennusvirhe)
     (let [roolit (kayttajan-roolit (partial q/hae-urakan-id-sampo-idlla db)
@@ -188,7 +187,7 @@ ja palauttaa käyttäjätiedot"
                        db
                        (assoc kayttaja
                          :organisaatio (:id organisaatio)))]
-     (log/info "SÄHKE HEADERIT: " headerit
+     (log/info "SÄHKE HEADERIT: " (str kayttajanimi ": " ryhmat)
                "; KÄYTTÄJÄ ID: " kayttaja-id
                "; ORGANISAATIO: " organisaatio)
      (merge (assoc kayttaja
@@ -218,7 +217,7 @@ headerit palautetaan normaalisti."
                     oam-tiedot))
            oam-tiedot)
       (catch Throwable t
-        (log/warn t "Käyttäjätietojen varmistuksessa virhe!")))))
+        (log/error t "Käyttäjätietojen varmistuksessa virhe!")))))
 
 (defprotocol Todennus
   "Protokolla HTTP pyyntöjen käyttäjäidentiteetin todentamiseen."
@@ -239,7 +238,7 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
           kayttaja-id (headerit "oam_remote_user")]
       (if (nil? kayttaja-id)
         (do
-          (log/warn "Todennusheader oam_remote_user puuttui kokonaan")
+          (log/warn (str "Todennusheader oam_remote_user puuttui kokonaan" headerit))
           (throw+ todennusvirhe))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)

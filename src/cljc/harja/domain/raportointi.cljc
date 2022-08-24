@@ -1,10 +1,13 @@
 (ns harja.domain.raportointi
   (:require [harja.domain.roolit :as roolit]))
 
+;; API to colors that can be used in Excel:
+;; https://poi.apache.org/apidocs/4.0/org/apache/poi/ss/usermodel/IndexedColors.html
+
 (def virhetyylit
-  {:virhe "rgb(221,0,0)"
+  {:virhe    "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
-   :info "rgb(0,136,204)"})
+   :info     "rgb(0,136,204)"})
 
 
 ;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
@@ -13,32 +16,37 @@
 ;; excel pitämistä synkassa. Haluamme tietenkin, että huomiovärit ovat kaikissa kolmessa
 ;; formaatissa edes melkein samat.
 
-(def rajat-excel {:border-left :thin
-                  :border-right :thin
+(def rajat-excel {:border-left   :thin
+                  :border-right  :thin
                   :border-bottom :thin
-                  :border-top :thin})
+                  :border-top    :thin})
 
 ;; https://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/IndexedColors.html
 (def virhetyylit-excel
-  {:virhe    (merge rajat-excel
-                    {:background :dark_red
-                     :font       {:color :white}})
+  {:virhe (merge rajat-excel
+                 {:background :dark_red
+                  :font {:color :white}})
    :varoitus (merge rajat-excel
                     {:background :orange
-                     :font       {:color :black}})
-   :info     (merge rajat-excel
-                    {:background :light_turquoise
-                     :font       {:color :black}})})
+                     :font {:color :black}})
+   :info (merge rajat-excel
+                {:background :light_turquoise
+                 :font {:color :black}})
+   :disabled {:font {:color :grey_80_percent}}})
 
-(defn solun-oletustyyli-excel [lihavoi? korosta?]
+(defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti?]
   (let [deep-merge (partial merge-with merge)]
     (cond-> {}
-           lihavoi?
-           (merge {:font {:bold true}})
+            lihavoi?
+            (merge {:font {:bold true}})
 
-           korosta?
-           (deep-merge (merge rajat-excel {:background :yellow
-                                                 :font       {:color :black}})))))
+            korosta?
+            (deep-merge (merge rajat-excel {:background :dark_blue
+                                            :font       {:color :white}}))
+
+            korosta-hennosti?
+            (deep-merge {:background :pale_blue
+                         :font       {:color :black}}))))
 
 (defn varillinen-teksti [tyyli teksti]
   [:varillinen-teksti {:arvo teksti :tyyli tyyli}])
@@ -55,6 +63,11 @@
   (and (vector? solu)
        (> (count solu) 1)
        (keyword? (first solu))))
+
+(defn excel-kaava?
+  [solu]
+  (and (raporttielementti? solu)
+    (= :kaava (first solu))))
 
 (defn sarakkeessa-raporttielementteja? [sarakkeen-indeksi taulukko-riveja]
   (let [sarakkeen-solut
@@ -93,9 +106,9 @@
   [solu]
   (if (raporttielementti? solu)
     (case (get-in solu [1 :fmt?])
-     true true
-     false false
-     true)
+      true true
+      false false
+      true)
 
     true))
 
@@ -114,4 +127,26 @@
   (try
     (apply (partial fn arvo) args)
     #?(:cljs (catch js/Object _ arvo))
-    #?(:clj (catch Exception _ arvo))))
+    #?(:clj (catch Exception _ arvo))
+    #?(:clj (catch Error _ arvo))))
+
+(defn numero-fmt? [fmt]
+  (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
+
+(def +mahdolliset-roolit+
+  [[nil "Kaikki"]
+   [:urakanvalvoja "Urakanvalvoja"]
+   [:ely-kayttaja "ELY:n käyttajä"]
+   [:ely-paakayttaja "ELY:n paakayttaja"]
+   [:jvh "Järjestelmävastaava"]
+   [:rakennuttajakonsultti "Rakennuttajakonsultti"]
+   [:urak-vastuuhenkilo "Urakoitsijan vastuuhenkilö"]
+   [:urak-paakayttaja "Urakoitsijan pääkäyttäjä"]])
+
+(def +mahdolliset-roolit-avaimet+
+  (keep #(first %) +mahdolliset-roolit+))
+
+(defn roolin-avain->nimi [avain]
+  (second
+    (first (filter #(= avain (first %))
+                   +mahdolliset-roolit+))))

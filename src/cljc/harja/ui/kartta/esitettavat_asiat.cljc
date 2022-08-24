@@ -66,10 +66,11 @@
     :else viivat))
 
 (defn- maarittele-piste
-  [valittu? merkki]
+  [valittu? merkki ikonin-vari]
   (let [merkki (first (validoi-merkkiasetukset merkki))]
     (merge
-      {:scale (laske-skaala valittu?)}
+      {:scale (laske-skaala valittu?)
+       :color ikonin-vari}
       merkki)))
 
 (defn- maarittele-viiva
@@ -158,48 +159,51 @@
   ([asia valittu?] (maarittele-feature asia valittu? [{}] [{}]))
   ([asia valittu? merkit] (maarittele-feature asia valittu? merkit [{}]))
   ([asia valittu? merkit viivat]
-   (maarittele-feature asia valittu? merkit viivat nil))
+   (maarittele-feature asia valittu? merkit viivat nil nil))
   ([asia valittu? merkit viivat pisteen-ikoni]
+   (maarittele-feature asia valittu? merkit viivat pisteen-ikoni nil))
+  ([asia valittu? merkit viivat pisteen-ikoni ikonin-vari]
    (let [geo (or (:sijainti asia) asia)
          tyyppi (:type geo)
-         koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))]
-     (if (= :geometry-collection tyyppi)
-       (merge
-         (maarittele-viiva valittu? merkit viivat)
-         asia)
-       (when (not (empty? koordinaatit))
-         (cond
-           ;; {:type :multipoint, :coordinates [{:type :point, :coordinates [298069.5999999996 6702931.0030000005]}]}
-           (and (= :multipoint tyyppi) (= 1 (count koordinaatit)))
-           (when (or pisteen-ikoni merkit)
-             (merge
-              (maarittele-piste valittu? (or pisteen-ikoni merkit))
-              {:type :merkki
-               :coordinates (:coordinates (first koordinaatit))}))
+         koordinaatit (or (:coordinates geo) (:points geo) (mapcat :points (:lines geo)))
+         vastaus (if (= :geometry-collection tyyppi)
+                   (merge
+                     (maarittele-viiva valittu? merkit viivat)
+                     asia)
+                   (when (not (empty? koordinaatit))
+                     (cond
+                       ;; {:type :multipoint, :coordinates [{:type :point, :coordinates [298069.5999999996 6702931.0030000005]}]}
+                       (and (= :multipoint tyyppi) (= 1 (count koordinaatit)))
+                       (when (or pisteen-ikoni merkit)
+                         (merge
+                           (maarittele-piste valittu? (or pisteen-ikoni merkit) ikonin-vari)
+                           {:type :merkki
+                            :coordinates (:coordinates (first koordinaatit))}))
 
-           (= :multipoint tyyppi)
-           nil
+                       (= :multipoint tyyppi)
+                       nil
 
-           ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
-           ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
-           (or (= :point tyyppi) (= 1 (count koordinaatit)))
-           (when (or pisteen-ikoni merkit)
-             (merge
-               (maarittele-piste valittu? (or pisteen-ikoni merkit))
-               {:type :merkki
-                :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
+                       ;; Näyttää siltä että joskus saattaa löytyä LINESTRINGejä, joilla on vain yksi piste
+                       ;; Ei tietoa onko tämä virheellistä testidataa vai real world case, mutta varaudutaan siihen joka tapauksessa
+                       (or (= :point tyyppi) (= 1 (count koordinaatit)))
+                       (when (or pisteen-ikoni merkit)
+                         (merge
+                           (maarittele-piste valittu? (or pisteen-ikoni merkit) ikonin-vari)
+                           {:type :merkki
+                            :coordinates (flatten koordinaatit)})) ;; [x y] -> [x y] && [[x y]] -> [x y]
 
-           (= :line tyyppi)
-           (merge
-             (maarittele-viiva valittu? merkit viivat)
-             {:type :viiva
-              :points koordinaatit})
+                       (= :line tyyppi)
+                       (merge
+                         (maarittele-viiva valittu? merkit viivat)
+                         {:type :viiva
+                          :points koordinaatit})
 
-           (= :multiline tyyppi)
-           (merge
-             (maarittele-viiva valittu? merkit viivat)
-             {:type :moniviiva
-              :lines (:lines geo)})))))))
+                       (= :multiline tyyppi)
+                       (merge
+                         (maarittele-viiva valittu? merkit viivat)
+                         {:type :moniviiva
+                          :lines (:lines geo)}))))]
+     vastaus)))
 
 ;;;;;;
 
@@ -502,7 +506,7 @@
   [toimenpide]
   (let [[viivat _] (tehtavan-viivat-ja-nuolitiedosto
                      [toimenpide] false)]
-    {:nimi toimenpide :teksti toimenpide
+    {:teksti toimenpide
      :vari (viivojen-varit-leveimmasta-kapeimpaan viivat)}))
 
 (defmethod asia-kartalle :toteuma [toteuma valittu?]
@@ -685,6 +689,21 @@
                                 viivamerkit
                                 viivat
                                 ikoni))))
+
+(defmethod asia-kartalle :varusteet-ulkoiset [kohde valittu?]
+  (let [[teksti viivat vari ikoni] (ulkoasu/varustetoteuma kohde)]
+    (assoc kohde
+      :type :varusteet-ulkoiset
+      :nimi (:ulkoinen-oid kohde)
+      :selite {:teksti teksti
+               :vari vari}
+      :alue (maarittele-feature
+              kohde
+              valittu?
+              nil
+              viivat
+              ikoni 
+              vari))))
 
 (defmethod asia-kartalle :default [{tyyppi :tyyppi-kartalla :as asia} _]
   (if tyyppi

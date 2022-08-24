@@ -3,10 +3,10 @@
   (:require [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka.toteumat.suola :as suola]
             [cljs.core.async :refer [<!]]
+            [clojure.string :as str]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.urakka :as u]
             [harja.loki :refer [log logt tarkkaile!]]
-            [harja.ui.debug :as debug]
             [harja.pvm :as pvm]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.views.urakka.valinnat :as valinnat]
@@ -81,7 +81,7 @@
 
 ;; pohjavesialueet (:nimi :tunnus :tie :alue)
 
-;; pv-rajat "tunnus tie" ->
+;; pv-rajat "tie tunnus" ->
 ;;      (:nimi
 ;;      :pohjavesialue (tunnus)
 ;;      :urakka
@@ -90,7 +90,10 @@
 ;;      :tie)
 
 ;; wrapped value
-;;   "tunnus tie" -> (:nimi :tunnus :tie :alue :talvisuolaraja)
+;;   "tie tunnus" -> (:nimi :tunnus :tie :alue :talvisuolaraja)
+
+;; Tie tunnus-tunnisteen järjestys vaikuttaa siihen missä järjestyksessä pohjavesialueet esitetään käyttöliittymässä.
+;; Nyt alueet järjestetään tienumeron mukaan. Jos järjestys halutaan vaihtaa, muuta kaikki kolme kohtaa, joissa kommentti ;; tie tunnus.
 
 ;; syotettavat-tiedot:pohjavesialue-talvisuola
 ;;   (:nimi :pohjavesialue :urakka :hoitokauden_alkuvuosi :talvisuolaraja :tie)
@@ -98,11 +101,11 @@
 (defn pohjavesialueet-muokkausdata []
   (let [pohjavesialueet @pohjavesialueet
         pv-rajat (into {}
-                       (map (juxt #(str (:pohjavesialue %) " " (:tie %)) identity))
+                       (map (juxt #(str (:tie %) " " (:pohjavesialue %)) identity)) ;; tie tunnus
                        (:pohjavesialue-talvisuola @syotettavat-tiedot))]
     (wrap (into (sorted-map)
                 (map (fn [pohjavesialue]
-                       (let [avain (str (:tunnus pohjavesialue) " " (:tie pohjavesialue))]
+                       (let [avain (str (:tie pohjavesialue) " " (:tunnus pohjavesialue))] ;; tie tunnus
                          [avain
                           (assoc pohjavesialue :talvisuolaraja (:talvisuolaraja (get pv-rajat avain)))])))
                 pohjavesialueet)
@@ -110,13 +113,14 @@
                   (fn [pohjavesialue-talvisuola]
                     (reduce (fn [pohjavesialue-talvisuola tunnus]
                                         ;(log "PV " tunnus)
-                              (let [[tunnus-pohjavesialue tie] (clojure.string/split tunnus " ")
+                              (let [tie (first (str/split tunnus " "))
+                                      tunnus-pohjavesialue (str/join " " (rest (str/split tunnus " "))) ;; tie tunnus
                                     paivitettava (first (filter integer? (keep-indexed (fn [i pv-raja]
                                                                                          (and (= tunnus-pohjavesialue (:pohjavesialue pv-raja))
                                                                                               (= tie (:tie pv-raja))
                                                                                               i))
                                                                                        pohjavesialue-talvisuola)))]
-                                
+
                                         ;(log "PV paivitettava " paivitettava)
                                 (if paivitettava
                                   (do
@@ -210,7 +214,7 @@
             :varoita [tarkista-sakko-ja-bonus]
             :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"}
 
-           (when (urakka/indeksi-kaytossa?)
+           (when (urakka/indeksi-kaytossa-sakoissa?)
              {:otsikko "Indeksi" :nimi :indeksi :tyyppi :valinta
               :muokattava? (constantly saa-muokata?)
               :valinta-nayta #(if (not saa-muokata?)
@@ -234,6 +238,7 @@
                                {:otsikko "Tie" :nimi :tie :muokattava? (constantly false) :leveys "10%"}
                                {:otsikko "Käyttöraja"
                                 :nimi :talvisuolaraja
+                                :fmt fmt/piste->pilkku
                                 :tyyppi :positiivinen-numero
                                 :yksikko "t/km"
                                 :aseta (fn [rivi arvo]

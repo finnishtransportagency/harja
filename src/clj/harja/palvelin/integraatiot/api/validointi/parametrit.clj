@@ -3,7 +3,7 @@
 
   (:require [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]])
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn heita-virheelliset-parametrit-poikkeus [viesti]

@@ -20,7 +20,7 @@
 (defn hae-tr-pisteilla
   "params on mappi {:x1 .. :y1 .. :x2 .. :y2 ..}"
   [db params]
-  (println "hae tr pisteillä: " params)
+  (log/debug "hae tr pisteillä: " params)
   (try
     (when-let [tros (first (tv/hae-tr-osoite-valille db
                                                      (:x1 params) (:y1 params)
@@ -150,9 +150,7 @@
 (defn hae-osien-tiedot
   [db params]
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
-  (map (fn [tieto]
-         (update tieto :pituudet konv/jsonb->clojuremap))
-       (tv/hae-trpisteiden-valinen-tieto db params)))
+  (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle

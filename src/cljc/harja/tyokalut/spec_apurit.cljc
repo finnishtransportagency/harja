@@ -1,7 +1,5 @@
 (ns harja.tyokalut.spec-apurit
-  (:require [clojure.spec.alpha :as s]
-    #?@(:clj [
-            ])))
+  (:require [clojure.spec.alpha :as s]))
 
 ;; PostgreSQL raja-arvot
 
@@ -10,6 +8,10 @@
 
 (s/def ::postgres-int (s/and int? #(s/int-in-range? postgres-int-min postgres-int-max %)))
 (s/def ::postgres-serial (s/and nat-int? #(s/int-in-range? 1 postgres-int-max %)))
+
+;; Yleiset speckit
+(s/def ::positive-int? (s/and integer? #(>= % 0)))
+(s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf) #?(:cljs #(not (.isNaN js/Number %)))))
 
 ;; Yleiset apufunktiot
 

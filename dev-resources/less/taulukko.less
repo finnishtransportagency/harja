@@ -8,7 +8,7 @@
 .suunta-ikoni-loop(@suunnat; @ikoni; @i: length(@suunnat)) when (@i > 0) {
   @suunta: extract(@suunnat, @i);
   .@{ikoni}-@{suunta}{
-    color: @blue;
+    color: @blue-default;
   }
   .suunta-ikoni-loop(@suunnat; @ikoni; @i - 1);
 }
@@ -19,7 +19,7 @@
   width: 100%;
   border: none;
   word-break: break-all;
-  .piillotettu, &.piillotettu {
+  .piilotettu, &.piilotettu {
     display:none;
   }
 
@@ -38,7 +38,7 @@
     display: flex;
     flex-direction: row;
 
-    &.piillotettu {
+    &.piilotettu {
       display: none;
     }
   }

@@ -28,13 +28,7 @@
 
        :email {:taso :error
                :palvelin "solita-service-1.solita.fi"
-
-               ;; Lisää nimesi vektoriin, jos haluat spämmiä
-               :vastaanottaja [;;"tatu.tarvainen@solita.fi"
-                               ;;"jarno.vayrynen@solita.fi"
-                               ;;"mikko.ronkkomaki@solita.fi"
-                               ]}
-       }
+               :vastaanottaja []}}
 
  ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
  ;; tarvii SSH-tunnelin testi-Sonjaan!!
