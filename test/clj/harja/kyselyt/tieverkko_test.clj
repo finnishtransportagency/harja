@@ -45,10 +45,10 @@
   (let [haku-alku 2
         haku-loppu 5
         odotettu-raaka-tulos [{:tr-numero 6666,
-                               :tr-osa 5,
-                               :pituudet {:pituus 1500,
-                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}],
-                                          :tr-alkuetaisyys 0}}
+                               :tr-osa 2,
+                               :pituudet {:pituus 1000,
+                                          :osoitteet [{:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}],
+                                          :tr-alkuetaisyys 1500}}
                               {:tr-numero 6666,
                                :tr-osa 4,
                                :pituudet {:pituus 4600,
@@ -56,18 +56,18 @@
                                                       {:pituus 4550, :tr-kaista 11, :tr-ajorata 2, :tr-alkuetaisyys 450}],
                                           :tr-alkuetaisyys 400}}
                               {:tr-numero 6666,
-                               :tr-osa 2,
-                               :pituudet {:pituus 1000,
-                                          :osoitteet [{:pituus 1000, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 1500}],
-                                          :tr-alkuetaisyys 1500}}]
+                               :tr-osa 5,
+                               :pituudet {:pituus 1500,
+                                          :osoitteet [{:pituus 1500, :tr-kaista 11, :tr-ajorata 1, :tr-alkuetaisyys 0}],
+                                          :tr-alkuetaisyys 0}}]
         odotettu-tulos [{:tr-numero 6666,
-                         :tr-osa 5,
-                         :pituudet {:pituus 1500,
-                                    :ajoradat [{:osiot [{:pituus 1500,
-                                                         :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}],
-                                                         :tr-alkuetaisyys 0}],
+                         :tr-osa 2,
+                         :pituudet {:pituus 1000,
+                                    :ajoradat [{:osiot [{:pituus 1000,
+                                                         :kaistat [{:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}],
+                                                         :tr-alkuetaisyys 1500}],
                                                 :tr-ajorata 1}],
-                                    :tr-alkuetaisyys 0}}
+                                    :tr-alkuetaisyys 1500}}
                         {:tr-numero 6666,
                          :tr-osa 4,
                          :pituudet {:pituus 4600,
@@ -81,13 +81,13 @@
                                                 :tr-ajorata 2}],
                                     :tr-alkuetaisyys 400}}
                         {:tr-numero 6666,
-                         :tr-osa 2,
-                         :pituudet {:pituus 1000,
-                                    :ajoradat [{:osiot [{:pituus 1000,
-                                                         :kaistat [{:pituus 1000, :tr-kaista 11, :tr-alkuetaisyys 1500}],
-                                                         :tr-alkuetaisyys 1500}],
+                         :tr-osa 5,
+                         :pituudet {:pituus 1500,
+                                    :ajoradat [{:osiot [{:pituus 1500,
+                                                         :kaistat [{:pituus 1500, :tr-kaista 11, :tr-alkuetaisyys 0}],
+                                                         :tr-alkuetaisyys 0}],
                                                 :tr-ajorata 1}],
-                                    :tr-alkuetaisyys 1500}}]]
+                                    :tr-alkuetaisyys 0}}]]
     (tarkista-tulos-ja-raaka-tulos odotettu-tulos odotettu-raaka-tulos haku-alku haku-loppu)))
 
 (deftest sama-kaista-ja-rako
