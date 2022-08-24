@@ -29,5 +29,5 @@
                       8 "Pohjois-Savo"
                       9 "Keski-Suomi"
                       10 "Etelä-Pohjanmaa"
-                      12 "Pohjois-Pohjanmaa ja Kainuu"
+                      12 "Pohjois-Pohjanmaa"
                       14 "Lappi"})

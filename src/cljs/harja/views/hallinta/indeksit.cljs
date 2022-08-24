@@ -12,13 +12,15 @@
             [harja.pvm :as pvm]
             [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.yleiset :as y])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
 (defn indeksi-grid [{:keys [indeksinimi koodi]}]
 
   (let [indeksit @i/indeksit
+        tallennus-kaynnissa? (contains? @i/indeksin-tallennus-kaynnissa indeksinimi)
         rivit (reverse (sort-by :vuosi
                                 (map #(assoc (second %) :kannassa? true)
                                      (filter (fn [[[nimi _] _]]
@@ -30,38 +32,41 @@
         tarkkuus (if platts? 2 1)
         formatter #(fmt/desimaaliluku-opt % tarkkuus)
         vihje (when platts? "Plattsin indeksit syötettävä muodossa euroa / tonni.")]
-    [:span.indeksi-grid
-     [grid/grid
-      {:otsikko (str indeksinimi (when koodi (str " (koodi: " koodi ")")))
-       :tyhja (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
-       :tallenna #(i/tallenna-indeksi indeksinimi %)
-       :tunniste :vuosi
-       :piilota-toiminnot? true
-       :voi-poistaa? #(not (:kannassa? %))}
-      [{:otsikko "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
-        :valinta-arvo identity
-        :valinta-nayta #(if (nil? %) "- valitse -" %)
+    [y/himmennys {:himmenna?            tallennus-kaynnissa?
+                  :himmennyksen-sisalto (when tallennus-kaynnissa?
+                                          [y/ajax-loader])}
+     [:span.indeksi-grid
+      [grid/grid
+       {:otsikko            (str indeksinimi (when koodi (str " (koodi: " koodi ")")))
+        :tyhja              (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
+        :tallenna           #(i/tallenna-indeksi indeksinimi %)
+        :tunniste           :vuosi
+        :piilota-toiminnot? true
+        :voi-poistaa?       #(not (:kannassa? %))}
+       [{:otsikko       "Vuosi" :nimi :vuosi :tyyppi :valinta :leveys "17%"
+         :valinta-arvo  identity
+         :valinta-nayta #(if (nil? %) "- valitse -" %)
 
-        :valinnat (vec (filter #(not (varatut-vuodet %)) (range 2009 (inc (t/year (pvm/nyt))))))
+         :valinnat      (vec (filter #(not (varatut-vuodet %)) (range 2009 (inc (t/year (pvm/nyt))))))
 
-        :validoi [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
-        :muokattava? #(not (:kannassa? %))}
+         :validoi       [[:ei-tyhja "Anna indeksin vuosi"] [:uniikki "Sama vuosi vain kerran per indeksi."]]
+         :muokattava?   #(not (:kannassa? %))}
 
-       {:otsikko "tammi" :nimi 1 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "helmi" :nimi 2 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "maalis" :nimi 3 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "huhti" :nimi 4 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "touko" :nimi 5 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "kesä" :nimi 6 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "heinä" :nimi 7 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "elo" :nimi 8 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "syys" :nimi 9 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "loka" :nimi 10 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "marras" :nimi 11 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
-       {:otsikko "joulu" :nimi 12 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}]
-      rivit]
-     (when vihje
-       [yleiset/vihje vihje])]))
+        {:otsikko "tammi" :nimi 1 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "helmi" :nimi 2 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "maalis" :nimi 3 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "huhti" :nimi 4 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "touko" :nimi 5 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "kesä" :nimi 6 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "heinä" :nimi 7 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "elo" :nimi 8 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "syys" :nimi 9 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "loka" :nimi 10 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "marras" :nimi 11 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}
+        {:otsikko "joulu" :nimi 12 :tyyppi :positiivinen-numero :desimaalien-maara tarkkuus :fmt formatter :leveys "7%"}]
+       rivit]
+      (when vihje
+        [yleiset/vihje vihje])]]))
 
   (defn- indeksitaulukot [urakkatyyppi indeksit]
     (if-not (empty? indeksit)
@@ -81,7 +86,8 @@
         urakkatyypit (keep #(if (not= :vesivayla (:arvo %))
                               %
                               {:nimi "Vesiväylät" :arvo :vesivayla-hoito})
-                           nav/+urakkatyypit+)]
+                           (conj nav/+urakkatyypit+
+                                 {:nimi "Kanavat", :arvo :vesivayla-kanavien-hoito}))] ; Kanavaurakoissa on käytössä eri indeksi kuin vesiväylissä. Tarvitaan oma hallinnointiosuus.
     [:span.indeksit
      [valinnat/urakkatyyppi
       yhteiset/valittu-urakkatyyppi
@@ -89,3 +95,4 @@
       #(reset! yhteiset/valittu-urakkatyyppi %)]
 
      [indeksitaulukot urakkatyyppi indeksit]]))
+

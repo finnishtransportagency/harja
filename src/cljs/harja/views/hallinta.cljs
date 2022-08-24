@@ -2,11 +2,8 @@
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
   (:require [reagent.core :refer [atom] :as reagent]
             [harja.ui.bootstrap :as bs]
-
-            [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as u]
             [harja.views.toimenpidekoodit :as tp]
             [harja.views.hallinta.indeksit :as i]
             [harja.views.hallinta.yhteydenpito :as yhteydenpito]
@@ -16,8 +13,8 @@
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
+            [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
-            [harja.ui.grid :as g]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -78,6 +75,12 @@
               (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
      [vu/vesivayla-hallinta])
+
+   "Raporttitiedot"
+   :raporttitiedot
+   (when (oikeudet/hallinta-indeksit)
+     ^{:key "raporttien-suoritustieto"}
+     [raporttien-suoritustieto/raporttien-suoritustieto])
 
    "Järjestelmäasetukset"
    :jarjestelma-asetukset

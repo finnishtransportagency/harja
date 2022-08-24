@@ -87,7 +87,7 @@
     (throw+ {:type :tuntematon-ilmoitus})))
 
 (defn vastaanota-tekstiviestikuittaus [jms-lahettaja db puhelinnumero viesti]
-  (log/debug (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
+  (log/warn (format "Vastaanotettiin T-LOIK kuittaus tekstiviestillä. Numero: %s, viesti: %s." puhelinnumero viesti))
   (try+
     (let [{:keys [toimenpide vapaateksti viestinumero aiheutti-toimenpiteita]} (parsi-tekstiviesti viesti)
           {:keys [ilmoitus ilmoitusid yhteyshenkilo]} (hae-paivystajatekstiviesti db viestinumero puhelinnumero)

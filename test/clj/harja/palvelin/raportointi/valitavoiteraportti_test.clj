@@ -51,36 +51,36 @@
     (is (vector? vastaus))
     (is (match vastaus
                [:raportti
-                 {:nimi "Välitavoiteraportti"
+                 {:nimi "Määräaikaan mennessä tehtävät työt"
                   :orientaatio :landscape}
                  [:taulukko
-                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Välitavoiteraportti"))
-                   :sheet-nimi "Välitavoiteraportti"
+                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Määräaikaan mennessä tehtävät työt"))
+                   :sheet-nimi "Määräaikaan mennessä tehtävät työt"
                    :tyhja nil}
                   [{:leveys 10
-                    :otsikko "Välitavoite"}
+                    :otsikko "Työn kuvaus"}
                    {:leveys 5
                     :otsikko "Takaraja"}
                    {:leveys 10
                     :otsikko "Valmistunut"}
                    {:leveys 10
                     :otsikko "Kommentti"}]
-                  [{:otsikko "Ajoissa valmistuneet (25%)"}
+                  [{:otsikko "Ajoissa valmistuneet (25 %)"}
                    ["Koko urakan alue aurattu"
                     "29.05.2014"
                     (_ :guard #(str/starts-with? % "01.05.2014"))
                     "Homma hoidettu hyvästi ennen tavoitepäivää!"]
-                   {:otsikko "Myöhässä valmistuneet (25%)"}
+                   {:otsikko "Myöhässä valmistuneet (25 %)"}
                    ["Pelkosentie 678 suolattu"
                     "23.09.2015"
                     (_ :guard #(str/starts-with? % "25.09.2015"))
                     "Aurattu, mutta vähän tuli myöhässä"]
-                   {:otsikko "Kesken (25%)"}
+                   {:otsikko "Kesken (25 %)"}
                    ["Oulaisten liikenneympyrä aurattu"
                     (_ :guard #(str/starts-with? % "01.01.2050"))
                     "-"
                     nil]
-                   {:otsikko "Valmistumatta (25%)"}
+                   {:otsikko "Valmistumatta (25 %)"}
                    ["Sepon mökkitie suolattu"
                     (_ :guard #(str/starts-with? % "24.12.2014"))
                     "-"

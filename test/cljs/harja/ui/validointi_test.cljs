@@ -1,9 +1,10 @@
 (ns harja.ui.validointi-test
-  (:require [harja.ui.validointi :as val]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as ur]
-            [harja.pvm :as pvm]
-            [cljs.test :as t :refer-macros [deftest is testing async]]))
+  (:require  [harja.ui.validointi :as val]
+             [harja.validointi :as val-cljc]
+             [harja.tiedot.navigaatio :as nav]
+             [harja.tiedot.urakka :as ur]
+             [harja.pvm :as pvm]
+             [cljs.test :as t :refer-macros [deftest is testing async]]))
 
 (defn validi-data? [saanto data & optiot]
   (apply val/validoi-saanto saanto :testi data {} {} optiot))
@@ -86,6 +87,13 @@
     (is (some? (validi-data? :ei-tyhja "     ")))
     (is (some? (validi-data? :ei-tyhja "\t")))
     (is (some? (validi-data? :ei-tyhja nil)))))
+
+(deftest ei-tyhja-jos-toinen-avain-ei-joukossa
+  (testing "Täyttää säännön ei-tyhja-jos-toinen-avain-ei-joukossa"
+    (is (nil? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa 1 {:id 1} :id [3 1])))
+    (is (nil? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa nil {:id 55} :id [1 2 55]))))
+  (testing "Ei täytä sääntöä ei-tyhja-jos-toinen-avain-ei-joukossa"
+    (is (some? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa nil {:id 11} :id [1 2 55])))))
 
 (deftest ei-negatiivinen-jos-avaimen-arvo
   (testing "Täyttää säännön ei-negatiivinen-jos-avaimen-arvo"
@@ -251,3 +259,10 @@
     (is (some? (validi-data? :ytunnus "123456789")))
     (is (some? (validi-data? :ytunnus "123456-78")))
     (is (some? (validi-data? :ytunnus "1234567-Y")))))
+
+(deftest numeron-validointi
+  (testing "testaa numeron validointia"
+    (is (true? (val-cljc/validoi-numero "3,6" 2 4 2)))
+    (is (true? (val-cljc/validoi-numero "3" 2 4 2)))
+    (is (false? (val-cljc/validoi-numero "3,61231233" 2 4 2)))
+    (is (false? (val-cljc/validoi-numero "13,6" 1 10 2)))))

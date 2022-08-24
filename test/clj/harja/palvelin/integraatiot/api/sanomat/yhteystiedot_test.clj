@@ -16,7 +16,7 @@
    :sampoid "1242141-OULU2"
    :id 4
    :alkupvm #inst"2014-09-30T21:00:00.000-00:00"
-   :elynimi "Pohjois-Pohjanmaa ja Kainuu"
+   :elynimi "Pohjois-Pohjanmaa"
    :urakkanro "1238"
    :urakoitsija-nimi "YIT Rakennus Oy"
    :elynumero 12})
@@ -58,7 +58,7 @@
 (deftest tarkista-sanoman-muodostus
   (let [odotettu-data {:urakka {:alkupvm #inst "2014-09-30T21:00:00.000-00:00"
                                 :alueurakkanro "1238"
-                                :elynimi "Pohjois-Pohjanmaa ja Kainuu"
+                                :elynimi "Pohjois-Pohjanmaa"
                                 :elynro 12
                                 :loppupvm #inst "2019-09-29T21:00:00.000-00:00"
                                 :nimi "Oulun alueurakka 2014-2019"

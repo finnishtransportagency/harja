@@ -21,6 +21,11 @@
     {:reitti (:reitti (first tulos))
      :reittipisteet (:reittipisteet (first tulos))}))
 
+(defn hae-tyokonehavainto-reitti [db params]
+  (let [tulos (q/hae-tyokonehavainto-reitti db {:tyokoneid (:tyokone-id params)})
+        reitti (:sijainti (first tulos))]
+    reitti))
+
 (defn geometrisoi-reittoteuma [db json]
   (let [parsittu  (cheshire/decode json)
         reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
@@ -37,7 +42,9 @@
   (fn [user payload]
     (if-not (roolit/jvh? user)
       (log/error "DEBUG näkymän palvelua yritti käyttää ei-jvh: " user)
-      (palvelu-fn payload))))
+      (do
+        (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
+        (palvelu-fn payload)))))
 
 
 (defrecord Debug []
@@ -45,19 +52,22 @@
   (start [{db :db
            http :http-palvelin :as this}]
     (http/julkaise-palvelut
-     http
-     :debug-hae-toteuman-reitti-ja-pisteet
-     (vaadi-jvh! (partial #'hae-toteuman-reitti-ja-pisteet db))
-     :debug-geometrisoi-reittitoteuma
-     (vaadi-jvh! (partial #'geometrisoi-reittoteuma db))
-     :debug-geometrisoi-reittipisteet
-     (vaadi-jvh! (partial #'geometrisoi-reittipisteet db)))
+      http
+      :debug-hae-toteuman-reitti-ja-pisteet
+      (vaadi-jvh! (partial #'hae-toteuman-reitti-ja-pisteet db))
+      :debug-geometrisoi-reittitoteuma
+      (vaadi-jvh! (partial #'geometrisoi-reittoteuma db))
+      :debug-geometrisoi-reittipisteet
+      (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
+      :debug-hae-tyokonehavainto-reittipisteet
+      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (http/poista-palvelut
-     http
-     :debug-hae-toteuman-reitti-ja-pisteet
-     :debug-geometrisoi-reittitoteuma
-     :debug-geometrisoi-reittipisteet)
+      http
+      :debug-hae-toteuman-reitti-ja-pisteet
+      :debug-geometrisoi-reittitoteuma
+      :debug-geometrisoi-reittipisteet
+      :debug-hae-tyokonehavainto-reittipisteet)
     this))

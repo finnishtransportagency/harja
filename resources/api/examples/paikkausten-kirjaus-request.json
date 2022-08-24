@@ -69,8 +69,8 @@
             }
           ]
         },
-        "tyomenetelma": "massapintaus",
-        "massatyyppi": "asfalttibetoni",
+        "tyomenetelma": "UREM",
+        "massatyyppi": "AB, Asfalttibetoni",
         "leveys": 10,
         "massamenekki": 12,
         "raekoko": 1,

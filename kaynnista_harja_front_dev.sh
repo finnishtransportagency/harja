@@ -1,18 +1,19 @@
 #!/bin/bash
-set -x
+set -euo pipefail
 
-LESS_WATCH_PID="$( pgrep -f [t]arkkaile_less_muutoksia.sh )"
-
-if [ -n "$LESS_WATCH_PID" ];
+if [[ $# -eq 0 ]]
 then
-  echo "----- Löydettiin käynnissä oleva less tarkkailu -----"
-  echo "$( ps -ax | grep [t]arkkaile_less_muutoksia.sh )"
-  echo "Tapetaan prosessi $LESS_WATCH_PID"
-  echo "-----------------------------------------------------"
-  kill -9 $LESS_WATCH_PID
+  ENV_PROFILE=false
+else
+  ENV_PROFILE=true
 fi
 
-echo "Generoidaan less -> CSS taustalla..."
-bash tarkkaile_less_muutoksia.sh &
-echo "Käynnistetään figwheel"
-lein do less once, build-dev
+# shellcheck source=../harja_dir.sh
+source "$( dirname "${BASH_SOURCE[0]}" )/sh/harja_dir.sh" || exit
+bash ${HARJA_DIR}/sh/tarkkaile_less.sh
+if [[ "$ENV_PROFILE" = "true" ]]
+then
+  lein do less once, build-dev
+else
+  lein do less once, build-dev-no-env
+fi

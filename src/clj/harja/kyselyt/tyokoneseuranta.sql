@@ -2,10 +2,10 @@
 -- Luo tai päivittää työkonehavainnon tietokantaan
 INSERT INTO tyokonehavainto
        (jarjestelma, organisaatio, viestitunniste, lahetysaika,
-        tyokoneid, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
+        tyokoneid, tyokonetunnus, tyokonetyyppi, sijainti, urakkaid, tehtavat, suunta)
 VALUES (:jarjestelma,
         (SELECT id FROM organisaatio WHERE ytunnus=:ytunnus),
-        :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetyyppi,
+        :viestitunniste, CAST(:lahetysaika AS TIMESTAMP), :tyokoneid, :tyokonetunnus, :tyokonetyyppi,
 	ST_MakePoint(:xkoordinaatti, :ykoordinaatti)::GEOMETRY,
 	:urakkaid, :tehtavat::suoritettavatehtava[], :suunta);
 
@@ -17,6 +17,7 @@ INSERT INTO tyokonehavainto
                viestitunniste,
                lahetysaika,
                tyokoneid,
+               tyokonetunnus,
                tyokonetyyppi,
                sijainti,
                urakkaid,
@@ -27,6 +28,7 @@ VALUES (:jarjestelma,
                 :viestitunniste,
                 CAST(:lahetysaika AS TIMESTAMP),
                 :tyokoneid,
+                :tyokonetunnus,
                 :tyokonetyyppi,
                 ST_GeomFromGeoJSON(:viivageometria),
                 :urakkaid,

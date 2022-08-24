@@ -13,23 +13,29 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero
-  ([tienumero-atom] (tienumero tienumero-atom nil))
-  ([tienumero-atom toiminta-f]
+  ([tienumero-atom] (tienumero tienumero-atom nil {}))
+  ([tienumero-atom toiminta-f] (tienumero tienumero-atom toiminta-f {}))
+  ([tienumero-atom toiminta-f {:keys [otsikon-luokka kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Tienumero"
-     :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f}
-     :arvo-atom tienumero-atom
-     :luokka "label-ja-kentta-puolikas"}
-    "Tienumero"]))
+    (merge
+      {:otsikko "Tienumero" :otsikon-luokka otsikon-luokka
+       :kentta-params (merge {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom tienumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn yllapitokohteen-kohdenumero
-  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil))
-  ([kohdenumero-atom toiminta-f]
+  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil {}))
+  ([kohdenumero-atom toiminta-f] (yllapitokohteen-kohdenumero kohdenumero-atom toiminta-f {}))
+  ([kohdenumero-atom toiminta-f {:keys [kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Kohdenumero"
-     :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f}
-     :arvo-atom kohdenumero-atom
-     :luokka "label-ja-kentta-puolikas"}]))
+    (merge
+      {:otsikko "Kohdenumero"
+       :otsikon-luokka "alasvedon-otsikko-vayla"
+       :kentta-params (merge {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom kohdenumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
@@ -66,6 +72,9 @@
 (defn aikavali []
   [valinnat/aikavali u/valittu-aikavali])
 
+(defn aikavali-hoitokauden-sisalla []
+  [valinnat/aikavali u/valittu-aikavali-hoitokauden-sisalla])
+
 (def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
                         ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
                         ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
@@ -76,7 +85,7 @@
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
   ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?
-                                    aikavalin-rajoitus] :as optiot}]
+                                    aikavalin-rajoitus vayla-tyyli?] :as optiot}]
    (let [[valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
          vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
@@ -114,7 +123,7 @@
              (valitse urakka @valinta)))
 
        (fn [urakka valittu-aikavali]
-         (when-not (u/urakka-kaynnissa? urakka)
+         (when (not (u/urakka-kaynnissa? urakka))
            (reset! valittu-aikavali
                    (or @u/valittu-hoitokauden-kuukausi
                        @u/valittu-hoitokausi)))
@@ -124,7 +133,11 @@
              [valinnat/aikavali valittu-aikavali {:otsikko (or otsikko "Aikaväli")}])
            [:span.aikavali-nykypvm-taakse
             [:div.label-ja-alasveto
-             [:span.alasvedon-otsikko (or otsikko "Aikaväli")]
+             ;; TODO: Väylätyylin asettaminen on tässä komponentissa kesken. Säädetään tässä vaiheessa pelkästään label
+             ;; oikeaan korkeuteen. Lopullisessa moodissa label ei ole enää boldilla, mutta nyt vielä on, kun muutos on kesken.
+             (if vayla-tyyli?
+               [:label.alasvedon-otsikko (or otsikko "Aikaväli")]
+               [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
              [livi-pudotusvalikko {:valinta @valinta
                                    :format-fn first
                                    :valitse-fn (partial valitse urakka)}
@@ -179,7 +192,7 @@
     (r/wrap (vec (concat [{:harja.domain.kanavat.kohde/nimi "Kaikki"}]
                          @ku/kanavakohteet-mukaanlukien-poistetut))
             identity)
-    ku/valittu-kohde ku/valitse-kohde!))
+    ku/valittu-kohde))
 
 
 ;; Komponentit, jotka käyttävät hoitokautta, joutuvat resetoimaan valitun aikavälin eksplisiittisesti
@@ -237,15 +250,6 @@ valintaoptiot {:sopimus {:valittu-sopimusnumero-atom u/valittu-sopimusnumero
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [ur]
   (fn [ur]
     (valinnat/urakan-valinnat ur (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide]))))
-
-(defn urakan-sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki
-  [ur]
-  (fn [ur]
-    (let [sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide (select-keys valintaoptiot [:sopimus :hoitokausi :aikavali-optiot :toimenpide])
-          sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki (update-in sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide [:toimenpide :urakan-toimenpideinstassit-atom]
-                                                                            (fn [urakan-toimenpideinstanssit]
-                                                                              (r/wrap (vec (concat @urakan-toimenpideinstanssit [{:tpi_nimi "Kaikki"}])) identity)))]
-      (valinnat/urakan-valinnat ur sopimus-ja-hoitokausi-ja-aikavali-ja-toimenpide+kaikki))))
 
 (defn urakan-sopimus-ja-hoitokausi-ja-aikavali
   ([ur] (urakan-sopimus-ja-hoitokausi-ja-aikavali ur {}))

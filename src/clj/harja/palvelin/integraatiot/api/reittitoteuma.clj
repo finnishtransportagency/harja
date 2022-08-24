@@ -121,21 +121,23 @@ maksimi-linnuntien-etaisyys 200)
   (log/debug "Luodaan uusi reittipiste")
   (toteumat/tallenna-toteuman-reittipisteet!
    db
-   {::rp/toteuma-id toteuma-id
-    ::rp/reittipisteet
-    (for [{:keys [aika koordinaatit tehtavat materiaalit]} (map :reittipiste reitti)]
-      (rp/reittipiste
-       (aika-string->java-sql-date aika)
-       koordinaatit
-       (toteumat/pisteen-hoitoluokat db koordinaatit)
-       (for [t tehtavat]
-         {::rp/toimenpidekoodi (get-in t [:tehtava :id])
-          ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
-       (for [m materiaalit]
-         {::rp/materiaalikoodi (->> m :materiaali
-                                    (materiaalit/hae-materiaalikoodin-id-nimella db)
-                                    first :id)
-          ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
+    {::rp/toteuma-id toteuma-id
+     ::rp/reittipisteet
+     (for [{:keys [aika koordinaatit tehtavat materiaalit]} (map :reittipiste reitti)]
+       (rp/reittipiste
+         (aika-string->java-sql-date aika)
+         koordinaatit
+         (toteumat/pisteen-hoitoluokat db koordinaatit
+           (map (comp :id :tehtava) tehtavat)
+           (map :materiaali materiaalit))
+         (for [t tehtavat]
+           {::rp/toimenpidekoodi (get-in t [:tehtava :id])
+            ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
+         (for [m materiaalit]
+           {::rp/materiaalikoodi (->> m :materiaali
+                                   (materiaalit/hae-materiaalikoodin-id-nimella db)
+                                   first :id)
+            ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
 
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
@@ -151,7 +153,7 @@ maksimi-linnuntien-etaisyys 200)
       (let [toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)]
         (log/debug "Toteuman perustiedot tallennettu. id: " toteuma-id)
         (log/debug "Aloitetaan toteuman tehtävien tallennus")
-        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id)
+        (api-toteuma/tallenna-tehtavat db kirjaaja toteuma toteuma-id urakka-id)
         (log/debug "Aloitetaan toteuman materiaalien tallennus")
         (api-toteuma/tallenna-materiaalit db kirjaaja toteuma toteuma-id urakka-id)
         (log/debug "Aloitetaan toteuman vanhan reitin poistaminen, jos sellainen on")
@@ -167,6 +169,10 @@ maksimi-linnuntien-etaisyys 200)
                                (pr-str (:paattynyt toteuma)))))
           (api-toteuma/paivita-toteuman-reitti db toteuma-id (if (= reitti +yhdistamis-virhe+) nil reitti)))))))
 
+(defn- materiaalicachen-paivitys-ajettava?
+  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä."
+  [toteuma-alkanut]
+  (not (pvm/tanaan? toteuma-alkanut)))
 
 (defn- paivita-materiaalicachet!
   "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain"
@@ -194,15 +200,19 @@ maksimi-linnuntien-etaisyys 200)
             ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
             viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
             toteumien-eri-pvmt (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)]
-        (doseq [sopimus-id urakan-sopimus-idt]
-          (doseq [pvm toteumien-eri-pvmt]
-            (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                   :alkupvm (pvm/dateksi pvm)})))
 
-        (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                           :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
-                                                                           :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)})))))
 
+        ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
+        ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
+
+        (when (materiaalicachen-paivitys-ajettava? (aika-string->java-util-date ensimmainen-toteuma-alkanut-str))
+          (doseq [sopimus-id urakan-sopimus-idt]
+            (doseq [pvm toteumien-eri-pvmt]
+              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
+                                                                     :alkupvm (pvm/dateksi pvm)})))
+          (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
+                                                                             :alkupvm (aika-string->java-sql-timestamp ensimmainen-toteuma-alkanut-str)
+                                                                             :loppupvm (aika-string->java-sql-timestamp viimeinen-toteuma-alkanut-str)}))))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat [db db-replica urakka-id kirjaaja data]
   (when (:reittitoteuma data)
@@ -212,7 +222,6 @@ maksimi-linnuntien-etaisyys 200)
   (doseq [toteuma (:reittitoteumat data)]
     (tallenna-yksittainen-reittitoteuma db db-replica
                                         urakka-id kirjaaja (:reittitoteuma toteuma)))
-
   (paivita-materiaalicachet! db urakka-id data))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
@@ -223,12 +232,14 @@ maksimi-linnuntien-etaisyys 200)
     (toteuman-validointi/tarkista-reittipisteet data)
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in data [:reittitoteuma :toteuma :tehtavat])
       (get-in data [:reittitoteuma :toteuma :toteumatyyppi])))
   (doseq [reittitoteuma (:reittitoteumat data)]
     (toteuman-validointi/tarkista-reittipisteet reittitoteuma)
     (toteuman-validointi/tarkista-tehtavat
       db
+      urakka-id
       (get-in reittitoteuma [:reittitoteuma :toteuma :tehtavat])
       (get-in reittitoteuma [:reittitoteuma :toteuma :toteumatyyppi]))))
 
@@ -291,3 +302,21 @@ maksimi-linnuntien-etaisyys 200)
 ;;(def toteuma (cheshire.core/parse-string (slurp "reittitoteuma-urakka-125.json") keyword))
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))
 ;;(kirjaa-toteuma db db {:id "urakkaid"} toteuma {:id kayttajaid})
+
+#_(defn vertaa-toteuman-suolamaara-vs-reittipisteiden-suolamaaran-summa
+  "Ottaa sisään yo. toteuma deffissä tiedostosta parsitun toteuman, ja palauttaa paljonko siinä ilmoitetaan toteumamääräksi 1) otsikkotasolla ja
+  2) reittipisteistä summattuna: Tavoite funktiolla on helpottaa debuggausta Ympäristöraportin hoitoluokittaisen erittelyn osalta."
+  [toteuma]
+  (let [toteumassa-raportoitu-maara (for [{:keys [materiaali maara]} (get-in toteuma [:reittitoteuma :toteuma :materiaalit])
+                                          :let [yksikko (get maara :yksikko)
+                                                maara (get maara :maara)]]
+                                      {materiaali (str maara yksikko)})
+        reittipisteiden-materiaalit-ryhmiteltyna (flatten (map (fn [reittipiste]
+                                                                 (for [[nimi sisalto] (group-by :materiaali (get-in reittipiste [:reittipiste :materiaalit]))
+                                                                       :let [maara (get-in (first sisalto) [:maara :maara])]]
+                                                                   {nimi maara}))
+                                                               (get-in toteuma [:reittitoteuma :reitti])))
+        reittipisteiden-materiaalit-summattuna (apply merge-with + reittipisteiden-materiaalit-ryhmiteltyna)]
+
+    {:toteumassa-ilmoitettu-maara toteumassa-raportoitu-maara
+     :reittipisteista-laskettu-maara reittipisteiden-materiaalit-summattuna}))

@@ -6,7 +6,7 @@
             [harja.domain.hanke :as hanke]
             [harja.id :as id]
             [namespacefy.core :refer [namespacefy]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.konversio :as konv]))

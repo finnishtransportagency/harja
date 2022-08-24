@@ -20,17 +20,17 @@
                    [reagent.ratom :refer [reaction run!]]))
 
 ;; Valtakunnallisille välitavoitteille on haluttu eri urakkatyypeissä käyttää hieman eri nimitystä
-(def kertaluontoiset-otsikko {:tiemerkinta "Tiemerkinnän kertaluontoisten välitavoitteiden mallipohjat"})
-(def toistuvat-otsikko {:tiemerkinta "Tiemerkinnän vuosittain toistuvien välitavoitteiden mallipohjat"})
+(def kertaluontoiset-otsikko {:tiemerkinta "Tiemerkinnän kertaluontoisten, määräaikaan mennessä tehtävien töiden mallipohjat"})
+(def toistuvat-otsikko {:tiemerkinta "Tiemerkinnän vuosittain toistuvien, määräaikaan mennessä tehtävien töiden mallipohjat"})
 
 (defn kertaluontoiset-valitavoitteet-grid
   [valitavoitteet-atom kertaluontoiset-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
    {:otsikko (or (kertaluontoiset-otsikko (:arvo @valittu-urakkatyyppi-atom))
-                 "Valtakunnalliset kertaluontoiset välitavoitteet")
+                 "Kertaluontoiset, kaikissa urakoissa määräaikaan mennessä tehtävät työt")
     :tyhja (if (nil? @kertaluontoiset-valitavoitteet-atom)
-             [y/ajax-loader "Välitavoitteita haetaan..."]
-             "Ei kertaluontoisia välitavoitteita")
+             [y/ajax-loader "Tavoitteita haetaan..."]
+             "Ei kertaluontoisia määräaikaan mennessä tehtäviä töitä")
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-valitavoitteet)
                 #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet
                                          (->> %
@@ -40,11 +40,11 @@
                                                          (assoc :urakkatyyppi
                                                                 (:arvo @yhteiset/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
-                         (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
+                         (viesti/nayta! "Määräaikaan mennessä tehtävien töiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
                          (reset! valitavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
-     :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
+     :validoi [[:ei-tyhja "Anna työn kuvaus"]]}
     {:otsikko "Taka\u00ADraja" :leveys 20 :nimi :takaraja :fmt #(if %
                                                                  (pvm/pvm-opt %)
                                                                  "Ei takarajaa")
@@ -57,10 +57,10 @@
   [valitavoitteet-atom toistuvat-valitavoitteet-atom valittu-urakkatyyppi-atom]
   [grid/grid
    {:otsikko (or (toistuvat-otsikko (:arvo @valittu-urakkatyyppi-atom))
-                 "Valtakunnalliset vuosittain toistuvat välitavoitteet")
+                 "Vuosittain toistuvat, kaikissa urakoissa määräaikaan mennessä tehtävät työt")
     :tyhja (if (nil? @toistuvat-valitavoitteet-atom)
-             [y/ajax-loader "Välitavoitteita haetaan..."]
-             "Ei toistuvia välitavoitteita")
+             [y/ajax-loader "Tavoitteita haetaan..."]
+             "Ei toistuvia töitä")
     :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-valitavoitteet)
                 #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet
                                          (->> %
@@ -70,11 +70,11 @@
                                                          (assoc :urakkatyyppi
                                                                 (:arvo @yhteiset/valittu-urakkatyyppi))))))))]
                        (if (k/virhe? vastaus)
-                         (viesti/nayta! "Välitavoitteiden tallentaminen epännistui"
+                         (viesti/nayta! "Määräaikaan mennessä tehtävien töiden tallentaminen epännistui"
                                         :warning viesti/viestin-nayttoaika-keskipitka)
                          (reset! valitavoitteet-atom vastaus)))))}
    [{:otsikko "Nimi" :leveys 60 :nimi :nimi :tyyppi :string :pituus-max 128
-     :validoi [[:ei-tyhja "Anna välitavoitteen nimi"]]}
+     :validoi [[:ei-tyhja "Anna työn kuvaus"]]}
     {:otsikko "Taka\u00ADrajan toisto\u00ADpäi\u00ADvä" :leveys 10 :nimi :takaraja-toistopaiva
      :tyyppi :numero :desimaalien-maara 0 :validoi [[:rajattu-numero 1 31 "Anna päivä välillä 1 - 31"]]}
     {:otsikko "Taka\u00ADrajan toisto\u00ADkuu\u00ADkausi" :leveys 10 :nimi :takaraja-toistokuukausi
@@ -121,26 +121,32 @@
             [:span
              (when nayta-kertaluontoiset-valtakunnalliset?
                [:span
-                "Uudet kertaluontoiset välitavoitteet liitetään valituntyyppisiin käynnissäoleviin ja tuleviin urakoihin, jos välitavoitteen takaraja on urakan voimassaoloaikana."
+                "Uudet kertaluontoiset tavoitteet liitetään valitun urakkatyypin mukaan käynnissä oleviin ja tuleviin urakoihin, jos tavoitteen takaraja on urakan voimassaoloaikana."
                 [:br]])
              (when nayta-toistuvat-valtakunnalliset?
                [:span
-                "Uudet toistuvat välitavoitteet liitetään valituntyyppisiin käynnissäoleviin ja tuleviin urakoihin kertaalleen per jäljellä oleva urakkavuosi."
+                "Uudet vuosittain toistuvat tavoitteet liitetään valitun urakkatyypin mukaan käynnissä oleviin ja tuleviin urakoihin. Tavoite liitetään kertaalleen urakan kaikkiin jäljellä oleviin urakkavuosiin."
+                [:br]])
+             (when (or nayta-toistuvat-valtakunnalliset? nayta-kertaluontoiset-valtakunnalliset?)
+               [:span
+                "Hoitourakan tavoitteisiin tehdyt lisäykset ja muutokset koskevat sekä uuden (MHU) että vanhan tyyppisiä hoitourakoita."
                 [:br]])
 
              [:br]
 
              (when nayta-kertaluontoiset-valtakunnalliset?
                [:span
-                "Kertaluontoisen välitavoitteen päivittäminen päivittää tiedot urakoihin, ellei tavoitetta ole muokattu urakassa."
+                "Kertaluontoisen tavoitteen päivittäminen päivittää tiedot urakoihin, jos tavoitetta ei ole muokattu urakassa."
+                [:br]"Jos tavoitetta on urakassa muokattu, hallintaosiossa päivitetty tavoite lisätään urakkaan uutena tavoitteena."
                 [:br]])
 
              (when nayta-toistuvat-valtakunnalliset?
                [:span
-                "Toistuvan välitavoitteen muokkaaminen päivittää sen käynnissä oleviin ja tuleviin urakoihin kertaalleen per jäljellä oleva urakkavuosi, ellei sitä ole muokattu urakassa."
+                "Vuosittain toistuvan tavoitteen muokkaaminen päivittää sen käynnissä oleviin ja tuleviin urakoihin kertaalleen per jäljellä oleva urakkavuosi, ellei sitä ole muokattu urakassa."
+                [:br]"Jos tavoitetta on urakassa muokattu, päivitetty tavoite lisätään urakkaan uutena tavoitteena jäljellä oleville urakkavuosille."
                 [:br]])
 
              [:br]
 
-             "Poistettu välitavoite jää näkyviin päättyneisiin urakoihin tai jos se on ehditty tehdä valmiiksi."]]
-           [:div "Valtakunnalliset välitavoitteet eivät ole käytössä valitussa urakkatyypissä."])]))))
+             "Poistettu tavoite jää näkyviin päättyneisiin urakoihin sekä käynnissä oleviin urakoihin, joissa se on ehditty merkitä valmiiksi."]]
+           [:div "Valtakunnallisia määräaikaan mennessä tehtäviä töitä ei määritellä valitussa urakkatyypissä."])]))))

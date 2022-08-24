@@ -6,8 +6,10 @@
             [clojure.core.async :refer [<! go thread]]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [harja.tyokalut.json-validointi :as json]
+            [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [harja.palvelin.integraatiot.sonja.sahkoposti.sanomat :as sonja-sahkoposti-sanomat]
             [harja.tyokalut.avaimet :as avaimet]
             [harja.kyselyt.kayttajat :as kayttajat]
             [harja.domain.oikeudet :as oikeudet]
@@ -19,6 +21,43 @@
            (java.io StringWriter PrintWriter)
            (java.util.zip GZIPInputStream)
            (org.httpkit BytesInputStream)))
+
+
+(defn lisaa-request-headerit-cors
+  "Palautetaan kutsujalle lisäksi pari Cross-Origin Resource Sharing headeria, jotta kutsuja voi hyödyntää
+  Harjan palauttamia tietoja sisällön esittämiseksi omassa domainissaan sijaitsevalla sivustolla."
+  [response-headerit request-origin]
+      (conj response-headerit
+            {"Access-Control-Allow-Origin" (if (empty? request-origin) "*" request-origin),
+             "Vary"                        "Origin"}))
+
+(defn lisaa-request-headerit
+      "Palautetaan kutsujalle sanoman content-typen mukaiset headerit"
+      [xml? request-origin]
+      (lisaa-request-headerit-cors (if xml? {"Content-Type" "application/xml"}
+                                            {"Content-Type" "application/json"})
+                                   request-origin))
+
+(defn kutsun-formaatti
+  "Analysoidaan kutsusta, onko se JSON vai XML formaattia. Palautetaan nil, mikäli ei passaa kumpaankaan."
+  [request]
+  (let [content-type (-> request :headers (get "content-type"))]
+    (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    (cond
+      (= content-type "application/x-www-form-urlencoded") "form"
+      (= content-type "application/xml") "xml"
+      (= content-type "text/xml") "xml"
+      (= content-type "application/json") "json"
+      (= content-type "text/json") "json"
+      :default nil)))
+
+(defn parsi-skeeman-polku
+  "XML validaattori vaatii polun skeemaan. Joten ylläpidetään mäppiä skeeman"
+  [polku]
+  (let [polun-osat (str/split polku #"\/")
+        alku-polku (str (str/join "/" (reverse (rest (reverse polun-osat)))) "/")
+        skeeman-nimi (last polun-osat)]
+    [alku-polku skeeman-nimi]))
 
 (defn tee-kirjausvastauksen-body
   "Ottaa kirjausvastauksen tiedot (mappi, jossa id, ilmoitukset, varoitukset ja virheet) ja tekee vastauksen bodyn.
@@ -43,9 +82,11 @@
 (defn poista-liitteet-logituksesta
   "Etsii avainpolun, joka päättyy avaimeen liitteet. Käsittelee sen alta löytyvät liitteet tyhjentäen niiden
    sisällön"
-  [body]
+  [body xml?]
   (try+
-    (let [body-clojure-mappina (cheshire/decode body true)
+    (let [body-clojure-mappina (if xml?
+                                 (xml/lue body "UTF-8")
+                                 (cheshire/decode body true))
           avainpolut (avaimet/keys-in body-clojure-mappina)
           avainpolku-liitteet (first (filter
                                        (fn [avainpolku]
@@ -53,12 +94,16 @@
                                        avainpolut))
           liitteet-ilman-sisaltoja (when avainpolku-liitteet
                                      (mapv (fn [liite]
-                                             (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >"))
+                                             (if xml?
+                                               (assoc-in liite [:liite :sisalto] " Liitettä ei logiteta ")
+                                               (assoc-in liite [:liite :sisalto] "< Liitettä ei logiteta >")))
                                            (get-in body-clojure-mappina avainpolku-liitteet)))
           body-ilman-liittteiden-sisaltoa (when liitteet-ilman-sisaltoja
                                             (assoc-in body-clojure-mappina avainpolku-liitteet liitteet-ilman-sisaltoja))]
       (if avainpolku-liitteet
-        (cheshire/encode body-ilman-liittteiden-sisaltoa)
+        (if xml?
+          body-ilman-liittteiden-sisaltoa
+          (cheshire/encode body-ilman-liittteiden-sisaltoa))
         (if (> (count body) 10000)
           (str/join (take 10000 body))
           body)))
@@ -66,24 +111,38 @@
       (log/debug "Ei voida poistaa liitteitä bodystä: " (.getMessage e))
       body)))
 
-(defn lokita-kutsu [integraatioloki resurssi request body]
-  (log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
-  (log/debug "Kutsu:" request)
-  (log/debug "Parametrit: " (:params request))
-  (log/debug "Headerit: " (:headers request))
-  (log/debug "Sisältö:" (poista-liitteet-logituksesta body))
+(defn tee-xml-lokiviesti [suunta body viesti]
+  {:suunta suunta
+   :sisaltotyyppi "application/xml"
+   :siirtotyyppi "HTTP"
+   :sisalto (poista-liitteet-logituksesta body true)
+   :otsikko (str (walk/keywordize-keys (:headers viesti)))
+   :parametrit (str (:params viesti))})
 
-  (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil (tee-lokiviesti "sisään" body request)))
+(defn lokita-kutsu [integraatioloki resurssi request body]
+  (let [xml? (= (kutsun-formaatti request) "xml")
+        loki-viesti (if xml?
+                     (tee-xml-lokiviesti "sisään" body request)
+                     (tee-lokiviesti "sisään" body request))]
+    ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+    ;(log/debug "Kutsu:" request)
+    ;(log/debug "Parametrit: " (:params request))
+    ;(log/debug "Headerit: " (:headers request))
+    ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
+    ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
+    ;(log/debug "Logitusviesti:" loki-viesti)
+
+    (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil loki-viesti)))
 
 (defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
-  (log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
-  (log/debug "Vastaus:" response)
-  (log/debug "Headerit: " (:headers response))
-  (log/debug "Sisältö:" (:body response))
+  ;(log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
+  ;(log/debug "Vastaus:" response)
+  ;(log/debug "Headerit: " (:headers response))
+  ;(log/debug "Sisältö:" (:body response))
 
   (if (= 200 (:status response))
     (do
-      (log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
+      ;(log/debug "Kutsu resurssiin:" resurssi "onnistui. Palautetaan vastaus:" response)
       (integraatioloki/kirjaa-onnistunut-integraatio
         integraatioloki
         (tee-lokiviesti "ulos" (:body response) response) nil tapahtuma-id nil))
@@ -123,29 +182,35 @@
   (tee-virhevastaus 403 virheet))
 
 (defn tee-vastaus
-  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
-  Payload on Clojure dataa, joka muunnetaan JSON-dataksi.
+  "Luo JSON/XML-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
+  Payload on Clojure dataa, joka muunnetaan JSON/XML-dataksi.
   Jokainen payload validoidaan annetulla skeemalla. Jos payload ei ole validi,
   palautetaan status 500 (sisäinen käsittelyvirhe)."
-  ([skeema payload] (tee-vastaus 200 skeema payload))
-  ([status skeema payload]
+  ([skeema payload] (tee-vastaus 200 skeema payload nil false))
+  ([status skeema payload request-origin xml?]
    (if payload
-     (let [json (cheshire/encode (spec-apurit/poista-nil-avaimet payload false))]
+     (let [vastaus (if xml?
+                     (xml/tee-xml-sanoma payload)
+                     (cheshire/encode (spec-apurit/poista-nil-avaimet payload false)))]
        (if skeema
          (do
            (if (fn? skeema)
-             (skeema json)
-             (json/validoi skeema json))
-           {:status status
-            :headers {"Content-Type" "application/json"}
-            :body json})
-         {:status status
-          :headers {"Content-Type" "application/json"}}))
+             (skeema vastaus)
+             (if xml?
+               (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) vastaus)
+               (json/validoi skeema vastaus)))
+           {:status  status
+            :headers (lisaa-request-headerit xml? request-origin)
+            :body    vastaus})
+         {:status  status
+          :headers (lisaa-request-headerit xml? request-origin)}))
      (if skeema
        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                 :virheet [{:koodi virheet/+tyhja-vastaus+
                            :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
-       {:status status}))))
+       {:status status
+        :headers (lisaa-request-headerit xml? request-origin)}
+       ))))
 
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
   (if (> (count kutsu) 10000)
@@ -188,18 +253,24 @@
 (defn lue-kutsu
   "Lukee kutsun bodyssä tulevan datan, mikäli kyseessä on POST-, DELETE- tai PUT-kutsu.
   Muille kutsuille palauttaa arvon nil.
-  Validoi annetun kutsun JSON-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
+  Validoi annetun kutsun JSON/XML-datan ja mikäli data on validia, palauttaa datan Clojure dataksi muunnettuna.
   Jos annettu data ei ole validia, palautetaan nil."
-  [skeema request body]
-  (log/debug "Luetaan kutsua")
+  [xml? skeema request body]
+  ;(log/debug "Luetaan kutsua")
   (when (or (= :post (:request-method request))
             (= :put (:request-method request))
             (= :delete (:request-method request)))
     (tarkista-tyhja-kutsu skeema body)
     (if (fn? skeema)
       (skeema body)
-      (json/validoi skeema body))
-    (cheshire/decode body true)))
+      (if xml?
+        ;; XML datalle välitetään skeemana vain skeeman polku, josta luetaan itse xml skeema lennosta
+        (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) body)
+        (json/validoi skeema body)))
+    (if xml?
+      ;(xml/lue body "UTF-8")
+      (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+      (cheshire/decode body true))))
 
 (defn hae-kayttaja [db kayttajanimi]
   (let [kayttaja (first (kayttajat/hae-kayttaja-kayttajanimella db kayttajanimi))]
@@ -210,6 +281,20 @@
         (throw+ {:type virheet/+tuntematon-kayttaja+
                  :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
                             :viesti (str "Tuntematon käyttäjätunnus: " kayttajanimi)}]})))))
+
+
+(defn vaadi-jarjestelmaoikeudet [db kayttaja vaadi-analytiikka-oikeus?]
+  (let [on-oikeus (if vaadi-analytiikka-oikeus?
+                    (kayttajat/onko-jarjestelma-ja-analytiikka? db {:kayttajanimi (:kayttajanimi kayttaja)})
+                    (kayttajat/onko-jarjestelma? db {:kayttajanimi (:kayttajanimi kayttaja)}))]
+    (if (nil? on-oikeus)
+      (do
+        (log/error "Käyttäjällä ei ole järjestelmäoikeuksia: " (:kayttajanimi kayttaja))
+        (throw+ {:type virheet/+tuntematon-kayttaja+
+                 :virheet [{:koodi virheet/+tuntematon-kayttaja-koodi+
+                            :viesti (str "Tuntematon käyttäjätunnus: " (:kayttajanimi kayttaja))}]}))
+      true)))
+
 
 (defn aja-virhekasittelyn-kanssa [resurssi kutsu parametrit ajo]
   (try+
@@ -271,8 +356,8 @@
 
 (defn kasittele-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
-  lähetetty data on JSON-formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
-  tuleva data validoidaan käyttäen annettuja JSON-skeemoja.
+  lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sekä sisääntuleva, että ulos
+  tuleva data validoidaan käyttäen annettuja JSON/XML -skeemoja.
 
   Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
   käsittelyvirhe."
@@ -280,9 +365,10 @@
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
-     :headers {"Content-Type" "text/plain"}
-     :body "Virhe: Saatiin JSON-kutsu lomakedatan content-typellä\n"}
-    (let [body (lue-body request)
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request body))
           parametrit (:params request)
@@ -292,9 +378,46 @@
                    parametrit
                    #(let
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
-                         kutsun-data (lue-kutsu kutsun-skeema request body)
+                         origin-header (get (:headers request) "origin")
+                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                          vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
-                      (tee-vastaus vastauksen-skeema vastauksen-data)))]
+                      (tee-vastaus 200
+                                   vastauksen-skeema
+                                   vastauksen-data
+                                   origin-header
+                                   xml?)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
+
+(defn kasittele-get-kutsu
+  "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
+   tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
+   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisest kasittele-kutsu
+   funktiosta.
+
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe."
+
+  [db integraatioloki resurssi request vastauksen-skeema kasittele-kutsu-fn vaadi-analytiikka-oikeus?]
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers {"Content-Type" "text/plain"}
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+          xml? (= (kutsun-formaatti request) "xml")
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request nil))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    nil
+                    parametrit
+                    #(let
+                       [_ (vaadi-jarjestelmaoikeudet db
+                            (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
+                        vastauksen-data (kasittele-kutsu-fn parametrit kayttaja db)]
+                       (tee-vastaus 200 vastauksen-skeema vastauksen-data (get (:headers request) "origin") xml?)))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))

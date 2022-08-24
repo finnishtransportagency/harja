@@ -65,10 +65,10 @@
     (if (and @urakka/yllapitokohdeurakka? (nil? @tiedot/urakan-yllapitokohteet-lomakkeelle))
       [y/ajax-loader "Ladataan..."]
       [grid/grid
-       {:otsikko "Urakan välitavoitteet"
+       {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
         :tyhja (if (nil? urakan-valitavoitteet)
-                 [y/ajax-loader "Välitavoitteita haetaan..."]
-                 "Ei välitavoitteita")
+                 [y/ajax-loader "Tavoitteita haetaan..."]
+                 "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
         :tallenna (if voi-muokata?
                     #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                            (if (k/virhe? vastaus)
@@ -122,10 +122,10 @@
         voi-merkita-valmiiksi? (oikeudet/on-muu-oikeus? "valmis" oikeudet/urakat-valitavoitteet (:id urakka))
         yllapitokohteet @tiedot/urakan-yllapitokohteet-lomakkeelle]
     [grid/grid
-     {:otsikko "Urakan välitavoitteet"
+     {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
       :tyhja (if (nil? @kaikki-valitavoitteet-atom)
-               [y/ajax-loader "Välitavoitteita haetaan..."]
-               "Ei välitavoitteita")
+               [y/ajax-loader "Tavoitteita haetaan..."]
+               "Ei urakkakohtaisia määräajassa tehtäviä töitä.")
       :tallenna (if voi-muokata?
                   #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                          (if (k/virhe? vastaus)
@@ -193,10 +193,10 @@
                               voi-tehda-tarkennuksen?))]
     [:div
      [grid/grid
-      {:otsikko "Valtakunnalliset välitavoitteet"
+      {:otsikko "Kaikissa urakoissa määräaikaan mennessä tehtävät työt"
        :tyhja (if (nil? valtakunnalliset-valitavoitteet)
-                [y/ajax-loader "Välitavoitteita haetaan..."]
-                "Ei välitavoitteita")
+                [y/ajax-loader "Tavoitteita haetaan..."]
+                "Ei valtakunnallisia määräajassa tehtäviä töitä")
        :tallenna (if voi-muokata?
                    #(go (let [vastaus (<! (tiedot/tallenna-valitavoitteet! (:id urakka) %))]
                           (if (k/virhe? vastaus)
@@ -210,7 +210,7 @@
        :voi-lisata? false
        :voi-poistaa? (constantly false)}
 
-      [{:otsikko "Valta\u00ADkunnal\u00ADlinen väli\u00ADtavoite"
+      [{:otsikko "Työn ku\u00ADva\u00ADus"
         :leveys 25
         :nimi :valtakunnallinen-nimi :tyyppi :string :pituus-max 128
         :muokattava? (constantly false) :hae #(str (:valtakunnallinen-nimi %))}
@@ -314,7 +314,7 @@
 
          (when nayta-valtakunnalliset-grid?
            [yleiset/vihje (str
-                            "Valtakunnalliset välitavoitteet ovat järjestelmävastaavan hallinnoimia."
+                            "Järjestelmävastaava hallinnoi listaa valtakunnallisista, määräaikaan mennessä tehtävistä töistä."
                             " "
                             (when voi-muokata?
                               "Voit kuitenkin tehdä tavoitteisiin urakkakohtaisia muokkauksia."))])]))))

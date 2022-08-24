@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [hiccup.core :refer [html]]
             [taoensso.timbre :as log]
+            [harja.domain.paallystysilmoitus :as pot-domain]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.yha.sanomat
              [urakoiden-hakuvastaussanoma :as urakoiden-hakuvastaus]
@@ -10,7 +11,7 @@
              [kohteen-lahetysvastaussanoma :as kohteen-lahetysvastaussanoma]
              [kohteen-poistovastaussanoma :as kohteen-poistovastaussanoma]]
             [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.kyselyt.paallystys :as q-paallystys]
+            [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.pvm :as pvm]
             [harja.kyselyt.konversio :as konv]
@@ -94,7 +95,7 @@
   (log/debug format "YHA palautti urakan kohteiden kirjauksille vastauksen: sisältö: %s, otsikot: %s" sisalto otsikot)
   (jdbc/with-db-transaction [db db]
     (let [vastaus (try (kohteen-lahetysvastaussanoma/lue-sanoma sisalto)
-                       (catch RuntimeException e
+                       (catch Throwable e
                          {:virheet [{:selite (.getMessage e)}]
                           :sanoman-lukuvirhe? true}))
           virheet (:virheet vastaus)
@@ -144,12 +145,22 @@
     parametrit))
 
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
+  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))
+        ilmoitus (update ilmoitus :vuodet (fn [vuodet]
+                                            ;; Käytännössä tuotannossa on aina yksi vuosi vuodet-sarakkeessa. Jos sattuisi olemaan kaksi,
+                                            ;; otetaan suurempi arvo, koska se on aina kuluva vuosi, koska päällystyskohteita ei voi hakea tulevalle vuodelle YHA:sta
+                                            (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
   (let [alikohteet (q-yha-tiedot/hae-yllapitokohteen-kohdeosat db {:yllapitokohde kohde-id})
-        osoitteet (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet])]
+        osoitteet (if (= (:versio paallystysilmoitus) 2)
+                    (map
+                      (fn [rivi]
+                        (assoc rivi :kuulamylly (pot-domain/kuulamylly-koodi-nimella (:kuulamyllyluokka rivi))
+                                    :raekoko (:max-raekoko rivi)))
+                      (q-paallystys/hae-pot2-paallystekerrokset db {:pot2_id (:id paallystysilmoitus)}))
+                    (get-in paallystysilmoitus [:ilmoitustiedot :osoitteet]))]
     (mapv (fn [alikohde]
             (let [id (:id alikohde)
                   ilmoitustiedot (first (filter #(= id (:kohdeosa-id %)) osoitteet))]
@@ -165,6 +176,16 @@
                                    db {:urakka-id (:urakka kohde) :yllapitokohde-id kohde-id}))
           paallystysilmoitus (hae-kohteen-paallystysilmoitus db kohde-id)
           paallystysilmoitus (assoc paallystysilmoitus :maaramuutokset maaramuutokset)
+          paallystysilmoitus (if (= (:versio paallystysilmoitus) 2)
+                               (let [keep-some (fn [map-jossa-on-nil]
+                                                 (into {} (filter
+                                                            (fn [[_ arvo]] (some? arvo))
+                                                            map-jossa-on-nil)))
+                                     alustatoimet (->> (q-paallystys/hae-pot2-alustarivit db {:pot2_id (:id paallystysilmoitus)})
+                                                       (map keep-some)
+                                                       (into []))]
+                                 (assoc-in paallystysilmoitus [:ilmoitustiedot :alustatoimet] alustatoimet))
+                               paallystysilmoitus)
           alikohteet (hae-alikohteet db kohde-id paallystysilmoitus)]
       {:kohde kohde
        :alikohteet alikohteet
@@ -234,9 +255,8 @@
 (defn laheta-kohteet-yhaan
   "Lähettää annetut kohteet YHA:an. Mikäli kohteiden lähetys epäonnistuu, niiden päällystysilmoituksen
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
-   päällystysilmoituksen lukitaan.
-
-   Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
+   päällystysilmoituksen lukitaan. Vuotta 2020 edeltäviä kohteita ei kaistamuutoksen jälkeen saa enää siirtää YHA:aan.
+   Tämä on estetty funktiossa tarkista-lahetettavat-kohteet. Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
@@ -263,9 +283,15 @@
             (throw+
               {:type +virhe-kohteen-lahetyksessa+
                :virheet {:virhe virhe}}))))
-      {:virhekasittelija (fn [_ _]
+      {:virhekasittelija (fn [konteksti e]
                            (doseq [kohde-id kohde-idt]
-                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})))})
+                             (q-paallystys/avaa-paallystysilmoituksen-lukko! db {:yllapitokohde_id kohde-id})
+                             (q-yllapitokohteet/merkitse-kohteen-lahetystiedot!
+                               db
+                               {:lahetetty (pvm/nyt)
+                                :onnistunut false
+                                :lahetysvirhe (pr-str (.getMessage e))
+                                :kohdeid kohde-id})))})
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       false)))
 

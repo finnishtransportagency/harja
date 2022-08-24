@@ -95,7 +95,7 @@
                           params)]
     (into {} keys-values)))
 
-(defn- timestamp []
+(defn timestamp []
   (.getTime (js/Date.)))
 
 (defn ilman-tavutusta [teksti]

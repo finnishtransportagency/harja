@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.kanavat.hairiotilanteet
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.kanavat.hairiotilanne :as hairio]
@@ -62,8 +63,10 @@
   component/Lifecycle
   (start [{http :http-palvelin
            db :db
-           fim :fim
-           email :sonja-sahkoposti :as this}]
+           fim :fim :as this}]
+    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
     (julkaise-palvelu
       http
       :hae-hairiotilanteet
@@ -92,7 +95,7 @@
              :materiaalilistaukset (m-q/hae-materiaalilistaus db {::materiaali/urakka-id (::hairio/urakka-id hairiotilanne)})})))
       {:kysely-spec ::hairio/tallenna-hairiotilanne-kutsu
        :vastaus-spec ::hairio/tallenna-hairiotilanne-vastaus})
-    this)
+    this))
 
   (stop [this]
     (poista-palvelut

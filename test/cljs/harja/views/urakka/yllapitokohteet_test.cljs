@@ -56,7 +56,7 @@
 
 (deftest uuden-kohteen-lisaaminen
   (let [vanhat-kohdeosat kohdeosat
-        uudet-kohdeosat (yllapitokohteet/lisaa-uusi-kohdeosa kohdeosat 1 {})]
+        uudet-kohdeosat (yllapitokohteet/pilko-paallystekohdeosa kohdeosat 1 {})]
     (is (= #{1 2 3 4} (avaimet uudet-kohdeosat)))
 
     (is (= (loppu (get vanhat-kohdeosat 1))

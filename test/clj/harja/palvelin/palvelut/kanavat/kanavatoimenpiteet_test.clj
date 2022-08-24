@@ -27,10 +27,9 @@
                       (component/system-map
                         :db ds
                         :http-palvelin (testi-http-palvelin)
-                        :pois-kytketyt-ominaisuudet testi-pois-kytketyt-ominaisuudet
                         :kan-toimenpiteet (component/using
                                             (kan-toimenpiteet/->Kanavatoimenpiteet)
-                                            [:http-palvelin :db :pois-kytketyt-ominaisuudet])))))
+                                            [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -38,7 +37,7 @@
                                       jarjestelma-fixture))
 
 #_(deftest toimenpiteiden-haku
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
                         ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
                         ::toimenpidekoodi/id 534
@@ -106,7 +105,7 @@
                        hakuargumentit)))))
 
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
-  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-urakan-id-nimella "Saimaan kanava")
                     ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
                     ::toimenpidekoodi/id 597
                     :alkupvm (pvm/luo-pvm 2017 1 1)
@@ -147,7 +146,7 @@
                                              %2))
         kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
         muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
-        urakka-id (hae-saimaan-kanavaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
                     ::kanavan-toimenpide/urakka-id urakka-id
                     ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
@@ -189,7 +188,7 @@
                                              %2))
         kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
         muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
-        urakka-id (hae-saimaan-kanavaurakan-id)
+        urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
                     ::kanavan-toimenpide/urakka-id urakka-id
                     ::kanavan-toimenpide/tyyppi :muutos-lisatyo}]
@@ -205,7 +204,7 @@
                                                              ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
 
 (deftest toimenpiteiden-haku-ilman-tyyppia-ei-toimi
-  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [parametrit {::kanavan-toimenpide/urakka-id (hae-urakan-id-nimella "Saimaan kanava")
                     ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
                     ::toimenpidekoodi/id 597
                     :alkupvm (pvm/luo-pvm 2017 1 1)
@@ -215,7 +214,7 @@
                        parametrit)))))
 
 (deftest toimenpiteen-tallentaminen-toimii
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kayttaja (ffirst (q "select id from kayttaja limit 1;"))
         ;; Käytetään kohdetta, joka on varmasti liitetty urakkaan
@@ -422,7 +421,7 @@
         (is (empty? toimenpiteen-poiston-jalkeiset-tyot))))))
 
 (deftest toimenpiteen-tallentaminen-ilman-oikeutta
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
         toimenpide {::kanavan-toimenpide/suorittaja "suorittaja"
@@ -484,7 +483,7 @@
                                                    argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-kohteen-kohdeosalle
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id (ffirst (q "select id from kan_kohde limit 1;"))
         kohteenosa-id 66666
@@ -518,7 +517,7 @@
                                                    argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-kohteelle
-  (let [urakka-id (hae-saimaan-kanavaurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
         sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
         kohde-id 6666
         id (ffirst (q "select id from kan_toimenpide limit 1;"))

@@ -49,7 +49,3 @@
                         :kayttajatunnus kayttajatunnus
                         :salasana salasana}]
     (r-apurit/kutsu-reimari-integraatiota hakuparametrit)))
-
-
-;; repl-testaus: (vaihda päivämäärä lähimenneisyyteen)
-;; (r-apurit/kutsu-interaktiivisesti hae-turvalaitekomponentit harja.palvelin.main/harja-jarjestelma #inst "2017-08-01T00:00:00")

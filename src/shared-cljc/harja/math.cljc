@@ -9,7 +9,7 @@
        100.0)
     0.0))
 
-(defn- avg [arvot]
+(defn avg [arvot]
   (if (empty? arvot)
     0
     (/ (reduce + 0 arvot) (count arvot))))

@@ -1,47 +1,72 @@
 (ns harja.palvelin.integraatiot.velho.velho-komponentti
-  (:require [com.stuartsierra.component :as component]
-            [hiccup.core :refer [html]]
-            [taoensso.timbre :as log]
-            [harja.kyselyt.yha :as q-yha-tiedot]
-            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
-            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
-            [clojure.string :as str])
-  (:use [slingshot.slingshot :only [throw+ try+]]))
+  (:require [taoensso.timbre :as log]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.integraatiot.velho.pot-lahetys :as pot-lahetys]
+            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
+            [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.pvm :as pvm]))
 
-(defprotocol VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-idt]))
+(defprotocol PaallystysilmoituksenLahetys
+  (laheta-kohde [this urakka-id kohde-id]))
 
-(defn laheta-kohteet-velhoon [integraatioloki db {:keys [paallystetoteuma-url autorisaatio]} urakka-id kohde-idt]
-  (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s Velhoon URL:lla: %s." urakka-id kohde-idt paallystetoteuma-url))
-  (when (not (str/blank? paallystetoteuma-url))
-    (try+
-     (integraatiotapahtuma/suorita-integraatio
-       db integraatioloki "velho" "kohteiden-lahetys" nil
-       (fn [konteksti]
-         (if-let [urakka (first (q-yha-tiedot/hae-urakan-yhatiedot db {:urakka urakka-id}))]
-           (let [urakka (assoc urakka :harjaid urakka-id
-                                      :sampoid (yha/yhaan-lahetettava-sampoid urakka))
-                 kohteet (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
-                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                 otsikot {"Content-Type" "text/xml; charset=utf-8"
-                          "Authorization" autorisaatio}
-                 http-asetukset {:metodi :POST
-                                 :url paallystetoteuma-url
-                                 :otsikot otsikot}]
-             (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata))
-           (log/error (format "Päällystysilmoitusta ei voida lähettää Velhoon: Urakan (id: %s) YHA-tietoja ei löydy." urakka-id))))
-       {:virhekasittelija (fn [_ _] (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui"))})
-     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-       (log/error "Päällystysilmoituksen lähetys Velhoon epäonnistui. Virheet: " virheet)
-       false))))
+(defprotocol VarustetoteumaHaku
+  (tuo-uudet-varustetoteumat-velhosta [this])
+  (paivita-mhu-urakka-oidt-velhosta [this]))
+
+(defn suorita-ja-kirjaa-alku-loppu-ajat
+  [funktio tunniste]
+  (let [aloitusaika-ms (System/currentTimeMillis)]
+    (log/info tunniste "suoritus alkoi")
+    (let [onnistui? (try
+                      (funktio)
+                      (catch Throwable t (log/error "Virhe suoritettaessa" tunniste "Throwable:" t) false))]
+      (log/info (str tunniste " suoritus päättyi "
+                     (when-not onnistui? "epäonnistuneesti") ; Suoritus voi onnistua kokonaan, osittain tai ei ollenkaan.
+                     ". Kesto: "
+                     (float (/ (- (System/currentTimeMillis) aloitusaika-ms) 1000)) " sekuntia")))))
+
+(defn hae-varustetoteumat-velhosta [integraatioloki db asetukset]
+  (lukko/yrita-ajaa-lukon-kanssa
+    db
+    "tuo-uudet-varustetoteumat-velhosta"
+    #(suorita-ja-kirjaa-alku-loppu-ajat
+       (fn [] (varusteet/tuo-uudet-varustetoteumat-velhosta integraatioloki db asetukset))
+       "tuo-uudet-varustetoteumat-velhosta")))
+
+(defn tee-varustetoteuma-haku-tehtava-fn [{:keys [db asetukset integraatioloki]} suoritusaika]
+  (if suoritusaika
+    (do
+      (log/debug "Ajastetaan varustetoteumien tuonti Tievelhosta tehtäväksi joka päivä kello: " (-> asetukset :velho :varustetoteuma-suoritusaika))
+      (ajastettu-tehtava/ajasta-paivittain
+        suoritusaika
+        (do
+          (log/info "ajasta-paivittain :: varustetoteumien tuonti :: Alkaa " (pvm/nyt))
+          (fn [_] (hae-varustetoteumat-velhosta integraatioloki db asetukset)))))
+    (constantly nil)))
 
 (defrecord Velho [asetukset]
   component/Lifecycle
-  (start [this] this)
-  (stop [this] this)
+  (start [this]
+    (let [suoritusaika (:varuste-tuonti-suoritusaika asetukset)]
+      (log/info (str "Käynnistetään tuo-uudet-varustetoteumat-velhosta -komponentti. Suoritusaika: " suoritusaika))
+      (assoc this :varustetoteuma-tuonti-tehtava (tee-varustetoteuma-haku-tehtava-fn this suoritusaika))))
+  (stop [this]
+    (log/info "Sammutetaan tuo-uudet-varustetoteumat-velhosta -komponentti.")
+    (let [varustetoteuma-tuonti-tehtava-cancel (:varustetoteuma-tuonti-tehtava this)]
+      (varustetoteuma-tuonti-tehtava-cancel))
+    (dissoc this :varustetoteuma-tuonti-tehtava))
 
-  VelhoRajapinnat
-  (laheta-kohteet [this urakka-id kohde-idt]
-    (laheta-kohteet-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-idt)))
+  PaallystysilmoituksenLahetys
+  (laheta-kohde [this urakka-id kohde-id]
+    (pot-lahetys/laheta-kohde-velhoon (:integraatioloki this) (:db this) asetukset urakka-id kohde-id))
+
+  VarustetoteumaHaku
+  (tuo-uudet-varustetoteumat-velhosta [this]
+    (suorita-ja-kirjaa-alku-loppu-ajat
+      #(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki this) (:db this) asetukset)
+      "tuo-uudet-varustetoteumat-velhosta"))
+  (paivita-mhu-urakka-oidt-velhosta [this]
+    (suorita-ja-kirjaa-alku-loppu-ajat
+      #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
+      "paivita-mhu-urakka-oidt-velhosta")))

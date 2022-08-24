@@ -28,7 +28,8 @@ WHERE k.likainen = TRUE;
 UPDATE kustannussuunnitelma
 SET likainen = TRUE,
 muokattu = current_timestamp
-WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi);
+WHERE maksuera IN (select numero from  maksuera WHERE toimenpideinstanssi = :tpi AND
+  toimenpideinstanssi IN (select id from toimenpideinstanssi where loppupvm > current_timestamp - INTERVAL '3 months'));
 
 -- name: merkitse-kustannussuunnitelma-odottamaan-vastausta!
 -- Merkitsee kustannussuunnitelma lähetetyksi, kirjaa lähetyksen id:n, avaa lukon ja merkitsee puhtaaksi
@@ -72,7 +73,7 @@ SELECT
   Sum(COALESCE(kt.summa, 0)) AS summa
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN kiinteahintainen_tyo kt on tpi.id = kt.toimenpideinstanssi
+       JOIN kiinteahintainen_tyo kt on tpi.id = kt.toimenpideinstanssi -- hankinnat
 WHERE m.numero = :maksuera GROUP BY kt.vuosi
 UNION ALL
 SELECT
@@ -80,8 +81,16 @@ SELECT
   Sum(COALESCE(ka.summa, 0)) AS summa
 FROM maksuera m
        JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
-       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi
-WHERE m.numero = :maksuera GROUP BY ka.vuosi;
+       JOIN kustannusarvioitu_tyo ka on tpi.id = ka.toimenpideinstanssi -- äkilliset hoitotyöt yms.
+WHERE m.numero = :maksuera GROUP BY ka.vuosi
+UNION ALL
+SELECT
+  jhk.vuosi as vuosi,
+  Sum(COALESCE((jhk.tunnit * jhk.tuntipalkka), 0)) AS summa
+FROM maksuera m
+       JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi and tpi.toimenpide = (select id from toimenpidekoodi where koodi = '23151') -- hoidon johto
+       JOIN johto_ja_hallintokorvaus jhk on tpi.urakka = jhk."urakka-id"
+WHERE m.numero = :maksuera GROUP BY jhk.vuosi;
 
 -- name: hae-kanavaurakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT
@@ -97,7 +106,8 @@ FROM maksuera m
                                    AND
                                    yht.urakka = tpi.urakka
 WHERE m.numero = :maksuera
-GROUP BY Extract(YEAR FROM yht.alkupvm);
+GROUP BY Extract(YEAR FROM yht.alkupvm)
+ORDER BY vuosi DESC;
 
 -- name: hae-hoitourakan-kustannussuunnitelman-yksikkohintaiset-summat
 SELECT

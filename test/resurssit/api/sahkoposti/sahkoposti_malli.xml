@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sahkoposti:sahkoposti xmlns:sahkoposti="http://www.liikennevirasto.fi/xsd/harja/sahkoposti">
+    <viestiId>21EC2020-3AEA-4069-A2DD-08002B30309D</viestiId>
+    <vastaanottajat>
+        <vastaanottaja>__VASTAANOTTAJA__</vastaanottaja>
+    </vastaanottajat>
+    <lahettaja>__LAHETTAJA__</lahettaja>
+    <otsikko>__OTSIKKO__</otsikko>
+    <sisalto>__SISALTO__</sisalto>
+</sahkoposti:sahkoposti>

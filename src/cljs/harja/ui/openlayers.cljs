@@ -329,8 +329,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 
 
-(defn- ol3-did-mount [this]
+(defn- ol3-did-mount
   "Initialize OpenLayers map for a newly mounted map component."
+  [this]
   (let [{layers :layers :as mapspec} (:mapspec (reagent/state this))
         interaktiot (let [oletukset (ol-interaction/defaults
                                      #js {:mouseWheelZoom true
@@ -432,7 +433,12 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 
 (defn ol3-will-unmount [this]
   (let [{:keys [ol3 geometries-map unmount-ch]} (reagent/state this)]
-    (async/close! unmount-ch)))
+    (async/close! unmount-ch)
+
+    ;; Poistamalla kartan target mahdollistetaan, että GC poistaa ol3 map objektin ja vapauttaa näin muistia.
+    ;; Resetoidaan myös the-kartta atom, jotta viittauksia karttaobjektiin ei jää ja GC voi tuhota karttaobjektin.
+    (some-> @the-kartta (.setTarget nil))
+    (reset! the-kartta nil)))
 
 (defn- ol3-did-update [this _]
   (let [uusi-leveys (.-offsetWidth
@@ -462,8 +468,9 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
             {:style {:left (+ 20 (:x hover)) :top (+ 10 (:y hover))}}
             (tooltipin-sisalto)])))]))
 
-(defn- update-ol3-geometries [component geometries]
+(defn- update-ol3-geometries
   "Update the ol3 layers based on the data, mutates the ol3 map object."
+  [component geometries]
   (let [{:keys [ol3 geometry-layers mapspec]} (reagent/state component)
         geometry-fn (or (:geometry-fn mapspec) identity)]
 
@@ -512,12 +519,13 @@ Näkyvän alueen ja resoluution parametrit lisätään kutsuihin automaattisesti
 ;;;;;;;;;
 ;; The OpenLayers 3 Reagent component.
 
-(defn openlayers [mapspec]
+(defn openlayers
   "A OpenLayers map component."
+  [mapspec]
   (reagent/create-class
     {:get-initial-state            (fn [_] {:mapspec mapspec})
      :component-did-mount          ol3-did-mount
      :reagent-render               ol3-render
      :component-will-unmount       ol3-will-unmount
      :component-did-update         ol3-did-update
-     :component-will-receive-props ol3-will-receive-props}))
+     :UNSAFE_component-will-receive-props ol3-will-receive-props}))

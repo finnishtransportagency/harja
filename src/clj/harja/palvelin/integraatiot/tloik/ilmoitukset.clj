@@ -5,7 +5,7 @@
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
             [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as kuittaus-sanoma]
-            [harja.palvelin.komponentit.sonja :as sonja]
+            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
             [harja.kyselyt.urakat :as urakat]
             [harja.tyokalut.xml :as xml]
@@ -24,9 +24,9 @@
 
 (def +xsd-polku+ "xsd/tloik/")
 
-(defn laheta-kuittaus [sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]
+(defn laheta-kuittaus [itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id onnistunut lisatietoja]
   (lokittaja :lahteva-jms-kuittaus kuittaus tapahtuma-id onnistunut lisatietoja kuittausjono)
-  (sonja/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id}))
+  (jms/laheta itmf kuittausjono kuittaus {:correlation-id korrelaatio-id}))
 
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
   (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)
@@ -97,8 +97,8 @@
                                    "Kesti *" (ilmoituksen-kesto kulunut-aika) "* saapua T-LOIK:ista HARJAA:n")})))
 
 (defn- kasittele-ilmoituksessa-kulunut-aika
-  [{:keys [ilmoitettu vastaanotettu viesti-id tapahtuma-id kehitysmoodi? uudelleen-lahetys?]}]
-  (try (let [kulunut-aika (pvm/aikavali-sekuntteina ilmoitettu vastaanotettu)]
+  [{:keys [valitetty vastaanotettu viesti-id tapahtuma-id kehitysmoodi? uudelleen-lahetys?]}]
+  (try (let [kulunut-aika (pvm/aikavali-sekuntteina valitetty vastaanotettu)]
          ;; Jos ilmoituksen saapumisessa HARJA:an on kestänyt yli 5 min, lähetetään siitä viesti slackiin
          (when (and kulunut-aika (> kulunut-aika 300) (not uudelleen-lahetys?))
            (log/debug "SLACKIIN PITÄS LÄHTÄ VIESTIÄ")
@@ -112,7 +112,7 @@
 
 (defn kasittele-ilmoitus
   "Tallentaa ilmoituksen ja tekee tarvittavat huomautus- ja ilmoitustoimenpiteet"
-  [sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+  [itmf ilmoitusasetukset lokittaja db kuittausjono urakka
    ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
    vastaanotettu]
   (jdbc/with-db-transaction [db db]
@@ -125,9 +125,16 @@
                                              paivystajat nil)
           ilmoittaja-urakan-urakoitsijan-organisaatiossa? (kayttajat-q/onko-kayttaja-nimella-urakan-organisaatiossa?
                                                             db urakka-id ilmoitus)
-          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-viesti-idlla? db ilmoitus-id viesti-id)
+          uudelleen-lahetys? (ilmoitukset-q/ilmoitus-loytyy-idlla? db ilmoitus-id)
+          ilmoitus-on-lahetetty-urakalle? (ilmoitukset-q/ilmoitus-on-lahetetty-urakalle? db ilmoitus-id urakka-id)
+          ;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
+          ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
+          _ (when (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+              (ilmoitukset-q/paivita-ilmoituksen-urakka db ilmoitus-id urakka-id))
+
           ilmoitus-kanta-id (ilmoitus/tallenna-ilmoitus db urakka-id ilmoitus)
-          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:ilmoitettu (:ilmoitettu ilmoitus) :vastaanotettu vastaanotettu
+          ;; Kuluneen ajan laskennassa verrataan ajankohtaa, jolloin T-LOIK on lähettänyt ilmoituksen siihen milloin se on Harjassa vastaanotettu.
+          kulunut-aika (kasittele-ilmoituksessa-kulunut-aika {:valitetty (:valitetty ilmoitus) :vastaanotettu vastaanotettu
                                                               :viesti-id (:viesti-id ilmoitus) :tapahtuma-id tapahtuma-id
                                                               :kehitysmoodi? kehitysmoodi? :uudelleen-lahetys? uudelleen-lahetys?})
           ilmoituksen-alkuperainen-kesto (when uudelleen-lahetys?
@@ -141,27 +148,29 @@
                         (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
           ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
           tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
-      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta tapahtumat urakka-id ilmoitus-id)
+      (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
       (if ilmoittaja-urakan-urakoitsijan-organisaatiossa?
         (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja)
-        (when (not uudelleen-lahetys?)
+        ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
+        ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
+        (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?)))
           (laheta-ilmoitus-paivystajille db
-                                         (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                                         paivystajat urakka-id ilmoitusasetukset)))
+            (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
+            paivystajat urakka-id ilmoitusasetukset)
+          (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin.")))
+      (laheta-kuittaus itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
 
-      (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id true lisatietoja))))
-
-(defn kasittele-tuntematon-urakka [sonja lokittaja kuittausjono viesti-id ilmoitus-id
+(defn kasittele-tuntematon-urakka [itmf lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]
   (let [virhe (format "Urakkaa ei voitu päätellä T-LOIK:n ilmoitukselle (id: %s, viesti id: %s)"
                       ilmoitus-id viesti-id)
         kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (.toString (time/now)) "virhe" nil
                                            nil "Tiedoilla ei voitu päätellä urakkaa.")]
     (log/error virhe)
-    (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
+    (laheta-kuittaus itmf lokittaja kuittausjono kuittaus
                      korrelaatio-id tapahtuma-id false virhe)))
 
-(defn vastaanota-ilmoitus [sonja lokittaja ilmoitusasetukset tapahtumat db kuittausjono jms-lahettaja kehitysmoodi? viesti]
+(defn vastaanota-ilmoitus [itmf lokittaja ilmoitusasetukset db kuittausjono jms-lahettaja kehitysmoodi? viesti]
   (log/debug "Vastaanotettiin T-LOIK:n ilmoitusjonosta viesti: " viesti)
   (let [vastaanotettu (pvm/nyt)
         jms-viesti-id (.getJMSMessageID viesti)
@@ -173,10 +182,10 @@
       (let [{:keys [viesti-id ilmoitus-id] :as ilmoitus} (ilmoitus-sanoma/lue-viesti viestin-sisalto)]
         (try+
           (if-let [urakka (hae-urakka db ilmoitus)]
-            (kasittele-ilmoitus sonja ilmoitusasetukset lokittaja db tapahtumat kuittausjono urakka
+            (kasittele-ilmoitus itmf ilmoitusasetukset lokittaja db kuittausjono urakka
                                 ilmoitus viesti-id korrelaatio-id tapahtuma-id jms-lahettaja kehitysmoodi?
                                 vastaanotettu)
-            (kasittele-tuntematon-urakka sonja lokittaja kuittausjono viesti-id ilmoitus-id
+            (kasittele-tuntematon-urakka itmf lokittaja kuittausjono viesti-id ilmoitus-id
                                          korrelaatio-id tapahtuma-id))
           (catch Exception e
             (log/error e (format "Tapahtui poikkeus luettaessa sisään ilmoitusta T-LOIK:sta"
@@ -184,10 +193,10 @@
             (let [virhe (str (format "Poikkeus (id: %s, viesti id: %s) " ilmoitus-id viesti-id) e)
                   kuittaus (kuittaus-sanoma/muodosta viesti-id ilmoitus-id (.toString (time/now))
                                                      "virhe" nil nil "Sisäinen käsittelyvirhe.")]
-              (laheta-kuittaus sonja lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id
+              (laheta-kuittaus itmf lokittaja kuittausjono kuittaus korrelaatio-id tapahtuma-id
                                false virhe)))))
       (let [virhe "XML-sanoma ei ole harja-tloik.xsd skeeman mukainen."
             viesti-id (str (UUID/randomUUID))
             kuittaus (kuittaus-sanoma/muodosta viesti-id nil (.toString (time/now)) "virhe" nil nil virhe)]
-        (laheta-kuittaus sonja lokittaja kuittausjono kuittaus
+        (laheta-kuittaus itmf lokittaja kuittausjono kuittaus
                          korrelaatio-id tapahtuma-id false virhe)))))

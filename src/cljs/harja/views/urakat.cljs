@@ -40,8 +40,7 @@
       [kartta/kartan-paikka hallintayksikot]]]))
 
 (defn valitse-urakka []
-  (let [urakkalista @nav/hallintayksikon-urakkalista
-        suodatettu-urakkalista @nav/suodatettu-urakkalista
+  (let [suodatettu-urakkalista @nav/suodatettu-urakkalista
         nyt (pvm/nyt)
         tulevia? (some #(pvm/ennen? nyt (:alkupvm %)) suodatettu-urakkalista)
         kaynnissaolevia? (some #(and
@@ -55,7 +54,7 @@
                                   (when paattyneita? :paattyneet)])]
     [:div.row {:data-cy "urakat-valitse-urakka"}
      [:div.col-md-4
-      (if (nil? urakkalista)
+      (if (nil? suodatettu-urakkalista)
         [yleiset/ajax-loader "Urakoita haetaan..."]
         [:span
          [:h5.haku-otsikko "Valitse hallintayksikön urakka"]

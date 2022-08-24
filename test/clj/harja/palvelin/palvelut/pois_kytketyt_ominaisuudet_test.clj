@@ -1,7 +1,7 @@
 (ns harja.palvelin.palvelut.pois-kytketyt-ominaisuudet-test
   (:require [harja.palvelin.komponentit.todennus :as todennus]
             [harja.testi :refer :all]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa? pois-kytketyt-ominaisuudet]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa? pois-kytketyt-ominaisuudet]]
             [clojure.test :as t :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]))
 

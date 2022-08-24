@@ -115,7 +115,7 @@
   (let [ensimmainen-vuosi (pvm/vuosi alkupvm)
         viimeinen-vuosi (pvm/vuosi loppupvm)]
     (cond
-      (or (= :hoito tyyppi) (= :teiden-hoito tyyppi))
+      (#{:hoito :teiden-hoito} tyyppi)
       ;; Hoidon alueurakan hoitokaudet
       (mapv (fn [vuosi]
               [(pvm/hoitokauden-alkupvm vuosi)
@@ -205,7 +205,12 @@
 (defonce valittu-hoitokausi
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
+(defonce valittu-voimassaoleva-aikavali
+  (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
+
 (defonce valittu-aikavali (reaction-writable @valittu-hoitokausi))
+(defonce valittu-aikavali-hoitokauden-sisalla (reaction-writable @valittu-voimassaoleva-aikavali))
+(defonce yksikkohintaiset-aikavali (atom (pvm/kuukauden-aikavali (pvm/nyt))))
 
 (defn valitse-aikavali! [alku loppu]
   (reset! valittu-aikavali [alku loppu]))
@@ -213,7 +218,8 @@
 (defn valitse-hoitokausi! [hk]
   (log "------- VALITAAN HOITOKAUSI:" (pr-str hk))
   (reset! valittu-hoitokausi hk)
-  (reset! valittu-aikavali [(first hk) (second hk)]))
+  (reset! valittu-aikavali [(first hk) (second hk)])
+  (reset! yksikkohintaiset-aikavali [(first hk) (second hk)]))
 
 (def aseta-kuluva-kk-jos-hoitokaudella? (atom false))
 
@@ -288,8 +294,6 @@
         (tulevat-hoitokaudet ur hoitokausi)))
 
 
-;; fixme if you can, man. En saanut kohtuullisessa ajassa tätä generalisoitua
-;; siistiksi osaksi rivit-tulevillekin-kausille-funktiota
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
   (into []
         (mapcat (fn [[alku loppu]]
@@ -464,6 +468,13 @@
   []
   (some? (:indeksi @nav/valittu-urakka)))
 
+(defn indeksi-kaytossa-sakoissa?
+  "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
+  []
+  (not (and
+         (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+         (> (-> @nav/valittu-urakka :alkupvm pvm/vuosi) 2020))))
+
 (def urakan-tiedot-ladattu?
   ;; Kertoo, onko ladattu urakasta kaikki sellaiset tiedot, joihin
   ;; viitataan urakan eri näkymistä. Ei tulisi näyttää urakkaa,
@@ -509,3 +520,23 @@
          (= (:sopimustyyppi ur) :palvelusopimus))
     (and (= (:tyyppi ur) :tiemerkinta)
          (= (:sopimustyyppi ur) :palvelusopimus))))
+
+(defn muuta-hoitokausivuosi-jarjestysnumeroksi
+  "Otetaan urakan loppupäivämäärän vuosi (esim 2025) ja vähennetään siitä saatu vuosi (esim 2021) ja muutetaan
+  se järjestysnumeroksi sillä oletuksella, että hoitokausia voi olla maksimissaan viisi (5). Joten laskutoimituksesta tulee
+  perin yksinkertainen. Saaduilla arvoilla laskuksi tulee 5 - 4 -> 1. Koska kuluva vuosi on aina ensimmäinen (1) eikä nollas vuosi (0)
+   lisätään järjestysnumeroon yksi. Eli Tulos on tässä tilanteessa 2."
+  [vuosi urakan-loppupvm]
+  (inc (- 5
+          (- (pvm/vuosi urakan-loppupvm) vuosi))))
+
+(defn hoitokauden-jarjestysnumero [valittu-hoitokausivuosi urakan-loppupvm]
+  (muuta-hoitokausivuosi-jarjestysnumeroksi valittu-hoitokausivuosi urakan-loppupvm))
+
+(defn kuluva-hoitokausi-nro [paivamaara urakan-loppupvm]
+  (let [vuosi (pvm/vuosi paivamaara)
+        kuukausi (pvm/kuukausi paivamaara)
+        kuluva-hoitokausivuosi (if (< kuukausi 10)
+                                 (dec vuosi)
+                                 vuosi)]
+    (muuta-hoitokausivuosi-jarjestysnumeroksi kuluva-hoitokausivuosi urakan-loppupvm)))

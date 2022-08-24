@@ -6,7 +6,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [fileyard.client :as fileyard-client]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [clojure.java.jdbc :as jdbc]

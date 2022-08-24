@@ -49,7 +49,7 @@
 (defn rakenna [paallystysilmoitus]
   (let [data {:osoitteet (rakenna-alikohteet paallystysilmoitus)
               :alustatoimet (rakenna-alustatoimet paallystysilmoitus)}
-        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus+
+        _ (skeema/validoi paallystysilmoitus-domain/+paallystysilmoitus-ilmoitustiedot+
                           data)
         encoodattu-ilmoitustiedot (cheshire/encode data)]
     encoodattu-ilmoitustiedot))

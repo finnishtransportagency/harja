@@ -8,7 +8,7 @@
             [harja.palvelin.komponentit.virustarkistus :as virustarkistus]
             [harja.palvelin.komponentit.tiedostopesula :as tiedostopesula]
             [fileyard.client :as fileyard-client]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.tyokalut.lukot :as lukot]
             [clojure.java.jdbc :as jdbc])
@@ -167,24 +167,29 @@
     (catch Exception e
       (log/error e "Poikkeus siirrettäessä liitettä fileyardiin " nimi " (id: " id ")"))))
 
+(def liitteiden-ajastusvali-min 5)
+(def lukon-vanhenemisaika-s (* (dec liitteiden-ajastusvali-min) 60))
+
 (defn- siirra-liitteet-fileyard [db fileyard-url]
   (when (and (ominaisuus-kaytossa? :fileyard)
              fileyard-url)
-    (lukot/aja-lukon-kanssa
-     db "fileyard-liitesiirto"
-     #(let [client (fileyard-client/new-client fileyard-url)]
+    (lukot/yrita-ajaa-lukon-kanssa
+      db "fileyard-liitesiirto"
+      #(let [client (fileyard-client/new-client fileyard-url)]
         (doseq [liite (liitteet/hae-siirrettavat-liitteet db)]
-          (siirra-liite-fileyard db client liite))))))
+          (siirra-liite-fileyard db client liite)))
+      lukon-vanhenemisaika-s)))
 
 (defrecord Liitteet [fileyard-url]
   component/Lifecycle
   (start [{db :db :as this}]
-    (ajastettu-tehtava/ajasta-minuutin-valein
-     5 11 ;; 5 min välein alkaen 11s käynnistyksestä
-     (fn [_]
-       (siirra-liitteet-fileyard db fileyard-url)))
-    this)
+    (assoc this ::lopeta-ajastettu-tehtava
+                (ajastettu-tehtava/ajasta-minuutin-valein
+                  liitteiden-ajastusvali-min 11                                      ;; 5 min välein alkaen 11s käynnistyksestä
+                  (fn [_]
+                    (siirra-liitteet-fileyard db fileyard-url)))))
   (stop [this]
+    ((get this ::lopeta-ajastettu-tehtava))
     this)
 
   LiitteidenHallinta

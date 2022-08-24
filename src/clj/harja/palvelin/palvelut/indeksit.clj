@@ -5,6 +5,7 @@
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
@@ -42,6 +43,29 @@
   [db nimi]
   (zippaa (ryhmittele-indeksit (q/hae-indeksi db nimi))))
 
+(defn indeksi-muuttunut [db {:keys [nimi vuosi kuukausi] :as indeksi}]
+  (log/debug "Indeksi muuttunut" indeksi)
+  ;; Syys/loka/marraskuun indeksi vaikuttaa indeksilaskennan peruslukuun, ja sitä kautta indeksikorjauksiin.
+  ;; Indeksikerroin on edellisen hoitovuoden syyskuun arvo jaettuna perusluvulla.
+  (when (#{9 10 11} kuukausi)
+    (log/debug "Lasketaan indeksikorjaukset uusiksi")
+    (log/debug
+      "Kiinteähintaiset työt:"
+      (budjettisuunnittelu-q/paivita-kiinteahintaiset-tyot-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Kustannusarvioidut työt:"
+      (budjettisuunnittelu-q/paivita-kustannusarvioidut-tyot-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Johto- ja hallintokorvaus:"
+      (budjettisuunnittelu-q/paivita-johto-ja-hallintokorvaus-indeksille! db indeksi)
+      "riviä päivitetty")
+    (log/debug
+      "Urakan tavoite:"
+      (budjettisuunnittelu-q/paivita-urakka-tavoite-indeksille! db indeksi)
+      "riviä päivitetty")))
+
 (defn tallenna-indeksi
   "Palvelu joka tallentaa nimellä tunnistetun indeksin tiedot"
   [db user {:keys [nimi indeksit]}]
@@ -69,14 +93,20 @@
 
           ;; 1) update 2) insert 3) delete operaatiot tilanteen mukaan
           (doseq [kk paivitettavat-eri-sisalto]
+            (log/debug "Päivitä indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/paivita-indeksi! c
-                                (get indeksivuosi kk) nimi vuosi kk))
+                                (get indeksivuosi kk) nimi vuosi kk)
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk lisattavat]
+            (log/debug "Luo indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/luo-indeksi<! c
-                             nimi vuosi kk (get indeksivuosi kk)))
+                             nimi vuosi kk (get indeksivuosi kk))
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk poistettavat]
+            (log/debug "Poista indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/poista-indeksi! c
-                               nimi vuosi kk))))
+                               nimi vuosi kk)
+            (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))))
 
       (hae-indeksit c user))))
 
@@ -87,7 +117,6 @@
   (let [indeksit (into []
                        (map #(konv/string->keyword % :urakkatyyppi))
                        (q/hae-urakkatyypin-indeksit db))]
-    (log/debug "hae urakkatyypin indeksit: " indeksit)
     indeksit))
 
 
@@ -100,7 +129,6 @@
                        (comp (map konv/alaviiva->rakenne)
                              (map #(konv/string->keyword % [:indeksi :urakkatyyppi])))
                        (q/hae-paallystysurakan-indeksitiedot db {:urakka urakka-id}))]
-    (log/debug "hae-paallystysurakan-indeksit: " indeksit)
     indeksit))
 
 (defn vaadi-paallystysurakan-indeksi-kuuluu-urakkaan [db urakka-id paallystysurakan-indeksi-id]
@@ -115,7 +143,6 @@
   "Palvelu joka tallentaa päällystysurakan indeksitiedot eli mihin arvoihin mikäkin raaka-ainehinta on sidottu.
   Esim. Bitumin arvo sidotaan usein raskaan polttoöljyn Platts-indeksiin, nestekaasulle ja kevyelle polttoöljylle on omat hintansta."
   [db user indeksitiedot]
-  (log/debug "tallenna-paallystysurakan-indeksitiedot: " indeksitiedot)
   (doseq [urakka-id (distinct (map :urakka indeksitiedot))]
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-yleiset user urakka-id))
   (let [urakka-id (some :urakka indeksitiedot)]

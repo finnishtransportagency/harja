@@ -6,7 +6,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [harja.palvelin.tyokalut.lukot :as lukko])
+            [harja.palvelin.tyokalut.lukot :as lukko]
+            [harja.pvm :as pvm])
   (:import (java.util UUID)))
 
 (defprotocol Valtuushallinta
@@ -44,7 +45,9 @@
       (log/debug "Ajastetaan urakoiden uudelleenlähetys Sähkeeseen tehtäväksi joka päivä kello: " uudelleenlahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         uudelleenlahetysaika
-        (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja integraatioloki db lahetysjono))))
+        (do
+          (log/info "ajasta-paivittain :: Sähkeeseen epäonnistuneet urakat uudestaan :: Alkaa " (pvm/nyt))
+          (fn [_] (laheta-epaonnistuneet-urakat-uudestaan sonja integraatioloki db lahetysjono)))))
     (fn [])))
 
 (defrecord Sahke [lahetysjono uudelleenlahetysaika]

@@ -49,7 +49,7 @@
                                 :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
                                 :valittu-jarjestelma "ptj"
                                 :valittu-integraatio "sillat-haku"}]
-    (log/error :ei-logiteta_
+    (log/error "[SILLAT]"
                {:fields [{:title "Linkit"
                           :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
                                       "<|||glogglog||||Graylog> | "
@@ -66,13 +66,13 @@
     (when silta-kannassa?
       (if (some :siltatarkastuksia? urakkatiedot)
         ;; Jos on tarkastuksia, annetaan olla kannassa ja logitetaan
-        (do (q-sillat/paivita-silta! db sql-parametrit)
+        (do (q-sillat/paivita-silta! db (assoc sql-parametrit :kunnan-vastuulla true))
             (logita-virhe-sillan-tuonnissa db
                                            "Kunnan hoitamalle sillalle merkattu tarkastuksia"
                                            (str "Silta " silta-taulun-id
                                                 " on merkattu kunnan hoitamaksi, mutta sillä on siltatarkastuksia.")))
         ;; Merkataan silta poistetuksi, jos ei ole tarkastuksia
-        (q-sillat/merkkaa-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
+        (q-sillat/merkkaa-kunnan-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
 
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
@@ -103,7 +103,7 @@
                                 (some #(= % alueurakka) kunnan-numerot))
                     (q-urakka/hae-urakka-id-alueurakkanumerolla db {:alueurakka alueurakka}))
         _ (when (and (nil? urakka-id) (not (some #(= % alueurakka) kunnan-numerot)) (= aineistovirhe "NO ERROR"))
-            (log/debug :ei-logiteta_ "---> e: " silta-floateilla)
+            (log/debug "[SILLAT]" "---> e: " silta-floateilla)
             (logita-virhe-sillan-tuonnissa db "Virhe shapefilessä: Sillalle ei ole merkattu urakkaa"
                                            (str "Sillalle " (:siltanimi silta)
                                                 " (" siltanumero ") "
@@ -174,7 +174,9 @@
                         :lakkautuspvm lakkautuspvm
                         :muutospvm muutospvm
                         :urakat urakat
-                        :status status}]
+                        :status status
+                        :poistettu false
+                        :kunnan-vastuulla false}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
 

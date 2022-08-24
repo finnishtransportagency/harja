@@ -1,0 +1,67 @@
+/* Kyllä / ei vastauskomponentti */
+.ke-valinta-wrapper {
+  position: relative;
+}
+.ke-valinta {
+  background-color: @white-dark;
+  width: 192px;
+  height: 32px;
+  border-radius: 5px;
+  display: flex;
+  flex-direction: row;
+}
+.ke-vastaus {
+  position: static;
+  width: 64px;
+  height: 32px;
+  padding-top: 7px;
+  text-align: center;
+  top: 0px;
+  border-radius: 5px;
+  user-select: none;
+  &:hover,
+  &:focus {
+    border: 1px solid black;
+  }
+  &.kylla-valittu {
+    color: @green-dark;
+    margin-left: 0px;
+    background-color: @white-default;
+    border: 1px solid @white-darker;
+    &:hover,
+    &:focus {
+      border: 1px solid black;
+    }
+  }
+  &.kylla-valitsematta {
+    color: @green-dark;
+    margin-left: 0px;
+    background-color: @white-dark;
+  }
+  &.odottaa {
+    color: @lemon-default;
+    background-color: @white-default;
+    border: 1px solid @white-darker;
+    &:hover,
+    &:focus {
+      border: 1px solid black;
+    }
+  }
+  &.odottaa-valitsematta {
+    color: @lemon-default;
+    background-color: @white-dark;
+  }
+  &.ei-valittu {
+    color: @red-dark;
+    background-color: @white-default;
+    border: 1px solid @white-darker;
+    &:hover,
+    &:focus {
+      border: 1px solid black;
+    }
+  }
+  &.ei-valitsematta {
+    color: @red-dark;
+    background-color: @white-dark;
+  }
+}

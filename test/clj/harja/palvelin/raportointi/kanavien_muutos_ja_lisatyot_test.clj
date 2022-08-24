@@ -45,10 +45,10 @@
                                 +kayttaja-jvh+
                                 {:nimi       :kanavien-muutos-ja-lisatyot
                                  :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                 :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2017 1 1))
                                               :loppupvm (c/to-date (t/local-date 2017 12 31))
-                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                               :kohde-id  nil
                                               :tehtava-id  nil}})
         nurkkasumma (last (last (last vastaus)))]
@@ -61,10 +61,10 @@
                                 +kayttaja-jvh+
                                 {:nimi       :kanavien-muutos-ja-lisatyot
                                  :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                 :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2016 8 1))
                                               :loppupvm (c/to-date (t/local-date 2017 4 1))
-                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                               :kohde-id  (hae-kohde-palli)
                                               :tehtava-id  nil}})
         nurkkasumma (last (last (last vastaus)))]
@@ -77,10 +77,10 @@
                                 +kayttaja-jvh+
                                 {:nimi       :kanavien-muutos-ja-lisatyot
                                  :konteksti  "urakka"
-                                 :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                 :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2017 1 1))
                                               :loppupvm (c/to-date (t/local-date 2017 12 31))
-                                              :urakka-id  (hae-saimaan-kanavaurakan-id)
+                                              :urakka-id  (hae-urakan-id-nimella "Saimaan kanava")
                                               :kohde-id  nil
                                               :tehtava-id  vaylanhoito-ei-yksiloity-tpk-id}})
         nurkkasumma (last (last (last vastaus)))]

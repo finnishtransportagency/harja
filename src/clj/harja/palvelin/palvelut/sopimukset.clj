@@ -5,7 +5,7 @@
             [harja.kyselyt.sopimukset :as q]
             [harja.domain.sopimus :as sopimus]
             [namespacefy.core :refer [namespacefy]]
-            [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.kyselyt.konversio :as konv]
             [clojure.java.jdbc :as jdbc]

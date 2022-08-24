@@ -2,7 +2,7 @@
   "Määrittelee talvihoitoluokat ja soratien hoitoluokat"
   (:require [harja.pvm :as pvm]))
 
-(def ei-talvihoitoluokkaa-nimi "Ei tiedossa")
+(def ei-talvihoitoluokkaa-nimi "Hoitoluokka puuttuu")
 
 (def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa. Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
@@ -13,13 +13,14 @@ talvihoitoluokat
    {:nimi "Is"  :numero 2 :numero-str "2"}
    {:nimi "I"   :numero 3 :numero-str "3"}
    {:nimi "Ib"  :numero 4 :numero-str "4"}
-   {:nimi "TIb" :numero 5 :numero-str "5"} ; 1.10.2019 alkaen oltava Ic!
+   {:nimi "Ic" :numero 5 :numero-str "5"}
    {:nimi "II"  :numero 6 :numero-str "6"}
    {:nimi "III" :numero 7 :numero-str "7"}
    {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
    {:nimi "K1"  :numero 9 :numero-str "9"}
    {:nimi "K2"  :numero 10 :numero-str "10"}
-   {:nimi "Ei talvihoitoa"  :numero 11 :numero-str "11"}
+   {:nimi "K (ei talvihoitoa)" :numero 11 :numero-str "11"}
+   {:nimi "Käsin kirjattu" :numero 99 :numero-str "99"}
    {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 
 (def hoitoluokkavaihtoehdot-raporteille
@@ -54,7 +55,9 @@ Numero on tierekisterin koodi luokalle."}
   soratieluokat
   [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1}
    {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2}
-   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}])
+   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}
+   {:nimi "Käsin kirjattu" :kuvaus "Käsin kirjattu" :numero 99}
+   {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100}])
 
 (def ^{:doc "Mäppäys soratieluokan numerosta sen nimeen."}
   soratieluokan-nimi

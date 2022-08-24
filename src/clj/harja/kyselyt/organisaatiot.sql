@@ -27,6 +27,10 @@ SELECT id
 FROM organisaatio
 WHERE sampoid = :sampoid;
 
+-- name: onko-olemassa
+-- Onko organisaatio olemassa
+select exists(select id from organisaatio where id = :id);
+
 -- name: hae-organisaatio
 -- Hakee organisaation id:llä
 SELECT

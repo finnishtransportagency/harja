@@ -10,7 +10,8 @@
     #?(:cljs [harja.ui.ikonit :as ikonit]))
   #?(:clj
      (:import (java.text NumberFormat)
-              (java.util Locale))))
+              (java.util Locale)
+              (java.math RoundingMode BigDecimal))))
 
 #?(:cljs (def frontin-formatointivirheviestit #{"epäluku"}))
 
@@ -42,16 +43,18 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (str tulos " \u20AC")))
+            (if nayta-euromerkki (str tulos " \u20AC") tulos)))
 
         :clj
-        (s/replace (.format (doto
-                       (if nayta-euromerkki
-                         (NumberFormat/getCurrencyInstance)
-                         (NumberFormat/getNumberInstance))
-                     (.setMaximumFractionDigits 2)
-                     (.setMinimumFractionDigits 2)) eur)
-                   #" €" " €")))))
+        (s/replace (.format
+                     (doto
+                         (if nayta-euromerkki
+                           (NumberFormat/getCurrencyInstance)
+                           (NumberFormat/getNumberInstance))
+                       (.setMaximumFractionDigits 2)
+                       (.setMinimumFractionDigits 2)
+                       (.setNegativePrefix "\u002D")) eur)     ;; Try to fix VHAR-2391 replacing - with its unicode representation
+          #" €" " €")))))
 
 
 
@@ -62,6 +65,12 @@
    (if (or (nil? summa) (and (string? summa) (empty? summa)))
      ""
      (euro nayta-euromerkki summa))))
+
+#?(:clj
+   (defn formatoi-arvo-raportille [arvo]
+     (as-> arvo arvo
+           (clojure.core/bigdec arvo)
+           (. arvo setScale 2 RoundingMode/HALF_UP))))
 
 (defn yksikolla
   "Lisää arvo-merkkijonon loppuun välilyönnin ja yksikkö-merkkijonon"
@@ -117,6 +126,20 @@
            ;; voi ottaa loppuvälilyönnin pois. Eli esim "harja-sampo " -> "harja-sampo"
            ;(re-find #"^\s*" nimi)
            ;(s/replace nimi #"^\s*" "")
+
+           (re-find #"maanteiden hoitourakka" nimi)
+           (s/replace nimi #"maanteiden hoitourakka" "MHU")
+
+           (re-find #"Maanteiden hoitourakka" nimi)
+           (s/replace nimi #"Maanteiden hoitourakka" "MHU")
+
+           ;; Tähän yksittäisiä pitkiä urakoita. Ei ehkä kovin tehokasta tai järkevää.
+           (re-find #"^[0-9]\w+,? Päällystettyjen teiden ylläpito, " nimi)
+           (s/replace nimi #"^[0-9]\w+,? Päällystettyjen teiden ylläpito," "Pääll.yp.")
+
+           ;; numerot (Sampo ID) alusta pois
+           (re-find #"^[0-9]\w+,?" nimi)
+           (s/replace nimi #"^[0-9]\w+,?" "")
 
            ;; Ylimääräiset välilyönnit pois
            (re-find #"\s\s+" nimi)
@@ -228,6 +251,10 @@
            (re-find #"Lappi " nimi)
            (s/replace nimi #"Lappi " "")
 
+           ;; Firmojen nimiin lyhennyksiä
+           (re-find #"NCC Industry Oy" nimi)
+           (s/replace nimi #"NCC Industry Oy" "NCC")
+
            ;; Kunnossapidon
            (re-find #"kunnossapidon" nimi)
            (s/replace nimi #"kunnossapidon" "kp.")
@@ -257,6 +284,15 @@
 
            (re-find #"TIENPÄÄLLYSTYS" nimi)
            (s/replace nimi #"TIENPÄÄLLYSTYS" "pääl.")
+
+           (re-find #"Päällystettyjen teiden ylläpito" nimi)
+           (s/replace nimi #"Päällystettyjen" "Pääll.yp.")
+
+           (re-find #"päällystettyjen" nimi)
+           (s/replace nimi #"päällystettyjen" "pääll.")
+
+           (re-find #"Päällystettyjen" nimi)
+           (s/replace nimi #"Päällystettyjen" "Pääll.")
 
            (re-find #"päällystys" nimi)
            (s/replace nimi #"päällystys" "pääl.")
@@ -305,23 +341,29 @@
            (s/replace nimi #"PAIKKAUKSEN" "paik.")
 
            ;; Valaistus
+           (re-find #"tievalaistuksen" nimi)
+           (s/replace nimi #"tievalaistuksen" "tieval.")
+
+           (re-find #"Tievalaistuksen" nimi)
+           (s/replace nimi #"Tievalaistuksen" "Tieval.")
+
            (re-find #"valaistuksen" nimi)
-           (s/replace nimi #"valaistuksen" "v.")
+           (s/replace nimi #"valaistuksen" "val.")
 
            (re-find #"Valaistuksen" nimi)
-           (s/replace nimi #"Valaistuksen" "v.")
+           (s/replace nimi #"Valaistuksen" "Val.")
 
            (re-find #"VALAISTUKSEN" nimi)
-           (s/replace nimi #"VALAISTUKSEN" "v.")
+           (s/replace nimi #"VALAISTUKSEN" "val.")
 
            (re-find #"valaistus" nimi)
-           (s/replace nimi #"valaistus" "v.")
+           (s/replace nimi #"valaistus" "val.")
 
            (re-find #"Valaistus" nimi)
-           (s/replace nimi #"Valaistus" "v.")
+           (s/replace nimi #"Valaistus" "val.")
 
            (re-find #"VALAISTUS" nimi)
-           (s/replace nimi #"VALAISTUS" "v.")
+           (s/replace nimi #"VALAISTUS" "val.")
 
            ;; Tiemerkintä
            (re-find #"merkinnän" nimi)
@@ -355,26 +397,6 @@
            (re-find #"\s*,\s*" nimi)
            (s/replace nimi #"\s*,\s*" " ")
 
-           ;; Lyhennetään tie. Ilman tätä esim "tievalaistus" on "tiev"., joka on ihan ok,
-           ;; mutta jos on pakko niin on pakko
-           (re-find #"tien" nimi)
-           (s/replace nimi #"tien" "")
-
-           (re-find #"Tien" nimi)
-           (s/replace nimi #"Tien" "")
-
-           (re-find #"TIEN" nimi)
-           (s/replace nimi #"TIEN" "")
-
-           (re-find #"tie" nimi)
-           (s/replace nimi #"tie" "")
-
-           (re-find #"Tie" nimi)
-           (s/replace nimi #"Tie" "")
-
-           (re-find #"TIE" nimi)
-           (s/replace nimi #"TIE" "")
-
            :else (lyhenna-keskelta pituus nimi)))))))
 
 (defn lyhennetty-urakan-nimi-opt
@@ -385,14 +407,6 @@
 (def roomalaisena-numerona {1 "I"
                             2 "II"
                             3 "III"})
-
-(defn euro-indeksikorotus
-  "Formatoi euromäärän tai stringin Indeksi puuttuu, jos nil."
-  [summa]
-  (if summa
-    (euro summa)
-    "Indeksi puuttuu"))
-
 
 (defn euro-ei-voitu-laskea
   "Formatoi euromäärän tai sanoo ei voitu laskea, jos nil."
@@ -445,20 +459,18 @@
 
 #?(:cljs
    (def desimaali-fmt
-     (into {}
-           (zipmap (range 1 4)
-                   (map #(doto (goog.i18n.NumberFormat.
-                                 (.-DECIMAL goog.i18n.NumberFormat/Format))
-                           (.setShowTrailingZeros false)
-                           (.setMinimumFractionDigits %)
-                           (.setMaximumFractionDigits %))
-                        (range 1 4))))))
+     (memoize (fn [min-desimaalit max-desimaalit]
+                (doto (goog.i18n.NumberFormat.
+                        (.-DECIMAL goog.i18n.NumberFormat/Format))
+                  (.setShowTrailingZeros false)
+                  (.setMinimumFractionDigits min-desimaalit)
+                  (.setMaximumFractionDigits max-desimaalit))))))
 
-#?(:cljs
-   (def desimaali-fmt-ilman-tarkkuutta
-     (doto (goog.i18n.NumberFormat.
-              (.-DECIMAL goog.i18n.NumberFormat/Format))
-        (.setMaximumFractionDigits 10))))
+(def oletus-max-desimaalit
+  "Käytetään maksimitarkkuutena, jos ei määritelty.
+   goog.i18n.NumberFormat oletus on null
+   java.text.DecimalFormat oletus on 3 (ei voida asettaa nulliksi)"
+  10)
 
 #?(:clj (def desimaali-symbolit
           (doto (java.text.DecimalFormatSymbols.)
@@ -467,52 +479,109 @@
 (defn desimaaliluku
   ([luku] (desimaaliluku luku 2 false))
   ([luku tarkkuus] (desimaaliluku luku tarkkuus false))
-  ([luku tarkkuus ryhmitelty?]
-    #?(:cljs
-       ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
-       (if (= tarkkuus 0)
-         (.toFixed luku 0)
-         (let [formatoitu (.format (if (nil? tarkkuus)
-                                     desimaali-fmt-ilman-tarkkuutta
-                                     (desimaali-fmt tarkkuus))
-                                   luku)]
-           (cond
-             (or
-               (or (nil? luku) (and (string? luku) (empty? luku)))
-               (frontin-formatointivirheviestit formatoitu))
-             (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+  ([luku tarkkuus ryhmitelty?] (desimaaliluku luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
+   "Formatoi desimaaliluku.
+   luku: formatoitava luku
+   min-desimaalit: monenko desimaalin tarkkuudella luku vähintään näytetään (voi olla nil)
+   max-desimaalit: monenko desimaalin tarkkuudella luku korkeintaan näytetään (jos nil, käytetään arvoa oletus-max-desimaalit)
+   ryhmitelty?: ryhmitelläänkö kokonaislukuosa (esim. 123 000 000,00)
 
-             ryhmitelty?
-             formatoitu
+   Esimerkkejä:
+   (desimaaliluku 123 nil nil false)
+   => \"123\"
+   (desimaaliluku 123 2 3 false)
+   => \"123,00\"
+   (desimaaliluku 123.123456789 nil nil false)
+   => \"123,123456789\"
+   (desimaaliluku 123.123456789 nil 7 false)
+   => \"123,1234568\"
 
-             :default
-             (s/replace formatoitu #" " ""))))
-       :clj
-       (.format (doto (java.text.DecimalFormat.)
+   HUOM: ainakin js-puolella formatoidun luvun loppuun tulee virhettä, jos luvussa on riittävästi
+   merkitseviä numeroita.
+   Esim. jos max-desimaalit on 7, niin kokonaislukuosalle voi sallia vain 9 numeroa:
+
+   (desimaaliluku 777777777.1234567 nil 7 false)
+   => \"777777777,1234567\" ; oikein
+   (desimaaliluku 7777777777.1234567 nil 7 false)
+   => \"7777777777,1234576\" ; väärin
+
+   Jos tarvitaan paljon merkitseviä numeroita, niin kannattaa harkita big decimalin käyttämistä."
+   #?(:cljs
+      ; Jostain syystä ei voi formatoida desimaalilukua nollalla desimaalilla. Aiheuttaa poikkeuksen.
+      (if (= max-desimaalit 0)
+        (.toFixed luku 0)
+        (let [max-desimaalit (or max-desimaalit oletus-max-desimaalit)
+              fmt (desimaali-fmt min-desimaalit max-desimaalit)
+              formatoitu (.format fmt luku)]
+          (cond
+            (or
+              (or (nil? luku) (and (string? luku) (empty? luku)))
+              (frontin-formatointivirheviestit formatoitu))
+            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+
+            ryhmitelty?
+            formatoitu
+
+            :default
+            ;; Poista whitespace ja non-breaking space
+            (s/replace formatoitu #"[\s\u00A0]" ""))))
+      :clj
+      (let [max-desimaalit (or max-desimaalit oletus-max-desimaalit)
+            fmt (doto (java.text.DecimalFormat.)
                   (.setDecimalFormatSymbols desimaali-symbolit)
-                  (.setMinimumFractionDigits tarkkuus)
-                  (.setMaximumFractionDigits tarkkuus)
-                  (.setGroupingSize (if ryhmitelty? 3 0)))
-
-                (double luku)))))
+                  (.setGroupingSize (if ryhmitelty? 3 0))
+                  (.setMaximumFractionDigits max-desimaalit))]
+        (when min-desimaalit
+          (.setMinimumFractionDigits fmt min-desimaalit))
+        (.format fmt (double luku))))))
 
 (defn desimaaliluku-opt
   ([luku] (desimaaliluku-opt luku 2 false))
   ([luku tarkkuus] (desimaaliluku-opt luku tarkkuus false))
   ([luku tarkkuus ryhmitelty?]
+   (desimaaliluku-opt luku tarkkuus tarkkuus ryhmitelty?))
+  ([luku min-desimaalit max-desimaalit ryhmitelty?]
    (if (or (nil? luku) (and (string? luku) (empty? luku)))
      ""
-     (desimaaliluku luku tarkkuus ryhmitelty?))))
+     (desimaaliluku luku min-desimaalit max-desimaalit ryhmitelty?))))
+
+(defn piste->pilkku [luku]
+  (if luku
+    (clojure.string/replace (str luku) "." ",")
+    luku))
+
+(defn kokonaisluku-opt
+  [luku]
+  (if luku
+    (if (number? luku)
+      (int luku)
+      #?(:cljs (js/parseInt luku)
+         :clj  (Integer/parseInt luku)))
+    ""))
+
+(defn pyorista-ehka-kolmeen [arvo]
+  (let [desimaalit-seq (s/split (str arvo) #"\.")
+        desimaalit (if (> (count desimaalit-seq) 1)
+                     (count (second desimaalit-seq))
+                     0)
+        arvo (try
+               (if (> desimaalit 2)
+                 (desimaaliluku-opt arvo 3 true)
+                 (desimaaliluku-opt arvo 2 true))
+               #?(:cljs (catch js/Object _ arvo))
+               #?(:clj (catch Exception _ arvo)))]
+    arvo))
 
 (defn prosentti
   ([luku] (prosentti luku 1))
   ([luku tarkkuus]
-   (str (desimaaliluku luku tarkkuus) "%")))
+   (str (desimaaliluku luku tarkkuus) "\u00A0%")))
 
 (defn lampotila
   ([luku] (lampotila luku 1))
   ([luku tarkkuus]
-   (str (desimaaliluku luku tarkkuus) "°C")))
+   (str (desimaaliluku luku tarkkuus) " °C")))
 
 (defn lampotila-opt
   ([luku] (lampotila-opt luku 1))

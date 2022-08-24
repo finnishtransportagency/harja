@@ -171,6 +171,7 @@
         muunnettu-vastausdata
         {:varusteet []}))))
 
+;; FIXME: Käyttää vanhoja VKM-muunnoksen parametreja. Päivitettävä, jos tätä käytetään vielä.
 (defn muunna-sijainti [vkm db tiedot]
   (let [harjan-karttapvm (geometriapaivitykset-q/harjan-verkon-pvm db)
         karttapvm (some->
@@ -178,7 +179,7 @@
                     (parametrit/pvm-aika))
         vanha-sijainti (set/rename-keys (get-in tiedot [:varuste :tietue :sijainti :tie]) {:numero :tie})]
     (if (and karttapvm (not= karttapvm harjan-karttapvm))
-      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti] karttapvm harjan-karttapvm))
+      (let [uusi-sijainti (first (vkm/muunna-osoitteet-verkolta-toiselle vkm [vanha-sijainti]))
             uusi-sijainti (set/rename-keys uusi-sijainti {:tie :numero})]
         (if uusi-sijainti
           (-> tiedot
@@ -188,6 +189,8 @@
       tiedot)))
 
 (defn lisaa-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa lisaa-varuste (lisaa-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Lisätään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [livitunniste (livitunnisteet-q/hae-seuraava-livitunniste db)
         toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-lisays data))
@@ -209,6 +212,8 @@
        :ilmoitukset (str "Uusi varuste lisätty onnistuneesti tunnisteella: " livitunniste)})))
 
 (defn paivita-varuste [tierekisteri vkm db {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa paivita-varuste (paivita-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Päivitetään varuste käyttäjän: %s pyynnöstä. Data: %s" kayttaja data))
   (let [toimenpiteen-tiedot (muunna-sijainti vkm db (:varusteen-paivitys data))
         tietolaji (get-in toimenpiteen-tiedot [:varuste :tietue :tietolaji :tunniste])
@@ -227,6 +232,8 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Varuste päivitetty onnistuneesti"}))
 
 (defn poista-varuste [tierekisteri {:keys [otsikko] :as data} kayttaja]
+  (log/warn "Rajapintaa poista-varuste (poista-tietue) kutsuttiin.")
+  ;; Kunhan Velho on käytössä, ja nämä rajapinnat vanhentuneet, poistetaan nämä rajapinnat käytöstä kokonaan. Arvio kevät 2022.
   (log/debug (format "Poistetaan varuste käyttäjän: %s pyynnöstä. Data: %s " kayttaja data))
   (let [poistosanoma (tierekisteri-sanomat/luo-tietueen-poistosanoma
                        otsikko
@@ -238,43 +245,44 @@
   "Käsittelee UI:lta tulleen varustehaun: hakee joko tunnisteen tai tietolajin ja
   tierekisteriosoitteen perusteella"
   [user tierekisteri db {:keys [tunniste tierekisteriosoite tietolaji voimassaolopvm] :as tiedot}]
-  (oikeudet/ei-oikeustarkistusta!)
-  (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
+  (do ;; Wrapataan koko funktio do lausekkeeseen, jotta oikeudet/ei-oikeustarkistusta! voi toimia
+    (oikeudet/ei-oikeustarkistusta!)
+    (log/debug "Haetaan varusteita Tierekisteristä: " (pr-str tiedot))
 
-  (try+
-    (let [nyt (t/now)
-          tulos
-          (cond
-            (not (str/blank? tunniste))
-            (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
+    (try+
+      (let [nyt (t/now)
+            tulos
+            (cond
+              (not (str/blank? tunniste))
+              (tierekisteri/hae-tietue tierekisteri tunniste tietolaji nyt)
 
-            (and tierekisteriosoite
-                 (not (str/blank? tietolaji)))
-            (tierekisteri/hae-tietueet
-              tierekisteri
-              {:numero (:numero tierekisteriosoite)
-               :aet (:alkuetaisyys tierekisteriosoite)
-               :aosa (:alkuosa tierekisteriosoite)
-               :let (:loppuetaisyys tierekisteriosoite)
-               :losa (:loppuosa tierekisteriosoite)}
-              tietolaji
-              (if voimassaolopvm
-                (pvm/joda-timeksi voimassaolopvm)
+              (and tierekisteriosoite
+                (not (str/blank? tietolaji)))
+              (tierekisteri/hae-tietueet
+                tierekisteri
+                {:numero (:numero tierekisteriosoite)
+                 :aet (:alkuetaisyys tierekisteriosoite)
+                 :aosa (:alkuosa tierekisteriosoite)
+                 :let (:loppuetaisyys tierekisteriosoite)
+                 :losa (:loppuosa tierekisteriosoite)}
+                tietolaji
+                (if voimassaolopvm
+                  (pvm/joda-timeksi voimassaolopvm)
+                  nyt)
                 nyt)
-              nyt)
 
-            :default
-            {:error "Ei hakuehtoja"})]
+              :default
+              {:error "Ei hakuehtoja"})]
 
-      (if (:onnistunut tulos)
-        (merge {:onnistunut true}
-               (hae-tietolaji-tunnisteella tierekisteri tietolaji)
-               (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
-        tulos))
+        (if (:onnistunut tulos)
+          (merge {:onnistunut true}
+            (hae-tietolaji-tunnisteella tierekisteri tietolaji)
+            (muodosta-tietueiden-hakuvastaus tierekisteri db tulos))
+          tulos))
 
-    (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      {:onnistunut false
-       :virheet virheet})))
+      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+        {:onnistunut false
+         :virheet virheet}))))
 
 (defrecord Varusteet []
   component/Lifecycle

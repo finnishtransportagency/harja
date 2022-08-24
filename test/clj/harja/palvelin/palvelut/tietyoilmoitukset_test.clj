@@ -7,9 +7,10 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.jms-test :refer [feikki-sonja]]
+            [harja.jms-test :refer [feikki-jms]]
+            [harja.integraatio :as integraatio]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [taoensso.timbre :as log]
@@ -42,16 +43,15 @@
                                (fim/->FIM +testi-fim+)
                                [:db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
-                        :sonja (feikki-sonja)
-                        :sonja-sahkoposti (component/using
-                                            (sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                       {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                        :sahkoposti-ulos-jono "harja-to-email"
-                                                                        :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :sonja (feikki-jms "sonja")
+                        :itmf (feikki-jms "itmf")
+                        :api-sahkoposti (component/using
+                                          (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                                           :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                          [:http-palvelin :db :integraatioloki :itmf])
                         :tietyoilmoitukset (component/using
                                              (tietyoilmoitukset/->Tietyoilmoitukset)
-                                             [:http-palvelin :db :fim :sonja-sahkoposti])))))
+                                             [:http-palvelin :db :fim :api-sahkoposti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -173,8 +173,8 @@
   (with-fake-http
     [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-          paallystysurakka-id (hae-muhoksen-paallystysurakan-id)
-          tiemerkintaurakka-id (hae-oulun-tiemerkintaurakan-id)
+          paallystysurakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+          tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
           vastaus-paallystysurakka (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                                                    +kayttaja-jvh+

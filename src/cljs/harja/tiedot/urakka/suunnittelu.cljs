@@ -146,6 +146,6 @@ kaikki nykyisen hoitokauden jälkeen olevat hoitokaudet ovat kaikki tyhjiä tai 
           rivit)))
 
 (defn monista-tuleville-teksti [urakkatyyppi]
-  (if (= urakkatyyppi :hoito)
+  (if (#{:teiden-hoito :hoito} urakkatyyppi)
     "Monista kaikki yo. tiedot tulevillekin hoitokausille"
     "Monista kaikki yo. tiedot tulevillekin sopimuskausille"))

@@ -1,6 +1,5 @@
 (ns harja.views.urakka.suunnittelu.materiaalit
   (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.yleiset :refer [raksiboksi]]
             [harja.tiedot.urakka.suunnittelu.materiaalit :as t]
             [harja.loki :refer [log logt]]
             [harja.tiedot.urakka :as u]
@@ -13,7 +12,8 @@
             [cljs.core.async :refer [<!]]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.yleiset :as yleiset])
+            [harja.ui.yleiset :as yleiset]
+            [harja.ui.kentat :as kentat])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [run! reaction]]
                    [harja.atom :refer [reaction-writable]]))
@@ -45,8 +45,7 @@
           :uusi-rivi aseta-hoitokausi
           :muutos (when virheet
                     #(reset! virheet (grid/hae-virheet %)))
-          :jarjesta (comp :nimi :materiaali)
-          }
+          :jarjesta (comp :nimi :materiaali) :piilota-toiminnot? true}
 
          [{:otsikko "Materiaali" :nimi :materiaali :fmt :nimi :leveys "60%"
            :muokattava? (constantly false)
@@ -154,11 +153,10 @@
 
 
           (when voi-muokata?
-            [raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
-                         :toiminto #(swap! tuleville? not)
+            [kentat/raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
                          :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
                          :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
-             @tuleville?])
+             tuleville?])
 
           [:div.toiminnot
            (yleiset/wrap-if

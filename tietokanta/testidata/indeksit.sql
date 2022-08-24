@@ -133,6 +133,41 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennus
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 8, 106.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 9, 106.2);
 
+DO $$
+DECLARE
+  indeksin_aloitus_vuosi INTEGER;
+  indeksi_vuoteen_asti INTEGER;
+  vuosi_ INTEGER;
+  kuluva_kk INTEGER;
+  arvo_ NUMERIC;
+BEGIN
+  IF ((SELECT date_part('month', now())) >= 10)
+  THEN
+      indeksin_aloitus_vuosi = (SELECT date_part('year', now())::INT - 3);
+  ELSE
+      indeksin_aloitus_vuosi = (SELECT date_part('year', now())::INT - 4);
+  END IF;
+  indeksi_vuoteen_asti = (SELECT date_part('year', now()));
+  kuluva_kk = (SELECT date_part('month', now()));
+  FOR vuosi_ IN indeksin_aloitus_vuosi..indeksi_vuoteen_asti
+  LOOP
+    IF (vuosi_ = indeksi_vuoteen_asti)
+    THEN
+      FOR kk IN 1..kuluva_kk
+      LOOP
+        arvo_ = (SELECT 100 + (vuosi_ - indeksin_aloitus_vuosi) * 10 + kk + (kk::DECIMAL / 12));
+        INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2015', vuosi_, kk, arvo_);
+      END LOOP;
+    ELSE
+      FOR kk IN 1..12
+      LOOP
+        arvo_ = (SELECT 100 + (vuosi_ - indeksin_aloitus_vuosi) * 10 + kk + (kk::DECIMAL / 12));
+        INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2015', vuosi_, kk, arvo_);
+      END LOOP;
+    END IF;
+  END LOOP;
+END $$;
+
 
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES

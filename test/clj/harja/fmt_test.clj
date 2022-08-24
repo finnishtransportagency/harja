@@ -43,13 +43,13 @@
   (is (thrown? Exception (fmt/lampotila "asd")))
   (is (thrown? Exception (fmt/lampotila "")))
   (is (thrown? Exception (fmt/lampotila "5")))
-  (is (= (fmt/lampotila 5) "5,0°C"))
+  (is (= (fmt/lampotila 5) "5,0\u00A0°C"))
 
   (is (thrown? Exception (fmt/prosentti nil)))
   (is (thrown? Exception (fmt/prosentti "asd")))
   (is (thrown? Exception (fmt/prosentti "")))
   (is (thrown? Exception (fmt/prosentti "5")))
-  (is (= (fmt/prosentti 5) "5,0%"))
+  (is (= (fmt/prosentti 5) "5,0\u00A0%"))
 
   (is (thrown? Exception (fmt/desimaaliluku nil)))
   (is (thrown? Exception (fmt/desimaaliluku "asd")))
@@ -71,16 +71,34 @@
   (is (thrown? Exception (fmt/lampotila-opt "asd")))
   (is (= (fmt/lampotila-opt "") ""))
   (is (thrown? Exception (fmt/lampotila-opt "5")))
-  (is (= (fmt/lampotila-opt 5) "5,0°C"))
+  (is (= (fmt/lampotila-opt 5) "5,0 °C"))
 
   (is (= (fmt/prosentti-opt nil) ""))
   (is (thrown? Exception (fmt/prosentti-opt "asd")))
   (is (= (fmt/prosentti-opt "") ""))
   (is (thrown? Exception (fmt/prosentti-opt "5")))
-  (is (= (fmt/prosentti-opt 5) "5,0%"))
+  (is (= (fmt/prosentti-opt 5) "5,0 %"))
 
   (is (= (fmt/desimaaliluku-opt nil) ""))
   (is (thrown? Exception (fmt/desimaaliluku-opt "asd")))
   (is (= (fmt/desimaaliluku-opt "") ""))
   (is (thrown? Exception (fmt/desimaaliluku-opt "5")))
   (is (= (fmt/desimaaliluku-opt 5) "5,00")))
+
+(deftest formatoi-arvo-raportille-tapaukset
+  (is (= (fmt/formatoi-arvo-raportille 5.0012M) 5M))
+  (is (= (fmt/formatoi-arvo-raportille 1235.1251M) 1235.13M))
+  (is (= (fmt/formatoi-arvo-raportille 5.125M) 5.13M))
+  (is (= (fmt/formatoi-arvo-raportille 5.135M) 5.14M))
+  (is (= (fmt/formatoi-arvo-raportille (java.lang.Long/valueOf 33)) 33.00M)))
+
+(deftest desimaaliluku
+  (is (= (fmt/desimaaliluku 123 nil nil false) "123") "tarkkuuden voi jättää määrittelemättä kokonaisluvulle")
+  (is (= (fmt/desimaaliluku 123.1 nil nil false) "123,1") "tarkkuuden voi jättää määrittelemättä desimaaliluvulle")
+  (is (= (fmt/desimaaliluku 123.123456789 nil nil false) "123,123456789") "tarkkuuden voi jättää määrittelemättä pitkälle desimaaliluvulle")
+  (is (= (fmt/desimaaliluku 123 2 3 false) "123,00") "min-tarkkuus toimii")
+  (is (= (fmt/desimaaliluku 123.123456789 nil 7 false) "123,1234568") "max-tarkkuus toimii")
+  (is (= (fmt/desimaaliluku 123.123456789 2 nil false) "123,123456789") "min-tarkkuus toimii, vaikka max-tarkkuutta ei ole määritetty")
+  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 false) "777777777,1234567") "kokonaislukuosa 9 numeroa, desimaaliosa 7 numeroa")
+  (is (= (fmt/desimaaliluku 123.123456789012 nil nil false) "123,123456789") "max-desimaalit oletusarvo on 10")
+  (is (= (fmt/desimaaliluku 777777777.1234567 nil 7 true) "777 777 777,1234567") "ryhmittely toimii"))

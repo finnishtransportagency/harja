@@ -24,7 +24,7 @@
 (deftest tarkista-tietyomaan-kasittely
   (let [lisays-kutsu (slurp "test/resurssit/api/tietyomaan-kirjaus.json")
         poisto-kutsu (slurp "test/resurssit/api/tietyomaan-poisto.json")
-        muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id)]
+        muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")]
     (api-tyokalut/post-kutsu [(str "/api/urakat/" muhoksen-paallystysurakan-id "/yllapitokohteet/5/tietyomaa")]
                              kayttaja portti lisays-kutsu)
     (let [[id muokattu poistettu nopeusrajoitus] (hae-tietyomaa)]

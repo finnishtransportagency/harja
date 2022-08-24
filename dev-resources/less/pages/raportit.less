@@ -1,3 +1,4 @@
+@import "../yleiset";
 /**********************************
  *            Yleiset
  **********************************/
@@ -17,15 +18,10 @@
         > tr {
             > th {
                 background-color: @raportin-tehostevari;
-                border-color: @valkoinen;
-                color: @valkoinen;
-                font-weight: normal;
-                &:first-child {
-                    border-left: 1px solid @raportin-tehostevari;
-                }
-                &:last-child {
-                    border-right: 1px solid @raportin-tehostevari;
-                }
+                border-color: @white-default;
+                color: @black-default;
+                font-weight: 600;
+                font-size: 12px;
             }
         }
         > tr:first-child {
@@ -49,7 +45,11 @@
         //font-weight: bold;
         background-color: @harmaa15;
         &.korostettu-rivi {
-            background-color: @varoitus;
+            background-color: @blue-dark;
+            color: @white;
+        }
+        &.hennosti-korostettu-rivi {
+            background-color: @hento-korostusvari;
         }
     }
     td {
@@ -61,9 +61,24 @@
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
     }
+    
+    td, th {
+        &.hennosti-korostettu-solu {
+            background-color: @hento-korostusvari;
+        }
+       
+        &.solun-korostus-estetty {
+            background-color: @harmaa15;
+            font-weight: normal;
+        }
+
+        &.solu-varoitus {
+            background-color: @red-lighter;
+        }
+    }
 }
 .tyomaakokous {
-    border-bottom: 1px solid @primaari-sininen;
+    border-bottom: 1px solid @blue-default;
 }
 .raportin-asetukset {
      margin-top: 1em;
@@ -107,6 +122,12 @@
     margin-bottom: 1px;
     > * {
      margin-bottom: 0;
+    }
+    .label-ja-aikavali-lyhyt {
+        > label {
+            line-height: 1rem;
+            margin-top: 0;
+        }
     }
 }
 .raportti-alasveto {
@@ -177,10 +198,32 @@
     }
 }
 
+.raporttitieto {
+    > .flex {
+        display: flex;
+        margin-top: @valistys-32;
+        flex-wrap: wrap;
+    }
+    .raporttitietojen-grid {
+        .livi-grid {
+            max-width: 450px;
+            margin-right: @valistys-32;
+        }
+    }
+}
 /**********************************
  *     Raporttien komponentit
  **********************************/
 
 .osuus {
-    font-size: @fontin-koko-raportti-pienempi;
+    font-size: @fontin-koko-taulukko-pienempi;
+}
+
+.teksti-ja-info .info {
+  color: @blue-dark;
+ 
+    // Toistaiseksi ei haluta paddingia muualle.
+    .tooltip-inner {
+        padding: @valistys-16;
+    }
 }

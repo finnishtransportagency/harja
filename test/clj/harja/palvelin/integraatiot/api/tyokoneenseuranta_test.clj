@@ -10,7 +10,7 @@
             [clojure.string :as str]
             [clojure.data.json :as json]))
 
-(def kayttaja "destia")
+(def kayttaja "carement")
 
 (def jarjestelma-fixture (laajenna-integraatiojarjestelmafixturea kayttaja
                                                                   :api-tyokoneenseuranta (component/using

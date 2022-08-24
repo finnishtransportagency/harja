@@ -44,7 +44,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :toimenpidepaivat
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2005-2012-id)
+                                 :urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 7 9 10}
@@ -84,7 +84,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -145,7 +145,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -205,7 +205,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -232,7 +232,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -259,7 +259,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -286,7 +286,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -313,7 +313,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -340,7 +340,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -367,7 +367,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -394,7 +394,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"
@@ -421,7 +421,7 @@
        :otsikko "Ib"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
-       :otsikko "TIb"
+       :otsikko "Ic"
        :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "II"

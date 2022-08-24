@@ -17,10 +17,10 @@
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
-    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki :pois-kytketyt-ominaisuudet])
+    :tierekisteri (component/using (tierekisteri/->Tierekisteri +testi-tierekisteri-url+ nil) [:db :integraatioloki])
     :api-varusteet (component/using
                      (varusteet/->Varusteet)
-                     [:http-palvelin :db :integraatioloki :tierekisteri :pois-kytketyt-ominaisuudet])))
+                     [:http-palvelin :db :integraatioloki :tierekisteri])))
 
 (use-fixtures :once (compose-fixtures tietokanta-fixture
                                       jarjestelma-fixture))
@@ -33,7 +33,7 @@
       [(str +testi-tierekisteri-url+ tierekisteri-resurssi) vastaus-xml
        (str "http://localhost:" portti validi-kutsu) :allow]
       (let [vastaus (api-tyokalut/get-kutsu [validi-kutsu] kayttaja portti)]
-        (log/debug "Vastaus saatiin: " (pr-str vastaus))
+        ;(log/debug "Vastaus saatiin: " (pr-str vastaus))
         (is (= 200 (:status vastaus)) "Haku onnistui validilla kutsulla")))))
 
 (deftest tarkista-tietolajin-virheellinen-haku

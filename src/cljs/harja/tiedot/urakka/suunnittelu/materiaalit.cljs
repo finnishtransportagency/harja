@@ -26,6 +26,7 @@
 
 (defn hae-urakassa-kaytetyt-materiaalit [urakka-id alku loppu sopimus-id]
   (log "Haetaan urakassa ("urakka-id") käytetyt materiaalit ajalta "(pvm/pvm alku))
+  (log (str "ALKU: " alku "\nLOPPU: " loppu))
   (k/post! :hae-urakassa-kaytetyt-materiaalit {:urakka-id urakka-id :hk-alku alku :hk-loppu loppu :sopimus sopimus-id}))
 
 (defn hae-toteumat-materiaalille [urakka-id materiaali-id hoitokausi sopimus]

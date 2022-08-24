@@ -57,31 +57,31 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 
 (defonce ilmoitukset
-  (atom {:ilmoitusnakymassa? false
+  (atom {:ilmoitusnakymassa?            false
          :edellinen-valittu-ilmoitus-id nil
-         :valittu-ilmoitus nil
-         :uusi-kuittaus-auki? false
-         :ensimmainen-haku-tehty? false
-         :ilmoitushaku-id nil ;; ilmoitushaun timeout
-         :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
-         :ilmoitukset nil ;; haetut ilmoitukset
-         :valinnat {:tyypit +ilmoitustyypit+
-                    :tilat (into #{} tila-filtterit)
-                    :hakuehto ""
-                    :selite [nil ""]
-                    :vain-myohassa? false
-                    :aloituskuittauksen-ajankohta :kaikki
-                    :ilmoittaja-nimi ""
-                    :ilmoittaja-puhelin ""
-                    :ilmoitettu-vakioaikavali (second aikavalit)
-                    :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
-                    :ilmoitettu-alkuaika (pvm/tuntia-sitten 12)
-                    :ilmoitettu-loppuaika (pvm/nyt)}
-         :kuittaa-monta nil}))
+         :valittu-ilmoitus              nil
+         :uusi-kuittaus-auki?           false
+         :ensimmainen-haku-tehty?       false
+         :ilmoitushaku-id               nil ;; ilmoitushaun timeout
+         :taustahaku?                   false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
+         :ilmoitukset                   nil ;; haetut ilmoitukset
+         :valinnat                      {:tyypit                               +ilmoitustyypit+
+                                         :tilat                                (into #{} tila-filtterit)
+                                         :hakuehto                             ""
+                                         :selite                               [nil ""]
+                                         :vain-myohassa?                       false
+                                         :aloituskuittauksen-ajankohta         :kaikki
+                                         :ilmoittaja-nimi                      ""
+                                         :ilmoittaja-puhelin                   ""
+                                         :valitetty-urakkaan-vakioaikavali             (second aikavalit)
+                                         :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
+                                         :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
+                                         :valitetty-urakkaan-loppuaika                 (pvm/nyt)}
+         :kuittaa-monta                 nil}))
 
 (defn- jarjesta-ilmoitukset [tulos]
   (reverse (sort-by
-             :ilmoitettu
+             :valitetty-urakkaan
              pvm/ennen?
              (mapv
                (fn [ilmo]
