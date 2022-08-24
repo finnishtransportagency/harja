@@ -3,7 +3,8 @@
 (def toteuma->toimenpide-map
   {"lisatty" "Lisätty"
    "paivitetty" "Päivitetty"
-   "poistettu" "Poistettu"})
+   "poistettu" "Poistettu"
+   "korjaus" "Korjattu"})
 
 (defn toteuma->toimenpide [toteuma]
   (get
