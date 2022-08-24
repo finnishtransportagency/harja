@@ -28,11 +28,11 @@
            muokkaaja]}) varustetoimenpiteet))
 
 (defn vie-ulkoiset-varusteet-exceliin
-  [db workbook user {:keys [urakka-id hoitovuosi tietolajit kuntoluokat kuukausi] :as tiedot}]
+  [db workbook user {:keys [urakka-id hoitokauden-alkuvuosi tietolajit kuntoluokat hoitovuoden-kuukausi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
-        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
-        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitovuosi))
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
         tiedot (assoc tiedot
                  :urakka urakka-id
                  :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
@@ -40,11 +40,11 @@
                  :tietolajit (or tietolajit [])
                  :kuntoluokat (or kuntoluokat []))
         varustetoimenpiteet (toteumat-q/hae-uusimmat-varustetoteuma-ulkoiset db tiedot)
-        kuukausi-pvm (when kuukausi (pvm/hoitokauden-alkuvuosi-kk->pvm hoitovuosi kuukausi))
+        kuukausi-pvm (when hoitovuoden-kuukausi (pvm/hoitokauden-alkuvuosi-kk->pvm hoitokauden-alkuvuosi hoitovuoden-kuukausi))
         tiedostonimi (str "Varustetoimenpiteet "
-                       (if kuukausi
-                         (pvm/urakan-kuukausi-str kuukausi hoitovuosi)
-                         (pvm/hoitokausi-str-alkuvuodesta hoitovuosi)))
+                       (if hoitovuoden-kuukausi
+                         (pvm/urakan-kuukausi-str hoitovuoden-kuukausi hoitokauden-alkuvuosi)
+                         (pvm/hoitokausi-str-alkuvuodesta hoitokauden-alkuvuosi)))
         optiot {:nimi "Varustetoimenpiteet"
                 :tyhja (when (empty? varustetoimenpiteet) "Ei varustetoimenpiteitä")}
         rivit (muodosta-excelrivit varustetoimenpiteet)
@@ -53,8 +53,8 @@
                                {:nimi tiedostonimi
                                 :raportin-yleiset-tiedot {:raportin-nimi "Varustetoimenpiteet"
                                                           :urakka (:nimi urakka)
-                                                          :alkupvm (if kuukausi (pvm/paiva-kuukausi kuukausi-pvm) (pvm/pvm hoitokauden-alkupvm))
-                                                          :loppupvm (if kuukausi (pvm/pvm (pvm/kuukauden-viimeinen-paiva kuukausi-pvm)) (pvm/pvm hoitokauden-loppupvm))}
+                                                          :alkupvm (if hoitovuoden-kuukausi (pvm/paiva-kuukausi kuukausi-pvm) (pvm/pvm hoitokauden-alkupvm))
+                                                          :loppupvm (if hoitovuoden-kuukausi (pvm/pvm (pvm/kuukauden-viimeinen-paiva kuukausi-pvm)) (pvm/pvm hoitokauden-loppupvm))}
                                 :orientaatio :landscape}]
                         taulukot))]
     (excel/muodosta-excel taulukko workbook)))
