@@ -1,20 +1,16 @@
 (ns harja.palvelin.palvelut.varuste-ulkoiset
   "Varustetoteumien backend"
   (:require [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [try+]]
-            [harja.geo :as geo]
-            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
-            [harja.palvelin.integraatiot.velho.varusteet :as varusteet]
-            [harja.kyselyt.toteumat :as toteumat-q]
-            [harja.kyselyt.konversio :as konv]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.geo :as geo]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.toteumat :as toteumat-q]
+            [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-komponentti]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
+            [harja.palvelin.palvelut.varuste-ulkoiset-excel :as v-excel]
             [harja.pvm :as pvm]))
-
-(defn luo-pvm-oikein [vuosi kuukausi paiva]
-  (pvm/luo-pvm vuosi (- kuukausi 1) paiva))
 
 (defn kelvollinen-tr-filter [tie aosa aeta losa leta]
   (or
@@ -29,36 +25,16 @@
     ; tie annettu ja ei muuta
     (and tie (every? nil? [aosa aeta losa leta]))
     ; ei ole annettu mitään tr-osotteen kenttää
-    (every? nil? [tie aosa aeta losa leta])
-    ))
-
-(defn muunna-sijainti
-  [varuste]
-  (let [sijainti (geo/pg->clj (:sijainti varuste))]
-    (assoc varuste :sijainti sijainti)))
+    (every? nil? [tie aosa aeta losa leta])))
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi kuukausi tie aosa aeta losa leta kuntoluokat tietolajit toteuma] :as tiedot}]
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi tie aosa aeta losa leta] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
-  (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
+  (when (nil? hoitokauden-alkuvuosi) (throw (IllegalArgumentException. "hoitokauden-alkuvuosi on pakollinen")))
   (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
     (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa aeta TAI kaikki")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
-  (let [hoitokauden-alkupvm (luo-pvm-oikein hoitovuosi 10 01)
-        hoitokauden-loppupvm (luo-pvm-oikein (+ 1 hoitovuosi) 9 30)
-        toteumat (toteumat-q/hae-urakan-uusimmat-varustetoteuma-ulkoiset db {:urakka urakka-id
-                                                                             :hoitokauden_alkupvm (konv/sql-date hoitokauden-alkupvm)
-                                                                             :hoitokauden_loppupvm (konv/sql-date hoitokauden-loppupvm)
-                                                                             :kuukausi kuukausi
-                                                                             :tie tie
-                                                                             :aosa aosa
-                                                                             :aeta aeta
-                                                                             :losa losa
-                                                                             :leta leta
-                                                                             :tietolajit (or tietolajit [])
-                                                                             :kuntoluokat (or kuntoluokat [])
-                                                                             :toteuma toteuma})]
-    {:urakka-id urakka-id :toteumat (map muunna-sijainti toteumat)}))
+  {:urakka-id urakka-id :toteumat (toteumat-q/hae-uusimmat-varustetoteuma-ulkoiset db tiedot)})
 
 (defn hae-varustetoteumat-ulkoiset
   [db user {:keys [urakka-id ulkoinen-oid] :as tiedot}]
@@ -90,15 +66,21 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          velho (:velho-integraatio this)]
+          velho (:velho-integraatio this)
+          excel (:excel-vienti this)
+          db (:db this)]
 
       (julkaise-palvelu http :hae-urakan-varustetoteuma-ulkoiset
                         (fn [user tiedot]
-                          (hae-urakan-uusimmat-varustetoteuma-ulkoiset (:db this) user tiedot)))
+                          (hae-urakan-uusimmat-varustetoteuma-ulkoiset db user tiedot)))
 
       (julkaise-palvelu http :hae-varustetoteumat-ulkoiset
                         (fn [user tiedot]
-                          (hae-varustetoteumat-ulkoiset (:db this) user tiedot)))
+                          (hae-varustetoteumat-ulkoiset db user tiedot)))
+
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :varusteet-ulkoiset-excel
+          (partial #'v-excel/vie-ulkoiset-varusteet-exceliin db)))
 
 
       (julkaise-palvelu http :petrisi-manuaalinen-testirajapinta-varustetoteumat

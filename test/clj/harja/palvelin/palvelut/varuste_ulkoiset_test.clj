@@ -3,6 +3,8 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
+            [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.testi :refer :all]))
 
 (defn jarjestelma-fixture [testit]
@@ -12,9 +14,12 @@
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
+                        :excel-vienti (component/using
+                                        (excel-vienti/luo-excel-vienti)
+                                        [:http-palvelin])
                         :varuste-velho (component/using
                                          (varuste-ulkoiset/->VarusteVelho)
-                                         [:http-palvelin :db])))))
+                                         [:http-palvelin :db :excel-vienti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -30,14 +35,14 @@
                         (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakan-varustetoteuma-ulkoiset
                                         +kayttaja-jvh+
-                                        {:urakka-id nil :hoitovuosi 2019}))))
+                                        {:urakka-id nil :hoitokauden-alkuvuosi 2019}))))
 
 (deftest palvelu-on-olemassa-ja-vaatii-parametrin-hoitovuosi
-  (is (thrown-with-msg? IllegalArgumentException #"hoitovuosi on pakollinen"
+  (is (thrown-with-msg? IllegalArgumentException #"hoitokauden-alkuvuosi on pakollinen"
                         (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :hae-urakan-varustetoteuma-ulkoiset
                                         +kayttaja-jvh+
-                                        {:urakka-id urakka-id-35 :hoitovuosi nil}))))
+                                        {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi nil}))))
 
 (defn assertoi-saatu-lista
   [odotettu-lista parametrit hae-fn]
@@ -59,11 +64,11 @@
 (deftest palvelu-palauttaa-oikean-hoitovuoden-tuloksia
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173999"
                              "1.2.246.578.4.3.12.512.310174000"]
-                            {:urakka-id urakka-id-33 :hoitovuosi 2022}))
+                            {:urakka-id urakka-id-33 :hoitokauden-alkuvuosi 2022}))
 
 (deftest tyhjalle-hoitovuodelle-palautuu-tyhja-tulos
   "Ja rinnakkaisien hoitovuosien alku & loppu ovat 1.10. ja 30.9. Ne eivät tule mukaan tulokseen."
-  (assertoi-saatu-oid-lista [] {:urakka-id urakka-id-33 :hoitovuosi 2023}))
+  (assertoi-saatu-oid-lista [] {:urakka-id urakka-id-33 :hoitokauden-alkuvuosi 2023}))
 
 (deftest hae-urakan-35-uusimmat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
@@ -75,35 +80,35 @@
                              "1.2.246.578.4.3.12.512.310173996"
                              "1.2.246.578.4.3.12.512.310173997"
                              "1.2.246.578.4.3.12.512.310173998"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019}))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019}))
 
 (deftest hae-vain-urakan-erittain-hyvat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä"]}))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :kuntoluokat ["Erittäin hyvä"]}))
 
 (deftest hae-vain-urakan-erittain-hyvat-ja-hyvat-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173995"
                              "1.2.246.578.4.3.12.512.310173990"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä" "Hyvä"] }))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :kuntoluokat ["Erittäin hyvä" "Hyvä"] }))
 
 (deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :kuntoluokat ["Erittäin hyvä"] :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :kuntoluokat ["Erittäin hyvä"] :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-paivitetyt-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
                              "1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :toteuma "paivitetty"}))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-tietolaji512-varusteet
   (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitovuosi 2019 :tietolajit ["tl506"]}))
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :tietolajit ["tl506"]}))
 
 (deftest palauta-uusin-versio-varusteesta-josta-loytyy-monta-versiota
   (assertoi-saatu-lista [{:ulkoinen-oid "1.2.246.578.4.3.12.512.310173998" :alkupvm #inst "2020-10-24T21:00:00.000-00:00"}]
-                        {:urakka-id urakka-id-35 :hoitovuosi 2020} varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset))
+                        {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2020} varuste-ulkoiset/hae-urakan-uusimmat-varustetoteuma-ulkoiset))
 
 (deftest kuukausi-rajaus
   (assertoi-saatu-lista [{:id 9} {:id 10} {:id 11}]
@@ -148,7 +153,7 @@
         saatu (->> (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-urakan-varustetoteuma-ulkoiset
                                   +kayttaja-jvh+
-                                  {:urakka-id urakka-id-35 :hoitovuosi 2019 :tie tie :aosa aosa :aeta aeta :losa nil :leta nil})
+                                  {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :tie tie :aosa aosa :aeta aeta :losa nil :leta nil})
                   :toteumat
                   (map #(dissoc % :sijainti :muokattu)))]
     (is (= odotettu saatu))))
@@ -240,4 +245,95 @@
     (is (= [] (osuvat-varusteet :k)) "k")
     (is (= [:v] (osuvat-varusteet :l)) "l")
     (is (= [:v :x] (osuvat-varusteet :m)) "m" )))
+
+(def odotettu-excel-raportti
+   {:raportti [:raportti
+              {:nimi "Varustetoimenpiteet 01.10.2019-30.09.2020",
+               :raportin-yleiset-tiedot {:raportin-nimi "Varustetoimenpiteet",
+                                         :urakka "Oulun MHU 2019-2024",
+                                         :alkupvm "01.10.2019",
+                                         :loppupvm "30.09.2020"},
+               :orientaatio :landscape}
+               [:taulukko
+                {:nimi "Varustetoimenpiteet"
+                 :tyhja nil}
+                [{:fmt :pvm
+                  :otsikko "Ajankohta"}
+                 {:otsikko "Tierekisteriosoite"}
+                 {:otsikko "Toimenpide"}
+                 {:otsikko "Varustetyyppi"}
+                 {:otsikko "Varusteen lisätieto"}
+                 {:otsikko "Kuntoluokitus"}
+                 {:otsikko "Tekijä"}]
+                '({:rivi [#inst "2019-09-30T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1921"
+                         "Lisätty"
+                         "Viemärit"
+                         "kansi: 600 kaivo: 1000 syvyys: 1000 materiaali: betoni"
+                         "Erittäin hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2019-11-29T22:00:00.000-00:00"
+                         "Tie 4 / 422 / 637"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-01-30T22:00:00.000-00:00"
+                         "Tie 4 / 421 / 1907"
+                         "Päivitetty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-04-24T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1900"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-06-09T21:00:00.000-00:00"
+                         "Tie 4 / 420 / 5758"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Erittäin huono"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 421 / 1904"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Tyydyttävä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 641"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 648"
+                         "Päivitetty"
+                         "Liikennemerkit"
+                         nil
+                         "Erittäin hyvä"
+                         "migraatio"]}
+                 {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
+                         "Tie 4 / 422 / 656"
+                         "Lisätty"
+                         "Viemärit"
+                         nil
+                         "Puuttuu"
+                         "migraatio"]})]]})
+
+(deftest tee-varuste-ulkoiset-excel
+  (let [odotettu odotettu-excel-raportti
+        vastaus (kutsu-excel-palvelua (:http-palvelin jarjestelma)
+                  :varusteet-ulkoiset-excel
+                  +kayttaja-jvh+
+                  {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id :hoitokauden-alkuvuosi 2019})]
+    (is (= vastaus odotettu) "Varusteiden excel ei vastannut odotettua")))
 
