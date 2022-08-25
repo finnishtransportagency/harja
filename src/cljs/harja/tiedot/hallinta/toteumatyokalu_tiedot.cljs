@@ -5,7 +5,8 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [cljs.core.async :refer [<! >! chan close!]]
-            [cljs-http.client :as http]
+    ;; FIXME: Mikä on tämä cljs-http kirjasto, sellaista ei ole meillä mukana atm. ja se kaataa buildin. Miksei harja.asiakas.kommunikaatio käy?
+            #_[cljs-http.client :as http]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
@@ -27,6 +28,7 @@
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
                                ;:lahetysaika "2022-08-10T12:00:00Z"
+                               ;; FIXME: Mikä on tämä jsondate?
                                :lahetysaika (pvm/jsondate (pvm/nyt))
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
@@ -164,7 +166,8 @@
           _ (js/console.log "valittu-urakka" (pr-str urakkaid))]
       (if urakkaid
         (go
-          (let [vastaus (<! (http/post (str "api/urakat/"
+          ;; FIXME: Mikä on tämä cljs-http kirjasto, sellaista ei ole meillä mukana atm. ja se kaataa buildin. Miksei harja.asiakas.kommunikaatio käy?
+          (let [vastaus (<! nil #_(http/post (str "api/urakat/"
                                          urakkaid
                                          "/toteumat/reitti")
                               {:body (.stringify js/JSON (clj->js (koostettu-data app)))
