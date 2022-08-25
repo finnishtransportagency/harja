@@ -13,6 +13,7 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.tierekisteri.varusteet :refer [varusteominaisuus->skeema] :as tierekisteri-varusteet]
+            [harja.domain.varuste-ulkoiset :as varuste-ulkoiset]
             [harja.geo :as geo]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
@@ -42,7 +43,9 @@
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck])
+            [harja.asiakas.kommunikaatio :as k]
+            [tuck.core :as tuck]
+            [harja.transit :as transit])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [tuck.intercept :refer [intercept send-to]]))
@@ -73,7 +76,7 @@
                                                      (sort (vals v/tietolaji->varustetyyppi-map))))
         varustetyypit (map (multimap-fn :varustetyypit) (into ["Kaikki"] varustetyypit-ja-suosikit))
         kuntoluokat (map (multimap-fn :kuntoluokat) (into ["Kaikki"] v/kuntoluokat))
-        toteumat (into [nil] (map :tallennusmuoto v/toteumat))
+        toteumat (into [nil] (keys varuste-ulkoiset/toteuma->toimenpide-map))
         tr-kentan-valitse-fn (fn [avain]
                                (fn [event]
                                  (e! (v/->ValitseTR-osoite (-> event .-target .-value) avain))))
@@ -120,7 +123,7 @@
         :vayla-tyyli? true
         :valitse-fn #(e! (v/->ValitseToteuma %))
         :format-fn #(if %
-                      (v/toteuma->toimenpide %)
+                      (varuste-ulkoiset/toteuma->toimenpide %)
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
        toteumat]
@@ -172,10 +175,15 @@
                         (e! (v/->HaeToteumat)))
       :otsikkorivi-klikattu (fn [opts]
                               (e! (v/->JarjestaVarusteet (:nimi opts))))
-      :custom-toiminto {:teksti "Vie Exceliin"
-                        :toiminto (constantly nil) 
-                        :opts {:ikoni [ikonit/harja-icon-action-upload]
-                               :luokka "nappi-reunaton"}}
+      :paneelikomponentit [(fn [] [:span.inline-block
+                                   [:form {:style {:margin-left "auto"}
+                                           :target "_blank" :method "POST"
+                                           :action (k/excel-url :varusteet-ulkoiset-excel)}
+                                    [:input {:type "hidden" :name "parametrit"
+                                             :value (transit/clj->transit (v/hakuparametrit app))}]
+                                    [:button {:type "submit"
+                                              :class #{"nappi-toissijainen nappi-reunaton"}}
+                                     [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Vie exceliin"]]]])]
       :voi-lisata? false :voi-kumota? false
       :voi-poistaa? (constantly false) :voi-muokata? true}
      [{:otsikko "Ajan\u00ADkoh\u00ADta" :nimi :alkupvm :leveys 5
@@ -183,7 +191,7 @@
       {:otsikko "Tie\u00ADrekis\u00ADteri\u00ADosoi\u00ADte" :leveys 5
        :hae v/muodosta-tr-osoite}
       {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-       :fmt v/toteuma->toimenpide}
+       :fmt varuste-ulkoiset/toteuma->toimenpide}
       {:otsikko "Varus\u00ADte\u00ADtyyppi" :nimi :tietolaji :leveys 5
        :fmt v/tietolaji->varustetyyppi}
       {:otsikko "Varus\u00ADteen lisä\u00ADtieto" :nimi :lisatieto :leveys 9}
@@ -203,7 +211,7 @@
    [{:otsikko "Käyty" :nimi :alkupvm :leveys 3
      :fmt pvm/fmt-p-k-v-lyhyt}
     {:otsikko "Toi\u00ADmen\u00ADpide" :nimi :toteuma :leveys 3
-     :fmt v/toteuma->toimenpide}
+     :fmt varuste-ulkoiset/toteuma->toimenpide}
     {:otsikko "Kunto\u00ADluoki\u00ADtus muu\u00ADtos" :nimi :kuntoluokka :tyyppi :komponentti :leveys 4
      :komponentti (fn [rivi]
                     [kuntoluokka-komponentti (:kuntoluokka rivi)])}

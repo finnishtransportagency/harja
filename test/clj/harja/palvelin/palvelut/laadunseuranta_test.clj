@@ -422,6 +422,27 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
+(def odotettu-urakan-jalkeinen-sanktio
+  [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
+    :suorasanktio false, :laji :C,
+    :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
+                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
+                     :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
+                     :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
+                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin,:muukasittelytapa ""}}
+
+  :summa 777.0, :indeksi "MAKU 2010", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
+
+
+(deftest hae-urakan-jalkseiset-sanktiot
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                     :alku (pvm/luo-pvm 2018 10 1)
+                                                                     :loppu (pvm/luo-pvm 2019 10 30)
+                                                                     :vain-yllapitokohteettomat? nil})]
+    (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
+
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-sanktiotyypit +kayttaja-jvh+)]
@@ -468,9 +489,9 @@
            paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
 (deftest vaadi-sanktio-kuuluu-urakkaan-testit
-  (let [kohde-urakka 4
-        kuuluva-sanktio 1
-        kuulumaton-sanktio 9
+  (let [kohde-urakka (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
+        kuuluva-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 1000 AND perintapvm = '2016-10-12';")))
+        kuulumaton-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 10000 AND perintapvm = '2011-10-12';")))
         kutsu (partial ls/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
     (testing "Olemattomat id:t"
       (is (nil? (kutsu -1)) "Uutta sanktiota ei pitäisi validoida")
