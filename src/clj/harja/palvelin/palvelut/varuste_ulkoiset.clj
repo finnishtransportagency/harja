@@ -28,9 +28,9 @@
     (every? nil? [tie aosa aeta losa leta])))
 
 (defn hae-urakan-uusimmat-varustetoteuma-ulkoiset
-  [db user {:keys [urakka-id hoitovuosi tie aosa aeta losa leta] :as tiedot}]
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi tie aosa aeta losa leta] :as tiedot}]
   (when (nil? urakka-id) (throw (IllegalArgumentException. "urakka-id on pakollinen")))
-  (when (nil? hoitovuosi) (throw (IllegalArgumentException. "hoitovuosi on pakollinen")))
+  (when (nil? hoitokauden-alkuvuosi) (throw (IllegalArgumentException. "hoitokauden-alkuvuosi on pakollinen")))
   (when-not (kelvollinen-tr-filter tie aosa aeta losa leta)
     (throw (IllegalArgumentException. "tr-osoitteessa pakolliset, tie TAI tie aosa aeta TAI kaikki")))
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-varusteet user urakka-id)
