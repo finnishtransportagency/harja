@@ -747,16 +747,29 @@ jatkon."
       :keskita "tasaa-keskita")))
 
 (defn- tooltip-sisalto [opts auki? sisalto]
-  (let [x (atom nil)]
+  (let [x (atom nil)
+        y (atom nil)
+        suunta (:suunta opts)]
     (komp/luo
       (komp/piirretty
         #(let [n (r/dom-node %)
                rect (aget (.getClientRects n) 0)
-               parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
+               parent-rect (aget (.getClientRects (.-parentNode n)) 0)
+               lisaa-valia-px 3]
            (when (and rect parent-rect)
              (reset! x
-               (+ (/ (.-width rect) -2)
-                 (/ (.-width parent-rect) 2))))))
+               (+ #_(/ (.-width rect) -2)
+                 (case suunta
+                   :vasen (- lisaa-valia-px)
+                   :oikea (+ (.-width parent-rect) lisaa-valia-px)
+                   :ylos (/ (.-width parent-rect) 2)
+                   (/ (.-width parent-rect) 2))))
+             (reset! y
+               (case suunta
+                 :vasen (- (/ (.-height parent-rect) 2))
+                 :oikea (- (/ (.-height parent-rect) 2))
+                 :ylos (- (+ (.-height parent-rect) lisaa-valia-px))
+                 lisaa-valia-px)))))
       (fn [opts auki? sisalto]
         (let [s-pituus (count (str sisalto))
               suunta (case (:suunta opts)
@@ -769,24 +782,23 @@ jatkon."
                                    (if (< 150 s-pituus)
                                      "levea"
                                      "ohut"))]
-                         :style {:left (when-let [x @x]
-                                         x)}}
+                         :style {:visibility (when-not auki? "hidden")
+                                 :margin-left (when @x (str @x "px"))
+                                 :margin-top (when @y (str @y "px"))}}
            [:div.tooltip-arrow]
            [:div.tooltip-inner
             sisalto]])))))
 
-(defn tooltip [opts komponentti tooltipin-sisalto]
-  (let [tooltip-nakyy? (atom false)
-        leveys (atom 0)]
-    (komp/luo
-      (fn [opts komponentti tooltipin-sisalto]
-        [:div.inline-block
-         {:style {:position "relative"}                     ;:div.inline-block
-          :on-mouse-enter #(reset! tooltip-nakyy? true)
-          :on-mouse-leave #(reset! tooltip-nakyy? false)}
-         komponentti
+(defn tooltip [{:keys [suunta leveys wrapper-luokka] :as opts} komponentti sisalto]
+  (r/with-let [tooltip-visible?-atom (atom false)]
+    [:div.inline-block
+     {:style {:position "relative"}
+      :class wrapper-luokka
+      :on-mouse-enter #(reset! tooltip-visible?-atom true)
+      :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+     komponentti
 
-         [tooltip-sisalto opts @tooltip-nakyy? tooltipin-sisalto]]))))
+     [tooltip-sisalto opts @tooltip-visible?-atom sisalto]]))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
