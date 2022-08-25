@@ -100,6 +100,11 @@
 
 (defmethod muodosta-solu :vain-arvo [arvo solun-tyyli] [arvo solun-tyyli])
 
+;; Excelissä tekee täsmälleen saman kuin ylempi :vain-arvo, mutta pdf:ssä ja html raportissa ui on eri näköinen ja me joudutaan
+;; käyttämään samoja elementtejä, niin se täällä excel puolella vaikuttaa toistolta, mutta ei ole kokonaisuudessaan sitä.
+(defmethod muodosta-solu :arvo [[_ {:keys [arvo]}] solun-tyyli]
+  [arvo solun-tyyli])
+
 (defmethod muodosta-solu :liitteet [[_ liitteet] solun-tyyli]
   [(count liitteet) solun-tyyli])
 

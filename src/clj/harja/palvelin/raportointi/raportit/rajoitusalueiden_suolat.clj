@@ -5,50 +5,67 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen
-             :refer [raportin-otsikko]]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
 
 (defqueries "harja/palvelin/raportointi/raportit/rajoitusalueiden_suolat.sql")
 
-(defn loppusumma [tulos]
-  (do
-    (log/debug "tulos: " tulos)
-    (vec (concat tulos [{:tie "Yhteensä" :yhteensa (reduce + (map :talvisuola_yht tulos))}]))))
-
 (defn rivi-xf [rivi]
-  [(:tie rivi)
-   (:osoitevali rivi)
-   (:pohjavesialue rivi)
-   (:pituus rivi)
-   (:ajoratojen_pituus rivi)
-   (:formiaattitoteumat rivi)
-   (:formiaatit_t_per_ajoratakm rivi)
-   (:suolatoteumat rivi)
-   (:talvisuola_t_per_ajoratakm rivi)
-   (:suolarajoitus rivi)
-   (:formiaatti-teksti rivi)])
+  {:lihavoi? nil
+   :rivi
+   (into []
+     (concat
+       [(:tie rivi)]
+       [(:osoitevali rivi)]
+       [(:pohjavesialue rivi)]
+       [(:pituus rivi)]
+       [(:ajoratojen_pituus rivi)]
+       [[:arvo {:arvo (:formiaattitoteumat rivi)
+                :jos-tyhja "-"
+                :korosta-hennosti? false
+                :desimaalien-maara 2
+                :ryhmitelty? false}]]
+       [[:arvo {:arvo (:formiaatit_t_per_ajoratakm rivi)
+                :jos-tyhja "-"
+                :korosta-hennosti? false
+                :desimaalien-maara 2
+                :ryhmitelty? false}]]
+       [[:arvo {:arvo (:suolatoteumat rivi)
+                :jos-tyhja "-"
+                :korosta-hennosti? false
+                :desimaalien-maara 2
+                :ryhmitelty? false}]]
+       [[:arvo {:arvo (:talvisuola_t_per_ajoratakm rivi)
+                :jos-tyhja "-"
+                :korosta-hennosti? true
+                :desimaalien-maara 2
+                :varoitus? (< (or (:suolarajoitus rivi) 9999) (or (:talvisuola_t_per_ajoratakm rivi) 0))
+                :ryhmitelty? false}]]
+       [[:arvo {:arvo (:suolarajoitus rivi)
+                :jos-tyhja "-"
+                :korosta-hennosti? false
+                :desimaalien-maara 2
+                :ryhmitelty? false}]]
+       [(:formiaatti-teksti rivi)]))})
 
 (defn sarakkeet []
-  [{:leveys 1 :fmt :kokonaisluku :otsikko "Tie"}
-   {:leveys 3 :fmt :teksti :otsikko "Osoiteväli"}
-   {:leveys 2 :fmt :teksti :otsikko "Pohjavesialue (tunnus)"}
-   {:leveys 2 :fmt :numero :otsikko "Pituus (m)"}
-   {:leveys 2 :fmt :numero :otsikko "Pituus ajoradat (m)"}
-   {:leveys 2 :fmt :numero :otsikko "Formiaatit yhteensä (t)"}
-   {:leveys 2 :fmt :numero :otsikko "Formiaatit (t/ajoratakm)"}
-   {:leveys 2 :fmt :numero :otsikko "Talvisuola yhteensä (t)"}
-   {:leveys 2 :fmt :numero :otsikko "Talvisuola (t/ajoratakm)"}
-   {:leveys 2 :fmt :numero :otsikko "Suolan käyttö\u00ADraja (t/km)"}
-   {:leveys 2 :fmt :teksti :otsikko ""}])
+  [{:leveys 0.8 :fmt :kokonaisluku :otsikko "Tie"}
+   {:leveys 2.5 :fmt :teksti :otsikko "Osoiteväli"}
+   {:leveys 2.5 :fmt :teksti :otsikko "Pohjavesialue (tunnus)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Pituus (m)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Pituus ajoradat (m)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Formiaatit yhteensä (t)"}
+   {:leveys 1.5 :fmt :numero :otsikko "Formiaatit (t/ajoratakm)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Talvisuola yhteensä (t)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Talvisuola (t/ajoratakm)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :numero :otsikko "Suolan käyttö\u00ADraja (t/km)"}
+   {:leveys 3 :fmt :teksti :otsikko ""}])
 
 (defn rajoitusalueet-taulukko [otsikko rivit]
   [:taulukko {:otsikko otsikko
               ;:viimeinen-rivi-yhteenveto? true
               :tyhja (if (empty? rivit) "Ei raportoitavia suolatoteumia.")}
    (sarakkeet)
-   (into [] (map rivi-xf rivit #_(loppusumma rivit)))])
-
-(defn serialize [m sep] (str (clojure.string/join sep (map (fn [[_ v]] v) m)) "\n"))
+   (map rivi-xf rivit)])
 
 (defn hae-rajoitusalueet-suolatoteumien-kanssa [db urakka-id alkupvm loppupvm]
   ;; TODO: tänne tietokantahaku, joka palauttaa suunnilleen alla olevan tuloksen kaikille urakan rajoitusalueille
@@ -69,10 +86,12 @@
                                  (assoc :osoitevali (str
                                                       (str (:aosa rivi) " / " (:aet rivi))
                                                       " – "
-                                                      (str (:losa rivi) " / " (:let rivi)))))
-
-                               ) rajoitusalueet)
-        _ (println "rajoitusalueet: " rajoitusalueet)]
+                                                      (str (:losa rivi) " / " (:let rivi))))
+                                 (assoc :formiaatti-teksti (if (:formiaatti? rivi)
+                                                             "Käytettävä formiaattia"
+                                                             ""))))
+                         rajoitusalueet)
+        _ (log/debug "Löydetyt rajoitusalueet: " rajoitusalueet)]
     rajoitusalueet))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]

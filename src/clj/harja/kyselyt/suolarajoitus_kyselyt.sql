@@ -109,6 +109,7 @@ SELECT ra.id                                                               AS ra
           AND tot.poistettu = false
           AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
           AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 50))         as formiaattitoteumat,
+       rr.formiaatti                                                       as "formiaatti?",
        rr.luotu                                                            as luotu,
        rr.luoja                                                            as luoja,
        rr.muokattu                                                         as muokattu,

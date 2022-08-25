@@ -35,6 +35,14 @@
 
 (defmethod muodosta-html :vain-arvo [arvo] arvo)
 
+(defmethod muodosta-html :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
+  [:span (if-not (nil? arvo)
+           (cond
+             desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+             fmt (fmt arvo)
+             :else arvo)
+           jos-tyhja)])
+
 (defmethod muodosta-html :liitteet [[_ liitteet]]
   (liitteet/liitteet-numeroina liitteet))
 
