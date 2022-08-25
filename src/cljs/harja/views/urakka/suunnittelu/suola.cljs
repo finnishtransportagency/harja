@@ -310,7 +310,16 @@
           :yksikko "t"
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true
-          :disabled? true})
+          :disabled? true}
+         {:nimi :kokonaismaara-info
+          :tyhja-otsikko? true
+          :tyyppi :komponentti
+          :komponentti (fn []
+                         [yleiset/tooltip {:suunta :oikea :leveys :levea
+                                           :wrapper-luokka "tooltip-wrapper"}
+                          [ikonit/harja-icon-status-info]
+                          [:div
+                           "Talvisuolan käyttöraja kirjataan Tehtävät ja määrät -välilehdellä kohdassa " [:b "Suolaus."]]])})
 
        (lomake/rivi
          {:nimi :sanktio_ylittavalta_tonnilta
