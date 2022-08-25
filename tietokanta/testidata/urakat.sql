@@ -1327,7 +1327,7 @@ VALUES ('1242141-OULU3', (SELECT id
                           WHERE lyhenne = 'POP'), 'Oulun MHU 2019-2024', '2019-10-01', '2024-09-30', 'teiden-hoito',
         (SELECT alueurakkanro FROM alueurakka WHERE nimi = 'Oulu 2014-2019'),
         (SELECT id FROM organisaatio WHERE ytunnus = '1565583-5'),
-        '1.2.3.4.1236',
+        '1.2.246.578.8.1.2436498421.1886759677',
         (SELECT alue FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019')),
 ('1242141-II3', (SELECT id
                           FROM organisaatio
