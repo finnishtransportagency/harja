@@ -283,48 +283,10 @@
                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     vastaus))
 
-(defn hae-suolatoteumat-rajoitusalueelle [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
+(defn hae-suolatoteumat-rajoitusalueittain [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
-  (let [_ (log/debug "hae-suolatoteumat-rajoitusalueelle :: tiedot" (pr-str tiedot))
-        ;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
-        materiaalit (materiaalit-kyselyt/hae-talvisuolauksen-materiaalit db)
-        talvisuolaidt (keep #(when (= "talvisuola" (:materiaalityyppi %))
-                               (:id %))
-                        materiaalit)
-        suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueet-summatiedoin db
-                        {:urakka-id urakka-id
-                         :alkupvm alkupvm
-                         :loppupvm loppupvm
-                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        suolatoteumat (mapv (fn [rivi]
-                              (-> rivi
-                                (update :pohjavesialueet
-                                  (fn [alueet]
-                                    (mapv
-                                      #(konv/pgobject->map % :tunnus :string :nimi :string)
-                                      (konv/pgarray->vector alueet))))))
-                        suolatoteumat)
-
-        _ (log/debug "suolatoteumat" suolatoteumat)
-        suolatoteumat (mapv (fn [rivi]
-                              (cond-> rivi
-                                true (konv/decimal->double rivi :suolatoteumat :formiaattitoteumat :ajoratojen_pituus)
-                                (and
-                                  (not (nil? (:formiaattitoteumat rivi)))
-                                  (not (nil? (:ajoratojen_pituus rivi)))
-                                  (> (:formiaattitoteumat rivi) 0)
-                                  (> (:ajoratojen_pituus rivi) 0))
-                                (assoc :formiaatit_t_per_ajoratakm
-                                       (with-precision 3 (/ (:formiaattitoteumat rivi) (:ajoratojen_pituus rivi))))
-                                (and
-                                  (not (nil? (:suolatoteumat rivi)))
-                                  (not (nil? (:ajoratojen_pituus rivi)))
-                                  (> (:suolatoteumat rivi) 0)
-                                  (> (:ajoratojen_pituus rivi) 0))
-                                (assoc :talvisuola_t_per_ajoratakm
-                                       (with-precision 4 (/ (:suolatoteumat rivi) (:ajoratojen_pituus rivi))))))
-                        suolatoteumat)]
-    suolatoteumat))
+  (let [_ (log/debug "hae-suolatoteumat-rajoitusalueittain :: tiedot" (pr-str tiedot))]
+    (suolarajoitus-kyselyt/hae-suolatoteumat-rajoitusalueittain db tiedot)))
 
 (defn hae-rajoitusalueen-summatiedot
   "Haetaan päivittäin groupatut suolatoteumat halutulle rajoitusalueelle"
@@ -449,9 +411,9 @@
         (tallenna-rajoitusalueen-sanktio (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
-      :hae-suolatoteumat-rajoitusalueelle
+      :hae-suolatoteumat-rajoitusalueittain
       (fn [user tiedot]
-        (hae-suolatoteumat-rajoitusalueelle (:db this) user tiedot)))
+        (hae-suolatoteumat-rajoitusalueittain (:db this) user tiedot)))
 
     (julkaise-palvelu (:http-palvelin this)
       :hae-rajoitusalueen-summatiedot
@@ -489,7 +451,7 @@
       :hae-talvisuolan-kayttorajat
       :tallenna-talvisuolan-kayttoraja
       :tallenna-rajoitusalueen-sanktio
-      :hae-suolatoteumat-rajoitusalueelle
+      :hae-suolatoteumat-rajoitusalueittain
       :hae-rajoitusalueen-summatiedot
       :hae-rajoitusalueen-paivan-toteumat
       :hae-pohjavesialueurakat

@@ -28,7 +28,7 @@
 
 (defn- hae-suolarajoitukset [valittu-vuosi]
   (let [urakka-id (-> @tila/yleiset :urakka :id)
-        _ (tuck-apurit/post! :hae-suolatoteumat-rajoitusalueelle
+        _ (tuck-apurit/post! :hae-suolatoteumat-rajoitusalueittain
             {:hoitokauden-alkuvuosi valittu-vuosi           ;; Määritellään minkä vuoden rajoitusalueille toteumat haetaan
              :alkupvm (first @valittu-aikavali)
              :loppupvm (second @valittu-aikavali)
