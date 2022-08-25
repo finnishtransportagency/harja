@@ -1,5 +1,6 @@
 {:linters
- {:unresolved-symbol
+ {:refer-all {:exclude [clojure.test]}
+  :unresolved-symbol
   {:exclude [(cljs.core.async.macros/go [<! >! alts!])
              (cljs.core.async.macros/go-loop [<! >! alts!])
              (harja.domain.tilannekuva.makrot/maarittele-suodattimet)]}}

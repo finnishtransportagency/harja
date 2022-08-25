@@ -216,12 +216,13 @@
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyotyyppi]))
     (map #(konv/string-polusta->keyword % [:yllapitokohdetyyppi]))))
 
-(defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi]}]
+(defn- hae-urakan-yllapitokohteet* [db {:keys [urakka-id sopimus-id vuosi vain-yha-kohteet?]}]
   (let [yllapitokohteet (into []
                               urakan-yllapitokohde-xf
                               (q/hae-urakan-sopimuksen-yllapitokohteet db {:urakka urakka-id
                                                                            :sopimus sopimus-id
-                                                                           :vuosi vuosi}))
+                                                                           :vuosi vuosi
+                                                                           :vain_yha_kohteet vain-yha-kohteet?}))
         idt (map :id yllapitokohteet)
         yllapitokohteet (q/liita-kohdeosat-kohteisiin db yllapitokohteet :id)
         osien-pituudet-tielle (laske-osien-pituudet db yllapitokohteet)
@@ -241,11 +242,12 @@
                                             (:muokattu (etsi-yllapitokohde (:id %))))))]
     (vec yllapitokohteet)))
 
-(defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi]}]
+(defn hae-urakan-yllapitokohteet [db {:keys [urakka-id sopimus-id vuosi vain-yha-kohteet?]}]
   (log/debug "Haetaan urakan ylläpitokohteet.")
   (let [yllapitokohteet (hae-urakan-yllapitokohteet* db {:urakka-id urakka-id
                                                          :sopimus-id sopimus-id
-                                                         :vuosi vuosi})
+                                                         :vuosi vuosi
+                                                         :vain-yha-kohteet? vain-yha-kohteet?})
         yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)]
     (vec yllapitokohteet)))
 

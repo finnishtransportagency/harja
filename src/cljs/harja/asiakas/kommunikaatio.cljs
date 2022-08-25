@@ -251,11 +251,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 (defn laheta-tiedosto!
   "Lähettää tiedoston palvelimelle. Palauttaa kanavan, josta voi lukea edistymisen.
   Kun tiedosto on kokonaan lähetetty, kirjoitetaan sen tiedot kanavaan ja kanava suljetaan."
-  [url input-elementti urakka-id onnistui-fn epaonnistui-fn]
+  [url input-elementti params-map onnistui-fn epaonnistui-fn]
   (let [form-data (js/FormData.)
         files (.-files input-elementti)]
     (.append form-data "file" (aget files 0))
-    (.append form-data "urakka-id" urakka-id)
+    (doseq [[key value] params-map]
+      (.append form-data (name key) value))
     (POST (str +polku+ "_/" url)
           {:headers (anti-csrf-token-header)
            :body form-data

@@ -30,12 +30,7 @@
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "tavoitehintaiset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "kaikki")
                                                  (when (= :urakka konteksti) [:tpi :maksuera_numero])]))]
-    (if (and (some? (:suolasakot_laskutettu rivi))
-             (some? (:suolasakot_laskutetaan rivi)))
-      (into []
-            (concat kustannusten-kentat
-                    (lyv-yhteiset/kustannuslajin-kaikki-kentat "suolasakot")))
-      kustannusten-kentat)))
+    kustannusten-kentat))
 
 (def summa-fmt fmt/euro-opt)
 
@@ -98,18 +93,6 @@
       [:varillinen-teksti {:arvo (if (:sakot_laskutetaan tp-rivi)
                                    (fmt/formatoi-arvo-raportille (:sakot_laskutetaan tp-rivi))
                                    (summa-fmt nil))
-                           :fmt :raha}])))
-
-(defn- suolasanktiot
-  [tp-rivi kyseessa-kk-vali?]
-  (rivi
-    (str "Suolasanktiot")
-    [:varillinen-teksti {:arvo (if (:suolasakot_laskutettu tp-rivi)
-                                 (fmt/formatoi-arvo-raportille (:suolasakot_laskutettu tp-rivi))
-                                 (summa-fmt nil))
-                         :fmt :raha}]
-    (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (:suolasakot_laskutetaan tp-rivi) (summa-fmt nil))
                            :fmt :raha}])))
 
 (defn- johto-hallintakorvaukset
@@ -278,8 +261,6 @@
                               [(hankinnat tp-rivi kyseessa-kk-vali?)
                                (lisatyot tp-rivi kyseessa-kk-vali?)
                                (sanktiot tp-rivi kyseessa-kk-vali?)
-                               (when (= "Talvihoito" (:nimi tp-rivi))
-                                 (suolasanktiot tp-rivi kyseessa-kk-vali?))
                                (yhteensa tp-rivi kyseessa-kk-vali?)])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
@@ -359,7 +340,7 @@
                                    (dec (pvm/vuosi alkupvm)))
                                  9))
 
-        ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
+        ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, jne) voivat aiheuttaa nillejä,
         ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)

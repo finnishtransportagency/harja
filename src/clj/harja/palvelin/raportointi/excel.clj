@@ -54,8 +54,44 @@
   (.formatAsString (CellReference. rivi-nro sarake-nro)))
 
 (defmulti aseta-kaava!
-  (fn [[tyyppi &_] _ _ _]
-    tyyppi))
+  (fn [[_ {:keys [kaava]}] _ _]
+    kaava))
+
+(defn- evaluoi-kaava
+  "Luo kaavaevaluaattorin ja evaluoi kaavan. Parametrina sisään workbook ja solu."
+  [workbook cell]
+  (-> workbook
+      (.getCreationHelper)
+      (.createFormulaEvaluator)
+      (.evaluateFormulaCell cell)))
+
+(defn parsi-sarakekirjain
+  "Parsii Excel-solun sarakekirjaimen, esim. 'A16' --> A, AC15 --> AC"
+  [osoite]
+  (re-find (re-pattern #"^[a-zA-Z]+") (.toString osoite)))
+
+(defn parsi-rivinumero
+  "Parsii Excel-solun rivinumeron, esim. 'A16' --> 16"
+  [osoite]
+  (let [rivinumero-stringina (re-find (re-pattern "\\d+") (.toString osoite))]
+    (when rivinumero-stringina (Integer/parseInt rivinumero-stringina))))
+
+(defmethod aseta-kaava! :summaa-yllaolevat [[_ {:keys [alkurivi loppurivi]}] workbook cell]
+  (let [osoite (-> cell .getAddress)
+        sarake (first (.toString osoite))]
+    (.setCellFormula
+      cell
+      (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
+    (evaluoi-kaava workbook cell)))
+
+(defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
+  (let [osoite (-> cell .getAddress)
+        rivi (parsi-rivinumero osoite)
+        loppusarake (or loppusarake (parsi-sarakekirjain osoite))]
+    (.setCellFormula
+      cell
+      (str "SUM("(or alkusarake "A") rivi  ":" loppusarake rivi ")")))
+  (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
   (if (string? data)
@@ -160,14 +196,18 @@
         data-format (luo-data-formaatti workbook pattern)]
     (.setDataFormat tyyli data-format)))
 
-(defn tyyli-format-mukaan [fmt tyyli]
-  ;; Jos halutaan tukea erityyppisiä sarakkeita,
-  ;; pitää tänne lisätä formatter.
+(defn tyyli-format-mukaan
+  "Antaa Excel-soluille erityyppisiä formattereita, kuten raha, kokonaisluku tai pvm."
+  [fmt voi-muokata? tyyli]
+  ;; voi-muokata? vaikuttaa vain, jos sheet on asetettu protected arvoon,
+  ;; joka enabloidaan lipulla :varjele-sheet-muokkauksilta?)
+  (.setLocked tyyli (not voi-muokata?))
   (case fmt
     ;; .setDataFormat hakee indeksillä tyylejä.
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
     ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
     ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
+    :kokonaisluku (.setDataFormat tyyli 1)
     :raha (.setDataFormat tyyli 8)
     :prosentti (.setDataFormat tyyli 10)
     :numero (.setDataFormat tyyli 2)
@@ -177,12 +217,15 @@
     nil))
 
 (defn- tee-raportin-tiedot-rivi  
-  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli] :as tiedot}]
+  [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli
+                 custom-ylin-rivi] :as tiedot}]
   (try 
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
-      (excel/set-cell! solu (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
-                                                              (str " - " alkupvm "-" loppupvm))))
+      (excel/set-cell! solu (or
+                              custom-ylin-rivi
+                              (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
+                                                               (str " - " alkupvm "-" loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.
@@ -197,48 +240,73 @@
     (excel/set-cell! solu nimi)
     (excel/set-cell-style! solu raportin-tiedot-tyyli)))
 
-(defmethod muodosta-excel :taulukko [[_ optiot sarakkeet data] workbook]
+(defn- font-leipateksti
+  ([] (font-leipateksti 11))
+  ([font-koko]
+   {:color :black :size font-koko}))
+
+(defn- tasaa-solu [solu tasaa]
+  (CellUtil/setAlignment solu
+                         (case tasaa
+                           :keskita HorizontalAlignment/CENTER
+                           :oikea HorizontalAlignment/RIGHT
+                           HorizontalAlignment/LEFT)))
+
+(defn- luo-rivi-ennen-tai-jalkeen
+  "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
+  [rivi-maaritys riviolio rivi-nro tyyli sheet]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita]}]
+            (let [solu (.createCell riviolio sarake-nro)]
+              (excel/set-cell! solu teksti)
+              (excel/set-cell-style! solu tyyli)
+              (tasaa-solu solu tasaa)
+              (when (> sarakkeita 1)
+                (.addMergedRegion sheet (CellRangeAddress. rivi-nro rivi-nro
+                                                           sarake-nro
+                                                           (+ sarake-nro sarakkeita -1))))
+              (+ sarake-nro sarakkeita)))
+          0 rivi-maaritys))
+
+(defn- font-otsikko
+  ([] (font-otsikko 14))
+  ([font-koko]
+   {:color :black
+    :size font-koko
+    :name "Arial"
+    :bold true}))
+
+(defn- luo-saraketyyli
+  [workbook lista-tyyli? rivi-ennen?]
+  (excel/create-cell-style! workbook (if lista-tyyli?
+                                       {:border-bottom :thin
+                                        :border-top :thin
+                                        :border-left :thin
+                                        :border-right :thin
+                                        :font (font-otsikko (if rivi-ennen? 18 14))}
+                                       {:background :grey_25_percent
+                                        :font {:color :black}})))
+
+(def puskuririvien-maara-ennen-rivi-jalkeen 5)
+
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
+                                                sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen] :as optiot}
+                                      sarakkeet data] workbook]
   (try
-    (let [nimi (:otsikko optiot)
-          raportin-tiedot (:raportin-tiedot optiot)
-          viimeinen-rivi-yhteenveto? (:viimeinen-rivi-yhteenveto? optiot)
-          viimeinen-rivi (last data)
+    (let [viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
-          samalle-sheetille? (:samalle-sheetille? optiot)
-          [sheet nolla] (if (and (nil? (:sheet-nimi optiot))
+          [sheet nolla] (if (and (nil? sheet-nimi)
                               (or samalle-sheetille? (nil? nimi))
                               aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
                                              (WorkbookUtil/createSafeSheetName
-                                               (or (:sheet-nimi optiot) nimi))) 0])
-          sarake-tyyli (if (:lista-tyyli? optiot)
-                         (excel/create-cell-style! workbook {:border-bottom :thin
-                                                             :border-top :thin
-                                                             :border-left :thin
-                                                             :border-right :thin
-                                                             :font {:color :black
-                                                                    :size 14
-                                                                    :name "Arial"
-                                                                    :bold true}})
-                         (excel/create-cell-style! workbook {:background :grey_25_percent
-                                                             :font {:color :black}}))
-
-          rivi-ennen-sarake-tyyli (if (:lista-tyyli? optiot)
-                                    (excel/create-cell-style! workbook {:border-bottom :thin
-                                                                        :border-top :thin
-                                                                        :border-left :thin
-                                                                        :border-right :thin
-                                                                        :font {:color :black
-                                                                               :size 18
-                                                                               :name "Arial"
-                                                                               :bold true}})
-                                    (excel/create-cell-style! workbook {:background :grey_25_percent
-                                                                        :font {:color :black}}))
-          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font {:color :black
-                                                                           :size 14
-                                                                           :name "Arial"
-                                                                           :bold true}})
+                                               (or sheet-nimi nimi))) 0])
+          ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
+          _ (when (:varjele-sheet-muokkauksilta? optiot)
+              (.enableLocking sheet))
+          sarake-tyyli (luo-saraketyyli workbook lista-tyyli? false)
+          rivi-ennen-sarake-tyyli (luo-saraketyyli workbook lista-tyyli? true)
+          raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font (font-otsikko)})
           ;; Ei tehdä uutta otsikkoriviä, jos taulukko tulee samalle sheetille.
           tee-raporttitiedot-rivi? (= nolla 0) 
 
@@ -250,11 +318,11 @@
           nolla (if (and samalle-sheetille? tee-raporttitiedot-rivi?)
                   (+ 2 nolla)
                   nolla)
-
-          rivi-ennen (:rivi-ennen optiot)
           rivi-ennen-nro nolla
           rivi-ennen-rivi (when rivi-ennen (.createRow sheet nolla))
 
+          rivi-jalkeen-nro (+ puskuririvien-maara-ennen-rivi-jalkeen (count data))
+          rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
           otsikko-rivi (.createRow sheet nolla)
           luodut-tyylit (atom {})
@@ -265,21 +333,11 @@
                              uusi-tyyli))]    
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
-        (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita] :as sarake}]
-                  (let [solu (.createCell rivi-ennen-rivi sarake-nro)]
-                    (excel/set-cell! solu teksti)
-                    (excel/set-cell-style! solu rivi-ennen-sarake-tyyli)
-                    (CellUtil/setAlignment solu
-                                           (case tasaa
-                                             :keskita HorizontalAlignment/CENTER
-                                             :oikea HorizontalAlignment/RIGHT
-                                             HorizontalAlignment/LEFT))
-                    (when (> sarakkeita 1)
-                      (.addMergedRegion sheet (CellRangeAddress. rivi-ennen-nro rivi-ennen-nro
-                                                                 sarake-nro
-                                                                 (+ sarake-nro sarakkeita -1))))
-                    (+ sarake-nro sarakkeita)))
-                0 rivi-ennen))
+        (luo-rivi-ennen-tai-jalkeen rivi-ennen
+                                    rivi-ennen-rivi
+                                    rivi-ennen-nro
+                                    rivi-ennen-sarake-tyyli
+                                    sheet))
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
       (when samalle-sheetille?
@@ -314,7 +372,8 @@
 
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
                        [naytettava-arvo solun-tyyli formaatti]
-                       (if (raportti-domain/raporttielementti? arvo-datassa)
+                       (if (and (raportti-domain/raporttielementti? arvo-datassa)
+                             (not (raportti-domain/excel-kaava? arvo-datassa)))
                          (muodosta-solu arvo-datassa oletustyyli)
                          [arvo-datassa oletustyyli])
                        kustomi-formaatti? (and (vector? formaatti) (= (first formaatti) :kustomi))
@@ -326,10 +385,10 @@
                                       (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
 
                                       formaatti
-                                      (partial tyyli-format-mukaan formaatti)
+                                      (partial tyyli-format-mukaan formaatti nil)
 
                                       formatoi-solu?
-                                      (partial tyyli-format-mukaan (:fmt sarake))
+                                      (partial tyyli-format-mukaan (:fmt sarake) (:voi-muokata? sarake))
 
                                       :default
                                       (constantly nil))
@@ -354,17 +413,12 @@
                        tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (:fmt sarake)])]
                                tyyli
                                (luo-uusi-tyyli solun-tyyli formaatti-fn (:fmt sarake)))]
-                   (if-let [kaava (:excel sarake)]
-                     (aseta-kaava! kaava cell rivi-nro sarake-nro)
+                   (if (raportti-domain/excel-kaava? arvo-datassa)
+                     (aseta-kaava! arvo-datassa workbook cell)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))
                    (excel/set-cell-style! cell tyyli)
                    (when (:tasaa sarake)
-                     (CellUtil/setAlignment cell
-                                            (case (:tasaa sarake)
-                                              :keskita HorizontalAlignment/CENTER
-                                              :oikea HorizontalAlignment/RIGHT
-                                              HorizontalAlignment/LEFT)))
-                   ))
+                     (tasaa-solu cell (:tasaa sarake)))))
               sarakkeet))))
         data))
 
@@ -375,7 +429,14 @@
       ;; Luodaan tiedot sisältävä rivi sheetin alkuun tässä, koska tämä tietostringi on todennäköisesti tarpeeksi pitkä, että autosizecolumn tekisi ekasta sarakkeesta tosi leveän
       ;; Ja tehdään tämä vain kerran, koska ei haluta montaa tietoriviä, jos useampi taulukko on samalla sheetillä.
       (when tee-raporttitiedot-rivi?
-        (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli))))
+        (tee-raportin-tiedot-rivi sheet (assoc raportin-tiedot :nolla raportin-tiedot-rivi :tyyli raportin-tiedot-tyyli)))
+
+      (when rivi-jalkeen
+        (luo-rivi-ennen-tai-jalkeen rivi-jalkeen
+                                    rivi-jalkeen-rivi
+                                    rivi-jalkeen-nro
+                                    (excel/create-cell-style! workbook {:font (font-leipateksti)})
+                                    sheet)))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 

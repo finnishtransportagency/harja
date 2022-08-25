@@ -22,9 +22,9 @@
      [:nimi (xml/escape-xml-varten (:organisaatio data))]
      [:ytunnus (:ytunnus data)]]))
 
-(defn muodosta-vapaateksti [vakiofraasi vapaateksti]
-  (let [vapaateksti (merkkijono/leikkaa 1024 (str (when vakiofraasi (str vakiofraasi " ")) vapaateksti))]
-    (xml/tee-c-data-elementti-tarvittaessa vapaateksti)))
+(defn muodosta-vapaateksti [vapaateksti]
+      (let [vapaateksti (merkkijono/leikkaa 1024 vapaateksti)]
+           (xml/tee-c-data-elementti-tarvittaessa vapaateksti)))
 
 (defn muodosta-viesti [{:keys [ilmoitusid kuittaustyyppi kuitattu vakiofraasi vapaateksti kasittelija kuittaaja]}
                        viesti-id]
@@ -34,7 +34,8 @@
    [:ilmoitusId ilmoitusid]
    [:tyyppi kuittaustyyppi]
    [:aika (xml/datetime->gmt-0-pvm kuitattu)]
-   [:vapaateksti (muodosta-vapaateksti vakiofraasi vapaateksti)]
+   [:vakiofraasi vakiofraasi]
+   [:vapaateksti (muodosta-vapaateksti vapaateksti)]
    [:kasittelija
     (muodosta-henkilo kasittelija)
     (muodosta-organisaatio kasittelija)]

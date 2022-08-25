@@ -141,7 +141,6 @@
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
-    [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
@@ -434,7 +433,7 @@
                           [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
+                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :excel-vienti])
       :pot2 (component/using
               (pot2/->POT2)
               [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
@@ -531,7 +530,7 @@
 
       :varustetoteuma-ulkoiset (component/using
                    (varuste-ulkoiset/->VarusteVelho)
-                   [:http-palvelin :db :velho-integraatio])
+                   [:http-palvelin :db :velho-integraatio :excel-vienti])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)

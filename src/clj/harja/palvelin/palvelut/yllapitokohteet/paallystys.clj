@@ -5,6 +5,7 @@
    Päällystysurakka on ylläpidon urakka ja siihen liittyy keskeisenä osana ylläpitokohteet.
    Ylläpitokohteiden hallintaan on olemassa oma palvelu."
   (:require [com.stuartsierra.component :as component]
+            [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [hiccup.core :refer [html]]
@@ -18,6 +19,7 @@
              [kommentit :as kommentit-q]
              [paallystys-kyselyt :as q]
              [urakat :as urakat-q]
+             [sopimukset :as sopimukset-q]
              [konversio :as konversio]
              [yllapitokohteet :as yllapitokohteet-q]
              [tieverkko :as tieverkko-q]]
@@ -39,13 +41,16 @@
             [harja.palvelin.palvelut.yllapitokohteet
              [maaramuutokset :as maaramuutokset]
              [yleiset :as yy]]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.tyokalut.html :refer [sanitoi]]
             [clojure.set :as set]
             [clj-time.coerce :as coerce]
             [harja.kyselyt.konversio :as konv]
+            [harja.palvelin.palvelut.yllapitokohteet.paallystyskohteet-excel :as p-excel]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.pvm :as pvm]
-            [specql.core :as specql])
+            [specql.core :as specql]
+            [dk.ative.docjure.spreadsheet :as xls])
   (:import (org.postgresql.util PSQLException)))
 
 (defn onko-pot2?
@@ -843,6 +848,32 @@
     (hae-urakan-paallystysilmoitus-paallystyskohteella db user {:urakka-id urakka-id
                                                                 :paallystyskohde-id kohde-id})))
 
+
+(defn- kasittele-excel [db user {:keys [urakka-id req]}]
+  (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
+        kohteet (p-excel/tallenna-paallystyskohteet-excelista db user workbook urakka-id)]
+   kohteet))
+
+(defn lue-paallystysten-kustannusexcel [db req]
+  (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+        sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db {:urakka urakka-id})))
+        vuosi (Integer/parseInt (get (:params req) "vuosi"))
+        kayttaja (:kayttaja req)]
+    (assert (int? urakka-id) "Urakka ID:n parsinta epäonnistui")
+    (assert kayttaja "Käyttäjän parsinta epäonnistui")
+    (yy/tarkista-urakkatyypin-mukainen-kirjoitusoikeus db kayttaja urakka-id)
+    ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
+    (jdbc/with-db-transaction [db db]
+      (kasittele-excel db kayttaja {:urakka-id urakka-id
+                                    :sopimus-id sopimus-id
+                                    :vuosi vuosi
+                                    :req req})
+      ;; palautetaan päivittyneet kohteet käyttöliittymää varten
+      (transit-vastaus
+        (yllapitokohteet/hae-urakan-yllapitokohteet db kayttaja {:urakka-id urakka-id
+                                                                 :sopimus-id sopimus-id
+                                                                 :vuosi vuosi})))))
+
 (defrecord Paallystys []
   component/Lifecycle
   (start [this]
@@ -851,7 +882,8 @@
           fim (:fim this)
           email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
                   (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+                  (:api-sahkoposti this))
+          excel (:excel-vienti this)]
       (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitukset db user tiedot)))
@@ -880,6 +912,12 @@
                         (fn [user tiedot]
                           (aseta-paallystysilmoituksen-tila db user tiedot))
                         {:kysely-spec ::pot-domain/aseta-paallystysilmoituksen-tila})
+      (julkaise-palvelu http :tuo-paallystyskustannukset-excelista
+                        (wrap-multipart-params (fn [req] (lue-paallystysten-kustannusexcel db req)))
+                        {:ring-kasittelija? true})
+      (when excel
+        (excel-vienti/rekisteroi-excel-kasittelija! excel :paallystyskohteet-excel
+                                                    (partial #'p-excel/vie-paallystyskohteet-exceliin db)))
       this))
 
   (stop [this]
@@ -892,5 +930,8 @@
       :tallenna-paallystysilmoitusten-takuupvmt
       :hae-paallystyksen-maksuerat
       :tallenna-paallystyksen-maksuerat
-      :aseta-paallystysilmoituksen-tila)
+      :aseta-paallystysilmoituksen-tila
+      :tuo-paallystyskustannukset-excelista)
+    (when (:excel-vienti this)
+      (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :paallystyskohteet-excel))
     this))

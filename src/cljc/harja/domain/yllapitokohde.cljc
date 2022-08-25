@@ -1307,3 +1307,20 @@ yllapitoluokkanimi->numero
                 (= (select-keys kohdeosa tr-domain/vali-avaimet)
                    (select-keys rivi tr-domain/vali-avaimet)))
               kohdeosat))))
+
+(defn laske-sarakkeen-summa [sarake kohderivit]
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))
+
+(defn kohteiden-summarivi
+  "Laskee ylläpitokohteen kustannusriveistä summarivin."
+  [kohteet]
+  {:id 0 :nimi "Yhteensä" :yhteenveto true
+   :sopimuksen-mukaiset-tyot (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+   :maaramuutokset (laske-sarakkeen-summa :maaramuutokset kohteet)
+   :arvonvahennykset (laske-sarakkeen-summa :arvonvahennykset kohteet)
+   :sakot-ja-bonukset (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+   :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
+   :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
+   :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})

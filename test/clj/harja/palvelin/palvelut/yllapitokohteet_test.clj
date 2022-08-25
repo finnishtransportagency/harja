@@ -18,7 +18,7 @@
             [harja.palvelin.palvelut
              [yllapitokohteet :refer :all]]
             [harja.palvelin.palvelut.yllapitokohteet.paallystys :refer :all]
-
+            [harja.palvelin.palvelut.yllapitokohteet.paallystyskohteet-excel :as paallystyskohteet-excel]
             [harja.testi :refer :all]
 
             [harja.jms-test :refer [feikki-jms]]
@@ -1751,3 +1751,234 @@
               :toimenpiteet nil
               :paallysteet nil)] tiedot)
         "Sähköpostilähetyksen tiedot OK, eli eivät sisällä poistettujen alikohteiden tietoja.")))
+
+(def excel-rivit-utajarvi-2022
+  (list {:lihavoi? false
+         :rivi [13374
+                "L14"
+                nil
+                "Ouluntie 2"
+                0M
+                [:varillinen-teksti
+                 {:arvo 0
+                  :fmt :raha
+                  :tyyli :disabled}]
+                0M
+                0M
+                [:kaava
+                 {:alkusarake "E"
+                  :kaava :summaa-vieressaolevat
+                  :loppusarake "H"}]]}
+        {:lihavoi? false
+         :rivi [13375
+                "L15"
+                "A"
+                "Puolangantie"
+                400M
+                [:varillinen-teksti
+                 {:arvo 20M
+                  :fmt :raha
+                  :tyyli :disabled}]
+                4543.95M
+                0M
+                [:kaava
+                 {:alkusarake "E"
+                  :kaava :summaa-vieressaolevat
+                  :loppusarake "H"}]]}
+        {:lihavoi? false
+         :rivi [547523069
+                "L42"
+                "B"
+                "Tärkeä kohde mt20 2022"
+                0M
+                [:varillinen-teksti
+                 {:arvo 0
+                  :fmt :raha
+                  :tyyli :disabled}]
+                0M
+                0M
+                [:kaava
+                 {:alkusarake "E"
+                  :kaava :summaa-vieressaolevat
+                  :loppusarake "H"}]]}
+        [nil nil nil nil nil nil nil nil nil]
+        [nil nil nil nil nil nil nil nil nil]
+        [nil
+         nil
+         nil
+         "Yhteensä:"
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 7}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 7}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 7}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 7}]
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 7}]]))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        vuosi (pvm/vuosi (pvm/nyt))
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                              +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi vuosi}))
+        excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
+    (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
+
+(def excel-rivit-muhos-2017
+  (list
+    {:lihavoi? false
+     :rivi [1233534
+            "L03"
+            nil
+            "Leppäjärven ramppi"
+            400M
+            [:varillinen-teksti
+             {:arvo 205M
+              :fmt :raha
+              :tyyli :disabled}]
+            100M
+            2000M
+            4543.95M
+            0M
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "J"}]]}
+    {:lihavoi? false
+     :rivi [54523243
+            "308a"
+            nil
+            "Oulun ohitusramppi"
+            9000M
+            [:varillinen-teksti
+             {:arvo 0
+              :fmt :raha
+              :tyyli :disabled}]
+            200M
+            nil
+            565M
+            100M
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "J"}]]}
+    {:lihavoi? false
+     :rivi [456896958
+            "310"
+            nil
+            "Oulaisten ohitusramppi"
+            500M
+            [:varillinen-teksti
+             {:arvo 0
+              :fmt :raha
+              :tyyli :disabled}]
+            3457M
+            -3000M
+            5M
+            6M
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "J"}]]}
+    {:lihavoi? false
+     :rivi [456896959
+            "666"
+            nil
+            "Kuusamontien testi"
+            500M
+            [:varillinen-teksti
+             {:arvo 0
+              :fmt :raha
+              :tyyli :disabled}]
+            3457M
+            nil
+            5M
+            6M
+            [:kaava
+             {:alkusarake "E"
+              :kaava :summaa-vieressaolevat
+              :loppusarake "J"}]]}
+    [nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil
+     "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]]))
+
+(deftest muodosta-paallystysexcelin-kohteiden-rivit-muhos-2017-vain-yha-kohteet
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+        vuosi 2017
+        kohteet (yllapitokohteet-domain/jarjesta-yllapitokohteet
+                  (hae-urakan-yllapitokohteet (:db jarjestelma)
+                                              +kayttaja-jvh+
+                                              {:urakka-id urakka-id
+                                               :sopimus-id sopimus-id
+                                               :vuosi vuosi
+                                               :vain-yha-kohteet? true}))
+        excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
+    (is (= excel-rivit-muhos-2017 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus hakee vain YHA-kohteet")))
+
+(defn hae-yllapitokohteen-kustannukset  [yhaid]
+  (first (q "SELECT * FROM yllapitokohteen_kustannukset WHERE yllapitokohde = (SELECT id FROM yllapitokohde WHERE yhaid = "yhaid ");")))
+
+(deftest yllapitokohteen-tallennus-yha-idlla
+  (let [db (luo-testitietokanta)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        yhaid 527523069
+        user-id (ffirst (q "SELECT id FROM kayttaja where kayttajanimi = 'jvh'"))
+        kohteen-kustannukset-ennen (hae-yllapitokohteen-kustannukset yhaid)
+        toteutunut-hinta nil ;; vain paikkauskohteille muuta kuin nil
+        kohde {:yhaid yhaid
+               :urakka urakka-id
+               :sopimuksen_mukaiset_tyot 1
+               :bitumi_indeksi 2
+               :kaasuindeksi 3
+               :muokkaaja user-id}
+        _ (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db kohde)
+        kohteen-kustannukset-jalkeen (hae-yllapitokohteen-kustannukset yhaid)]
+    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil]) "kustannukset ennen tallennusta")
+    (is (= (butlast kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset ennen tallennuksen jälkeen")))

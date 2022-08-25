@@ -2,6 +2,7 @@
   (:require [taoensso.timbre :as log]
             [clj-time.format :as df]
             [harja.pvm :as pvm]
+            [harja.geo :as geo]
             [clojure.string :as str])
   (:import (org.joda.time DateTime)
            (java.sql Timestamp)))
@@ -292,13 +293,48 @@
 
           (= 0 (count toimenpidelista))
           ; Varusteiden lisäys, poisto ja muokkaus eivät ole toimenpiteitä Velhossa. Harjassa ne ovat.
-          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "tt01"        ; Tieosoitemuutos
-                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "tt02"        ; Muu tekninen toimenpide
+          (cond (= "tekninen-tapahtuma/tt01" tekninen-tapahtuma) "tt01" ; Tieosoitemuutos
+                (= "tekninen-tapahtuma/tt02" tekninen-tapahtuma) "tt02" ; Muu tekninen toimenpide
                 (and (nil? version-voimassaolo) paattyen) "poistettu" ;Sijaintipalvelu ei palauta versioita
                 (and (nil? version-voimassaolo) (not paattyen)) "lisatty"
                 (= alkaen version-alku) "lisatty"           ; varusteen syntymäpäivä, onnea!
                 (and uusin-versio (some? version-loppu)) "poistettu" ; uusimmalla versiolla on loppu
                 :else "paivitetty"))))
+
+(defn velhogeo->harjageo [geo]
+  (let [tyyppi (get {"MultiLineString" :multiline
+                     "MultiPoint" :multipoint
+                     "LineString" :line
+                     "Point" :point}
+                    (:type geo))]
+    (when geo
+      (cond
+        (= :point tyyppi)
+        (-> {:coordinates (:coordinates geo) :type tyyppi}
+            (geo/clj->pg)
+            (geo/geometry))
+
+        (= :line tyyppi)
+        (-> {:points (:coordinates geo) :type tyyppi}
+            (geo/clj->pg)
+            (geo/geometry))
+
+        (= :multiline tyyppi)
+        (-> {:lines (map
+                      (fn [p] {:type :line :points p})
+                      (:coordinates geo)) :type tyyppi}
+            (geo/clj->pg)
+            (geo/geometry))
+
+        (= :multipoint tyyppi)
+        (-> {:coordinates (mapv
+                      (fn [p] {:type :point :coordinates p})
+                      (:coordinates geo)) :type tyyppi}
+            (geo/clj->pg)
+            (geo/geometry))
+
+        :else
+        (assert false (str "Tuntematon geometriatyyppi Velhosta: " geo))))))
 
 (defn varustetoteuma-velho->harja
   "Muuttaa Velhosta saadun varustetiedon Harjan varustetoteuma muotoon.
@@ -323,6 +359,8 @@
                      :muokattu
                      velho-aika->aika
                      aika->sql)
+        klgeopg (velhogeo->harjageo (:keskilinjageometria kohde))
+
         varustetoteuma {:ulkoinen_oid (:oid kohde)
                         :urakka_id (urakka-id-kohteelle-fn kohde)
                         :tr_numero (:tie alkusijainti)
@@ -330,7 +368,9 @@
                         :tr_alkuetaisyys (:etaisyys alkusijainti)
                         :tr_loppuosa (:osa loppusijainti)
                         :tr_loppuetaisyys (:etaisyys loppusijainti)
-                        :sijainti (sijainti-kohteelle-fn kohde)
+                        :sijainti (or
+                                    klgeopg
+                                    (sijainti-kohteelle-fn kohde)) ;tr-osoite fallbackina
                         :tietolaji tietolaji
                         :lisatieto (varusteen-lisatieto konversio-fn tietolaji kohde)
                         :toteuma (varusteen-toteuma konversio-fn kohde)

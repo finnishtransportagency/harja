@@ -2,9 +2,6 @@
   #?@(:clj  [(:require [clojure.pprint :refer [pprint]])]
       :cljs [(:require [cljs.pprint :refer [pprint]])]))
 
-(defn pyorista-kahteen [numero]
-  (/ (Math/round (* 100 numero)) 100))
-
 (defn round2
   "Round a double to the given precision (number of significant digits)"
   [precision d]

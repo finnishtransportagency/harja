@@ -11,6 +11,8 @@
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.komponentit.liitteet :as liitteet]
+    [harja.palvelin.komponentit.vienti :as vienti]
+    [harja.palvelin.raportointi.excel :as excel]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
      [tapahtumat :as tapahtumat]
@@ -419,7 +421,12 @@
 
   (kutsu-karttakuvapalvelua
     ;; POST
-    [this nimi kayttaja payload koordinaatti extent]))
+    [this nimi kayttaja payload koordinaatti extent])
+  
+  (kutsu-excel-palvelua
+    ;; Palauttaa halutun excelin testiin ennen kuin siitä generoidaan
+    ;; oikea excel-tiedosto, eli raporttielementteinä.
+    [this nimi kayttaja payload]))
 
 (defn- palvelua-ei-loydy [nimi]
   (is false (str "Palvelua " nimi " ei löydy!"))
@@ -494,7 +501,19 @@
          {:parametrit (assoc payload "_" nimi)
           :koordinaatti koordinaatti
           :extent (or extent
-                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])}))
+
+      (kutsu-excel-palvelua [_ nimi kayttaja payload]
+        (with-redefs
+          [;; Sen sijaan, että muodostetaan excel, palautetaan raporttielementit
+           ;; mapissa, jolloin siitä ei yritetä tehdä tiedostoa
+           excel/muodosta-excel (fn [raportti _] {:raportti raportti})
+           ;; parametrien luku onnistuu testeissä ilman kikkailuja, toisin kuin ringin kautta.
+           vienti/lue-body-parametrit identity]
+          ((get @palvelut :excel)
+           {:kayttaja kayttaja
+            :body payload
+            :params {"_" nimi}}))))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]

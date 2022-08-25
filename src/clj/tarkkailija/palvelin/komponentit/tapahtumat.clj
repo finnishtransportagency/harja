@@ -391,7 +391,7 @@
               _ (reset! tarkkailijat {})
               _ (reset! kuuntelijat {})
               _ (reset! ajossa true)
-              ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "sonjaping" tai "urakan_123_tapahtumat".
+              ;; kuuntelijat-mapin avaimina on notifikaatiojonon id, esim "urakan_123_tapahtumat".
               ;; arvona kullakin avaimella on seq async-kanavia (?)
               tapahtuma-loop (thread (loop [kaatui-virheeseen? false
                                             timeout-arvo 0]

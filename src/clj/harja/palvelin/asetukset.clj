@@ -158,6 +158,7 @@
                             :kayttajatunnus s/Str
                             :salasana s/Str
                             :varuste-api-juuri-url s/Str
+                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
                             :varuste-kayttajatunnus s/Str
                             :varuste-salasana s/Str
                             :varuste-urakka-oid-url s/Str
@@ -195,7 +196,7 @@
 
    (s/optional-key :kanavasillat) {:geometria-url s/Str
                                    :paivittainen-tarkistusaika [s/Num]
-                                   :paivitysvali-paivissa s/Num}
+                                   :paivitysvali-paivissa s/Any}
 
    (s/optional-key :tyotunti-muistutukset) {:paivittainen-aika [s/Num]}
 

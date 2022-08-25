@@ -855,9 +855,9 @@
   [hoitokausi kopioi-tuleville? ennen-urakkaa? toimenkuvan-maarat vuosipalkka]
   (if ennen-urakkaa?
     (assoc-in toimenkuvan-maarat [1 10 :kuukausipalkka] vuosipalkka) ;; ennen urakkaa tapahtuvat laitetaan ekalle lokakuulle
-    (let [kuukausipalkka (tyokalut/pyorista-kahteen (/ vuosipalkka 12))
+    (let [kuukausipalkka (tyokalut/round2 2 (/ vuosipalkka 12))
           viimeinen-kuukausi (if-not (= vuosipalkka (* 12 kuukausipalkka))
-                               (tyokalut/pyorista-kahteen (- vuosipalkka (tyokalut/pyorista-kahteen (* 11 kuukausipalkka))))
+                               (tyokalut/round2 2 (- vuosipalkka (tyokalut/round2 2 (* 11 kuukausipalkka))))
                                kuukausipalkka)
           alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
           loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)

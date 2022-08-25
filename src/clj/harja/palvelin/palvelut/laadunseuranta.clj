@@ -117,10 +117,14 @@
   (let [sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
+                             (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
+                                            :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
                              (map konv/alaviiva->rakenne)
                              (map #(konv/decimal->double % :summa))
                              (map #(assoc % :laji (keyword (:laji %)))))
-                       (sanktiot/hae-urakan-sanktiot db urakka-id (konv/sql-timestamp alku) (konv/sql-timestamp loppu)))]
+                       (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                         :alku (konv/sql-timestamp alku)
+                                                         :loppu (konv/sql-timestamp loppu)}))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))

@@ -1,4 +1,6 @@
--- hieno
+ALTER TABLE toteuman_reittipisteet ADD COLUMN IF NOT EXISTS reittipisteiden_kopio reittipistedata[];
+COMMENT ON COLUMN toteuman_reittipisteet.reittipisteiden_kopio IS 'Reittipisteiden varmuuskopio, kun ollaan siirretty talvisuolia pois kevyen liikenteen väyliltä.';
+
 CREATE OR REPLACE FUNCTION siirra_talvisuola_kelvilta(urakka_ INTEGER, alku TIMESTAMP, loppu TIMESTAMP)
     RETURNS INTEGER AS
 $$
@@ -38,7 +40,8 @@ BEGIN
                                   WHERE trp.talvihoitoluokka = ANY(kelvien_talvihoitoluokat)))
         LOOP
             UPDATE toteuman_reittipisteet trp
-            SET reittipisteet = (SELECT ARRAY_AGG((rp.aika, rp.sijainti,
+            SET reittipisteiden_kopio = trp.reittipisteet,
+                reittipisteet = (SELECT ARRAY_AGG((rp.aika, rp.sijainti,
                                                    (CASE
                                                         WHEN rp.talvihoitoluokka = ANY (kelvien_talvihoitoluokat)
                                                             THEN hoitoluokka_pisteelle(rp.sijainti::GEOMETRY,
@@ -53,7 +56,6 @@ BEGIN
             WHERE trp.toteuma = uusi_trp.toteuma;
             maara := maara + count(uusi_trp.reittipisteet);
         END LOOP;
-
 
     PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(
             urakka_::INTEGER,
