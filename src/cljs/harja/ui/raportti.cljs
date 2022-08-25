@@ -92,8 +92,13 @@
       (str "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
 (defmethod muodosta-html :teksti-ja-info [[_ {:keys [arvo info]}]]
-  [:span.teksti-ja-info [:span.arvo (str arvo "\u00A0")]
-   [:span.info [yleiset/tooltip {:suunta :oikea :leveys :levea} [ikonit/harja-icon-status-info] info]]])
+  [:span.teksti-ja-info
+   [:span.arvo (str arvo "\u00A0")]
+   [yleiset/tooltip {:suunta :oikea :leveys :levea
+                     :wrapper-luokka "tooltip-wrapper"
+                     :wrapperin-koko {:leveys 20 :korkeus 20}}
+    [ikonit/harja-icon-status-info]
+    info]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
