@@ -188,9 +188,10 @@
           :rivi? true
           :ryhman-luokka "lomakeryhman-otsikko-tausta"}
          {:nimi :suolarajoitus
-          :otsikko "Suolan max määrä"
+          :otsikko "Suolan max määrä (NaCl ja CaCl2)"
           :tyyppi :positiivinen-numero
           :yksikko "t/ajoratakm"
+          :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true
           :virhe? (validointi/nayta-virhe? [:suolarajoitus] lomake)
           :pakollinen? true
@@ -201,7 +202,7 @@
          {:nimi :formiaatti
           :tyyppi :checkbox
           :palstoja 3
-          :teksti "Alueella tulee käyttää suolan sijaan formiaattia"
+          :teksti "Alueella tulee käyttää formiaattia"
           :rivi-luokka "lomakeryhman-rivi-tausta"})])))
 
 (defn lomake-rajoitusalue
@@ -304,9 +305,11 @@
          {:nimi :kokonaismaara
           :tyyppi :positiivinen-numero
           :palstoja 1
-          :otsikko "Talvisuolan käyttöraja / vuosi"
-          :yksikko "kuivatonnia"
+          :otsikko "Talvisuolan käyttöraja / vuosi (kuivatonnia)"
           :placeholder "Ei rajoitusta"
+          :yksikko "t"
+          :piilota-yksikko-otsikossa? true
+          :vayla-tyyli? true
           :disabled? true})
 
        (lomake/rivi
@@ -315,7 +318,9 @@
           :palstoja 1
           :muokattava? (constantly saa-muokata?)
           :otsikko "Sanktio / ylittävä tonni"
-          :yksikko "€"}
+          :yksikko "€"
+          :piilota-yksikko-otsikossa? true
+          :vayla-tyyli? true}
 
          (when (urakka/indeksi-kaytossa-sakoissa?)
            {:nimi :indeksi
@@ -361,14 +366,15 @@
           :nimi :sanktio_ylittavalta_tonnilta
           :tyyppi :positiivinen-numero
           :palstoja 1
-          :yksikko "€"}
+          :yksikko "€"
+          :piilota-yksikko-otsikossa? true
+          :vayla-tyyli? true}
 
          (when (urakka/indeksi-kaytossa-sakoissa?)
            {:otsikko "Indeksi"
             :nimi :indeksi
             :tyyppi :valinta
             :on-blur #(e! (suolarajoitukset-tiedot/->TallennaRajoitusalueidenSanktiolomake))
-            :on-change #(log "jee change")
             :muokattava? (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
                               ""
