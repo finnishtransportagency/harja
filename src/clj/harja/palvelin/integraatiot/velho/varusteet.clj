@@ -195,7 +195,7 @@
         (lokita-oid-haku oidit url)
         {:tila true :oidit (->> oidit
                                (shuffle)
-                               (take 250))})
+                               (take 2500))})
       (do
         (tallenna-virhe-fn nil virhe-viesti)
         {:tila false :oidit nil}))))
