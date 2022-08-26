@@ -17,7 +17,8 @@
  :npm-deps false ;; if you run Cypress locally, you might need this
  :parallel-build true
  :cache-analysis true
- :compiler-stats true
+ ;; Laita true, jos haluat tarkempaa statistiikkaa käännösajoista
+ :compiler-stats false
  ;; HUOMIO: Älä käytä, jos otat mukaan NPM kirjastoja cljsjs kirjastojen lisäksi
  :aot-cache true
 
