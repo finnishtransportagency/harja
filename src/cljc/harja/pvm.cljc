@@ -365,6 +365,11 @@
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
+(defn jsondate
+  "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
+
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))

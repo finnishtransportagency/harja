@@ -15,6 +15,7 @@
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
+            [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
             [harja.views.hallinta.pohjavesialueidensiirto_nakyma :as pohjavesialueidensiirto-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
@@ -89,8 +90,14 @@
      ^{:key "jarjestelma-asetukset"}
      [jarjestelma-asetukset/jarjestelma-asetukset])
 
-   "Pohjavesialueiden siirto"
-   :pohjavesialueiden-siirto
-   (when true
-     ^{:key "pohjavesialueiden-siirto"}
-     [pohjavesialueidensiirto-nakyma/view])])
+   "Toteumatyökalu"
+   :toteumatyokalu
+   (when (istunto/ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
+     ^{:key "toteumatyokalu"}
+     [toteumatyokalu-nakyma/simuloi-toteuma])
+
+  "Pohjavesialueiden siirto"
+  :pohjavesialueiden-siirto
+  (when true
+    ^{:key "pohjavesialueiden-siirto"}
+    [pohjavesialueidensiirto-nakyma/view])])

@@ -9,11 +9,9 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.loki :refer [log]]
-            [harja.tiedot.hallinta.yhteiset :as yhteiset])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+            [harja.tiedot.istunto :as istunto]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+  (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def +mahdolliset-urakat+
@@ -26,7 +24,6 @@
                                :valittu-jarjestelma "Autoyksikkö Kolehmainen"
                                :valittu-urakka nil
                                :valittu-hallintayksikko nil
-                               ;:lahetysaika "2022-08-10T12:00:00Z"
                                :lahetysaika (pvm/jsondate (pvm/nyt))
                                :ulkoinen-id 123
                                :suorittaja-nimi "Urakoitsija Oy"
@@ -104,32 +101,41 @@
 
 (defrecord HaeHallintayksikonUrakatOnnistui [vastaus])
 (defrecord HaeHallintayksikonUrakatEpaonnistui [vastaus])
+(defrecord HaeKayttajanOikeuksiaOnnistui [vastaus])
+(defrecord HaeKayttajanOikeuksiaEpaonnistui [vastaus])
+
+;; Lisätään oikeudet urakkaan
+(defrecord LisaaOikeudetUrakkaan [urakka-id])
+(defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
+(defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
 
 (defn hae-hallintayksikon-urakat [hal]
-  (let [_ (js/console.log "hae-hallintayksikon-urakat :: hal")
-        _ (tuck-apurit/post! :hallintayksikon-urakat
+  (let [_ (tuck-apurit/post! :hallintayksikon-urakat
             (:id hal)
             {:onnistui ->HaeHallintayksikonUrakatOnnistui
              :epaonnistui ->HaeHallintayksikonUrakatEpaonnistui
              :paasta-virhe-lapi? true})]))
 
+(defn hae-kayttajan-kaytto-oikeudet []
+  (tuck-apurit/post! :hae-jarjestelmatunnuksen-lisaoikeudet {:kayttaja-id (:id @istunto/kayttaja)}
+    {:onnistui ->HaeKayttajanOikeuksiaOnnistui
+     :epaonnistui ->HaeKayttajanOikeuksiaEpaonnistui
+     :paasta-virhe-lapi? true}))
+
 (extend-protocol tuck/Event
 
   Muokkaa
   (process-event [{toteumatiedot :toteumatiedot} app]
-    (let [#_(when-not (= @valittu-urakka (:valittu-urakka toteumatiedot))
-              (do
-                (reset! valittu-urakka (:valittu-urakka toteumatiedot))
-                (nav/valitse-urakka! (:valittu-urakka toteumatiedot))))
-          ;; Tarkista hallintayksikko
-          toteumatiedot (if #_(= @valittu-hallintayksikko (:valittu-hallintayksikko toteumatiedot))
-                          (and (not= (get-in app [:toteumatiedot :valittu-hallintayksikko]) (:valittu-hallintayksikko toteumatiedot)))
+    (let [;; Tarkista hallintayksikko
+          toteumatiedot (if (and (not= (get-in app [:toteumatiedot :valittu-hallintayksikko]) (:valittu-hallintayksikko toteumatiedot)))
                           (do
                             (js/console.log "(get-in app [::toteumatiedot :valittu-hallintayksikko])" (get-in app [:toteumatiedot :valittu-hallintayksikko]))
                             (js/console.log "(:valittu-hallintayksikko toteumatiedot)" (:valittu-hallintayksikko toteumatiedot))
                             ;(reset! valittu-hallintayksikko (:valittu-hallintayksikko toteumatiedot))
                             ;(nav/valitse-hallintayksikko! (:valittu-hallintayksikko toteumatiedot))
                             (hae-hallintayksikon-urakat (:valittu-hallintayksikko toteumatiedot))
+                            ;; Haetaan urakkahaun yhteydessä aina myös tiedot, että onko käyttäjällä oikeudet lisätä urakkaan API:n kautta toteumia :hae-urakat-lisaoikeusvalintaan
+                            (hae-kayttajan-kaytto-oikeudet)
                             (reset! valittu-urakka nil)
                             (-> toteumatiedot
                               (assoc :sopimusid nil)
@@ -142,11 +148,7 @@
           ;; Aseta urakoitsija
           toteumatiedot (if (and (:valittu-urakka toteumatiedot) (get-in toteumatiedot [:valittu-urakka :urakoitsija]))
                           (assoc toteumatiedot :suorittaja-nimi (get-in toteumatiedot [:valittu-urakka :urakoitsija :nimi]))
-                          toteumatiedot)
-          ;_ (js/console.log "Muokkaa :: +mahdolliset-urakat+" (pr-str +mahdolliset-urakat+))
-          ;_ (js/console.log "Muokkaa :: @nav/hallintayksikon-urakkalista" (pr-str @nav/hallintayksikon-urakkalista))
-          ;_ (js/setTimeout (fn [] (js/console.log "Odota hetiki")) 1000)
-          ]
+                          toteumatiedot)]
       (-> app
         (assoc :mahdolliset-urakat (if (and
                                          @nav/hallintayksikon-urakkalista
@@ -238,4 +240,39 @@
       (assoc :koordinaatit nil)
       (assoc :trhaku-kaynnissa? false)))
 
+  HaeKayttajanOikeuksiaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (js/console.log "HaeKayttajanOikeuksiaOnnistui :: vastaus" (pr-str vastaus))
+      (viesti/nayta-toast! "HaeKayttajanOikeuksiaOnnistui" :onnistui)
+      (assoc app :oikeudet-urakoihin vastaus)))
+
+  HaeKayttajanOikeuksiaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeKayttajanOikeuksiaEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+
+  LisaaOikeudetUrakkaan
+  (process-event [{urakka-id :urakka-id} app]
+    (let [payload {:oikeudet (conj [] {:urakka-id urakka-id
+                                       :poistettu false})
+                   :kayttaja-id (:id @istunto/kayttaja)}
+          _ (tuck-apurit/post! :tallenna-jarjestelmatunnuksen-lisaoikeudet
+              payload
+              {:onnistui ->LisaaOikeudetUrakkaanOnnistui
+               :epaonnistui ->LisaaOikeudetUrakkaanEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  LisaaOikeudetUrakkaanOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaOikeudetUrakkaanOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "LisaaOikeudetUrakkaanOnnistui" :onnistui)
+    (hae-kayttajan-kaytto-oikeudet)
+    app)
+
+  LisaaOikeudetUrakkaanEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
   )

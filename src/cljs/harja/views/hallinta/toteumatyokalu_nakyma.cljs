@@ -1,9 +1,6 @@
 (ns harja.views.hallinta.toteumatyokalu-nakyma
   "Työkalu toteumien lisäämiseksi testiurakoille."
-  (:require [reagent.core :refer [atom] :as reagent]
-            [cljs.core.async :refer [<! >! chan close! timeout]]
-            [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.tiedot.hallinta.yhteiset :as yhteiset]
+  (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
@@ -11,19 +8,8 @@
             [harja.ui.napit :as napit]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
-            [harja.ui.yleiset :as yleiset]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.loki :refer [log]]
-            [harja.ui.grid :as grid]
-            [harja.fmt :as fmt]
-            [cljs-time.core :as t]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallintayksikot :as hal]
-            [clojure.string :as str]
-            [harja.ui.yleiset :as y])
+            [harja.tiedot.hallintayksikot :as hal])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -35,7 +21,7 @@
                             true
                             false)
         disable-trhaku? (if (or (nil? (:numero (:tierekisteriosoite toteumatiedot)))
-                                (nil? (:alkuosa (:tierekisteriosoite toteumatiedot)))
+                              (nil? (:alkuosa (:tierekisteriosoite toteumatiedot)))
                               (nil? (:alkuetaisyys (:tierekisteriosoite toteumatiedot)))
                               (nil? (:loppuosa (:tierekisteriosoite toteumatiedot)))
                               (nil? (:loppuetaisyys (:tierekisteriosoite toteumatiedot)))
@@ -44,6 +30,9 @@
                             false)]
     [:div.yhteydenpito
      [:h3 "Reittitoteuman simulointi valitulle urakalle"]
+     [:p "Aloita valitsemalla hallintayksikkö ja sitten urakka."]
+     [:p "Huomaa, että samalla ulkoisella id:llä tehdään toteumaan päivitys. Eli käytä aina uniikkia ulkoista id:tä."]
+     [:p "Käytössäsi on hyvin vähän koko suomen tierekisteristä. Paras tuki on käytössä Raaseporin urakan alueella. Kysy tarvittaessa."]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true
@@ -64,7 +53,7 @@
         :valinnat @hal/vaylamuodon-hallintayksikot
         :valinta-nayta :nimi
         :pakollinen? true}
-       {:id #_ (hash tiedot/+mahdolliset-urakat+)
+       {:id #_(hash tiedot/+mahdolliset-urakat+)
         (hash (:mahdolliset-urakat app))
         :nimi :valittu-urakka
         :otsikko "Valitse urakka"
@@ -118,26 +107,36 @@
   (komp/luo
     (komp/sisaan-ulos
       #(go (do
-             (js/console.log "simuloi-toteuma* :: sisään" @tiedot/nakymassa?)
-             (nav/vaihda-kartan-koko! :L)
+             (nav/vaihda-kartan-koko! :S)                   ;; Otetaan kartta paremmin näkyviin, kun reitin tiedot on saatu renderöityä sinne
              (kartta-tasot/taso-paalle! :tr-valitsin)
              (kartta-tasot/taso-paalle! :organisaatio)
              (reset! tiedot/nakymassa? true)))
       #(do
-         (js/console.log "simuloi-toteuma* :: ulos" @tiedot/nakymassa?)
          (nav/vaihda-kartan-koko! :S)
          (kartta-tasot/taso-pois! :tr-valitsin)
          (kartta-tasot/taso-pois! :organisaatio)
          (reset! tiedot/nakymassa? false)))
     (fn [e! app]
-      (let [valittu-hallintayksikko @nav/valittu-hallintayksikko
-            ;_ (js/console.log "simuloi-toteuma* :: valittu-hallintayksikko: " (pr-str valittu-hallintayksikko))
-            ]
-        (when @tiedot/nakymassa?
-          [:div
-           [kartta/kartan-paikka]
-           [debug/debug app]
-           (toteumalomake e! app)])))))
+      (when @tiedot/nakymassa?
+        [:div
+         [kartta/kartan-paikka]
+         [debug/debug app]
+         (when (:oikeudet-urakoihin app)
+           [:div
+            [:p [:b "Käyttäjällä on oikeus lisätä toteumia seuraaviin urakoihin:"]]
+            (for [urakka (:oikeudet-urakoihin app)]
+              ^{:key (str urakka)}
+              [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]]
+              )])
+         [:div
+          ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
+          (when (and (get-in app [:toteumatiedot :valittu-urakka])
+                  (not (some (fn [u] (when (= (get-in app [:toteumatiedot :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
+            [:p "Lisää oikeudet puuttuvaan urakkaan"]
+            [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
+             #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
+             {:paksu? true}])]
+         (toteumalomake e! app)]))))
 
 (defn simuloi-toteuma []
   [tuck tiedot/data simuloi-toteuma*])
