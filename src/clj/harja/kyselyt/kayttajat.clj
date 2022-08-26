@@ -1,5 +1,6 @@
 (ns harja.kyselyt.kayttajat
-  (:require [jeesql.core :refer [defqueries]]))
+  (:require [jeesql.core :refer [defqueries]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]))
 
 (defqueries "harja/kyselyt/kayttajat.sql"
   {:positional? true})
@@ -8,8 +9,13 @@
   (:exists (first (onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))
 
 (defn onko-kayttajalla-lisaoikeus-urakkaan? [db urakka-id kayttaja-id]
-  (:exists (first (onko-kayttajalla-lisaoikeus-urakkaan db {:urakka urakka-id
-                                                            :kayttaja kayttaja-id}))))
+  (:exists (first
+             ;; Lokaali ympäristöön on sallittu admin käyttäjän toimia myös API rajapinnan käyttäjänä. Voit säätää tätä pois-kytketyt-omimaisuudet setissä asetuksissa.
+             (if (ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
+                    (onko-normikayttajalla-lisaoikeus-urakkaan db {:urakka urakka-id
+                                                              :kayttaja kayttaja-id})
+                    (onko-kayttajalla-lisaoikeus-urakkaan db {:urakka urakka-id
+                                                              :kayttaja kayttaja-id})))))
 
 
 (defn onko-kayttaja-organisaatiossa? [db ytunnus kayttaja-id]

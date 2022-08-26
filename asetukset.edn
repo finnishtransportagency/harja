@@ -235,7 +235,8 @@
                                :itmf-uudelleen-kaynnistys
                                :sonja-sahkoposti
                                :reittitarkistukset
-                               :tiedostopesula}
+                               :tiedostopesula
+                               :salli-hallinnan-apin-kaytto}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
