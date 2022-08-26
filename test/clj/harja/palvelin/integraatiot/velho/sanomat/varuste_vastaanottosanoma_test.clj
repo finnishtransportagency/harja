@@ -239,7 +239,7 @@
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
   ; Toimenpiteet joukko konvertoituu niin, että pidämme vain tutut toimenpiteet.
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json")
-        odotetut-toimenpiteet "korjaus"
+        odotetut-toimenpiteet "tarkastus"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotetut-toimenpiteet (vos/varusteen-toteuma konversio-fn kohde)))))
 
