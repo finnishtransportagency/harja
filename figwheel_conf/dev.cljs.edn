@@ -15,4 +15,14 @@
  :closure-defines {harja.ui.taulukko-debug/TAULUKKO_DEBUG false
                    harja.ui.grid-debug/GRID_DEBUG true}
  :npm-deps false ;; if you run Cypress locally, you might need this
+ :parallel-build true
+ :cache-analysis true
+ ;; Laita true, jos haluat tarkempaa statistiikkaa käännösajoista
+ :compiler-stats false
+ ;; HUOMIO: Älä käytä, jos otat mukaan NPM kirjastoja cljsjs kirjastojen lisäksi
+ :aot-cache true
+
+ ;; HUOMIO: Voi aiheuttaa ongelmia käännöksessä. Aseta true, jos kohtaat outoja käännösongelmia.
+ ;;         Älä aseta :reload-dependents asetusta kuitenkaan koskaan falseksi.
+ :recompile-dependents false
  }
