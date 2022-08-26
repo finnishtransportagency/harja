@@ -2,9 +2,11 @@
 
 (def toteuma->toimenpide-map
   {"lisatty" "Lisätty"
-   "paivitetty" "Päivitetty"
    "poistettu" "Poistettu"
-   "korjaus" "Korjattu"})
+   "tarkastus" "Tarkastettu"
+   "puhdistus" "Puhdistettu"
+   "korjaus" "Korjattu"
+   "paivitetty" "Päivitetty"})
 
 (defn toteuma->toimenpide [toteuma]
   (get
@@ -36,4 +38,3 @@
     tietolaji->varustetyyppi-map
     tietolaji
     (str "Tuntematon: " tietolaji)))
-
