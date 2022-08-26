@@ -53,12 +53,13 @@
     muunna-tiedostolista-kohteiksi))
 
 (defn poimi-tietolaji-oidista [oid]
-  "Poimitaan oid-merkkijonosta tietolaji.
-  Esimerkiksi: oid \"1.2.246.578.4.3.11.507.51457624\" tietolaji 507"
+  ; Poimitaan oid-merkkijonosta tietolaji.
+  ; Esimerkiksi: oid "1.2.246.578.4.3.11.507.51457624" tietolaji 507
+  ; Pätee vain vanhoissa Velhos oideissa!
   (as-> oid a
-        (clojure.string/split a #"\.")
-        (nth a 7)
-        (str "tl" a)))
+    (clojure.string/split a #"\.")
+    (nth a 7)
+    (str "tl" a)))
 
 (defn assertoi-kohteen-tietolaji-on-kohteen-oidissa [kohteet & tietolaji-poikkeus-map]
   (doseq [kohde kohteet]
@@ -229,14 +230,14 @@
            (vos/varusteen-lisatieto konversio-fn "tl506" kohde)))))
 
 (deftest varusteen-yleinen-kuntoluokka-konvertoituu-oikein-test
-  "Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua."
+  ; Yleinen-kuntoluokka ei ole pakollinen, mutta jos on, niin sen pitää konvertoitua.
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/kuntoluokka-konvertoituu-oikein.json")
         odotettu-kuntoluokka "Hyvä"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
     (is (= odotettu-kuntoluokka (vos/varusteen-kuntoluokka konversio-fn kohde)))))
 
 (deftest varusteen-toimenpiteet-konvertoituu-oikein-test
-  "Toimenpiteet joukko on konvertoituu niin, että pidämme vain tutut toimenpiteet."
+  ; Toimenpiteet joukko konvertoituu niin, että pidämme vain tutut toimenpiteet.
   (let [kohde (slurp->json "test/resurssit/velho/varusteet/toimenpiteet-konvertoituu-oikein.json")
         odotetut-toimenpiteet "korjaus"
         konversio-fn (partial koodistot/konversio (:db jarjestelma))]
@@ -248,9 +249,9 @@
         muokattu-kohde (assoc-in kohde [:version-voimassaolo :alku] "2019-10-15")
         uusin-kohde (assoc muokattu-kohde :uusin-versio true)
         poistettu-kohde (assoc-in uusin-kohde [:version-voimassaolo :loppu] "2021-11-01") ; Oletus: historian-viimeinen ja version-voimassaolo.loppu!=null ==> poistettu
-        tarkastettu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp01"])
-        puhdistettu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp02"])
-        korjattu-kohde (assoc-in muokattu-kohde [:toimenpiteet] ["varustetoimenpide/vtp07"])
+        tarkastettu-kohde (assoc-in muokattu-kohde [:ominaisuudet :toimenpiteet] ["varustetoimenpide/vtp01"])
+        puhdistettu-kohde (assoc-in muokattu-kohde [:ominaisuudet :toimenpiteet] ["varustetoimenpide/vtp02"])
+        korjattu-kohde (assoc-in muokattu-kohde [:ominaisuudet :toimenpiteet] ["varustetoimenpide/vtp07"])
         kohteet-ja-toteumatyypit [{:kohde uusi-kohde :odotettu-toteumatyyppi "lisatty"}
                                   {:kohde muokattu-kohde :odotettu-toteumatyyppi "paivitetty"}
                                   {:kohde poistettu-kohde :odotettu-toteumatyyppi "poistettu"}
