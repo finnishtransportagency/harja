@@ -239,7 +239,7 @@
                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
                        {:disabled disabled? :paksu? true}]]
                      [:div.loppuun
-                      (when (:rajoitusalue_id lomake-tila)
+                      (when muokkaustila?
                         [napit/poista
                          "Poista"
                          #(let [poista-kaikilta-vuosilta?-atom (atom false)]
