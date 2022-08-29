@@ -160,6 +160,10 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           true)))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (if-not (ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
+            false
+            true))))
     this)
 
   (stop [{http :http-palvelin :as this}]
