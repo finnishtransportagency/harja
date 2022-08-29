@@ -314,7 +314,7 @@
                                                                                          ::t/lisatieto          nil
                                                                                          ::t/maara              nil}]}}
                              :velho-varusteet {:valinnat {:hoitokauden-alkuvuosi nil
-                                                          :hoitokauden-kuukausi nil
+                                                          :hoitovuoden-kuukausi nil
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
                                                           :toteuma nil}
