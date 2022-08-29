@@ -212,6 +212,17 @@
         :headers (lisaa-request-headerit xml? request-origin)}
        ))))
 
+(defn tee-optimoitu-json-vastaus
+  "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
+  Payload on Clojure dataa, joka muunnetaan JSON-dataksi."
+  [status payload request-origin ]
+   (if payload
+     {:status status
+      :headers (lisaa-request-headerit false request-origin)
+      :body (cheshire/generate-string payload)}
+     {:status status
+      :headers (lisaa-request-headerit false request-origin)}))
+
 (defn kasittele-invalidi-json [virheet kutsu resurssi]
   (if (> (count kutsu) 10000)
     (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON:n 10000 ensimmäistä merkkiä: %s. " resurssi virheet (pr-str (str/join (take 10000 kutsu)))))
@@ -421,6 +432,40 @@
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
+
+(defn kasittele-kevyesti-get-kutsu
+  "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
+   tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
+   Vain ulospäin lähtevä data validoidaan annetun scheman mukaisesti. Tämä siis poikkeaa hieman toisest kasittele-kutsu
+   funktiosta.
+
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe."
+
+  [db integraatioloki resurssi request kasittele-kutsu-fn vaadi-analytiikka-oikeus?]
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers {"Content-Type" "text/plain"}
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [kutsun-kesto-alkaa (System/currentTimeMillis)
+          request-origin (get (:headers request) "origin")
+          kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request nil))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    nil
+                    parametrit
+                    #(let
+                       [_ (vaadi-jarjestelmaoikeudet db kayttaja vaadi-analytiikka-oikeus?)]
+                       (tee-optimoitu-json-vastaus 200 (kasittele-kutsu-fn parametrit kayttaja db) request-origin)))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi {:status (:status vastaus)
+                                                  :body "Liian iso logitettavaksi"} tapahtuma-id))
+      (do
+        (log/info (str "Optimoitu kutsu: " resurssi " ajoaika: " (- (System/currentTimeMillis) kutsun-kesto-alkaa) " ms"))
+        vastaus))))
 
 (defn kasittele-kutsu-async
   "Käsittelee asynkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja

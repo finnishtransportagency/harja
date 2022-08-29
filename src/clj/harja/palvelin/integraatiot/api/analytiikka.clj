@@ -4,8 +4,9 @@
             [clojure.spec.alpha :as s]
             [compojure.core :refer [POST GET DELETE]]
             [clojure.string :refer [join]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-get-kutsu]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -62,13 +63,13 @@
         koordinaatit (when sijainnit {:x (str/replace (first sijainnit) #"\(" "")
                                       :y (str/replace (second sijainnit) #"\)" "")})
         reitti (-> reitti
-                      (update-in [:reittipiste] dissoc :sijainti)
-                      (assoc-in [:reittipiste :koodinaatit] koordinaatit))]
+                 (update-in [:reittipiste] dissoc :sijainti)
+                 (assoc-in [:reittipiste :koodinaatit] koordinaatit))]
     reitti))
 
 (defn rakenna-reittipiste-tehtavat [reitti]
   (let [tehtavat (:tehtavat (:reittipiste reitti))
-        tehtavat (mapv
+        tehtavat (map
                    #(-> %
                       (assoc-in [:tehtava :id] (:toimenpidekoodi %))
                       (dissoc :toimenpidekoodi))
@@ -80,7 +81,7 @@
 
 (defn rakenna-reittipiste-materiaalit [reitti materiaalikoodit]
   (let [materiaalit (:materiaalit (:reittipiste reitti))
-        materiaalit (mapv
+        materiaalit (map
                       (fn [materiaali]
                         (let [yksikko (:yksikko (first (filter (comp #{(:materiaalikoodi materiaali)} :id) materiaalikoodit)))
                               maara (:maara materiaali)]
@@ -103,11 +104,12 @@
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
                                                                        :loppuaika loppuaika} )
         toteumat (->> toteumat
-                   ;; Muuta :f1 tyyppiset kolumnit oikean nimisiksi
-                   (mapv #(update % :toteumatehtavat konversio/jsonb->clojuremap))
-                   (mapv #(update % :toteumamateriaalit konversio/jsonb->clojuremap))
-                   (mapv #(update % :reitti konversio/jsonb->clojuremap))
-                   (mapv #(update % :toteumatehtavat
+                   (map (fn [toteuma]
+                           (-> toteuma
+                             (update :reitti konversio/jsonb->clojuremap)
+                             (update :toteumatehtavat konversio/jsonb->clojuremap)
+                             (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+                   (map #(update % :toteumatehtavat
                             (fn [rivit]
                               (keep
                                 (fn [r]
@@ -115,7 +117,7 @@
                                     (clojure.set/rename-keys db-tehtavat->avaimet)
                                     (konversio/alaviiva->rakenne)))
                                 rivit))))
-                   (mapv #(update % :toteumamateriaalit
+                   (map #(update % :toteumamateriaalit
                             (fn [rivit]
                               (keep
                                 (fn [r]
@@ -124,9 +126,9 @@
                                       (clojure.set/rename-keys db-materiaalit->avaimet)
                                       (konversio/alaviiva->rakenne))))
                                 rivit))))
-                   (mapv #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
+                   (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
                                                       :toteumatehtavat :toteuma_tehtavat}))
-                   (mapv #(update % :reitti
+                   (map #(update % :reitti
                             (fn [rivit]
                               (keep
                                 (fn [r]
@@ -141,9 +143,8 @@
                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
                                     r))
                                 rivit)))))
-
         toteumat {:reittitoteumat
-                  (mapv (fn [toteuma]
+                  (map (fn [toteuma]
                           (konversio/alaviiva->rakenne toteuma))
                     toteumat)}]
     toteumat))
@@ -154,12 +155,10 @@
     (julkaise-reitti
       http :analytiikka-toteumat
       (GET "/api/analytiikka/toteumat/:alkuaika/:loppuaika" request
-        (kasittele-get-kutsu db integraatioloki
+        (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-toteumat request
-          json-skeemat/analytiikkaportaali-toteuma-vastaus
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
-          true)))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (if-not (ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
             false
