@@ -226,7 +226,7 @@
 ;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
 (deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
   (let [tunnus 11244001
-        vanha-suola 100M
+        vanha-suola 6.6M
         odotettu-tie 846
         suolaa 123
         odotettu-suolaa 123M
