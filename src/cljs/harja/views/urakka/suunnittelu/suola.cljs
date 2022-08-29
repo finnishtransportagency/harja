@@ -208,26 +208,24 @@
 (defn lomake-rajoitusalue
   "Rajoitusalueen lisäys/muokkaus"
   [e! {:keys [lomake valittu-hoitovuosi] :as app} urakka]
-  (let [;; Aseta hoitovuosi lomakkeelle, mikäli sitä ei ole
+  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
+        ;; Aseta hoitovuosi lomakkeelle, mikäli sitä ei ole
         rajoituslomake (if (nil? (:hoitokauden-alkuvuosi lomake))
                          (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
                          lomake)
-        muokkaustila? true
-        disabled? (not (get-in app [:lomake ::tila/validi?]))
-        ;; TODO: Oikeustarkastukset
-        ]
+        muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
+        disabled? (or (not (get-in app [:lomake ::tila/validi?])) (not saa-muokata?))]
     [:div
        #_ [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
-       :voi-muokata? true
+       :voi-muokata? saa-muokata?
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :otsikko [:div (when muokkaustila?
-                        (if (:rajoitusalue_id rajoituslomake) "Muokkaa rajoitusta" "Lisää rajoitusalue"))
+       :otsikko [:div (when saa-muokata?
+                        (if muokkaustila? "Muokkaa rajoitusta" "Lisää rajoitusalue"))
                  [:div.small-text.harmaa
                   (str (urakka/hoitokauden-jarjestysnumero valittu-hoitovuosi (:loppupvm urakka)) ". hoitovuosi"
                     " (" (pvm/hoitokausi-str-alkuvuodesta-vuodet valittu-hoitovuosi) ")")]]
-       ;; TODO: Muokkaus
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
                     [:div.flex-row
@@ -267,7 +265,8 @@
                               [rajoituksen-poiston-varmistus-modaali e! {:lomake-tila lomake-tila
                                                                          :poista-kaikilta-vuosilta?-atom poista-kaikilta-vuosilta?-atom
                                                                          :urakka urakka}]))
-                         {:vayla-tyyli? true}])
+                         {:vayla-tyyli? true
+                          :disabled disabled?}])
                       [napit/yleinen-toissijainen
                        "Peruuta"
                        #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
