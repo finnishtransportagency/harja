@@ -890,10 +890,14 @@
         paivitetyt (jaa-vuosipalkka-kuukausille hoitokausi kopioi-tuleville? (:ennen-urakkaa? rivi) toimenkuvan-maarat (:vuosipalkka rivi))
         rivi (assoc rivi :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
         tiedot @atomi
+        tiedot-muuttuneet? (not= 
+                             (get tiedot (:tunniste rivi))
+                             rivi)
         tiedot (assoc-in tiedot [(:tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
         _ (reset! atomi tiedot)]
     ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
-    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 1)))
+    (when tiedot-muuttuneet?
+      (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 1))))
 
 (defn- paivita-toimenkuvan-vuosiloota
   [hoitokausi [toimenkuva toimenkuvan-tiedot]]
