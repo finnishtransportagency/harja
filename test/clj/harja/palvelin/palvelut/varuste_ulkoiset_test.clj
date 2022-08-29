@@ -93,13 +93,12 @@
                              "1.2.246.578.4.3.12.512.310173997"]
                             {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :kuntoluokat ["Erittäin hyvä" "Hyvä"] }))
 
-(deftest hae-vain-urakan-erittain-hyvat-paivitetyt-varusteet
-  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173997"]
-                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :kuntoluokat ["Erittäin hyvä"] :toteuma "paivitetty"}))
+(deftest hae-vain-urakan-hyvat-paivitetyt-varusteet
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173998"]
+                            {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2020 :kuntoluokat ["Hyvä"] :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-paivitetyt-varusteet
-  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"
-                             "1.2.246.578.4.3.12.512.310173997"]
+  (assertoi-saatu-oid-lista ["1.2.246.578.4.3.12.512.310173994"]
                             {:urakka-id urakka-id-35 :hoitokauden-alkuvuosi 2019 :toteuma "paivitetty"}))
 
 (deftest hae-vain-urakan-tietolaji512-varusteet
@@ -143,7 +142,7 @@
                   :loppupvm nil
                   :muokkaaja "migraatio"
                   :tietolaji "tl506"
-                  :toteuma "paivitetty"
+                  :toteuma "tarkastus"
                   :tr-alkuetaisyys aeta
                   :tr-alkuosa aosa
                   :tr-loppuetaisyys nil
@@ -302,7 +301,7 @@
                          "migraatio"]}
                  {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
                          "Tie 4 / 421 / 1904"
-                         "Lisätty"
+                         "Korjattu"
                          "Viemärit"
                          nil
                          "Tyydyttävä"
@@ -316,7 +315,7 @@
                          "migraatio"]}
                  {:rivi [#inst "2020-09-29T21:00:00.000-00:00"
                          "Tie 4 / 422 / 648"
-                         "Päivitetty"
+                         "Tarkastettu"
                          "Liikennemerkit"
                          nil
                          "Erittäin hyvä"

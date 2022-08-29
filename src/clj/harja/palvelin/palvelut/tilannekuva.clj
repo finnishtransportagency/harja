@@ -779,7 +779,8 @@ paallystyskohdeosan-tiedot-xf
   "Hakee klikkauspisteen perusteella kohteessa olevan päällystystyön tiedot"
   [db user {:keys [x y toleranssi nykytilanne? alku loppu] :as parametrit}]
   (let [urakat (rajaa-urakat-hakuoikeudella db user parametrit)]
-    (when-not (empty? urakat)
+    (if (empty? urakat)
+      []
       (let [vastaus (into []
                           paallystyskohdeosan-tiedot-xf
                           (q/hae-paallystysten-tiedot db {:x x :y y

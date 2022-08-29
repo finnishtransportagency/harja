@@ -144,7 +144,7 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.11"]
+                 [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
