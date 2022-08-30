@@ -1,4 +1,5 @@
 
+
 # Väylän Harja-järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
@@ -7,6 +8,10 @@ client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bo
 Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
 
 Autentikointiin käytetään KOKAa.
+
+@startuml
+A->B
+@enduml
 
 ## Hakemistorakenne ##
 
@@ -305,6 +310,8 @@ Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistet
 sivun rakenteesta.
 
 ### Tievelho
+
+Tievelhon varustetapahtumien tuonnin sekvenssikaavio löytyy sekalaista/Tievelho-varustet-tuonti.puml dokumentista.
 
 Testiajoja voi suorittaa kutsumalla REPL:ssa:
 ```

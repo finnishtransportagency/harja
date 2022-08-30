@@ -1,0 +1,49 @@
+// https://plantuml.com
+// https://plugins.jetbrains.com/plugin/7017-plantuml-integration
+@startuml
+title Tievelho varustetapahtumien tuonti
+participant "tuo-varusteet" as tuo_varusteet
+participant "tuo-urakat" as tuo_urakat
+participant vastaanottosanoma as vs
+participant db as db
+participant token
+participant tunnisteet
+participant kohteet
+
+note over token, kohteet: Velho
+tuo_varusteet->token : Authentication Request
+note right:  kutsutaan uudelleen tarvittaessa
+token-->tuo_varusteet: token
+
+tuo_urakat->tunnisteet: hae MHU tunnisteet
+tuo_urakat->kohteet: hae urakoiden tiedot
+loop
+  tuo_urakat->db: päivitä velho-oid urakkaan
+end
+loop kaikille 13 tietolähteelle
+    tuo_varusteet->db: tietolähteen viime haun aikaleima
+    activate db
+    db-->tuo_varusteet: aikaleima
+    deactivate db
+    tuo_varusteet->tunnisteet: hae muuttuneet tunnisteet
+    tuo_varusteet->db: hae virheelliset tunnisteet
+    note right: Harja ei siivoa näitä
+    tuo_varusteet->tuo_varusteet: vähennä virheelliset tunnisteet
+    loop partitioi ja hae (maks. 1000 kerralla)
+        tuo_varusteet->kohteet: hae partition kohteiden tiedot
+    loop jokaiselle kohteelle
+        tuo_varusteet->vs: konversio
+        tuo_varusteet->vs: tarkistus
+        alt jos ok
+            tuo_varusteet->db: tallennus insert / update
+        else virhe eri tauluun
+            tuo_varusteet->db: virhe ja sen tiedot
+        end
+    end
+    opt jos kaikki tietolähteessä onnistuivat
+        tuo_varusteet->db: tallenna tietolähteen viime haun aikaleima
+    end
+end
+@enduml
+
+
