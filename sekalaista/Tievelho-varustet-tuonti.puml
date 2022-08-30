@@ -22,6 +22,7 @@ tuo_urakat->kohteet: hae urakoiden tiedot
 loop
   tuo_urakat->db: päivitä velho-oid urakkaan
 end
+
 loop kaikille 13 tietolähteelle
     tuo_varusteet->db: tietolähteen viime haun aikaleima
     activate db
@@ -33,13 +34,14 @@ loop kaikille 13 tietolähteelle
     tuo_varusteet->tuo_varusteet: vähennä virheelliset tunnisteet
     loop partitioi ja hae (maks. 1000 kerralla)
         tuo_varusteet->kohteet: hae partition kohteiden tiedot
-    loop jokaiselle kohteelle
-        tuo_varusteet->vs: konversio
-        tuo_varusteet->vs: tarkistus
-        alt jos ok
-            tuo_varusteet->db: tallennus insert / update
-        else virhe eri tauluun
-            tuo_varusteet->db: virhe ja sen tiedot
+        loop jokaiselle kohteelle
+            tuo_varusteet->vs: konversio
+            tuo_varusteet->vs: tarkistus
+            alt jos ok
+                tuo_varusteet->db: tallennus insert / update
+            else virhe eri tauluun
+                tuo_varusteet->db: virhe ja sen tiedot
+            end
         end
     end
     opt jos kaikki tietolähteessä onnistuivat
@@ -47,5 +49,3 @@ loop kaikille 13 tietolähteelle
     end
 end
 @enduml
-
-
