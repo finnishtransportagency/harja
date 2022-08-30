@@ -171,7 +171,8 @@
                               {:body (.stringify js/JSON (clj->js (koostettu-data app)))
                                :content-type :json
                                :accect :json
-                               :headers {"OAM_REMOTE_USER" "ivalo-api"}}))]
+                               ;:headers {"OAM_REMOTE_USER" "ivalo-api"}
+                               }))]
             (if (k/virhe? vastaus)
               (virhe!)
               (tulos!))))
