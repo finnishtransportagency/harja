@@ -48,11 +48,10 @@
                     :tyhja (if (nil? toteumat)
                              [yleiset/ajax-loader "Toteumia haetaan..."]
                              "Ei toteumia")}
-         [{:tyyppi :vetolaatikon-tila :leveys 0.05}
-          {:otsikko "Alkoi" :nimi :alkanut :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
+         [{:otsikko "Alkoi" :nimi :alkanut :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
           {:otsikko "Päättyi" :nimi :paattynyt :tyyppi :pvm :fmt pvm/pvm-aika-klo-suluissa :leveys 1}
           {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt fmt/pyorista-ehka-kolmeen :tasaa :oikea :leveys 1}
-          {:otsikko "ID / lisätieto" :nimi :lisatieto :leveys 2}]
+          {:otsikko "ID / lisätieto" :nimi :lisatieto :leveys 3}]
          toteumat]))))
 
 
@@ -67,7 +66,7 @@
                :hoitokauden-alkuvuosi 2021}))))
     (fn [e! app rivi]
       (let [valittu-rajoitusalue (some #(when (= rajoitusalue_id (:rajoitusalue_id %)) %) (:rajoitusalueet app))
-            toteumien-summatiedot (:suolasummat valittu-rajoitusalue) #_ (get @tiedot/urakan-rajoitusalueiden-summatiedot rajoitusalue_id)]
+            toteumien-summatiedot (:suolasummat valittu-rajoitusalue)]
         [grid/grid {:tunniste :rivi-id
                     :piilota-muokkaus? true
                     ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
@@ -81,13 +80,13 @@
                     :tyhja (if (nil? toteumien-summatiedot)
                              [yleiset/ajax-loader "Toteumien yhteenvetoja haetaan..."]
                              "Ei toteumia")}
-         [{:tyyppi :vetolaatikon-tila :leveys 0.18}
-          {:otsikko "Päivämäärä" :hae :pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 0.8}
-          {:otsikko "Materiaali" :nimi :materiaali-nimi :leveys 1}
+         [{:tyyppi :vetolaatikon-tila :leveys 0.5}
+          {:otsikko "Päivämäärä" :hae :pvm :tyyppi :pvm :fmt pvm/pvm-opt :leveys 1}
+          {:otsikko "Materiaali" :nimi :materiaali-nimi :leveys 2}
           {:otsikko "Käytetty määrä (t)" :nimi :maara :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–")
            :tasaa :oikea :leveys 1}
           {:otsikko "Toteumia" :nimi :lukumaara :tasaa :oikea :leveys 1}
-          {:otsikko "Lisätieto" :nimi :koneellinen? :fmt #(when % "Koneellisesti raportoitu") :leveys 1}]
+          {:otsikko "Lisätieto" :nimi :koneellinen? :fmt #(when % "Koneellisesti raportoitu") :leveys 2}]
          toteumien-summatiedot]))))
 
 (defn taulukko-rajoitusalueet
@@ -95,9 +94,13 @@
   Määrittelee tason 1 ja 2 vetolaatikot, joista pääsee sukeltamaan rajoitusalueen suolojen käytön yhteenvetoon ja sieltä
   vielä tiettyyn suolariviin liittyviin toteutumiin."
   [e! {:keys [rajoitusalueet] :as app}]
-  (let [vetolaatikot (into {}
+  (let [_ (js/console.log "rajoitusalueet" (pr-str rajoitusalueet))
+        ;; Siivotaan pois ne rajoitusalueet, joilla ei ole toteumia
+        vetolaatikon-rajoitusalueet (keep #(when (or (:suolatoteumat %) (:formiaattitoteumat %))
+                                             %) rajoitusalueet)
+        vetolaatikot (into {}
                        (map (juxt :rajoitusalue_id (fn [rivi] [vetolaatikko-taso-1 e! app rivi])))
-                       rajoitusalueet)]
+                       vetolaatikon-rajoitusalueet)]
     [grid/grid {:tunniste :rajoitusalue_id
                 :piilota-muokkaus? true
                 ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
