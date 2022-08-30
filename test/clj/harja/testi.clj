@@ -1637,9 +1637,8 @@
           FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
 
 (defn hae-kaikki-integraatioviestit []
-  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
-                      osoite, kasitteleva_palvelin
-                 FROM integraatioviesti;")))
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
+                 FROM integraatioviesti ORDER BY integraatiotapahtuma ASC, id asc ;")))
 
 (defn nykyhetki-iso8061-formaatissa-menneisyyteen
   "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
