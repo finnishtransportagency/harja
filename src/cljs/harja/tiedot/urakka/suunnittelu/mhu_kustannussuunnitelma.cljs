@@ -23,8 +23,6 @@
             [harja.ui.modal :as modal]
             [reagent.core :as r]
             [taoensso.timbre :as log]
-            [harja.ui.grid.protokollat :as grid-protokolla]
-            [harja.fmt :as fmt]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]
                    [harja.ui.taulukko.grid :refer [jarjesta-data triggeroi-seurannat]]
@@ -1207,7 +1205,7 @@
                                                         (keyword (str "kuukausitasolla?" yksiloiva-nimen-paate)) any?
                                                         (keyword (str "johto-ja-hallintokorvaus" yksiloiva-nimen-paate)) any?)))
                                             {}
-                                            (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))
+                                            (pohjadatan-versio))))
 
 (defn jh-yhteenvetopaivitys
   [tila arvo
@@ -1233,7 +1231,6 @@
                                     (get-in tila [:gridit :johto-ja-hallintokorvaukset :yhteenveto omanimi :maksukausi])
                                     maksukausi))
         domain-paivitys (fn [tila]
-                          (println "domian")
                           (reduce (fn [tila hoitokauden-numero]
                                     (println "domain red" hoitokauden-numero)
                                     (update-in tila
@@ -1241,9 +1238,7 @@
                                         [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero)]
                                         [:domain :johto-ja-hallintokorvaukset toimenkuva maksukausi (dec hoitokauden-numero)])
                                       (fn [hoitokauden-jh-korvaukset]
-                                        (println "domian" hoitokauden-jh-korvaukset)
                                         (mapv (fn [kuukauden-jh-korvaus]
-                                                (println "domian " kuukauden-jh-korvaus)
                                                 ;; Päivitetään kuukauden arvot, jos kuukausi liittyy valittuun maksukauteen.
                                                 (if (some #{(:kuukausi kuukauden-jh-korvaus)} paivitettavat-kuukaudet)
                                                   (let [kuukauden-jh-korvaus
@@ -1404,7 +1399,7 @@
                                       (map merge
                                         arvot
                                         johdetut-arvot))))))}})))
-          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)))
+          (pohjadatan-versio))))
 
     ;; ### Asetus-kuvaus
     {:aseta-tunnit! (partial aseta-maara!
@@ -1428,7 +1423,7 @@
                                     [:gridit :johto-ja-hallintokorvaukset :johdettu toimenkuva maksukausi]
                                     (vec (repeat (kk-v-toimenkuvan-kuvaukselle toimenkuva-kuvaus) {}))))
                           $
-                          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
+                          (pohjadatan-versio))
                         (reduce (fn [tila jarjestysnumero]
                                   (let [nimi (jh-omienrivien-nimi jarjestysnumero)]
                                     (assoc-in tila
@@ -1510,7 +1505,7 @@
                                     :tuntipalkka-indeksikorjattu tuntipalkka-indeksikorjattu
                                     :kk-v kk-v})))}})))
         {}
-        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
+        (pohjadatan-versio))
 
       ;; Itse lisättyjen toimenkuvien seuranta
       (reduce (fn [seurannat jarjestysnumero]
@@ -1596,7 +1591,7 @@
                 (assoc rajapinnat
                   (keyword (str "yhteenveto" yksiloiva-nimen-paate)) any?)))
       {}
-      (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
+      (pohjadatan-versio))
     (reduce (fn [rajapinnat index]
               (let [nimi (jh-omienrivien-nimi index)]
                 (merge rajapinnat
@@ -1605,7 +1600,6 @@
       (range 1 (inc jh-korvausten-omiariveja-lkm)))))
 
 (defn johto-ja-hallintokorvaus-yhteenveto-dr []
-  #_(let [rajapinnat ])
   (grid/datan-kasittelija tiedot/suunnittelu-kustannussuunnitelma
     johto-ja-hallintokorvaus-yhteenveto-rajapinta
     (merge
@@ -1622,7 +1616,7 @@
                   {(keyword (str "yhteenveto" yksiloiva-nimen-paate))
                    {:polut [[:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto toimenkuva maksukausi]]
                     :haku #(vec (concat [toimenkuva-formatoitu] (when-not (post-2022?) [kk-v]) %))}}))
-          (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))
+          (pohjadatan-versio)))
       (reduce (fn [rajapinnat index]
                 (let [nimi (jh-omienrivien-nimi index)]
                   (merge rajapinnat
@@ -1676,7 +1670,7 @@
                                  yhteensa-arvot)
                                (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto :yhteenveto-indeksikorjattu toimenkuva maksukausi]
                                  yhteensa-indeksikorjatut-arvot))))}}))
-        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata))))
+        (pohjadatan-versio)))))
 
 (defn paivita-solun-arvo [{:keys [paivitettava-asia arvo solu ajettavat-jarjestykset triggeroi-seuranta?]
                            :or {ajettavat-jarjestykset false triggeroi-seuranta? false}}
@@ -2212,7 +2206,7 @@
                                             (group-by #(pvm/paivamaaran-hoitokausi (:aika %))
                                               taytetty-jh-data))))))))))
         {}
-        (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)
+        (pohjadatan-versio))
       ;; Omat toimenkuvat
       (first
         (reduce
@@ -2478,7 +2472,7 @@
            :yhteenveto (reduce (fn [yhteenveto-otsikot {:keys [toimenkuva maksukausi] :as toimenkuva-kuvaus}]
                                  (assoc-in yhteenveto-otsikot [toimenkuva maksukausi :toimenkuva] (toimenkuva-formatoitu toimenkuva-kuvaus)))
                          {}
-                         (pohjadatan-versio) #_johto-ja-hallintokorvaukset-pohjadata)})
+                         (pohjadatan-versio))})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
           {:otsikot
 {:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}

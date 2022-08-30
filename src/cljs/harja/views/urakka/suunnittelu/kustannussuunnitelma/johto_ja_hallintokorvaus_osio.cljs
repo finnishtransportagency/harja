@@ -219,7 +219,7 @@
                                                                {:tyyppi :tyhja}
                                                                {:tyyppi :tyhja}
                                                                {:tyyppi :tyhja}]})))}]})))
-                     (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
+                     (t/pohjadatan-versio))
 
         muokattavat-rivit (mapv (fn [index]
                                   (let [rivin-nimi (t/jh-omienrivien-nimi index)]
@@ -448,7 +448,7 @@
                                                                                     (grid/hae-grid rivi :lapset))))
                                                                    (grid/hae-grid data-sisalto-grid :lapset))))}}))]))
           [0 {}]
-          (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
+          (t/pohjadatan-versio))
 
         muokkauskasittelijat (second
                                (reduce (fn [[rivi-index grid-kasittelijat] nimi-index]
@@ -523,7 +523,7 @@
                                                                            (when (and (= toimenkuva (:toimenkuva jh-pohjadata))
                                                                                    (= maksukausi (:maksukausi jh-pohjadata)))
                                                                              index))
-                                                             (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata))]]
+                                                             (t/pohjadatan-versio)))]]
                                   (rividisable! g index kuukausitasolla?)))))}
 
               ;; Näyttää tai piilottaa "ennen urakkaa"-rivit. VHAR-3127
@@ -632,7 +632,7 @@
                         :toiminto! (fn [g tila oma-jh-korvausten-tila kuukausitasolla?]
                                      (let [hoitokauden-numero (get-in tila [:suodattimet :hoitokauden-numero])
                                            toimenkuva (get-in oma-jh-korvausten-tila [(dec hoitokauden-numero) 0 :toimenkuva])
-                                           index (dec (+ (count (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
+                                           index (dec (+ (count (t/pohjadatan-versio))
                                                         jarjestysnumero))
                                            yhteenvetorivi (if (grid/rivi? (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0]))
                                                             (grid/get-in-grid g [::g-pohjat/data index ::t/data-yhteenveto 0])
@@ -643,7 +643,7 @@
                                              true)
                                            (disable-osa-indexissa! yhteenvetorivi #{1 2 4} true))
                                          (do (rividisable! g
-                                               (dec (+ (count (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
+                                               (dec (+ (count (t/pohjadatan-versio))
                                                       jarjestysnumero))
                                                kuukausitasolla?)
                                              (disable-osa-indexissa! yhteenvetorivi #{2 4} false)))))}})))
@@ -687,7 +687,7 @@
                                                     (if sisaltaa-erottimen?
                                                       (fmt/desimaaliluku (clj-str/replace (str teksti) "," ".") 1 true)
                                                       teksti))))))}]})
-                     (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)
+                     (t/pohjadatan-versio))
              :footer (let [osat (vec (repeat (if (t/post-2022?) 6 7)
                                    {:tyyppi :teksti
                                     :luokat #{"table-default" "table-default-sum"}
@@ -749,7 +749,7 @@
                                                                                      :solun-polun-pituus 1
                                                                                      :datan-kasittely identity}})]))
                    [0 {}]
-                   (t/pohjadatan-versio) #_t/johto-ja-hallintokorvaukset-pohjadata)))))))
+                   (t/pohjadatan-versio))))))))
 
 
 ;; | -- Gridit päättyy

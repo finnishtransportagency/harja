@@ -390,7 +390,7 @@
                                            (-> johto-ja-hallintokorvaus
                                                (update :tunnit to-float)
                                                (update :tuntipalkka to-float)
-                                               (update :maksukuukaudet konv/pgarray->vector))) ;; Mikä tämä maksukuukaudet homma on? Tietokannasta ei tällaista kolumnia löydy
+                                               (update :maksukuukaudet konv/pgarray->vector)))
                                          data)
         hoitokauden-numero-lisatty (apply concat
                                           (map-indexed (fn [index [_ tiedot]]
@@ -416,9 +416,8 @@
                                    [] hoitokauden-numero-lisatty)
         ;; Vuoden -22 ja sen jälkeen alkavilla urakoilla ei ole enää erikseen maksukausia ja kk-v erottelua ei enää tarvita
         kk-v-lisatty (if (< urakan-alkuvuosi 2022)
-                       (map (fn [{:keys [#_kk-v toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
+                       (map (fn [{:keys [toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
                               (cond
-                                #_#_(not (nil? kk-v)) (update johto-ja-hallintokorvaus :kk-v float)
                                 (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
                                 (= :talvi maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 7)
                                 (and (= toimenkuva "hankintavastaava") (= 0 hoitokausi)) (assoc johto-ja-hallintokorvaus :kk-v 4.5)
@@ -631,7 +630,7 @@
   NOTE: Johto- ja hallintokorvaukset sisältää vain yhdestä osiosta tulevaa dataa ja se tallennetaan vain yhteen tauluun.
         Toistaiseksi ei ole siis tarpeen tarkkailla mistä osiosta data on relevanttiin tauluun tallennettu."
   ;;TODO: Tätä kannattaisi refaktoroida.
-  [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos] :as tiedot}]
+  [db user {:keys [urakka-id toimenkuva toimenkuva-id ennen-urakkaa? jhk-tiedot maksukausi muutos]}]
   {:pre [(integer? urakka-id)
          (or (and toimenkuva-id (integer? toimenkuva-id))
            (and toimenkuva (string? toimenkuva)))]}
