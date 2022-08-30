@@ -12,8 +12,10 @@ participant kohteet
 
 note over token, kohteet: Velho
 tuo_varusteet->token : Authentication Request
+activate token
 note right:  kutsutaan uudelleen tarvittaessa
 token-->tuo_varusteet: token
+deactivate token
 
 tuo_urakat->tunnisteet: hae MHU tunnisteet
 tuo_urakat->kohteet: hae urakoiden tiedot
