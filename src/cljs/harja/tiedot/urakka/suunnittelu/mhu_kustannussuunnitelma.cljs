@@ -30,11 +30,8 @@
 
 
 (def vertailuvuosi-uudelle-taulukolle 2022)
-(defn post-2022?
-  []
-  (println "posti katsottu")
-  false
-  #_(let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)]
+(defn post-2022? []
+  (let [alkupvm (-> @tiedot/yleiset :urakka :alkupvm)]
     (if alkupvm
       (>= (pvm/vuosi alkupvm) vertailuvuosi-uudelle-taulukolle)
       false)))
