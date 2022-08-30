@@ -5,8 +5,7 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [cljs.core.async :refer [<! >! chan close!]]
-    ;; FIXME: Mikä on tämä cljs-http kirjasto, sellaista ei ole meillä mukana atm. ja se kaataa buildin. Miksei harja.asiakas.kommunikaatio käy?
-            #_[cljs-http.client :as http]
+            [cljs-http.client :as http]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
@@ -163,12 +162,10 @@
     (let [_ (js/console.log "(clj->js koostettu-data)" (.stringify js/JSON (clj->js (koostettu-data app))))
           tulos! (tuck/send-async! ->LahetysOnnistui)
           virhe! (tuck/send-async! ->LahetysEpaonnistui)
-          urakkaid (:id (get-in app [:toteumatiedot :valittu-urakka]))
-          _ (js/console.log "valittu-urakka" (pr-str urakkaid))]
+          urakkaid (:id (get-in app [:toteumatiedot :valittu-urakka]))]
       (if urakkaid
         (go
-          ;; FIXME: Mikä on tämä cljs-http kirjasto, sellaista ei ole meillä mukana atm. ja se kaataa buildin. Miksei harja.asiakas.kommunikaatio käy?
-          (let [vastaus (<! nil #_(http/post (str "api/urakat/"
+          (let [vastaus (<! (http/post (str "api/urakat/"
                                          urakkaid
                                          "/toteumat/reitti")
                               {:body (.stringify js/JSON (clj->js (koostettu-data app)))
