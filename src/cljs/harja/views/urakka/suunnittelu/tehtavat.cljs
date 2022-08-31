@@ -31,7 +31,7 @@
       (let [vuosi (pvm/vuosi alkupvm)
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
-        [:div.flex-row
+        [:div.flex-row.sticky-ylos.valkoinen-tausta
          {:style {:justify-content "flex-start"
                   :align-items     "flex-end"}}
          [:div
@@ -301,7 +301,8 @@
           :info])
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
-       [valitaso-filtteri e! app]
+       (when sopimukset-syotetty?
+         [valitaso-filtteri e! app])
        [tehtava-maarat-taulukko-kontti e! app]
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])])))
