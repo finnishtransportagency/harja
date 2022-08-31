@@ -11,6 +11,7 @@
             [harja.ui.yleiset :as yleiset]   
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
+            [harja.tyokalut.vieritys :as vieritys]
             [harja.pvm :as pvm]))
 
 (defn sarakkeiden-leveys [sarake]
@@ -270,7 +271,7 @@
   [:div.table-default-even.col-xs-12
    [:div.flex-row 
     [:h3 "Syötä tarjouksen määrät"]
-    [napit/yleinen-ensisijainen "Tallenna" #(e! (t/->TallennaSopimus true))]]
+    [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))]]
    (when virhe-sopimuksia-syottaessa?  
      [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
 
@@ -284,10 +285,14 @@
                             {:hoitokausi :kaikki}))))
     (fn [e! {:keys [sopimukset-syotetty? virhe-sopimuksia-syottaessa?] :as app}]
       [:div#vayla
+       [vieritys/majakka ::top]
        [:div.flex-row
         [:h1 "Tehtävät ja määrät"]
         (when sopimukset-syotetty?
-          [napit/yleinen-reunaton "Muokkaa tarjouksien määriä" #(e! (t/->TallennaSopimus false)) {:ikoni [ikonit/pencil]}])]
+          [napit/yleinen-reunaton "Muokkaa tarjouksien määriä"
+           (comp
+             (vieritys/vierita ::top)
+             #(e! (t/->TallennaSopimus false))) {:ikoni [ikonit/pencil]}])]
        [debug/debug app]
        [debug/debug @t/taulukko-tila]
        [debug/debug @t/taulukko-virheet]
