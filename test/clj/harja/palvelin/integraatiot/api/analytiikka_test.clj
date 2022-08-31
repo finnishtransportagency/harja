@@ -86,6 +86,7 @@
         ;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
         alkuaika "2004-01-01T00:00:00+03"
         loppuaika "2004-12-31T21:00:00+03"
+        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
         vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
         vastaus-body (-> (:body @vastaus)
                        (json/read-str)
