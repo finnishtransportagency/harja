@@ -2316,23 +2316,21 @@
                                                  ;; Sisältää yhtä monta riviä, kuin urakalla on hoitokausia
                                                  (range 1 (inc (count toimenkuvan-data-hoitokausittain))))
                                      jarjestys (first (filter #(= toimenkuva (:toimenkuva %)) (pohjadatan-versio)))
-                                     ;; summittain, koska järjestelmä laskee pyöristysvirheen myötä syntyviä senttejä viimeiselle hoitovuoden kuulle (syyskuulle)
-                                     ;; ei lukita kenttiä, jos virhe mahtuu tähän marginaaliin
-                                     kuukausipalkka-summittain-sama?-fn (fn [vertailtava]
-                                                               (fn [[_ tiedot]]
-                                                                 (and (>= (:kuukausipalkka tiedot) (:kuukausipalkka vertailtava))
-                                                                   (< (:kuukausipalkka tiedot) (+ (:kuukausipalkka vertailtava) 0.1)))))                                     
                                      erikseen-syotettava? (into {}
                                                             (map (fn [hoitokausi]
-                                                                   [hoitokausi (not
-                                                                                 (every?
-                                                                                   (kuukausipalkka-summittain-sama?-fn
-                                                                                     (get-in maksuerat [hoitokausi
-                                                                                                        (first
-                                                                                                          (sort
-                                                                                                            (keys (get maksuerat hoitokausi))))]))
-                                                                                   (get maksuerat hoitokausi)))]))
-                                                            (range 1 (inc (count (keys maksuerat)))))
+                                                                   [hoitokausi
+                                                                    (let [hk-maksuerat (vals (get maksuerat hoitokausi))
+                                                                          ensimmaiset-kkt (filter #(not= 9 (:kuukausi %)) hk-maksuerat)
+                                                                          viimeinen-kk (first (filter #(= 9 (:kuukausi %)) hk-maksuerat))]
+                                                                      (or
+                                                                        ;; Jos kaikki on samoja
+                                                                        (apply = (map :kuukausipalkka hk-maksuerat))
+                                                                        (and
+                                                                          ;; Jos ensimmäiset 11 kk on samoja JA
+                                                                          ;; erotus viimeisen ja jonkun muun kk välillä on alle 0.12 => ei ole voitu laittaa tasan kaikille kk
+                                                                          (apply = (map :kuukausipalkka ensimmaiset-kkt))
+                                                                          (< 0.12 (Math/abs (- (:kuukausipalkka viimeinen-kk) (:kuukausipalkka (first ensimmaiset-kkt))))))))])
+                                                              (range 1 (inc (count (keys maksuerat))))))
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
                                                                       (or (:jarjestys ensimmaisen-kuukauden-data) 99))
