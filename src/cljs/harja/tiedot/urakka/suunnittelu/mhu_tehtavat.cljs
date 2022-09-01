@@ -313,12 +313,10 @@
 
 (defn kopioi-tarvittaessa-sopimusmaarat-maariin
   [rivi]
-  (println "row" rivi)
   (let [{:keys [sopimuksen-tehtavamaarat maarat]} rivi
         maarat (into {}
                  (map
                    (fn [[vuosi sopimuksen-maara]]
-                     (println "vuosi" vuosi sopimuksen-maara)
                      [vuosi (if (some? (get maarat vuosi))
                               (get maarat vuosi)
                               sopimuksen-maara)]))
