@@ -957,8 +957,14 @@
          (= 1 hoitokausi))
       (false? (:ennen-urakkaa? tiedot)))))
 
+(defn- vetolaatikko-klikattu-fn [atomi tallenna-fn rivi-atom event]
+  (let [valittu? (-> event .-target .-checked)]
+    (when (and @atomi (not valittu?))
+      (tallenna-fn @rivi-atom))
+    (reset! atomi valittu?)))
+
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [tunniste] :as rivi}]
+  [tiedot-atomi polku {:keys [tunniste] :as rivi} tallenna-fn]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -972,7 +978,12 @@
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
         [:div
          [kentat/tee-kentta {:tyyppi :checkbox
-                             :teksti "Suunnittele maksuerät kuukausittain"}
+                             :teksti "Suunnittele maksuerät kuukausittain"
+                             :valitse! (partial
+                                         vetolaatikko-klikattu-fn
+                                         (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])
+                                         tallenna-fn
+                                         (get-in kursorit [:toimenkuva]))}
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
          [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :margin-top "16px" :padding-left "18px"}}
           [vanha-grid/muokkaus-grid
@@ -997,14 +1008,17 @@
            (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
 
 (defn luo-vetolaatikot
-  [atomi]  
-  (into {} (map (juxt first #(let [rivi (second %)
-                                   polku (:tunniste rivi)]
-                               [vetolaatikko-komponentti atomi polku rivi]))) (into {}
-                                                                                (filter #(let [data (second %)]
-                                                                                           (not (or (:ennen-urakkaa? data)
-                                                                                                  (get (:hoitokaudet data) 0)))))
-                                                                                @atomi)))
+  [atomi tallenna-fn]
+  (into {}
+    (map
+      (juxt first #(let [rivi (second %)
+                         polku (:tunniste rivi)]
+                     [vetolaatikko-komponentti atomi polku rivi tallenna-fn])))
+    (into {}
+      (filter #(let [data (second %)]
+                 (not (or (:ennen-urakkaa? data)
+                        (get (:hoitokaudet data) 0)))))
+      @atomi)))
 
 (defn- kun-ei-syoteta-erikseen
   [hoitokausi tiedot]
@@ -1035,9 +1049,13 @@
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
         data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)]
     (fn [app]
-      (let [vetolaatikot (luo-vetolaatikot data)
-            kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
-            kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)]
+      (let [kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
+            kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)
+            tallenna-fn (r/partial tallenna-toimenkuvan-tiedot
+                          data
+                          {:hoitokausi kuluva-hoitokausi
+                           :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
+            vetolaatikot (luo-vetolaatikot data tallenna-fn)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
@@ -1051,10 +1069,7 @@
            :voi-kumota? false
            :jarjesta :jarjestys
            :piilota-toiminnot? true
-           :on-rivi-blur (r/partial tallenna-toimenkuvan-tiedot
-                           data
-                           {:hoitokausi kuluva-hoitokausi
-                            :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
+           :on-rivi-blur tallenna-fn
            :voi-poistaa? (constantly false)
            :piilota-rivi #(and (not (= kuluva-hoitokausi 1)) (:ennen-urakkaa? %))
            :vetolaatikot vetolaatikot}
