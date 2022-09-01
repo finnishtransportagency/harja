@@ -2,31 +2,21 @@
   "Harjan käyttöön soveltuva geneerinen jatkuvassa
    muokkaustilassa oleva ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
+            [harja.ui.yleiset :refer [virheen-ohje] :as y]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina] :as kentat]
+            [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
-            [goog.events :as events]
             [goog.events.EventType :as EventType]
 
-            [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.grid.protokollat :refer
              [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
-            [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t]
             [harja.ui.grid.yleiset :as grid-yleiset]
             [harja.ui.napit :as napit]
-            [harja.fmt :as fmt])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]
-                   [harja.makrot :refer [fnc]]))
+            [harja.fmt :as fmt]))
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia

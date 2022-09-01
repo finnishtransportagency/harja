@@ -258,7 +258,7 @@
 
 (def +desimaalin-oletus-tarkkuus+ 2)
 
-(defn numero-fmt [{:keys [kokonaisluku? desimaalien-maara min-desimaalit max-desimaalit fmt] :as kentta}]  
+(defn numero-fmt [{:keys [kokonaisluku? desimaalien-maara min-desimaalit max-desimaalit fmt] :as kentta}]
   (cond
     fmt
     fmt

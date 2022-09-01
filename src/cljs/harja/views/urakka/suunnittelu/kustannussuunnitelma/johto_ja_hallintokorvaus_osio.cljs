@@ -4,24 +4,20 @@
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
-            [harja.loki :refer [log]]
             [harja.tyokalut.yleiset :as tyokalut]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.yhteiset :as ks-yhteiset :refer [e!]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.taulukko.impl.solu :as solu]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.fmt :as fmt]
-            [harja.ui.debug :as debug]
             [clojure.string :as clj-str]
             [harja.ui.modal :as modal]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
             [harja.ui.grid :as vanha-grid]
-            [harja.domain.palvelut.budjettisuunnittelu :as bj]
             [harja.ui.taulukko.grid-osan-vaihtaminen :as gov]
             [harja.views.urakka.suunnittelu.kustannussuunnitelma.grid-apurit :as grid-apurit]
-            [harja.domain.mhu :as mhu]
-            [tuck.core :as tuck]))
+            [harja.domain.mhu :as mhu]))
 
 
 ;; -- Johto- ja hallintokorvaus osioon liittyvät gridit --
@@ -33,8 +29,7 @@
 (defn- yhteenveto-grid-rajapinta-asetukset
   [toimenkuva maksukausi data-koskee-ennen-urakkaa?]
   (let [yksiloiva-nimen-paate (str "-" toimenkuva "-" maksukausi)
-        kuvaus (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) [:kk-v])))
-        _ (println "kuvaus" kuvaus yksiloiva-nimen-paate)]
+        kuvaus (vec (concat [:toimenkuva :tunnit :tuntipalkka :yhteensa] (when-not (t/post-2022?) [:kk-v])))]
     {:rajapinta (keyword (str "yhteenveto" yksiloiva-nimen-paate))
      :solun-polun-pituus 1
      :jarjestys [(with-meta kuvaus {:nimi :mapit})]
@@ -84,7 +79,6 @@
   ([tallenna-kaikki? etsittava-osa solu]
    (blur-tallenna! tallenna-kaikki? etsittava-osa solu nil))
   ([tallenna-kaikki? etsittava-osa solu muutos]
-   (println "blur tallenna JHO" tallenna-kaikki? etsittava-osa)
    (if tallenna-kaikki?
      (e! (t/->TallennaJohtoJaHallintokorvaukset
            (mapv #(grid/solun-asia (get (grid/hae-grid % :lapset) 1)
@@ -101,7 +95,6 @@
   ([rivit-alla]
    (nappia-painettu-tallenna! rivit-alla nil))
   ([rivit-alla muutos]
-   (println "nappi tallenna JHO")
    (e! (t/->TallennaJohtoJaHallintokorvaukset
          (vec (keep (fn [rivi]
                       (let [haettu-solu (grid/get-in-grid rivi [1])
@@ -333,8 +326,6 @@
                                                      :data-cy "kk-v-valinnat"
                                                      :valitse-fn
                                                      (fn [maksukausi]
-                                                       #_(println "### [pudotusvalikko] :maksukausi" maksukausi)
-
                                                        (let [solu solu/*this*
                                                              paivita-ui! (fn []
                                                                            (t/paivita-solun-arvo {:paivitettava-asia :aseta-jh-yhteenveto!
@@ -911,7 +902,7 @@
     tiedot))
 
 (defn- tallenna-kuukausipalkka
-  [tiedot-atom {:keys [alkuvuosi loppuvuosi toimenkuva hoitokausi rivin-tiedot kopioi-tuleville?]} rivi]
+  [tiedot-atom {:keys [alkuvuosi loppuvuosi hoitokausi kopioi-tuleville?]} rivi]
   (let [tiedot @tiedot-atom
         loppukausi (inc
                      (if kopioi-tuleville?
@@ -958,7 +949,7 @@
     (range 1 vuosien-erotus)))
 
 (defn- palkkakentta-muokattava?
-  [erikseen-syotettava? tiedot hoitokausi rivi]
+  [erikseen-syotettava? tiedot hoitokausi]
   (and @erikseen-syotettava?
     (or
       (and
@@ -967,7 +958,7 @@
       (false? (:ennen-urakkaa? tiedot)))))
 
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [toimenkuva tunniste hoitokaudet] :as rivi}]
+  [tiedot-atomi polku {:keys [tunniste] :as rivi}]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -980,11 +971,6 @@
       (let [{valitun-hoitokauden-numero :hoitokauden-numero kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet             
             valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
         [:div
-         [:div
-          [debug/debug kursorit]
-          [debug/debug @tiedot-atomi]
-          [debug/debug (deref (get-in kursorit [:maksuerat valitun-hoitokauden-numero]))]
-          [debug/debug (deref (get-in kursorit [:toimenkuva]))]]
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"}
           (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
@@ -1007,7 +993,7 @@
                              :loppuvuosi urakan-loppuvuosi})
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
-            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? (r/partial palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]) rivi valitun-hoitokauden-numero)}]
+            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? #(palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]) rivi valitun-hoitokauden-numero)}]
            (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
 
 (defn luo-vetolaatikot
@@ -1033,8 +1019,7 @@
 (defn tallenna-toimenkuvan-tiedot
   [data-atomi optiot rivin-tiedot]
   (when (:oma-toimenkuva? rivin-tiedot)
-    (let [_ (js/console.log "tallennetaan ensimmäisenä pelkästään toimenkuvan nimi :: %" (pr-str rivin-tiedot))
-          uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
+    (let [uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
           rivin-nimi (:rivin-nimi rivin-tiedot)]
       ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
       (when (not= uusi-toimenkuva-nimi rivin-nimi)
@@ -1046,31 +1031,17 @@
     rivin-tiedot))
 
 (defn taulukko-2022-eteenpain
-  [app _]
+  [app]
   (let [kaytetty-hoitokausi (r/atom (-> app :suodattimet :hoitokauden-numero))
-        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)
-        ;rivin-avaimet (keys @data)
-        #_omat-toimenkuvat #_(r/atom (reduce (fn [omat rivin-avain]
-                                           (let [arvo (get @data rivin-avain)]
-                                             (if (:oma-toimenkuva? arvo)
-                                               (assoc-in omat [rivin-avain] arvo)
-                                               omat)))
-                                   {} rivin-avaimet))
-;        _ (js/console.log "ui:lta omat-toimenkuvat: " (pr-str @omat-toimenkuvat))
-        ]
-    (fn [app indeksit]
+        data (t/konvertoi-jhk-data-taulukolle (get-in app [:domain :johto-ja-hallintokorvaukset]) @kaytetty-hoitokausi)]
+    (fn [app]
       (let [vetolaatikot (luo-vetolaatikot data)
-         ;   omat-vetolaatikot (luo-vetolaatikot omat-toimenkuvat)
             kuluva-hoitokausi (-> app :suodattimet :hoitokauden-numero)
             kopioidaan-tuleville-vuosille? (-> app :suodattimet :kopioidaan-tuleville-vuosille?)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
         [:div
-         ;[debug/debug indeksit]
-         [debug/debug app]
-         [debug/debug @data]
-         [debug/debug vetolaatikot]
          ;; Kaikille yhteiset toimenkuvat
          [vanha-grid/muokkaus-grid
           {:otsikko "Tuntimäärät ja -palkat"
@@ -1092,8 +1063,6 @@
            {:otsikko "Vuosipalkka, €" :nimi :vuosipalkka :desimaalien-maara 2 :tyyppi :numero :muokattava? (r/partial kun-ei-syoteta-erikseen kuluva-hoitokausi) :leveys "15%"}]
           data]]))))
 
-(def piilota-2022-taulukko? false)
-
 (defn- johto-ja-hallintokorvaus
   [app vahvistettu? johto-ja-hallintokorvaus-grid johto-ja-hallintokorvaus-yhteenveto-grid toimistokulut-grid
    suodattimet
@@ -1114,7 +1083,6 @@
      [:h3 "Tuntimäärät ja -palkat"]
      [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
       [ks-yhteiset/yleis-suodatin suodattimet]]
-;                  [debug/debug app]
      (cond
        (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
        ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
@@ -1123,7 +1091,7 @@
 
        (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
        [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [taulukko-2022-eteenpain app indeksit]]
+        [taulukko-2022-eteenpain app]]
 
        :else
        [yleiset/ajax-loader])
