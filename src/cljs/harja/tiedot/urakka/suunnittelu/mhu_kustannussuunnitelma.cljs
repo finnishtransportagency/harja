@@ -2135,9 +2135,10 @@
     rahavaraukset-hoitokausittain))
 
 (defn jh-korvaukset-vastauksesta [vastaus pohjadata]
-  (let [omat-jh-korvaukset (vec (reverse (sort-by #(get-in % [1 0 :toimenkuva])
-                                           (group-by :toimenkuva-id
-                                             (get-in vastaus [:johto-ja-hallintokorvaukset :omat])))))
+  (let [
+        omat-jh-korvaukset (vec (sort-by #(get-in % [1 0 :toimenkuva-id])
+                                  (group-by :toimenkuva-id
+                                    (get-in vastaus [:johto-ja-hallintokorvaukset :omat]))))
         vapaat-omien-toimekuvien-idt (clj-set/difference
                                        (into #{} (map :toimenkuva-id
                                                    (get-in vastaus [:johto-ja-hallintokorvaukset :omat-toimenkuvat])))
@@ -2236,7 +2237,7 @@
                                    (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
                                      :toimenkuva toimenkuva
                                      :toimenkuva-id toimenkuva-id
-                                     :jarjestys 99
+                                     :jarjestys (+ (apply max (map :jarjestys (pohjadatan-versio))) jarjestysnumero)
                                      :rivin-nimi omanimi
                                      :tunniste omanimi
                                      :oma-toimenkuva? true
@@ -2283,9 +2284,9 @@
                                      toimenkuvan-data-hoitokausittain (if (map? toimenkuvan-data)
                                                                         (first (vals toimenkuvan-data))
                                                                         toimenkuvan-data)
-                                     tunniste (if (-> toimenkuvan-data-hoitokausittain first first :oma-toimenkuva?)
-                                                (-> toimenkuvan-data-hoitokausittain first first :tunniste ;:toimenkuva-id
-                                                  )
+                                     ensimmaisen-kuukauden-data (ffirst toimenkuvan-data-hoitokausittain)
+                                     tunniste (if (:oma-toimenkuva? ensimmaisen-kuukauden-data)
+                                                (:tunniste ensimmaisen-kuukauden-data)
                                                 toimenkuva)
                                      ennen-urakkaa? (or (-> toimenkuvan-data-hoitokausittain first first :ennen-urakkaa)
                                                       (some? (get (:hoitokaudet (first (first toimenkuvan-data-hoitokausittain))) 0))) 
@@ -2334,13 +2335,13 @@
                                                             (range 1 (inc (count (keys maksuerat)))))
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
-                                                                      99)
+                                                                      (or (:jarjestys ensimmaisen-kuukauden-data) 99))
                                                          :rivin-nimi (:rivin-nimi (first (first toimenkuvan-data-hoitokausittain)))
                                                          :maksukausi (:maksukausi (first (first toimenkuvan-data-hoitokausittain)))
                                                          :toimenkuva-id (:toimenkuva-id (first (first toimenkuvan-data-hoitokausittain)))
                                                          :oma-toimenkuva? (:oma-toimenkuva? (first (first toimenkuvan-data-hoitokausittain)))
                                                          :toimenkuva toimenkuvan-nimi
-                                                         :ennen-urakkaa? ennen-urakkaa? 
+                                                         :ennen-urakkaa? ennen-urakkaa?
                                                          :vuosipalkka vuosipalkka ;; Lasketaan valitun hoitovuoden datasta :tunnit * :tuntipalkka * kuukaudet
                                                          :hoitokaudet (:hoitokaudet (first (first toimenkuvan-data-hoitokausittain)))
                                                          :erikseen-syotettava? erikseen-syotettava? ;; Erikseen syötettävät hoitokaudet. Yleisimmin kopioidaan
