@@ -313,8 +313,6 @@ describe('Johto- & Hallintokorvaukset, 2022->', () => {
     describe('Omat toimenkuvat', () => {        
         it('Omien toimenkuvien nimet voi vaihtaa', () => {
             cy.intercept('POST', '_/tallenna-toimenkuva').as('tallenna-toimenkuva');
-            cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
-            cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset').as('tallenna-jhk')
             
             cy.get('#toimenkuvat-taulukko')
                 .contains('Harjoittelija')
@@ -337,10 +335,6 @@ describe('Johto- & Hallintokorvaukset, 2022->', () => {
                 .blur()
             
             cy.wait('@tallenna-toimenkuva')
-                .its('response.statusCode').should('equal', 200)
-            cy.wait('@tallenna-jhk')
-                .its('response.statusCode').should('equal', 200)
-            cy.wait('@tallenna-budjettitavoite')
                 .its('response.statusCode').should('equal', 200)
         })
         it('Omien toimenkuvien vuosisummat voi syöttää', () => {
