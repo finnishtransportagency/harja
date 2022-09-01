@@ -1551,6 +1551,7 @@
                               (assoc-in tila [:gridit :johto-ja-hallintokorvaukset :johdettu nimi] (vec (repeat 12 {}))))
                       :aseta (fn [tila jh-korvaukset maksukausi hoitokauden-numero]
                                (let [korvauksien-index (dec hoitokauden-numero)
+                                     toimenkuva (get-in jh-korvaukset [0 0 :toimenkuva])
                                      maksukauden-jh-tunnit (filterv (fn [{:keys [kuukausi]}]
                                                                       (kuukausi-kuuluu-maksukauteen? kuukausi maksukausi))
                                                              (get jh-korvaukset korvauksien-index))
@@ -1570,6 +1571,7 @@
                                    [:gridit :johto-ja-hallintokorvaukset :yhteenveto nimi]
                                    merge
                                    {:tunnit tunnit
+                                    :toimenkuva toimenkuva
                                     :yhteensa (when-not (= 0 yhteensa)
                                                 yhteensa)
                                     ;; TODO: Indeksikorjattu yhteensa-arvo tähän. Esim. :yhteensa-indeksikorjattu
@@ -2455,10 +2457,7 @@
                          (pohjadatan-versio))})
         (assoc-in [:gridit :johto-ja-hallintokorvaukset-yhteenveto]
           {:otsikot
-{:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"}
-           #_(merge {:toimenkuva "Toimenkuva"}
-                      (when-not (post-2022?) {:kk-v "kk/v"})
-                      {:hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"})})
+{:toimenkuva "Toimenkuva" :kk-v "kk/v" :hoitovuosi-1 "1.vuosi/€" :hoitovuosi-2 "2.vuosi/€" :hoitovuosi-3 "3.vuosi/€" :hoitovuosi-4 "4.vuosi/€" :hoitovuosi-5 "5.vuosi/€"} })
         (assoc-in [:gridit :suunnitellut-hankinnat]
           {:otsikot {:nimi "Kiinteät" :maara "Määrä €/kk" :yhteensa "Yhteensä" :indeksikorjattu "Indeksikorjattu"}
            :yhteensa {:nimi "Yhteensä"}})

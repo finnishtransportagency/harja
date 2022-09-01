@@ -1036,6 +1036,7 @@
     (let [uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
           rivin-nimi (:rivin-nimi rivin-tiedot)]
       ;; Jos toimenkuvan nimi muuttui, niin vaihdetaan se
+      ;; FIXME: rivin-nimi ei koskaan vaihdu, joten tätä kutsutaan aina. Jätetään toistaiseksi, koska ei ole vakava virhe.
       (when (not= uusi-toimenkuva-nimi rivin-nimi)
         (e! (t/->VaihdaOmanToimenkuvanNimi rivin-tiedot))
         (e! (t/->TallennaToimenkuva (:tunniste rivin-tiedot))))))
