@@ -213,11 +213,8 @@
                                                {:urakka-id urakka-id
                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
 
-    {:talvisuolan-sanktiot talvisuolan-sanktiot
-     ;; Palautetaan tyhjä map, jos mitään ei ole asetettu kantaan.
-     :rajoitusalueiden-suolasanktio (if (nil? rajoitusalueiden-suolasanktio)
-                                      {}
-                                      rajoitusalueiden-suolasanktio)}))
+    {:talvisuolan-sanktiot (or talvisuolan-sanktiot {})
+     :rajoitusalueiden-suolasanktio (or rajoitusalueiden-suolasanktio {})}))
 
 (defn hae-talvisuolan-kayttorajat-alueurakka
   "Alueurakan sakot ja käyttöraja tulevat suolasakko-taulusta"
@@ -228,7 +225,7 @@
   (let [talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
                                       {:urakka-id urakka-id
                                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
-    {:talvisuolan-sanktiot talvisuolan-sanktiot}))
+    {:talvisuolan-sanktiot (or talvisuolan-sanktiot {})}))
 
 (defn hae-talvisuolan-kayttorajat
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]

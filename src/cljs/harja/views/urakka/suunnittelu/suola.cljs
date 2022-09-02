@@ -531,23 +531,26 @@
           (case (:tyyppi urakka)
             ;; MHU talvisuolan käyttöraja lomake
             :teiden-hoito
-            (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
-              [lomake-talvisuolan-kayttoraja-mhu e! app urakka])
+            (if (get-in app [:kayttorajat :talvisuolan-sanktiot])
+              [lomake-talvisuolan-kayttoraja-mhu e! app urakka]
+              [yleiset/ajax-loader "Ladataan..."])
 
             ;; Alueurakka talvisuolan käyttöraja lomake
             :hoito
-            (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
-              [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka])
+            (if (get-in app [:kayttorajat :talvisuolan-sanktiot])
+              [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka]
+              [yleiset/ajax-loader "Ladataan..."])
 
-            nil)
+            [yleiset/virheviesti-sailio "Tuntematon urakkatyyppi"])
 
           (when (= :teiden-hoito (:tyyppi urakka))
             [:<>
              [:h3 "Pohjavesialueen suolasanktio"]
-             (when-not (nil? (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio]))
+             (if (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])
                ;; Ladataan rajoitusalueiden ylityksen määrittävä lomake, nimestä huolimatta. Käyttöliittymässä on historian painolastista johtuen
                ;; paljon pohjavesialue termiä, vaikka käytännössä käsitellään rajoitusalueita. (joita voi olla monta yhdellä pohjavesialueella)
-               [lomake-pohjavesialueen-suolasanktio e! app urakka])])]
+               [lomake-pohjavesialueen-suolasanktio e! app urakka]
+               [yleiset/ajax-loader "Ladataan..."])])]
 
          ;; Pohjavesialueiden rajoitusalueiden taulukko ym.
          [:div.pohjavesialueiden-suolarajoitukset
