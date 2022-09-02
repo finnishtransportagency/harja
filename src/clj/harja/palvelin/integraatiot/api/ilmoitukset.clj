@@ -162,8 +162,18 @@
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
 
-(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+;; Sallitaan ajalle kaksi eri formaattia
+(def pvm-aika-muoto1 "yyyy-MM-dd'T'HH:mm:ssX")
+(def pvm-aika-muoto2 "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+(defn valid-aikamuoto? [string]
+  (try
+    (if (< (count string) 25)
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto1) string))
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto2) string)))
+    (catch Exception e
+      false)))
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
 
 (defn- tarkista-ilmoitus-haun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
