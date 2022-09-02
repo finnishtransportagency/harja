@@ -201,7 +201,8 @@
    :f5 :kuittaaja_henkilo_etunimi
    :f6 :kuittaaja_henkilo_sukunimi,
    :f7 :kuittaaja_organisaatio_nimi,
-   :f8 :kuittaaja_organisaatio_ytunnus})
+   :f8 :kuittaaja_organisaatio_ytunnus
+   :f9 :kanava})
 
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
@@ -210,7 +211,9 @@
   (log/info "Hae ilmoitukset ytunnuksella :: parametrit:" parametrit)
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-  (let [loppuaika (if loppuaika
+  (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
+        alkuaika (c/to-sql-time (pvm/iso8601-basic->suomen-aika alkuaika))
+        loppuaika (if loppuaika
                     loppuaika
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
@@ -251,16 +254,14 @@
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika/:loppuaika" request
-        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
-          json-skeemat/ilmoitusten-haku
+        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           false)))
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
-        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
-          json-skeemat/ilmoitusten-haku
+        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           false)))
