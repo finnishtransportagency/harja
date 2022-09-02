@@ -63,7 +63,7 @@
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi valinnat)
         valittu-toteuma (:toteuma valinnat)
-        hoitokauden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
+        hoitovuoden-kuukaudet [nil 10 11 12 1 2 3 4 5 6 7 8 9]
         itse-tai-kaikki #(if % % "Kaikki")
         multimap-fn (fn [avain] (fn [{:keys [id nimi] :as t}]
                                   {:id id
@@ -99,9 +99,9 @@
        hoitokaudet]
       [yleiset/pudotusvalikko "Kuukausi"
        {:wrap-luokka "col-md-1 filtteri varusteet label-ja-alasveto-grid"
-        :valinta (:hoitokauden-kuukausi valinnat)
+        :valinta (:hoitovuoden-kuukausi valinnat)
         :vayla-tyyli? true
-        :valitse-fn #(e! (v/->ValitseHoitokaudenKuukausi %))
+        :valitse-fn #(e! (v/->ValitseHoitovuodenKuukausi %))
         :format-fn #(if %
                       (str (pvm/kuukauden-nimi % true) " "
                            (if (>= % 10)
@@ -109,7 +109,7 @@
                              (inc hoitokauden-alkuvuosi)))
                       "Kaikki")
         :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
-       hoitokauden-kuukaudet]
+       hoitovuoden-kuukaudet]
       [yleiset/tr-kentat-flex
        {:wrap-luokka "col-md-3 filtteri varusteet tr-osoite-wrap"}
        {:tie [yleiset/tr-kentan-elementti {:otsikko "Tie" :valitse-fn (tr-kentan-valitse-fn :tie) :luokka "tr-numero" :arvo tie}]

@@ -273,9 +273,10 @@
       (konversio-fn "v/vtykl" kuntoluokka)
       "Puuttuu")))
 
-(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio toimenpiteet tekninen-tapahtuma] :as kohde}]
+(defn varusteen-toteuma [konversio-fn {:keys [version-voimassaolo alkaen paattyen uusin-versio ominaisuudet tekninen-tapahtuma] :as kohde}]
   (let [version-alku (:alku version-voimassaolo)
         version-loppu (:loppu version-voimassaolo)
+        toimenpiteet (:toimenpiteet ominaisuudet)
         toimenpidelista (->> toimenpiteet
                              (map #(konversio-fn "v/vtp" %))
                              (keep not-empty))]

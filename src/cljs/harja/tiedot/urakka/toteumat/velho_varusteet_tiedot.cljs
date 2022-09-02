@@ -71,7 +71,7 @@
 (def +max-toteumat+ 1000)
 
 (defrecord ValitseHoitokausi [hoitokauden-alkuvuosi])
-(defrecord ValitseHoitokaudenKuukausi [hoitokauden-kuukausi])
+(defrecord ValitseHoitovuodenKuukausi [hoitovuoden-kuukausi])
 (defrecord ValitseTR-osoite [arvo avain])
 (defrecord ValitseVarustetyyppi [varustetyyppi valittu?])
 (defrecord ValitseKuntoluokka [kuntoluokka valittu?])
@@ -109,10 +109,10 @@
   (process-event [{uusi-alkuvuosi :hoitokauden-alkuvuosi} app]
     (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi))
 
-  ValitseHoitokaudenKuukausi
-  (process-event [{hoitokauden-kuukausi :hoitokauden-kuukausi} app]
+  ValitseHoitovuodenKuukausi
+  (process-event [{hoitovuoden-kuukausi :hoitovuoden-kuukausi} app]
     (do
-      (assoc-in app [:valinnat :hoitokauden-kuukausi] hoitokauden-kuukausi)))
+      (assoc-in app [:valinnat :hoitovuoden-kuukausi] hoitovuoden-kuukausi)))
 
   ValitseVarustetyyppi
   (process-event [{:keys [varustetyyppi valittu?]} app]
