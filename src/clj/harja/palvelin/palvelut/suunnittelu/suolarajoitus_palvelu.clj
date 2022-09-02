@@ -191,12 +191,14 @@
       (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
       "OK")))
 
-(defn hae-talvisuolan-kayttorajat
+(defn hae-talvisuolan-kayttorajat-mhu
   "Talvisuolan käyttöraja tulee urakka_tehtavamaara tauluun tallennetun suolauksen määrästä. Sanktiot ja indeksi tulevat suolasakko taulusta"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
-  (let [_ (log/debug "hae-talvisuolan-kayttoraja :: tiedot" tiedot)
-        kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+
+  (log/debug "hae-talvisuolan-kayttoraja :: tiedot" tiedot)
+
+  (let [kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
                                {:urakka-id urakka-id
                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
@@ -204,17 +206,44 @@
                                       {:urakka-id urakka-id
                                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         ;; Lisää kokonaismäärä myös talvisuolan-sanktioihin
-        talvisuolan-sanktiot (assoc talvisuolan-sanktiot :kokonaismaara (:talvisuolan_kayttoraja kokonaismaara))
-        rajoitusalueiden-suolasanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db {:urakka-id urakka-id
-                                                                                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
-    {:talvisuolan-kokonaismaara (:talvisuolan_kayttoraja kokonaismaara)
-     :talvisuolan-sanktiot talvisuolan-sanktiot
+        talvisuolan-sanktiot (assoc talvisuolan-sanktiot :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))
+
+        ;; Vain MHU urakoissa määritellään rajoitusalueidelle suolasanktio
+        rajoitusalueiden-suolasanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db
+                                               {:urakka-id urakka-id
+                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+
+    {:talvisuolan-sanktiot talvisuolan-sanktiot
      ;; Palautetaan tyhjä map, jos mitään ei ole asetettu kantaan.
      :rajoitusalueiden-suolasanktio (if (nil? rajoitusalueiden-suolasanktio)
                                       {}
                                       rajoitusalueiden-suolasanktio)}))
 
-(defn tallenna-talvisuolan-kayttoraja
+(defn hae-talvisuolan-kayttorajat-alueurakka
+  "Alueurakan sakot ja käyttöraja tulevat suolasakko-taulusta"
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (log/debug "hae-talvisuolan-kayttorajat-alueurakka :: tiedot" tiedot)
+
+  (let [talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
+                                      {:urakka-id urakka-id
+                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+    {:talvisuolan-sanktiot talvisuolan-sanktiot}))
+
+(defn hae-talvisuolan-kayttorajat
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db urakka-id))))
+        vastaus (case urakkatyyppi
+                               :teiden-hoito
+                               (hae-talvisuolan-kayttorajat-mhu db user tiedot)
+
+                               :hoito
+                               (hae-talvisuolan-kayttorajat-alueurakka db user tiedot)
+                               (transit-vastaus 400 {:virhe (str "Urakan tyyppi on virheellinen: " urakkatyyppi)}))]
+    vastaus))
+
+(defn tallenna-talvisuolan-kayttoraja-mhu
   "Funktio ei nimestään huolimatta tallenna talvisuolan käyttörajoja, koska ne tallennetaan Tehtävät ja määrät sivulla.
   Tässä tallennetaan kokonaismäärälle sanktiot ja indeksi.
   Käyttöraja mäpin sisältö:
@@ -254,8 +283,51 @@
         kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
                                {:urakka-id urakka-id
                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        vastaus (assoc vastaus :kokonaismaara (:talvisuolan_kayttoraja kokonaismaara))]
+        vastaus (assoc vastaus :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))]
     vastaus))
+
+(defn tallenna-talvisuolan-kayttoraja-alueurakka
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as kayttoraja}]
+  (log/debug "tallenna suolasakko" kayttoraja)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+
+  (let [hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
+                                        {:urakka-id urakka-id
+                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+        params {:suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara kayttoraja)
+                :vain-sakko-maara (:vain-sakko-maara kayttoraja)
+                :maksukuukausi (:maksukuukausi kayttoraja)
+                :indeksi (:indeksi kayttoraja)
+                :kayttaja (:id user)
+                :talvisuolan-kayttoraja (:talvisuolan-kayttoraja kayttoraja)
+                :urakka-id urakka-id
+                :suolasakko-kaytossa (boolean (:suolasakko-kaytossa kayttoraja))
+                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                :id (:id hoitovuoden-kayttoraja)}]
+    (if (:id hoitovuoden-kayttoraja)
+      (do
+        (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja-alueurakka! db params)
+        (:id hoitovuoden-kayttoraja))
+      (:id (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja-alueurakka<! db params)))
+
+    ;; Muodosta vastaus
+    (let [vastaus (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
+                           {:urakka-id urakka-id
+                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+      vastaus)))
+
+
+(defn tallenna-talvisuolan-kayttoraja
+  [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as kayttoraja}]
+  (let [urakkatyyppi (keyword (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db urakka-id))))]
+    (case urakkatyyppi
+      :teiden-hoito
+      (tallenna-talvisuolan-kayttoraja-mhu db user kayttoraja)
+
+      :hoito
+      (tallenna-talvisuolan-kayttoraja-alueurakka db user kayttoraja)
+
+      (transit-vastaus 400 {:virhe (str "Urakan tyyppi on virheellinen: " urakkatyyppi)}))))
 
 (defn tallenna-rajoitusalueen-sanktio [db user {:keys [urakka-id hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?] :as sanktio}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)

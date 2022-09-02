@@ -449,7 +449,7 @@
         _ (t/u (str (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja)))]))
 
-(deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-test
+(deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         hk-alkuvuosi 2022
 
@@ -487,13 +487,13 @@
 
     ;; Tarkistetaan hakutulos
     (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
-    (is (= talvisuolaraja (:talvisuolan-kokonaismaara hakutulos)))
+    (is (= talvisuolaraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
     (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
-(deftest paivita-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-test
+(deftest paivita-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         hk-alkuvuosi 2022
 
@@ -544,10 +544,111 @@
 
     ;; Tarkistetaan hakutulos
     (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
-    (is (= talvisuolaraja (:talvisuolan-kokonaismaara hakutulos)))
+    (is (= talvisuolaraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
     (is (= muokattu_sanktio_ylittavalta_tonnilta (get-in hakutulos [:talvisuolan-sanktiot :sanktio_ylittavalta_tonnilta])))
     (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
+    (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
+
+(deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-alueurakka-test
+  (let [urakka-id (t/hae-urakan-id-nimella "Tampereen alueurakka 2017-2022")
+        hk-alkuvuosi 2022
+        suolasakko-tai-bonus-maara 100M
+        vain-sakko-maara 50M
+        maksukuukausi 9
+        talvisuolan-kayttoraja 500M
+        suolasakko-kaytossa? true
+        kayttoraja {:suolasakko-tai-bonus-maara suolasakko-tai-bonus-maara
+                    :vain-sakko-maara vain-sakko-maara
+                    :maksukuukausi maksukuukausi
+                    :indeksi nil
+                    :talvisuolan-kayttoraja talvisuolan-kayttoraja
+                    :urakka-id urakka-id
+                    :suolasakko-kaytossa suolasakko-kaytossa?
+                    :hoitokauden-alkuvuosi hk-alkuvuosi}
+        vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ kayttoraja)
+
+        ;; Hae rajoitusalueen suolasanktio, jotta voi vertailla lukuja
+        hakutulos (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :hae-talvisuolan-kayttorajat t/+kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :hoitokauden-alkuvuosi hk-alkuvuosi})
+        ;; Siivotaan kanta
+        _ (t/u (str "DELETE from suolasakko WHERE urakka = " urakka-id))]
+
+    ;; Tarkistetaan tallennuksen vastauksen tiedot
+    (is (not (nil? (:id vastaus))))
+    (is (= nil (:indeksi vastaus)))
+    (is (= true (:suolasakko-kaytossa vastaus)))
+    (is (= suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara vastaus)))
+    (is (= vain-sakko-maara (:vain-sakko-maara vastaus)))
+    (is (= talvisuolan-kayttoraja (:talvisuolan-kayttoraja vastaus)))
+    (is (= maksukuukausi (:maksukuukausi vastaus)))
+    (is (= nil (:indeksi vastaus)))
+    (is (= true (:suolasakko-kaytossa vastaus)))
+    (is (= "kokonaismaara" (:tyyppi vastaus)))
+
+    ;; Tarkistetaan hakutulos
+    (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
+    (is (= talvisuolan-kayttoraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
+    (is (= suolasakko-tai-bonus-maara (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-tai-bonus-maara])))
+    (is (= maksukuukausi (get-in hakutulos [:talvisuolan-sanktiot :maksukuukausi])))
+    (is (= vain-sakko-maara (get-in hakutulos [:talvisuolan-sanktiot :vain-sakko-maara])))
+    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= true (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-kaytossa])))
+    (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
+
+(deftest paivita-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-alueurakka-test
+  (let [urakka-id (t/hae-urakan-id-nimella "Tampereen alueurakka 2017-2022")
+        hk-alkuvuosi 2022
+        muokattu-suolasakko-tai-bonus-maara 100M
+        vain-sakko-maara 50M
+        maksukuukausi 9
+        talvisuolan-kayttoraja 500M
+        suolasakko-kaytossa? true
+        kayttoraja {:suolasakko-tai-bonus-maara 50M
+                    :vain-sakko-maara vain-sakko-maara
+                    :maksukuukausi maksukuukausi
+                    :indeksi nil
+                    :talvisuolan-kayttoraja talvisuolan-kayttoraja
+                    :urakka-id urakka-id
+                    :suolasakko-kaytossa suolasakko-kaytossa?
+                    :hoitokauden-alkuvuosi hk-alkuvuosi}
+        vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ kayttoraja)
+
+        ;; Muokataan kokonaisrajoitusta hieman
+        muokattu-kayttoraja (assoc kayttoraja :suolasakko-tai-bonus-maara muokattu-suolasakko-tai-bonus-maara
+                                              :id (:id vastaus))
+        vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ muokattu-kayttoraja)
+
+        ;; Hae rajoitusalueen suolasanktio, jotta voi vertailla lukuja
+        hakutulos (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :hae-talvisuolan-kayttorajat t/+kayttaja-jvh+
+                    {:urakka-id urakka-id
+                     :hoitokauden-alkuvuosi hk-alkuvuosi})
+        ;; Siivotaan kanta
+        _ (t/u (str "DELETE from suolasakko WHERE urakka = " urakka-id))]
+
+    ;; Tarkistetaan tallennuksen vastauksen tiedot
+    (is (not (nil? (:id vastaus))))
+    (is (= nil (:indeksi vastaus)))
+    (is (= muokattu-suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara vastaus)))
+    (is (= true (:suolasakko-kaytossa vastaus)))
+    (is (= vain-sakko-maara (:vain-sakko-maara vastaus)))
+    (is (= talvisuolan-kayttoraja (:talvisuolan-kayttoraja vastaus)))
+    (is (= maksukuukausi (:maksukuukausi vastaus)))
+    (is (= nil (:indeksi vastaus)))
+    (is (= true (:suolasakko-kaytossa vastaus)))
+    (is (= "kokonaismaara" (:tyyppi vastaus)))
+
+    ;; Tarkistetaan hakutulos
+    (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
+    (is (= talvisuolan-kayttoraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
+    (is (= muokattu-suolasakko-tai-bonus-maara (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-tai-bonus-maara])))
+    (is (= maksukuukausi (get-in hakutulos [:talvisuolan-sanktiot :maksukuukausi])))
+    (is (= vain-sakko-maara (get-in hakutulos [:talvisuolan-sanktiot :vain-sakko-maara])))
+    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= true (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
 
