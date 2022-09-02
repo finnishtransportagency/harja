@@ -137,3 +137,6 @@
 
 (def +analytiikkaportaali-toteuma-vastaus+ "api/schemas/entities/analytiikkaportaali.schema.json")
 (def analytiikkaportaali-toteuma-vastaus (tee-validaattori +analytiikkaportaali-toteuma-vastaus+))
+
+(def +raportti-materiaaliraportti-response+ "api/schemas/raportti.schema.json")
+(def raportti-materiaaliraportti-response (tee-validaattori +raportti-materiaaliraportti-response+))
