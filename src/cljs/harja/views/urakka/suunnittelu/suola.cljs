@@ -278,7 +278,9 @@
 
 ;; -------
 
-(defn lomake-talvisuolan-kayttoraja [e! app urakka]
+(defn lomake-talvisuolan-kayttoraja-mhu
+  "Talvisuolan käyttörajan lomake mhu urakoille ('teiden-hoito'-tyyppi)"
+  [e! app urakka]
   (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
         valittavat-indeksit (map :indeksinimi (i/urakkatyypin-indeksit :hoito))
         lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
@@ -289,19 +291,19 @@
     [:div
      [lomake/lomake {:ei-borderia? true
                      :tarkkaile-ulkopuolisia-muutoksia? false
-                     :muokkaa! (fn [data] (do
-                                            (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomake data))
-                                            ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
-                                            (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
-                                              (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomake)))))
-                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomake)))}
+                     :muokkaa! (fn [data]
+                                 (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomakeMHU data))
+                                 ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista. Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
+                                 (when (= :indeksi (:harja.ui.lomake/viimeksi-muokattu-kentta data))
+                                   (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU))))
+                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeMHU)))}
       [(lomake/rivi
          {:nimi :kopioi-rajoitukset
           :tyyppi :checkbox
           :palstoja 1
           :teksti "Kopioi rajoitukset tuleville hoitovuosille"})
        (lomake/rivi
-         {:nimi :kokonaismaara
+         {:nimi :talvisuolan-kayttoraja
           :tyyppi :positiivinen-numero
           :palstoja 1
           :otsikko "Talvisuolan käyttöraja / vuosi (kuivatonnia)"
@@ -310,7 +312,7 @@
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true
           :disabled? true}
-         {:nimi :kokonaismaara-info
+         {:nimi :talvisuolan-kayttoraja-info
           :tyhja-otsikko? true
           :tyyppi :komponentti
           :komponentti (fn []
@@ -330,6 +332,7 @@
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true}
 
+         ;; TODO: Tarkista toimiiko indeksin valinta niin kuin on ajateltu speksissä
          (when (urakka/indeksi-kaytossa-sakoissa?)
            {:nimi :indeksi
             :tyyppi :valinta
@@ -341,6 +344,63 @@
                               (if (nil? %) "Ei indeksiä" (str %)))
             :valinnat (conj valittavat-indeksit nil)}))]
       lomake]]))
+
+(defn lomake-talvisuolan-kayttoraja-alueurakka
+  "Talvisuolan käyttörajan lomake alueurakoille ('hoito'-tyyppi)"
+  [e! app urakka]
+  (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
+        lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
+        tarkasta-sakko-ja-bonus (fn [_ {sakko-tai-bonus :suolasakko-tai-bonus-maara vain-sakko :vain-sakko-maara}]
+                                  (when (and (number? vain-sakko)
+                                          (number? sakko-tai-bonus)
+                                          (not= vain-sakko sakko-tai-bonus)
+                                          (not= 0 vain-sakko)
+                                          (not= 0 sakko-tai-bonus))
+                                    "Sakko/bonus ja sakko eivät saa olla eri arvoja. Käytetään Sakko/bonus arvoa."))]
+    [:div
+     [lomake/lomake {:ei-borderia? true
+                     :muokkaa! (fn [data]
+                                 (e! (suolarajoitukset-tiedot/->PaivitaKayttorajalomakeAlueurakka data))
+                                 ;; Lomake ei tunnista on-blur komentoa alasvetovalikoista.
+                                 ;; Joten tulkitaan tässä, että onko alasvetovalikon tila muuttunut
+                                 (when (some #(= (:harja.ui.lomake/viimeksi-muokattu-kentta data) %) #{:suolasakko-kaytossa :maksukuukausi})
+                                   (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeAlueurakka))))
+                     :blurrissa! (fn [data] (e! (suolarajoitukset-tiedot/->TallennaKayttorajalomakeAlueurakka)))}
+      [{:teksti "Suolasakko käytössä"
+        :nimi :suolasakko-kaytossa :tyyppi :checkbox :palstoja 2
+        :muokattava? (constantly saa-muokata?) :nayta-rivina? true
+        :vayla-tyyli? true}
+       {:otsikko "Talvisuolan käyttöraja / vuosi (kuivatonnia)"
+        :nimi :talvisuolan-kayttoraja :tyyppi :positiivinen-numero :palstoja 1
+        :placeholder "Ei rajoitusta"
+        :muokattava? (constantly saa-muokata?)
+        :yksikko "t" :piilota-yksikko-otsikossa? true
+        :vayla-tyyli? true}
+       {:otsikko "Maksukuukausi" :nimi :maksukuukausi :tyyppi :valinta :palstoja 1
+        :valinta-arvo first
+        :muokattava? (constantly saa-muokata?)
+        :valinta-nayta #(if (not saa-muokata?)
+                          ""
+                          (if (nil? %) yleiset/+valitse-kuukausi+ (second %)))
+        :valinnat [[5 "Toukokuu"] [6 "Kesäkuu"] [7 "Heinäkuu"]
+                   [8 "Elokuu"] [9 "Syyskuu"]]
+        :vayla-tyyli? true}
+       {:otsikko "Suola\u00ADsakko/bonus / ylittävä tonni"
+        :nimi :suolasakko-tai-bonus-maara :tyyppi :positiivinen-numero :palstoja 1
+        :muokattava? (constantly saa-muokata?)
+        :yksikko "€" :piilota-yksikko-otsikossa? false
+        :varoita [tarkasta-sakko-ja-bonus]
+        :vihje "Jos urakassa käytössä sekä suolasakko että -bonus, täytä vain tämä"
+        :vayla-tyyli? false}
+       {:otsikko "Vain suola\u00ADsakko / ylittävä tonni"
+        :nimi :vain-sakko-maara :tyyppi :positiivinen-numero :palstoja 1
+        :muokattava? (constantly saa-muokata?)
+        :yksikko "€" :piilota-yksikko-otsikossa? false
+        :varoita [tarkasta-sakko-ja-bonus]
+        :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"
+        :vayla-tyyli? false}]
+      lomake]]))
+
 
 (defn lomake-pohjavesialueen-suolasanktio [e! app urakka]
   (let [saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))
@@ -468,14 +528,26 @@
 
          [:div.lomakkeet
           [:h3 "Talvisuolan kokonaismäärän käyttöraja"]
-          (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
-            [lomake-talvisuolan-kayttoraja e! app urakka])
+          (case (:tyyppi urakka)
+            ;; MHU talvisuolan käyttöraja lomake
+            :teiden-hoito
+            (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
+              [lomake-talvisuolan-kayttoraja-mhu e! app urakka])
 
-          [:h3 "Pohjavesialueen suolasanktio"]
-          (when-not (nil? (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio]))
-            ;; Ladataan rajoitusalueiden ylityksen määrittävä lomake, nimestä huolimatta. Käyttöliittymässä on historian painolastista johtuen
-            ;; paljon pohjavesialue termiä, vaikka käytännössä käsitellään rajoitusalueita. (joita voi olla monta yhdellä pohjavesialueella)
-            [lomake-pohjavesialueen-suolasanktio e! app urakka])]
+            ;; Alueurakka talvisuolan käyttöraja lomake
+            :hoito
+            (when-not (nil? (get-in app [:kayttorajat :talvisuolan-sanktiot]))
+              [lomake-talvisuolan-kayttoraja-alueurakka e! app urakka])
+
+            nil)
+
+          (when (= :teiden-hoito (:tyyppi urakka))
+            [:<>
+             [:h3 "Pohjavesialueen suolasanktio"]
+             (when-not (nil? (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio]))
+               ;; Ladataan rajoitusalueiden ylityksen määrittävä lomake, nimestä huolimatta. Käyttöliittymässä on historian painolastista johtuen
+               ;; paljon pohjavesialue termiä, vaikka käytännössä käsitellään rajoitusalueita. (joita voi olla monta yhdellä pohjavesialueella)
+               [lomake-pohjavesialueen-suolasanktio e! app urakka])])]
 
          ;; Pohjavesialueiden rajoitusalueiden taulukko ym.
          [:div.pohjavesialueiden-suolarajoitukset

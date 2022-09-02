@@ -55,10 +55,15 @@
 (defrecord HaeTalvisuolanKayttorajatEpaonnistui [vastaus])
 
 ;; Käyttörajalomake
-(defrecord PaivitaKayttorajalomake [lomake])
-(defrecord TallennaKayttorajalomake [])
-(defrecord TallennaKayttorajalomakeOnnistui [vastaus])
-(defrecord TallennaKayttorajalomakeEpaonnistui [vastaus])
+(defrecord PaivitaKayttorajalomakeMHU [lomake])
+(defrecord TallennaKayttorajalomakeMHU [])
+(defrecord TallennaKayttorajalomakeMHUOnnistui [vastaus])
+(defrecord TallennaKayttorajalomakeMHUEpaonnistui [vastaus])
+
+(defrecord PaivitaKayttorajalomakeAlueurakka [lomake])
+(defrecord TallennaKayttorajalomakeAlueurakka [])
+(defrecord TallennaKayttorajalomakeAlueurakkaOnnistui [vastaus])
+(defrecord TallennaKayttorajalomakeAlueurakkaEpaonnistui [vastaus])
 
 ;; RajoitusalueidenSanktiolomake
 (defrecord PaivitaRajoitusalueidenSanktiolomake [lomake])
@@ -163,22 +168,24 @@
         (assoc :kayttoraja-haku-kaynnissa? false)
         (assoc :kayttorajat nil))))
 
-  PaivitaKayttorajalomake
+  PaivitaKayttorajalomakeMHU
   (process-event [{lomake :lomake} app]
+    (log/debug "PaivitaKayttorajalomakeMHU")
+
     (let [urakka-id (-> @tila/yleiset :urakka :id)
-          lomake {:id (:id lomake)
-                  :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta lomake)
-                  :indeksi (:indeksi lomake)
-                  :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
-                  :urakka-id urakka-id
-                  :kopioi-rajoitukset (:kopioi-rajoitukset lomake)}]
+          ;; Huom, lomake-data sisältää myös lomakkeen metadataa kuten ::muokatut ym., älä poista vahingossa metadataa.
+          lomake (assoc lomake
+                   :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                   :urakka-id urakka-id)]
 
       (-> app
         (assoc-in [:kayttorajat :talvisuolan-sanktiot] lomake)
         (assoc :paivita-kayttoraja-kaynnissa? true))))
 
-  TallennaKayttorajalomake
+  TallennaKayttorajalomakeMHU
   (process-event [_ app]
+    (log/debug "TallennaKayttorajalomakeMHU")
+
     (let [urakka-id (-> @tila/yleiset :urakka :id)
           lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
           lomake-data {:id (:id lomake)
@@ -193,21 +200,81 @@
 
           _ (tuck-apurit/post! :tallenna-talvisuolan-kayttoraja
               lomake-data
-              {:onnistui ->TallennaKayttorajalomakeOnnistui
-               :epaonnistui ->TallennaKayttorajalomakeEpaonnistui
+              {:onnistui ->TallennaKayttorajalomakeMHUOnnistui
+               :epaonnistui ->TallennaKayttorajalomakeMHUEpaonnistui
                :paasta-virhe-lapi? true})]
       (assoc app :paivita-kayttoraja-kaynnissa? true)))
 
-  TallennaKayttorajalomakeOnnistui
+  TallennaKayttorajalomakeMHUOnnistui
   (process-event [{vastaus :vastaus} app]
+    (log/debug "TallennaKayttorajalomakeMHUOnnistui")
+
     (do
         (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
         (-> app
           (assoc-in [:kayttorajat :talvisuolan-sanktiot] vastaus)
           (assoc :paivita-kayttoraja-kaynnissa? false))))
 
-  TallennaKayttorajalomakeEpaonnistui
+  TallennaKayttorajalomakeMHUEpaonnistui
   (process-event [{vastaus :vastaus} app]
+    (log/debug "TallennaKayttorajalomakeMHUEpaonnistui")
+
+    (do
+      (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-lyhyt)
+      (assoc app :paivita-kayttoraja-kaynnissa? false)))
+
+  PaivitaKayttorajalomakeAlueurakka
+  (process-event [{lomake :lomake} app]
+    (log/debug "PaivitaKayttorajalomakeAlueurakka")
+
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          ;; Huom, lomake-data sisältää myös lomakkeen metadataa kuten ::muokatut ym., älä poista vahingossa metadataa.
+          lomake (assoc lomake
+                   :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                   :urakka-id urakka-id
+                   :muokattu true
+                   :muokattu? true)]
+
+      (-> app
+        (assoc-in [:kayttorajat :talvisuolan-sanktiot] lomake)
+        (assoc :paivita-kayttoraja-kaynnissa? true))))
+
+  TallennaKayttorajalomakeAlueurakka
+  (process-event [_ app]
+    (log/debug "TallennaKayttorajalomakeAlueurakka")
+
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          lomake (get-in app [:kayttorajat :talvisuolan-sanktiot])
+          lomake-data {:id (:id lomake)
+                       :suolasakko-kaytossa (:suolasakko-kaytossa lomake)
+                       :talvisuolan-kayttoraja (:talvisuolan-kayttoraja lomake)
+                       :maksukuukausi (:maksukuukausi lomake)
+                       :suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara lomake)
+                       :vain-sakko-maara (:vain-sakko-maara lomake)
+                       :hoitokauden-alkuvuosi (:valittu-hoitovuosi app)
+                       :urakka-id urakka-id}
+
+          _ (tuck-apurit/post! :tallenna-talvisuolan-kayttoraja
+              lomake-data
+              {:onnistui ->TallennaKayttorajalomakeAlueurakkaOnnistui
+               :epaonnistui ->TallennaKayttorajalomakeAlueurakkaEpaonnistui
+               :paasta-virhe-lapi? true})]
+      (assoc app :paivita-kayttoraja-kaynnissa? true)))
+
+  TallennaKayttorajalomakeAlueurakkaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/debug "TallennaKayttorajalomakeAlueurakkaOnnistui")
+
+    (do
+      (viesti/nayta-toast! "Tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+      (-> app
+        (assoc-in [:kayttorajat :talvisuolan-sanktiot] vastaus)
+        (assoc :paivita-kayttoraja-kaynnissa? false))))
+
+  TallennaKayttorajalomakeAlueurakkaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/debug "TallennaKayttorajalomakeAlueurakkaEpaonnistui")
+
     (do
       (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-lyhyt)
       (assoc app :paivita-kayttoraja-kaynnissa? false)))
