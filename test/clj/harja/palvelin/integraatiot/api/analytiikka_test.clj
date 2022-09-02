@@ -79,22 +79,34 @@
     (is (= 400 (:status @vastaus)))
     (is (str/includes? (:body @vastaus) "Alkuaika väärässä muodossa"))))
 
+
 (deftest hae-toteumat-test-poistettu-onnistuu
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
           ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
-        ;; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
-        alkuaika "2004-01-01T00:00:00+03"
-        loppuaika "2004-12-31T21:00:00+03"
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
+        ;; Aseta hakuväli, josta löytyy suunnilleen kaikki toteumat, koska ci putkessa luontipäiväksi asettuu tietokannan luonti päivä,
+        paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
+        paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        vastaus-body (-> (:body @vastaus)
+                       (json/read-str)
+                       (clojure.walk/keywordize-keys))
 
-        ;; Merkitään kaikki saman aikavälin toteumat poistetuiksi ja tehdään uusi haku
-        _ (u (str "UPDATE toteuma SET poistettu = true WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
-        poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti))
-        _ (u (str "UPDATE toteuma SET poistettu = false WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
-        _ (Thread/sleep 3500)]
+        ;; Merkitään kaikki saman aikavälin toteumat poistetuiksi
+        _ (u (str "UPDATE toteuma SET poistettu = true, muokattu = NOW() WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
+        ;; Päivitetään analytiikka_toteumat taulun tiedot
+        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        ;; Haetaan poistetut, jotka on muuttuneet tänään (eli muokkauksen jälkeen)
+        poistetut (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        _ (u (str "UPDATE toteuma SET poistettu = false, muokattu = null WHERE alkanut >= '2004-01-01T00:00:00+03' AND alkanut <= '2004-12-31T21:00:00+03'"))
+        _ (Thread/sleep 3500)
+        poistetut-body (-> (:body @poistetut)
+                         (json/read-str)
+                         (clojure.walk/keywordize-keys))]
     (is (= 200 (:status @vastaus)))
     (is (= 200 (:status @poistetut)))
     (sisaltaa-perustiedot (:body @vastaus))
     (sisaltaa-perustiedot (:body @poistetut))
-    (is (= @vastaus @poistetut))))
+    (is (= (count (:reittitoteumat vastaus-body)) (count (:reittitoteumat poistetut-body))))
+    (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
