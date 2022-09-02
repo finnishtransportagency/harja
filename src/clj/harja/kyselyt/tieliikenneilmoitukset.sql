@@ -331,7 +331,7 @@ WHERE urakka = :urakka AND
 -- name: hae-ilmoitukset-ytunnuksella
 WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
                            FROM urakka u
-                                JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = '2163026-3'
+                                JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
                                 -- Haetaan vain käynnissäolevista urakoista
                           WHERE ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR
                                 (u.loppupvm IS NULL AND u.alkupvm <= NOW())))
