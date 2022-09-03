@@ -41,7 +41,7 @@
                         "23116"))
 (def id-K2 (hae-toimenpidekoodin-id "K2" "23104"))
 (def id-ib-rampit (hae-toimenpidekoodin-id "Ib rampit" "23104"))
-(def rumpujen-tarkastus (hae-toimenpidekoodin-id "Rumpujen tarkastus" "23116"))
+(def rumpujen-korjaus (hae-toimenpidekoodin-id "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet" "20191"))
 
 ;; Uudet lisättävät tehtävät
 (def id-ise-rampit (hae-toimenpidekoodin-id "Ise rampit" "23104"))
@@ -73,7 +73,7 @@
    {:tehtava-id id-yksityisten-rumpujen :maara 666}])
 
 (def uuden-hoitokauden-tehtavat
-  [{:tehtava-id id-ib-rampit :maara 6.66}
+  [{:tehtava-id rumpujen-korjaus :maara 6.66}
    {:tehtava-id id-opastustaulut :maara 999}])
 
 (def virheellinen-tehtava
@@ -89,8 +89,7 @@
                                   :tehtavahierarkia
                                   +kayttaja-jvh+
                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
-    #_(is (= (count hierarkia) 108) "Hierarkiassa on 108 osaa.")
-    (is (= (:tehtava (first (filter #(= rumpujen-tarkastus (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
+    (is (= (:tehtava (first (filter #(= rumpujen-korjaus (:tehtava-id %)) hierarkia))) "Yksityisten rumpujen korjaus ja uusiminen  Ø ≤ 400 mm, päällystetyt tiet") "Tehtävähierarkiassa palautuu tietoja.")))
 
 
 
@@ -186,14 +185,13 @@
 
     ;; hoitokauden tietojen lisäys
     (is (= (count tehtavamaarat-lisayksen-jalkeen) 19) "Uudet rivit lisättiin, vanhat säilyivät.")
-    (is (= (:maara (first (filter #(and (= id-ise-rampit (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= id-yksityisten-rumpujen (:tehtava-id %))
                                         (= 2020 (:hoitokauden-alkuvuosi %))
                                         (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) tehtavamaarat-lisaa))) 666M) "Lisäys lisäsi määrän.")
 
     ;; uuden hoitokauden lisäys
-    #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (is (= (:maara (first (filter #(and (= id-ib-rampit (:tehtava-id %))
+    (is (= (:maara (first (filter #(and (= rumpujen-korjaus (:tehtava-id %))
                                        (= 2022 (:hoitokauden-alkuvuosi %))
                                        (= @oulun-maanteiden-hoitourakan-2019-2024-id (:urakka %))) hoitokausi-2022-lisaa))) 6.66M) "Uuden hoitokauden tiedot palautettiin hierarkiassa.")
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
@@ -330,11 +328,12 @@
                   +kayttaja-jvh+
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                    :hoitokauden-alkuvuosi :kaikki})
-        odotettuja-tehtavia #{id-opastustaulut id-palteiden-poisto id-ib-rampit id-K2 id-III id-katupolyn-sidonta id-soratoiden-polynsidonta id-id-ohituskaistat}
+        odotettuja-tehtavia #{id-opastustaulut id-palteiden-poisto  id-soratoiden-polynsidonta}
+        ei-odotettuja-tehtavia #{id-katupolyn-sidonta id-K2}
         loydetyt-tehtavat (set (map :tehtava-id (filter (comp not nil? :sopimuksen-tehtavamaara) vastaus)))
         hae-tehtavan-maara-fn (fn [tehtava]
                                 (:sopimuksen-tehtavamaara
                                   (first (filter #(= (:tehtava-id %) tehtava) vastaus))))]
     (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
-    (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut)))
-    (is (= 1000M (hae-tehtavan-maara-fn id-K2)))))
+    (is (not (set/subset? ei-odotettuja-tehtavia loydetyt-tehtavat)) "Odottamattomia tehtäväviä ei ole kirjatuissa sopimuksen tehtävämäärissä.")
+    (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut)))))
