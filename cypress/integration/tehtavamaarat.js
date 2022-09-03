@@ -52,9 +52,9 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('table.grid').contains('Levähdys- ja pysäköimisalueet').parent().find('td.muokattava').find('input').should('have.value', 666)
     cy.get('table.grid').contains('Levähdys- ja pysäköimisalueet').parent().find('td.muokattava').find('input').type('9')
     cy.get('table.grid').contains('Levähdys- ja pysäköimisalueet').parent().find('td.muokattava').find('input').should('have.value', 6669)
-    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 7.2)
-    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').type('9')
-    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 7.29)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 7.12)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('9')
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 9)
   })
 
   after(() => {
