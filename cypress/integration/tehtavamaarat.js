@@ -17,7 +17,7 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
   })
 
   it('Määrän voi syöttää', () => {
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').type('666')
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').type('666')
     
   })
 
@@ -25,7 +25,7 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('div.select-default').first().find('button').click()    
     cy.get('.harja-alasvetolistaitemi').contains('3 Sorateiden hoito').click()
     cy.wait(2000)
-    cy.get('table.grid').contains('Ise 2-ajorat').should('not.exist')
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').should('not.exist')
   })
 
   it('Hoitokautta voi vaihtaa', () => {
@@ -50,9 +50,9 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('div.select-default').first().find('button').click()
     cy.get('.harja-alasvetolistaitemi').contains('1.0 TALVIHOITO').click()
     cy.wait(2000)
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('have.value', 666)
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').type('9')
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').should('have.value', 6669)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 666)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').type('9')
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 6669)
   })
 
   after(() => {
@@ -61,7 +61,7 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('div.select-default').first().find('button').click()
     cy.get('.harja-alasvetolistaitemi').contains('0 KAIKKI').click()
     cy.wait(1000)
-    cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear()
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear()
     cy.wait('@tallennatehtavamaarat')
     cy.wait(1000)
     cy.get('div.select-default').first().find('button').click()    
