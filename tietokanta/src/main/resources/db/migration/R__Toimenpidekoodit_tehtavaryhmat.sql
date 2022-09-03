@@ -1219,6 +1219,6 @@ DELETE from tehtavaryhma where nimi like ('%Tie-, levähdys- ja liitännäisalue
 -- Korjaa yksiköt
 UPDATE toimenpidekoodi SET yksikko = 'm3' WHERE nimi = 'Maakivien (>1m3) poisto';
 UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
-UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi = 'Is rampit'
+UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi = 'Is rampit';
 
 DELETE from tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kiveykset (U)'; -- Väärin kirjoitettu versio, poistetaan roikkumasta
