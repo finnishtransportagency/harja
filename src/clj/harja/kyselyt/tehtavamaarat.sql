@@ -153,6 +153,45 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  -- suljetaan listalta pois tehtäviä, joille ei tarvitse suunnitella määriä
+  AND tpk4.suunnitteluyksikko != 'euroa' AND tpk4.nimi NOT IN ('Sorateiden pinnan hoito, hoitoluokka II',
+                                                               'Sorateiden pinnan hoito, hoitoluokka III',
+                                                               'Sorapintaisten kävely- ja pyöräilyväylienhoito',
+                                                               'Sorastus km',
+                                                               'Vesakonraivaus N1',
+                                                               'Reunapaalujen uusiminen',
+                                                               'Nurmetuksen hoito / niitto N2',
+                                                               'Nurmetuksen hoito / niitto N3',
+                                                               'Nurmetuksen hoito / niitto N1',
+                                                               'Katupölynsidonta',
+                                                               'Reunapaalujen kp (uusien)',
+                                                               'Meluesteiden pesu',
+                                                               'Ic 2-ajorat',
+                                                               'Kävely- ja pyöräilyväylien laatukäytävät',
+                                                               'K1',
+                                                               'K2',
+                                                               'Linjahiekoitus',
+                                                               'Pistehiekoitus',
+                                                               'TIb',
+                                                               'II ohituskaistat',
+                                                               'Ib rampit',
+                                                               'Ic 1-ajorat',
+                                                               'Ic ohituskaistat',
+                                                               'Ic rampit',
+                                                               'II',
+                                                               'III',
+                                                               'Talvihoidon kohotettu laatu',
+                                                               'Ib ohituskaistat',
+                                                               'Ise 2-ajorat.',
+                                                               'Ise 1-ajorat.',
+                                                               'Ise ohituskaistat',
+                                                               'Ise rampit',
+                                                               'Is 2-ajorat.',
+                                                               'Is 1-ajorat.',
+                                                               'Is ohituskaistat',
+                                                               'Is rampit',
+                                                               'Ib 2-ajorat.',
+                                                               'Ib 1-ajorat.')
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-tehtavahierarkia-maarineen
@@ -203,6 +242,45 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  -- suljetaan listalta pois tehtäviä, joille ei tarvitse suunnitella määriä
+  AND tpk4.suunnitteluyksikko != 'euroa' AND tpk4.nimi NOT IN ('Sorateiden pinnan hoito, hoitoluokka II',
+                        'Sorateiden pinnan hoito, hoitoluokka III',
+                        'Sorapintaisten kävely- ja pyöräilyväylienhoito',
+                        'Sorastus km',
+                        'Vesakonraivaus N1',
+                        'Reunapaalujen uusiminen',
+                        'Nurmetuksen hoito / niitto N2',
+                        'Nurmetuksen hoito / niitto N3',
+                        'Nurmetuksen hoito / niitto N1',
+                        'Katupölynsidonta',
+                        'Reunapaalujen kp (uusien)',
+                        'Meluesteiden pesu',
+                        'Ic 2-ajorat',
+                        'Kävely- ja pyöräilyväylien laatukäytävät',
+                        'K1',
+                        'K2',
+                        'Linjahiekoitus',
+                        'Pistehiekoitus',
+                        'TIb',
+                        'II ohituskaistat',
+                        'Ib rampit',
+                        'Ic 1-ajorat',
+                        'Ic ohituskaistat',
+                        'Ic rampit',
+                        'II',
+                        'III',
+                        'Talvihoidon kohotettu laatu',
+                        'Ib ohituskaistat',
+                        'Ise 2-ajorat.',
+                        'Ise 1-ajorat.',
+                        'Ise ohituskaistat',
+                        'Ise rampit',
+                        'Is 2-ajorat.',
+                        'Is 1-ajorat.',
+                        'Is ohituskaistat',
+                        'Is rampit',
+                        'Ib 2-ajorat.',
+                        'Ib 1-ajorat.')
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
