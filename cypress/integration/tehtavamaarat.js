@@ -17,8 +17,8 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
   })
 
   it('Määrän voi syöttää', () => {
+    cy.get('div.select-default').contains('01.10.2022-30.09.2023').click()
     cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').type('666')
-    
   })
 
   it('Toimenpidettä voi vaihtaa', () => {
@@ -50,9 +50,9 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('div.select-default').first().find('button').click()
     cy.get('.harja-alasvetolistaitemi').contains('1.0 TALVIHOITO').click()
     cy.wait(2000)
-    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 666)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 7.2)
     cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').type('9')
-    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 6669)
+    cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').should('have.value', 7.29)
   })
 
   after(() => {
