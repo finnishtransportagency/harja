@@ -125,7 +125,12 @@ WHERE ((lp.urakka IN (:urakat) AND u.urakkanro IS NOT NULL)
 -- row-fn: geo/muunna-reitti
 SELECT
   ST_Simplify(t.sijainti, :toleranssi) AS reitti,
-  t.tyyppi,
+  -- Esitetään tilaajan tekemät talvihoito- ja tiestötarkastukset tilaajan laadunvalvontana, mutta säilytetään ero kantatasolla
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
+      END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -179,7 +184,11 @@ ORDER BY t.laadunalitus ASC;
 -- Hakee tarkastusten asiat pisteessä
 SELECT
   t.id,
-  t.tyyppi,
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
+      END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
@@ -187,6 +196,7 @@ SELECT
   END                                                        AS tekija,
   t.aika,
   t.tarkastaja,
+  o.nimi as organisaatio,
   t.havainnot,
   (SELECT array_agg(nimi)
    FROM tarkastus_vakiohavainto t_vh
