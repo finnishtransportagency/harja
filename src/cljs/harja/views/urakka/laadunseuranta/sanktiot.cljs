@@ -45,6 +45,8 @@
     :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
     :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
     :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueiden suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"
     :yllapidon_bonus "Bonus"
