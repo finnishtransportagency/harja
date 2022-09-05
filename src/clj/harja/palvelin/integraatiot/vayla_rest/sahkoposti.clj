@@ -111,6 +111,10 @@
                   nil)
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
         kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
+
+    ;; Lähetetään vastaus virheellisestä viestistä
+    (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) kuittaus-xml false)
+
     ;; Palautetaan käsitelty vastaus
     kuittaus-xml))
 
