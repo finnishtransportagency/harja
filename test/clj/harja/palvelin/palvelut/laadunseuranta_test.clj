@@ -424,7 +424,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
-    :suorasanktio false, :laji :C,
+    :suorasanktio false, :laji :C, :indeksikorjattu nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
