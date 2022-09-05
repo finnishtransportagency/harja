@@ -69,6 +69,8 @@ SELECT
   s.toimenpideinstanssi,
   s.vakiofraasi,
 
+  indeksikorjaa(s.maara, date_part('year', s.perintapvm::date)::integer, date_part('month', s.perintapvm::date)::integer, :urakka::integer) as indeksikorjattu,
+
   lp.id                               AS laatupoikkeama_id,
   lp.kohde                            AS laatupoikkeama_kohde,
   lp.aika                             AS laatupoikkeama_aika,
