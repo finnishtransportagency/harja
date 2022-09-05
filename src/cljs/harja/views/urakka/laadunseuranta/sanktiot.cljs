@@ -40,7 +40,6 @@
     :A "Ryhmä A"
     :B "Ryhmä B"
     :C "Ryhmä C"
-    :HAU "Ryhmä HAU"
     :muistutus "Muistutus"
     :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
     :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
