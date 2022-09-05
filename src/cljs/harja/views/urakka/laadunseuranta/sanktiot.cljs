@@ -349,15 +349,14 @@
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(valitse-sanktio! % tiedot/valittu-sanktio)
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
-                               yhteensa-indeksit (reduce + 0 (map :indeksikorjattu %))
-                               erotus (- yhteensa-indeksit yhteensa-summat)]
-                             [{:teksti "Yht." :luokka "lihavoitu"}
-                              {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
-                              {:teksti (str (fmt/euro-opt true yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}                              
-                              {:teksti (str
-                                         (if (>= erotus 0) "+" "-")
-                                         (fmt/euro-opt true erotus))
-                               :tasaa :oikea :luokka "lihavoitu"}])}
+                               ;; Ylläpidossa sekä bonuksia että sanktioita, käsiteltävä sakot miinusmerkkisinä
+                               yhteensa-summat (if yllapito? (- yhteensa-summat) yhteensa-summat)
+                               yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
+                           [{:teksti "Yht." :luokka "lihavoitu"}
+                            {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
+                            {:teksti (str (fmt/euro-opt true yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
+                            {:teksti (fmt/euro-opt true yhteensa-indeksit)
+                             :tasaa :oikea :luokka "lihavoitu"}])}
       [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm :leveys 1}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt laji->teksti}
        (when yllapitokohdeurakka?
@@ -379,10 +378,7 @@
                                   (when summa
                                     (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjattu :tasaa :oikea
-        :hae #(let [{:keys [summa indeksikorjattu]} %]
-                (fmt/euro-opt false (when (and summa indeksikorjattu)
-                                      (- indeksikorjattu (if yllapito? (- summa) summa))))) :leveys 1}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1}]
       sanktiot]
      (when yllapito?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))

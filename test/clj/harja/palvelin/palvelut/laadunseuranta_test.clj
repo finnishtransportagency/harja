@@ -424,7 +424,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
-    :suorasanktio false, :laji :C, :indeksikorjattu nil
+    :suorasanktio false, :laji :C, :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
@@ -442,6 +442,18 @@
                                                                      :loppu (pvm/luo-pvm 2019 10 30)
                                                                      :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
+
+(deftest urakka-2019-alkaen-ed-syyskuun-indeksikorotus
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                     :alku (pvm/luo-pvm 2020 2 1)
+                                                                     :loppu (pvm/luo-pvm 2020 3 30)
+                                                                     :vain-yllapitokohteettomat? nil})
+        sanktio (first vastaus)]
+    (is (= (count vastaus) 1))
+    (is (= (:summa sanktio) 100.2) "sanktion summa laskettu oikein")
+    (is (= (:indeksikorjaus sanktio) 8.116200M) "sanktion indeksikorjaus laskettu oikein")))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
