@@ -72,22 +72,27 @@
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
   [db asetukset integraatioloki sahkoposti-xml liite?]
   (try+
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "api" (if liite?
-                                 "sahkoposti-ja-liite-lahetys"
-                                 "sahkoposti-lahetys") nil
-      (fn [konteksti]
-        (let [http-asetukset {:metodi :POST
-                              :url (muodosta-lahetys-uri asetukset liite?)
-                              :otsikot {"Content-Type" "application/xml"}
-                              :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
-                              :salasana (get-in asetukset [:api-sahkoposti :salasana])}
-              {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
-          (if liite?
-            (kasittele-sahkoposti-ja-liite-vastaus status body db)
-            (kasittele-sahkoposti-vastaus status body)))))
+    (do
+      (log/info "Lähetä rest-api sähköposti.")
+      (integraatiotapahtuma/suorita-integraatio
+        db integraatioloki "api" (if liite?
+                                   "sahkoposti-ja-liite-lahetys"
+                                   "sahkoposti-lahetys") nil
+        (fn [konteksti]
+          (let [http-asetukset {:metodi :POST
+                                :url (muodosta-lahetys-uri asetukset liite?)
+                                :otsikot {"Content-Type" "application/xml"}
+                                :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
+                                :salasana (get-in asetukset [:api-sahkoposti :salasana])}
+                {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
+            (if liite?
+              (kasittele-sahkoposti-ja-liite-vastaus status body db)
+              (kasittele-sahkoposti-vastaus status body)))))
+      (log/info "rest-api sähköpostin lähetys onnistui"))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      false)))
+      (do
+        (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
+        false))))
 
 (defn muodosta-kuittaus
   "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
