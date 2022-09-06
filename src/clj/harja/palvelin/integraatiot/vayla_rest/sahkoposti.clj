@@ -110,7 +110,12 @@
                   [(:sisalto kasitelty-vastaus)]
                   nil)
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
-        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
+        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)
+        viesti (xml/tee-xml-sanoma kuittaus-xml)]
+
+    ;; Lähetetään kuittaus saatuun sähköpostiin
+    (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti false)
+
     ;; Palautetaan käsitelty vastaus
     kuittaus-xml))
 
