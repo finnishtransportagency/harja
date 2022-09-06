@@ -153,6 +153,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko != 'euroa' -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-tehtavahierarkia-maarineen
@@ -203,6 +204,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko != 'euroa' -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
