@@ -10,8 +10,10 @@ $$
         _luotu := '2022-07-11 15:00:18.947853';
 
         -- Pohjavesialue: Hanko
-        INSERT INTO rajoitusalue(id, tierekisteriosoite, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
-        VALUES (1, ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE, NULL, NULL, _urakka, _luotu, _kayttaja);
+        INSERT INTO rajoitusalue(id, tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja)
+        VALUES (1, ROW (25, 2, 200, 3, 2837, NULL)::TR_OSOITE,
+                (select * from tierekisteriosoitteelle_viiva(25, 2, 200, 3, 2837) as sijainti),
+                NULL, NULL, _urakka, _luotu, _kayttaja);
 
 
         INSERT INTO rajoitusalue_rajoitus(rajoitusalue_id, suolarajoitus, formiaatti, hoitokauden_alkuvuosi, luotu,
