@@ -1070,63 +1070,51 @@ UPDATE tehtavaryhma SET otsikko = '2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystei
 UPDATE tehtavaryhma SET otsikko = '2.8 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito' WHERE otsikko = '2.8 LIIKENNEYMPÄRISTÖN HOITO';
 UPDATE tehtavaryhma SET otsikko = '2.9 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito' WHERE otsikko = '2.9 LIIKENNEYMPÄRISTÖN HOITO';
 
--- Lisätään tunnisteet sellaisille tehtäväryhmille ja tehtäville, joita käytetään esim. kustannusarvioiden hakemisessa
--- FIXME: Talvihoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä
+-- Lisätään yksilöivät tunnisteet erityisille tehtäväryhmille
+-- Osaa käytetää Kustannusten suunnittelussa, osa on relevantti ainoastaan kulujen kirjauksessa, osa liittyy hoitovuoden päättämiseeen ja siihen liittyvien kulujen kirjaamiseen
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '24103c8d-3a8a-4b6f-9315-570834d4479d' WHERE nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658' WHERE nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)';
--- FIXME: Sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6' WHERE nimi = 'Äkilliset hoitotyöt, Soratiet (T1)';
--- FIXME: Talvihoidolle ei voi enää kustannussuunnitelmassa kirjata Vahinkojen korjauksia
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0623ae3c-b8b0-4791-96ea-4808029d43de' WHERE nimi = 'Vahinkojen korjaukset, Talvihoito (T2)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18e3' WHERE nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)';
--- FIXME: Sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Vahinkojen korjauksia
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8' WHERE nimi = 'Vahinkojen korjaukset, Soratiet (T2)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '37d3752c-9951-47ad-a463-c1704cf22f4c' WHERE nimi = 'Erillishankinnat (W)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6' WHERE nimi = 'Tilaajan rahavaraus (T3)';
--- TODO Tarkista tämä
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' WHERE nimi = 'Johto- ja hallintokorvaus (J)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '0ef0b97e-1390-4d6c-bbc4-b30536be8a68' WHERE nimi = 'Hoidonjohtopalkkio (G)';
-
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6' WHERE nimi = 'Muut, liikenneympäristön hoito (F)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '4e3cf237-fdf5-4f58-b2ec-319787127b3e' WHERE nimi = 'Muut, MHU ylläpito (F)';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3' WHERE nimi = 'Hoitovuoden päättäminen / Tavoitepalkkio';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä';
 
-
+-- Lisätään yksilöivät tunnisteet erityisille tehtäville
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' WHERE nimi = 'Hoidonjohtopalkkio';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Vahinkojen korjauksia. Pitääkö näille tehdä jotakin?
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '49b7388b-419c-47fa-9b1b-3797f1fab21d' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (talvihoito)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0623ae3c-b8b0-4791-96ea-4808029d43de');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '63a2585b-5597-43ea-945c-1b25b16a06e2' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (l.ymp.hoito)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '1b374802-dbe7-430b-bfc5-4635383d18e3');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'b3a7a210-4ba6-4555-905c-fef7308dc5ec' WHERE nimi = 'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'df612065-20d5-47b9-8cca-51ffd250e1f8');
--- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä. Pitääkö nöille tehdä jotakin?
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1f12fe16-375e-49bf-9a95-4560326ce6cf' WHERE nimi = 'Äkillinen hoitotyö (talvihoito)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '24103c8d-3a8a-4b6f-9315-570834d4479d');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974' WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c3cb9e68-7f08-4145-ad8f-f2985e8f1658');
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'd373c08b-32eb-4ac2-b817-04106b862fb1' WHERE nimi = 'Äkillinen hoitotyö (soratiet)' AND
         tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '5a6760e8-6494-4db2-80bc-c06df391a5b6');
-
-UPDATE toimenpidekoodi
-SET yksiloiva_tunniste = '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'
+UPDATE toimenpidekoodi SET yksiloiva_tunniste = '4342cd30-a9b7-4194-94ee-00c0ce1f6fc6'
 WHERE nimi = 'Tunnelit'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'ce9264f7-0860-4be0-a447-ac79822c3ca6');
-
 UPDATE toimenpidekoodi
 SET yksiloiva_tunniste = '794c7fbf-86b0-4f3e-9371-fb350257eb30'
 WHERE nimi = 'Tilaajan rahavaraus lupaukseen 1'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6');
-
 UPDATE toimenpidekoodi
 SET yksiloiva_tunniste = '548033b7-151d-4202-a2d8-451fba284d92'
 WHERE nimi = 'Muut tavoitehintaan vaikuttavat rahavaraukset'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '0e78b556-74ee-437f-ac67-7a03381c64f6');
-
 UPDATE toimenpidekoodi
 SET yksiloiva_tunniste = 'e5f61569-bed3-4be3-8aa0-9e0dd2725c6b'
 WHERE nimi = 'Hoitovuoden päättäminen'
@@ -1222,3 +1210,23 @@ UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi 
 UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi = 'Is rampit';
 
 DELETE from tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kiveykset (U)'; -- Väärin kirjoitettu versio, poistetaan roikkumasta
+
+-- Muutokset tehtäviin lokakuussa 2021
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Oja- ja luiskamateriaalien käyttö kulutuskerrokseen';
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Toimistotarvike- ja ICT-kulut, tiedotus, opastus, kokousten järjestäminen jne.';
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Hoito- ja korjaustöiden pientarvikevarasto';
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Toimitilat sähkö-, lämmitys-, vesi-, jäte-, siivous-, huolto-, korjaus- ja vakuutus- yms. kuluineen';
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Hoitourakan tarvitsemat kelikeskus- ja keliennustepalvelut';
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Seurantajärjestelmät (mm. ajantasainen seuranta, suolan automaattinen seuranta)';
+-- TODO: Tilalle on tullut tehtävä nimeltä Erilliskustannukset. Se on euroja. Kun kustannussuunnitelmassa suunnitellaan Erilliskustannusten euroja, mihin ne tallennetaan, mitä tietoja tallentuu mukaan?
+-- Tallennetaanko tieto vain tehtäväryhmään linkitettynä vai tarvitaanko sille tehtävä?
+
+-- Muutokset tehtäviin lokakuussa 2022
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2021 WHERE nimi = 'Oja- ja luiskamateriaalien käyttö kulutuskerrokseen';
+-- TODO: Rumpujen uusiminen Liikenneympäristönhoidosta ylläpitoon?
+-- TODO: Avo-ojitusten siirto korjauksesta ylläpitoon?
+
+-- Muutokset tehtäviin lokakuussa 2023
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2022 WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III';
+-- TODO: Soratieluokittelu muuttuu, tarvitaanko uudet tehtävät vai miten näitä täytyy pystyä tulevaisuudessa seuraamaan?
+-- TODO: Sorateitä kaventava ojitus
