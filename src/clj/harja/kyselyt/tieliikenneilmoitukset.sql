@@ -332,8 +332,9 @@ WHERE urakka = :urakka AND
 WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
                            FROM urakka u
                                 JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
-                                -- Haetaan vain käynnissäolevista urakoista
-                          WHERE ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR
+                                -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
+                                -- 12 h urakan päättymisvuorokauden jälkeenkin.
+                          WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
                                 (u.loppupvm IS NULL AND u.alkupvm <= NOW())))
 SELECT
     i.ilmoitusid,
