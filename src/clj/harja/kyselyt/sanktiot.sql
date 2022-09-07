@@ -68,7 +68,14 @@ SELECT
   s.suorasanktio,
   s.toimenpideinstanssi,
   s.vakiofraasi,
-
+  CASE
+      WHEN s.indeksi IS NULL
+          THEN 0
+      ELSE
+              indeksikorjaa(s.maara, DATE_PART('year', s.perintapvm::DATE)::INTEGER,
+                            DATE_PART('month', s.perintapvm::DATE)::INTEGER,
+                            :urakka::INTEGER) - s.maara
+      END                            AS indeksikorjaus,
   lp.id                               AS laatupoikkeama_id,
   lp.kohde                            AS laatupoikkeama_kohde,
   lp.aika                             AS laatupoikkeama_aika,

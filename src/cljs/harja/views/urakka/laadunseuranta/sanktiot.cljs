@@ -35,6 +35,25 @@
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]))
 
+(defn- laji->teksti
+  [laji]
+  (case laji
+    :A "Ryhmä A"
+    :B "Ryhmä B"
+    :C "Ryhmä C"
+    :muistutus "Muistutus"
+    :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
+    :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
+    :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+    :arvonvahennyssanktio "Arvonvähennys"
+    :yllapidon_muistutus "Muistutus"
+    :yllapidon_sakko "Sakko"
+    :yllapidon_bonus "Bonus"
+    :vesivayla_muistutus "Muistutus"
+    :vesivayla_sakko "Sakko"
+    :vesivayla_bonus "Bonus"
+    "- valitse laji -"))
+
 (defn sanktion-tiedot
   [optiot]
   (let [lukutila (atom true)]
@@ -243,6 +262,7 @@
                  :tyyppi :text :koko [80 :auto]
                  :validoi [[:ei-tyhja "Anna perustelu"]]}
 
+
                 (when (and (sanktio-domain/sakko? @muokattu))
                   {:otsikko "Toimenpide"
                    :pakollinen? true
@@ -253,6 +273,31 @@
                    :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                    :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
                    :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
+
+         (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+           {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
+            :palstoja 1 :uusi-rivi? true :nimi :laji
+            :hae (comp keyword :laji)
+            :aseta (fn [rivi arvo]
+                     (let [rivi (-> rivi
+                                    (assoc :laji arvo)
+                                    (dissoc :tyyppi)
+                                    (assoc :tyyppi nil))
+                           s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
+                           rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count s-tyypit)) (first s-tyypit))]
+                                  (assoc rivi
+                                    :tyyppi (dissoc tyyppi :laji)
+                                    :toimenpideinstanssi
+                                    (when tpk
+                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                  rivi)]
+                       (if-not (sanktio-domain/sakko? rivi)
+                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                         rivi)))
+            :valinnat (sort mahdolliset-sanktiolajit)
+            :valinta-nayta laji->teksti
+            :validoi [[:ei-tyhja "Valitse laji"]]})
+
 
                 (apply lomake/ryhma {:rivi? true}
                   (keep identity [(when (sanktio-domain/sakko? @muokattu)
@@ -383,34 +428,41 @@
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
-       :rivi-klikattu #(valitse-sanktio! % tiedot/valittu-sanktio)}
-      [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm-aika :leveys 1}
+       :rivi-klikattu #(valitse-sanktio! % tiedot/valittu-sanktio)
+       :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
+                               ;; Ylläpidossa sekä bonuksia että sanktioita, käsiteltävä sakot miinusmerkkisinä
+                               yhteensa-summat (if yllapito? (- yhteensa-summat) yhteensa-summat)
+                               yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
+                           [{:teksti "Yht." :luokka "lihavoitu"}
+                            {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
+                            {:teksti (str (fmt/euro-opt true yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
+                            {:teksti (fmt/euro-opt true yhteensa-indeksit)
+                             :tasaa :oikea :luokka "lihavoitu"}])}
+      [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm :leveys 1}
+       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt laji->teksti}
        (when yllapitokohdeurakka?
-         {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
+         {:otsikko "Kohde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
                  (if (get-in rivi [:yllapitokohde :id])
                    (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                  :nimi (get-in rivi [:yllapitokohde :nimi])})
                    "Ei liity kohteeseen"))})
-       (when (and (not yllapitokohdeurakka?) (not vesivayla?))
-         {:otsikko "Kohde" :nimi :kohde :hae (comp :kohde :laatupoikkeama) :leveys 1})
-       {:otsikko "Perus\u00ADtelu" :nimi :kuvaus :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        (if yllapito?
-         {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi
+         {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
-       {:otsikko "Tekijä" :nimi :tekija :hae (comp :tekijanimi :laatupoikkeama) :leveys 1}
-       {:otsikko "Summa €" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
+       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae (comp :kohde :laatupoikkeama) :leveys 3})
+       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
+       {:otsikko "Määrä (€)" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
         :hae #(or (let [summa (:summa %)]
                     (fmt/euro-opt false
                                   (when summa
                                     (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
-                  "Muistutus")}]
+                "Muistutus")}
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1}]
       sanktiot]
      (when yllapito?
-       (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))
-     (when (> (count sanktiot) 0)
-       [:div.pull-right.bold (str "Yhteensä " (fmt/euro-opt yhteensa))])]))
+       (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
 
 (defn sanktiot [optiot]
   (komp/luo
