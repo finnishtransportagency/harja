@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.vayla-rest.sahkoposti
   (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt.integraatiot :as q]
-            [compojure.core :refer [PUT GET POST]]
+            [clojure.string :as str]
+            [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut julkaise-palvelu]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.api.tyokalut.xml-skeemat :as xml-skeemat]
@@ -105,8 +105,20 @@
      (for [virhe virheet]
        [:virheet virhe]))])
 
+(defn muodosta-ilmoitus-virheellisesta-sahkopostista
+  "Jos saamme virheellisen sähköpostin, niin vastataan siihen parhaan tietämyksen mukaan ohjeistetulla vastauksella."
+  [harja-lahettaja {:keys [viesti-id lahettaja otsikko sisalto] :as kutsun-data} virheet]
+  (let [;; Muodostetaan vastaus lähetettyyn sähköpostiin jolloin lahettajasta tulee vastaanottaja
+        vastaanottaja lahettaja
+        otsikko (str "Re: " otsikko)
+        virheet-txt (str/join "," virheet)
+        viesti (str virheet-txt "\n Saatu viesti: \n" sisalto)
+        sahkoposti (sahkoposti-sanomat/sahkoposti viesti-id harja-lahettaja vastaanottaja otsikko viesti)]
+    sahkoposti))
+
 (defn vastaanota-sahkoposti [kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki]
-  (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys")
+  (let [_ (log/info "RestApi - Sähköposti :: vastaanota-sahkoposti")
+        jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys")
                         itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
@@ -114,15 +126,16 @@
         virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
                   nil)
-        ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
-        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)
-        viesti (xml/tee-xml-sanoma kuittaus-xml)]
+        vastaus-virheelliseen-viestiin (when-not (nil? virheet)
+                                         (-> (muodosta-ilmoitus-virheellisesta-sahkopostista
+                                               (get-in asetukset [:api-sahkoposti :vastausosoite])
+                                               kutsun-data virheet)
+                                           (xml/tee-xml-sanoma)))]
 
-    ;; Lähetetään kuittaus saatuun sähköpostiin
-    (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti false)
-
-    ;; Palautetaan käsitelty vastaus
-    kuittaus-xml))
+    ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
+    (when-not (nil? virheet)
+      (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
+        vastaus-virheelliseen-viestiin false))))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
 (def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")

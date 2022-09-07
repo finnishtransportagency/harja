@@ -1633,8 +1633,11 @@
   <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
 
 (defn hae-ulos-lahtevat-integraatiotapahtumat []
-  (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
-          FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+                 FROM integraatioviesti
+                WHERE suunta = 'ulos'
+                  AND sisalto is not null and sisalto != ''
+                ORDER BY integraatiotapahtuma ASC;")))
 
 (defn hae-kaikki-integraatioviestit []
   (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
