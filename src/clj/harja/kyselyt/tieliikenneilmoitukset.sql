@@ -368,7 +368,7 @@ SELECT
     i.lahettaja_puhelinnumero,
     i.lahettaja_sahkoposti,
     i."aiheutti-toimenpiteita",
-    json_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
+    json_agg(row_to_json(row(it.kuitattu::timestamptz, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
         it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
         coalesce(it.kuittaaja_organisaatio_ytunnus, ''), it.kanava))) AS kuittaukset
 FROM ilmoitus i

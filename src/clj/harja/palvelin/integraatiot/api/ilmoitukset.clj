@@ -23,7 +23,8 @@
             [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.string :as str])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -39,7 +40,7 @@
 
 (defn luo-ilmoitustoimenpide
   [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi aiheutti-toimenpiteita vapaateksti suunta kanava]
-  
+
   (when (not (nil? aiheutti-toimenpiteita))
     (tieliikenneilmoitukset-kyselyt/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita id))
 
@@ -184,14 +185,14 @@
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Alkuaika väärässä muodossa: %s
-       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX
-       esim: 2005-01-01T00:00:00+03 tai 2005-01-01T00:00:00.123+03" (:alkuaika parametrit))}))
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-01T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:alkuaika parametrit))}))
   (when (and (not (nil? (:loppuaika parametrit))) (not (s/valid? ::loppuaika (:loppuaika parametrit))))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
        :viesti (format "Loppuaika väärässä muodossa: %s
-       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX
-       esim: 2005-01-02T00:00:00+03 tai 2005-01-01T00:00:00.123+03" (:loppuaika parametrit))})))
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-02T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:loppuaika parametrit))})))
 
 (def db-kuittaus->avaimet
   {:f1 :kuitattu
@@ -223,20 +224,23 @@
                        :loppuaika loppuaika})
         ilmoitukset
         (->> ilmoitukset
-          (mapv #(update % :kuittaukset konversio/jsonb->clojuremap))
-          (mapv #(update % :kuittaukset
+          (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+          (map #(update % :kuittaukset
                    (fn [rivit]
                      (let [tulos (keep
                                    (fn [r]
                                      ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
                                      (when (not (nil? (:f1 r)))
                                        (let [r (-> r
-                                                 (clojure.set/rename-keys db-kuittaus->avaimet))]
+                                                 (clojure.set/rename-keys db-kuittaus->avaimet)
+                                                 (update :kuitattu
+                                                   (fn [rivi]
+                                                     (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSX") rivi))))]
                                          r)))
                                    rivit)]
                        tulos)))))
         vastaus {:ilmoitukset
-                 (mapv (fn [ilmoitus]
+                 (map (fn [ilmoitus]
                          (sanomat/rakenna-ilmoitus
                            (konversio/alaviiva->rakenne ilmoitus)))
                    ilmoitukset)}]
@@ -273,7 +277,7 @@
            (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
                          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
-  
+
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
