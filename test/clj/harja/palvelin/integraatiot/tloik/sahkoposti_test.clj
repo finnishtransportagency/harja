@@ -283,18 +283,18 @@
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 6)) "<tyyppi>vaara-urakka</tyyppi>"))
 
         ;; 5. T-LOIK lähettää ilmoituksen uudestaan
-        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) "harja:ilmoitus"))
-        (is (= "sisään" (:suunta (nth integraatioviestit 7))))
-        (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 7))))
-        (is (= "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 7))))
-        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) viesti-id))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 9)) "harja:ilmoitus"))
+        (is (= "sisään" (:suunta (nth integraatioviestit 9))))
+        (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 9))))
+        (is (= "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 9))))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 9)) viesti-id))
 
         ;; 6. Harja ilmoittaa toiselle päivystäjälle saapuneesta ilmoituksesta
-        (is (= "ulos" (:suunta (nth integraatioviestit 8))))
-        (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 8))))
-        (is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 8)))
-        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 8)) (str ilmoitus-id)))
+        (is (= "ulos" (:suunta (nth integraatioviestit 10))))
+        (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 10))))
+        (is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 10)))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 10)) (str ilmoitus-id)))
 
-        (is (= "ulos" (:suunta (nth integraatioviestit 9))))
-        (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 9))))
-        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 9)) (format "[%s/%s]" oikea-urakka-id ilmoitus-id)))))))
+        (is (= "ulos" (:suunta (nth integraatioviestit 11))))
+        (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 11))))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 11)) (format "[%s/%s]" oikea-urakka-id ilmoitus-id)))))))
