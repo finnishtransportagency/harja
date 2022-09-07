@@ -120,7 +120,8 @@ order by tr3.jarjestys;
 -- name: hae-tehtavahierarkia
 -- Palauttaa tehtävähierarkian kokonaisuudessaan.
 -- Käytä tehtävä- ja määräluettelossa hierarkian hakemiseen SQL-lausetta: hae-tehtavahierarkia-maarineen.
-SELECT tr1.jarjestys               as "otsikon-jarjestys",
+SELECT tpk4.suunnitteluyksikko     as "SUUNNITTELUYKSIKÖK",
+       tr1.jarjestys               as "otsikon-jarjestys",
        tpk4.jarjestys              as "jarjestys",
        tpk4.id                     as "tehtava-id",
        tr3.otsikko                 as "otsikko",
@@ -153,7 +154,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tpk4.suunnitteluyksikko != 'euroa' -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
+  AND (tpk4.suunnitteluyksikko IS NULL OR tpk4.suunnitteluyksikko != 'euroa') -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-tehtavahierarkia-maarineen
@@ -204,7 +205,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tpk4.suunnitteluyksikko != 'euroa' -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
+  AND (tpk4.suunnitteluyksikko IS NULL OR tpk4.suunnitteluyksikko != 'euroa') -- Kaikki eurot suunnitellaan kustannussuunnitelmanäytöllä
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
