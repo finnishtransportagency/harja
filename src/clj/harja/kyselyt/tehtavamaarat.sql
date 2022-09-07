@@ -120,8 +120,7 @@ order by tr3.jarjestys;
 -- name: hae-tehtavahierarkia
 -- Palauttaa tehtävähierarkian kokonaisuudessaan.
 -- Käytä tehtävä- ja määräluettelossa hierarkian hakemiseen SQL-lausetta: hae-tehtavahierarkia-maarineen.
-SELECT tpk4.suunnitteluyksikko     as "SUUNNITTELUYKSIKÖK",
-       tr1.jarjestys               as "otsikon-jarjestys",
+SELECT tr1.jarjestys               as "otsikon-jarjestys",
        tpk4.jarjestys              as "jarjestys",
        tpk4.id                     as "tehtava-id",
        tr3.otsikko                 as "otsikko",
