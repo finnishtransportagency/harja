@@ -238,5 +238,5 @@
 
 (s/def ::hakuteksti ::hakija-nimi)
 (s/def ::hae-tielupien-hakijat-kysely (s/keys :req-un [::hakuteksti]))
-(s/def ::hae-tielupien-hakijat-vastaus (s/coll-of ::hakija-nimi))
+(s/def ::hae-tielupien-hakijat-vastaus (s/coll-of (s/map-of keyword? string?)))
 
