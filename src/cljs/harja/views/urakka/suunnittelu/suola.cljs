@@ -338,6 +338,8 @@
             :tyyppi :valinta
             :palstoja 1
             :otsikko "Indeksi"
+            ;; Tällä hetkellä kokonaissuolamäärän sanktioissa ei ole indeksiä missään urakassa, joten disabloidaan indeksin valinta.
+            :disabled? true
             :muokattava? (constantly saa-muokata?)
             :valinta-nayta #(if (not saa-muokata?)
                               ""
