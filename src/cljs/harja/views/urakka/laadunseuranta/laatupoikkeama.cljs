@@ -2,7 +2,6 @@
   "Yksittäisen laatupoikkeaman näkymä"
   (:require [reagent.core :refer [atom] :as r]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat-kartalla :as lp-kartalla]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
@@ -12,19 +11,15 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
-            [harja.loki :refer [log tarkkaile!]]
             [harja.ui.napit :as napit]
-            [harja.domain.laadunseuranta :refer [validi-laatupoikkeama?]]
             [harja.asiakas.kommunikaatio :as k]
             [cljs.core.async :refer [<!]]
-            [harja.views.kartta :as kartta]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
-            [harja.domain.tierekisteri :as tierekisteri]
+            [harja.views.urakka.laadunseuranta.sanktiot :as v-sanktiot]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
@@ -33,9 +28,7 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.urakka :as u-domain]
             [harja.domain.kommentti :as kommentti])
-  (:require-macros [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]
-                   [harja.atom :refer [reaction<!]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn paatos?
   "Onko annetussa laatupoikkeamassa päätös?"
@@ -133,19 +126,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
                 :valinnat (sort mahdolliset-sanktiolajit)
-                :valinta-nayta #(case %
-                                  :A "Ryhmä A"
-                                  :B "Ryhmä B"
-                                  :C "Ryhmä C"
-                                  :lupaussanktio "Lupaussanktio"
-                                  :muistutus "Muistutus"
-                                  :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
-                                  :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
-                                  :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
-                                  :arvonvahennyssanktio "Arvonvähennys"
-                                  :yllapidon_muistutus "Muistutus"
-                                  :yllapidon_sakko "Sakko"
-                                  "- valitse laji -")
+                :valinta-n#_ayta v-sanktiot/laji->teksti
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?

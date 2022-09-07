@@ -30,30 +30,29 @@
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.ui.liitteet :as liitteet]))
 
-(defn- laji->teksti
+(defn laji->teksti
   [laji]
   (case laji
-    :A "Ryhmä A"
-    :B "Ryhmä B"
-    :C "Ryhmä C"
+    :A "A-ryhmä (tehtäväkohtainen sanktio)"
+    :B "B-ryhmä (vakava laiminlyönti)"
+    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
     :muistutus "Muistutus"
-    :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
-    :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
-    :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+    :vaihtosanktio "Vastuuhenkilön vaihto"
+    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen" 
+    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
     :arvonvahennyssanktio "Arvonvähennys"
     :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
     :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"
     :yllapidon_bonus "Bonus"
     :vesivayla_muistutus "Muistutus"
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
-    "- valitse laji -"))
+    (pr-str "- valitse laji -" laji)))
 
 (defn sanktion-tiedot
   [optiot]
