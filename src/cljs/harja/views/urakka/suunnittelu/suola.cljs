@@ -215,7 +215,7 @@
                          lomake)
         muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
         disabled? (or (not (get-in app [:lomake ::tila/validi?])) (not saa-muokata?))]
-    [:div
+    [:div.lomake-rajoitusalue
        #_ [debug/debug (:lomake app)]
      [lomake/lomake
       {:ei-borderia? true
@@ -331,20 +331,14 @@
           :yksikko "€"
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true}
-
-         ;; TODO: Tarkista toimiiko indeksin valinta niin kuin on ajateltu speksissä
-         (when (urakka/indeksi-kaytossa-sakoissa?)
-           {:nimi :indeksi
-            :tyyppi :valinta
-            :palstoja 1
-            :otsikko "Indeksi"
-            ;; Tällä hetkellä kokonaissuolamäärän sanktioissa ei ole indeksiä missään urakassa, joten disabloidaan indeksin valinta.
-            :disabled? true
-            :muokattava? (constantly saa-muokata?)
-            :valinta-nayta #(if (not saa-muokata?)
-                              ""
-                              (if (nil? %) "Ei indeksiä" (str %)))
-            :valinnat (conj valittavat-indeksit nil)}))]
+         {:otsikko "Indeksi"
+          :nimi :indeksi
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.kentta-indeksi
+                          ;; Talvisuolan kokonaismäärän käyttörajalla ei ole tällä hetkellä indeksiä missään urakassa
+                          [:div "Ei indeksiä"]])
+          :palstoja 1})]
       lomake]]))
 
 (defn lomake-talvisuolan-kayttoraja-alueurakka
@@ -400,7 +394,17 @@
         :yksikko "€" :piilota-yksikko-otsikossa? false
         :varoita [tarkasta-sakko-ja-bonus]
         :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"
-        :vayla-tyyli? false}]
+        :vayla-tyyli? false}
+       (when (urakka/indeksi-kaytossa-sakoissa?)
+         {:otsikko "Indeksi"
+          :nimi :indeksi
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.kentta-indeksi
+                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
+                          [:div (-> @tila/yleiset :urakka :indeksi)]])
+          :palstoja 1})]
       lomake]]))
 
 
@@ -443,13 +447,12 @@
          (when (urakka/indeksi-kaytossa-sakoissa?)
            {:otsikko "Indeksi"
             :nimi :indeksi
-            :tyyppi :valinta
-            :on-blur #(e! (suolarajoitukset-tiedot/->TallennaRajoitusalueidenSanktiolomake))
-            :muokattava? (constantly saa-muokata?)
-            :valinta-nayta #(if (not saa-muokata?)
-                              ""
-                              (if (nil? %) "Ei indeksiä" (str %)))
-            :valinnat (conj valittavat-indeksit nil)
+            :tyyppi :komponentti
+            :komponentti (fn [_]
+                           [:div.kentta-indeksi
+                            ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                            ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
+                            [:div (-> @tila/yleiset :urakka :indeksi)]])
             :palstoja 1}))]
       (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
@@ -528,7 +531,7 @@
                                           :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
              hoitovuodet]]]]
 
-         [:div.lomakkeet
+         [:div.kayttoraja-lomakkeet
           [:h3 "Talvisuolan kokonaismäärän käyttöraja"]
           (case (:tyyppi urakka)
             ;; MHU talvisuolan käyttöraja lomake
