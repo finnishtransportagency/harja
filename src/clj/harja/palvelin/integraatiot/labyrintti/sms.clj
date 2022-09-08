@@ -48,7 +48,7 @@
     nil))
 
 (defn vastaanota-tekstiviesti [integraatioloki kutsu kuuntelijat]
-  (log/debug (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
+  (log/info (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
         parametrit (:params kutsu)

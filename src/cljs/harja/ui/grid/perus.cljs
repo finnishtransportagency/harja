@@ -1222,9 +1222,11 @@
                                                  (vals @muokatut)
                                                  alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
-                   (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
+                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
                      [:td {:colSpan (or sarakkeita 1) :class luokka}
-                      teksti])])]])
+                      (case tasaa
+                        :oikea [:span.pull-right teksti]
+                        teksti)])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti
