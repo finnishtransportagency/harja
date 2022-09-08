@@ -332,7 +332,13 @@
         perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
         ;; Indeksiä käytetään vain sanktioissa ja bonuksissa
         ;; Indeksinä käytetään hoitokautta edeltävän syyskuun arvoa, mikäli se on olemassa.
-        indeksi-puuttuu (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
+        ;; tiedot-tuotteittain on monimutkainen rakenne ja sen toiminnan varmistamiseksi tarvitaan monimutkainen if
+        indeksi-puuttuu (if (and tiedot-tuotteittain
+                              (seq? tiedot-tuotteittain)
+                              (seq? (first tiedot-tuotteittain))
+                              (first (val (first (first tiedot-tuotteittain)))))
+                          (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
+                          true)
         raportin-indeksiarvo (when-not indeksi-puuttuu
                                (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id
                                  (if (> (pvm/kuukausi alkupvm) 9)
@@ -353,7 +359,9 @@
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
-        indeksikerroin (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku)]
+        ;; Laske indeksikerroin vain, jos arvot ovat saatavilla
+        indeksikerroin (when (and raportin-indeksiarvo perusluku)
+                         (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku))]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
