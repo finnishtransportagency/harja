@@ -461,7 +461,9 @@
         kayttoraja {:urakka-id urakka-id
                     :tyyppi "kokonaismaara"
                     :hoitokauden-alkuvuosi hk-alkuvuosi
-                    :indeksi "MAKU 2015"
+                    ;; Asetetaan payloadiin indeksi, mutta se ei saa tallentua oikeasti!
+                    ;; Back-endin kuuluu asettaa indeksi tyhjäksi mhu-urakoille kokonaismäärän käyttörajan sanktioon.
+                    :indeksi "MAKU 2222"
                     :kopioidaan-tuleville-vuosille? false
                     :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta}
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ kayttoraja)
@@ -481,7 +483,7 @@
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id vastaus))))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
-    (is (= "MAKU 2015" (:indeksi vastaus)))
+    (is (= nil (:indeksi vastaus)))
     (is (= true (:kaytossa vastaus)))
     (is (= "kokonaismaara" (:tyyppi vastaus)))
 
@@ -489,7 +491,7 @@
     (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
     (is (= talvisuolaraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta vastaus)))
-    (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
@@ -506,7 +508,9 @@
         kayttoraja {:urakka-id urakka-id
                     :tyyppi "kokonaismaara"
                     :hoitokauden-alkuvuosi hk-alkuvuosi
-                    :indeksi "MAKU 2015"
+                    ;; Asetetaan payloadiin indeksi, mutta se ei saa tallentua oikeasti!
+                    ;; Back-endin kuuluu asettaa indeksi tyhjäksi mhu-urakoille kokonaismäärän käyttörajan sanktioon.
+                    :indeksi "MAKU 2222"
                     :kopioidaan-tuleville-vuosille? false
                     :sanktio_ylittavalta_tonnilta sanktio_ylittavalta_tonnilta}
         uusi-kayttoraja (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ kayttoraja)
@@ -531,14 +535,14 @@
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id uusi-kayttoraja))))
     (is (= sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta uusi-kayttoraja)))
-    (is (= "MAKU 2015" (:indeksi uusi-kayttoraja)))
+    (is (= nil (:indeksi uusi-kayttoraja)))
     (is (= true (:kaytossa uusi-kayttoraja)))
     (is (= "kokonaismaara" (:tyyppi uusi-kayttoraja)))
 
     ;; Tarkistetaan muokatun vastauksen tiedot
     (is (not (nil? (:id muokattu-vastaus))))
     (is (= muokattu_sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta muokattu-vastaus)))
-    (is (= "MAKU 2015" (:indeksi muokattu-vastaus)))
+    (is (= nil (:indeksi muokattu-vastaus)))
     (is (= true (:kaytossa muokattu-vastaus)))
     (is (= "kokonaismaara" (:tyyppi muokattu-vastaus)))
 
@@ -546,7 +550,7 @@
     (is (not (nil? (get-in hakutulos [:talvisuolan-sanktiot :id]))))
     (is (= talvisuolaraja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja])))
     (is (= muokattu_sanktio_ylittavalta_tonnilta (get-in hakutulos [:talvisuolan-sanktiot :sanktio_ylittavalta_tonnilta])))
-    (is (= "MAKU 2015" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
@@ -561,6 +565,7 @@
         kayttoraja {:suolasakko-tai-bonus-maara suolasakko-tai-bonus-maara
                     :vain-sakko-maara vain-sakko-maara
                     :maksukuukausi maksukuukausi
+                    ;; Back-endin kuuluu asettaa oikea indeksi (MAKU 2010 tälle alueurakalle)
                     :indeksi nil
                     :talvisuolan-kayttoraja talvisuolan-kayttoraja
                     :urakka-id urakka-id
@@ -578,13 +583,13 @@
 
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id vastaus))))
-    (is (= nil (:indeksi vastaus)))
+    (is (= "MAKU 2010" (:indeksi vastaus)))
     (is (= true (:suolasakko-kaytossa vastaus)))
     (is (= suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara vastaus)))
     (is (= vain-sakko-maara (:vain-sakko-maara vastaus)))
     (is (= talvisuolan-kayttoraja (:talvisuolan-kayttoraja vastaus)))
     (is (= maksukuukausi (:maksukuukausi vastaus)))
-    (is (= nil (:indeksi vastaus)))
+    (is (= "MAKU 2010" (:indeksi vastaus)))
     (is (= true (:suolasakko-kaytossa vastaus)))
     (is (= "kokonaismaara" (:tyyppi vastaus)))
 
@@ -594,7 +599,7 @@
     (is (= suolasakko-tai-bonus-maara (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-tai-bonus-maara])))
     (is (= maksukuukausi (get-in hakutulos [:talvisuolan-sanktiot :maksukuukausi])))
     (is (= vain-sakko-maara (get-in hakutulos [:talvisuolan-sanktiot :vain-sakko-maara])))
-    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= "MAKU 2010" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
@@ -609,6 +614,7 @@
         kayttoraja {:suolasakko-tai-bonus-maara 50M
                     :vain-sakko-maara vain-sakko-maara
                     :maksukuukausi maksukuukausi
+                    ;; Back-endin kuuluu asettaa oikea indeksi (MAKU 2010 tälle urakalle)
                     :indeksi nil
                     :talvisuolan-kayttoraja talvisuolan-kayttoraja
                     :urakka-id urakka-id
@@ -631,13 +637,13 @@
 
     ;; Tarkistetaan tallennuksen vastauksen tiedot
     (is (not (nil? (:id vastaus))))
-    (is (= nil (:indeksi vastaus)))
+    (is (= "MAKU 2010" (:indeksi vastaus)))
     (is (= muokattu-suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara vastaus)))
     (is (= true (:suolasakko-kaytossa vastaus)))
     (is (= vain-sakko-maara (:vain-sakko-maara vastaus)))
     (is (= talvisuolan-kayttoraja (:talvisuolan-kayttoraja vastaus)))
     (is (= maksukuukausi (:maksukuukausi vastaus)))
-    (is (= nil (:indeksi vastaus)))
+    (is (= "MAKU 2010" (:indeksi vastaus)))
     (is (= true (:suolasakko-kaytossa vastaus)))
     (is (= "kokonaismaara" (:tyyppi vastaus)))
 
@@ -647,7 +653,7 @@
     (is (= muokattu-suolasakko-tai-bonus-maara (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-tai-bonus-maara])))
     (is (= maksukuukausi (get-in hakutulos [:talvisuolan-sanktiot :maksukuukausi])))
     (is (= vain-sakko-maara (get-in hakutulos [:talvisuolan-sanktiot :vain-sakko-maara])))
-    (is (= nil (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
+    (is (= "MAKU 2010" (get-in hakutulos [:talvisuolan-sanktiot :indeksi])))
     (is (= true (get-in hakutulos [:talvisuolan-sanktiot :suolasakko-kaytossa])))
     (is (= "kokonaismaara" (get-in hakutulos [:talvisuolan-sanktiot :tyyppi])))))
 
@@ -660,7 +666,9 @@
                      :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
                      :tyyppi "rajoitusalue"
                      :hoitokauden-alkuvuosi hk-alkuvuosi
-                     :indeksi "MAKU 2015"
+                     ;; Tämä arvo ei saisi päätyä tietokantaan.
+                     ;; Backendin kuuluu asettaa oikea indeksi (MAKU 2015 tälle alueurakalle).
+                     :indeksi "MAKU 2222"
                      :kopioidaan-tuleville-vuosille? false}
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                   :tallenna-rajoitusalueen-sanktio t/+kayttaja-jvh+ aluesanktio)
@@ -697,7 +705,9 @@
                       :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
                       :tyyppi "kokonaismaara"
                       :hoitokauden-alkuvuosi hk-alkuvuosi
-                      :indeksi "MAKU 2015"
+                      ;; Tämä arvo ei saisi päätyä tietokantaan.
+                      ;; Backendin kuuluu tallentaa tyhjä indeksi MHU urakoille kokonaismäärän käyttörajan sanktiolle
+                      :indeksi "MAKU 2222"
                       :kopioidaan-tuleville-vuosille? false}
         suolasanktio-vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                :tallenna-talvisuolan-kayttoraja t/+kayttaja-jvh+ suolasanktio)
@@ -706,7 +716,9 @@
                      :sanktio_ylittavalta_tonnilta sanktio-ylittavalta-tonnilta
                      :tyyppi "rajoitusalue"
                      :hoitokauden-alkuvuosi hk-alkuvuosi
-                     :indeksi "MAKU 2015"
+                     ;; Tämä arvo ei saisi päätyä tietokantaan.
+                     ;; Backendin kuuluu tallentaa oikea indeksi urakalle (Tälle urakalle MAKU 2015).
+                     :indeksi "MAKU 2222"
                      :kopioidaan-tuleville-vuosille? false}
         aluesanktio-vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                               :tallenna-rajoitusalueen-sanktio t/+kayttaja-jvh+ aluesanktio)
@@ -719,7 +731,7 @@
     (is (not (nil? (:id aluesanktio-vastaus))))
     (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta suolasanktio-vastaus)))
     (is (= sanktio-ylittavalta-tonnilta (:sanktio_ylittavalta_tonnilta aluesanktio-vastaus)))
-    (is (= "MAKU 2015" (:indeksi suolasanktio-vastaus)))
+    (is (= nil (:indeksi suolasanktio-vastaus)))
     (is (= "MAKU 2015" (:indeksi aluesanktio-vastaus)))
     (is (= true (:kaytossa suolasanktio-vastaus)))
     (is (= true (:kaytossa aluesanktio-vastaus)))

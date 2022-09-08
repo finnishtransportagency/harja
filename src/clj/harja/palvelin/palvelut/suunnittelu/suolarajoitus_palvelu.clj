@@ -253,8 +253,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [_ (log/debug "tallenna-talvisuolan-kayttoraja :: kayttoraja" kayttoraja)
         kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? kayttoraja)
-        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
-                             (first (urakat-kyselyt/hae-urakka db {:id urakka-id})))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
+
         ;; Päivitä tiedot tai tallenna uusi
         _ (doseq [vuosi urakan-hoitovuodet]
             (let [;; Hae käyttöraja kannasta, jos siellä olisi jo olemassa jotain pohjaa
@@ -263,10 +264,12 @@
                                                    :hoitokauden-alkuvuosi vuosi}))
                   ;; Jätetaan mahdolliset id yms, tiedot jäljelle, jos tietokannassa oli jo olemassa jotain
                   hoitovuoden-kayttoraja (-> hoitovuoden-kayttoraja
-                                           (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta kayttoraja))
-                                           (assoc :indeksi (:indeksi kayttoraja))
-                                           (assoc :kayttaja-id (:id user))
                                            (assoc :urakka-id urakka-id)
+                                           ;; Asetetaan aina indeksi tyhjäksi, koska mhu/hju urakoiden talvisuolan
+                                           ;;   käyttörajalle ei aseteta indeksiä
+                                           (assoc :indeksi nil)
+                                           (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta kayttoraja))
+                                           (assoc :kayttaja-id (:id user))
                                            (assoc :hoitokauden-alkuvuosi vuosi)
                                            (assoc :kaytossa true)) ;; Mahdollistetaan sanktioiden kääntäminen pois päältä
 
@@ -288,13 +291,16 @@
   (log/debug "tallenna suolasakko" kayttoraja)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
 
-  (let [hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
+  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        indeksi (:indeksi urakan-tiedot)
+        hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
                                         {:urakka-id urakka-id
                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
         params {:suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara kayttoraja)
                 :vain-sakko-maara (:vain-sakko-maara kayttoraja)
                 :maksukuukausi (:maksukuukausi kayttoraja)
-                :indeksi (:indeksi kayttoraja)
+                ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2010
+                :indeksi indeksi
                 :kayttaja (:id user)
                 :talvisuolan-kayttoraja (:talvisuolan-kayttoraja kayttoraja)
                 :urakka-id urakka-id
@@ -329,8 +335,9 @@
 (defn tallenna-rajoitusalueen-sanktio [db user {:keys [urakka-id hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?] :as sanktio}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [_ (log/debug "tallenna-rajoitusalueen-sanktio :: sanktio" sanktio)
-        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?
-                             (first (urakat-kyselyt/hae-urakka db {:id urakka-id})))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        indeksi (:indeksi urakan-tiedot)
+        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
         ;; Päivitä tiedot tai luo uusi
 
         _ (doseq [vuosi urakan-hoitovuodet]
@@ -339,10 +346,11 @@
                                                             {:urakka-id urakka-id
                                                              :hoitokauden-alkuvuosi vuosi}))
                   hoitovuoden-rajoitusalue-sanktio (-> hoitovuoden-rajoitusalue-sanktio
-                                                     (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta sanktio))
-                                                     (assoc :indeksi (:indeksi sanktio))
-                                                     (assoc :kayttaja-id (:id user))
                                                      (assoc :urakka-id urakka-id)
+                                                     ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2015
+                                                     (assoc :indeksi indeksi)
+                                                     (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta sanktio))
+                                                     (assoc :kayttaja-id (:id user))
                                                      (assoc :hoitokauden-alkuvuosi vuosi)
                                                      (assoc :kaytossa true))
                   _ (if (:id hoitovuoden-rajoitusalue-sanktio)
