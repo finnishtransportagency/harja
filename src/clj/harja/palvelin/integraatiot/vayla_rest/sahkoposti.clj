@@ -130,12 +130,15 @@
                                          (-> (muodosta-ilmoitus-virheellisesta-sahkopostista
                                                (get-in asetukset [:api-sahkoposti :vastausosoite])
                                                kutsun-data virheet)
-                                           (xml/tee-xml-sanoma)))]
+                                           (xml/tee-xml-sanoma)))
+        ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
+        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
 
     ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
     (when-not (nil? virheet)
       (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
-        vastaus-virheelliseen-viestiin false))))
+        vastaus-virheelliseen-viestiin false))
+    kuittaus-xml))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
 (def ^:const +sahkoposti-xsd+ "sahkoposti.xsd")
