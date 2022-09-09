@@ -188,3 +188,45 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION sanktion_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER, sanktiolaji sanktiolaji)
+    RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+    urakan_alkuvuosi INTEGER;
+    korotus NUMERIC;
+    paluurivi kuukauden_indeksikorotus_rivi;
+BEGIN
+    SELECT EXTRACT(YEAR FROM alkupvm) FROM urakka WHERE id = urakka_id into urakan_alkuvuosi;
+    RAISE NOTICE 'Urakan alkuvuosi %, sanktiolaji: %', urakan_alkuvuosi, sanktiolaji;
+
+    -- jos urakka on alkanut 2018 tai ennen --> käytetään "vanhaa sääntöä", eli laske_kuukauden_indeksikorotus funktion läpi
+    IF urakan_alkuvuosi < 2019 THEN
+        korotus := kuukauden_indeksikorotus(pvm, indeksinimi, summa, urakka_id) - summa;
+        RAISE NOTICE 'Käytetään vanhaa sääntöä, saatiin summalle % korotus: %', summa, korotus;
+        -- jos urakka on alkanut 2019 tai 2020 -->  ed. hoitokauden syyskuun pisteluvun avulla
+    ELSEIF urakan_alkuvuosi IN (2019, 2020) THEN
+        RAISE NOTICE 'Käytetään indeksikorjaa ns. syyskuun sääntöä';
+        korotus :=
+                CASE
+                    WHEN indeksinimi IS NULL
+                        THEN 0
+                    ELSE
+                            indeksikorjaa(summa, DATE_PART('year', pvm::DATE)::INTEGER,
+                                          DATE_PART('month', pvm::DATE)::INTEGER,
+                                          urakka_id) - summa
+                    END;
+        RAISE NOTICE 'Käytetään syyskuu sääntöä, saatiin korotus: %', korotus;
+        -- jos urakka on alkanut 2021 tai jälkeen --> sanktioon ei indeksikorotusta
+    ELSE
+        korotus := 0;
+        RAISE NOTICE 'Ei indeksikorotusta. % ', korotus;
+    END IF;
+    korotus := round(korotus, 4);
+
+
+    paluurivi := (summa, summa + korotus, korotus);
+    RAISE NOTICE 'PALUURIVI: %', paluurivi;
+    RETURN paluurivi;
+END;
+$$ LANGUAGE plpgsql;

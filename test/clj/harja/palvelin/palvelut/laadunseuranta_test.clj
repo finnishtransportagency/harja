@@ -15,7 +15,12 @@
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms])
+            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
+            [harja.fmt :as fmt]
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -35,6 +40,15 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
+                        :pdf-vienti (component/using
+                                      (pdf-vienti/luo-pdf-vienti)
+                                      [:http-palvelin])
+                        :raportointi (component/using
+                                       (raportointi/luo-raportointi)
+                                       [:db :pdf-vienti])
+                        :raportit (component/using
+                                    (raportit/->Raportit)
+                                    [:http-palvelin :db :raportointi :pdf-vienti])
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
@@ -431,7 +445,7 @@
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin,:muukasittelytapa ""}}
 
-  :summa 777.0, :indeksi "MAKU 2010", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
+  :summa 777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkseiset-sanktiot
@@ -443,17 +457,73 @@
                                                                      :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
-(deftest urakka-2019-alkaen-ed-syyskuun-indeksikorotus
-  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+(deftest urakka-alkaen-2018-tai-ennen-indeksikorotus-perintapvm-pisteluvun-mukaan
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        alkupvm (pvm/luo-pvm 2016 9 1)
+        loppupvm (pvm/luo-pvm 2017 8 30)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku (pvm/luo-pvm 2020 2 1)
-                                                                     :loppu (pvm/luo-pvm 2020 3 30)
+                                                                     :alku alkupvm
+                                                                     :loppu loppupvm
                                                                      :vain-yllapitokohteettomat? nil})
-        sanktio (first vastaus)]
+        sanktio-100e (first (filter #(= 100.0 (:summa %)) vastaus))
+        summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
+        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
+
+        sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :suorita-raportti
+                                        +kayttaja-jvh+
+                                        {:nimi :sanktioraportti
+                                         :konteksti "urakka"
+                                         :urakka-id urakka-id
+                                         :parametrit {:urakkatyyppi :hoito
+                                                      :alkupvm alkupvm
+                                                      :loppupvm loppupvm}})
+        laskutusyhteenvedosta-samat-sanktiot (map
+                                               #(select-keys % [:sakot_laskutetaan
+                                                                :sakot_laskutetaan_ind_korotus
+                                                                :sakot_laskutetaan_ind_korotettuna ])
+                                               (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                                                 (:db jarjestelma)
+                                                +kayttaja-jvh+
+                                                {:urakka-id urakka-id
+                                                 :alkupvm alkupvm
+                                                 :loppupvm loppupvm}))
+        sakkojen-indeksikorotukset-yhteensa-laskutuksesta (reduce + 0 (remove nil? (map :sakot_laskutetaan_ind_korotus laskutusyhteenvedosta-samat-sanktiot)))]
+    (is (=  (count vastaus) 8) "Sanktioita odotettu määrä testikannassa.")
+    (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2) "1900,67") "Sanktioiden summat palvelusta.")
+    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2) "571,66") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+    (is (= (fmt/desimaaliluku sakkojen-indeksikorotukset-yhteensa-laskutuksesta 2) "−571,66") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
+
+    (is (= (:summa sanktio-100e) 100.0) "sanktion summa palautuu oikein")
+    (is (= (:indeksikorjaus sanktio-100e) 30.0766) "sanktion indeksikorjaus laskettu oikein")))
+
+(deftest urakka-2019-alkaen-ed-syyskuun-indeksikorotus
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm (pvm/luo-pvm 2020 2 1)
+        loppupvm (pvm/luo-pvm 2020 2 31)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                     :alku alkupvm
+                                                                     :loppu loppupvm
+                                                                     :vain-yllapitokohteettomat? nil})
+        sanktio (first vastaus)
+        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
+        laskutusyhteenvedosta-samat-sanktiot (map
+                                               :sakot_laskutetaan
+                                               (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
+                                                 (:db jarjestelma)
+                                                 +kayttaja-jvh+
+                                                 {:urakka-id urakka-id
+                                                  :alkupvm alkupvm
+                                                  :loppupvm loppupvm
+                                                  :urakkatyyppi "teiden-hoito"}))
+        sakkojen-indeksikorotukset-yhteensa-laskutuksesta (reduce + 0 (remove nil? laskutusyhteenvedosta-samat-sanktiot))]
     (is (= (count vastaus) 1))
-    (is (= (:summa sanktio) 100.2) "sanktion summa laskettu oikein")
-    (is (= (:indeksikorjaus sanktio) 8.116200M) "sanktion indeksikorjaus laskettu oikein")))
+    (is (= (:summa sanktio) 100.2) "sanktion summa palautuu oikein")
+    (is (= (:indeksikorjaus sanktio) 8.1162) "sanktion indeksikorjaus laskettu oikein")
+    (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
+           (fmt/desimaaliluku (Math/abs (double sakkojen-indeksikorotukset-yhteensa-laskutuksesta)) 3)) "sanktiopalvelu ja laskutusyhteenveto antaa saman summat")))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

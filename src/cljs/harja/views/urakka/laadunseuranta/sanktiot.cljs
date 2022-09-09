@@ -275,7 +275,7 @@
             :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
          (when (:suorasanktio @muokattu)
-           {:otsikko "Liitteet" :nimi :liitteet
+           {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
             :palstoja 2
             :tyyppi :komponentti
             :komponentti (fn [_]
