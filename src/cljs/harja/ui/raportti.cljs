@@ -247,8 +247,11 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:color (when vari vari)}} teksti
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
+  [:p {:style (merge
+                {:color (when vari vari)}
+                (when rivita? {:white-space "pre-line"}))}
+   teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]

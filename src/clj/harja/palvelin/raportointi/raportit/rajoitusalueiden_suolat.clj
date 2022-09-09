@@ -16,7 +16,7 @@
      (concat
        [(:tie rivi)]
        [(:osoitevali rivi)]
-       [(:pohjavesialue rivi)]
+       [[:teksti (:pohjavesialue rivi) {:rivita? true}]]
        [(:pituus rivi)]
        [(:ajoratojen_pituus rivi)]
        [[:arvo {:arvo (:formiaattitoteumat rivi)
@@ -80,7 +80,7 @@
                                (-> rivi
                                  ;; Muunna pohjavesualueet tekstiksi
                                  (assoc :pohjavesialue (str/join " " (mapv (fn [p]
-                                                                             (str (:nimi p) " (" (:tunnus p) ")"))
+                                                                             (str (:nimi p) " (" (:tunnus p) ")" "\n"))
                                                                        (:pohjavesialueet rivi))))
                                  ;; Rakenna osoiteväli
                                  (assoc :osoitevali (str
