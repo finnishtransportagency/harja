@@ -443,9 +443,9 @@
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
-                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin,:muukasittelytapa ""}}
+                     :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-  :summa 777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
+    :summa 777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkseiset-sanktiot
@@ -457,6 +457,7 @@
                                                                      :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
+;;  Tämä testi varmistaa, että hoidon alueurakoissa (urakan tyyppi = 'hoito'), jotka ovat alkaneet 2018 tai aiemmin, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
 (deftest urakka-alkaen-2018-tai-ennen-indeksikorotus-perintapvm-pisteluvun-mukaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         alkupvm (pvm/luo-pvm 2016 9 1)
@@ -479,25 +480,34 @@
                                          :parametrit {:urakkatyyppi :hoito
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
+        sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
+        sanktioraportti-sakot-yhteensa (last (last (butlast sanktioraportti-yhteensa-rivi)))
+        sanktioraportti-indeksit-yhteensa (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))
+
         laskutusyhteenvedosta-samat-sanktiot (map
                                                #(select-keys % [:sakot_laskutetaan
                                                                 :sakot_laskutetaan_ind_korotus
-                                                                :sakot_laskutetaan_ind_korotettuna ])
+                                                                :sakot_laskutetaan_ind_korotettuna])
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
                                                  (:db jarjestelma)
-                                                +kayttaja-jvh+
-                                                {:urakka-id urakka-id
-                                                 :alkupvm alkupvm
-                                                 :loppupvm loppupvm}))
-        sakkojen-indeksikorotukset-yhteensa-laskutuksesta (reduce + 0 (remove nil? (map :sakot_laskutetaan_ind_korotus laskutusyhteenvedosta-samat-sanktiot)))]
-    (is (=  (count vastaus) 8) "Sanktioita odotettu määrä testikannassa.")
-    (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2) "1900,67") "Sanktioiden summat palvelusta.")
-    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2) "571,66") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
-    (is (= (fmt/desimaaliluku sakkojen-indeksikorotukset-yhteensa-laskutuksesta 2) "−571,66") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
-
+                                                 +kayttaja-jvh+
+                                                 {:urakka-id urakka-id
+                                                  :alkupvm alkupvm
+                                                  :loppupvm loppupvm}))
+        sakkojen-indeksikorotukset-yhteensa-laskutusyhteenvedosta (reduce + 0 (remove nil? (map :sakot_laskutetaan_ind_korotus laskutusyhteenvedosta-samat-sanktiot)))]
+    (is (= (count vastaus) 8) "Sanktioita odotettu määrä testikannassa.")
+    (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2)
+           (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
+           "1900,67") "Sanktioiden summat palvelusta.")
+    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2)
+           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
+           "571,66") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+    (is (= (fmt/desimaaliluku sakkojen-indeksikorotukset-yhteensa-laskutusyhteenvedosta 2) "−571,66") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
     (is (= (:summa sanktio-100e) 100.0) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio-100e) 30.0766) "sanktion indeksikorjaus laskettu oikein")))
 
+
+;;  Tämä testi varmistaa, että hoidon MHU-urakoissa (urakan tyyppi = 'teiden-hoito'), jotka ovat alkaneet 2019 tai 2020, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
 (deftest urakka-2019-alkaen-ed-syyskuun-indeksikorotus
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm (pvm/luo-pvm 2020 2 1)
@@ -508,7 +518,22 @@
                                                                      :loppu loppupvm
                                                                      :vain-yllapitokohteettomat? nil})
         sanktio (first vastaus)
+        summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
+
+        sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :suorita-raportti
+                                        +kayttaja-jvh+
+                                        {:nimi :sanktioraportti
+                                         :konteksti "urakka"
+                                         :urakka-id urakka-id
+                                         :parametrit {:urakkatyyppi :teiden-hoito
+                                                      :alkupvm alkupvm
+                                                      :loppupvm loppupvm}})
+        sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
+        sanktioraportti-sakot-yhteensa (last (last (butlast sanktioraportti-yhteensa-rivi)))
+        sanktioraportti-indeksit-yhteensa (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))
+
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -518,12 +543,20 @@
                                                   :alkupvm alkupvm
                                                   :loppupvm loppupvm
                                                   :urakkatyyppi "teiden-hoito"}))
-        sakkojen-indeksikorotukset-yhteensa-laskutuksesta (reduce + 0 (remove nil? laskutusyhteenvedosta-samat-sanktiot))]
+        sakot-indeksikorotuksineen-laskutusyhteenvedosta (reduce + 0 (remove nil? laskutusyhteenvedosta-samat-sanktiot))]
     (is (= (count vastaus) 1))
     (is (= (:summa sanktio) 100.2) "sanktion summa palautuu oikein")
-    (is (= (:indeksikorjaus sanktio) 8.1162) "sanktion indeksikorjaus laskettu oikein")
+    (is (= (:indeksikorjaus sanktio) 8.1162) "sanÉktion indeksikorjaus laskettu oikein")
+    (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2)
+           (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
+           "100,20") "Sanktioiden summat palvelusta.")
+    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2)
+           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
+           "8,12") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+    (is (= (fmt/desimaaliluku sakot-indeksikorotuksineen-laskutusyhteenvedosta 2) "−108,32") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
+
     (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
-           (fmt/desimaaliluku (Math/abs (double sakkojen-indeksikorotukset-yhteensa-laskutuksesta)) 3)) "sanktiopalvelu ja laskutusyhteenveto antaa saman summat")))
+           (fmt/desimaaliluku (Math/abs (double sakot-indeksikorotuksineen-laskutusyhteenvedosta)) 3)) "sanktiopalvelu ja laskutusyhteenveto antaa saman summat")))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)

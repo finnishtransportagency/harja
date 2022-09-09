@@ -2,8 +2,8 @@
 -- Hakee sanktiot
 SELECT
   s.id,
-  sakkoryhma,
-  maara AS summa,
+  s.sakkoryhma,
+  s.maara AS summa,
   s.indeksi,
   suorasanktio,
   st.id          AS sanktiotyyppi_id,
@@ -17,9 +17,7 @@ SELECT
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
   (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2,
-  CASE WHEN s.indeksi IS NOT NULL THEN
-    kuukauden_indeksikorotus(s.perintapvm::DATE, s.indeksi, s.maara, u.id) - s.maara
-  END AS indeksikorotus
+  (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorotus
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
