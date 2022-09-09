@@ -1874,7 +1874,7 @@
 
 ;;
 (defrecord VaihdaOmanToimenkuvanNimi [rivin-tiedot])
-(defrecord TallennaToimenkuva [tunniste])
+(defrecord TallennaToimenkuva [rivin-nimi])
 (defrecord TallennaToimenkuvaOnnistui [vastaus])
 (defrecord TallennaToimenkuvaEpaonnistui [vastaus])
 
@@ -3376,10 +3376,11 @@
       toimenkuva))
 
   TallennaToimenkuva
-  (process-event [{:keys [tunniste]} app]
+  (process-event [{:keys [rivin-nimi]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          toimenkuva-id (get-in app [:domain :johto-ja-hallintokorvaukset tunniste 0 0 :toimenkuva-id])
-          toimenkuva-nimi (get-in app [:domain :johto-ja-hallintokorvaukset tunniste 0 0 :toimenkuva])
+          _ (println "rivin-nimi" rivin-nimi)
+          toimenkuva-id (get-in app [:domain :johto-ja-hallintokorvaukset rivin-nimi 0 0 :toimenkuva-id])
+          toimenkuva-nimi (get-in app [:domain :johto-ja-hallintokorvaukset rivin-nimi 0 0 :toimenkuva])
           lahetettava-data {:urakka-id urakka-id
                             :toimenkuva-id toimenkuva-id
                             :toimenkuva toimenkuva-nimi}]
