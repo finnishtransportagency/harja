@@ -16,6 +16,12 @@
     [harja.geo :as geo])
   (:import (org.postgis PGgeometry)))
 
+;; Ajaetaan jeesql:ssä haun yhteydessä
+(defn muunna-hakija [hakija]
+  (let [avaimet {:hakija-nimi ::tielupa/hakija-nimi}
+        hakija (set/rename-keys hakija avaimet)]
+    hakija))
+
 (defqueries "harja/kyselyt/tielupa_kyselyt.sql"
             {:positional? true})
 
@@ -106,11 +112,7 @@
     mapatyt-tulokset))
 
 (defn hae-tielupien-hakijat [db hakuteksti]
-  (set
-    (fetch db
-           ::tielupa/tielupa
-           #{::tielupa/hakija-nimi}
-           {::tielupa/hakija-nimi (op/ilike (str hakuteksti "%"))})))
+  (tielupien-hakijat db {:hakuteksti (str hakuteksti "%")}))
 
 (defn hae-ulkoisella-tunnistella [db ulkoinen-id]
   (first (hae-tieluvat db {::tielupa/ulkoinen-tunniste ulkoinen-id})))
