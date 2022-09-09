@@ -871,9 +871,8 @@
                                 (update maarat %
                                   paivita-vuoden-tiedot))
                              kaudet)
-          paivita (apply comp paivitysfunktiot)
-          paivitetyt (paivita toimenkuvan-maarat)]
-      paivitetyt)))
+          paivita (apply comp paivitysfunktiot)]
+      (paivita toimenkuvan-maarat))))
 
 (defn- tallenna-vuosipalkka
   [atomi {:keys [hoitokausi kopioi-tuleville?]} rivi]

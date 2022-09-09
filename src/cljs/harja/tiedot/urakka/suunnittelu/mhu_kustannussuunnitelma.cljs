@@ -1229,7 +1229,6 @@
                                     maksukausi))
         domain-paivitys (fn [tila]
                           (reduce (fn [tila hoitokauden-numero]
-                                    (println "domain red" hoitokauden-numero)
                                     (update-in tila
                                       (if omanimi
                                         [:domain :johto-ja-hallintokorvaukset omanimi (dec hoitokauden-numero)]
@@ -2135,8 +2134,7 @@
     rahavaraukset-hoitokausittain))
 
 (defn jh-korvaukset-vastauksesta [vastaus pohjadata]
-  (let [
-        omat-jh-korvaukset (vec (sort-by #(get-in % [1 0 :toimenkuva-id])
+  (let [omat-jh-korvaukset (vec (sort-by #(get-in % [1 0 :toimenkuva-id])
                                   (group-by :toimenkuva-id
                                     (get-in vastaus [:johto-ja-hallintokorvaukset :omat]))))
         vapaat-omien-toimekuvien-idt (clj-set/difference
@@ -2157,14 +2155,13 @@
                 (if data-koskee-ennen-urakkaa?
                   (let [kannasta (filterv :ennen-urakkaa asia-kannasta)]
                     (if (empty? kannasta)
-                      (let [arvot (merge
-                                    {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
-                                     :vuosi (pvm/vuosi urakan-aloituspvm)
-                                     :osa-kuukaudesta 1
-                                     :hoitokaudet hoitokaudet
-                                     :maksukausi maksukausi
-                                     :kuukausi 10
-                                     :kk-v kk-v})
+                      (let [arvot {:aika (pvm/luo-pvm (pvm/vuosi urakan-aloituspvm) 9 15)
+                                   :vuosi (pvm/vuosi urakan-aloituspvm)
+                                   :osa-kuukaudesta 1
+                                   :hoitokaudet hoitokaudet
+                                   :maksukausi maksukausi
+                                   :kuukausi 10
+                                   :kk-v kk-v}
                             kokonaiset (vec (repeat (js/Math.floor kk-v) arvot))
                             osittainen? (not= 0 (- kk-v (count kokonaiset)))]
                         (if osittainen?
@@ -3123,14 +3120,14 @@
             (assoc-in [:domain :toimistokulut] toimistokulut-hoitokausittain))))))
 
   TallennaJHOToimenkuvanVuosipalkka
-  (process-event [{rivi :rivi} app]
+  (process-event [{{:keys [maksukausi toimenkuva toimenkuva-id maksuerat-per-hoitovuosi-per-kuukausi ennen-urakkaa?] :as rivi} :rivi} app]
     (let [{urakka-id :id alkupvm :alkupvm} (:urakka @tiedot/yleiset)
           urakan-alkuvuosi (pvm/vuosi alkupvm)
-          maksukausi (:maksukausi rivi)
-          toimenkuva (:toimenkuva rivi)
-          toimenkuva-id (:toimenkuva-id rivi)
+          maksukausi maksukausi
+          toimenkuva toimenkuva
+          toimenkuva-id toimenkuva-id
           post-kutsu :tallenna-johto-ja-hallintokorvaukset
-          raaka-data (:maksuerat-per-hoitovuosi-per-kuukausi rivi)
+          raaka-data maksuerat-per-hoitovuosi-per-kuukausi
           raada-data-hoitovuosinumerot (keys raaka-data) ;; -> (1 2 3 4 5)
           tiedot (reduce (fn [data hoitokauden-numero]
                            (let [;; Asetetaan yhden hoitovuoden arvot muuttujaan
@@ -3152,7 +3149,7 @@
                    []
                    raada-data-hoitovuosinumerot)
           lahetettava-data (merge {:urakka-id urakka-id
-                                   :ennen-urakkaa? (:ennen-urakkaa? rivi)
+                                   :ennen-urakkaa? ennen-urakkaa?
                                    :jhk-tiedot tiedot
                                    :toimenkuva toimenkuva}
                              ;; Itsetäytetyillä rivillä on id. Vakioilla ei. :maksukausi :molemmat, :ennen-urakkaa? false, :jhk-tiedot
@@ -3373,10 +3370,10 @@
 
   ;; ----
   VaihdaOmanToimenkuvanNimi
-  (process-event [{rivin-tiedot :rivin-tiedot} app]
-    (let [uusi-toimenkuva-nimi (:toimenkuva rivin-tiedot)
-          app (assoc-in app [:domain :johto-ja-hallintokorvaukset (:tunniste rivin-tiedot) 0 0 :toimenkuva] uusi-toimenkuva-nimi)]
-      app))
+  (process-event [{{:keys [toimenkuva tunniste]} :rivin-tiedot} app]
+    (assoc-in app
+      [:domain :johto-ja-hallintokorvaukset tunniste 0 0 :toimenkuva]
+      toimenkuva))
 
   TallennaToimenkuva
   (process-event [{:keys [tunniste]} app]
