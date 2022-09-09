@@ -16,6 +16,7 @@
 (def muokkaa-rivit! protokollat/muokkaa-rivit!)
 (def validoi-grid protokollat/validoi-grid)
 (def aseta-muokkaustila! protokollat/aseta-muokkaustila!)
+(def sulje-vetolaatikot! protokollat/sulje-vetolaatikot!)
 (def vakiosivutus 250)
 
 (def rivi-piilotetun-otsikon-alla? perus/rivi-piilotetun-otsikon-alla?)

@@ -964,7 +964,7 @@
     (reset! atomi valittu?)))
 
 (defn- vetolaatikko-komponentti
-  [tiedot-atomi polku {:keys [tunniste] :as rivi} tallenna-fn]
+  [tiedot-atomi polku {:keys [tunniste] :as rivi} tallenna-fn_ kuluva-hoitokausi_]
   (let [suodattimet (r/cursor tila/suunnittelu-kustannussuunnitelma [:suodattimet])
         urakan-alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)
         urakan-loppuvuosi (-> tila/yleiset deref :urakka :loppupvm pvm/vuosi)
@@ -973,18 +973,20 @@
                    :toimenkuva (r/cursor tiedot-atomi [tunniste])
                    :maksuerat (kursorit-polulle :maksuerat-per-hoitovuosi-per-kuukausi tiedot-atomi polku vuosien-erotus)
                    :erikseen-syotettava? (kursorit-polulle :erikseen-syotettava? tiedot-atomi polku vuosien-erotus))]
-    (fn [_ polku toimenkuva]
-      (let [{valitun-hoitokauden-numero :hoitokauden-numero kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet             
-            valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec valitun-hoitokauden-numero)))]
+    (fn [_ polku rivi tallenna-fn kuluva-hoitokausi]
+      (let [{kopioi-tuleville? :kopioidaan-tuleville-vuosille?} @suodattimet
+            valitun-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :alkupvm pvm/vuosi (+ (dec kuluva-hoitokausi)))
+            maksuerat (get-in kursorit [:maksuerat kuluva-hoitokausi])]
+
         [:div
          [kentat/tee-kentta {:tyyppi :checkbox
                              :teksti "Suunnittele maksuerät kuukausittain"
                              :valitse! (partial
                                          vetolaatikko-klikattu-fn
-                                         (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])
+                                         (get-in kursorit [:erikseen-syotettava? kuluva-hoitokausi])
                                          tallenna-fn
                                          (get-in kursorit [:toimenkuva]))}
-          (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero])]
+          (get-in kursorit [:erikseen-syotettava? kuluva-hoitokausi])]
          [:div.vetolaatikko-border {:style {:border-left "4px solid lightblue" :margin-top "16px" :padding-left "18px"}}
           [vanha-grid/muokkaus-grid
            {:id (str polku valitun-hoitokauden-alkuvuosi)
@@ -996,24 +998,22 @@
             :piilota-table-header? true
             :on-rivi-blur (r/partial tallenna-kuukausipalkka
                             (get kursorit :toimenkuva)
-                            {:toimenkuva toimenkuva
-                             :rivin-tiedot rivi
-                             :hoitokausi valitun-hoitokauden-numero
+                            {:hoitokausi kuluva-hoitokausi
                              :kopioi-tuleville? kopioi-tuleville?
                              :alkuvuosi urakan-alkuvuosi
                              :loppuvuosi urakan-loppuvuosi})
             :voi-kumota? false}
            [{:nimi :kuukausi :tyyppi :string :muokattava? (constantly false) :leveys "85%" :fmt (r/partial formatoi-kuukausi valitun-hoitokauden-alkuvuosi)}
-            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? #(palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? valitun-hoitokauden-numero]) rivi valitun-hoitokauden-numero)}]
-           (get-in kursorit [:maksuerat valitun-hoitokauden-numero])]]]))))
+            {:nimi :kuukausipalkka :tyyppi :numero :leveys "15%" :muokattava? #(palkkakentta-muokattava? (get-in kursorit [:erikseen-syotettava? kuluva-hoitokausi]) rivi kuluva-hoitokausi)}]
+           maksuerat]]]))))
 
 (defn luo-vetolaatikot
-  [atomi tallenna-fn]
+  [atomi tallenna-fn kuluva-hoitokausi]
   (into {}
     (map
       (juxt first #(let [rivi (second %)
                          polku (:tunniste rivi)]
-                     [vetolaatikko-komponentti atomi polku rivi tallenna-fn])))
+                     [vetolaatikko-komponentti atomi polku rivi tallenna-fn kuluva-hoitokausi])))
     (into {}
       (filter #(let [data (second %)]
                  (not (or (:ennen-urakkaa? data)
@@ -1056,7 +1056,7 @@
                           data
                           {:hoitokausi kuluva-hoitokausi
                            :kopioi-tuleville? kopioidaan-tuleville-vuosille?})
-            vetolaatikot (luo-vetolaatikot data tallenna-fn)]
+            vetolaatikot (luo-vetolaatikot data tallenna-fn @kaytetty-hoitokausi)]
         (when-not (= kuluva-hoitokausi @kaytetty-hoitokausi)
           (swap! data paivita-vuosilootat kuluva-hoitokausi)
           (reset! kaytetty-hoitokausi kuluva-hoitokausi))
@@ -1068,6 +1068,9 @@
            :luokat ["poista-bottom-margin"]
            :voi-lisata? false
            :voi-kumota? false
+           :muutos (fn [g]
+                     (when-not (= @kaytetty-hoitokausi kuluva-hoitokausi)
+                       (vanha-grid/sulje-vetolaatikot! g)))
            :jarjesta :jarjestys
            :piilota-toiminnot? true
            :on-rivi-blur tallenna-fn

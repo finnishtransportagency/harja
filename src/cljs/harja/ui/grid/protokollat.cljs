@@ -69,6 +69,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
+  (sulje-vetolaatikot! [this] "Sulje kaikki vetolaatikot")
+
   (avattavat-rivit-auki? [this id] "Tarkista onko avattavat-rivit auki annetulla rivin id:llä.")
 
   (avaa-avattavat-rivit! [this id] "Avaa avattavat-rivit rivin id:llä.")
@@ -124,6 +126,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
+
+      (sulje-vetolaatikot! [_]
+        (sulje-vetolaatikot! @gridi))
 
       (avattavat-rivit-auki? [_ id]
         (avattavat-rivit-auki? @gridi id))

@@ -598,6 +598,8 @@
                         (swap! vetolaatikot-auki conj id))
                       (sulje-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki disj id))
+                      (sulje-vetolaatikot! [_]
+                        (reset! vetolaatikot-auki #{}))
                       (validoi-grid [_]
                         (let [gridin-tiedot @muokatut]
                           (swap! virheet (fn [_]
