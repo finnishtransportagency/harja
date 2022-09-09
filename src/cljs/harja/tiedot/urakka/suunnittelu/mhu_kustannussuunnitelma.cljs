@@ -2329,7 +2329,7 @@
                                                                                ;; Jos ensimmäiset 11 kk on samoja JA
                                                                                ;; erotus viimeisen ja jonkun muun kk välillä on alle 0.12 => ei ole voitu laittaa tasan kaikille kk
                                                                                (apply = (map :kuukausipalkka ensimmaiset-kkt))
-                                                                               (< 0.12 (Math/abs (- (:kuukausipalkka viimeinen-kk) (:kuukausipalkka (first ensimmaiset-kkt)))))))))])
+                                                                               (> 0.12 (Math/abs (- (:kuukausipalkka viimeinen-kk) (:kuukausipalkka (first ensimmaiset-kkt)))))))))])
                                                               (range 1 (inc (count (keys maksuerat))))))
                                      toimenkuvan-tiedot {:jarjestys (if-not (nil? jarjestys)
                                                                       (:jarjestys jarjestys)
