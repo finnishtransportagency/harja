@@ -336,9 +336,19 @@
 
 (defn pohjadatan-versio
   []
-  (let [vuosifiltteri (filter #(if (post-2022?)
+  (let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)
+        vuosifiltteri (filter #(cond
+                                 (nil? alkupvm)
+                                 true
+
+                                 (not (post-2022?))
+                                 (= 1 (:versio %))
+
+                                 (post-2022?)
                                  (= 2 (:versio %))
-                                 (= 1 (:versio %))))]
+
+                                 :else
+                                 true))]
     (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)))
 
 (defn aakkosta [sana]
