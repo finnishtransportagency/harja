@@ -103,8 +103,7 @@ SELECT ra.id                                                               AS ra
                  LEFT JOIN LATERAL unnest(tr.reittipisteet) AS trp ON TRUE
                  LEFT JOIN LATERAL unnest(trp.materiaalit) as mat ON TRUE
             AND mat.materiaalikoodi in
-                (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi),
-             materiaalikoodi mk
+                (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi)
         WHERE tot.urakka = :urakka-id
           AND tot.poistettu = false
           AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
