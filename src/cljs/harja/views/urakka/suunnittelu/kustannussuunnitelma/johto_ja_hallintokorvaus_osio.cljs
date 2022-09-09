@@ -1089,52 +1089,51 @@
    kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
-  (let [alkuvuosi (-> tila/yleiset deref :urakka :alkupvm pvm/vuosi)]
-    [:<>
-     [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
-     [johto-ja-hallintokorvaus-yhteenveto
-      johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
-      toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [:<>
+   [:h2 {:id (str (get t/hallinnollisten-idt :johto-ja-hallintokorvaus) "-osio")} "Johto- ja hallintokorvaus"]
+   [johto-ja-hallintokorvaus-yhteenveto
+    johto-ja-hallintokorvaukset-summat toimistokulut-summat johto-ja-hallintokorvaukset-summat-indeksikorjattu
+    toimistokulut-summat-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
 
-     ;; Tuntimäärät ja -palkat -taulukko
-     [:h3 "Tuntimäärät ja -palkat"]
-     [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
-      [ks-yhteiset/yleis-suodatin suodattimet]]
-     (cond
-       (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (< alkuvuosi t/vertailuvuosi-uudelle-taulukolle))
-       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [grid/piirra johto-ja-hallintokorvaus-grid]]
+   ;; Tuntimäärät ja -palkat -taulukko
+   [:h3 "Tuntimäärät ja -palkat"]
+   [:div {:data-cy "tuntimaarat-ja-palkat-taulukko-suodattimet"}
+    [ks-yhteiset/yleis-suodatin suodattimet]]
+   (cond
+     (and johto-ja-hallintokorvaus-grid kantahaku-valmis? (not (t/post-2022?)))
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra johto-ja-hallintokorvaus-grid]]
 
-       (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-       [:div.johto-ja-hallintokorvaukset {:class (when vahvistettu? "osio-vahvistettu")}
-        [taulukko-2022-eteenpain app]]
+     (and (t/post-2022?) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
+     [:div.johto-ja-hallintokorvaukset {:class (when vahvistettu? "osio-vahvistettu")}
+      [taulukko-2022-eteenpain app]]
 
-       :else
-       [yleiset/ajax-loader])
+     :else
+     [yleiset/ajax-loader])
 
-     (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
-       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]]
-       [yleiset/ajax-loader])
+   (if (and johto-ja-hallintokorvaus-yhteenveto-grid kantahaku-valmis?)
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra johto-ja-hallintokorvaus-yhteenveto-grid]]
+     [yleiset/ajax-loader])
 
-     ;; Johto ja hallinto: Muut kulut -taulukko
-     [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
-     [:div {:data-cy "johto-ja-hallinto-muut-kulut-taulukko-suodattimet"}
-      [ks-yhteiset/yleis-suodatin suodattimet]]
+   ;; Johto ja hallinto: Muut kulut -taulukko
+   [:h3 {:id (str (get t/hallinnollisten-idt :toimistokulut) "-osio")} "Johto ja hallinto: muut kulut"]
+   [:div {:data-cy "johto-ja-hallinto-muut-kulut-taulukko-suodattimet"}
+    [ks-yhteiset/yleis-suodatin suodattimet]]
 
-     ;; Note: "Muut kulut" taulukko on hämäävästi toimistokulut-grid. Jos gridiin tulee myöhemmin
-     ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
-     ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
-     (if (and toimistokulut-grid kantahaku-valmis?)
-       ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
-        [grid/piirra toimistokulut-grid]]
-       [yleiset/ajax-loader])
+   ;; Note: "Muut kulut" taulukko on hämäävästi toimistokulut-grid. Jos gridiin tulee myöhemmin
+   ;;       muutakin kuin pelkkä "toimistokulut", niin kannattaa harkita gridin nimen vaihtoa. Tämä on vähän työlästä, sillä
+   ;;       gridin dataan viitataan monessa paikassa :toimistokulut-keywordillä.
+   (if (and toimistokulut-grid kantahaku-valmis?)
+     ;; FIXME: "Osio-vahvistettu" luokka on väliaikainen hack, jolla osion input kentät saadaan disabloitua kunnes muutosten seuranta ehditään toteuttaa.
+     [:div {:class (when vahvistettu? "osio-vahvistettu")}
+      [grid/piirra toimistokulut-grid]]
+     [yleiset/ajax-loader])
 
-     [:span
-      "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]]))
+   [:span
+    "Yhteenlaskettu kk-määrä: Toimisto- ja ICT-kulut, tiedotus, opastus, kokousten ja vierailujen järjestäminen sekä tarjoilukulut + Hoito- ja korjaustöiden pientarvikevarasto (työkalut, mutterit, lankut, naulat jne.)"]])
 
 ;; ### Johto- ja hallintokorvaus osion pääkomponentti ###
 

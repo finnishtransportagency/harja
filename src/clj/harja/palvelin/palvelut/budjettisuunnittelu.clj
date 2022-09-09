@@ -407,7 +407,7 @@
                                        ;; Ennen urakkakautta tapahtuvat kustannukset toimivat kaikkina vuosina samoin
                                        ennen-urakkaa (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi nil))
                                        ;; Vain vuonna 2021 ja sitä aiemmin alkaneille urakoille voi määritellä toimenkuvakohtaisesti erilaisia kuukausijaksoja
-                                       (and (< urakan-alkuvuosi 2022)
+                                       (and (not (bs-p/vuosikohtaiset-toimenkuvat? urakan-alkuvuosi))
                                          (or (= toimenkuva "päätoiminen apulainen")
                                            (= toimenkuva "apulainen/työnjohtaja"))) (if (<= 5 kuukausi 9)
                                                                                       (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :kesa))
@@ -415,7 +415,7 @@
                                        :else (conj johto-ja-hallintokorvaukset (assoc johto-ja-hallintokorvaus :maksukausi :molemmat))))
                                    [] hoitokauden-numero-lisatty)
         ;; Vuoden -22 ja sen jälkeen alkavilla urakoilla ei ole enää erikseen maksukausia ja kk-v erottelua ei enää tarvita
-        kk-v-lisatty (if (< urakan-alkuvuosi 2022)
+        kk-v-lisatty (if (not (bs-p/vuosikohtaiset-toimenkuvat? urakan-alkuvuosi))
                        (map (fn [{:keys [toimenkuva maksukausi hoitokausi] :as johto-ja-hallintokorvaus}]
                               (cond
                                 (= :kesa maksukausi) (assoc johto-ja-hallintokorvaus :kk-v 5)
@@ -643,6 +643,7 @@
                                                  ::ur/urakka
                                                  #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
                                                  {::ur/id urakka-id}))
+          urakan-alkuvuosi (urakat-q/hae-urakan-alkuvuosi db urakka-id)
           toimenkuva-id (or toimenkuva-id
                           (::bs/id (first (fetch db ::bs/johto-ja-hallintokorvaus-toimenkuva
                                             #{::bs/id}
@@ -700,7 +701,7 @@
       (when-not (empty? olemassa-olevat-jhkt)
         (doseq [jhk olemassa-olevat-jhkt
                 :let [tunnit (some (fn [{:keys [vuosi kuukausi tunnit]}]
-                                     (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
+                                     (let [tunnit (if (bs-p/vuosikohtaiset-toimenkuvat? urakan-alkuvuosi)
                                                     1       ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
                                                     tunnit)]
 
@@ -743,10 +744,10 @@
       ;; Käsittele uudet insertoitavat jhk:t
       (when-not (empty? uudet-jhkt)
         (doseq [{:keys [vuosi kuukausi osa-kuukaudesta tunnit tuntipalkka]} uudet-jhkt]
-          (let [tunnit (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
+          (let [tunnit (if (bs-p/vuosikohtaiset-toimenkuvat? urakan-alkuvuosi)
                          1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa. Yksittäistä tuntia ei enää tallenneta
                          tunnit)
-                osa-kuukaudesta (if (pvm/sama-tai-jalkeen? urakan-alkupvm (pvm/luo-pvm-dec-kk 2022 10 1))
+                osa-kuukaudesta (if (bs-p/vuosikohtaiset-toimenkuvat? urakan-alkuvuosi)
                          1 ;; Kaikissa -22 tai myöhemmin alkaneissa urakoissa käytetään kokonaishintaa, joten osa-kuukaudesta on aina 1
                          osa-kuukaudesta)
                 uusi-rivi (insert! db

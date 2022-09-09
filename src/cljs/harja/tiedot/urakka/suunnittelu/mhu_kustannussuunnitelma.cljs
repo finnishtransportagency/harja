@@ -9,9 +9,7 @@
             [harja.tyokalut.yleiset :as yleiset-tyokalut]
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log warn]]
             [harja.ui.viesti :as viesti]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.taulukko.grid :as grid]
             [harja.ui.taulukko.grid-pohjat :as g-pohjat]
             [harja.domain.oikeudet :as oikeudet]
@@ -29,11 +27,10 @@
                    [cljs.core.async.macros :refer [go go-loop]]))
 
 
-(def vertailuvuosi-uudelle-taulukolle 2022)
 (defn post-2022? []
   (let [alkupvm (-> @tiedot/yleiset :urakka :alkupvm)]
     (if alkupvm
-      (>= (pvm/vuosi alkupvm) vertailuvuosi-uudelle-taulukolle)
+      (bs/vuosikohtaiset-toimenkuvat? (pvm/vuosi alkupvm))
       false)))
 
 ;; Tuck e!
@@ -339,19 +336,9 @@
 
 (defn pohjadatan-versio
   []
-  (let [alkupvm (-> tiedot/yleiset deref :urakka :alkupvm)
-        alkuvuosi (when (some? alkupvm) (pvm/vuosi alkupvm))
-        vuosifiltteri (filter #(cond
-                                 (and alkuvuosi
-                                   (< alkuvuosi vertailuvuosi-uudelle-taulukolle))
-                                 (= 1 (:versio %))
-
-                                 (and alkuvuosi
-                                   (>= alkuvuosi vertailuvuosi-uudelle-taulukolle))
+  (let [vuosifiltteri (filter #(if (post-2022?)
                                  (= 2 (:versio %))
-
-                                 :else
-                                 true))]
+                                 (= 1 (:versio %))))]
     (into [] vuosifiltteri johto-ja-hallintokorvaukset-pohjadata)))
 
 (defn aakkosta [sana]
@@ -2172,13 +2159,16 @@
                     (vec (sort-by (juxt :vuosi :kuukausi) asia-kannasta))
                     ;; Vuoden -22 jälkeen urakoissa ei ole enää maksukausia, vaan kaikki syötetään vuosihintoina (ja voi kyllä laittaa kuukausihinnatkin, mutta ei kausia)
                     (fn [_vuosi kuukausi]
-                      (cond
-                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :kesa)) (<= 5 kuukausi 9)
-                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= maksukausi :talvi)) (or (<= 1 kuukausi 4)
-                                                (<= 10 kuukausi 12))
-                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "harjoittelija")) (<= 5 kuukausi 8)
-                        (and (< (pvm/vuosi urakan-aloituspvm) vertailuvuosi-uudelle-taulukolle) (= toimenkuva "viherhoidosta vastaava henkilö")) (<= 4 kuukausi 8)
-                        :else true))
+                      (or
+                        (post-2022?)
+                        (cond
+                          (= maksukausi :kesa) (<= 5 kuukausi 9)
+                          (= maksukausi :talvi) (or 
+                                                  (<= 1 kuukausi 4)
+                                                  (<= 10 kuukausi 12))
+                          (= toimenkuva "harjoittelija") (<= 5 kuukausi 8)
+                          (= toimenkuva "viherhoidosta vastaava henkilö") (<= 4 kuukausi 8)
+                          :else true)))
                     (fn [{:keys [vuosi kuukausi tunnit tuntipalkka tuntipalkka-indeksikorjattu] :as data}]
                       (-> data
                         (assoc :aika (pvm/luo-pvm vuosi (dec kuukausi) 15)
@@ -3378,7 +3368,6 @@
   TallennaToimenkuva
   (process-event [{:keys [rivin-nimi]} app]
     (let [{urakka-id :id} (:urakka @tiedot/yleiset)
-          _ (println "rivin-nimi" rivin-nimi)
           toimenkuva-id (get-in app [:domain :johto-ja-hallintokorvaukset rivin-nimi 0 0 :toimenkuva-id])
           toimenkuva-nimi (get-in app [:domain :johto-ja-hallintokorvaukset rivin-nimi 0 0 :toimenkuva])
           lahetettava-data {:urakka-id urakka-id
