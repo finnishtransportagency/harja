@@ -287,6 +287,14 @@
         indeksikerroin (big/fmt (big/div-decimal b-indeksiarvo b-perusluku 3) 3)]
     indeksikerroin))
 
+(defn etsi-syvalta-arvoa
+  "Haetaan syvältä datarakenteesta, kun annettu ehto täyttyy."
+  [ehto data kun-ei-loydy]
+  (->> data
+    (tree-seq coll? seq)
+    (some #(when (ehto %) [%]))
+    ((fnil first [kun-ei-loydy]))))
+
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
   (let [;; Aikavälit ja otsikkotekstit
@@ -332,7 +340,9 @@
         perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
         ;; Indeksiä käytetään vain sanktioissa ja bonuksissa
         ;; Indeksinä käytetään hoitokautta edeltävän syyskuun arvoa, mikäli se on olemassa.
-        indeksi-puuttuu (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
+        ;; tiedot-tuotteittain on hieman monimutkainen rakenteeltaan, joten käytetään erillistä fn:ää datan löytämiseksi
+        indeksi-puuttuu (etsi-syvalta-arvoa #(not (nil? (:indeksi_puuttuu %))) tiedot-tuotteittain false)
+        indeksi-puuttuu (if indeksi-puuttuu (:indeksi_puuttuu indeksi-puuttuu) true)
         raportin-indeksiarvo (when-not indeksi-puuttuu
                                (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id
                                  (if (> (pvm/kuukausi alkupvm) 9)
@@ -353,7 +363,9 @@
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
-        indeksikerroin (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku)]
+        ;; Laske indeksikerroin vain, jos arvot ovat saatavilla
+        indeksikerroin (when (and raportin-indeksiarvo perusluku)
+                         (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku))]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
@@ -365,11 +377,12 @@
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
        [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
 
-     [:teksti (str "Indeksikerroin: " indeksikerroin)
-      {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
-                                  [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta indeksistä ja perusluvusta.
+     (when-not indeksi-puuttuu
+       [:teksti (str "Indeksikerroin: " indeksikerroin)
+        {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
+                                    [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta indeksistä ja perusluvusta.
                           Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
-                                  [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}]
+                                    [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}])
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat
