@@ -885,9 +885,8 @@
                              rivi)
         tiedot (assoc-in tiedot [(:tunniste rivi) :maksuerat-per-hoitovuosi-per-kuukausi] paivitetyt)
         _ (reset! atomi tiedot)]
-    ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
     (when tiedot-muuttuneet?
-      (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)) 1))))
+      (e! (t/->TallennaJHOToimenkuvanVuosipalkka rivi)))))
 
 (defn- paivita-toimenkuvan-vuosiloota
   [hoitokausi [toimenkuva toimenkuvan-tiedot]]
@@ -926,7 +925,7 @@
         toimenkuvan-tiedot (assoc tiedot :maksuerat-per-hoitovuosi-per-kuukausi paivitetyt)
         _ (reset! tiedot-atom toimenkuvan-tiedot)]
     ;; Atomin päivittämisessä menee joitakin millisekunteja. Siksi viive
-    (yleiset/fn-viiveella #(e! (t/->TallennaJHOToimenkuvanVuosipalkka toimenkuvan-tiedot)) 1)))
+    (e! (t/->TallennaJHOToimenkuvanVuosipalkka toimenkuvan-tiedot))))
 
 (defn- jarjesta-hoitovuoden-jarjestykseen
   "Järjestys lokakuusta seuraavan vuoden syyskuuhun"
