@@ -1107,7 +1107,7 @@
         [grid/piirra johto-ja-hallintokorvaus-grid]]
 
        (and (>= alkuvuosi t/vertailuvuosi-uudelle-taulukolle) johto-ja-hallintokorvaus-grid kantahaku-valmis?)
-       [:div {:class (when vahvistettu? "osio-vahvistettu")}
+       [:div.johto-ja-hallintokorvaukset {:class (when vahvistettu? "osio-vahvistettu")}
         [taulukko-2022-eteenpain app]]
 
        :else
