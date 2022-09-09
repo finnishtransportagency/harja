@@ -205,6 +205,11 @@
    :f8 :kuittaaja_organisaatio_ytunnus
    :f9 :kanava})
 
+(defn- parsi-aika [aika]
+  (if (< (count aika) 25)
+    (.parse (SimpleDateFormat. pvm-aika-muoto1) aika)
+    (.parse (SimpleDateFormat. pvm-aika-muoto2) aika)))
+
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
   on mahdollista eritellä."
@@ -213,9 +218,9 @@
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
-        alkuaika (c/to-sql-time (pvm/iso8601-basic->suomen-aika alkuaika))
+        alkuaika (parsi-aika alkuaika)
         loppuaika (if loppuaika
-                    loppuaika
+                    (parsi-aika loppuaika)
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
