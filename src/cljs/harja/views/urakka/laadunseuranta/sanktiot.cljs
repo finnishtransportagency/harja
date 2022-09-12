@@ -433,6 +433,6 @@
          [:div
           (when @tiedot/valittu-sanktio           
             [sivupalkki/oikea
-             {:leveys "600px"}
+             {:leveys "600px" :sulku-fn #(reset! tiedot/valittu-sanktio nil)}
              [sanktion-tiedot optiot]])
           [sanktiolistaus optiot @nav/valittu-urakka]])])))
