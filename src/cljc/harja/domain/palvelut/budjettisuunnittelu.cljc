@@ -22,6 +22,14 @@
 
 (def toimenpide-avaimet #{:paallystepaikkaukset :mhu-yllapito :talvihoito :liikenneympariston-hoito :sorateiden-hoito :mhu-korvausinvestointi :mhu-johto})
 
+(def vuosikohtaisten-toimenkuvien-vertailuvuosi 2022)
+
+(defn vuosikohtaiset-toimenkuvat?
+  "Vuodesta 2022 eteenpäin urakan toimenkuvat suunnitellaan vuosikohtaisesti.
+  Tätä tarkastusta käytetään monessa paikassa, joten tämä funktio pitää tarkastukset yhtenäisinä"
+  [urakan-alkuvuosi]
+  (>= urakan-alkuvuosi vuosikohtaisten-toimenkuvien-vertailuvuosi))
+
 (s/def ::positive-int? (s/and integer? #(>= % 0)))
 (s/def ::positive-number? (s/and number? #(>= % 0) #(not= % ##Inf)))
 
