@@ -4,7 +4,8 @@
             [clojure.spec.gen.alpha :as gen]
             [clojure.set :as clj-set]
             [harja.pvm :as pvm]
-            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]))
+            [harja.domain.palvelut.budjettisuunnittelu :as bs-p]
+            [harja.tyokalut.yleiset :as yleiset-tyokalut]))
 
 (def ^:dynamic *hoitokaudet* #{1 2 3 4 5})
 
@@ -88,13 +89,16 @@
       :sorateiden-hoito
       :mhu-korvausinvestointi])))
 
-(defn toimenkuvan-maksukaudet [toimenkuva]
+(defn toimenkuvan-maksukaudet
+  "Vuoden -22 alkavien urakoiden toimenkuvien muutos aiheuttaa sen, että päätoimiselle apulaiselle ja apulainen/työnjohtaja
+  toimenkuville on pakko sallia koko vuoden kestävät työsuhteet, koska tunteja ei enää raportoida, vaan siirrytään kokonaiskustannuksiin."
+  [toimenkuva]
   (case toimenkuva
     "hankintavastaava" #{:molemmat}
     "sopimusvastaava" #{:molemmat}
     "vastuunalainen työnjohtaja" #{:molemmat}
-    "päätoiminen apulainen" #{:talvi :kesa}
-    "apulainen/työnjohtaja" #{:talvi :kesa}
+    "päätoiminen apulainen" #{:talvi :kesa :molemmat}
+    "apulainen/työnjohtaja" #{:talvi :kesa :molemmat}
     "viherhoidosta vastaava henkilö" #{:molemmat}
     "harjoittelija" #{:molemmat}))
 
@@ -117,43 +121,41 @@
                            :jhk-tiedot (if ennen-urakkaa?
                                          (reduce (fn [data {:keys [kuukausi osa-kuukaudesta]}]
                                                    (conj data
-                                                         {:vuosi urakan-aloitusvuosi
-                                                          :kuukausi kuukausi
-                                                          :osa-kuukaudesta osa-kuukaudesta
-                                                          :tunnit (gen/generate (s/gen ::bs-p/tunnit))
-                                                          :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))}))
-                                                 []
-                                                 kuukaudet-hoitokausille)
+                                                     {:vuosi urakan-aloitusvuosi
+                                                      :kuukausi kuukausi
+                                                      :osa-kuukaudesta osa-kuukaudesta
+                                                      :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                                      :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))}))
+                                           []
+                                           kuukaudet-hoitokausille)
                                          (second
                                            (reduce (fn [[hoitokauden-numero data] hoitokauden-kuukaudet]
                                                      [(inc hoitokauden-numero)
                                                       (vec (concat
                                                              data
                                                              (map (fn [{:keys [kuukausi osa-kuukaudesta]}]
-                                                                    {:vuosi (dec (+ urakan-aloitusvuosi hoitokauden-numero))
+                                                                    {:vuosi (yleiset-tyokalut/vuosi-hoitokauden-numerosta-ja-kuukaudesta hoitokauden-numero kuukausi urakan-aloitusvuosi)
                                                                      :kuukausi kuukausi
                                                                      :osa-kuukaudesta osa-kuukaudesta
                                                                      :tunnit (gen/generate (s/gen ::bs-p/tunnit))
                                                                      :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))})
-                                                                  hoitokauden-kuukaudet)))])
-                                                   [1 []]
-                                                   kuukaudet-hoitokausille)))}
+                                                               hoitokauden-kuukaudet)))])
+                                             [1 []]
+                                             kuukaudet-hoitokausille)))}
                           (if oma?
                             {:toimenkuva-id toimenkuva-id}
                             {:toimenkuva toimenkuva})))))))
 (defn tallenna-johto-ja-hallintokorvaus-data
   ([urakka-id urakan-aloitusvuosi] (tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitusvuosi {}))
-  ([urakka-id
-    urakan-aloitusvuosi
-    {:keys [toimenkuvat maksukaudet hoitokaudet ennen-urakkaa-mukaan?]
-     :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}
-     :as filtterit}]
+  ([urakka-id urakan-aloitusvuosi {:keys [toimenkuvat maksukaudet hoitokaudet ennen-urakkaa-mukaan?]
+                                   :or {toimenkuvat :kaikki maksukaudet :kaikki hoitokaudet :kaikki ennen-urakkaa-mukaan? true}
+                                   :as filtterit}]
    {:pre [(s/valid? ::toimenkuvat-arg toimenkuvat)
           (s/valid? ::maksukaudet-arg maksukaudet)
           (s/valid? ::hoitokaudet-arg hoitokaudet)]}
    (let [kuukaudet-hoitokausille (fn [kuukaudet]
                                    (vec (repeat 5 (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
-                                                        kuukaudet))))]
+                                                    kuukaudet))))]
      (transduce
        (comp
          (filter (fn [{toimenkuva :toimenkuva}]
@@ -187,10 +189,13 @@
         {:urakka-id urakka-id
          :toimenkuva "hankintavastaava"
          :ennen-urakkaa? true
-         :kuukaudet {nil (conj (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
-                                     (repeat 4 10))
-                               {:kuukausi 10
-                                :osa-kuukaudesta 0.5})}}
+         :kuukaudet (if (>= urakan-aloitusvuosi 2022)       ;; Urakoiden alkaessa -22 tai myöhemmin, käytetään aina koko vuotta
+                      {nil (conj (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
+                                   (repeat 5 10)))}
+                      {nil (conj (mapv #(identity {:kuukausi % :osa-kuukaudesta 1})
+                                   (repeat 4 10))
+                             {:kuukausi 10
+                              :osa-kuukaudesta 0.5})})}
         {:urakka-id urakka-id
          :toimenkuva "sopimusvastaava"
          :ennen-urakkaa? false
@@ -202,21 +207,29 @@
         {:urakka-id urakka-id
          :toimenkuva "päätoiminen apulainen"
          :ennen-urakkaa? false
-         :kuukaudet {:kesa (kuukaudet-hoitokausille (range 5 10))
-                     :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))}}
+         :kuukaudet (if (>= urakan-aloitusvuosi 2022)       ;; Urakoiden alkaessa -22 tai myöhemmin, käytetään aina koko vuotta
+                      {:molemmat (kuukaudet-hoitokausille (range 1 13))}
+                      {:kesa (kuukaudet-hoitokausille (range 5 10))
+                       :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))})}
         {:urakka-id urakka-id
          :toimenkuva "apulainen/työnjohtaja"
          :ennen-urakkaa? false
-         :kuukaudet {:kesa (kuukaudet-hoitokausille (range 5 10))
-                     :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))}}
+         :kuukaudet (if (>= urakan-aloitusvuosi 2022)       ;; Urakoiden alkaessa -22 tai myöhemmin, käytetään aina koko vuotta
+                      {:molemmat (kuukaudet-hoitokausille (range 1 13))}
+                      {:kesa (kuukaudet-hoitokausille (range 5 10))
+                       :talvi (kuukaudet-hoitokausille (concat (range 1 5) (range 10 13)))})}
         {:urakka-id urakka-id
          :toimenkuva "viherhoidosta vastaava henkilö"
          :ennen-urakkaa? false
-         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 4 9))}}
+         :kuukaudet (if (>= urakan-aloitusvuosi 2022)       ;; Urakoiden alkaessa -22 tai myöhemmin, käytetään aina koko vuotta
+                      {:molemmat (kuukaudet-hoitokausille (range 1 13))}
+                      {:molemmat (kuukaudet-hoitokausille (range 4 9))})}
         {:urakka-id urakka-id
          :toimenkuva "harjoittelija"
          :ennen-urakkaa? false
-         :kuukaudet {:molemmat (kuukaudet-hoitokausille (range 5 9))}}]))))
+         :kuukaudet (if (>= urakan-aloitusvuosi 2022)       ;; Urakoiden alkaessa -22 tai myöhemmin, käytetään aina koko vuotta
+                      {:molemmat (kuukaudet-hoitokausille (range 1 13))}
+                      {:molemmat (kuukaudet-hoitokausille (range 5 9))})}]))))
 
 (defn toimenpiteen-tallennettavat-asiat
   [toimenpide-avain]

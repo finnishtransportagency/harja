@@ -235,11 +235,11 @@
   [:h3 teksti])
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:color (when vari vari)}} teksti
+  [:div {:style {:color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:font-weight 700
+  [:div {:style {:font-weight 700
                :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
