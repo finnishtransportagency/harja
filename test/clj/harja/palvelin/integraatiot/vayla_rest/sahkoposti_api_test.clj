@@ -457,8 +457,8 @@
           _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
           _ (Thread/sleep 1500)
           ulos-lahtevat-integraatiotapahtumat (hae-ulos-lahtevat-integraatiotapahtumat)
-          ;; Virheelliseen sähköpostiin tehty vastaus näkyy tietokannassa viimeisimpänä integraatiotapahtumana
-          integraatio (last ulos-lahtevat-integraatiotapahtumat)]
+          ;; Virheelliseen sähköpostiin tehty vastaus näkyy tietokannassa integraatiotapahtumana - ota tarkasteluun vain sähköpostin lähetys tapahtumat
+          integraatio (last (filter #(when (str/includes? (:sisalto %) "sahkoposti:sahkoposti") %) ulos-lahtevat-integraatiotapahtumat))]
       (is (str/includes? (:sisalto integraatio) "www.liikennevirasto.fi"))
       (is (str/includes? (:sisalto integraatio) "<vastaanottaja>seppoyit@example.org</vastaanottaja>"))
       (is (str/includes? (:sisalto integraatio) "Urakka-id puuttuu."))
