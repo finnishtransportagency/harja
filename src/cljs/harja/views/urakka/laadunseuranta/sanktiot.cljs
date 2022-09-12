@@ -75,39 +75,23 @@
               yllapito? (:yllapito? optiot)
               vesivayla? (:vesivayla? optiot)
               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
-              muokkaustila? (some? (:id @muokattu))
+              muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
-              lukutila? @lukutila]
+              lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
           [:div.padding-16.ei-sulje-sivupaneelia
            #_[napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
-           [:h1 (cond
-                  (and lukutila? muokkaustila?)
-                  (str (case (:laji @muokattu)
-                         :A "Ryhmä A"
-                         :B "Ryhmä B"
-                         :C "Ryhmä C"
-                         :muistutus "Muistutus"
-                         :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
-                         :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
-                         :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
-                         :arvonvahennyssanktio "Arvonvähennys"
-                         :yllapidon_muistutus "Muistutus"
-                         :yllapidon_sakko "Sakko"
-                         :yllapidon_bonus "Bonus"
-                         :vesivayla_muistutus "Muistutus"
-                         :vesivayla_sakko "Sakko"
-                         :vesivayla_bonus "Bonus"))
+           [:h2 (cond
+                  (and lukutila? muokataan-vanhaa?)
+                  (str (laji->teksti (:laji @muokattu)))
 
-                  muokkaustila?
+                  muokataan-vanhaa?
                   "Muokkaa sanktiota"
                   
                   :else
                   "Lisää uusi")]
-           (when (and lukutila? muokkaustila?)
+           (when (and lukutila? muokataan-vanhaa?)
              [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)])
-           
-           (when-not muokkaustila?
-             [:div "PLACEHOLDER radiobuttonit"])
+                      
            ;; Vaadi tarvittavat tiedot ennen rendausta
            (if (and mahdolliset-sanktiolajit
                  (or (not yllapitokohdeurakka?)
@@ -117,31 +101,32 @@
               [lomake/lomake
                {:otsikko "Sanktion tiedot"
                 :ei-borderia? true
+                :vayla-tyyli? true
                 :luokka "padding-16 taustavari-taso3"
                 :muokkaa! #(reset! tiedot/valittu-sanktio %)
+                :validoi-alussa? false
                 :voi-muokata? (and voi-muokata? (not lukutila?))
                 :footer-fn (fn [sanktio]
-                             [:span.nappiwrappi
-                              [napit/palvelinkutsu-nappi
-                               "Tallenna sanktio"
-                               #(tiedot/tallenna-sanktio (lomake/ilman-lomaketietoja @muokattu) urakka-id)
-                               {:luokka "nappi-ensisijainen"
-                                :ikoni (ikonit/tallenna)
-                                :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
-                                :disabled (or (not voi-muokata?)
-                                            (not (lomake/voi-tallentaa? sanktio)))}]
-                              (when (and voi-muokata? (:id @muokattu))
-                                [:button.nappi-kielteinen
+                             [:span.nappiwrappi.flex-row
+                              (when-not lukutila?
+                                [napit/palvelinkutsu-nappi
+                                 (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                                 #(tiedot/tallenna-sanktio (lomake/ilman-lomaketietoja @muokattu) urakka-id)
+                                 {:luokka "nappi-ensisijainen"
+                                  :ikoni (ikonit/tallenna)
+                                  :kun-onnistuu #(reset! tiedot/valittu-sanktio nil)
+                                  :disabled (or (not voi-muokata?)
+                                              (not (lomake/voi-tallentaa? sanktio)))}])
+                              (when (and voi-muokata? (:id @muokattu) (not lukutila?))
+                                [:button.nappi-kielteinen.oikealle
                                  {:class (when @tallennus-kaynnissa "disabled")
                                   :on-click
                                   (fn [e]
                                     (.preventDefault e)
                                     (varmista-kayttajalta/varmista-kayttajalta
                                       {:otsikko "Sanktion poistaminen"
-                                       :sisalto (str "Haluatko varmasti poistaa sanktion "
-                                                  (or (str (:summa @muokattu) "€") "")
-                                                  " päivämäärällä "
-                                                  (pvm/pvm (:perintapvm @muokattu)) "?")
+                                       :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
+                                       :modal-luokka "varmistus-modal"
                                        :hyvaksy "Poista"
                                        :toiminto-fn #(do
                                                        (let [res (tiedot/tallenna-sanktio
@@ -150,16 +135,14 @@
                                                                    urakka-id)]
                                                          (do (viesti/nayta! "Sanktio poistettu")
                                                              (reset! tiedot/valittu-sanktio nil))))}))}
-                                 (ikonit/livicon-trash) " Poista sanktio"])])}
-               [#_{:otsikko "Tekijä" :nimi :tekijanimi
-                   :hae (comp :tekijanimi :laatupoikkeama)
-                   :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
-                   :leveys 1 :tyyppi :string
-                   :muokattava? (constantly false)}                                          
-
-                (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
-                  {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
-                   :palstoja 2
+                                 (ikonit/livicon-trash) " Poista"])
+                              [napit/peruuta (if lukutila?
+                                               "Sulje"
+                                               "Peruuta")
+                               #(reset! tiedot/valittu-sanktio nil)]])}
+               [(when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+                  {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
+                   ::lomake/col-luokka "col-xs-12"
                    :uusi-rivi? true :nimi :laji
                    :hae (comp keyword :laji)
                    :aseta (fn [rivi arvo]
@@ -179,28 +162,13 @@
                                 (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                 rivi)))
                    :valinnat (sort mahdolliset-sanktiolajit)
-                   :valinta-nayta #(case %
-                                     :A "Ryhmä A"
-                                     :B "Ryhmä B"
-                                     :C "Ryhmä C"
-                                     :muistutus "Muistutus"
-                                     :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
-                                     :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
-                                     :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
-                                     :arvonvahennyssanktio "Arvonvähennys"
-                                     :yllapidon_muistutus "Muistutus"
-                                     :yllapidon_sakko "Sakko"
-                                     :yllapidon_bonus "Bonus"
-                                     :vesivayla_muistutus "Muistutus"
-                                     :vesivayla_sakko "Sakko"
-                                     :vesivayla_bonus "Bonus"
-                                     "- valitse laji -")
-                   :validoi [[:ei-tyhja "Valitse laji"]]})
+                   :valinta-nayta laji->teksti
+                   :validoi [[:ei-tyhja "Valitse laji"]]})                
 
                 (when-not (or yllapito? vesivayla?)
                   {:otsikko "Tyyppi" :tyyppi :valinta
                    :pakollinen? true
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :nimi :tyyppi
                    :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
                             (assoc sanktio
@@ -217,9 +185,9 @@
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
                 
                 (when yllapitokohdeurakka?
-                  {:otsikko "Ylläpitokohde" :tyyppi :valinta :nimi :yllapitokohde
+                  {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
                    :pakollinen? false :muokattava? (constantly voi-muokata?)
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
                    :valinta-nayta (fn [arvo voi-muokata?]
                                     (if (:id arvo)
@@ -236,19 +204,19 @@
                                           "Ei liity kohteeseen"
                                           ""))))}) 
                 (when (and (not yllapitokohdeurakka?) (not vesivayla?))
-                  {:otsikko "Kohde" :tyyppi :string :nimi :kohde
+                  {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
                    :hae (comp :kohde :laatupoikkeama)
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
                    :pakollinen? true
                    :muokattava? (constantly voi-muokata?)
-                   :validoi [[:ei-tyhja "Anna sanktion kohde"]]})         
+                   :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})         
 
                 (when yllapito?
                   {:otsikko "Puute tai laiminlyönti"
                    :nimi :vakiofraasi
                    :tyyppi :valinta
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :valinta-arvo first
                    :valinta-nayta second
                    :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})         
@@ -256,88 +224,71 @@
                 {:otsikko "Perustelu"
                  :nimi :perustelu
                  :pakollinen? true
-                 :palstoja 2
+                 ::lomake/col-luokka "col-xs-12"
                  :hae (comp :perustelu :paatos :laatupoikkeama)
                  :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
                  :tyyppi :text :koko [80 :auto]
                  :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-
                 (when (and (sanktio-domain/sakko? @muokattu))
-                  {:otsikko "Toimenpide"
+                  {:otsikko "Kulun kohdistus"
                    :pakollinen? true
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :nimi :toimenpideinstanssi
                    :tyyppi :valinta
                    :valinta-arvo :tpi_id
                    :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                    :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-                   :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
-
-         (when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
-           {:otsikko "Laji" :tyyppi :valinta :pakollinen? true
-            :palstoja 1 :uusi-rivi? true :nimi :laji
-            :hae (comp keyword :laji)
-            :aseta (fn [rivi arvo]
-                     (let [rivi (-> rivi
-                                    (assoc :laji arvo)
-                                    (dissoc :tyyppi)
-                                    (assoc :tyyppi nil))
-                           s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
-                           rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count s-tyypit)) (first s-tyypit))]
-                                  (assoc rivi
-                                    :tyyppi (dissoc tyyppi :laji)
-                                    :toimenpideinstanssi
-                                    (when tpk
-                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                  rivi)]
-                       (if-not (sanktio-domain/sakko? rivi)
-                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
-                         rivi)))
-            :valinnat (sort mahdolliset-sanktiolajit)
-            :valinta-nayta laji->teksti
-            :validoi [[:ei-tyhja "Valitse laji"]]})
-
+                   :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})        
 
                 (apply lomake/ryhma {:rivi? true}
                   (keep identity [(when (sanktio-domain/sakko? @muokattu)
                                     {:otsikko "Summa" :nimi :summa :tyyppi :positiivinen-numero
+                                     ::lomake/col-luokka "col-xs-4"
                                      :hae #(when (:summa %) (Math/abs (:summa %)))
                                      :pakollinen? true :uusi-rivi? true :yksikko "€"
                                      :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-                                  (when (and (sanktio-domain/sakko? @muokattu) (urakka/indeksi-kaytossa-sakoissa?))
-                                    {:otsikko "Indeksi" :nimi :indeksi :leveys 2
+                                  (when (sanktio-domain/sakko? @muokattu)
+                                    {:otsikko (str "Indeksi") :nimi :indeksi
                                      :tyyppi :valinta
-                                     :muokattava? (constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
-                                     :valinnat sanktio-domain/hoidon-indeksivalinnat
-                                     :valinta-nayta #(or % "Ei sidota indeksiin")})]))
+                                     ::lomake/col-luokka "col-xs-4"
+                                     :muokattava? (constantly (not lukutila?)) #_(constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
+                                     :hae (if (urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
+                                     :disabled? (not (urakka/indeksi-kaytossa-sakoissa?))
+                                     :valinnat (into [] (keep identity [(when (urakka/indeksi-kaytossa-sakoissa?)
+                                                                          (:indeksi @nav/valittu-urakka))
+                                                                        "Ei indeksiä"]))
+                                     :valinta-nayta #(or % "Ei indeksiä")})]))
 
                 (lomake/ryhma {:rivi? true}
                   {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
                    :pakollinen? true
+                   ::lomake/col-luokka "col-xs-4"
                    :hae (comp :aika :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
-                   :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
+                   :fmt pvm/pvm-aika :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                    :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                   {:otsikko "Käsitelty" :nimi :kasittelyaika
                    :pakollinen? true
+                   ::lomake/col-luokka "col-xs-4"
                    :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
-                   :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
+                   :fmt pvm/pvm-aika :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]
                              [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
-                  {:otsikko "Perintäpvm" :nimi :perintapvm
+                  {:otsikko "Perintä" :nimi :perintapvm
                    :pakollinen? true
-                   :fmt pvm/pvm-aika :leveys 1 :tyyppi :pvm
+                   ::lomake/col-luokka "col-xs-4"
+                   :fmt pvm/pvm-aika :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]
                              [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                               "Ei voi olla ennen havaintoa"]]})
 
                 {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                  :pakollinen? true
-                 :palstoja 2
+                 ::lomake/col-luokka "col-xs-12"
                  :hae (comp :kasittelytapa :paatos :laatupoikkeama)
                  :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
                  :tyyppi :valinta
@@ -350,21 +301,22 @@
                                          nil) "- valitse käsittelytapa -")}
                 (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
                   {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
+                   ::lomake/col-luokka "col-xs-12"
                    :hae (comp :muukasittelytapa :paatos :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :muukasittelytapa] arvo))
-                   :leveys 2 :tyyppi :string :palstoja 2
+                   :tyyppi :string
                    :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
                 (when (:suorasanktio @muokattu)
                   {:otsikko "Liitteet" :nimi :liitteet
                    :tyyppi :komponentti
-                   :palstoja 2
+                   ::lomake/col-luokka "col-xs-12"
                    :komponentti (fn [_]
                                   [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
                                    {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
                                                        #(swap! tiedot/valittu-sanktio
                                                           (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
-                                    :uusi-liite-teksti "Lisää liite sanktioon"
+                                    :uusi-liite-teksti "Lisää liite"
                                     :salli-poistaa-lisatty-liite? true
                                     :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
                                                                 (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))

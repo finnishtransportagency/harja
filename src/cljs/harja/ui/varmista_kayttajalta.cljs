@@ -5,7 +5,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.grid :as grid]))
 
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka]}]
+(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
   "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
 
   Parametrimap:
@@ -36,7 +36,7 @@
                                                {:luokka "pull-right"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
-                   :modal-luokka modal-luokka}
+                   :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}
                   sisalto)))
 
 (def modal-muut-vastaanottajat

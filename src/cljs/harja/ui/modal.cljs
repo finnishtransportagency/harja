@@ -66,7 +66,7 @@
              otsikko]
             (when otsikon-alle-komp
               [otsikon-alle-komp])])
-         (when-not (or
+         #_(when-not (or
                      (and (empty? otsikko)
                          (nil? otsikon-alle-komp))
                      (nil? sisalto))
