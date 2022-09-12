@@ -57,9 +57,7 @@
 (defn sanktion-tiedot
   [optiot]
   (let [lukutila (atom true)]
-    (komp/luo
-      #_(komp/klikattu-ulkopuolelle ;{:luokat #{"ei-sulje-sivupaneelia"} :ulkopuolella-fn}
-        #(reset! tiedot/valittu-sanktio nil))
+    (komp/luo      
       (fn [optiot]      
         (let [muokattu (atom @tiedot/valittu-sanktio)
                                         ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
@@ -79,8 +77,7 @@
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
           [:div.padding-16.ei-sulje-sivupaneelia
-           #_[napit/takaisin "Takaisin sanktioluetteloon" #(reset! tiedot/valittu-sanktio nil)]
-           [:h2 (cond
+            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
                   (str (laji->teksti (:laji @muokattu)))
 
