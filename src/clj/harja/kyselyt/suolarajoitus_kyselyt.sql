@@ -395,21 +395,29 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
    AND (ra.tierekisteriosoite).tie = :tie
 
    AND (
-       -- Annettu alkuosa osuu kannassa olevan väliin
-         (:aosa != :losa AND (((ra.tierekisteriosoite).aosa BETWEEN :aosa AND :losa)
-             AND (:aosa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet > :aet)))
-        OR
-        -- Annettu loppuosa osuu kannassa olevan väliin
-        (:aosa != :losa AND (((ra.tierekisteriosoite).losa BETWEEN :aosa AND :losa)
-            AND (:losa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).losa < :losa)))
-       -- Alkuosa ja loppuosa on samat, tarkista etäisyydet
-       OR
-       -- Alkuosa ja loppuosa on samat ja ne täsmää kannassa jo olevaan alkuosaan,
-       -- joten tarkistetaan onko etäisyydet annettujen etäisyyksien välissä
-       (:aosa = :losa AND (ra.tierekisteriosoite).aosa = :aosa
-            AND ((ra.tierekisteriosoite).aet BETWEEN :aet AND :let
-                    OR
-                 ((ra.tierekisteriosoite).let - 1) BETWEEN :aet AND :let)));
+     -- Annetut alkuosa ja loppusa ylittävät rajoitusalueet alku ja loppuosasta |----*----*----|
+         (:aosa != :losa AND ((:aosa < (ra.tierekisteriosoite).aosa AND :losa > (ra.tierekisteriosoite).losa)))
+         OR
+         -- Annettu alkuosa osuu kannassa olevan väliin
+         (:aosa != :losa AND ((:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
+             OR (:aosa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet <= :aet)
+             -- Sallitaan tilanne, jossa uusi rajoitusalue alkaa samasta pisteestä, mihin joku toinen loppuu
+             OR (:aosa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let - 1 >= :aet)
+             ))
+         OR
+         -- Annettu loppuosa osuu kannassa olevan väliin
+         (:aosa != :losa AND ((:losa > (ra.tierekisteriosoite).aosa AND :losa < (ra.tierekisteriosoite).losa)
+             OR (:losa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let <= :let)
+             OR (:losa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet <= :let)))
+         -- Alkuosa ja loppuosa on samat, tarkista etäisyydet
+         OR
+         -- Kun alkuosa ja loppuosa on samat
+         (:aosa = :losa AND (
+             -- Alkuosa osuu kokonaan kannassa olevien aosan ja losan väliin
+                 (:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
+                 -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
+                 OR (:aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let))));
+
 
 -- name: hae-pohjavesialueidenurakat
 SELECT DISTINCT ON (u.id) u.id, u.nimi
