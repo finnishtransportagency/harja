@@ -10,7 +10,8 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]))
+            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.fmt :as fmt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -116,8 +117,7 @@
       (is (=marginaalissa? kaikki-yhteensa nurkkasumma 155250.20M)))))
 
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2016-2017
-  (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi in (10,11,12) AND vuosi = 2016"))
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :laskutusyhteenveto
@@ -129,7 +129,6 @@
     (is (vector? vastaus))
     (let [odotettu-otsikko "Oulun alueurakka 2014-2019, 01.10.2016-30.09.2017"
           saatu-otsikko (second (nth vastaus 2))
-          varoitus-indeksiarvojen-puuttumisesta (nth vastaus 5)
           yks-hint (arvo-raportin-nnesta-elementista vastaus 0)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 1)
 
@@ -141,19 +140,20 @@
           kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 7)
 
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
+      (println "Jarno nurkka" nurkkasumma)
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
-      (is (= varoitus-indeksiarvojen-puuttumisesta
-             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019"]))
 
       (is (=marginaalissa? yks-hint 7882.50M))
       (is (=marginaalissa? sanktiot -1900.67M))
-      (is (=marginaalissa? indeksitarkistukset-yks-hint 0.00M))
-      (is (=marginaalissa? indeksitarkistukset-sanktiot -191.15M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint -167.62))
-      (is (=marginaalissa? indeksitarkistukset-kaikki -167.62M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 5790.67M))
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 5981.83M)))))
+      (is (=marginaalissa? indeksitarkistukset-yks-hint 2310.387931034483003250M))
+      (is (=marginaalissa? indeksitarkistukset-sanktiot -571.6564M))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 1738.731531034483003250M ))
+      (is (=marginaalissa? indeksitarkistukset-kaikki 1738.731531034483003250M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa  7720.565531034483003250M))
+      (is (= (fmt/desimaaliluku kaikki-yhteensa 2)
+             (fmt/desimaaliluku nurkkasumma 2)
+             "7720,57")) "Loppusumma oikein")))
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015-kun-092015-indeksiarvo-puuttuu
   (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi = 9 AND vuosi = 2015"))
@@ -257,9 +257,11 @@
       (is (=marginaalissa? yks-hint 7882.50M))
       (is (=marginaalissa? sanktiot -1900.67M))
       (is (=marginaalissa? yks-hint-indeksitarkistukset 2310.39M))
-      (is (=marginaalissa? sanktioiden-indeksitarkistukset -191.159M))
-      (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset 2119.23M))
-      (is (=marginaalissa? kaikki-indeksitarkistukset 2119.23M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 8101.06M))
+      (is (=marginaalissa? sanktioiden-indeksitarkistukset -571.6564M))
+      (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset 1738.731531034483003250M))
+      (is (=marginaalissa? kaikki-indeksitarkistukset 1738.731531034483003250M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa  7720.565531034483003250M))
 
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 8101.06M)))))
+      (is (= (fmt/desimaaliluku kaikki-yhteensa 2)
+             (fmt/desimaaliluku nurkkasumma 2)
+             "7720,57") "Loppusumma oikein"))))
