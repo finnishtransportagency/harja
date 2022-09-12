@@ -248,14 +248,14 @@
   [:h3 teksti])
 
 (defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
-  [:p {:style (merge
+  [:div {:style (merge
                 {:color (when vari vari)}
                 (when rivita? {:white-space "pre-line"}))}
    teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:font-weight 700
+  [:div {:style {:font-weight 700
                :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
