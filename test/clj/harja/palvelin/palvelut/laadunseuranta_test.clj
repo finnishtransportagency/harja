@@ -20,7 +20,8 @@
             [harja.fmt :as fmt]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti])
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [clojure.string :as str])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -69,6 +70,16 @@
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each jarjestelma-fixture)
+
+
+(defn poista-sanktio-perustelulla
+  [perustelu]
+  (let [laatupoikkeama-idt (map first (q (str "SELECT id FROM laatupoikkeama where perustelu = '" perustelu "';")))
+        sanktio-idt (map first (q (str "SELECT id FROM sanktio where laatupoikkeama IN (" (str/join "," laatupoikkeama-idt) ");")))]
+    (println "Jarno POISTETTAVAT SANKTIOT: " sanktio-idt)
+    (println "Jarno POISTETTAVAT LAATUPOIKKEAMAT: " laatupoikkeama-idt)
+    (u "DELETE FROM sanktio WHERE id IN (" (str/join "," sanktio-idt) ");")
+    (u "DELETE FROM laatupoikkeama WHERE id IN(" (str/join "," laatupoikkeama-idt) ");")))
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeama {:yllapitokohde nil
@@ -271,7 +282,8 @@
             sanktiot-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
                                             +kayttaja-jvh+ hoidon-muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
             lisatty-hoidon-sakko (first (filter #(= 665.9 (:summa %)) sanktiot-sakon-jalkeen))
-            lisatty-hoidon-muistutus (first (filter #(= nil (:summa %)) sanktiot-muistutuksen-jalkeen))]
+            lisatty-hoidon-muistutus (first (filter #(= nil (:summa %)) sanktiot-muistutuksen-jalkeen))
+            roskien-keruu (poista-sanktio-perustelulla perustelu)]
         (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
         (is (number? (:id lisatty-hoidon-muistutus)) "Tallennus palauttaa uuden id:n")
         (is (= :A (:laji lisatty-hoidon-sakko)) "Hoitourakan bonuksen oikea sanktiolaji")
@@ -404,7 +416,8 @@
 
       (testing "laatupoikkeamaan-liitetyn-sanktion-poistaminen-ei-poista-laatupoikkeamaa"
         (is (and (= true (:poistettu poistettu-lp-sanktio-kannassa))
-                 (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))))
+                 (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))
+    (poista-sanktio-perustelulla perustelu)))
 
 
 (deftest hae-laatupoikkeaman-tiedot
@@ -595,8 +608,6 @@
                                                   :loppupvm loppupvm
                                                   :urakkatyyppi "teiden-hoito"}))
         sakot-indeksikorotuksineen-laskutusyhteenvedosta (reduce + 0 (remove nil? laskutusyhteenvedosta-samat-sanktiot))]
-    (println "Jarno vastau " vastaus)
-    (println "Jarno sakot-indeksikorotuksineen-laskutusyhteenvedosta " sakot-indeksikorotuksineen-laskutusyhteenvedosta)
     (is (= (count vastaus) 1))
     (is (= (:summa sanktio) 1000.0) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio) 0.0) "sanktion indeksikorjaus laskettu oikein")
