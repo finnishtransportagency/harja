@@ -37,7 +37,7 @@
                    :yksikkohintainen 2000.0M}
                   {:akillinen-hoitotyo 3000.0M
                    :bonus 0.0M
-                   :indeksi 2240.008531034483003250M
+                   :indeksi 2363.57176704980846225000M
                    :kokonaishintainen 0.0M
                    :lisatyo 10000.0M
                    :muu 1000.0M
