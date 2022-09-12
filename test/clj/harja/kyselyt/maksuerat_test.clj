@@ -27,7 +27,7 @@
         urakka-id (ffirst (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
         odotettu [{:akillinen-hoitotyo 0.0M
                    :bonus 21000.0M
-                   :indeksi 8011.5518361430393730262000000M
+                   :indeksi 8011.5519246487865237290000000M
                    :kokonaishintainen 42010.0M
                    :lisatyo 2000.0M
                    :muu 11000.0M
@@ -37,17 +37,17 @@
                    :yksikkohintainen 2000.0M}
                   {:akillinen-hoitotyo 3000.0M
                    :bonus 0.0M
-                   :indeksi 2363.57176704980846225000M
+                   :indeksi 2634.85536398467391047000M
                    :kokonaishintainen 0.0M
                    :lisatyo 10000.0M
                    :muu 1000.0M
                    :sakko -1434.0M
                    :tpi_id 5
                    :urakka_id 4
-                   :yksikkohintainen 11882.50M}
+                   :yksikkohintainen 35002.50M}
                   {:akillinen-hoitotyo 0.0M
                    :bonus 0.0M
-                   :indeksi -1616.36013946360377790000M
+                   :indeksi -1616.36015325670619390000M
                    :kokonaishintainen 120000.0M
                    :lisatyo 0.0M
                    :muu 0.0M
@@ -69,10 +69,10 @@
                ; MHU Korvausinvestointi	14300	51
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
-               odotettu [{:kokonaishintainen 5411.7914M
+               odotettu [{:kokonaishintainen 5411.791430M
                           :tpi_id 45
                           :urakka_id 35}
-                         {:kokonaishintainen 6251.4876M
+                         {:kokonaishintainen 6251.487630M
                           :tpi_id 46
                           :urakka_id 35}
                          {:kokonaishintainen 8801.94M
