@@ -24,7 +24,7 @@
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle
   (let [db (:db jarjestelma)
-        urakka-id (ffirst (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+        urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         odotettu [{:akillinen-hoitotyo 0.0M
                    :bonus 21000.0M
                    :indeksi 8011.5519246487865237290000000M
@@ -37,14 +37,14 @@
                    :yksikkohintainen 2000.0M}
                   {:akillinen-hoitotyo 3000.0M
                    :bonus 0.0M
-                   :indeksi 2634.85536398467391047000M
+                   :indeksi 2363.57183908045982945000M
                    :kokonaishintainen 0.0M
                    :lisatyo 10000.0M
                    :muu 1000.0M
                    :sakko -1434.0M
                    :tpi_id 5
                    :urakka_id 4
-                   :yksikkohintainen 35002.50M}
+                   :yksikkohintainen 11882.50M}
                   {:akillinen-hoitotyo 0.0M
                    :bonus 0.0M
                    :indeksi -1616.36015325670619390000M
