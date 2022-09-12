@@ -218,8 +218,6 @@ BEGIN
         korotus := 0;
         RAISE NOTICE 'Ei indeksikorotusta. % ', korotus;
     END IF;
-    korotus := round(korotus, 4);
-
 
     paluurivi := (summa, summa + korotus, korotus);
     RAISE NOTICE 'PALUURIVI: %', paluurivi;

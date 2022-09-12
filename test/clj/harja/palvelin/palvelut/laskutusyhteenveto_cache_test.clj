@@ -222,13 +222,13 @@
       (is (= 7000.0M
              (:muutostyot_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
              (:muutostyot_laskutetaan cachesta-haettu-kysely)) ":muutostyot_laskutetaan laskutusyhteenvedossa")
-      (is (= 3820.11496015325665900000M
+      (is (= 3820.11494252873560900000M
              (:kaikki_laskutettu haetut-tiedot-oulu-liikenneympariston-hoito)
              (:kaikki_laskutettu cachesta-haettu-kysely)) ":kaikki_laskutettu laskutusyhteenvedossa")
       (is (= 13103.44827586206880000M
              (:kaikki_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito)
              (:kaikki_laskutetaan cachesta-haettu-kysely)) ":kaikki_laskutetaan laskutusyhteenvedossa")
-      (is (= 20.11496015325665900000M
+      (is (= 20.11494252873560900000M
              (:kaikki_laskutettu_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito)
              (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
       (is (= 103.44827586206880000M
@@ -253,13 +253,13 @@
         (is (= 26000.0M
                (:muutostyot_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:muutostyot_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":muutostyot_laskutetaan laskutusyhteenvedossa")
-        (is (= 42366.09197164750865900000M
+        (is (= 42366.09195402298760900000M
                (:kaikki_laskutettu toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:kaikki_laskutettu cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu laskutusyhteenvedossa")
         (is (= 71086.2068965517224000M
                (:kaikki_laskutetaan toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:kaikki_laskutetaan cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutetaan laskutusyhteenvedossa")
-        (is (= 566.09197164750865900000M
+        (is (= 566.09195402298760900000M
                (:kaikki_laskutettu_ind_korotus toka-haetut-tiedot-oulu-liikenneympariston-hoito)
                (:kaikki_laskutettu_ind_korotus cachesta-haettu-kysely-triggerin-jalkeen)) ":kaikki_laskutettu_ind_korotus laskutusyhteenvedossa")
         (is (= 1086.2068965517224000M

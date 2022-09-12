@@ -138,22 +138,6 @@
         (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")
         (is (number? (get-in vastaus [:sanktiot 0 :id])) "Uudelle sanktiolle luodaan uusi id")))
 
-    (testing "Sanktion päivittäminen laatupoikkeamaan"
-      ;; Tässä testissä olemassaoleva sanktio siirretään uuteen laatupoikkeamaan
-      ;; tämä ei ole varsinaisesti toivottu mahdollisuus, eikä ole mahdollista normaalisti,
-      ;; mutta tämä on vaan helppo tapa testata sanktion päivittymistä
-      (let [vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama
-                                         +kayttaja-jvh+
-                                         (assoc laatupoikkeama
-                                           :paatos paatos
-                                           :sanktiot [olemassa-oleva-sanktio
-                                                      uusi-sanktio]))]
-        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
-        (is (= 2 (count (:sanktiot vastaus))) "Laatupoikkeamalla pitäisi olla kaksi sanktiota")
-
-        (is (every? number? (map :id (:sanktiot vastaus))))
-        (is (some #(= olemassa-olevan-sanktion-id %) (map :id (:sanktiot vastaus))))))
-
     (testing "Laatupoikkeaman luominen epäonnistuu jos sanktio ei kuulu urakkaan"
       (is (thrown? SecurityException
                    (kutsu-http-palvelua :tallenna-laatupoikkeama
@@ -517,7 +501,7 @@
            "571,66") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
     (is (= (fmt/desimaaliluku sakkojen-indeksikorotukset-yhteensa-laskutusyhteenvedosta 2) "−571,66") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
     (is (= (:summa sanktio-100e) 100.0) "sanktion summa palautuu oikein")
-    (is (= (:indeksikorjaus sanktio-100e) 30.0766) "sanktion indeksikorjaus laskettu oikein")))
+    (is (= (:indeksikorjaus sanktio-100e) 30.07662835249042) "sanktion indeksikorjaus laskettu oikein")))
 
 
 ;;  Tämä testi varmistaa, että hoidon MHU-urakoissa (urakan tyyppi = 'teiden-hoito'), jotka ovat alkaneet 2019 tai 2020, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
