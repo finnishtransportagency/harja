@@ -69,6 +69,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
+  (sulje-vetolaatikot! [this] "Sulje kaikki vetolaatikot")
+
   (avattavat-rivit-auki? [this id] "Tarkista onko avattavat-rivit auki annetulla rivin id:llä.")
 
   (avaa-avattavat-rivit! [this id] "Avaa avattavat-rivit rivin id:llä.")
@@ -125,6 +127,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
 
+      (sulje-vetolaatikot! [_]
+        (sulje-vetolaatikot! @gridi))
+
       (avattavat-rivit-auki? [_ id]
         (avattavat-rivit-auki? @gridi id))
 
@@ -174,11 +179,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn vetolaatikon-tila [ohjaus vetolaatikot id luokat]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td {:class luokat
+    [:td {:class (conj (if (coll? luokat) luokat [luokat])
+                   (when vetolaatikko? "klikattava"))
           :on-click (when vetolaatikko?
                       #(do (.preventDefault %)
-                           (.stopPropagation %)
-                           (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
+                         (.stopPropagation %)
+                         (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
        [:div.vetolaatikon-sailio
         [:div.inline-block.vetolaatikon-pylvas]
