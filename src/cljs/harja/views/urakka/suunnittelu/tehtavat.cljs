@@ -210,7 +210,8 @@
          aluetiedot-tila]])
      (when (> maara-tehtavia 0)
        [:<>
-        [:div.tm-otsikko "Määrät"]
+        [:div.tm-otsikko.suunniteltavat
+         "Suunniteltavat määrät"]
         [grid/muokkaus-grid
          (merge 
            {:id (keyword (str "tehtavat-maarat-" (vali->viiva nimi)))
@@ -224,6 +225,7 @@
             :voi-kumota? false
             :virheet t/taulukko-virheet
             :piilota-toiminnot? true
+            :korostusrajaus? true
             :on-rivi-blur (r/partial tallenna! e! sopimukset-syotetty? :maarat)}
            (when (not sopimukset-syotetty?) 
              {:vetolaatikot

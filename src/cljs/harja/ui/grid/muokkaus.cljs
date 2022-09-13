@@ -536,7 +536,8 @@
   :disabloi-autocomplete?         True, jos ei haluta inputeilla autofilliä
   :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
   :piilota-table-header?          True, niin ei piirretä thead -elementtiä.
-  :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy"
+  :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy
+  :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit"
 
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
@@ -691,7 +692,7 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -719,7 +720,7 @@
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
                                 :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
             [:div.panel-body
-             [:table.grid
+             [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)
                 [gridin-otsikot skeema rivinumerot? piilota-toiminnot?])
               [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja :gridin-id gridin-id
