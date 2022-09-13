@@ -92,7 +92,7 @@
 
    "Toteumatyökalu"
    :toteumatyokalu
-   (when (istunto/ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
+   (when (istunto/ominaisuus-kaytossa? :toteumatyokalu)
      ^{:key "toteumatyokalu"}
      [toteumatyokalu-nakyma/simuloi-toteuma])
 

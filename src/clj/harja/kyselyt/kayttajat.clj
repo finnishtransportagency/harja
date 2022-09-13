@@ -11,7 +11,7 @@
 (defn onko-kayttajalla-lisaoikeus-urakkaan? [db urakka-id kayttaja-id]
   (:exists (first
              ;; Lokaali ympäristöön on sallittu admin käyttäjän toimia myös API rajapinnan käyttäjänä. Voit säätää tätä pois-kytketyt-omimaisuudet setissä asetuksissa.
-             (if (ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)
+             (if (ominaisuus-kaytossa? :toteumatyokalu)
                     (onko-normikayttajalla-lisaoikeus-urakkaan db {:urakka urakka-id
                                                               :kayttaja kayttaja-id})
                     (onko-kayttajalla-lisaoikeus-urakkaan db {:urakka urakka-id
