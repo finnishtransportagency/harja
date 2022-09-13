@@ -2,13 +2,10 @@
 CREATE TABLE rajoitusalue (
                               id                 SERIAL PRIMARY KEY NOT NULL,
                               tierekisteriosoite TR_OSOITE,
--- TODO: Tallennetaanko pituudet suoraan tähän tauluun, vai tehdäänkö esim. VIEW jossa joinataan mukaan
---       tavaraa tauluista tr_osan_ajorata tr_ajoratojen_pituudet tr_osien_pituudet ja lasketaan pituudet näkymässä.
--- Lasketaan tierekisteriosoitteelle
+-- Lasketaan tierekisteriosoitteelle pituus ja ajoratojen pituus
                               pituus             INTEGER,
--- Lasketaan tierekisteriosoitteelle
                               ajoratojen_pituus  INTEGER,
--- lasketaan sijainti valmiiksi, niin nopeutetaan tietokantahakuja koordinaattien perusteella
+-- Lasketaan sijainti valmiiksi, niin nopeutetaan tietokantahakuja koordinaattien perusteella
                               sijainti geometry,
 
 -- Urakan id, johon rajoitusalue liittyy (vrt. pohjavesialueet_urakoittain ja pohjavesialueet_hallintayksikoittain)
