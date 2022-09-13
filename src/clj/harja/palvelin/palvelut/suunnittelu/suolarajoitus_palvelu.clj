@@ -89,20 +89,19 @@
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
       tr-tiedot)))
 
-(defn hae-suolarajoitukset [db user {:keys [urakka_id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
+(defn hae-suolarajoitukset [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (log/debug "Suolarajoitus :: hae-suolarajoitukset :: tiedot " tiedot)
   (let [rajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-hoitokaudelle db
                       {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                       :urakka_id urakka_id})
-        rajoitukset (mapv (fn [suolarajoitus]
+                       :urakka_id urakka-id})
+        rajoitukset (map (fn [suolarajoitus]
                             (update suolarajoitus :pohjavesialueet
                               (fn [alueet]
                                 (mapv
                                   #(konv/pgobject->map % :tunnus :string :nimi :string)
                                   (konv/pgarray->vector alueet)))))
-                      rajoitukset)
-        _ (log/debug "Suolarajoitus :: hae-suolarajoitukset :: Löydettiin rajoitukset:" rajoitukset)]
+                      rajoitukset)]
     rajoitukset))
 
 (defn tallenna-suolarajoitus
@@ -452,7 +451,8 @@
                                                 (assoc :pituus (:pituus tr-tiedot))
                                                 (assoc :ajoratojen_pituus (:ajoratojen_pituus tr-tiedot)))]
               ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
-              (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]))
+              (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
+    urakan-pohjavesialueet))
 
 (defrecord Suolarajoitus []
   component/Lifecycle

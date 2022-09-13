@@ -90,7 +90,7 @@
   (let [urakka-id (-> @tila/yleiset :urakka :id)
         _ (tuck-apurit/post! :hae-suolarajoitukset
             {:hoitokauden-alkuvuosi valittu-vuosi
-             :urakka_id urakka-id}
+             :urakka-id urakka-id}
             {:onnistui ->HaeSuolarajoituksetOnnistui
              :epaonnistui ->HaeSuolarajoituksetEpaonnistui
              :paasta-virhe-lapi? true})]))
@@ -443,6 +443,7 @@
                :paasta-virhe-lapi? true})]
 
       (-> app
+        (assoc :valittu-hoitovuosi (:hoitokauden-alkuvuosi lomake))
         (assoc :tallennus-kaynnissa? true)
         (assoc :rajoitusalue-lomake-auki? sivupaneeli-tila))))
 
