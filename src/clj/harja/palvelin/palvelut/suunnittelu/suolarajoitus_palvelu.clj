@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.java.jdbc :as jdbc]
+            [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.tyokalut.yleiset :as yleiset-tyokalut]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
@@ -90,8 +91,8 @@
 
 (defn hae-suolarajoitukset [db user {:keys [urakka_id hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
-  (let [_ (log/debug "Suolarajoitus :: hae-suolarajoitukset :: tiedot " tiedot)
-        rajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-hoitokaudelle db
+  (log/debug "Suolarajoitus :: hae-suolarajoitukset :: tiedot " tiedot)
+  (let [rajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-hoitokaudelle db
                       {:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                        :urakka_id urakka_id})
         rajoitukset (mapv (fn [suolarajoitus]
@@ -114,82 +115,83 @@
   (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
-      (let [_ (log/debug "tallenna-suolarajoitus :: tierekisteritiedot on validit" tr-tiedot)
-            kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? suolarajoitus)
-            urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)}))
-            urakan-hoitovuodet (pvm/tulevat-hoitovuodet
-                                 (:hoitokauden-alkuvuosi suolarajoitus)
-                                 kopioidaan-tuleville-vuosille?
-                                 urakan-tiedot)
-            ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
-            db-rajoitusalue {:id (when (:rajoitusalue_id suolarajoitus) (:rajoitusalue_id suolarajoitus))
-                             :tie (:tie suolarajoitus)
-                             :aosa (:aosa suolarajoitus)
-                             :aet (:aet suolarajoitus)
-                             :losa (:losa suolarajoitus)
-                             :let (:let suolarajoitus)
-                             :pituus (:pituus suolarajoitus)
-                             :ajoratojen_pituus (:ajoratojen_pituus suolarajoitus)
-                             :urakka_id (:urakka_id suolarajoitus)
-                             :kayttaja_id (:id user)}
+      (jdbc/with-db-transaction [db db]
+       (let [kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? suolarajoitus)
+             urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id (:urakka_id suolarajoitus)}))
+             urakan-hoitovuodet (pvm/tulevat-hoitovuodet
+                                  (:hoitokauden-alkuvuosi suolarajoitus)
+                                  kopioidaan-tuleville-vuosille?
+                                  urakan-tiedot)
+             ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
+             db-rajoitusalue {:id (when (:rajoitusalue_id suolarajoitus) (:rajoitusalue_id suolarajoitus))
+                              :tie (:tie suolarajoitus)
+                              :aosa (:aosa suolarajoitus)
+                              :aet (:aet suolarajoitus)
+                              :losa (:losa suolarajoitus)
+                              :let (:let suolarajoitus)
+                              :pituus (:pituus suolarajoitus)
+                              :ajoratojen_pituus (:ajoratojen_pituus suolarajoitus)
+                              :urakka_id (:urakka_id suolarajoitus)
+                              :kayttaja_id (:id user)}
 
-            ;; Päivitä tai tallenna uutena
-            rajoitusalue (if (:id db-rajoitusalue)
-                           (do
-                             (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
-                             (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)})))
-                           (let [vastaus (suolarajoitus-kyselyt/tallenna-rajoitusalue<! db (dissoc db-rajoitusalue :id))]
-                             (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id vastaus)}))))
+             ;; Päivitä tai tallenna uutena
+             rajoitusalue (if (:id db-rajoitusalue)
+                            (do
+                              (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
+                              (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)})))
+                            (let [vastaus (suolarajoitus-kyselyt/tallenna-rajoitusalue<! db (dissoc db-rajoitusalue :id))]
+                              (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id vastaus)}))))
 
-            db-rajoitus {:id (when (:rajoitus_id suolarajoitus) (:rajoitus_id suolarajoitus))
-                         :rajoitusalue_id (:id rajoitusalue)
-                         :suolarajoitus (:suolarajoitus suolarajoitus)
-                         :formiaatti (:formiaatti suolarajoitus)
-                         :kayttaja_id (:id user)}
-            ;; Päivitä tai tallenna uutena
-            _ (if (:id db-rajoitus)
-                (doseq [vuosi urakan-hoitovuodet]
-                  (let [;; Haetaan päivitettävä rajoitus tietokannasta urakan ja vuoden perusteella. Meillä ei ole id:tä kaikille vuosille
-                        haettu-rajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
-                                                                                            :hoitokauden-alkuvuosi vuosi}))
-                        rajoitus {:id (:rajoitus_id haettu-rajoitus)
-                                  :kayttaja_id (:id user)
-                                  :suolarajoitus (:suolarajoitus suolarajoitus)
-                                  :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi haettu-rajoitus)
-                                  :formiaatti (:formiaatti suolarajoitus)
-                                  :rajoitusalue_id (:rajoitusalue_id haettu-rajoitus)}
-                        _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
-                    rajoitus))
-                (doseq [vuosi urakan-hoitovuodet]
-                  (let [rajoitus (assoc db-rajoitus :hoitokauden-alkuvuosi vuosi)
-                        r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
-                    rajoitus)))
-            suolarajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
-                                                                              :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi suolarajoitus)}))
+             db-rajoitus {:id (:rajoitus_id suolarajoitus)
+                          :rajoitusalue_id (:id rajoitusalue)
+                          :suolarajoitus (:suolarajoitus suolarajoitus)
+                          :formiaatti (:formiaatti suolarajoitus)
+                          :kayttaja_id (:id user)}
+             ;; Päivitä tai tallenna uutena
+             _ (if (:id db-rajoitus)
+                 (doseq [vuosi urakan-hoitovuodet]
+                   (let [;; Haetaan päivitettävä rajoitus tietokannasta urakan ja vuoden perusteella. Meillä ei ole id:tä kaikille vuosille
+                         haettu-rajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
+                                                                                             :hoitokauden-alkuvuosi vuosi}))
+                         rajoitus {:id (:rajoitus_id haettu-rajoitus)
+                                   :kayttaja_id (:id user)
+                                   :suolarajoitus (:suolarajoitus suolarajoitus)
+                                   :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi haettu-rajoitus)
+                                   :formiaatti (:formiaatti suolarajoitus)
+                                   :rajoitusalue_id (:rajoitusalue_id haettu-rajoitus)}
+                         _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
+                     rajoitus))
+                 (doseq [vuosi urakan-hoitovuodet]
+                   (let [rajoitus (assoc db-rajoitus :hoitokauden-alkuvuosi vuosi)
+                         r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
+                     rajoitus)))
+             suolarajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
+                                                                               :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi suolarajoitus)}))
 
-            suolarajoitus (update suolarajoitus :pohjavesialueet
-                            (fn [alueet]
-                              (mapv
-                                #(konv/pgobject->map % :tunnus :string :nimi :string)
-                                (konv/pgarray->vector alueet))))]
-        suolarajoitus))))
+             suolarajoitus (update suolarajoitus :pohjavesialueet
+                             (fn [alueet]
+                               (mapv
+                                 #(konv/pgobject->map % :tunnus :string :nimi :string)
+                                 (konv/pgarray->vector alueet))))]
+         suolarajoitus)))))
 
 (defn poista-suolarajoitus [db user {:keys [kopioidaan-tuleville-vuosille? urakka_id rajoitusalue_id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka_id)
-  (let [_ (log/debug "Suolarajoitus :: poista-suolarajoitus :: rajoitusalue_id:" rajoitusalue_id " hoitokauden-alkuvuosi: " hoitokauden-alkuvuosi)
-        ;; Poistaa kaikki suolarajoitukset joilla on sama tai suurempi hoitokauden alkuvuosi, mikäli kopiointi on käytössä
-        poistetut-rajoitukset (suolarajoitus-kyselyt/poista-suolarajoitus<! db (merge {:rajoitusalue_id rajoitusalue_id
-                                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                                                       :poista-tulevat nil}
-                                                                                 (when kopioidaan-tuleville-vuosille?
-                                                                                   {:poista-tulevat "true"})))
-        ;; Jos suolarajoituksia ei jää rajoitusalue_rajoitus tauluun, niin poistetaan myös alkuperäinen rajoitusalue
-        suolarajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-rajoitusalueelle db {:rajoitusalue_id rajoitusalue_id})
-        poistetut-rajoitusalueet (when (empty? suolarajoitukset)
-                                   (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
-    (if (nil? poistetut-rajoitukset)
-      (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
-      "OK")))
+  (jdbc/with-db-transaction [db db]
+    (log/debug "Suolarajoitus :: poista-suolarajoitus :: rajoitusalue_id:" rajoitusalue_id " hoitokauden-alkuvuosi: " hoitokauden-alkuvuosi)
+    (let [;; Poistaa kaikki suolarajoitukset joilla on sama tai suurempi hoitokauden alkuvuosi, mikäli kopiointi on käytössä
+         poistetut-rajoitukset (suolarajoitus-kyselyt/poista-suolarajoitus<! db (merge {:rajoitusalue_id rajoitusalue_id
+                                                                                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                                        :poista-tulevat nil}
+                                                                                  (when kopioidaan-tuleville-vuosille?
+                                                                                    {:poista-tulevat "true"})))
+         ;; Jos suolarajoituksia ei jää rajoitusalue_rajoitus tauluun, niin poistetaan myös alkuperäinen rajoitusalue
+         suolarajoitukset (suolarajoitus-kyselyt/hae-suolarajoitukset-rajoitusalueelle db {:rajoitusalue_id rajoitusalue_id})
+         poistetut-rajoitusalueet (when (empty? suolarajoitukset)
+                                    (suolarajoitus-kyselyt/poista-suolarajoitusalue<! db {:id rajoitusalue_id}))]
+     (if (nil? poistetut-rajoitukset)
+       (transit-vastaus 400 {:virhe "Suolarajoituksen poistaminen epäonnistui"})
+       "OK"))))
 
 (defn hae-talvisuolan-kayttorajat-mhu
   "Talvisuolan käyttöraja tulee urakka_tehtavamaara tauluun tallennetun suolauksen määrästä. Sanktiot ja indeksi tulevat suolasakko taulusta"
@@ -198,23 +200,24 @@
 
   (log/debug "hae-talvisuolan-kayttoraja :: tiedot" tiedot)
 
-  (let [kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
-                               {:urakka-id urakka-id
-                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+  (jdbc/with-db-transaction [db db]
+   (let [kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
+                                {:urakka-id urakka-id
+                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-        talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
-                                      {:urakka-id urakka-id
-                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        ;; Lisää kokonaismäärä myös talvisuolan-sanktioihin
-        talvisuolan-sanktiot (assoc talvisuolan-sanktiot :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))
+         talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
+                                       {:urakka-id urakka-id
+                                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+         ;; Lisää kokonaismäärä myös talvisuolan-sanktioihin
+         talvisuolan-sanktiot (assoc talvisuolan-sanktiot :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))
 
-        ;; Vain MHU urakoissa määritellään rajoitusalueidelle suolasanktio
-        rajoitusalueiden-suolasanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db
-                                               {:urakka-id urakka-id
-                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+         ;; Vain MHU urakoissa määritellään rajoitusalueidelle suolasanktio
+         rajoitusalueiden-suolasanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db
+                                                {:urakka-id urakka-id
+                                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
 
-    {:talvisuolan-sanktiot (or talvisuolan-sanktiot {})
-     :rajoitusalueiden-suolasanktio (or rajoitusalueiden-suolasanktio {})}))
+     {:talvisuolan-sanktiot (or talvisuolan-sanktiot {})
+      :rajoitusalueiden-suolasanktio (or rajoitusalueiden-suolasanktio {})})))
 
 (defn hae-talvisuolan-kayttorajat-alueurakka
   "Alueurakan sakot ja käyttöraja tulevat suolasakko-taulusta"
@@ -232,12 +235,12 @@
 
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-kyselyt/hae-urakan-tyyppi db urakka-id))))
         vastaus (case urakkatyyppi
-                               :teiden-hoito
-                               (hae-talvisuolan-kayttorajat-mhu db user tiedot)
+                  :teiden-hoito
+                  (hae-talvisuolan-kayttorajat-mhu db user tiedot)
 
-                               :hoito
-                               (hae-talvisuolan-kayttorajat-alueurakka db user tiedot)
-                               (transit-vastaus 400 {:virhe (str "Urakan tyyppi on virheellinen: " urakkatyyppi)}))]
+                  :hoito
+                  (hae-talvisuolan-kayttorajat-alueurakka db user tiedot)
+                  (transit-vastaus 400 {:virhe (str "Urakan tyyppi on virheellinen: " urakkatyyppi)}))]
     vastaus))
 
 (defn tallenna-talvisuolan-kayttoraja-mhu
@@ -251,73 +254,75 @@
    :kopioidaan-tuleville-vuosille? <true/false>}"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as kayttoraja}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
-  (let [_ (log/debug "tallenna-talvisuolan-kayttoraja :: kayttoraja" kayttoraja)
-        kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? kayttoraja)
-        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
+  (log/debug "tallenna-talvisuolan-kayttoraja :: kayttoraja" kayttoraja)
+  (jdbc/with-db-transaction [db db]
+   (let [kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? kayttoraja)
+         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+         urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
 
-        ;; Päivitä tiedot tai tallenna uusi
-        _ (doseq [vuosi urakan-hoitovuodet]
-            (let [;; Hae käyttöraja kannasta, jos siellä olisi jo olemassa jotain pohjaa
-                  hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
-                                                  {:urakka-id urakka-id
-                                                   :hoitokauden-alkuvuosi vuosi}))
-                  ;; Jätetaan mahdolliset id yms, tiedot jäljelle, jos tietokannassa oli jo olemassa jotain
-                  hoitovuoden-kayttoraja (-> hoitovuoden-kayttoraja
-                                           (assoc :urakka-id urakka-id)
-                                           ;; Asetetaan aina indeksi tyhjäksi, koska mhu/hju urakoiden talvisuolan
-                                           ;;   käyttörajalle ei aseteta indeksiä
-                                           (assoc :indeksi nil)
-                                           (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta kayttoraja))
-                                           (assoc :kayttaja-id (:id user))
-                                           (assoc :hoitokauden-alkuvuosi vuosi)
-                                           (assoc :kaytossa true)) ;; Mahdollistetaan sanktioiden kääntäminen pois päältä
+         ;; Päivitä tiedot tai tallenna uusi
+         _ (doseq [vuosi urakan-hoitovuodet]
+             (let [;; Hae käyttöraja kannasta, jos siellä olisi jo olemassa jotain pohjaa
+                   hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
+                                                   {:urakka-id urakka-id
+                                                    :hoitokauden-alkuvuosi vuosi}))
+                   ;; Jätetaan mahdolliset id yms, tiedot jäljelle, jos tietokannassa oli jo olemassa jotain
+                   hoitovuoden-kayttoraja (-> hoitovuoden-kayttoraja
+                                            (assoc :urakka-id urakka-id)
+                                            ;; Asetetaan aina indeksi tyhjäksi, koska mhu/hju urakoiden talvisuolan
+                                            ;;   käyttörajalle ei aseteta indeksiä
+                                            (assoc :indeksi nil)
+                                            (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta kayttoraja))
+                                            (assoc :kayttaja-id (:id user))
+                                            (assoc :hoitokauden-alkuvuosi vuosi)
+                                            (assoc :kaytossa true)) ;; Mahdollistetaan sanktioiden kääntäminen pois päältä
 
-                  _ (if (:id hoitovuoden-kayttoraja)
-                      (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja! db hoitovuoden-kayttoraja)
-                      (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja! db hoitovuoden-kayttoraja))]))
-        vastaus (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db {:urakka-id urakka-id
-                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+                   _ (if (:id hoitovuoden-kayttoraja)
+                       (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja! db hoitovuoden-kayttoraja)
+                       (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja! db hoitovuoden-kayttoraja))]))
+         vastaus (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db {:urakka-id urakka-id
+                                                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
 
-        ;; Lisää vielä kokonaismäärä vastaukseen
-        kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
-                               {:urakka-id urakka-id
-                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        vastaus (assoc vastaus :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))]
-    vastaus))
+         ;; Lisää vielä kokonaismäärä vastaukseen
+         kokonaismaara (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
+                                {:urakka-id urakka-id
+                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+         vastaus (assoc vastaus :talvisuolan-kayttoraja (:talvisuolan_kayttoraja kokonaismaara))]
+     vastaus)))
 
 (defn tallenna-talvisuolan-kayttoraja-alueurakka
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as kayttoraja}]
   (log/debug "tallenna suolasakko" kayttoraja)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
 
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        indeksi (:indeksi urakan-tiedot)
-        hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
-                                        {:urakka-id urakka-id
-                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        params {:suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara kayttoraja)
-                :vain-sakko-maara (:vain-sakko-maara kayttoraja)
-                :maksukuukausi (:maksukuukausi kayttoraja)
-                ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2010
-                :indeksi indeksi
-                :kayttaja (:id user)
-                :talvisuolan-kayttoraja (:talvisuolan-kayttoraja kayttoraja)
-                :urakka-id urakka-id
-                :suolasakko-kaytossa (boolean (:suolasakko-kaytossa kayttoraja))
-                :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-                :id (:id hoitovuoden-kayttoraja)}]
-    (if (:id hoitovuoden-kayttoraja)
-      (do
-        (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja-alueurakka! db params)
-        (:id hoitovuoden-kayttoraja))
-      (:id (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja-alueurakka<! db params)))
+  (jdbc/with-db-transaction [db db]
+   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+         indeksi (:indeksi urakan-tiedot)
+         hoitovuoden-kayttoraja (first (suolarajoitus-kyselyt/hae-talvisuolan-sanktiot db
+                                         {:urakka-id urakka-id
+                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
+         params {:suolasakko-tai-bonus-maara (:suolasakko-tai-bonus-maara kayttoraja)
+                 :vain-sakko-maara (:vain-sakko-maara kayttoraja)
+                 :maksukuukausi (:maksukuukausi kayttoraja)
+                 ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2010
+                 :indeksi indeksi
+                 :kayttaja (:id user)
+                 :talvisuolan-kayttoraja (:talvisuolan-kayttoraja kayttoraja)
+                 :urakka-id urakka-id
+                 :suolasakko-kaytossa (boolean (:suolasakko-kaytossa kayttoraja))
+                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                 :id (:id hoitovuoden-kayttoraja)}]
+     (if (:id hoitovuoden-kayttoraja)
+       (do
+         (suolarajoitus-kyselyt/paivita-talvisuolan-kayttoraja-alueurakka! db params)
+         (:id hoitovuoden-kayttoraja))
+       (:id (suolarajoitus-kyselyt/tallenna-talvisuolan-kayttoraja-alueurakka<! db params)))
 
-    ;; Muodosta vastaus
-    (let [vastaus (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
-                           {:urakka-id urakka-id
-                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
-      vastaus)))
+     ;; Muodosta vastaus
+     (let [vastaus (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
+                            {:urakka-id urakka-id
+                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+       vastaus))))
 
 
 (defn tallenna-talvisuolan-kayttoraja
@@ -334,43 +339,44 @@
 
 (defn tallenna-rajoitusalueen-sanktio [db user {:keys [urakka-id hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille?] :as sanktio}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
-  (let [_ (log/debug "tallenna-rajoitusalueen-sanktio :: sanktio" sanktio)
-        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        indeksi (:indeksi urakan-tiedot)
-        urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
-        ;; Päivitä tiedot tai luo uusi
+  (log/debug "tallenna-rajoitusalueen-sanktio :: sanktio" sanktio)
+  (jdbc/with-db-transaction [db db]
+   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+         indeksi (:indeksi urakan-tiedot)
+         urakan-hoitovuodet (pvm/tulevat-hoitovuodet hoitokauden-alkuvuosi kopioidaan-tuleville-vuosille? urakan-tiedot)
+         ;; Päivitä tiedot tai luo uusi
 
-        _ (doseq [vuosi urakan-hoitovuodet]
-            (let [;; Haetaan mahdollinen sanktio kannasta
-                  hoitovuoden-rajoitusalue-sanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db
-                                                            {:urakka-id urakka-id
-                                                             :hoitokauden-alkuvuosi vuosi}))
-                  hoitovuoden-rajoitusalue-sanktio (-> hoitovuoden-rajoitusalue-sanktio
-                                                     (assoc :urakka-id urakka-id)
-                                                     ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2015
-                                                     (assoc :indeksi indeksi)
-                                                     (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta sanktio))
-                                                     (assoc :kayttaja-id (:id user))
-                                                     (assoc :hoitokauden-alkuvuosi vuosi)
-                                                     (assoc :kaytossa true))
-                  _ (if (:id hoitovuoden-rajoitusalue-sanktio)
-                      (suolarajoitus-kyselyt/paivita-rajoitusalueen-suolasanktio! db hoitovuoden-rajoitusalue-sanktio)
-                      (suolarajoitus-kyselyt/tallenna-rajoitusalueen-suolasanktio! db hoitovuoden-rajoitusalue-sanktio))]))
-        vastaus (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db {:urakka-id urakka-id
-                                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
-    vastaus))
+         _ (doseq [vuosi urakan-hoitovuodet]
+             (let [;; Haetaan mahdollinen sanktio kannasta
+                   hoitovuoden-rajoitusalue-sanktio (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db
+                                                             {:urakka-id urakka-id
+                                                              :hoitokauden-alkuvuosi vuosi}))
+                   hoitovuoden-rajoitusalue-sanktio (-> hoitovuoden-rajoitusalue-sanktio
+                                                      (assoc :urakka-id urakka-id)
+                                                      ;; Asetetaan aina tallentaessa indeksiksi alueurakan oma indeksi, esim. Maku 2015
+                                                      (assoc :indeksi indeksi)
+                                                      (assoc :sanktio_ylittavalta_tonnilta (:sanktio_ylittavalta_tonnilta sanktio))
+                                                      (assoc :kayttaja-id (:id user))
+                                                      (assoc :hoitokauden-alkuvuosi vuosi)
+                                                      (assoc :kaytossa true))
+                   _ (if (:id hoitovuoden-rajoitusalue-sanktio)
+                       (suolarajoitus-kyselyt/paivita-rajoitusalueen-suolasanktio! db hoitovuoden-rajoitusalue-sanktio)
+                       (suolarajoitus-kyselyt/tallenna-rajoitusalueen-suolasanktio! db hoitovuoden-rajoitusalue-sanktio))]))
+         vastaus (first (suolarajoitus-kyselyt/hae-rajoitusalueiden-suolasanktio db {:urakka-id urakka-id
+                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+     vastaus)))
 
 (defn hae-suolatoteumat-rajoitusalueittain [db user {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
-  (let [_ (log/debug "hae-suolatoteumat-rajoitusalueittain :: tiedot" (pr-str tiedot))]
-    (suolarajoitus-kyselyt/hae-suolatoteumat-rajoitusalueittain db tiedot)))
+  (log/debug "hae-suolatoteumat-rajoitusalueittain :: tiedot" (pr-str tiedot))
+  (suolarajoitus-kyselyt/hae-suolatoteumat-rajoitusalueittain db tiedot))
 
 (defn hae-rajoitusalueen-summatiedot
   "Haetaan päivittäin groupatut suolatoteumat halutulle rajoitusalueelle"
   [db user {:keys [rajoitusalue-id alkupvm loppupvm urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
-  (let [_ (log/debug "hae-rajoitusalueen-summatiedot :: tiedot" (pr-str tiedot))
-        suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-suolatoteumasummat db
+  (log/debug "hae-rajoitusalueen-summatiedot :: tiedot" (pr-str tiedot))
+  (let [suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-suolatoteumasummat db
                         {:urakka-id urakka-id
                          :rajoitusalue-id rajoitusalue-id
                          :alkupvm alkupvm
@@ -387,8 +393,8 @@
   "Haetaan yhden päivän toteumat rajoitusalueelle materiaali-id:n perusteella"
   [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
-  (let [_ (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
-        paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
+  (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
+  (let [paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
                           {:urakka-id urakka-id
                            :rajoitusalue-id rajoitusalue-id
                            :materiaali-id materiaali-id
@@ -422,8 +428,8 @@
     alueet))
 
 (defn siirra-urakan-pohjavesialueet [db user tiedot]
-  (let [_ (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
-        urakkaid (:urakkaid tiedot)
+  (log/debug "siirra-urakan-pohjavesialueet :: tiedot" tiedot)
+  (let [urakkaid (:urakkaid tiedot)
         urakkatiedot (first (urakat-kyselyt/hae-urakka db {:id urakkaid}))
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakkatiedot))
         urakan-pohjavesialueet (:pohjavesialueet tiedot)
