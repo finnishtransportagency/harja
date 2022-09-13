@@ -182,7 +182,7 @@
        [:<>        
         [:div.tm-otsikko {:class (str (when sopimukset-syotetty? "marginilla"))} "Hoitoluokkatiedot"]
         (when sopimukset-syotetty?
-          [:div "Urakka-alueen tietoja ei tarvitse syöttää, ellei määrä ole muuttunut"])
+          [:div "Hoitoluokkatietoja ei tarvitse syöttää, ellei määrä ole muuttunut"])
         [grid/muokkaus-grid
          {:id (keyword (str "tehtavat-alueet-" (vali->viiva nimi)))
           :tyhja "Ladataan tietoja"
