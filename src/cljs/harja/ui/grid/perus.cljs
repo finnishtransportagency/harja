@@ -144,7 +144,6 @@
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                  "klikattava"
                                                                   (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index esta-tiivis-grid?])))
@@ -233,7 +232,6 @@
                   (= :vetolaatikon-tila tyyppi)
                   ^{:key (str "vetolaatikontila" id)}
                   [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                      "klikattava"
                                                                       (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
                   :else
                   ^{:key (str i nimi)}
@@ -1224,9 +1222,11 @@
                                                  (vals @muokatut)
                                                  alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
-                   (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
+                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
                      [:td {:colSpan (or sarakkeita 1) :class luokka}
-                      teksti])])]])
+                      (case tasaa
+                        :oikea [:span.pull-right teksti]
+                        teksti)])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti

@@ -68,7 +68,7 @@ SELECT
   s.suorasanktio,
   s.toimenpideinstanssi,
   s.vakiofraasi,
-
+  (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorjaus,
   lp.id                               AS laatupoikkeama_id,
   lp.kohde                            AS laatupoikkeama_kohde,
   lp.aika                             AS laatupoikkeama_aika,

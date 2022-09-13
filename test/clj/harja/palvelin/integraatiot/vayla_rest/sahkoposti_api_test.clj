@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.vayla-rest.sahkoposti-api-test
   (:require [clojure.test :refer :all]
             [clj-time.core :as t]
+            [clojure.string :as str]
             [clojure.core.async :as async]
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
@@ -137,8 +138,8 @@
                           "seppoyit@example.org"
                           "pekka.paivystaja@example.org"
                           "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
-          (catch Throwable t
-            (println (str "VIRHE: " (.getMessage t) " " (.getStackTrace t)))
+          (catch Throwable th
+            (println (str "VIRHE: " (.getMessage th) " " (.getStackTrace th)))
             "VIRHE"))
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetys on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
@@ -437,3 +438,30 @@
         ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
     (is (= "kuittaamaton" (:tila ilmoitus)))
     (is (= 0 (count ilmoitustoimenpiteet)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa.")))
+
+(deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan
+  (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
+                integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                                       {:status 200
+                                                        :header "jotain"
+                                                        :body (onnistunut-sahkopostikuittaus nil)})]
+    (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+          _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
+          ;; Luo sähköpostin sisältö, jossa ei ole mitään hyvää. Pelkästään vaarallisia asioita
+          haro-sisalto "<![CDATA[<IMG SRC=http://www.example.com/siteLogo.gif onmouseover=javascript:alert(‘XSS’);>]]>"
+          sposti_xml (aseta-xml-sahkopostin-sisalto "Väärä otsikko"
+                       haro-sisalto
+                       "seppoyit@example.org"
+                       "vayla@harja.fi")
+          vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
+          _ (odota-ehdon-tayttymista #(realized? vastaus) "Urakoitsija vastaa, että toimenpidepyyntö on tullut perille." ehdon-timeout)
+          _ (Thread/sleep 1500)
+          ulos-lahtevat-integraatiotapahtumat (hae-ulos-lahtevat-integraatiotapahtumat)
+          ;; Virheelliseen sähköpostiin tehty vastaus näkyy tietokannassa integraatiotapahtumana - ota tarkasteluun vain sähköpostin lähetys tapahtumat
+          integraatio (last (filter #(when (str/includes? (:sisalto %) "sahkoposti:sahkoposti") %) ulos-lahtevat-integraatiotapahtumat))]
+      (is (str/includes? (:sisalto integraatio) "www.liikennevirasto.fi"))
+      (is (str/includes? (:sisalto integraatio) "<vastaanottaja>seppoyit@example.org</vastaanottaja>"))
+      (is (str/includes? (:sisalto integraatio) "Urakka-id puuttuu."))
+      (is (str/includes? (:sisalto integraatio) "Ilmoitus-id puuttuu."))
+      (is (str/includes? (:sisalto integraatio) "Kuittaustyyppi puuttuu."))
+      (is (str/includes? (:sisalto integraatio) "Jos lähetit toimenpidekuittauksen tai muun määrämuotoisen viestin, tarkista viestin muoto ja lähetä se uudelleen. HARJA ei osannut käsitellä lähettämäsi sähköpostiviestin sisältöä. Virhe: Viestistä ei löytynyt kuittauksen tietoja.")))))

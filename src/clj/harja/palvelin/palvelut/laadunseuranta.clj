@@ -121,6 +121,7 @@
                                             :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
                              (map konv/alaviiva->rakenne)
                              (map #(konv/decimal->double % :summa))
+                             (map #(konv/decimal->double % :indeksikorjaus))
                              (map #(assoc % :laji (keyword (:laji %)))))
                        (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
                                                          :alku (konv/sql-timestamp alku)
