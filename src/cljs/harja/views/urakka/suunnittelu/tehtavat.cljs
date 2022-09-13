@@ -178,6 +178,8 @@
     [:<>
      (when (= :kaikki (-> valinnat :toimenpide :id))
        [:h2 nimi])
+     (when (= 0 alue-tehtavia maara-tehtavia)
+       [yleiset/keltainen-vihjelaatikko "Rahavaraukset suunnitellaan kustannussuunnitelmassa"])
      (when (> alue-tehtavia 0)
        [:<>        
         [:div.tm-otsikko {:class (str (when sopimukset-syotetty? "marginilla"))} "Hoitoluokkatiedot"]
