@@ -253,16 +253,18 @@
                [ei-muokattava-elementti (y/luokat "ei-muokattava"
                                           tasaus-luokka
                                           (grid-yleiset/tiivis-tyyli skeema))
-                fmt (cond 
-                      (and (= tyyppi :valinta)
-                        valinta-arvo valinta-nayta)
-                      (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
-                      
-                      (some? sarake-disabloitu-arvo-fn)
-                      (sarake-disabloitu-arvo-fn sarake i)
-                      
-                      :else
-                      arvo)]))))})))
+                fmt
+                tyyppi
+                (cond 
+                  (and (= tyyppi :valinta)
+                    valinta-arvo valinta-nayta)
+                  (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
+                  
+                  (some? sarake-disabloitu-arvo-fn)
+                  (sarake-disabloitu-arvo-fn sarake i)
+                  
+                  :else
+                  arvo)]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
                           {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema muokattava?] :as elementin-asetukset}
@@ -364,7 +366,8 @@
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
                    vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args gridin-id
-                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni? sarake-disabloitu-arvo-fn disabloi-autocomplete?
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?
+                   sarake-disabloitu-arvo-fn disabloi-autocomplete?
                    vetolaatikko-optiot piilota-rivi]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
@@ -687,7 +690,7 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
                     piilota-table-header? piilota-rivi] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
