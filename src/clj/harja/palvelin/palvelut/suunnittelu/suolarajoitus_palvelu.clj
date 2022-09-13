@@ -158,12 +158,10 @@
                                    :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi haettu-rajoitus)
                                    :formiaatti (:formiaatti suolarajoitus)
                                    :rajoitusalue_id (:rajoitusalue_id haettu-rajoitus)}
-                         _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]
-                     rajoitus))
+                         _ (suolarajoitus-kyselyt/paivita-suolarajoitus! db rajoitus)]))
                  (doseq [vuosi urakan-hoitovuodet]
                    (let [rajoitus (assoc db-rajoitus :hoitokauden-alkuvuosi vuosi)
-                         r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))]
-                     rajoitus)))
+                         r (suolarajoitus-kyselyt/tallenna-suolarajoitus<! db (dissoc rajoitus :id))])))
              suolarajoitus (first (suolarajoitus-kyselyt/hae-suolarajoitus db {:rajoitusalue_id (:id rajoitusalue)
                                                                                :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi suolarajoitus)}))
 
