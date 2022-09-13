@@ -2,17 +2,9 @@
   "Pohjavesialueidensiirron ui controlleri."
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
-            [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
-            [cljs.core.async :refer [<! >! chan close!]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
-            [harja.loki :refer [log]]
-            [harja.tiedot.hallinta.yhteiset :as yhteiset])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
-                   [cljs.core.async.macros :refer [go]]))
+            [harja.loki :refer [log]]))
 
 (def data (atom {}))
 (defrecord HaePohjavesialueurakat [])
@@ -125,9 +117,9 @@
   (process-event [{vastaus :vastaus} app]
     (do
       (js/console.log "TeeSiirtoOnnistui :: vastaus" (pr-str vastaus))
+      (viesti/nayta-toast! "Pohjavesialuueet siirretty rajoitusalueiksi onnistueesti!" :onnistui)
       (hae-pohjavesialueiden-urakat) ;; Päivitetään vielä listaus, jotta jo siirretyt poistuvat
       (-> app
-        (assoc :jotain vastaus)
         (assoc :siirto-kaynnissa? false))))
 
   TeeSiirtoEpaonnistui
