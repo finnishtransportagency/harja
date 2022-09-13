@@ -23,42 +23,6 @@ CREATE TABLE rajoitusalue (
                               poistettu          BOOLEAN default false
 );
 
--- TODO: Tarkastetaan leikkaako tierekisteriosoite rajoitusalue-taulussa (Hahmotelma. Ei vielä testattu toimiiko.)
-CREATE OR REPLACE FUNCTION rajoitusalue_tr_osoite_ei_leikkaa(id_tunniste INTEGER, osoite TR_OSOITE)
-    RETURNS BOOLEAN AS
-$$
-BEGIN
-
-    RAISE NOTICE 'saatiin id : % ja tr-osoite: % ', id_tunniste, osoite;
-    -- Leikkaus ohitettu nyt, kun se ei oikein voi toimia id vertailun kanssa, kun sitä id:tä ei vielä ole, kun insert on kesken.
-    -- Se ei tapahdu siinä transaktiossa samassa järjestyksessä, kuin miten se on tässä ajateltu.
-    RETURN FALSE;
-    -- RETURN (SELECT NOT EXISTS(
-    --        SELECT 1
-    --          FROM rajoitusalue
-    --         WHERE rajoitusalue.id != id_tunniste
-    -- FIXME: Varustepuolella on tällainen apufunktio. Tästä voisi tehdä yleisen funktion eri nimellä.
-    --        Ilmeisesti on tapana syöttää tr-osoitteita niin, että edellisen osoitteen loppu on seuraavan alku,
-    --        eli esim. 1. 25 2/200 - 3/2837 2. 25 3/2837 - 5/1153.
-    --        varuste_leikkaus funktio tässä tapauksessa tekee päätelmän, että kyseiset osotteet leikkaavat, mikä
-    --        ei toimi rajoitusalueiden käyttötarkoitukseen.
-    --        Meidän käyttötarkoituksiamme varten täytynee tehdä eri variantti varuste_leikkaus funktiosta.
-    --          AND varuste_leikkaus(
-    --                osoite.tie, osoite.aosa, osoite.aet, osoite.losa, osoite.let,
-    --                (rajoitusalue.tierekisteriosoite).tie, (rajoitusalue.tierekisteriosoite).aosa,
-    --                (rajoitusalue.tierekisteriosoite).aet, (rajoitusalue.tierekisteriosoite).losa,
-    --                (rajoitusalue.tierekisteriosoite).let)));
-END;
-$$ LANGUAGE plpgsql;
-
--- TODO: Estetään rajoitusalueen tallentaminen, mikäli tierekisteriosoite leikkaa aiemman rajoitusalueen osoitteen kanssa.
---       HOX: Hahmotelma. Toimintaa ei vielä varmistettu!
---ALTER TABLE rajoitusalue
---    ADD CONSTRAINT tierekisteriosoite_ei_leikkaa CHECK (rajoitusalue_tr_osoite_ei_leikkaa(id, tierekisteriosoite));
-
-CREATE INDEX rajoitusalue_tr_osoite_geom_idx ON rajoitusalue USING gist (((tierekisteriosoite).geometria));
-
-
 -- Rajoitusalueen rajoitus yksittäiselle hoitovuodelle
 CREATE TABLE rajoitusalue_rajoitus (
    id                    SERIAL PRIMARY KEY NOT NULL,
@@ -71,7 +35,7 @@ CREATE TABLE rajoitusalue_rajoitus (
    luoja                 INTEGER REFERENCES kayttaja (id),
    muokattu              TIMESTAMP,
    muokkaaja             INTEGER REFERENCES kayttaja (id),
-   poistettu          BOOLEAN default false
+   poistettu             BOOLEAN default false
 );
 
 -- Leikkaavat pohjavesialueet proseduuri tarvitsee tyypin, jonka se voi palauttaa
