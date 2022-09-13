@@ -138,10 +138,7 @@
           indeksitarkistukset-kaikki (arvo-raportin-nnesta-elementista vastaus 5)
           kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 6)
           kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 7)
-
           nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
-      (println "Jarno nurkka" nurkkasumma)
-
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
 
       (is (=marginaalissa? yks-hint 7882.50M))

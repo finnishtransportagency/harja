@@ -72,12 +72,13 @@
 (use-fixtures :each jarjestelma-fixture)
 
 
+;; Helpottaa testien roskien keruuta. Toisinaan kun omalla koneella ajaa kaikki testit useampaan kertaan,
+;; jäävät siivoamattomat sanktiot testikantaan vääristämään tuloksia
 (defn poista-sanktio-perustelulla
+  "Poistaa laatupoikkeaman perustelukentän sisällön mukaan tunnistaen, ja siihen liittyvät sanktiot."
   [perustelu]
   (let [laatupoikkeama-idt (map first (q (str "SELECT id FROM laatupoikkeama where perustelu = '" perustelu "';")))
         sanktio-idt (map first (q (str "SELECT id FROM sanktio where laatupoikkeama IN (" (str/join "," laatupoikkeama-idt) ");")))]
-    (println "Jarno POISTETTAVAT SANKTIOT: " sanktio-idt)
-    (println "Jarno POISTETTAVAT LAATUPOIKKEAMAT: " laatupoikkeama-idt)
     (u "DELETE FROM sanktio WHERE id IN (" (str/join "," sanktio-idt) ");")
     (u "DELETE FROM laatupoikkeama WHERE id IN(" (str/join "," laatupoikkeama-idt) ");")))
 
