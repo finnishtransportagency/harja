@@ -94,8 +94,7 @@
   Määrittelee tason 1 ja 2 vetolaatikot, joista pääsee sukeltamaan rajoitusalueen suolojen käytön yhteenvetoon ja sieltä
   vielä tiettyyn suolariviin liittyviin toteutumiin."
   [e! {:keys [rajoitusalueet] :as app}]
-  (let [_ (js/console.log "rajoitusalueet" (pr-str rajoitusalueet))
-        ;; Siivotaan pois ne rajoitusalueet, joilla ei ole toteumia
+  (let [;; Siivotaan pois ne rajoitusalueet, joilla ei ole toteumia
         vetolaatikon-rajoitusalueet (keep #(when (or (:suolatoteumat %) (:formiaattitoteumat %))
                                              %) rajoitusalueet)
         vetolaatikot (into {}

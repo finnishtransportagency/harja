@@ -23,7 +23,6 @@
                                       (konv/pgarray->vector alueet))))))
                         suolatoteumat)
 
-        _ (log/debug "suolatoteumat" suolatoteumat)
         ;; Laske formiaateille ja suolatoteumille menekki per ajoratakilometri
         suolatoteumat (mapv (fn [rivi]
                               (cond-> rivi

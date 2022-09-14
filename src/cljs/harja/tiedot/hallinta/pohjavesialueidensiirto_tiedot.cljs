@@ -37,11 +37,9 @@
 
   HaePohjavesialueurakatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (do
-      (js/console.log "HaePohjavesialueurakatOnnistui :: vastaus" (pr-str vastaus))
-      (-> app
-        (assoc :urakat vastaus)
-        (assoc :urakkahaku-kaynnissa? false))))
+    (-> app
+      (assoc :urakat vastaus)
+      (assoc :urakkahaku-kaynnissa? false)))
 
   HaePohjavesialueurakatEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -52,8 +50,7 @@
   ;; HAe valitun urakan pohjavesialueet, joilla on rajoituksia siinä muodossa, kun ne muokattaessa tulee rajoitusalueiksi
   HaeUrakanPohjavesialueet
   (process-event [{urakkaid :urakkaid} app]
-    (let [_ (js/console.log "HaeUrakanPohjavesialueet")
-          _ (tuck-apurit/post! :hae-urakan-siirrettavat-pohjavesialueet
+    (let [_ (tuck-apurit/post! :hae-urakan-siirrettavat-pohjavesialueet
               {:urakkaid urakkaid}
               {:onnistui ->HaeUrakanPohjavesialueetOnnistui
                :epaonnistui ->HaeUrakanPohjavesialueetEpaonnistui
@@ -75,9 +72,8 @@
           ;; Muokataan formiaattitiedot
           vastaus (map #(if (= 0 (:talvisuolaraja %))
                           (assoc % :formiaatti true)
-                          (assoc % :formiaatti false)
-                          ) vastaus)
-          _ (js/console.log "HaeUrakanPohjavesialueetOnnistui :: urakkaid" (pr-str urakkaid))]
+                          (assoc % :formiaatti false))
+                    vastaus)]
       (-> app
         (update :urakat (fn [urakat]
                           (do
@@ -86,7 +82,6 @@
                                       (assoc urakka :pohjavesialueet vastaus)
                                       urakka))
                               urakat))))
-        ;(assoc :pohjavesialueet vastaus)
         (assoc :pohjavesialuehaku-kaynnissa? false))))
 
   HaeUrakanPohjavesialueetEpaonnistui
@@ -95,16 +90,7 @@
 
   TeeSiirto
   (process-event [{urakka :urakka} app]
-    (let [_ (js/console.log "TeeSiirto :: urakka" (pr-str urakka))
-          _ (js/console.log "TeeSiirto :: app" (pr-str app))
-          pohjavesialueet (:pohjavesialueet urakka) #_ (some
-                             (fn [u]
-                               (do
-                                 (js/console.log "some: u" (pr-str u) "urakkaid: " (pr-str (:id urakka)))
-                                 (when (= (:id urakka) (:urakkaid u))
-                                   (:pohjavesialueet u))))
-                             (:urakat app))
-          _ (js/console.log "TeeSiirto :: pohjavesialueet" (pr-str pohjavesialueet))
+    (let [pohjavesialueet (:pohjavesialueet urakka)
           _ (tuck-apurit/post! :siirra-urakan-pohjavesialueet
               {:urakkaid (:id urakka)
                :pohjavesialueet pohjavesialueet}
@@ -116,7 +102,6 @@
   TeeSiirtoOnnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.log "TeeSiirtoOnnistui :: vastaus" (pr-str vastaus))
       (viesti/nayta-toast! "Pohjavesialuueet siirretty rajoitusalueiksi onnistueesti!" :onnistui)
       (hae-pohjavesialueiden-urakat) ;; Päivitetään vielä listaus, jotta jo siirretyt poistuvat
       (-> app

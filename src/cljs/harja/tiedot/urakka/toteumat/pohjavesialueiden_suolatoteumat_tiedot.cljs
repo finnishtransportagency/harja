@@ -42,7 +42,6 @@
   HaeRajoitusalueet
   (process-event [{valittu-vuosi :valittu-vuosi} app]
     (do
-      (js/console.log "HaeRAjoitusalueet :: ala käyttämään valittu-aikavali:" (pr-str @valittu-aikavali))
       (hae-suolarajoitukset valittu-vuosi)
       (-> app
         (assoc :rajoitusalueet nil)
@@ -101,16 +100,13 @@
     (let [valittu-rajoitusalue (:valittu-rajoitusalue app)
           app (update app :rajoitusalueet
                 (fn [rajoitusalueet]
-                  (do
-                    ;(js/console.log "vastauksen jälkeen update ::  rajoitusalueet")
-                    (mapv
-                      (fn [rajoitusalue]
-                        (let [;_ (js/console.log "rajoitusalue: " (pr-str (= valittu-rajoitusalue (:rajoitusalue_id rajoitusalue))))
-                              rajoitusalue (if (= valittu-rajoitusalue (:rajoitusalue_id rajoitusalue))
-                                             (assoc rajoitusalue :suolasummat vastaus)
-                                             rajoitusalue)]
-                          rajoitusalue))
-                      rajoitusalueet))))]
+                  (mapv
+                    (fn [rajoitusalue]
+                      (let [rajoitusalue (if (= valittu-rajoitusalue (:rajoitusalue_id rajoitusalue))
+                                           (assoc rajoitusalue :suolasummat vastaus)
+                                           rajoitusalue)]
+                        rajoitusalue))
+                    rajoitusalueet)))]
       (assoc app :summatiedot-haku-kaynnissa? false)))
 
   HaeRajoitusalueenSummatiedotEpaonnistui

@@ -389,7 +389,6 @@
                           (get-in app [:lomake :harja.tiedot.urakka.urakka/validius [:tie]])
                           {:validi? false :virheteksti virhe})]
 
-      (js/console.log "HaeTierekisterinTiedotOnnistui :: vastaus" (pr-str vastaus))
       (cond-> app
         (not virhe) (assoc-in [:lomake :palvelinvirheet :tierekisteri] nil)
         virhe (assoc-in [:lomake :palvelinvirheet :tierekisteri :tie] tievalidointi)
