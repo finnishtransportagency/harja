@@ -61,7 +61,7 @@
 (deftest hae-suolarajoitukset-hoitovuoden-perusteella-onnistuu-test
   (let [urakka_id (t/hae-urakan-id-nimella "Oulun MHU 2019-2024")
         hk_alkuvuosi 2022
-        suolarajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi hk_alkuvuosi :urakka_id urakka_id})]
+        suolarajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi hk_alkuvuosi :urakka-id urakka_id})]
 
     (is (> (count suolarajoitukset) 0) "Suolarajoitukset löytyy")))
 
@@ -115,7 +115,7 @@
                         :tallenna-suolarajoitus
                         t/+kayttaja-jvh+
                         suolarajoitus)
-        rajoitukset (hae-suolarajoitukset {:urakka_id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi})
+        rajoitukset (hae-suolarajoitukset {:urakka-id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi})
 
         ;; Kovakoodatusti juuri luotu alue
         muokattava-rajoitus (-> (first rajoitukset)
@@ -913,7 +913,7 @@
                                                              :pohjavesialueet pohjavesirajoitukset})
         ;; Haetaan rajoitukset jokaiselle urakan vuodelle
         suolarajoitukset (reduce (fn [rajoitukset vuosi]
-                                   (conj rajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi vuosi :urakka_id urakka-id})))
+                                   (conj rajoitukset (hae-suolarajoitukset {:hoitokauden-alkuvuosi vuosi :urakka-id urakka-id})))
                            [] urakan-vuodet)]
     ;; Jokaiselle tulevalle vuodelle luodaan uusi rajoitus, joten niitä pitää olla yhtä monta kuin lista * vuodet
     (is (= (* (count pohjavesirajoitukset) (count urakan-vuodet)) (count suolarajoitukset)))))
