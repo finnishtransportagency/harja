@@ -210,7 +210,9 @@
                                                  (* (:ajoratojen-maara rivi) (- (:let k) (:aet k)))
                                                  ;; Kun loppuetäisyys on suurempi, kuin ajoratojen pituus (virhetilanne)
                                                  (and (< (:aet k) (:ajoratojen-pituus rivi)) (> (:let k) (:ajoratojen-pituus rivi)))
-                                                 (* (:ajoratojen-maara rivi) (- (:ajoratojen-pituus rivi) (:aet k))))
+                                                 (* (:ajoratojen-maara rivi) (- (:ajoratojen-pituus rivi) (:aet k)))
+                                                 ;; Jossakin virhetilanteessa mikään pituus ei täsmää, niin annetaan nolla
+                                                 :else 0)
                                                0)))
                           (assoc k :pituus (+
                                              (:pituus k)    ;; Nykyinen pituus
