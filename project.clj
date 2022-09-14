@@ -32,6 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
+                 [cljs-http "0.1.46"]
                  [http-kit "2.5.3"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee

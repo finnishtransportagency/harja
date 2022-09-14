@@ -15,20 +15,34 @@
   line-height: 1.4;
   .opacity(0);
   white-space: break-spaces;
+  filter: drop-shadow(0 2px 1.5px rgba(0, 0, 0, 0.25));
 
   &.in     { .opacity(1); }
-  &.top    { margin-top:  -3px; padding: @tooltip-arrow-width 0; }
-  &.right  { margin-left:  3px; padding: 0 @tooltip-arrow-width; }
-  &.bottom { margin-top:   3px; padding: @tooltip-arrow-width 0; }
-  &.left   { margin-left: -3px; padding: 0 @tooltip-arrow-width; }
+
+  // Vain % translatet täällä.
+  // Parent elementin leveyteen/korkeuteen liittyvät hienosäädöt tehdään ainoastaan yleiset/tooltip komponentissa.
+  &.top {
+    padding: @tooltip-arrow-width 0;
+    transform: translate(-50%, -100%);
+  }
+
+  &.right {
+    padding: 0 @tooltip-arrow-width;
+    transform: translate(0, -50%);
+  }
+
+  &.bottom {
+    padding: @tooltip-arrow-width 0;
+    transform: translate(-50%, 0);
+  }
+
+  &.left {
+    padding: 0 @tooltip-arrow-width;
+    transform: translate(-100%, -50%);
+  }
+
   &.ohut   { min-width: 150px }
   &.levea  { min-width: 300px }
-  
-  // Jatkettu oikealle menevän tooltipin toteutusta raportteja varten.
-  &.right {
-    display: inline-block;
-    transform: translate(0, calc(~"10px + -50%"));
-  }
 }
 
 // Wrapper for the tooltip content
@@ -36,7 +50,7 @@
   background-color: @white;
   color: @black-default;
   border-radius: 4px;
-  box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.2), 0px 2px 6px rgba(0, 0, 0, 0.2);
+  //box-shadow: 0px 2px 1px rgba(0, 0, 0, 0.2), 0px 2px 6px rgba(0, 0, 0, 0.2);
   max-width: 400px;
   padding: 3px 8px;
   text-align: left;

@@ -1435,7 +1435,7 @@
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (pystyta-harja-tarkkailija!)
-     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti :salli-hallinnan-apin-kaytto) ;; Pakota sonja-sahkoposti pois käytöstä
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti :toteumatyokalu) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start

@@ -648,6 +648,7 @@
                                                       (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
+                                                      (when (:yhteenveto-vayla rivi) "yhteenveto-vayla ")
                                                       (when rivin-luokka
                                                         (rivin-luokka rivi))
                                                       (:rivin-luokka rivi))

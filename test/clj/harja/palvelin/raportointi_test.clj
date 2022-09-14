@@ -226,7 +226,7 @@
 ;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
 (deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
   (let [tunnus 11244001
-        vanha-suola 100M
+        vanha-suola 6.6M
         odotettu-tie 846
         suolaa 123
         odotettu-suolaa 123M
@@ -237,13 +237,13 @@
         db (:db jarjestelma)]
     (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
     (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
-    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
+    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
         WHERE pohjavesialue = '" tunnus "'
         AND tie = " odotettu-tie))))
     (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
     (p/paivita-pohjavesialue-kooste db)
     (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
-    (is (= 1 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
+    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
         WHERE pohjavesialue = '" tunnus "'
         AND tie = " odotettu-tie))))))
 
