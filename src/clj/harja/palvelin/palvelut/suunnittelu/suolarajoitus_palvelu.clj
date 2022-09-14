@@ -56,7 +56,7 @@
                               (tieverkko-kyselyt/hae-ajoratojen-pituudet db {:tie (:tie suolarajoitus)
                                                                              :aosa (:aosa suolarajoitus)
                                                                              :losa (:losa suolarajoitus)}))
-        yhdistetyt-ajoradat2 (mapv (fn [[osa data]]
+        yhdistetyt-ajoradat (mapv (fn [[osa data]]
                                      (let [ajoratatiedot {:osa osa ;; Osa talteen
                                                           :pituus (or (some #(when (and (= (:ajorata %) 0) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) 0) ;; Ensimmäisen ajoradan pituus talteen
                                                           :ajoratojen-pituus (some #(when (and (= (:ajorata %) 1) (= (:osa %) osa)) (:pituus %)) ajoratojen-pituudet) ;; Oletetaan, että kaikki loput ajoradat ovat saman mittaisia
@@ -71,7 +71,7 @@
                                     (let [pituus (tieverkko-kyselyt/laske-tien-osien-pituudet (conj [] ajorata) suolarajoitus)
                                           summa (+ summa (:pituus pituus))]
                                       summa))
-                            0 yhdistetyt-ajoradat2)
+                            0 yhdistetyt-ajoradat)
         ;; Haetaan pohjavesialueet annetun tierekisterin perusteella
         pohjavesialueet (when tierekisteri-valid?
                           (suolarajoitus-kyselyt/hae-leikkaavat-pohjavesialueet-tierekisterille db (select-keys suolarajoitus [:tie :aosa :aet :losa :let])))]
