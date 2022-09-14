@@ -38,13 +38,13 @@
 (defn- laji->teksti
   [laji]
   (case laji
-    :A "Ryhmä A"
-    :B "Ryhmä B"
-    :C "Ryhmä C"
+    :A "A-ryhmä (tehtäväkohtainen sanktio)"
+    :B "B-ryhmä (vakava laiminlyönti)"
+    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
     :muistutus "Muistutus"
-    :vaihtosanktio "Vastuuhenkilöiden vaihtosanktio"
-    :testikeskiarvo-sanktio "Sanktio vastuuhenkilöiden testikeskiarvon laskemisesta"
-    :tenttikeskiarvo-sanktio "Sanktio vastuuhenkilöiden tenttikeskiarvon laskemisesta"
+    :vaihtosanktio "Vastuuhenkilön vaihto"
+    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
+    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
     :arvonvahennyssanktio "Arvonvähennys"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"
@@ -52,7 +52,30 @@
     :vesivayla_muistutus "Muistutus"
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
+    :talvisuola-ylitys "Talvisuolan kokonaiskäytön ylitys" ; ei vielä olemassa tätä lajia, kun uudet on lisätty, niin vaihdetaan keyword oikeaksi
+    :pohjavesialue-ylitys "Talvisuolan kokonaiskäytön ylitys" ;kts yllä
     "- valitse laji -"))
+
+(defn- lajien-sorttaus
+  [laji]
+  (case laji
+    (:muistutus, :yllapidon_muistutus, :vesivayla_muistutus) 1
+    :A 2 
+    :B 3 
+    :C 4 
+    :arvonvahennyssanktio 5
+    :pohjavesialue-ylitys 6 ;kts yllä    
+    :talvisuola-ylitys 7 ; ei vielä olemassa tätä lajia, kun uudet on lisätty, niin vaihdetaan keyword oikeaksi
+    :tenttikeskiarvo-sanktio 8    
+    :testikeskiarvo-sanktio 9
+    :vaihtosanktio 10 
+
+    :yllapidon_sakko 2
+    :yllapidon_bonus 3
+
+    :vesivayla_sakko 2
+    :vesivayla_bonus 3
+    999))
 
 (defn sanktion-tiedot
   [optiot]
@@ -70,6 +93,7 @@
               urakka-id (:id @nav/valittu-urakka)
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
               mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
+     
               yllapito? (:yllapito? optiot)
               vesivayla? (:vesivayla? optiot)
               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
@@ -77,6 +101,7 @@
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
           [:div.padding-16.ei-sulje-sivupaneelia
+           [:div (pr-str mahdolliset-sanktiolajit)]
             [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
                   (str (laji->teksti (:laji @muokattu)))
@@ -158,7 +183,7 @@
                               (if-not (sanktio-domain/sakko? rivi)
                                 (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                 rivi)))
-                   :valinnat (sort mahdolliset-sanktiolajit)
+                   :valinnat (sort-by lajien-sorttaus mahdolliset-sanktiolajit)
                    :valinta-nayta laji->teksti
                    :validoi [[:ei-tyhja "Valitse laji"]]})                
 
