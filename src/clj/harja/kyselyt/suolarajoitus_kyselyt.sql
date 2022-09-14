@@ -94,7 +94,7 @@ SELECT ra.id                                                               AS ra
                                       tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE)
                  JOIN materiaalikoodi mk ON rp.materiaalikoodi = mk.id
         WHERE tot.urakka = :urakka-id
-          AND ST_DWithin(ra.sijainti, rp.sijainti::geometry, 50)
+          AND ST_DWithin(ra.sijainti, rp.sijainti::geometry, 0)
           AND rp.aika BETWEEN :alkupvm::DATE AND :loppupvm::DATE
         GROUP BY tot.urakka)                                               as suolatoteumat,
        (SELECT SUM(mat.maara)
@@ -107,7 +107,7 @@ SELECT ra.id                                                               AS ra
         WHERE tot.urakka = :urakka-id
           AND tot.poistettu = false
           AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
-          AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 50))         as formiaattitoteumat,
+          AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 0))         as formiaattitoteumat,
        rr.formiaatti                                                       as "formiaatti?",
        rr.luotu                                                            as luotu,
        rr.luoja                                                            as luoja,
@@ -141,7 +141,7 @@ WHERE tot.poistettu = FALSE
   AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
   AND mk.id = rp.materiaalikoodi
   AND ra.id = :rajoitusalue-id
-  AND ST_DWithin(ra.sijainti, rp.sijainti::geometry, 50)
+  AND ST_DWithin(ra.sijainti, rp.sijainti::geometry, 0)
 GROUP BY pvm, rp.materiaalikoodi, mk.nimi
 UNION
 SELECT mk.id                          AS materiaali_id,
@@ -162,7 +162,7 @@ WHERE ra.id = :rajoitusalue-id
   AND mat.materiaalikoodi = mk.id
   AND tot.poistettu = FALSE
   AND tot.urakka = :urakka-id
-  AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 50)
+  AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 0)
   AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
 GROUP BY pvm, mk.id
 ORDER BY pvm ASC, "materiaali-nimi" ASC;
@@ -187,7 +187,7 @@ FROM toteuma tot
                 AND rp.materiaalikoodi = :materiaali-id,
      rageom
 WHERE tot.urakka = :urakka-id
-  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 50)
+  AND ST_DWithin(rageom.sijainti, rp.sijainti::geometry, 0)
   AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
 GROUP BY tot.id
 UNION
@@ -205,7 +205,7 @@ FROM toteuma tot
 WHERE mat.materiaalikoodi = mk.id
   AND mat.materiaalikoodi = :materiaali-id
   AND tot.urakka = :urakka-id
-  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 50)
+  AND ST_DWithin(rageom.sijainti, trp.sijainti::geometry, 0)
   AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
 GROUP BY tot.id;
 
