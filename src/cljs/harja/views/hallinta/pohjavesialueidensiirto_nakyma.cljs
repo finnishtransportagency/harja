@@ -1,31 +1,13 @@
 (ns harja.views.hallinta.pohjavesialueidensiirto_nakyma
   "Työkalu pohjavesialueiden siirtämiseksi rajoitusalueiksi"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [cljs.core.async :refer [<! >! chan close! timeout]]
-            [tuck.core :refer [tuck send-value! send-async!]]
-            [harja.tiedot.hallinta.yhteiset :as yhteiset]
+  (:require [tuck.core :refer [tuck send-value! send-async!]]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.hallinta.pohjavesialueidensiirto-tiedot :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
-            [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.views.kartta :as kartta]
-            [harja.views.kartta.tasot :as kartta-tasot]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.kentat :as kentat]
-            [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.loki :refer [log]]
-            [harja.ui.grid :as grid]
-            [harja.fmt :as fmt]
-            [cljs-time.core :as t]
-            [harja.pvm :as pvm]
-            [harja.ui.valinnat :as valinnat]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallintayksikot :as hal]
-            [clojure.string :as str]
-            [harja.ui.yleiset :as y])
-
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+            [harja.ui.grid :as grid]))
 
 (defn pohjavesialueet
   "Rajoitusalueen toteumien summatiedot / yhteenveto per päivämäärä ja käytetty materiaali."
@@ -82,9 +64,11 @@
        :tyyppi :komponentti
        :leveys 1
        :komponentti (fn [urakka]
-                      [:div [napit/tallenna "Tee siirto"
-                             #(e! (tiedot/->TeeSiirto urakka))
-                             {:paksu? true}]])}]
+                      (if (:pohjavesialueet urakka)
+                        [:div [napit/tallenna "Tee siirto"
+                               #(e! (tiedot/->TeeSiirto urakka))
+                               {:paksu? true}]]
+                        [:div "Avaa pohjavesialueet ensin"]))}]
      urakat]))
 
 (defn urakat* [e! app]
@@ -93,11 +77,12 @@
       #(do
          (e! (tiedot/->HaePohjavesialueurakat))))
     (fn [e! app]
-      (when (:urakat app)
-        [:div
-         [debug/debug app]
-         (listaa-urakat e! app)]))))
+      (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto)
+        (when (:urakat app)
+          [:div
+           [debug/debug app]
+           (listaa-urakat e! app)])
+        "Käyttöoikeudet puuttuu"))))
 
-;; TODO: Keksi parempi nimi
-(defn view []
+(defn nakyma []
   [tuck tiedot/data urakat*])

@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.toteumatyokalu-nakyma
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
@@ -26,8 +27,8 @@
                               (nil? (:loppuosa (:tierekisteriosoite toteumatiedot)))
                               (nil? (:loppuetaisyys (:tierekisteriosoite toteumatiedot)))
                               )
-                            true
-                            false)]
+                          true
+                          false)]
     [:div.yhteydenpito
      [:h3 "Reittitoteuman simulointi valitulle urakalle"]
      [:p "Aloita valitsemalla hallintayksikkö ja sitten urakka."]
@@ -117,26 +118,27 @@
          (kartta-tasot/taso-pois! :organisaatio)
          (reset! tiedot/nakymassa? false)))
     (fn [e! app]
-      (when @tiedot/nakymassa?
-        [:div
-         [kartta/kartan-paikka]
-         [debug/debug app]
-         (when (:oikeudet-urakoihin app)
+      (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu)
+        (when @tiedot/nakymassa?
+          [:div
+           [kartta/kartan-paikka]
+           [debug/debug app]
+           (when (:oikeudet-urakoihin app)
+             [:div
+              [:p [:b "Käyttäjällä on oikeus lisätä toteumia seuraaviin urakoihin:"]]
+              (for [urakka (:oikeudet-urakoihin app)]
+                ^{:key (str urakka)}
+                [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]])])
            [:div
-            [:p [:b "Käyttäjällä on oikeus lisätä toteumia seuraaviin urakoihin:"]]
-            (for [urakka (:oikeudet-urakoihin app)]
-              ^{:key (str urakka)}
-              [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]]
-              )])
-         [:div
-          ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
-          (when (and (get-in app [:toteumatiedot :valittu-urakka])
-                  (not (some (fn [u] (when (= (get-in app [:toteumatiedot :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
-            [:p "Lisää oikeudet puuttuvaan urakkaan"]
-            [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
-             #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
-             {:paksu? true}])]
-         (toteumalomake e! app)]))))
+            ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
+            (when (and (get-in app [:toteumatiedot :valittu-urakka])
+                    (not (some (fn [u] (when (= (get-in app [:toteumatiedot :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
+              [:p "Lisää oikeudet puuttuvaan urakkaan"]
+              [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
+               #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
+               {:paksu? true}])]
+           (toteumalomake e! app)])
+        "Puutteelliset käyttöoikeudet"))))
 
 (defn simuloi-toteuma []
   [tuck tiedot/data simuloi-toteuma*])

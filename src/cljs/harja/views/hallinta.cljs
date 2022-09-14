@@ -100,4 +100,4 @@
   :pohjavesialueiden-siirto
   (when true
     ^{:key "pohjavesialueiden-siirto"}
-    [pohjavesialueidensiirto-nakyma/view])])
+    [pohjavesialueidensiirto-nakyma/nakyma])])
