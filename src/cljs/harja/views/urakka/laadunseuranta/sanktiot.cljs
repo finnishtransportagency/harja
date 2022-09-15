@@ -52,7 +52,7 @@
     :vesivayla_muistutus "Muistutus"
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
-    (pr-str "- valitse laji -" laji)))
+    "- valitse laji -"))
 
 (defn sanktion-tiedot
   [optiot]
