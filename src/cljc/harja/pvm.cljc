@@ -365,6 +365,11 @@
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
+(defn jsondate
+  "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
+
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
   (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss") pvm))
@@ -627,6 +632,15 @@
       "-"
       (hoitokauden-loppupvm-str (inc hk-alkuvuosi)))))
 
+(defn hoitokausi-str-alkuvuodesta-vuodet
+  "Ottaa sisään hoitokauden alkuvuodesta, palauttaa formatoidun hoitokauden muodossa 2021-2022"
+  [hk-alkuvuosi]
+  (when hk-alkuvuosi
+    (str
+      hk-alkuvuosi
+      "-"
+      (inc hk-alkuvuosi))))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]
@@ -769,6 +783,16 @@
 
     {:alkupvm hoitokauden-alkupvm
      :loppupvm hoitokauden-loppupvm}))
+
+(defn tulevat-hoitovuodet
+  "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
+  Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
+  [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
+  (let [urakan-loppuvuosi (vuosi (:loppupvm urakka))
+        hoitovuodet (if kopioidaan-tuleville-vuosille?
+                      (range nykyvuosi urakan-loppuvuosi)
+                      [nykyvuosi])]
+    hoitovuodet))
 
 (defn
   kuukauden-aikavali
