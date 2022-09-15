@@ -230,7 +230,7 @@
         odotettu-tie 846
         suolaa 123
         odotettu-suolaa 123M
-        suolaraja-materialized-viewsta (fn [tie] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie)
+        suolaraja-materialized-viewsta (fn [tie] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie " ORDER BY tunnus, tie")
                                                      q-map
                                                      first
                                                      :talvisuolaraja))
@@ -243,7 +243,7 @@
     (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
     (p/paivita-pohjavesialue-kooste db)
     (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
-    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 100
+    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 6.6
         WHERE pohjavesialue = '" tunnus "'
         AND tie = " odotettu-tie))))))
 
