@@ -126,7 +126,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
                 :valinnat (sort mahdolliset-sanktiolajit)
-                :valinta-n#_ayta v-sanktiot/laji->teksti
+                :valinta-nayta v-sanktiot/laji->teksti
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
