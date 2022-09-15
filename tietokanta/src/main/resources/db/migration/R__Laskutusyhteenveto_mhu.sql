@@ -720,9 +720,11 @@ BEGIN
                                       perintapvm,
                                       sakkoryhma,
                                       (SELECT korotettuna
-                                           FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                               indeksinimi, -maara,
-                                                                               perusluku, pyorista_kerroin))                      AS indeksikorotettuna
+                                           FROM sanktion_indeksikorotus(perintapvm,
+                                                                        indeksi,
+                                                                        -maara,
+                                                                        ur,
+                                                                        sakkoryhma))                      AS indeksikorotettuna
                                    FROM sanktio s
                                    WHERE s.toimenpideinstanssi = t.tpi
                                      AND s.maara IS NOT NULL

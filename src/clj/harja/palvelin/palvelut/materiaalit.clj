@@ -235,8 +235,14 @@
                          (map #(konv/array->vec % :toteumaidt)))
                        (q/hae-suolatoteumien-summatiedot db {:urakka urakka-id
                                                              :alkupvm alkupvm
-                                                             :loppupvm loppupvm}))]
-    toteumat))
+                                                             :loppupvm loppupvm}))
+        ;; Lisätään taulun viimeiseksi riviksi yhteenveto lukumääristä ja summista. Ja mahdollistetaan väylä muotoinen ui luokka
+        yhteensa-rivi (reduce (fn [yhteensa rivi]
+                                (-> yhteensa
+                                  (assoc :lukumaara (+ (:lukumaara yhteensa) (:lukumaara rivi)))
+                                  (assoc :maara (+ (:maara yhteensa) (:maara rivi)))))
+                        {:yhteenveto true :yhteenveto-vayla true :materiaali {:nimi "Yhteenveto"} :lukumaara 0 :maara 0 :rivinumero (inc (count toteumat))} toteumat)]
+    (conj toteumat yhteensa-rivi)))
 
 (defn hae-suolatoteumat-tr-valille [db user {:keys [urakka-id tie alkuosa alkuet loppuosa loppuet alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)

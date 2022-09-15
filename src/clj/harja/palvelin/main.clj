@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
+    [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -461,6 +462,9 @@
                           [:http-palvelin :db])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
+                         [:http-palvelin :db])
+      :suolarajoitukset (component/using
+                         (suolarajoitus-palvelu/->Suolarajoitus)
                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)

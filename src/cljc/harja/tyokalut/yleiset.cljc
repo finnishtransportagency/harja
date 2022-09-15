@@ -57,3 +57,14 @@
      (if (string? x)
        (f x y)
        (f y x)))))
+
+(defn vuosi-hoitokauden-numerosta-ja-kuukaudesta [hoitokauden-numero kuukausi urakan-aloitusvuosi]
+  (cond
+    (and (>= kuukausi 10) (<= kuukausi 12)
+      (= 1 hoitokauden-numero)) urakan-aloitusvuosi
+    (and (>= kuukausi 1) (<= kuukausi 9)
+      (= 1 hoitokauden-numero)) (+ hoitokauden-numero urakan-aloitusvuosi)
+    (and (>= kuukausi 10) (<= kuukausi 12)
+      (> hoitokauden-numero 1)) (dec (+ hoitokauden-numero urakan-aloitusvuosi))
+    (and (>= kuukausi 1) (<= kuukausi 9)
+      (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi)))

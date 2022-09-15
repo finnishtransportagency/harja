@@ -8,6 +8,7 @@
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
             [harja.kyselyt.paikkaus :as q-paikkaus]
+            [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.domain.paikkaus :as paikkaus]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.tyokalut.paikkaus-test :refer :all]
@@ -343,20 +344,20 @@
                         {:osa 3 :pituus 100}
                         {:osa 4 :pituus 100})
         keksitty-kohde1 {:tie 1 :aosa 1 :aet 0 :losa 2 :let 10}
-        laskettu1 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde1)
+        laskettu1 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde1)
         keksitty-kohde11 {:tie 1 :aosa 1 :aet 0 :losa 5 :let 100}
-        laskettu11 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde11)
+        laskettu11 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde11)
 
         keksitty-kohde2 {:tie 1 :aosa 1 :aet 0 :losa 3 :let 50}
-        laskettu2 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde2)
+        laskettu2 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde2)
 
         keksitty-kohde3 {:tie 1 :aosa 2 :aet 20 :losa 2 :let 80}
-        laskettu3 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde3)
+        laskettu3 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde3)
 
         keksitty-kohde4 {:tie 1 :aosa 2 :aet 10 :losa 1 :let 0}
-        laskettu4 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
+        laskettu4 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde4)
         keksitty-kohde41 {:tie 1 :aosa 4 :aet 100 :losa 1 :let 0}
-        laskettu41 (q-paikkaus/laske-tien-osien-pituudet keksityt-osat keksitty-kohde41)
+        laskettu41 (tieverkko-kyselyt/laske-tien-osien-pituudet keksityt-osat keksitty-kohde41)
         ]
     ;; Perus case, otetaan osasta 1 loput ja osan 2 alku
     (is (= 110 (:pituus laskettu1)))

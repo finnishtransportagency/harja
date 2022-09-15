@@ -176,6 +176,10 @@
   tr.vetolaatikko-kiinni {
     display: none;
   }
+
+  .vetolaatikon-sailio {
+    text-align: right;
+  }
   // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
   // käytetään ns. general sibling selectoria (~)
   tr.gridin-collapsoitava-valiotsikko ~ tr {
@@ -301,6 +305,12 @@
     background-color: @harmaa15;
     border-bottom: 2px solid @harmaa7;
     border-top: 2px solid @harmaa7;
+    font-weight: bold;
+  }
+  tr.yhteenveto-vayla {
+    background-color: @harmaa15;
+    border-bottom: 1px solid @white-darker;
+    border-top: 1px solid @white-darker;
     font-weight: bold;
   }
   tr.korostettu-rivi {

@@ -296,7 +296,7 @@ BEGIN
     sakot_laskutetaan_ind_korotettuna := 0.0;
     sakot_laskutetaan_ind_korotus := 0.0;
 
-    FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, perintapvm
+    FOR sanktiorivi IN SELECT -maara AS maara, perintapvm, indeksi, sakkoryhma
                        FROM sanktio s
                        WHERE s.toimenpideinstanssi = t.tpi AND
                              s.maara IS NOT NULL AND
@@ -305,9 +305,11 @@ BEGIN
                              s.poistettu IS NOT TRUE
     LOOP
       SELECT *
-        FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM sanktiorivi.perintapvm) :: INTEGER),
-                                            (SELECT EXTRACT(MONTH FROM sanktiorivi.perintapvm) :: INTEGER),
-                                            sanktiorivi.indeksi, sanktiorivi.maara, perusluku)
+        FROM sanktion_indeksikorotus(sanktiorivi.perintapvm,
+                                     sanktiorivi.indeksi,
+                                     sanktiorivi.maara,
+                                     ur,
+                                     sanktiorivi.sakkoryhma)
         INTO sakot_rivi;
       IF sanktiorivi.perintapvm < aikavali_alkupvm THEN
         sakot_laskutettu := sakot_laskutettu + COALESCE(sakot_rivi.summa, 0.0);
