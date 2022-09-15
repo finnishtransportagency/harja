@@ -100,8 +100,7 @@
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
-          [:div.padding-16.ei-sulje-sivupaneelia
-           [:div (pr-str mahdolliset-sanktiolajit)]
+          [:div.padding-16.ei-sulje-sivupaneelia           
             [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
                   (str (laji->teksti (:laji @muokattu)))
@@ -330,7 +329,7 @@
                    :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
                 (when (:suorasanktio @muokattu)
-                  {:otsikko "Liitteet" :nimi :liitteet
+                  {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
                    :tyyppi :komponentti
                    ::lomake/col-luokka "col-xs-12"
                    :komponentti (fn [_]
