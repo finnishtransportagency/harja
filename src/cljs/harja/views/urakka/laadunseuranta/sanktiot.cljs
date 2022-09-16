@@ -31,11 +31,9 @@
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.ui.liitteet :as liitteet]))
 
-(defn- laji->teksti
+(defn laji->teksti
   [laji]
   (case laji
     :A "A-ryhmä (tehtäväkohtainen sanktio)"
@@ -46,6 +44,9 @@
     :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
     :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
     :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"
     :yllapidon_bonus "Bonus"
@@ -117,7 +118,7 @@
            (if (and mahdolliset-sanktiolajit
                  (or (not yllapitokohdeurakka?)
                    (and yllapitokohdeurakka? yllapitokohteet)))
-             
+
              [:div
               [lomake/lomake
                {:otsikko "Sanktion tiedot"
@@ -168,18 +169,22 @@
                    :hae (comp keyword :laji)
                    :aseta (fn [rivi arvo]
                             (let [rivi (-> rivi
-                                         (assoc :laji arvo)
-                                         (dissoc :tyyppi)
-                                         (assoc :tyyppi nil))
+                                           (assoc :laji arvo)
+                                           (dissoc :tyyppi)
+                                           (assoc :tyyppi nil))
                                   s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
-                                  rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and (= 1 (count s-tyypit)) (first s-tyypit))]
+                                  rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and
+                                                                                    (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                                                                    ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                                                                    ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                                                                    (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
                                          (assoc rivi
                                            :tyyppi (dissoc tyyppi :laji)
                                            :toimenpideinstanssi
                                            (when tpk
                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                                          rivi)]
-                              (if-not (sanktio-domain/sakko? rivi)
+                              (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                 (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                 rivi)))
                    :valinnat (sort-by lajien-sorttaus mahdolliset-sanktiolajit)
@@ -251,7 +256,7 @@
                  :tyyppi :text :koko [80 :auto]
                  :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-                (when (and (sanktio-domain/sakko? @muokattu))
+                (when (sanktio-domain/muu-kuin-muistutus? @muokattu)
                   {:otsikko "Kulun kohdistus"
                    :pakollinen? true
                    ::lomake/col-luokka "col-xs-12"
@@ -260,17 +265,17 @@
                    :valinta-arvo :tpi_id
                    :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                    :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-                   :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})        
+                   :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
                 (apply lomake/ryhma {:rivi? true}
-                  (keep identity [(when (sanktio-domain/sakko? @muokattu)
+                  (keep identity [(when (sanktio-domain/muu-kuin-muistutus? @muokattu)
                                     {:otsikko "Summa" :nimi :summa :tyyppi :positiivinen-numero
                                      ::lomake/col-luokka "col-xs-4"
                                      :hae #(when (:summa %) (Math/abs (:summa %)))
                                      :pakollinen? true :uusi-rivi? true :yksikko "€"
                                      :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-                                  (when (sanktio-domain/sakko? @muokattu)
+                                  (when (sanktio-domain/muu-kuin-muistutus? @muokattu)
                                     {:otsikko (str "Indeksi") :nimi :indeksi
                                      :tyyppi :valinta
                                      ::lomake/col-luokka "col-xs-4"
