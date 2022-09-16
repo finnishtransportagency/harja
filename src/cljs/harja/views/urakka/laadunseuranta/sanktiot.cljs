@@ -332,7 +332,8 @@
                    :tyyppi :string
                    :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-                (when (:suorasanktio @muokattu)
+                (when (and (not lukutila?)
+                        (:suorasanktio @muokattu))
                   {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
                    :tyyppi :komponentti
                    ::lomake/col-luokka "col-xs-12"
