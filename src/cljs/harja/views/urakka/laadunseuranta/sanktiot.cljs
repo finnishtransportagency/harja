@@ -291,7 +291,7 @@
                    ::lomake/col-luokka "col-xs-4"
                    :hae (comp :aika :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
-                   :fmt pvm/pvm-aika :tyyppi :pvm
+                   :fmt pvm/pvm :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]]
                    :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                   {:otsikko "Käsitelty" :nimi :kasittelyaika
@@ -299,13 +299,13 @@
                    ::lomake/col-luokka "col-xs-4"
                    :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
-                   :fmt pvm/pvm-aika :tyyppi :pvm
+                   :fmt pvm/pvm :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]
                              [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
                   {:otsikko "Perintä" :nimi :perintapvm
                    :pakollinen? true
                    ::lomake/col-luokka "col-xs-4"
-                   :fmt pvm/pvm-aika :tyyppi :pvm
+                   :fmt pvm/pvm :tyyppi :pvm
                    :validoi [[:ei-tyhja "Valitse päivämäärä"]
                              [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
                               "Ei voi olla ennen havaintoa"]]})
