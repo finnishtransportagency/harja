@@ -61,7 +61,7 @@
           ;; Laatupoikkeama tallennettu onnistuneesti, päivitetään sen tiedot
           (let [uusi-laatupoikkeama tulos
                 aika (:aika uusi-laatupoikkeama)
-                [alku loppu] @tiedot-urakka/valittu-aikavali]
+                [alku loppu] @urakka/valittu-aikavali]
             (when (and (pvm/sama-tai-jalkeen? aika alku)
                        (pvm/sama-tai-ennen? aika loppu))
               ;; Kuuluu aikavälille, lisätään tai päivitetään
@@ -89,10 +89,10 @@
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
   (let [g (grid/grid-ohjaus)
-        yllapito? @tiedot-urakka/yllapidon-urakka?
+        yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
-        urakan-tpit @tiedot-urakka/urakan-toimenpideinstanssit
-        mahdolliset-sanktiolajit (disj @tiedot-urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
+        urakan-tpit @urakka/urakan-toimenpideinstanssit
+        mahdolliset-sanktiolajit (disj @urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [nakyma (:nakyma optiot)]
         (if mahdolliset-sanktiolajit
@@ -149,7 +149,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                (if (sanktio-domain/sakko? paivitetty)
                                  (assoc paivitetty :toimenpideinstanssi
                                                    (when tpk
-                                                     (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                                     (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                                  (assoc paivitetty :toimenpideinstanssi nil))))
                     :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
                     :valinta-nayta :nimi
@@ -300,10 +300,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                             #(sanktiotietoja-annettu? @laatupoikkeama))
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)
-               yllapito? @tiedot-urakka/yllapidon-urakka?
+               yllapito? @urakka/yllapidon-urakka?
                nakyma (:nakyma optiot)
                vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
-               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+               yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]
            (if (and yllapitokohdeurakka? (nil? yllapitokohteet)) ;; Pakko olla ylläpitokohteet ennen kuin lomaketta voi näyttää
              [ajax-loader "Ladataan..."]
              [:div.laatupoikkeama
