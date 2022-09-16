@@ -31,11 +31,9 @@
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]))
+            [harja.ui.liitteet :as liitteet]))
 
-(defn- laji->teksti
+(defn laji->teksti
   [laji]
   (case laji
     :A "A-ryhmä (tehtäväkohtainen sanktio)"
@@ -46,6 +44,9 @@
     :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
     :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
     :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
     :yllapidon_muistutus "Muistutus"
     :yllapidon_sakko "Sakko"
     :yllapidon_bonus "Bonus"
