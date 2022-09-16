@@ -53,8 +53,6 @@
     :vesivayla_muistutus "Muistutus"
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
-    :talvisuola-ylitys "Talvisuolan kokonaiskäytön ylitys" ; ei vielä olemassa tätä lajia, kun uudet on lisätty, niin vaihdetaan keyword oikeaksi
-    :pohjavesialue-ylitys "Talvisuolan kokonaiskäytön ylitys" ;kts yllä
     "- valitse laji -"))
 
 (defn- lajien-sorttaus
@@ -65,8 +63,8 @@
     :B 3 
     :C 4 
     :arvonvahennyssanktio 5
-    :pohjavesialue-ylitys 6 ;kts yllä    
-    :talvisuola-ylitys 7 ; ei vielä olemassa tätä lajia, kun uudet on lisätty, niin vaihdetaan keyword oikeaksi
+    :pohjavesialueen_ylitys 6 
+    :talvisuolam_ylitys 7 
     :tenttikeskiarvo-sanktio 8    
     :testikeskiarvo-sanktio 9
     :vaihtosanktio 10 
