@@ -105,7 +105,7 @@
                               (map konv/alaviiva->rakenne)
                               (map #(konv/string->keyword % :laji :vakiofraasi))
                               (map #(assoc %
-                                      :sakko? (sanktiot-domain/sakko? %)
+                                      :sakko? (sanktiot-domain/muu-kuin-muistutus? %)
                                       :summa (some-> % :summa double))))
                         (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))

@@ -1,6 +1,6 @@
 (ns harja.domain.laadunseuranta.sanktio)
 
-(defn sakko? [sanktio]
+(defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
        (not= :yllapidon_muistutus (:laji sanktio))
        (not= :vesivayla_muistutus (:laji sanktio))))
