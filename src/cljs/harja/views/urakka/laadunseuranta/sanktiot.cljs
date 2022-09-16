@@ -358,7 +358,15 @@
                                                            (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
                                                              (filter (fn [liite]
                                                                        (not= (:id liite) liite-id))
-                                                               liitteet))))}))}])})]
+                                                               liitteet))))}))}])})
+
+                (when lukutila?
+                  {:otsikko "Kirjaaja" :nimi :tekijanimi
+                   :hae (comp :tekijanimi :laatupoikkeama)
+                   :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
+                   :tyyppi :string
+                   ::lomake/col-luokka "col-xs-12"
+                   :muokattava? (constantly false)})]
                @muokattu]]
              [ajax-loader "Ladataan..."])])))))
 
