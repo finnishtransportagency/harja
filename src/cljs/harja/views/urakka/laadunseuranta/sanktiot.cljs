@@ -64,7 +64,7 @@
     :C 4 
     :arvonvahennyssanktio 5
     :pohjavesialueen_ylitys 6 
-    :talvisuolam_ylitys 7 
+    :talvisuolan_ylitys 7 
     :tenttikeskiarvo-sanktio 8    
     :testikeskiarvo-sanktio 9
     :vaihtosanktio 10 
