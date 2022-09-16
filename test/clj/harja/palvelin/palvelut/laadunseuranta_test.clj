@@ -434,6 +434,8 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
+(def maarapaivan-ylitys-sanktiotyyppi (first (q-map "SELECT id, toimenpidekoodi, nimi FROM sanktiotyyppi WHERE nimi = 'Määräpäivän ylitys'")))
+
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
     :suorasanktio false, :laji :C, :indeksikorjaus nil
@@ -443,10 +445,10 @@
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa 777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi {:id 9, :toimenpidekoodi nil, :nimi "Määräpäivän ylitys"}, :vakiofraasi nil}])
+    :summa 777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
-(deftest hae-urakan-jalkseiset-sanktiot
+(deftest hae-urakan-jalkeiset-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
@@ -648,7 +650,7 @@
                                      :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
                                      {:urakkatyyppi :valaistus})]
     (is (not (empty? hoidon)))
-    (is (= #{:A :B :C :muistutus} hoidon) "Hoidon sanktiolajit")
+    (is (= #{:A :B :C :muistutus :talvisuolan_ylitys :pohjavesisuolan_ylitys} hoidon) "Hoidon sanktiolajit")
     (is (= #{:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus}
            paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
