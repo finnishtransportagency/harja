@@ -277,7 +277,7 @@
                                     {:otsikko (str "Indeksi") :nimi :indeksi
                                      :tyyppi :valinta
                                      ::lomake/col-luokka "col-xs-4"
-                                     :muokattava? (constantly (not lukutila?)) #_(constantly (not= :teiden-hoito (:tyyppi @nav/valittu-urakka)))
+                                     :muokattava? (constantly (not lukutila?)) 
                                      :hae (if (urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                      :disabled? (not (urakka/indeksi-kaytossa-sakoissa?))
                                      :valinnat (into [] (keep identity [(when (urakka/indeksi-kaytossa-sakoissa?)
