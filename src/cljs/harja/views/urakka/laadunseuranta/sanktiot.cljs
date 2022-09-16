@@ -316,9 +316,10 @@
                  :hae (comp :kasittelytapa :paatos :laatupoikkeama)
                  :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
                  :tyyppi :valinta
-                 :valinnat [:tyomaakokous :puhelin :kommentit :muu]
+                 :valinnat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu]
                  :valinta-nayta #(if % (case %
                                          :tyomaakokous "Työmaakokous"
+                                         :valikatselmus "Välikatselmus"
                                          :puhelin "Puhelimitse"
                                          :kommentit "Harja-kommenttien perusteella"
                                          :muu "Muu tapa"
