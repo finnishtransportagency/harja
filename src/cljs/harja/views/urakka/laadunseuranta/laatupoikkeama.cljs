@@ -122,7 +122,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :nimi :laji
                 :aseta (fn [rivi arvo]
                          (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                           (if-not (sanktio-domain/sakko? paivitetty)
+                           (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
                 :valinnat (sort mahdolliset-sanktiolajit)
@@ -146,7 +146,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
                              ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
                              (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                               (if (sanktio-domain/sakko? paivitetty)
+                               (if (sanktio-domain/muu-kuin-muistutus? paivitetty)
                                  (assoc paivitetty :toimenpideinstanssi
                                                    (when tpk
                                                      (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
@@ -160,17 +160,17 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
               :tyyppi :valinta
               :valinta-arvo :tpi_id
               :valinta-nayta :tpi_nimi
-              :valinnat-fn #(when (sanktio-domain/sakko? %) urakan-tpit)
+              :valinnat-fn #(when (sanktio-domain/muu-kuin-muistutus? %) urakan-tpit)
               :leveys 2
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-              :muokattava? sanktio-domain/sakko?}
+              :muokattava? sanktio-domain/muu-kuin-muistutus?}
 
              {:otsikko "Sakko (€)"
               :tyyppi :numero
               :nimi :summa
               :leveys 1.5
               :validoi [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
-              :muokattava? sanktio-domain/sakko?}
+              :muokattava? sanktio-domain/muu-kuin-muistutus?}
 
              (when (urakka/indeksi-kaytossa?)
                {:otsikko "Indeksi"
@@ -180,7 +180,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :valinnat sanktio-domain/hoidon-indeksivalinnat
                 :valinta-nayta #(or % "Ei sidota indeksiin")
                 :palstoja 1
-                :muokattava? sanktio-domain/sakko?})]
+                :muokattava? sanktio-domain/muu-kuin-muistutus?})]
 
             sanktiot-atom]]
           [ajax-loader "Ladataan..."])))))
@@ -211,7 +211,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn- tarkasta-sanktiorivi [sanktiorivi nakyma]
   (let [kentat (map #(get-in sanktiorivi %)
-                    (pakolliset-kentat nakyma (sanktio-domain/sakko? sanktiorivi)))]
+                    (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi)))]
     (every? some? kentat)))
 
 (defn- sanktiorivit-ok? [laatupoikkeama nakyma]
