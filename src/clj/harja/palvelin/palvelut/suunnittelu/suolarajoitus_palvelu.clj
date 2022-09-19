@@ -83,7 +83,7 @@
        :pohjavesialueet pohjavesialueet})))
 
 (defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
@@ -193,7 +193,7 @@
 (defn hae-talvisuolan-kayttorajat-mhu
   "Talvisuolan käyttöraja tulee urakka_tehtavamaara tauluun tallennetun suolauksen määrästä. Sanktiot ja indeksi tulevat suolasakko taulusta"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
 
   (log/debug "hae-talvisuolan-kayttoraja :: tiedot" tiedot)
 
@@ -219,7 +219,7 @@
 (defn hae-talvisuolan-kayttorajat-alueurakka
   "Alueurakan sakot ja käyttöraja tulevat suolasakko-taulusta"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (log/debug "hae-talvisuolan-kayttorajat-alueurakka :: tiedot" tiedot)
 
   (let [talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
