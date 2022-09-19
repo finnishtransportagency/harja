@@ -11,6 +11,8 @@
 (defonce taulukko-avatut-vetolaatikot (r/atom #{}))
 (defonce taulukko-virheet (r/atom {}))
 
+(defrecord NaytaAluetehtavat [tila])
+(defrecord NaytaSuunniteltavatTehtavat [tila])
 (defrecord ValitseTaso [arvo taso])
 (defrecord HaeTehtavat [parametrit])
 (defrecord TehtavaHakuOnnistui [tehtavat parametrit])
@@ -387,6 +389,12 @@
      :tehtavamaarat tehtavamaarat}))
 
 (extend-protocol tuck/Event
+  NaytaAluetehtavat
+  (process-event [{tila :tila} app]
+    (assoc-in app [:valinnat :nayta-aluetehtavat?] tila))
+  NaytaSuunniteltavatTehtavat
+  (process-event [{tila :tila} app]
+    (assoc-in app [:valinnat :nayta-suunniteltavat-tehtavat?] tila))
   AsetaOletusHoitokausi
   (process-event 
     [_ app]

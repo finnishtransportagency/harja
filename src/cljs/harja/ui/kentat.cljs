@@ -1758,8 +1758,8 @@
   [:div [:h3 teksti]])
 
 (defn raksiboksi
-  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  [:span.raksiboksi
+  [{:keys [tiivis? teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
+  [:span {:class (merge #{"raksiboksi"} (when tiivis? #{"tiivis"}))}
    [:div.input-group
     [tee-kentta
      {:tyyppi :checkbox
