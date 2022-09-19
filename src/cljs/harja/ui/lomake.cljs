@@ -431,6 +431,7 @@ ja kaikki pakolliset kentät on täytetty"
      (as-> opts opts
            (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
            (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+           (assoc opts :muokattu? muokattu?)
            (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
     (when (and muokattu?
