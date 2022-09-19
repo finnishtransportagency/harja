@@ -92,7 +92,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
-        mahdolliset-sanktiolajit (disj @urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
+        mahdolliset-sanktiolajit (keep 
+                                   ;; TODO: Paranna mahdollisesti tätä? Ei mitään järkeä että käytännössä tehdään
+                                   ;;       oma lista sen jälkeen kun nämä on haettu tietokannasta.
+                                   (set [:A :B :C :muistutus :arvonvahennyssanktio])
+                                   @urakka/urakkatyypin-sanktiolajit)]
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [nakyma (:nakyma optiot)]
         (if mahdolliset-sanktiolajit
@@ -125,7 +129,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                            (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
-                :valinnat (sort mahdolliset-sanktiolajit)
+                :valinnat (sort-by v-sanktiot/lajien-sorttaus mahdolliset-sanktiolajit)
                 :valinta-nayta v-sanktiot/laji->teksti
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 

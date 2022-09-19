@@ -55,7 +55,7 @@
     :vesivayla_bonus "Bonus"
     "- valitse laji -"))
 
-(defn- lajien-sorttaus
+(defn lajien-sorttaus
   [laji]
   (case laji
     (:muistutus, :yllapidon_muistutus, :vesivayla_muistutus) 1
