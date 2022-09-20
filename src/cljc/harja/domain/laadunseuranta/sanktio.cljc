@@ -1,5 +1,29 @@
 (ns harja.domain.laadunseuranta.sanktio)
 
+;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
+;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
+;; mikäli on tarve.
+(def sanktiolaji->sanktiotyyppi
+  {:A #{0 1 13 14 15 16}
+   :B #{0 1 13 14 15 16}
+   :C #{8 9 10 11 12 15 16}
+   :muistutus #{0 1}
+   :yllapidon_sakko #{2}
+   :yllapidon_bonus #{3}
+   :yllapidon_muistutus #{4}
+   :vesivayla_sakko #{5}
+   :vesivayla_bonus #{}
+   :vesivayla_muistutus #{}
+   :talvisuolan_ylitys #{7}
+   :pohjavesisuolan_ylitys #{7}
+   :lupaussanktio #{8}
+   :vaihtosanktio #{8}
+   :testikeskiarvo-sanktio #{8}
+   :tenttikeskiarvo-sanktio #{8}
+   :arvonvahennyssanktio #{8}})
+
+
+
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
        (not= :yllapidon_muistutus (:laji sanktio))
