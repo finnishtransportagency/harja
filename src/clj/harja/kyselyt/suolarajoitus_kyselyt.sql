@@ -400,7 +400,6 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
          OR
          -- Annettu alkuosa osuu kannassa olevan väliin
          (:aosa != :losa AND ((:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
-             OR (:aosa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet <= :aet)
              -- Sallitaan tilanne, jossa uusi rajoitusalue alkaa samasta pisteestä, mihin joku toinen loppuu
              OR (:aosa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let - 1 >= :aet)
              ))
