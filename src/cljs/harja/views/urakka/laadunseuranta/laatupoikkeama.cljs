@@ -92,7 +92,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
-        mahdolliset-sanktiolajit (disj @urakka/urakkatyypin-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
+        mahdolliset-sanktiolajit (disj @urakka/valitun-urakan-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [nakyma (:nakyma optiot)]
         (if mahdolliset-sanktiolajit

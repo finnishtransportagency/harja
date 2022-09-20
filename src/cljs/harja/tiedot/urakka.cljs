@@ -486,15 +486,32 @@
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
 
-(def urakkatyypin-sanktiolajit
-  (reaction<! [urakka @nav/valittu-urakka
-               ls-sivu (nav/valittu-valilehti :laadunseuranta)
-               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
-              (when (and urakka (or (= :laatupoikkeamat ls-sivu)
-                                    (= :sanktiot ls-sivu)
-                                    (= :vesivayla-sanktiot vv-ls-sivu)))
-                (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
-                                                         :urakkatyyppi (:tyyppi urakka)}))))
+(defn- urakan-sanktiolajit
+  "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
+  [{:keys [tyyppi alkupvm] :as urakka}]
+
+  (cond
+    ;; Sanktiolajit MH- ja Alueurakoille, joiden alkuvuosi on yhtäsuuri tai pienempi kuin 2022
+    (and (or (= :teiden-hoito tyyppi) (= :hoito tyyppi)) (<= (pvm/vuosi alkupvm) 2022))
+    [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
+     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+
+    ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
+    ;; TODO: Varmistettava
+    (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
+    [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+
+    :else []))
+
+(def valitun-urakan-sanktiolajit
+  (reaction
+    (let [urakka @nav/valittu-urakka
+          ls-sivu (nav/valittu-valilehti :laadunseuranta)
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
+      (when (and urakka (or (= :laatupoikkeamat ls-sivu)
+                          (= :sanktiot ls-sivu)
+                          (= :vesivayla-sanktiot vv-ls-sivu)))
+        (urakan-sanktiolajit urakka)))))
 
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]

@@ -10,7 +10,7 @@ ALTER TABLE sanktiotyyppi
     -- Kälissä käsitellään primary-key:tä (id), mutta esimerkiksi migraatioista tulee ikäviä, kun viitataan vain nimiin.
     -- Koodeihin on myös helpompi viitata, kun rakennetaan laji->tyyppi hierarkiaa domain-koodissa.
     -- Lisäksi tyypin nimeä voi huoletta muuttaa, koska koodi pysyy aina samana.
-    ADD COLUMN koodi     SMALLINT,
+    ADD COLUMN koodi     SMALLINT UNIQUE,
     -- Sanktiotyyppi voidaan merkitä poistetuksi, mutta sitä ei oikeasti poisteta, jotta historiatiedot säilyvät.
     ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE;
 

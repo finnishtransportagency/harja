@@ -4,24 +4,26 @@
 ;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
 ;; mikäli on tarve.
 (def sanktiolaji->sanktiotyyppi-koodi
-  {:A #{0 1 13 14 15 16}
-   :B #{0 1 13 14 15 16}
-   :C #{8 9 10 11 12 15 16}
-   :muistutus #{0 1}
-   :yllapidon_sakko #{2}
-   :yllapidon_bonus #{3}
-   :yllapidon_muistutus #{4}
-   :vesivayla_sakko #{5}
-   :vesivayla_bonus #{}
-   :vesivayla_muistutus #{}
-   :talvisuolan_ylitys #{7}
-   :pohjavesisuolan_ylitys #{7}
-   :lupaussanktio #{8}
-   :vaihtosanktio #{8}
-   :testikeskiarvo-sanktio #{8}
-   :tenttikeskiarvo-sanktio #{8}
-   :arvonvahennyssanktio #{8}})
+  {:muistutus [0 1]
+   :A [0 1 13 14 15 16]
+   :B [0 1 13 14 15 16]
+   :C [8 9 10 11 12 15 16]
+   :arvonvahennyssanktio [8]
+   :pohjavesisuolan_ylitys [7]
+   :talvisuolan_ylitys [7]
+   :tenttikeskiarvo-sanktio [8]
+   :testikeskiarvo-sanktio [8]
+   :vaihtosanktio [8]
 
+   :yllapidon_sakko [2]
+   :yllapidon_bonus [3]
+   :yllapidon_muistutus [4]
+
+   :vesivayla_sakko [5]
+   :vesivayla_bonus []
+   :vesivayla_muistutus []
+
+   :lupaussanktio [8]})
 
 
 (defn muu-kuin-muistutus? [sanktio]

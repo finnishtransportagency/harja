@@ -55,27 +55,6 @@
     :vesivayla_bonus "Bonus"
     "- valitse laji -"))
 
-(defn- lajien-sorttaus
-  [laji]
-  (case laji
-    (:muistutus, :yllapidon_muistutus, :vesivayla_muistutus) 1
-    :A 2 
-    :B 3 
-    :C 4 
-    :arvonvahennyssanktio 5
-    :pohjavesialueen_ylitys 6 
-    :talvisuolan_ylitys 7 
-    :tenttikeskiarvo-sanktio 8    
-    :testikeskiarvo-sanktio 9
-    :vaihtosanktio 10 
-
-    :yllapidon_sakko 2
-    :yllapidon_bonus 3
-
-    :vesivayla_sakko 2
-    :vesivayla_bonus 3
-    999))
-
 (defn sanktion-tiedot
   [optiot]
   (let [lukutila (atom true)]
@@ -91,7 +70,7 @@
               tallennus-kaynnissa (atom false)
               urakka-id (:id @nav/valittu-urakka)
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
-              mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
+              mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
      
               yllapito? (:yllapito? optiot)
               vesivayla? (:vesivayla? optiot)
@@ -167,17 +146,18 @@
                    :hae (comp keyword :laji)
                    :aseta (fn [rivi arvo]
                             (let [rivi (-> rivi
-                                           (assoc :laji arvo)
-                                           (dissoc :tyyppi)
-                                           (assoc :tyyppi nil))
-                                  s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
-                                  rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and
-                                                                                    (and (= 1 (count s-tyypit)) (first s-tyypit))
-                                                                                    ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
-                                                                                    ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                                                                    (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                         (assoc :laji arvo)
+                                         (dissoc :tyyppi)
+                                         (assoc :tyyppi nil))
+                                  s-tyypit (vec (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi arvo))
+                                  rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
+                                                (and
+                                                  (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                                  ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                                  ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                                  (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
                                          (assoc rivi
-                                           :tyyppi (dissoc tyyppi :laji)
+                                           :tyyppi tyyppi
                                            :toimenpideinstanssi
                                            (when tpk
                                              (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
@@ -185,7 +165,7 @@
                               (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                 (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                 rivi)))
-                   :valinnat (sort-by lajien-sorttaus mahdolliset-sanktiolajit)
+                   :valinnat (vec mahdolliset-sanktiolajit)
                    :valinta-nayta laji->teksti
                    :validoi [[:ei-tyhja "Valitse laji"]]})                
 
@@ -203,7 +183,8 @@
                    :valinta-arvo identity
                    :aseta-vaikka-sama? true
                    :valinnat-fn (fn [_]
-                                  (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+                                  (map #(-> {:nimi %} (assoc :id 1) (assoc :toimenpidekoodi 1))
+                                    (vec (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi (:laji @muokattu)))))
                    :valinta-nayta (fn [arvo]
                                     (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})

@@ -147,17 +147,10 @@ WHERE tyyppi = 'sakko' AND
 -- TODO Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
 SELECT
   id,
+  koodi,
   nimi,
-  toimenpidekoodi,
-
-  sanktiolaji AS laji
+  toimenpidekoodi
 FROM sanktiotyyppi;
-
---name: hae-urakkatyypin-sanktiolajit
--- TODO Poistetaan kokonaan, sanktiolajeista setti yhteiskäyttöiseen cljc domain-koodiin.
-SELECT id, nimi, sanktiolaji, urakkatyyppi
-  FROM sanktiotyyppi
- WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
 
 --name: hae-sanktiotyyppi-sanktiolajilla
 -- TODO Refaktoroidaan tai poistetaan ja haetaan cljc-koodissa määritellyn laji->tyyppi mapin avulla sanktiotyypit
