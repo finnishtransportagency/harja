@@ -92,12 +92,13 @@
 
    "Toteumatyökalu"
    :toteumatyokalu
-   (when (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
      ^{:key "toteumatyokalu"}
      [toteumatyokalu-nakyma/simuloi-toteuma])
 
   "Pohjavesialueiden siirto"
   :pohjavesialueiden-siirto
-  (when true
+  (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto)
     ^{:key "pohjavesialueiden-siirto"}
     [pohjavesialueidensiirto-nakyma/nakyma])])
