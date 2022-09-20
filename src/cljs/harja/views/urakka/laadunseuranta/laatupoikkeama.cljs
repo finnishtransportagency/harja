@@ -159,7 +159,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                     :valinta-nayta :nimi
                     :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
-             {:otsikko "Toimenpide"
+             {:otsikko "Kulun Kohdistus"
               :nimi :toimenpideinstanssi
               :tyyppi :valinta
               :valinta-arvo :tpi_id
