@@ -106,7 +106,7 @@ SELECT ra.id                                                               AS ra
                 (SELECT id FROM materiaalikoodi WHERE materiaalityyppi = 'formiaatti'::materiaalityyppi)
         WHERE tot.urakka = :urakka-id
           AND tot.poistettu = false
-          AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
+          AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
           AND ST_DWithin(ra.sijainti, trp.sijainti::geometry, 1))         as formiaattitoteumat,
        rr.formiaatti                                                       as "formiaatti?",
        rr.luotu                                                            as luotu,
@@ -138,7 +138,7 @@ FROM toteuma tot
       materiaalikoodi mk
 WHERE tot.poistettu = FALSE
   AND tot.urakka = :urakka-id
-  AND tot.alkanut BETWEEN :alkupvm::DATE - INTERVAL '1 day' AND :loppupvm::DATE
+  AND tot.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND mk.id = rp.materiaalikoodi
   AND ra.id = :rajoitusalue-id
   AND ST_DWithin(ra.sijainti, rp.sijainti::geometry, 1)

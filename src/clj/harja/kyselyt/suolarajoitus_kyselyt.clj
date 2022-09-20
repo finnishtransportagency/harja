@@ -1,6 +1,7 @@
 (ns harja.kyselyt.suolarajoitus-kyselyt
   (:require [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
+            [clj-time.coerce :as c]
             [taoensso.timbre :as log]))
 
 (defqueries "harja/kyselyt/suolarajoitus_kyselyt.sql"
@@ -8,6 +9,8 @@
 
 (defn hae-suolatoteumat-rajoitusalueittain [db {:keys [hoitokauden-alkuvuosi alkupvm loppupvm urakka-id] :as tiedot}]
   (let [;; Hae formiaatti ja talvisuolan materiaalityyppien id:t, jotta niiden summatiedot on helpompi laskea toteumista
+        alkupvm (c/to-sql-time alkupvm)
+        loppupvm (c/to-sql-time loppupvm)
         suolatoteumat (hae-rajoitusalueet-summatiedoin db
                         {:urakka-id urakka-id
                          :alkupvm alkupvm
