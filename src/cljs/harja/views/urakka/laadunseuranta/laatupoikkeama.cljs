@@ -88,8 +88,7 @@
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
-  (let [g (grid/grid-ohjaus)
-        yllapito? @urakka/yllapidon-urakka?
+  (let [yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
         mahdolliset-sanktiolajit (keep 
@@ -101,95 +100,93 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                       (urakka/indeksi-kaytossa-sakoissa?)
                                       (conj (:indeksi @nav/valittu-urakka)))]
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
-      (let [nakyma (:nakyma optiot)]
-        (if mahdolliset-sanktiolajit
-          [:div.sanktiot
-           [grid/muokkaus-grid
-            {:tyhja "Ei kirjattuja sanktioita."
-             :lisaa-rivi " Lisää sanktio"
-             :ohjaus g
-             :voi-muokata? paatosoikeus?
-             :uusi-rivi (fn [rivi]
-                          (assoc rivi :laji (cond
-                                              yllapito? :yllapidon_sakko
-                                              vesivayla? :vesivayla_sakko
-                                              ;; Oletettavasti hoito
-                                              :default :A)
-                                      :toimenpideinstanssi (when (= 1 (count urakan-tpit))
-                                                             (:tpi_id (first urakan-tpit)))))}
+      (if mahdolliset-sanktiolajit
+        [:div.sanktiot
+         [grid/muokkaus-grid
+          {:tyhja "Ei kirjattuja sanktioita."
+           :lisaa-rivi " Lisää sanktio"
+           :voi-muokata? paatosoikeus?
+           :uusi-rivi (fn [rivi]
+                        (assoc rivi :laji (cond
+                                            yllapito? :yllapidon_sakko
+                                            vesivayla? :vesivayla_sakko
+                                            ;; Oletettavasti hoito
+                                            :default :A)
+                          :toimenpideinstanssi (when (= 1 (count urakan-tpit))
+                                                 (:tpi_id (first urakan-tpit)))))}
 
-            [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
-              :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
-                        [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
+          [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
+            :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
+                      [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
 
-             (if vesivayla?
-               {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae (constantly "Sakko")
-                :muokattava? (constantly false)}
-               {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
-                :nimi :laji
-                :aseta (fn [rivi arvo]
-                         (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                           (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
-                             (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                             paivitetty)))
-                :valinnat (sort-by v-sanktiot/lajien-sorttaus mahdolliset-sanktiolajit)
-                :valinta-nayta v-sanktiot/laji->teksti
-                :validoi [[:ei-tyhja "Valitse laji"]]})
+           (if vesivayla?
+             {:otsikko "Laji" :tyyppi :string :leveys 1.25 :hae (constantly "Sakko")
+              :muokattava? (constantly false)}
+             {:otsikko "Laji" :tyyppi :valinta :leveys 1.25
+              :nimi :laji
+              :aseta (fn [rivi arvo]
+                       (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
+                         (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
+                           (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
+                           paivitetty)))
+              :valinnat (sort-by v-sanktiot/lajien-sorttaus mahdolliset-sanktiolajit)
+              :valinta-nayta v-sanktiot/laji->teksti
+              :validoi [[:ei-tyhja "Valitse laji"]]})
 
-             (cond yllapito?
-                   {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 2
-                    :tyyppi :valinta
-                    :valinta-arvo first
-                    :valinta-nayta second
-                    :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}
-
-                   vesivayla?
-                   nil
-
-                   :default
-                   ;; hoidossa sanktiotyyppi
-                   {:otsikko "Tyyppi" :nimi :tyyppi :leveys 2
-                    :tyyppi :valinta
-                    :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                             ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                             (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                               (if (sanktio-domain/muu-kuin-muistutus? paivitetty)
-                                 (assoc paivitetty :toimenpideinstanssi
-                                                   (when tpk
-                                                     (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                 (assoc paivitetty :toimenpideinstanssi nil))))
-                    :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
-                    :valinta-nayta :nimi
-                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
-
-             {:otsikko "Kulun Kohdistus"
-              :nimi :toimenpideinstanssi
+           (cond yllapito?
+             {:otsikko "Puute tai laiminlyönti" :nimi :vakiofraasi :leveys 2
               :tyyppi :valinta
-              :valinta-arvo :tpi_id
-              :valinta-nayta :tpi_nimi
-              :valinnat-fn #(when (sanktio-domain/muu-kuin-muistutus? %) urakan-tpit)
+              :valinta-arvo first
+              :valinta-nayta second
+              :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}
+
+             vesivayla?
+             nil
+
+             :default
+             ;; hoidossa sanktiotyyppi
+             {:otsikko "Tyyppi" :nimi :tyyppi :leveys 2
+              :tyyppi :valinta
+              :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                       ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
+                       (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
+                         (if (sanktio-domain/muu-kuin-muistutus? paivitetty)
+                           (assoc paivitetty :toimenpideinstanssi
+                             (when tpk
+                               (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                           (assoc paivitetty :toimenpideinstanssi nil))))
+              :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
+              :valinta-nayta :nimi
+              :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+
+           {:otsikko "Kulun Kohdistus"
+            :nimi :toimenpideinstanssi
+            :tyyppi :valinta
+            :valinta-arvo :tpi_id
+            :valinta-nayta :tpi_nimi
+            :valinnat-fn #(when (sanktio-domain/muu-kuin-muistutus? %) urakan-tpit)
+            :leveys 2
+            :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
+            :muokattava? sanktio-domain/muu-kuin-muistutus?}
+
+           {:otsikko "Sakko (€)"
+            :tyyppi :numero
+            :nimi :summa
+            :leveys 1.5
+            :validoi [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
+            :muokattava? sanktio-domain/muu-kuin-muistutus?}
+
+           (when (urakka/indeksi-kaytossa?)
+             {:otsikko "Indeksi"
+              :nimi :indeksi
               :leveys 2
-              :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-              :muokattava? sanktio-domain/muu-kuin-muistutus?}
-
-             {:otsikko "Sakko (€)"
-              :tyyppi :numero
-              :nimi :summa
-              :leveys 1.5
-              :validoi [[:ei-tyhja "Anna sakon summa euroina"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]
-              :muokattava? sanktio-domain/muu-kuin-muistutus?}
-
-             (when (urakka/indeksi-kaytossa?)
-               {:otsikko "Indeksi"
-                :nimi :indeksi
-                :leveys 2
-                :tyyppi :valinta
-                :valinnat mahdolliset-indeksivalinnat
-                :valinta-nayta #(or % "Ei sidota indeksiin")
-                :palstoja 1
-                :muokattava? #(and (sanktio-domain/muu-kuin-muistutus? %) (urakka/indeksi-kaytossa-sakoissa?))})]
-            sanktiot-atom]]
-          [ajax-loader "Ladataan..."])))))
+              :tyyppi :valinta
+              :valinnat mahdolliset-indeksivalinnat
+              :valinta-nayta #(or % "Ei sidota indeksiin")
+              :palstoja 1
+              :muokattava? #(and (sanktio-domain/muu-kuin-muistutus? %) (urakka/indeksi-kaytossa-sakoissa?))})]
+          sanktiot-atom]]
+        [ajax-loader "Ladataan..."]))))
 
 (defn avaa-tarkastus [tarkastus-id]
   (tarkastukset-nakyma/valitse-tarkastus tarkastus-id)
