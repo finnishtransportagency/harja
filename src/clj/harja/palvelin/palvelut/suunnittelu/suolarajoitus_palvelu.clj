@@ -83,7 +83,7 @@
        :pohjavesialueet pohjavesialueet})))
 
 (defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
@@ -193,7 +193,7 @@
 (defn hae-talvisuolan-kayttorajat-mhu
   "Talvisuolan käyttöraja tulee urakka_tehtavamaara tauluun tallennetun suolauksen määrästä. Sanktiot ja indeksi tulevat suolasakko taulusta"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
 
   (log/debug "hae-talvisuolan-kayttoraja :: tiedot" tiedot)
 
@@ -219,7 +219,7 @@
 (defn hae-talvisuolan-kayttorajat-alueurakka
   "Alueurakan sakot ja käyttöraja tulevat suolasakko-taulusta"
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (log/debug "hae-talvisuolan-kayttorajat-alueurakka :: tiedot" tiedot)
 
   (let [talvisuolan-sanktiot (first (suolarajoitus-kyselyt/hae-talvisuolan-kayttoraja-alueurakka db
@@ -376,8 +376,8 @@
   (let [suolatoteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-suolatoteumasummat db
                         {:urakka-id urakka-id
                          :rajoitusalue-id rajoitusalue-id
-                         :alkupvm alkupvm
-                         :loppupvm loppupvm})
+                         :alkupvm (c/to-sql-time alkupvm)
+                         :loppupvm (c/to-sql-time loppupvm)})
         suolatoteumat (mapv (fn [rivi]
                               (-> rivi
                                 (assoc :maara (or (:formiaattimaara rivi) (:suolamaara rivi)))
@@ -391,12 +391,14 @@
   [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
-  (let [paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
+  (let [alkupaiva (c/to-sql-time pvm)
+        loppupaiva (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi pvm) true 1 :paiva))
+        paivan-toteumat (suolarajoitus-kyselyt/hae-rajoitusalueen-paivan-toteumat db
                           {:urakka-id urakka-id
                            :rajoitusalue-id rajoitusalue-id
                            :materiaali-id materiaali-id
-                           :alkupvm (c/to-sql-time pvm)
-                           :loppupvm (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi pvm) true 1 :paiva))})
+                           :alkupvm alkupaiva
+                           :loppupvm loppupaiva})
         paivan-toteumat (mapv #(assoc % :maara (or (:formiaattimaara %) (:suolamaara %))) paivan-toteumat)]
     paivan-toteumat))
 
