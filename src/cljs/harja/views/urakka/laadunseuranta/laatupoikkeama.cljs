@@ -96,7 +96,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                    ;; TODO: Paranna mahdollisesti tätä? Ei mitään järkeä että käytännössä tehdään
                                    ;;       oma lista sen jälkeen kun nämä on haettu tietokannasta.
                                    (set [:A :B :C :muistutus :arvonvahennyssanktio])
-                                   @urakka/urakkatyypin-sanktiolajit)]
+                                   @urakka/urakkatyypin-sanktiolajit)
+        mahdolliset-indeksivalinnat (cond-> [nil]
+                                      (urakka/indeksi-kaytossa-sakoissa?)
+                                      (conj (:indeksi @nav/valittu-urakka)))]
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [nakyma (:nakyma optiot)]
         (if mahdolliset-sanktiolajit
@@ -181,11 +184,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :nimi :indeksi
                 :leveys 2
                 :tyyppi :valinta
-                :valinnat sanktio-domain/hoidon-indeksivalinnat
+                :valinnat mahdolliset-indeksivalinnat
                 :valinta-nayta #(or % "Ei sidota indeksiin")
                 :palstoja 1
-                :muokattava? sanktio-domain/muu-kuin-muistutus?})]
-
+                :muokattava? #(and (sanktio-domain/muu-kuin-muistutus? %) (urakka/indeksi-kaytossa-sakoissa?))})]
             sanktiot-atom]]
           [ajax-loader "Ladataan..."])))))
 
