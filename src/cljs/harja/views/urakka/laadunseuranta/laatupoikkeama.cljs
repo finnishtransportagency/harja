@@ -27,7 +27,8 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.urakka :as u-domain]
-            [harja.domain.kommentti :as kommentti])
+            [harja.domain.kommentti :as kommentti]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn paatos?
@@ -104,7 +105,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         [:div.sanktiot
          [grid/muokkaus-grid
           {:tyhja "Ei kirjattuja sanktioita."
-           :lisaa-rivi " Lisää sanktio"
+           :lisaa-rivi "Lisää sanktio"
            :voi-muokata? paatosoikeus?
            :uusi-rivi (fn [rivi]
                         (assoc rivi :laji (cond
@@ -286,8 +287,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
     "Avaa tarkastus"))
 
 (defn laatupoikkeamalomake
-  ([laatupoikkeama] (laatupoikkeamalomake laatupoikkeama {}))
-  ([laatupoikkeama optiot]
+  ([e! laatupoikkeama] (laatupoikkeamalomake e! laatupoikkeama {}))
+  ([e! laatupoikkeama optiot]
    (let [sanktio-virheet (atom {})
          muokattava? (not (paatos? @laatupoikkeama))
          urakka-id (:id @nav/valittu-urakka)
@@ -297,7 +298,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                 oikeudet/urakat-laadunseuranta-sanktiot
                                                 urakka-id @istunto/kayttaja)]
      (komp/luo
-       (fn [laatupoikkeama optiot]
+       (fn [e! laatupoikkeama optiot]
          (let [uusi? (not (:id @laatupoikkeama))
                sanktion-validointi (partial lisaa-sanktion-validointi
                                             #(sanktiotietoja-annettu? @laatupoikkeama))
@@ -316,32 +317,35 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                 :muokkaa! #(do
                              (when (contains? (:sijainti %) :virhe)
                                (viesti/nayta! (get-in % [:sijainti :virhe])
-                                              :danger))
+                                 :danger))
                              (let [uusi-lp (cond-> %
-                                                   (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
-                                                                   (get-in % [:yllapitokohde :id])) (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot yllapitokohteet)
-                                                   (contains? (:sijainti %) :virhe) (assoc :sijainti nil))]
+                                             (kohde-muuttui? (get-in @laatupoikkeama [:yllapitokohde :id])
+                                               (get-in % [:yllapitokohde :id])) (laatupoikkeamat/paivita-yllapitokohteen-tr-tiedot yllapitokohteet)
+                                             (contains? (:sijainti %) :virhe) (assoc :sijainti nil))]
                                (reset! laatupoikkeama uusi-lp)))
                 :voi-muokata? @laatupoikkeamat/voi-kirjata?
                 :footer-fn (fn [sisalto]
                              (when voi-kirjoittaa?
-                               [napit/palvelinkutsu-nappi
-                                (cond
-                                  (paatos? sisalto)
+                               [napit/yleinen-ensisijainen
+                                (if (paatos? sisalto)
                                   "Tallenna ja lukitse laatupoikkeama"
-
-                                  :default
                                   "Tallenna laatupoikkeama")
-                                #(tallenna-laatupoikkeama sisalto nakyma)
+                                (fn []
+                                  (if (paatos? sisalto)
+                                    (varmista-kayttajalta/varmista-kayttajalta
+                                      {:otsikko "Tallenna ja lukitse laatupoikkeama?"
+                                       :sisalto "Laatupoikkeamaa ei voi enää muokata tai poistaa tallentamisen jälkeen."
+                                       :hyvaksy "Tallenna ja lukitse"
+                                       :napit [:tallenna :peruuta]
+                                       :toiminto-fn #(e! (laatupoikkeamat/->TallennaLaatuPoikkeama (lomake/ilman-lomaketietoja sisalto) nakyma))})
+                                    (e! (laatupoikkeamat/->TallennaLaatuPoikkeama (lomake/ilman-lomaketietoja sisalto) nakyma))))
                                 {:ikoni (ikonit/tallenna)
                                  :disabled (or
                                              (not (validoi-sanktiotiedot sisalto))
                                              (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
-                                                                                  vesivayla? :vesivayla
-                                                                                  :default :hoito)))
-                                             (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))
-                                 :virheviesti "Laatupoikkeaman tallennus epäonnistui"
-                                 :kun-onnistuu (fn [_] (reset! laatupoikkeamat/valittu-laatupoikkeama-id nil))}]))}
+                                                                              vesivayla? :vesivayla
+                                                                              :default :hoito)))
+                                             (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))}]))}
 
                [{:otsikko "Päivämäärä ja aika"
                  :pakollinen? true
@@ -564,8 +568,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                        :palstoja 2
                        :komponentti (fn [_]
                                       [laatupoikkeaman-sanktiot
-                                       (r/wrap (:sanktiot @laatupoikkeama)
-                                               #(swap! laatupoikkeama assoc :sanktiot %))
+                                       (r/cursor laatupoikkeama [:sanktiot])
                                        sanktio-virheet
                                        paatosoikeus?
                                        laatupoikkeama optiot])})

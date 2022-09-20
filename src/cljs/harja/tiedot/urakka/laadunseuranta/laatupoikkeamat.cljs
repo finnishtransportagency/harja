@@ -6,13 +6,12 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.roolit :as roolit]
-            [harja.loki :refer [log]]
-            [harja.tiedot.urakka :as tiedot-urakka]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.laadunseuranta.laatupoikkeama :as laatupoikkeamat]
             [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.urakka :as u])
+            [harja.tiedot.urakka :as urakka]
+            [harja.ui.viesti :as viesti]
+            [harja.loki :as log])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -49,6 +48,9 @@
 (defn uusi-laatupoikkeama []
   {:tekija (roolit/osapuoli @istunto/kayttaja)
    :aika (pvm/nyt)})
+
+(defn- sanktiotaulukon-rivit [laatupoikkeama]
+  (vals (:sanktiot laatupoikkeama)))
 
 (defonce valittu-laatupoikkeama
          (reaction<! [id @valittu-laatupoikkeama-id]
@@ -95,6 +97,10 @@
 (defrecord HaeLaatupoikkeamatEpaonnistui [vastaus])
 (defrecord PaivitaAikavali [aikavali tyyppi urakka-id])
 (defrecord PaivitaListausTyyppi [tyyppi aikavali urakka-id])
+
+(defrecord TallennaLaatuPoikkeama [laatupoikkeama nakyma])
+(defrecord TallennaLaatuPoikkeamaOnnistui [vastaus laatupoikkeama])
+(defrecord TallennaLaatuPoikkeamaEpaonnistui [vastaus])
 
 (defn hae-laatupoikkeamat [tyyppi urakka-id aikavali]
   (tt/post! :hae-urakan-laatupoikkeamat
@@ -144,4 +150,49 @@
     (do
       (reset! laatupoikkeamat-kartalla [])
       (js/console.log "HaeLaatupoikkeamatEpaonnistui :: vastaus" (pr-str vastaus))
-      app)))
+      app))
+
+  TallennaLaatuPoikkeama
+  (process-event [{:keys [laatupoikkeama nakyma]} app]
+    (let [laatupoikkeama (as-> laatupoikkeama lp
+                           (assoc lp :sanktiot (sanktiotaulukon-rivit lp))
+                           ;; Varmistetaan, että tietyssä näkymäkontekstissa tallennetaan vain näkymän
+                           ;; sisältämät asiat (esim. on mahdollista vaihtaa koko valittu urakka päällystyksestä
+                           ;; hoitoon, ja emme halua että hoidon lomakkeessa tallentuu myös ylläpitokohde)
+                           (if (some #(= nakyma %) [:paallystys :paikkaus :tiemerkinta])
+                             (dissoc lp :kohde)
+                             (dissoc lp :yllapitokohde))
+                           (if (integer? (:yllapitokohde lp))
+                             lp
+                             (assoc lp :yllapitokohde (get-in lp [:yllapitokohde :id]))))]
+      (tt/post! app :tallenna-laatupoikkeama
+        laatupoikkeama
+        {:onnistui ->TallennaLaatuPoikkeamaOnnistui
+         :onnistui-parametrit [laatupoikkeama]
+         :epaonnistui ->TallennaLaatuPoikkeamaEpaonnistui})))
+
+  TallennaLaatuPoikkeamaOnnistui
+  (process-event [{:keys [vastaus laatupoikkeama]} {:keys [laatupoikkeamat] :as app}]
+    (let [uusi-laatupoikkeama vastaus
+          aika (:aika uusi-laatupoikkeama)
+          [alku loppu] @urakka/valittu-aikavali]
+      (reset! valittu-laatupoikkeama-id nil)
+      (if (and (pvm/sama-tai-jalkeen? aika alku)
+              (pvm/sama-tai-ennen? aika loppu))
+        ;; Kuuluu aikavälille, lisätään tai päivitetään
+        (if (:id laatupoikkeama)
+          ;; Päivitetty olemassaolevaa
+          (assoc app :laatupoikkeamat
+            (mapv (fn [lp]
+                    (if (= (:id lp) (:id uusi-laatupoikkeama))
+                      uusi-laatupoikkeama
+                      lp)) laatupoikkeamat))
+          ;; Luotu uusi
+          (update app :laatupoikkeamat conj uusi-laatupoikkeama))
+        app)))
+
+  TallennaLaatuPoikkeamaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/error "Laatupoikkeaman tallennuksessa virhe!" vastaus)
+    (viesti/nayta-toast! "Oikaisun tallennuksessa tapahtui virhe" :varoitus)
+    app))

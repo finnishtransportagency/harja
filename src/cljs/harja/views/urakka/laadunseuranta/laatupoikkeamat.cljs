@@ -145,7 +145,7 @@
       [:span.laatupoikkeamat
        [kartta/kartan-paikka]
        (if @laatupoikkeamat/valittu-laatupoikkeama
-         [laatupoikkeamalomake laatupoikkeamat/valittu-laatupoikkeama
+         [laatupoikkeamalomake e! laatupoikkeamat/valittu-laatupoikkeama
           (merge optiot
                  {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
          [laatupoikkeamalistaus e! app optiot])])))
