@@ -88,7 +88,7 @@
 (defn laatupoikkeaman-sanktiot
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
-  [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
+  [_sanktiot-atom _paatosoikeus? _laatupoikkeama _muokattava? optiot]
   (let [yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
@@ -100,13 +100,13 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         mahdolliset-indeksivalinnat (cond-> [nil]
                                       (urakka/indeksi-kaytossa-sakoissa?)
                                       (conj (:indeksi @nav/valittu-urakka)))]
-    (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
+    (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
       (if mahdolliset-sanktiolajit
         [:div.sanktiot
          [grid/muokkaus-grid
           {:tyhja "Ei kirjattuja sanktioita."
            :lisaa-rivi "Lisää sanktio"
-           :voi-muokata? paatosoikeus?
+           :voi-muokata? (and paatosoikeus? muokattava?)
            :uusi-rivi (fn [rivi]
                         (assoc rivi :laji (cond
                                             yllapito? :yllapidon_sakko
@@ -569,9 +569,9 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                        :komponentti (fn [_]
                                       [laatupoikkeaman-sanktiot
                                        (r/cursor laatupoikkeama [:sanktiot])
-                                       sanktio-virheet
                                        paatosoikeus?
-                                       laatupoikkeama optiot])})
+                                       laatupoikkeama
+                                       muokattava? optiot])})
                     (when (nayta-siirtymisnappi? @laatupoikkeama)
                       {:rivi? true
                        :uusi-rivi? true
