@@ -33,13 +33,13 @@
                                   (> (:formiaattitoteumat rivi) 0)
                                   (> (:ajoratojen_pituus rivi) 0))
                                 (assoc :formiaatit_t_per_ajoratakm
-                                       (with-precision 3 (/ (:formiaattitoteumat rivi) (:ajoratojen_pituus rivi))))
+                                       (with-precision 3 (/ (:formiaattitoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))
                                 (and
                                   (not (nil? (:suolatoteumat rivi)))
                                   (not (nil? (:ajoratojen_pituus rivi)))
                                   (> (:suolatoteumat rivi) 0)
                                   (> (:ajoratojen_pituus rivi) 0))
                                 (assoc :talvisuola_t_per_ajoratakm
-                                       (with-precision 4 (/ (:suolatoteumat rivi) (:ajoratojen_pituus rivi))))))
+                                       (with-precision 4 (/ (:suolatoteumat rivi) (/ (:ajoratojen_pituus rivi) 1000))))))
                         suolatoteumat)]
     suolatoteumat))
