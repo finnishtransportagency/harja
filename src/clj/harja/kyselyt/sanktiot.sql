@@ -39,6 +39,7 @@ WHERE id = :id;
 
 -- name: hae-laatupoikkeaman-sanktiot
 -- Palauttaa kaikki annetun laatupoikkeaman sanktiot
+-- TODO Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
 SELECT
   s.id,
   s.perintapvm,
@@ -50,7 +51,6 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-       -- TODO: Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
   t.sanktiolaji     AS tyyppi_laji
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
@@ -144,22 +144,23 @@ WHERE tyyppi = 'sakko' AND
 
 -- name: hae-sanktiotyypit
 -- Hakee kaikki sanktiotyypit
+-- TODO Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
 SELECT
   id,
   nimi,
   toimenpidekoodi,
-  -- TODO: Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
+
   sanktiolaji AS laji
 FROM sanktiotyyppi;
 
 --name: hae-urakkatyypin-sanktiolajit
--- TODO: Poistetaan kokonaan, sanktiolajeista setti yhteiskäyttöiseen cljc domain-koodiin.
+-- TODO Poistetaan kokonaan, sanktiolajeista setti yhteiskäyttöiseen cljc domain-koodiin.
 SELECT id, nimi, sanktiolaji, urakkatyyppi
   FROM sanktiotyyppi
  WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
 
--- TODO: Refaktoroidaan tai poistetaan ja haetaan cljc-koodissa määritellyn laji->tyyppi mapin avulla sanktiotyypit
 --name: hae-sanktiotyyppi-sanktiolajilla
+-- TODO Refaktoroidaan tai poistetaan ja haetaan cljc-koodissa määritellyn laji->tyyppi mapin avulla sanktiotyypit
 SELECT id
   FROM sanktiotyyppi
  WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];

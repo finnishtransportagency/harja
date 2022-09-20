@@ -3,7 +3,7 @@
 ;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
 ;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
 ;; mikäli on tarve.
-(def sanktiolaji->sanktiotyyppi
+(def sanktiolaji->sanktiotyyppi-koodi
   {:A #{0 1 13 14 15 16}
    :B #{0 1 13 14 15 16}
    :C #{8 9 10 11 12 15 16}
