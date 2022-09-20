@@ -83,7 +83,7 @@
        :pohjavesialueet pohjavesialueet})))
 
 (defn hae-tierekisterin-tiedot [db user {:keys [urakka-id] :as suolarajoitus}]
-  (oikeudet/vaadi-lukusoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-suola user urakka-id)
   (let [tr-tiedot (tierekisterin-tiedot db suolarajoitus)]
     (if (:validaatiovirheet tr-tiedot)
       (transit-vastaus 400 (:validaatiovirheet tr-tiedot))
