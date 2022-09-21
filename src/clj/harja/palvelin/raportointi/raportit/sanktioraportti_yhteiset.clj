@@ -8,7 +8,8 @@
     [harja.kyselyt.konversio :as konv]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
     [harja.kyselyt.urakat :as urakat-q]
-    [harja.kyselyt.hallintayksikot :as hallintayksikot-q]))
+    [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
+    [harja.domain.urakka :as urakka-domain]))
 
 (defn- rivi-kuuluu-talvihoitoon? [rivi]
   (if (:toimenpidekoodi_taso2 rivi)
@@ -116,9 +117,7 @@
 (def +sakkorivin-nimi-yllapito+ "Sakot (-) ja bonukset (+)")
 
 (defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake? urakkatyyppi] :as optiot}]
-  (let [yllapito? (or (= urakkatyyppi :paallystys)
-                      (= urakkatyyppi :paikkaus)
-                      (= urakkatyyppi :tiemerkinta))
+  (let [yllapito? (urakka-domain/yllapidon-urakka? {:tyyppi urakkatyyppi})
         sakkorivin-nimi (if yllapito?
                           +sakkorivin-nimi-yllapito+
                           +sakkorivin-nimi-hoito+)

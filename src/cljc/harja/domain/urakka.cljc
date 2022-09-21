@@ -107,5 +107,5 @@
       :else :hoito)))
 
 (defn yllapidon-urakka?
-  [{:keys [tyyppi] :as urakka}]
+  [{:keys [tyyppi] :as optiot}]
   (boolean (some #{tyyppi} #{:paallystys :paikkaus :tiemerkinta :valaistus})))
