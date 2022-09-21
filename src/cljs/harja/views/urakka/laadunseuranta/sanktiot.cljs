@@ -83,7 +83,6 @@
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
 
-
           [:div.padding-16.ei-sulje-sivupaneelia
             [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -98,7 +97,7 @@
              [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)])
                       
            ;; Vaadi tarvittavat tiedot ennen rendausta
-           (if (and mahdolliset-sanktiolajit
+           (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
                  (or (not yllapitokohdeurakka?)
                    (and yllapitokohdeurakka? yllapitokohteet)))
 
@@ -188,8 +187,7 @@
                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
                    :valinta-arvo identity
                    :aseta-vaikka-sama? true
-                   :valinnat-fn (fn [_]
-                                  (sanktio-domain/sanktiolaji->sanktiotyypit (:laji @muokattu) kaikki-sanktiotyypit))
+                   :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit (:laji @muokattu) kaikki-sanktiotyypit))
                    :valinta-nayta (fn [arvo]
                                     (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})

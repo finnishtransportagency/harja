@@ -132,9 +132,10 @@
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id]
-  (let [mahdolliset-sanktiotyypit (into #{}
-                                        (map :id (sanktiot/hae-sanktiotyyppi-sanktiolajilla
-                                                   db {:sanktiolaji (name sanktiolaji)})))]
+  (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword sanktiolaji))
+        mahdolliset-sanktiotyypit (into #{}
+                                        (map :id (sanktiot/hae-sanktiotyyppi-koodilla
+                                                   db {:koodit lajin-sanktiotyyppien-koodit})))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
       (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
                                       sanktiotyypin-id))))))
@@ -159,10 +160,11 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
+        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword laji))
         sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
-                          (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
+                          (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
         params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
@@ -304,18 +306,6 @@
       (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
-(defn hae-urakkatyypin-sanktiolajit
-  "Palauttaa urakkatyypin sanktiotyypit [sic] settinä"
-  [db user urakka-id urakkatyyppi]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiotyypit (into []
-                            (map #(konv/array->set % :sanktiolaji keyword))
-                            (sanktiot/hae-urakkatyypin-sanktiolajit
-                              db (name urakkatyyppi)))
-        sanktiolajit (apply clojure.set/union
-                            (map :sanktiolaji sanktiotyypit))]
-    sanktiolajit))
-
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
@@ -354,10 +344,6 @@
       (fn [user]
         (hae-sanktiotyypit db user))
 
-      :hae-urakkatyypin-sanktiolajit
-      (fn [user {:keys [urakka-id urakkatyyppi]}]
-        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi))
-
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
         (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
@@ -371,6 +357,5 @@
                      :hae-urakan-sanktiot
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
-                     :hae-urakkatyypin-sanktiolajit
                      :hae-sanktion-liitteet)
     this))

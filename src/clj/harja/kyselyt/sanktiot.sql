@@ -51,7 +51,8 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji     AS tyyppi_laji
+  t.sanktiolaji     AS tyyppi_laji,
+  t.koodi           AS tyyppi_koodi
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE laatupoikkeama = :laatupoikkeama
@@ -103,7 +104,9 @@ SELECT
 
   t.nimi                             AS tyyppi_nimi,
   t.id                               AS tyyppi_id,
-  t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
+  t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi,
+  t.koodi                            AS tyyppi_koodi
+
 
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -144,7 +147,6 @@ WHERE tyyppi = 'sakko' AND
 
 -- name: hae-sanktiotyypit
 -- Hakee kaikki sanktiotyypit
--- TODO Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
 SELECT
   id,
   koodi,
@@ -152,11 +154,10 @@ SELECT
   toimenpidekoodi
 FROM sanktiotyyppi;
 
---name: hae-sanktiotyyppi-sanktiolajilla
--- TODO Refaktoroidaan tai poistetaan ja haetaan cljc-koodissa määritellyn laji->tyyppi mapin avulla sanktiotyypit
+--name: hae-sanktiotyyppi-koodilla
 SELECT id
   FROM sanktiotyyppi
- WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];
+ WHERE koodi IN (:koodit);
 
 
 --name: hae-sanktion-urakka-id
