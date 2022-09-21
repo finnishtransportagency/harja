@@ -1,4 +1,5 @@
-(ns harja.domain.laadunseuranta.sanktio)
+(ns harja.domain.laadunseuranta.sanktio
+  (:require [harja.pvm :as pvm]))
 
 ;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
 ;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
@@ -24,6 +25,25 @@
    :vesivayla_muistutus []
 
    :lupaussanktio [8]})
+
+(defn urakan-sanktiolajit
+  "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
+  [{:keys [tyyppi alkupvm] :as urakka}]
+
+  (cond
+    ;; Sanktiolajit MH- ja Alueurakoille, joiden alkuvuosi on yhtäsuuri tai pienempi kuin 2022
+    (and (or (= :teiden-hoito tyyppi) (= :hoito tyyppi)) (<= (pvm/vuosi alkupvm) 2022))
+    [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
+     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+
+    ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
+    ;; TODO: Varmistettava
+    (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
+    [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+
+    :else []))
+
+(def laatupoikkeaman-sanktiolajit [:A :B :C])
 
 (defn sanktiolaji->sanktiotyypit
   "Suodattaa kaikista sanktiotyypeistä annetun lajin ja sanktiotyypin uniikin koodin avulla lajiin kuuluvat tyypit.

@@ -92,10 +92,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
-        mahdolliset-sanktiolajit (disj @urakka/valitun-urakan-sanktiolajit :yllapidon_bonus)] ; laatupoikkeamasta ei bonusta, kyseessä negatiivinen asia
+        ;; Laatupoikkeama näyttää oman karsitun setin lajeista
+        mahdolliset-sanktiolajit sanktio-domain/laatupoikkeaman-sanktiolajit
+        ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
+        ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
+        kaikki-sanktiotyypit @sanktiot/sanktiotyypit]
+
     (fn [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama]
       (let [nakyma (:nakyma optiot)]
-        (if mahdolliset-sanktiolajit
+        (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit))
           [:div.sanktiot
            [grid/muokkaus-grid
             {:tyhja "Ei kirjattuja sanktioita."
@@ -151,7 +156,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                    (when tpk
                                                      (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                                  (assoc paivitetty :toimenpideinstanssi nil))))
-                    :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
+                    :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit (:laji %) kaikki-sanktiotyypit))
                     :valinta-nayta :nimi
                     :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 

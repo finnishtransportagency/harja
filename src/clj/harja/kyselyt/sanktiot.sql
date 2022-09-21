@@ -39,7 +39,6 @@ WHERE id = :id;
 
 -- name: hae-laatupoikkeaman-sanktiot
 -- Palauttaa kaikki annetun laatupoikkeaman sanktiot
--- TODO Sanktiolaji pitää hakea eri tavalla sanktiolaji->sanktiotyyppi mappauksen kautta (harja.domain.laadunseuranta.sanktio)
 SELECT
   s.id,
   s.perintapvm,
@@ -51,7 +50,6 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji     AS tyyppi_laji,
   t.koodi           AS tyyppi_koodi
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id

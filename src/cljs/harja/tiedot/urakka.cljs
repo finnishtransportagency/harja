@@ -17,7 +17,8 @@
             [cljs-time.core :as t]
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -486,22 +487,7 @@
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
 
-(defn- urakan-sanktiolajit
-  "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
-  [{:keys [tyyppi alkupvm] :as urakka}]
 
-  (cond
-    ;; Sanktiolajit MH- ja Alueurakoille, joiden alkuvuosi on yhtäsuuri tai pienempi kuin 2022
-    (and (or (= :teiden-hoito tyyppi) (= :hoito tyyppi)) (<= (pvm/vuosi alkupvm) 2022))
-    [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
-     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
-
-    ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
-    ;; TODO: Varmistettava
-    (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
-    [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
-
-    :else []))
 
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan."
@@ -512,7 +498,7 @@
       (when (and urakka (or (= :laatupoikkeamat ls-sivu)
                           (= :sanktiot ls-sivu)
                           (= :vesivayla-sanktiot vv-ls-sivu)))
-        (urakan-sanktiolajit urakka)))))
+        (sanktio-domain/urakan-sanktiolajit urakka)))))
 
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
