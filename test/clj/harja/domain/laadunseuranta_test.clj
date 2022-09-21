@@ -16,7 +16,7 @@
         paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys :alkupvm (pvm/hoitokauden-alkupvm 2019)})
         paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus :alkupvm (pvm/hoitokauden-alkupvm 2019)})
         tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta :alkupvm (pvm/hoitokauden-alkupvm 2019)})
-        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus :alkupvm pvm/hoitokauden-alkupvm})]
+        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
