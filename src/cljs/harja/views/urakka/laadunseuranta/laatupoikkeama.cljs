@@ -92,8 +92,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
         yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
-        ;; Laatupoikkeama näyttää oman karsitun setin lajeista
-        mahdolliset-sanktiolajit sanktio-domain/laatupoikkeaman-sanktiolajit
+        ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
+        mahdolliset-sanktiolajit @urakka/valitun-urakan-sanktiolajit
         ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
         ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
         kaikki-sanktiotyypit @sanktiot/sanktiotyypit]

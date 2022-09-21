@@ -498,7 +498,11 @@
       (when (and urakka (or (= :laatupoikkeamat ls-sivu)
                           (= :sanktiot ls-sivu)
                           (= :vesivayla-sanktiot vv-ls-sivu)))
-        (sanktio-domain/urakan-sanktiolajit urakka)))))
+        (if (= :laatupoikkeamat ls-sivu)
+          ;; Laatupoikkeamille on omat karsitut sanktiolajien listaukset riippuen urakkatyypistä
+          (sanktio-domain/laatupoikkeaman-sanktiolajit urakka)
+          ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
+          (sanktio-domain/urakan-sanktiolajit urakka))))))
 
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]

@@ -25,5 +25,20 @@
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
           mhu-lajit-2023->)
       "Hoidon sanktiolajit urakoille ennen 2023")
-    (is (= [:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus]
+    (is (= [:yllapidon_sakko :yllapidon_muistutus]
+          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit) "Ylläpidon sanktiolajit")))
+
+
+(deftest laatupoikkeaman-mahdolliset-sanktiolajit
+  (let [alueurakan-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)})
+        mhu-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)})
+        paallystyksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paallystys :alkupvm (pvm/hoitokauden-alkupvm 2019)})
+        paikkauksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paikkaus :alkupvm (pvm/hoitokauden-alkupvm 2019)})
+        tiemerkinnan-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :tiemerkinta :alkupvm (pvm/hoitokauden-alkupvm 2019)})
+        valaistuksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
+
+    (is (= [:A :B :C]
+          alueurakan-lajit mhu-lajit)
+      "Hoidon sanktiolajit urakoille ennen 2023")
+    (is (= [:yllapidon_sakko :yllapidon_muistutus]
           paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit) "Ylläpidon sanktiolajit")))

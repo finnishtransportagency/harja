@@ -76,11 +76,20 @@
 
     ;; Yllapidon urakka?
     (urakka-domain/yllapidon-urakka? urakka)
-    [:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus]
+    [:yllapidon_sakko :yllapidon_muistutus]
 
     :else []))
 
-(def laatupoikkeaman-sanktiolajit [:A :B :C])
+(defn laatupoikkeaman-sanktiolajit
+  [{:keys [tyyppi alkupvm] :as urakka}]
+  (cond
+    ;; Yllapidon urakka?
+    (urakka-domain/yllapidon-urakka? urakka)
+    [:yllapidon_sakko :yllapidon_muistutus]
+
+    ;; TODO: Varmistettava onko muita ehtoja
+
+    :else [:A :B :C]))
 
 
 
