@@ -398,6 +398,30 @@
     (viesti/nayta! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
 
+(defn- sanktion-kuvaus [{:keys [suorasanktio laatupoikkeama]}]
+  (let [kohde (:kohde laatupoikkeama)]
+    (if suorasanktio
+      kohde
+      [:span
+       (str "Laatupoikkeama: " kohde)
+       [:br]
+       (str (when (get-in laatupoikkeama [:tr :numero])
+              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
+
+(defn- sanktion-perustelu [{:keys [suorasanktio laatupoikkeama] :as param}]
+  (println param)
+  (let [perustelu (get-in laatupoikkeama [:paatos :perustelu])
+        kuvaus (:kuvaus laatupoikkeama)]
+    (if suorasanktio
+      [:span
+       perustelu]
+
+      [:<>
+       (str "Laatupoikkeaman kuvaus: " kuvaus)
+       [:br]
+       [:br]
+       (str "Päätöksen selitys: " perustelu)])))
+
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
@@ -437,8 +461,10 @@
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
-       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae (comp :kohde :laatupoikkeama) :leveys 3})
-       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
+       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
+                              :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
+       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3
+        :tyyppi :komponentti :komponentti sanktion-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
         :hae #(or (let [summa (:summa %)]
                     (fmt/euro-opt false

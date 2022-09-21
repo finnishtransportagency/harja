@@ -11,7 +11,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
             [harja.ui.viesti :as viesti]
-            [harja.loki :as log])
+            [harja.loki :as log]
+            [harja.domain.tierekisteri :as tierekisteri])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -51,6 +52,13 @@
 
 (defn- sanktiotaulukon-rivit [laatupoikkeama]
   (vals (:sanktiot laatupoikkeama)))
+
+(defn- taydenna-kohteen-kuvaus [laatupoikkeama]
+  (let [tr-osoite-teksti (tierekisteri/tierekisteriosoite-tekstina (:yllapitokohde laatupoikkeama) {:teksti-tie? false})
+        tr-osoite-teksti (when-not (empty? tr-osoite-teksti)
+                            (str "(" tr-osoite-teksti ")"))]
+    (update laatupoikkeama :kohde
+      #(str "Laatupoikkeama: " % " " tr-osoite-teksti))))
 
 (defonce valittu-laatupoikkeama
          (reaction<! [id @valittu-laatupoikkeama-id]
