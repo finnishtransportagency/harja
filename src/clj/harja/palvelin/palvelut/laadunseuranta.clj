@@ -277,8 +277,6 @@
   [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (into []
-        ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
-        (map #(konv/array->set % :laji keyword))
         (sanktiot/hae-sanktiotyypit db)))
 
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]

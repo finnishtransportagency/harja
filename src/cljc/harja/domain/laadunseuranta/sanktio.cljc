@@ -25,6 +25,17 @@
 
    :lupaussanktio [8]})
 
+(defn sanktiolaji->sanktiotyypit
+  "Suodattaa kaikista sanktiotyypeistä annetun lajin ja sanktiotyypin uniikin koodin avulla lajiin kuuluvat tyypit.
+  Parametrit:
+    laji (keyword) Sanktiolaji
+    kaikki-sanktiotyypit (seq) Sekvenssi sanktiotyyppien dataa sisältäviä mappeja."
+  [laji kaikki-sanktiotyypit]
+  (filter
+    #(some #{(:koodi %)}
+       (sanktiolaji->sanktiotyyppi-koodi laji))
+    kaikki-sanktiotyypit))
+
 
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))

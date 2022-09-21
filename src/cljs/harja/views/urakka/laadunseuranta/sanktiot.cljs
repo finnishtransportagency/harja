@@ -21,7 +21,6 @@
             [harja.loki :refer [log]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.tierekisteri :as tierekisteri]
@@ -31,7 +30,8 @@
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet]))
+            [harja.ui.liitteet :as liitteet]
+            [harja.ui.debug :as debug]))
 
 (defn laji->teksti
   [laji]
@@ -70,7 +70,11 @@
               tallennus-kaynnissa (atom false)
               urakka-id (:id @nav/valittu-urakka)
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
+              ;; Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan.
               mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
+              ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
+              ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
+              kaikki-sanktiotyypit @tiedot/sanktiotyypit
      
               yllapito? (:yllapito? optiot)
               vesivayla? (:vesivayla? optiot)
@@ -78,7 +82,9 @@
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
-          [:div.padding-16.ei-sulje-sivupaneelia           
+
+
+          [:div.padding-16.ei-sulje-sivupaneelia
             [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
                   (str (laji->teksti (:laji @muokattu)))
@@ -149,7 +155,7 @@
                                          (assoc :laji arvo)
                                          (dissoc :tyyppi)
                                          (assoc :tyyppi nil))
-                                  s-tyypit (vec (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi arvo))
+                                  s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit arvo kaikki-sanktiotyypit)
                                   rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
                                                 (and
                                                   (and (= 1 (count s-tyypit)) (first s-tyypit))
@@ -183,8 +189,7 @@
                    :valinta-arvo identity
                    :aseta-vaikka-sama? true
                    :valinnat-fn (fn [_]
-                                  (map #(-> {:nimi %} (assoc :id 1) (assoc :toimenpidekoodi 1))
-                                    (vec (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi (:laji @muokattu)))))
+                                  (sanktio-domain/sanktiolaji->sanktiotyypit (:laji @muokattu) kaikki-sanktiotyypit))
                    :valinta-nayta (fn [arvo]
                                     (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})

@@ -504,6 +504,7 @@
     :else []))
 
 (def valitun-urakan-sanktiolajit
+  "Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan."
   (reaction
     (let [urakka @nav/valittu-urakka
           ls-sivu (nav/valittu-valilehti :laadunseuranta)
