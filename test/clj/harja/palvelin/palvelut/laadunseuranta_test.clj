@@ -234,7 +234,9 @@
                                             +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
             lisatty-sakko (first (filter #(= 1234.0 (:summa %)) sanktiot-sakon-jalkeen))
             lisatty-bonus (first (filter #(= -4321.0 (:summa %)) sanktiot-bonuksen-jalkeen))
-            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-muistutuksen-jalkeen))]
+            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-muistutuksen-jalkeen))
+            ;; Roskien keruu
+            _ (poista-sanktio-perustelulla perustelu)]
         (is (number? (:id lisatty-sakko)) "Tallennus palauttaa uuden id:n")
         (is (= :yllapidon_sakko (:laji lisatty-sakko)) "Päällystysurakan bonuksen oikea sanktiolaji")
         (is (= "Ylläpidon sakko" (:nimi (:tyyppi lisatty-sakko))) "Päällystysurakan sakon oikea sanktiotyyppi")
@@ -434,7 +436,7 @@
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
-(def maarapaivan-ylitys-sanktiotyyppi (first (q-map "SELECT id, toimenpidekoodi, nimi FROM sanktiotyyppi WHERE nimi = 'Määräpäivän ylitys'")))
+(def maarapaivan-ylitys-sanktiotyyppi (first (q-map "SELECT id, toimenpidekoodi, nimi, koodi FROM sanktiotyyppi WHERE nimi = 'Määräpäivän ylitys'")))
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
@@ -633,26 +635,6 @@
          :loppu (pvm/luo-pvm 2016 10 30)
          :tpi 1})))
 
-(deftest hae-urakkatyypin-sanktiolajit
-  (let [hoidon (kutsu-palvelua (:http-palvelin jarjestelma)
-                               :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
-                               {:urakkatyyppi :hoito})
-        paallystyksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
-                                      {:urakkatyyppi :paallystys})
-        paikkauksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
-                                    {:urakkatyyppi :paikkaus})
-        tiemerkinnan (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
-                                     {:urakkatyyppi :tiemerkinta})
-        valaistuksen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :hae-urakkatyypin-sanktiolajit +kayttaja-urakan-vastuuhenkilo+
-                                     {:urakkatyyppi :valaistus})]
-    (is (not (empty? hoidon)))
-    (is (= #{:A :B :C :muistutus :talvisuolan_ylitys :pohjavesisuolan_ylitys} hoidon) "Hoidon sanktiolajit")
-    (is (= #{:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus}
-           paallystyksen paikkauksen tiemerkinnan valaistuksen) "Ylläpidon sanktiolajit")))
 
 (deftest vaadi-sanktio-kuuluu-urakkaan-testit
   (let [kohde-urakka (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")

@@ -1,30 +1,63 @@
 (ns harja.domain.laadunseuranta.sanktio
-  (:require [harja.pvm :as pvm]))
+  (:require [harja.pvm :as pvm]
+            [harja.domain.urakka :as urakka-domain]))
 
 ;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
 ;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
 ;; mikäli on tarve.
+;; NOTE: Sanktiotyyppi-taulun tila 2022-09-21 (koodi, nimi):
+;; 0,Ei tarvita sanktiotyyppiä
+;; 1,Muu tuote
+;; 2,Talvihoito
+;; 3,Ylläpidon sakko
+;; 4,Ylläpidon bonus
+;; 5,Ylläpidon muistutus
+;; 6,Vesiväylän sakko
+;; 7,Suolasakko
+;; 8,Määräpäivän ylitys
+;; 9,Työn tekemättä jättäminen
+;; 10,Hallinnolliset laiminlyönnit
+;; 11,Muu sopimuksen vastainen toiminta
+;; 12,Asiakirjamerkintöjen paikkansa pitämättömyys
+;; 13,"Talvihoito, päätiet"
+;; 14,"Talvihoito, muut tiet"
+;; 15,Liikenneympäristön hoito
+;; 16,Sorateiden hoito ja ylläpito
+;; 17,Muut hoitourakan tehtäväkokonaisuudet
 (def sanktiolaji->sanktiotyyppi-koodi
-  {:muistutus [0 1]
-   :A [0 1 13 14 15 16]
-   :B [0 1 13 14 15 16]
-   :C [8 9 10 11 12 15 16]
-   :arvonvahennyssanktio [8]
+  {:muistutus [0 1 #_2 #_15 #_16]
+   :A [0 1 2 13 14 15 16]
+   :B [0 1 2 13 14 15 16]
+   :C [8 9 10 11 12 #_15 #_16]
+
    :pohjavesisuolan_ylitys [7]
    :talvisuolan_ylitys [7]
-   :tenttikeskiarvo-sanktio [8]
-   :testikeskiarvo-sanktio [8]
-   :vaihtosanktio [8]
 
-   :yllapidon_sakko [2]
-   :yllapidon_bonus [3]
-   :yllapidon_muistutus [4]
+   :yllapidon_sakko [3]
+   :yllapidon_bonus [4]
+   :yllapidon_muistutus [5]
 
-   :vesivayla_sakko [5]
-   :vesivayla_bonus []
-   :vesivayla_muistutus []
+   :vesivayla_sakko [6]
+   ;; Näitä ei ollut sanktiotyyppi-tietokantataulussa tuotannossa käytössä, joten disabloituna tässä
+   #_#_:vesivayla_bonus []
+   #_#_:vesivayla_muistutus []
 
-   :lupaussanktio [8]})
+   :lupaussanktio [0]
+   :tenttikeskiarvo-sanktio [0]
+   :testikeskiarvo-sanktio [0]
+   :vaihtosanktio [0]
+   :arvonvahennyssanktio [0]})
+
+(defn sanktiolaji->sanktiotyypit
+  "Suodattaa kaikista sanktiotyypeistä annetun lajin ja sanktiotyypin uniikin koodin avulla lajiin kuuluvat tyypit.
+  Parametrit:
+    laji (keyword) Sanktiolaji
+    kaikki-sanktiotyypit (seq) Sekvenssi sanktiotyyppien dataa sisältäviä mappeja."
+  [laji kaikki-sanktiotyypit]
+  (filter
+    #(some #{(:koodi %)}
+       (sanktiolaji->sanktiotyyppi-koodi laji))
+    kaikki-sanktiotyypit))
 
 (defn urakan-sanktiolajit
   "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
@@ -41,20 +74,14 @@
     (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
+    ;; Yllapidon urakka?
+    (urakka-domain/yllapidon-urakka? urakka)
+    [:yllapidon_sakko :yllapidon_bonus :yllapidon_muistutus]
+
     :else []))
 
 (def laatupoikkeaman-sanktiolajit [:A :B :C])
 
-(defn sanktiolaji->sanktiotyypit
-  "Suodattaa kaikista sanktiotyypeistä annetun lajin ja sanktiotyypin uniikin koodin avulla lajiin kuuluvat tyypit.
-  Parametrit:
-    laji (keyword) Sanktiolaji
-    kaikki-sanktiotyypit (seq) Sekvenssi sanktiotyyppien dataa sisältäviä mappeja."
-  [laji kaikki-sanktiotyypit]
-  (filter
-    #(some #{(:koodi %)}
-       (sanktiolaji->sanktiotyyppi-koodi laji))
-    kaikki-sanktiotyypit))
 
 
 (defn muu-kuin-muistutus? [sanktio]
