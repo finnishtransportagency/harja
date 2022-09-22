@@ -24,7 +24,7 @@
 
 (defn vetolaatikko-taso-2
   "Valitun toteumien summarivin toteumarivit."
-  [e! app {:keys [materiaali_id pvm rivi-id] :as rivi} rajoitusalue-id]
+  [e! app {:keys [materiaali_id pvm rivi-id koneellinen?] :as rivi} rajoitusalue-id]
 
   (komp/luo
     (komp/sisaan
@@ -33,7 +33,8 @@
               {:rajoitusalue-id rajoitusalue-id
                :materiaali-id materiaali_id
                :pvm pvm
-               :rivi-id rivi-id}))))
+               :rivi-id rivi-id
+               :koneellinen? koneellinen?}))))
     (fn [e! app rivi]
       (let [rajoitusalueet (:rajoitusalueet app)
             valittu-rajoitusalue (some #(when (= rajoitusalue-id (:rajoitusalue_id %)) %) rajoitusalueet)
