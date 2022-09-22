@@ -25,10 +25,34 @@
 ;; 16,Sorateiden hoito ja ylläpito
 ;; 17,Muut hoitourakan tehtäväkokonaisuudet
 (def sanktiolaji->sanktiotyyppi-koodi
-  {:muistutus [0 1 #_2 #_15 #_16]
-   :A [0 1 2 13 14 15 16]
-   :B [0 1 2 13 14 15 16]
-   :C [8 9 10 11 12 #_15 #_16]
+  {:muistutus [;; Poistetaan
+               1
+
+               ;; Poistetaan
+               #_2
+
+               13 14
+
+               ;; Poistetaan urakoista 2020->
+               #_15 #_16]
+   :A [;; Poistetaan
+       1
+
+       ;; Poistetaan
+       #_2
+
+       13 14
+       ;; Poistetaan urakoista 2020->
+       #_15 #_16]
+   :B [;; Poistetaan
+       1
+       ;; Poistetaan
+       #_2
+
+       13 14
+       ;; Poistetaan urakoista 2020->
+       #_15 #_16]
+   :C [8 9 10 11 12]
 
    :pohjavesisuolan_ylitys [7]
    :talvisuolan_ylitys [7]

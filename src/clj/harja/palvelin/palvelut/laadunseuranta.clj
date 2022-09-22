@@ -133,12 +133,14 @@
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id]
   (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword sanktiolaji))
+        kaikki-sanktiotyypit (group-by :id (sanktiot/hae-sanktiotyypit db))
         mahdolliset-sanktiotyypit (into #{}
                                         (map :id (sanktiot/hae-sanktiotyyppi-koodilla
-                                                   db {:koodit lajin-sanktiotyyppien-koodit})))]
+                                                   db {:koodit lajin-sanktiotyyppien-koodit})))
+        sanktiotyyppi (first (kaikki-sanktiotyypit sanktiotyypin-id))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
-      (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
-                                      sanktiotyypin-id))))))
+      (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
+                                      sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
 (defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
