@@ -924,3 +924,29 @@
                            [] urakan-vuodet)]
     ;; Jokaiselle tulevalle vuodelle luodaan uusi rajoitus, joten niitä pitää olla yhtä monta kuin lista * vuodet
     (is (= (* (count pohjavesirajoitukset) (count urakan-vuodet)) (count suolarajoitukset)))))
+
+(deftest tierekisteri-muokattu?-toimii
+  (testing "Sama tierekisteri"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (false? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: tie"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 2 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: aosa"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 2 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: aet"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 2 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: losa"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 3 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: let"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 3}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue))))))

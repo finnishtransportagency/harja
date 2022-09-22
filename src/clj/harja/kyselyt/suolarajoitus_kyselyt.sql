@@ -416,3 +416,16 @@ FROM pohjavesialue_talvisuola pt
 WHERE pt.urakka = :urakkaid
   AND pt.talvisuolaraja IS NOT NULL
 GROUP BY tunniste;
+
+-- name: hae-rajoitusaluetta-muokanneet-urakat
+SELECT MIN(ra.urakka_id) as urakka_id
+  FROM rajoitusalue ra
+ WHERE ra.tierekisteri_muokattu = TRUE
+GROUP BY ra.urakka_id;
+
+-- name: nollaa-paivittyneet-rajoitusalueet!
+UPDATE rajoitusalue SET tierekisteri_muokattu = FALSE
+WHERE tierekisteri_muokattu = TRUE;
+
+-- name: paivita-suolatoteumat-urakalle
+SELECT paivita_suolatoteumat_urakalle(:urakka_id, :alkupvm::DATE, :loppupvm::DATE);
