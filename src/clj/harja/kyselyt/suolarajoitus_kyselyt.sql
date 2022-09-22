@@ -21,10 +21,10 @@ FROM rajoitusalue WHERE id = :id;
 
 -- name: tallenna-rajoitusalue<!
 INSERT INTO rajoitusalue
-(tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja) VALUES
+(tierekisteriosoite, sijainti, pituus, ajoratojen_pituus, urakka_id, luotu, luoja, tierekisteri_muokattu) VALUES
     (ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
      (select * from tierekisteriosoitteelle_viiva(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT) as sijainti),
-     :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id)
+     :pituus, :ajoratojen_pituus, :urakka_id, NOW(), :kayttaja_id, true)
 RETURNING id;
 
 -- name: paivita-rajoitusalue!
@@ -35,7 +35,8 @@ SET tierekisteriosoite = ROW (:tie, :aosa, :aet, :losa, :let, NULL)::TR_OSOITE,
     ajoratojen_pituus = :ajoratojen_pituus,
     urakka_id = :urakka_id,
     muokattu = NOW(),
-    muokkaaja = :kayttaja_id
+    muokkaaja = :kayttaja_id,
+    tierekisteri_muokattu = :tierekisteri_muokattu?
 WHERE id = :id;
 
 -- name: hae-suolarajoitukset-hoitokaudelle
@@ -237,7 +238,7 @@ WHERE ra.poistettu = FALSE
   AND ra.id = :rajoitusalue_id;
 
 -- name: poista-suolarajoitusalue<!
-UPDATE rajoitusalue SET poistettu = true
+UPDATE rajoitusalue SET poistettu = true, tierekisteri_muokattu = true
  WHERE id = :id
    AND poistettu = false
 RETURNING *;
