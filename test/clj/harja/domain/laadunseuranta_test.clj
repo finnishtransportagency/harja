@@ -37,7 +37,7 @@
         tiemerkinnan-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :tiemerkinta :alkupvm (pvm/hoitokauden-alkupvm 2019)})
         valaistuksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
 
-    (is (= [:A :B :C]
+    (is (= [:muistutus :A :B :C :arvonvahennyssanktio]
           alueurakan-lajit mhu-lajit)
       "Hoidon sanktiolajit urakoille ennen 2023")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
