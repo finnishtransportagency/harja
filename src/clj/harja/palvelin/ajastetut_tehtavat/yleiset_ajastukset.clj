@@ -43,15 +43,14 @@
 (defn- ajasta-rajoitusalueen-suolatoteumat [db]
   (log/info "Ajastetaan siivoa tapahtuman tiedot - ajetaan kerran vuorokaudessa.")
   (ajastettu-tehtava/ajasta-paivittain [0 45 0]
-    (do
-      (fn [_]
-        (lukot/yrita-ajaa-lukon-kanssa
-          db
-          "rajoitusalueen_suolatoteumat"
-          #(do
-             (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Alkaa " (pvm/nyt))
-             (paivita-mahdolliset-suolatoteumat db)
-             (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Loppuu " (pvm/nyt))))))))
+    (fn [_]
+      (lukot/yrita-ajaa-lukon-kanssa
+        db
+        "rajoitusalueen_suolatoteumat"
+        #(do
+           (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Alkaa " (pvm/nyt))
+           (paivita-mahdolliset-suolatoteumat db)
+           (log/info "ajasta-paivittain :: rajoitusalueen_suolatoteumat :: Loppuu " (pvm/nyt)))))))
 
 (defrecord YleisetAjastuket []
   component/Lifecycle
