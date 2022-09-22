@@ -2,9 +2,6 @@
 ALTER TABLE suolatoteuma_reittipiste ADD rajoitusalue_id integer;
 CREATE INDEX suolatoteuma_rajoitusalue_id_aika_idx ON suolatoteuma_reittipiste (rajoitusalue_id, aika);
 
--- Mahdollistetaan rajoitusalueen muokkaus ilman, että se generoi koko suolatoteumien uudelleen laskennan
-ALTER TABLE rajoitusalue ADD tierekisteri_muokattu TIMESTAMP DEFAULT NULL;
-
 -- Luodaan funktio, jolla päätellään mihin rajoitusalueeseen piste osuu
 CREATE OR REPLACE FUNCTION pisteen_rajoitusalue(piste POINT, threshold INTEGER, toteuma_id INTEGER) RETURNS INTEGER AS $$
 DECLARE
