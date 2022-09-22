@@ -111,9 +111,8 @@
     (urakka-domain/yllapidon-urakka? urakka)
     [:yllapidon_sakko :yllapidon_muistutus]
 
-    ;; TODO: Varmistettava onko muita ehtoja
-
-    :else [:A :B :C]))
+    ;; MHU ja muut
+    :else [:muistutus :A :B :C :arvonvahennyssanktio]))
 
 
 
