@@ -11,20 +11,17 @@
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [ajax-loader]]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
+            [harja.ui.yleiset :as yleiset
+                              :refer [ajax-loader]]
             [harja.ui.sivupalkki :as sivupalkki]
 
             [harja.loki :refer [log]]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
-            [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.urakka :as u-domain]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
@@ -91,11 +88,11 @@
               tallennus-kaynnissa (atom false)
               urakka-id (:id @nav/valittu-urakka)
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
-              mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
+              mahdolliset-sanktiolajit @urakka/urakkatyypin-sanktiolajit
      
               yllapito? (:yllapito? optiot)
               vesivayla? (:vesivayla? optiot)
-              yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+              yllapitokohdeurakka? @urakka/yllapitokohdeurakka?
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
@@ -170,17 +167,17 @@
                                            (assoc :laji arvo)
                                            (dissoc :tyyppi)
                                            (assoc :tyyppi nil))
-                                  s-tyypit (sanktiot/lajin-sanktiotyypit arvo)
+                                  s-tyypit (tiedot/lajin-sanktiotyypit arvo)
                                   rivi (if-let [{tpk :toimenpidekoodi :as tyyppi} (and
                                                                                     (and (= 1 (count s-tyypit)) (first s-tyypit))
                                                                                     ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                                                                     ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                                                                    (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                                                                    (not= (count @urakka/urakan-toimenpideinstanssit) 1))]
                                          (assoc rivi
                                            :tyyppi (dissoc tyyppi :laji)
                                            :toimenpideinstanssi
                                            (when tpk
-                                             (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                             (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                                          rivi)]
                               (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                 (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
@@ -199,11 +196,11 @@
                               :tyyppi tyyppi
                               :toimenpideinstanssi
                               (when tpk
-                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
+                                (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
                    :valinta-arvo identity
                    :aseta-vaikka-sama? true
                    :valinnat-fn (fn [_]
-                                  (map #(dissoc % :laji) (sanktiot/lajin-sanktiotyypit (:laji @muokattu))))
+                                  (map #(dissoc % :laji) (tiedot/lajin-sanktiotyypit (:laji @muokattu))))
                    :valinta-nayta (fn [arvo]
                                     (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
@@ -262,7 +259,7 @@
                    :tyyppi :valinta
                    :valinta-arvo :tpi_id
                    :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-                   :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+                   :valinnat @urakka/urakan-toimenpideinstanssit
                    :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
                 (apply lomake/ryhma {:rivi? true}
@@ -408,7 +405,7 @@
                    (if yllapito?
                      (- yhteensa) ; ylläpidossa sakot miinusmerkkisiä
                      yhteensa))
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+        yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [suodattimet-ja-toiminnot valittu-urakka]
      [grid/grid
@@ -462,7 +459,7 @@
        [kartta/kartan-paikka]
        (let [optiot (merge optiot
                            {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                            :yllapito? @tiedot-urakka/yllapidon-urakka?
+                            :yllapito? @urakka/yllapidon-urakka?
                             :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
          [:div
           (when @tiedot/valittu-sanktio           
