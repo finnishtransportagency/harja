@@ -114,7 +114,7 @@
       {:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.6}
       {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1.5}
       {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
-       :luokka "sarake-pohjavesialueet"
+       ;:luokka "sarake-pohjavesialueet" -- Otetaan toistaiseksi pois, koska taulukon kolumnien määrä on muuttunut, niin tilaa tarvitaan enemmän muille
        :tyyppi :komponentti
        :komponentti (fn [{:keys [pohjavesialueet]}]
                       (if (seq pohjavesialueet)
