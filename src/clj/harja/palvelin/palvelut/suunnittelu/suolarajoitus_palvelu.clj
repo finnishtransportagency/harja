@@ -388,7 +388,7 @@
 
 (defn hae-rajoitusalueen-paivan-toteumat
   "Haetaan yhden päivän toteumat rajoitusalueelle materiaali-id:n perusteella"
-  [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id] :as tiedot}]
+  [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id koneellinen?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
   (let [alkupaiva (c/to-sql-time pvm)
@@ -397,16 +397,10 @@
                           {:urakka-id urakka-id
                            :rajoitusalue-id rajoitusalue-id
                            :materiaali-id materiaali-id
+                           :koneellinen? koneellinen?
                            :alkupvm alkupaiva
-                           :loppupvm loppupaiva})
-        paivan-toteumat (mapv #(assoc % :maara (or (:formiaattimaara %) (:suolamaara %))) paivan-toteumat)]
+                           :loppupvm loppupaiva})]
     paivan-toteumat))
-
-(defn hae-pohjavesialueidenurakat [db user tiedot]
-  ;;TODO: Varmista oikeat käyttöoikeudet
-  (log/debug "hae-pohjavesialueidenurakat :: urakat" hae-pohjavesialueidenurakat)
-  (let [urakat (suolarajoitus-kyselyt/hae-pohjavesialueidenurakat db)]
-    urakat))
 
 (defn hae-urakan-siirrettavat-pohjavesialueet [db user tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakkaid tiedot))

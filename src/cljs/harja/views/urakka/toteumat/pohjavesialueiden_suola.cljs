@@ -111,7 +111,7 @@
                          [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                          "Ei Rajoitusalueita")}
      [{:tyyppi :vetolaatikon-tila :leveys 0.5}
-      {:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.5}
+      {:otsikko "Tie" :nimi :tie :tasaa :oikea :leveys 0.6}
       {:otsikko "Osoiteväli" :nimi :osoitevali :leveys 1.5}
       {:otsikko "Pohjavesialue (tunnus)" :nimi :pohjavesialueet
        :luokka "sarake-pohjavesialueet"
@@ -124,10 +124,14 @@
                             pohjavesialueet))
                         "-"))
        :leveys 1.7}
-      {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.8}
+      {:otsikko "Pituus (m)" :nimi :pituus :tasaa :oikea :leveys 0.7}
       {:otsikko "Pituus ajoradat (m)" :nimi :ajoratojen_pituus :fmt fmt/pyorista-ehka-kolmeen
        :tasaa :oikea :leveys 1}
+      {:otsikko "Formiaatit yhteensä (t)" :nimi :formiaattitoteumat
+       :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–") :tasaa :oikea :leveys 1}
       {:otsikko "Formiaatit (t/ajoratakm)" :nimi :formiaatit_t_per_ajoratakm
+       :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–") :tasaa :oikea :leveys 1}
+      {:otsikko "Talvisuola yhteensä (t)" :nimi :suolatoteumat
        :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–") :tasaa :oikea :leveys 1}
       {:otsikko "Talvisuola (t/ajoratakm)" :nimi :talvisuola_t_per_ajoratakm
        :fmt #(if % (fmt/pyorista-ehka-kolmeen %) "–")
@@ -135,9 +139,9 @@
                        (when (> arvo (:suolarajoitus rivi))
                          "rajoitus-ylitetty"))
        :tasaa :oikea :leveys 1}
-      {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea :leveys 1
+      {:otsikko "Suolankäyttöraja (t/ajoratakm)" :nimi :suolarajoitus :tasaa :oikea :leveys 1.1
        :fmt #(if % (fmt/desimaaliluku % 1) "–")}
-      {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 1}]
+      {:otsikko "" :nimi :formiaatti :fmt #(when % "Käytettävä formiaattia") :leveys 0.9}]
      rajoitusalueet]))
 
 (defn pohjavesialueiden-suola* [e! app]
