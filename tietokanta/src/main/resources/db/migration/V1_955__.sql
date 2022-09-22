@@ -52,16 +52,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- alla olevalle funktiolle recordi
-CREATE TYPE REITTIPISTE_RIVI
-AS
-(
-    toteuma     INTEGER,
-    luotu       TIMESTAMP,
-    reittipisteet reittipistedata[]
-
-);
-
 -- Laske hoitokauden alkuvuoden perusteella urakalle suolatoteuman_reittipisteet uusiksi formiaatin kanssa
 -- Tätä käytetään, kun rajoitusaluetta muokataan
 CREATE OR REPLACE FUNCTION paivita_suolatoteumat_urakalle(urakka_id INTEGER, alkupvm DATE, loppupvm DATE)
