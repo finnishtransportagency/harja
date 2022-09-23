@@ -418,7 +418,7 @@ WHERE pt.urakka = :urakkaid
 GROUP BY tunniste;
 
 -- name: hae-rajoitusaluetta-muokanneet-urakat
-SELECT MIN(ra.urakka_id) as urakka_id
+SELECT ra.urakka_id as urakka_id
   FROM rajoitusalue ra
  WHERE ra.tierekisteri_muokattu = TRUE
 GROUP BY ra.urakka_id;
