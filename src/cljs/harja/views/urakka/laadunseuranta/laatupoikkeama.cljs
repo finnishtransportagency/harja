@@ -89,6 +89,7 @@
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [sanktiot-atom sanktio-virheet paatosoikeus? laatupoikkeama optiot]
   (let [g (grid/grid-ohjaus)
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
@@ -130,7 +131,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                            (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
-                :valinnat (sort mahdolliset-sanktiolajit)
+                :valinnat mahdolliset-sanktiolajit
                 :valinta-nayta v-sanktiot/laji->teksti
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
@@ -156,7 +157,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                    (when tpk
                                                      (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                                  (assoc paivitetty :toimenpideinstanssi nil))))
-                    :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit (:laji %) kaikki-sanktiotyypit))
+                    :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit
+                                         (:laji %) kaikki-sanktiotyypit urakan-alkupvm))
                     :valinta-nayta :nimi
                     :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 
