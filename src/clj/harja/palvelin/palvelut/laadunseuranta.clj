@@ -131,8 +131,9 @@
       sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
-  [db sanktiolaji sanktiotyypin-id]
-  (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword sanktiolaji))
+  [db sanktiolaji sanktiotyypin-id urakan-alkupvm]
+  (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
+                                       (keyword sanktiolaji) urakan-alkupvm)
         kaikki-sanktiotyypit (group-by :id (sanktiot/hae-sanktiotyypit db))
         mahdolliset-sanktiotyypit (into #{}
                                         (map :id (sanktiot/hae-sanktiotyyppi-koodilla
@@ -162,12 +163,13 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
-        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword laji))
+        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
+                                       (keyword laji) (:alkupvm urakan-tiedot))
         sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
         params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti

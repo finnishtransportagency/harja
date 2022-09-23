@@ -18,7 +18,8 @@
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain])
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.urakka :as urakka-domain])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -512,10 +513,7 @@
 
 (def yllapidon-urakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (or (= :paallystys urakkatyyppi)
-                  (= :paikkaus urakkatyyppi)
-                  (= :tiemerkinta urakkatyyppi)
-                  (= :valaistus urakkatyyppi)))))
+              (urakka-domain/yllapidon-urakka? urakkatyyppi))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
 

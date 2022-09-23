@@ -69,6 +69,7 @@
                              (:id @nav/valittu-urakka))
               tallennus-kaynnissa (atom false)
               urakka-id (:id @nav/valittu-urakka)
+              urakan-alkupvm (:alkupvm @nav/valittu-urakka)
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
               ;; Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan.
               mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
@@ -154,7 +155,8 @@
                                          (assoc :laji arvo)
                                          (dissoc :tyyppi)
                                          (assoc :tyyppi nil))
-                                  s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit arvo kaikki-sanktiotyypit)
+                                  s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
+                                             arvo kaikki-sanktiotyypit urakan-alkupvm)
                                   rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
                                                 (and
                                                   (and (= 1 (count s-tyypit)) (first s-tyypit))
@@ -187,7 +189,8 @@
                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
                    :valinta-arvo identity
                    :aseta-vaikka-sama? true
-                   :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit (:laji @muokattu) kaikki-sanktiotyypit))
+                   :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
+                                    (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
                    :valinta-nayta (fn [arvo]
                                     (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
                    :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})

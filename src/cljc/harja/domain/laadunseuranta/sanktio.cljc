@@ -24,64 +24,115 @@
 ;; 15,Liikenneympäristön hoito
 ;; 16,Sorateiden hoito ja ylläpito
 ;; 17,Muut hoitourakan tehtäväkokonaisuudet
-(def sanktiolaji->sanktiotyyppi-koodi
-  {:muistutus [;; Poistetaan
-               1
+(defn sanktiolaji->sanktiotyyppi-koodi
+  [sanktiolaji-kw urakan-alkupvm]
+  ;; TODO: Alle on hahmoteltu Figma-spesifikaation mukaisia poikeauksia sanktiolajien sanktiotyyppeihin.
 
-               ;; Poistetaan
-               #_2
+  (let [laji->koodi {:muistutus
+                     (vec (concat
+                            [
+                             ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                             #_1
 
-               13 14
+                             ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                             #_2
 
-               ;; Poistetaan urakoista 2020->
-               #_15 #_16]
-   :A [;; Poistetaan
-       1
+                             13 14]
+                            ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
+                            ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
+                            (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                              [15 16])
 
-       ;; Poistetaan
-       #_2
+                            ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
+                            ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
+                            (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                              [17])))
+                     :A (vec (concat
+                               [
+                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                #_1
 
-       13 14
-       ;; Poistetaan urakoista 2020->
-       #_15 #_16]
-   :B [;; Poistetaan
-       1
-       ;; Poistetaan
-       #_2
+                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                #_2
 
-       13 14
-       ;; Poistetaan urakoista 2020->
-       #_15 #_16]
-   :C [8 9 10 11 12]
+                                13 14]
+                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
+                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
+                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                                 [15 16])
 
-   :pohjavesisuolan_ylitys [7]
-   :talvisuolan_ylitys [7]
+                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
+                               ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                                 [17])))
+                     :B (vec (concat
+                               [
+                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                #_1
 
-   :yllapidon_sakko [3]
-   :yllapidon_bonus [4]
-   :yllapidon_muistutus [5]
+                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                #_2
 
-   :vesivayla_sakko [6]
-   ;; Näitä ei ollut sanktiotyyppi-tietokantataulussa tuotannossa käytössä, joten disabloituna tässä
-   #_#_:vesivayla_bonus []
-   #_#_:vesivayla_muistutus []
+                                13 14]
+                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
+                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
+                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                                 [15 16])
 
-   :lupaussanktio [0]
-   :tenttikeskiarvo-sanktio [0]
-   :testikeskiarvo-sanktio [0]
-   :vaihtosanktio [0]
-   :arvonvahennyssanktio [0]})
+                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
+                               ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                                 [17])))
+
+                     :C [8 9 10 11 12]
+
+                     :pohjavesisuolan_ylitys [7]
+                     :talvisuolan_ylitys [7]
+
+                     :yllapidon_sakko [3]
+                     :yllapidon_bonus [4]
+                     :yllapidon_muistutus [5]
+
+                     :vesivayla_sakko [6]
+                     ;; Näitä ei ollut sanktiotyyppi-tietokantataulussa tuotannossa käytössä, joten disabloituna tässä
+                     #_#_:vesivayla_bonus []
+                     #_#_:vesivayla_muistutus []
+
+                     :lupaussanktio [0]
+                     :tenttikeskiarvo-sanktio [0]
+                     :testikeskiarvo-sanktio [0]
+                     :vaihtosanktio [0]
+                     :arvonvahennyssanktio [0]}]
+    (laji->koodi sanktiolaji-kw)))
 
 (defn sanktiolaji->sanktiotyypit
-  "Suodattaa kaikista sanktiotyypeistä annetun lajin ja sanktiotyypin uniikin koodin avulla lajiin kuuluvat tyypit.
+  "Suodattaa kaikki-sanktiotyypit sekvenssistä lajin ja lajiin kuuluvien sanktiotyyppien koodien avulla
+  koodia vastaavat mapit. 'Kaikki-sanktiotyypit' sisältää sanktiotyyppien kaikki tiedot mappeina.
+
+  Laji -> tyyppi hierarkia on siis määritelty esim. näin: {:A [1 8 12]}, jossa numerot ovat sanktiotyyppien uniikkeja koodeja.
+  Tietokannassa on sanktiotyyppien koodeilla löytyvät tiedot esim. {:nimi ... :id ... :toimenpidekoodi ... :koodi ...}
+
+  Käyttöliittymän valikkoja varten tämä funktio huolehtii myös siitä, että funktio paluuarvona
+  palautetaan sanktiotyypit vastaavassa järjestyksessä, kuin \"sanktiolaji->sanktiotyyppi-koodi\" mapissa on määritelty.
+
   Parametrit:
     laji (keyword) Sanktiolaji
-    kaikki-sanktiotyypit (seq) Sekvenssi sanktiotyyppien dataa sisältäviä mappeja."
-  [laji kaikki-sanktiotyypit]
-  (filter
-    #(some #{(:koodi %)}
-       (sanktiolaji->sanktiotyyppi-koodi laji))
-    kaikki-sanktiotyypit))
+    kaikki-sanktiotyypit (seq) Sekvenssi sanktiotyyppien dataa sisältäviä mappeja. Esim. [{:nimi ... :id ... :toimenpidekoodi ... :koodi ...}]"
+  [laji-kw kaikki-sanktiotyypit urakan-alkupvm]
+  (let [lajin-sanktiotyyppien-koodit (sanktiolaji->sanktiotyyppi-koodi laji-kw urakan-alkupvm)]
+    (->>
+      (filter
+        #(some #{(:koodi %)}
+           lajin-sanktiotyyppien-koodit)
+        kaikki-sanktiotyypit)
+      ;; Varmistetaan, että lopputulos on samassa järjestyksessä kuin alkuperäinen lajin-sanktiotyyppien-koodit
+      (sort-by #(.indexOf (vec lajin-sanktiotyyppien-koodit) (:koodi %))))))
 
 (defn urakan-sanktiolajit
   "Palauttaa urakalle kuuluvat sanktiolajit Figma-speksin mukaisesti järjestettynä"
@@ -99,7 +150,7 @@
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? urakka)
+    (urakka-domain/yllapidon-urakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     :else []))
@@ -108,7 +159,7 @@
   [{:keys [tyyppi alkupvm] :as urakka}]
   (cond
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? urakka)
+    (urakka-domain/yllapidon-urakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     ;; MHU ja muut

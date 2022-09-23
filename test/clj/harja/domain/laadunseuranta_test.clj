@@ -24,9 +24,10 @@
       "Hoidon sanktiolajit urakoille ennen 2023")
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
           mhu-lajit-2023->)
-      "Hoidon sanktiolajit urakoille ennen 2023")
+      "Hoidon sanktiolajit urakoille 2023 tai sen jälkeen")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
-          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit) "Ylläpidon sanktiolajit")))
+          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
+      "Ylläpidon sanktiolajit")))
 
 
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
@@ -39,6 +40,23 @@
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio]
           alueurakan-lajit mhu-lajit)
-      "Hoidon sanktiolajit urakoille ennen 2023")
+      "Hoidon sanktiolajit urakoille laatupoikkeamissa")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
-          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit) "Ylläpidon sanktiolajit")))
+          paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
+      "Ylläpidon sanktiolajit laatupoikkeamissa")))
+
+(deftest sanktiolajien-tyyppien-urakkakohtaiset-poikkeudet
+  (let [muistutus-tyyppikoodit-ennen-2020 (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :muistutus (pvm/hoitokauden-alkupvm 2019))
+        muistutus-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :muistutus (pvm/hoitokauden-alkupvm 2020))
+        A-tyyppikoodit-ennen-2020 (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :A (pvm/hoitokauden-alkupvm 2019))
+        A-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :A (pvm/hoitokauden-alkupvm 2020))
+        B-tyyppikoodit-ennen-2020 (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :B (pvm/hoitokauden-alkupvm 2019))
+        B-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :B (pvm/hoitokauden-alkupvm 2020))]
+
+    (is (= [13 14 15 16] muistutus-tyyppikoodit-ennen-2020 A-tyyppikoodit-ennen-2020 B-tyyppikoodit-ennen-2020)
+      "Muistutus, A ja B lajien sanktiotyypit urakoissa ennen 2020")
+
+    (is (= [13 14 17] muistutus-tyyppikoodit-2020-tai-jalkeen A-tyyppikoodit-2020-tai-jalkeen B-tyyppikoodit-2020-tai-jalkeen)
+      "Muistutus, A ja B lajien sanktiotyypit urakoissa 2020 tai sen jälkeen")))
+
+
