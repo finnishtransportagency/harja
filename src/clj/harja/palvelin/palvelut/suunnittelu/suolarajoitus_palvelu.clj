@@ -15,6 +15,16 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.big :as big]))
 
+(defn tierekisteri-muokattu? [uusi-rajoitusalue vanha-rajoitusalue]
+  (if (and
+        (= (:tie uusi-rajoitusalue) (:tie vanha-rajoitusalue))
+        (= (:aosa uusi-rajoitusalue) (:aosa vanha-rajoitusalue))
+        (= (:aet uusi-rajoitusalue) (:aet vanha-rajoitusalue))
+        (= (:losa uusi-rajoitusalue) (:losa vanha-rajoitusalue))
+        (= (:let uusi-rajoitusalue) (:let vanha-rajoitusalue)))
+    false
+    true))
+
 (defn pituuden-laskennan-data-validi?
   [{:keys [tie aosa losa aet let] :as suolarajoitus}]
   (and
@@ -135,9 +145,13 @@
 
              ;; Päivitä tai tallenna uutena
              rajoitusalue (if (:id db-rajoitusalue)
-                            (do
-                              (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
-                              (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)})))
+                            (let [;; Haetaan rajoitusalue kannasta, jotta voidaan verrata, onko tierekisteriosoite muuttunut
+                                  vanha-rajoitusalue (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id db-rajoitusalue)}))
+                                  tierekisteri_muokattu? (tierekisteri-muokattu? db-rajoitusalue vanha-rajoitusalue)
+                                  db-rajoitusalue (assoc db-rajoitusalue :tierekisteri_muokattu? tierekisteri_muokattu?)]
+                              (do
+                                (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
+                                (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)}))))
                             (let [vastaus (suolarajoitus-kyselyt/tallenna-rajoitusalue<! db (dissoc db-rajoitusalue :id))]
                               (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id vastaus)}))))
 
