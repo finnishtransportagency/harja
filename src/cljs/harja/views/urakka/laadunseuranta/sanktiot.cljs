@@ -17,7 +17,6 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.loki :refer [log]]
-            [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as u-domain]
@@ -441,7 +440,6 @@
                       #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
     (fn []
       [:span
-       [kartta/kartan-paikka]
        (let [optiot (merge optiot
                            {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
                             :yllapito? @tiedot-urakka/yllapidon-urakka?
