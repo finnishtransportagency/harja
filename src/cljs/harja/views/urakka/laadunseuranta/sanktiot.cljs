@@ -5,33 +5,28 @@
             [harja.views.urakka.valinnat :as urakka-valinnat]
 
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.tiedot.urakka :as urakka]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.navigaatio :as nav]
 
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :refer [ajax-loader]]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.sivupalkki :as sivupalkki]
-
             [harja.loki :refer [log]]
-            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.kartta :as kartta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.urakka :as u-domain]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet]
-            [harja.ui.debug :as debug]))
+            [harja.ui.liitteet :as liitteet]))
 
 (defn laji->teksti
   [laji]
@@ -265,9 +260,9 @@
                                      :tyyppi :valinta
                                      ::lomake/col-luokka "col-xs-4"
                                      :muokattava? (constantly (not lukutila?)) 
-                                     :hae (if (urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
-                                     :disabled? (not (urakka/indeksi-kaytossa-sakoissa?))
-                                     :valinnat (into [] (keep identity [(when (urakka/indeksi-kaytossa-sakoissa?)
+                                     :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
+                                     :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
+                                     :valinnat (into [] (keep identity [(when (tiedot-urakka/indeksi-kaytossa-sakoissa?)
                                                                           (:indeksi @nav/valittu-urakka))
                                                                         "Ei indeksiä"]))
                                      :valinta-nayta #(or % "Ei indeksiä")})]))
