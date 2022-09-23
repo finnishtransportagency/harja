@@ -26,65 +26,51 @@
 ;; 17,Muut hoitourakan tehtäväkokonaisuudet
 (defn sanktiolaji->sanktiotyyppi-koodi
   [sanktiolaji-kw urakan-alkupvm]
-  ;; TODO: Alle on hahmoteltu Figma-spesifikaation mukaisia poikeauksia sanktiolajien sanktiotyyppeihin.
 
   (let [laji->koodi {:muistutus
                      (vec (concat
-                            [
-                             ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                            [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                              #_1
-
-                             ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                             ;; Talvihoito, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                              #_2
-
                              13 14]
-                            ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                             ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
                             ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
                             (when (< (pvm/vuosi urakan-alkupvm) 2020)
                               [15 16])
 
-                            ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                             ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
                             ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
                             (when (>= (pvm/vuosi urakan-alkupvm) 2020)
                               [17])))
                      :A (vec (concat
-                               [
-                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                               [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                                 #_1
-
-                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                ;; Talvihoito, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                                 #_2
 
                                 13 14]
-                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
                                ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
                                (when (< (pvm/vuosi urakan-alkupvm) 2020)
                                  [15 16])
 
-                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
                                (when (>= (pvm/vuosi urakan-alkupvm) 2020)
                                  [17])))
                      :B (vec (concat
-                               [
-                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                               [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                                 #_1
-
-                                ;; TODO: Varmista, poistetaanko kaikilta urakkatyypeiltä ja alkuvuosilta
+                                ;; Talvihoito, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                                 #_2
 
                                 13 14]
-                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
                                ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
                                (when (< (pvm/vuosi urakan-alkupvm) 2020)
                                  [15 16])
 
-                               ;; TODO: Varmista tarkoitetaanko vuodella 2020 kaikkien urakkatyyppien alkuvuotta.
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
                                (when (>= (pvm/vuosi urakan-alkupvm) 2020)
@@ -145,7 +131,8 @@
      :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
-    ;; TODO: Varmistettava
+    ;; TODO: Speksi varmistettava (Tämä tulee eteen vielä myöhemmin. Sääntö lisätty jo etukäteen tähän tuleville 2023 urakoille.
+    ;;       TODO-kommentti jätetty tulevalle kehittäjälle, joka tähän tulee perehtymään.
     (and (= :teiden-hoito tyyppi) (>= (pvm/vuosi alkupvm) 2023))
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
