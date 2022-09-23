@@ -13,7 +13,6 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
-            [cljs-time.core :as t]
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -134,8 +133,8 @@
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
   ([n] (edelliset-hoitokaudet n false :hoito))
   ([n nykyinenkin? valittu-urakkatyyppi]
-   (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
-         viimeinen-vuosi (+ (t/year (pvm/nyt))
+   (let [ensimmainen-vuosi (- (time/year (pvm/nyt)) n)
+         viimeinen-vuosi (+ (time/year (pvm/nyt))
                             (if nykyinenkin? 1 0))
          hoitokauden-alkupvm-fn (fn [vuosi]
                                   (if (= :vesivayla valittu-urakkatyyppi)
@@ -225,8 +224,8 @@
 
 (defn- urakan-oletusvuosi [urakka]
   (when urakka
-    (min (t/year (:loppupvm urakka))
-         (t/year (pvm/nyt)))))
+    (min (time/year (:loppupvm urakka))
+         (time/year (pvm/nyt)))))
 
 (def valittu-urakan-vuosi (reaction-writable
                             (let [ur @nav/valittu-urakka]
