@@ -2,7 +2,6 @@
   "Tämä nimiavaruus hallinnoi urakan usealle toiminnolle yhteisiä tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
-            [cljs-time.coerce :as tc]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -203,7 +202,6 @@
             ;; ultimate fallback, jos ei löydy jostain syystä, käytä ensimmäistä
             (first hoitokaudet))))))
 
-
 (defonce valittu-hoitokausi
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
@@ -295,7 +293,6 @@
                          (assoc rivi :alkupvm alku :loppupvm loppu)) rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
 
-
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
   (into []
         (mapcat (fn [[alku loppu]]
@@ -338,7 +335,6 @@
        (if (contains? ryhmitelty kausi)
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
-
 
 (defonce urakan-toimenpiteet-ja-tehtavat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
@@ -487,8 +483,6 @@
     (let [toimenpideinstanssit @urakan-toimenpideinstanssit
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
-
-
 
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan."
