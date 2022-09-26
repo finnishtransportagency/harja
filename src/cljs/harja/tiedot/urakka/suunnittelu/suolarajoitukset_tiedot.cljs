@@ -50,6 +50,11 @@
 (defrecord HaeSuolarajoituksetOnnistui [vastaus])
 (defrecord HaeSuolarajoituksetEpaonnistui [vastaus])
 
+;; Tarkistetaan, onko urakalla jo suolatoteumia
+(defrecord TarkistaOnkoSuolatoteumia [])
+(defrecord TarkistaOnkoSuolatoteumiaOnnistui [vastaus])
+(defrecord TarkistaOnkoSuolatoteumiaEpaonnistui [vastaus])
+
 (defrecord HaeTalvisuolanKayttorajat [valittu-vuosi])
 (defrecord HaeTalvisuolanKayttorajatOnnistui [vastaus])
 (defrecord HaeTalvisuolanKayttorajatEpaonnistui [vastaus])
@@ -144,6 +149,32 @@
       (viesti/nayta-toast! "Suolarajoitusten haku epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
       (-> app
         (assoc :suolarajoitukset-haku-kaynnissa? false)
+        (assoc :suolarajoitukset nil))))
+
+  TarkistaOnkoSuolatoteumia
+  (process-event [_ app]
+    (do
+      (tuck-apurit/post! :tarkista-onko-suolatoteumia
+        {:urakka-id (-> @tila/yleiset :urakka :id)}
+        {:onnistui ->TarkistaOnkoSuolatoteumiaOnnistui
+         :epaonnistui ->TarkistaOnkoSuolatoteumiaEpaonnistui
+         :paasta-virhe-lapi? true})
+      (-> app
+        (assoc :onko-suolatoteumia? nil)
+        (assoc :onko-suolatoteumia?-haku-kaynnissa? true))))
+
+  TarkistaOnkoSuolatoteumiaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (-> app
+      (assoc :onko-suolatoteumia?-haku-kaynnissa? false)
+      (assoc :onko-suolatoteumia? vastaus)))
+
+  TarkistaOnkoSuolatoteumiaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (do
+      (viesti/nayta-toast! "Virhe palvelinyhteydessä" :varoitus viesti/viestin-nayttoaika-pitka)
+      (-> app
+        (assoc :onko-suolatoteumia?-haku-kaynnissa? false)
         (assoc :suolarajoitukset nil))))
 
   HaeTalvisuolanKayttorajat
