@@ -403,16 +403,18 @@
         :varoita [tarkasta-sakko-ja-bonus]
         :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"
         :vayla-tyyli? false}
-       (when (urakka/indeksi-kaytossa-sakoissa?)
-         {:otsikko "Indeksi"
-          :nimi :indeksi
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [:div.kentta-indeksi
-                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                          [:div (-> @tila/yleiset :urakka :indeksi)]])
-          :palstoja 1})]
+
+       {:otsikko "Indeksi"
+        :nimi :indeksi
+        :tyyppi :komponentti
+        :komponentti (fn [_]
+                       [:div.kentta-indeksi
+                        ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                        ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse
+                        (if (urakka/indeksi-kaytossa-sakoissa?)
+                          [:div (-> @tila/yleiset :urakka :indeksi)]
+                          [:div "Ei indeksiä"])])
+        :palstoja 1}]
       lomake]]))
 
 
@@ -458,7 +460,9 @@
                          [:div.kentta-indeksi
                           ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
                           ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse.
-                          [:div (-> @tila/yleiset :urakka :indeksi)]])
+                          (if (urakka/indeksi-kaytossa-sakoissa?)
+                            [:div (-> @tila/yleiset :urakka :indeksi)]
+                            [:div "Ei indeksiä"])])
           :palstoja 1})]
       (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
