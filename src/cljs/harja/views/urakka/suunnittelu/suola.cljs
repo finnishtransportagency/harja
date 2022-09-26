@@ -497,6 +497,7 @@
   (komp/luo
     (komp/sisaan
       #(do
+         (e! (suolarajoitukset-tiedot/->TarkistaOnkoSuolatoteumia))
          (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset (pvm/vuosi (first @urakka/valittu-hoitokausi))))
          (e! (suolarajoitukset-tiedot/->HaeTalvisuolanKayttorajat (pvm/vuosi (first @urakka/valittu-hoitokausi))))))
     (komp/ulos
