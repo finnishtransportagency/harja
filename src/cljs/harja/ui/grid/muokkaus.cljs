@@ -56,7 +56,8 @@
 
 (defmethod ei-muokattava-tyypillinen-fmt :numero
   [_]
-  (fn [arvo] (fmt/desimaaliluku-opt arvo 2) ))
+  (fn [arvo] (when (number? arvo)
+               (fmt/desimaaliluku-opt arvo 2)) ))
 
 (defmethod ei-muokattava-tyypillinen-fmt :default
   [_] nil)
