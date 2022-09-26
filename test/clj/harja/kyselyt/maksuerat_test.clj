@@ -69,7 +69,7 @@
                ; MHU Korvausinvestointi	14300	51
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
-               odotettu [{:kokonaishintainen 5411.791430M
+               odotettu [{:kokonaishintainen 4150.791430M
                           :tpi_id 48
                           :urakka_id 35}
                          {:kokonaishintainen 6251.487630M
