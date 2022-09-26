@@ -640,6 +640,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +vari-lemon-dark+ "#654D00")
 (def +vari-black-light+ "#5C5C5C")
+(def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
   ([teksti] (vihje teksti nil))
@@ -720,6 +721,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (case tyyppi
        :varoitus (ikonit/livicon-warning-sign)
        :onnistunut (ikonit/livicon-check)
+       :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
        :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
     [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
      [:div {:style {:padding-left "8px"}}
