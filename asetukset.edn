@@ -227,7 +227,7 @@
  ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
  ;; :reittitarkistukset
- ;; :salli-hallinnan-apin-kaytto - sallittu vain gc ja local ympäristöissä, muualla päällä.
+ ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :varusteet-ulkoiset

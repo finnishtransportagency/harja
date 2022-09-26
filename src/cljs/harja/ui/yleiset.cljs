@@ -324,7 +324,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -332,7 +332,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div (merge
                   {:class (str (if vayla-tyyli?
-                                 (str "select-" (if virhe? "error-" "") "default")
+                                 (str "select-" (if (and muokattu? virhe?) "error-" "") "default")
                                  "dropdown livi-alasveto")
                                (when class (str " " class))
                                (when @auki? " open"))}
@@ -763,16 +763,39 @@ jatkon."
       :keskita "tasaa-keskita")))
 
 (defn- tooltip-sisalto [opts auki? sisalto]
-  (let [x (atom nil)]
+  (let [x (atom nil)
+        y (atom nil)
+        suunta (:suunta opts)
+        ;; Custom offset. Sopii tilanteisiin, joissa clientRectiä ei voi laskea tooltip-wrapperille (elementti on piirtohetkellä esim. display: none)
+        wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
         #(let [n (r/dom-node %)
-               rect (aget (.getClientRects n) 0)
-               parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
-           (when (and rect parent-rect)
+               parent-rect (aget (.getClientRects (.-parentNode n)) 0)
+               width (if (map? wrapperin-koko)
+                       (:leveys wrapperin-koko)
+                       (some-> parent-rect (.-width)))
+               height (if (map? wrapperin-koko)
+                        (:korkeus wrapperin-koko)
+                        (some-> parent-rect (.-height)))
+               ;; Asettaa hiukan ilmaa tooltipin nuolen ja tooltipin kohteen välille.
+               lisaa-valia-px 3]
+
+           ;; Hienosäädä tooltipin lopullinen offset riippuen siitä kuinka iso komponentti tooltip wrapperin sisälle on laitettu.
+           (when (and width height)
              (reset! x
-               (+ (/ (.-width rect) -2)
-                 (/ (.-width parent-rect) 2))))))
+               (case suunta
+                 :vasen (- lisaa-valia-px)
+                 :oikea (+ width lisaa-valia-px)
+                 :ylos (/ width 2)
+                 (/ width 2)))
+             (reset! y
+               (case suunta
+                 :vasen (- (/ height 2))
+                 :oikea (- (/ height 2))
+                 :ylos (- (+ height lisaa-valia-px))
+                 lisaa-valia-px)))))
+
       (fn [opts auki? sisalto]
         (let [s-pituus (count (str sisalto))
               suunta (case (:suunta opts)
@@ -785,24 +808,47 @@ jatkon."
                                    (if (< 150 s-pituus)
                                      "levea"
                                      "ohut"))]
-                         :style {:left (when-let [x @x]
-                                         x)}}
+                         :style {:visibility (when-not auki? "hidden")
+                                 :margin-left (when @x (str @x "px"))
+                                 :margin-top (when @y (str @y "px"))}}
            [:div.tooltip-arrow]
            [:div.tooltip-inner
             sisalto]])))))
 
-(defn tooltip [opts komponentti tooltipin-sisalto]
-  (let [tooltip-nakyy? (atom false)
-        leveys (atom 0)]
-    (komp/luo
-      (fn [opts komponentti tooltipin-sisalto]
-        [:div.inline-block
-         {:style {:position "relative"}                     ;:div.inline-block
-          :on-mouse-enter #(reset! tooltip-nakyy? true)
-          :on-mouse-leave #(reset! tooltip-nakyy? false)}
-         komponentti
+(defn tooltip
+  "Asettaa annetulle komponentille tooltipin, joka aukeaa joko alas/ylös/vasemmalle/oikealle.
+  Tooltip asetetaan automaattisesti oikeaan kohtaan sisällä olevan komponentin mukaan.
 
-         [tooltip-sisalto opts @tooltip-nakyy? tooltipin-sisalto]]))))
+  Joskus tulee kuitenkin tilanteita, että komponentin koko ei pysty laskemaan automaattisesti piirtohetkellä.
+  Tällaisia tilanteita on esim. Harjan taulukoissa, joissa piilotetut rivit ovat aina 'display:none;', jolloin
+  mittojen laskenta epäonnistuu.
+  Tällöin käyttäjän täytyy itse kertoa tooltip-komponentille sisällä olevan komponentin (esim. ikonin/napin) mitat,
+  jotta tooltip voidaan asettaa oikeaan kohtaan.
+  Tämä hoituu asetuksella ':wrapperin-koko {:leveys 20 :korkeus 20}'
+
+  -- Parametrit --
+
+  opts:
+    suunta: :vasen / :oikea / :ylos / :alas
+    leveys: :levea / :ohut
+    wrapper-luokka: Custom luokan nimi tai vektori luokan nimiä, joilla voidaan tyylitellä tooltip wrapperia ja sen lapsia.
+    wrapperin-koko: Käyttäjän määrittelemä koko tooltip-wrapprille. Vaikuttaa siihen, miten tooltip asetellaan annetun komponentin viereen.
+                    Käytä ainoastaan silloin, kun tooltipin wrapperin kokoa ei voida laskea automaattisesti (esim. display: none;)
+
+  komponentti: Komponentti, jolle tooltip asetetaan.
+  sisalto: Tooltipin teksti tai hiccup-html.
+  "
+
+  [{:keys [suunta leveys wrapper-luokka wrapperin-koko] :as opts} komponentti sisalto]
+  (r/with-let [tooltip-visible?-atom (atom false)]
+    [:div.inline-block
+     {:style {:position "relative"}
+      :class wrapper-luokka
+      :on-mouse-enter #(reset! tooltip-visible?-atom true)
+      :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+     komponentti
+
+     [tooltip-sisalto opts @tooltip-visible?-atom sisalto]]))
 
 (defn wrap-if
   "If condition is truthy, return container-component with

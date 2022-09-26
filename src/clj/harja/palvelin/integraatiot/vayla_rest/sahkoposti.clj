@@ -111,9 +111,13 @@
   (let [;; Muodostetaan vastaus lähetettyyn sähköpostiin jolloin lahettajasta tulee vastaanottaja
         vastaanottaja lahettaja
         otsikko (str "Re: " otsikko)
-        virheet-txt (str/join "," virheet)
-        viesti (str virheet-txt "\n Saatu viesti: \n" sisalto)
-        sahkoposti (sahkoposti-sanomat/sahkoposti viesti-id harja-lahettaja vastaanottaja otsikko viesti)]
+        virheet-html (str/join "<br>" virheet)
+        viesti-html (str "<html><body>"
+                      virheet-html
+                      "<br> Saatu viesti: <br>"
+                      sisalto
+                      "</body></html>")
+        sahkoposti (sahkoposti-sanomat/sahkoposti viesti-id harja-lahettaja vastaanottaja otsikko viesti-html)]
     sahkoposti))
 
 (defn vastaanota-sahkoposti [kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki]

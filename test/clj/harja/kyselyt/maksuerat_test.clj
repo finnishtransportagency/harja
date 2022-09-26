@@ -70,25 +70,25 @@
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
                odotettu [{:kokonaishintainen 5411.791430M
-                          :tpi_id 45
-                          :urakka_id 35}
-                         {:kokonaishintainen 6251.487630M
-                          :tpi_id 46
-                          :urakka_id 35}
-                         {:kokonaishintainen 8801.94M
-                          :tpi_id 47
-                          :urakka_id 35}
-                         {:kokonaishintainen 3697.454000M
                           :tpi_id 48
                           :urakka_id 35}
-                         {:kokonaishintainen 11001.94M
+                         {:kokonaishintainen 6251.487630M
                           :tpi_id 49
                           :urakka_id 35}
-                         {:kokonaishintainen 15401.94M
+                         {:kokonaishintainen 8801.94M
                           :tpi_id 50
                           :urakka_id 35}
-                         {:kokonaishintainen 13201.94M
+                         {:kokonaishintainen 3697.454000M
                           :tpi_id 51
+                          :urakka_id 35}
+                         {:kokonaishintainen 11001.94M
+                          :tpi_id 52
+                          :urakka_id 35}
+                         {:kokonaishintainen 15401.94M
+                          :tpi_id 53
+                          :urakka_id 35}
+                         {:kokonaishintainen 13201.94M
+                          :tpi_id 54
                           :urakka_id 35}]
                vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
               (is (= vastaus odotettu))))
