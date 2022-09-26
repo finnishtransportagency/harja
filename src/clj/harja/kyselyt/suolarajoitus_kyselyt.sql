@@ -429,3 +429,12 @@ WHERE tierekisteri_muokattu = TRUE;
 
 -- name: paivita-suolatoteumat-urakalle
 SELECT paivita_suolatoteumat_urakalle(:urakka_id, :alkupvm::DATE, :loppupvm::DATE);
+
+-- name: onko-urakalla-suolatoteumia
+SELECT exists(
+SELECT rp.maara
+FROM suolatoteuma_reittipiste AS rp
+         JOIN toteuma tot ON tot.id = rp.toteuma AND tot.poistettu = false
+WHERE tot.urakka = :urakka-id
+  AND tot.poistettu = false
+LIMIT 1);
