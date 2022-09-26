@@ -462,6 +462,11 @@
               (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
     urakan-pohjavesialueet))
 
+(defn tarkista-onko-suolatoteumia [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakka-id tiedot))
+  (let [onko? (:exists (first (suolarajoitus-kyselyt/onko-urakalla-suolatoteumia db {:urakka-id (:urakka-id tiedot)})))]
+    onko?))
+
 (defrecord Suolarajoitus []
   component/Lifecycle
   (start [this]
@@ -525,6 +530,11 @@
       :siirra-urakan-pohjavesialueet
       (fn [user tiedot]
         (siirra-urakan-pohjavesialueet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :tarkista-onko-suolatoteumia
+      (fn [user tiedot]
+        (tarkista-onko-suolatoteumia (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -540,5 +550,6 @@
       :hae-rajoitusalueen-summatiedot
       :hae-rajoitusalueen-paivan-toteumat
       :hae-urakan-siirrettavat-pohjavesialueet
-      :siirra-urakan-pohjavesialueet)
+      :siirra-urakan-pohjavesialueet
+      :tarkista-onko-suolatoteumia)
     this))
