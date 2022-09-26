@@ -145,8 +145,8 @@
     parametrit))
 
 (defn- yha-otsikot [api-key]
-  {"Content-Type" "text/xml; charset=utf-8"
-   "x-api-key" api-key} )
+  (merge {"Content-Type" "text/xml; charset=utf-8"}
+         (when api-key {"x-api-key" api-key})) )
 
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
   (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))
