@@ -451,17 +451,15 @@
           :yksikko "€"
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true}
-
-         (when (urakka/indeksi-kaytossa-sakoissa?)
-           {:otsikko "Indeksi"
-            :nimi :indeksi
-            :tyyppi :komponentti
-            :komponentti (fn [_]
-                           [:div.kentta-indeksi
-                            ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                            ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                            [:div (-> @tila/yleiset :urakka :indeksi)]])
-            :palstoja 1}))]
+         {:otsikko "Indeksi"
+          :nimi :indeksi
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.kentta-indeksi
+                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse.
+                          [:div (-> @tila/yleiset :urakka :indeksi)]])
+          :palstoja 1})]
       (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
 (defn taulukko-rajoitusalueet
