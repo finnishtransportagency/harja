@@ -15,8 +15,10 @@ $$
         sopimus_id                         INTEGER;
     BEGIN
         kayttaja_id := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
-        saktio_talvihoito :=
-                (SELECT id FROM sanktiotyyppi WHERE nimi = 'Talvihoito, päätiet (talvihoitoluokat Is ja I)');
+        saktio_talvihoito := (SELECT id
+                                FROM sanktiotyyppi
+                                     -- 13, Talvihoito, päätiet
+                               WHERE koodi = 13);
         saktio_liikymp := (SELECT id FROM sanktiotyyppi WHERE nimi = 'Liikenneympäristön hoito');
         toimenpideinstanssi_talvihoito_id := (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP');
         toimenpideinstanssi_liikenneymp_id :=
@@ -120,9 +122,12 @@ $$
                     3, 4, point(418237, 7207744)::GEOMETRY, 5);
         INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-            VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
-                    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ2'),
-                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Sanktiotyyppiä ei tarvita'), FALSE, kayttaja_id);
+        VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+                (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ2'),
+                toimenpideinstanssi_hoidonjohto_id, (SELECT id
+                                                       FROM sanktiotyyppi
+                                                            -- 0,Ei tarvita sanktiotyyppiä
+                                                      WHERE koodi = 0), FALSE, kayttaja_id);
 
         -- MHU Hoidonjohto - SANKTIOT: arvonvähennykset
         INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
@@ -136,9 +141,12 @@ $$
                     3, 4, point(418237, 7207744)::GEOMETRY, 5);
         INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-            VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
-                    (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ3'),
-                    toimenpideinstanssi_hoidonjohto_id, (SELECT id FROM sanktiotyyppi WHERE nimi = 'Sanktiotyyppiä ei tarvita'), FALSE, kayttaja_id);
+        VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+                (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ3'),
+                toimenpideinstanssi_hoidonjohto_id, (SELECT id
+                                                       FROM sanktiotyyppi
+                                                            -- 0,Ei tarvita sanktiotyyppiä
+                                                      WHERE koodi = 0), FALSE, kayttaja_id);
 
     END
 $$ LANGUAGE plpgsql;

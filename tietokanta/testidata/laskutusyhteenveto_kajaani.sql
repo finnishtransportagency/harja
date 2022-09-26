@@ -237,10 +237,38 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 
 -- Sanktioita
 INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
-VALUES ('A'::sanktiolaji, 100, '2015-01-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 500, '2015-05-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 700, '2015-07-12 06:06.37', null, null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 1000, '2015-08-01 00:00.00', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 800, '2015-08-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 900, '2015-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 20160, '2016-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'), 1, true, 2);
+VALUES ('A'::sanktiolaji, 100, '2015-01-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Talvihoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 500, '2015-05-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 700, '2015-07-12 06:06.37', null, null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Liikenneympäristön hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 1000, '2015-08-01 00:00.00', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 800, '2015-08-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 900, '2015-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2),
+  ('A'::sanktiolaji, 20160, '2016-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kajaani Sorateiden hoito TP 2014-2019'),
+   (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), true, 2);
