@@ -98,9 +98,14 @@
 (defn kanavaurakka? [urakka]
   (kanavaurakkatyyppi? (:tyyppi urakka)))
 
+;; FIXME: Omituinen apufunktio, jota käytetään vain suunnittelussa yksikkohintaiset_tyot osastolla
 (defn urakkatyyppi [urakka]
   (let [tyyppi (:tyyppi urakka)]
     (cond
       (kanavaurakkatyyppi? tyyppi) :kanava
       (vesivaylaurakkatyyppi? tyyppi) :vv
       :else :hoito)))
+
+(defn yllapidon-urakka?
+  [urakan-tyyppi]
+  (boolean (some #{urakan-tyyppi} #{:paallystys :paikkaus :tiemerkinta :valaistus})))
