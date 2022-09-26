@@ -1,5 +1,7 @@
 (ns harja.domain.laadunseuranta.sanktio)
 
+(def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
+
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
        (not= :yllapidon_muistutus (:laji sanktio))
