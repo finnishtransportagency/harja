@@ -438,3 +438,24 @@ FROM suolatoteuma_reittipiste AS rp
 WHERE tot.urakka = :urakka-id
   AND tot.poistettu = false
 LIMIT 1);
+
+
+-- name: hae-urakan-siirrettavat-pohjavesialueet
+select distinct on (pk.alue) pk.alue,
+                             pt.hoitokauden_alkuvuosi                      AS "hoitokauden-alkuvuosi",
+                             pk.nimi                                        AS nimi,
+                             pk.tunnus                                   AS tunnus,
+                             pk.tie                                 AS tie,
+                             pk.alkuosa                                AS aosa,
+                             pk.alkuet                           AS aet,
+                             pk.loppuosa                               AS losa,
+                             pk.loppuet                          AS let,
+                             pa.luoja                                       AS luoja,
+                             pt.urakka                                     AS urakkaid,
+                             pk.talvisuolaraja                             AS talvisuolaraja
+from pohjavesialue_kooste pk, pohjavesialue_talvisuola pt, pohjavesialue pa
+where pk.tunnus = pa.tunnus
+  and pa.tunnus = pt.pohjavesialue
+  and pt.urakka = :urakkaid
+  and pk.talvisuolaraja is not null
+  and pk.rajoituksen_alkuvuosi = pt.hoitokauden_alkuvuosi;
