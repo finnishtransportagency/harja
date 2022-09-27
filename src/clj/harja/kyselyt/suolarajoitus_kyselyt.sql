@@ -67,7 +67,7 @@ WHERE ra.poistettu = FALSE
   AND rr.poistettu = FALSE
   AND rr.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
   AND ra.urakka_id = :urakka_id
-  ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC;
+  ORDER BY suolarajoitus DESC, (ra.tierekisteriosoite).tie ASC, (ra.tierekisteriosoite).aosa ASC, (ra.tierekisteriosoite).aet ASC;
 
 -- name: hae-rajoitusalueet-summatiedoin
 WITH suola AS (
