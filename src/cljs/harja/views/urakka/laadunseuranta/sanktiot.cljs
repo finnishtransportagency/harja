@@ -50,6 +50,9 @@
     :vesivayla_muistutus "Muistutus"
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
+    :lupausbonus "Lupausbonus"
+    :alihankintabonus "Alihankintabonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     "- valitse laji -"))
 
 (defn- lajien-sorttaus
@@ -433,8 +436,9 @@
        (if yllapito?
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
-         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
-       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae (comp :kohde :laatupoikkeama) :leveys 3})
+         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :fmt #(or % "-") :leveys 3})
+       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
+                              :hae (comp :kohde :laatupoikkeama) :fmt #(or % "-") :leveys 3})
        {:otsikko "Perus\u00ADtelu" :nimi :perustelu :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
         :hae #(or (let [summa (:summa %)]

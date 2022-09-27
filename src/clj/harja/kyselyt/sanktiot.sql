@@ -63,7 +63,7 @@ SELECT
   s.id,
   s.perintapvm,
   s.maara                            AS summa,
-  s.sakkoryhma                       AS laji,
+  s.sakkoryhma::text                  AS laji,
   s.indeksi,
   s.suorasanktio,
   s.toimenpideinstanssi,
@@ -126,7 +126,115 @@ WHERE
         AND (lp.yllapitokohde IS NULL
         OR
              lp.yllapitokohde IS NOT NULL AND
-             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
+-- TODO: Siirrä ehkä eri funktioon?
+UNION ALL
+-- Bonukset erilliskustannuksista
+SELECT ek.id,
+       ek.pvm                 AS perintapvm,
+       ek.rahasumma           AS summa,
+       ek.tyyppi::text        AS laji,
+       ek.indeksin_nimi       AS indeksi,
+       TRUE                   AS suorasanktio,
+       ek.toimenpideinstanssi AS toimenpideinstanssi,
+       null                   AS vakiofraasi,
+       CASE
+           WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
+               THEN (SELECT korotus FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::integer, null::sanktiolaji))
+           ELSE 0
+           END                AS indeksikorjaus,                  -- TODO: Varmista laskusäännöt
+       null                   AS laatupoikkeama_id,
+       null                   AS laatupoikkeama_kohde,
+       null                   AS laatupoikkeama_aika,
+       null                   AS laatupoikkeama_tekija,
+       null                   AS laatupoikkeama_urakka,
+       null                   AS laatupoikkeama_tekijanimi,
+       null                   AS laatupoikkeama_paatos_kasittelyaika,
+       null                   AS laatupoikkeama_paatos_paatos,
+       null                   AS laatupoikkeama_paatos_kasittelytapa,
+       null                   AS laatupoikkeama_paatos_muukasittelytapa,
+       null                   AS laatupoikkeama_kuvaus,
+       ek.lisatieto           AS laatupoikkeama_paatos_perustelu, -- TODO: Varmista, mutta näyttää hyvältä
+       null                   AS laatupoikkeama_tr_numero,
+       null                   AS laatupoikkeama_tr_alkuosa,
+       null                   AS laatupoikkeama_tr_loppuosa,
+       null                   AS laatupoikkeama_tr_alkuetaisyys,
+       null                   AS laatupoikkeama_tr_loppuetaisyys,
+       null                   AS laatupoikkeama_sijainti,
+       null                   AS laatupoikkeama_tarkastuspiste,
+       null                   AS laatupoikkeama_selvityspyydetty,
+       null                   AS laatupoikkeama_selvitysannettu,
+       null                   AS yllapitokohde_tr_numero,
+       null                   AS yllapitokohde_tr_alkuosa,
+       null                   AS yllapitokohde_tr_alkuetaisyys,
+       null                   AS yllapitokohde_tr_loppuosa,
+       null                   AS yllapitokohde_tr_loppuetaisyys,
+       null                   AS yllapitokohde_numero,
+       null                   AS yllapitokohde_nimi,
+       null                   AS yllapitokohde_id,
+       null                   AS tyyppi_nimi,
+       null                   AS tyyppi_id,
+       null                   AS tyyppi_toimenpidekoodi
+FROM erilliskustannus ek
+WHERE ek.urakka = :urakka
+  AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
+                                FROM toimenpideinstanssi tpi
+                                         JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                                         JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                     maksuera m
+                                WHERE tpi.urakka = :urakka
+                                  AND m.toimenpideinstanssi = tpi.id
+                                  AND tpk2.koodi = '23150'
+                                limit 1)
+  AND ek.pvm BETWEEN :alku AND :loppu
+  AND ek.poistettu IS NOT TRUE
+UNION ALL
+-- Lupausbonukset
+SELECT p.id,
+       make_date(p."hoitokauden-alkuvuosi" + 1, 9, 15)                 AS perintapvm,
+       p."tilaajan-maksu"           AS summa,
+       p.tyyppi::text        AS laji,
+       null       AS indeksi,
+       TRUE                   AS suorasanktio,
+       null AS toimenpideinstanssi, -- TODO: Tarkista
+       null                   AS vakiofraasi,
+       0 AS indeksikorjaus,                  -- TODO: Varmista laskusäännöt
+       null                   AS laatupoikkeama_id,
+       null                   AS laatupoikkeama_kohde,
+       null                   AS laatupoikkeama_aika,
+       null                   AS laatupoikkeama_tekija,
+       null                   AS laatupoikkeama_urakka,
+       null                   AS laatupoikkeama_tekijanimi,
+       null                   AS laatupoikkeama_paatos_kasittelyaika,
+       null                   AS laatupoikkeama_paatos_paatos,
+       null                   AS laatupoikkeama_paatos_kasittelytapa,
+       null                   AS laatupoikkeama_paatos_muukasittelytapa,
+       null                   AS laatupoikkeama_kuvaus,
+       'adasdfasdfas'           AS laatupoikkeama_paatos_perustelu,
+       null                   AS laatupoikkeama_tr_numero,
+       null                   AS laatupoikkeama_tr_alkuosa,
+       null                   AS laatupoikkeama_tr_loppuosa,
+       null                   AS laatupoikkeama_tr_alkuetaisyys,
+       null                   AS laatupoikkeama_tr_loppuetaisyys,
+       null                   AS laatupoikkeama_sijainti,
+       null                   AS laatupoikkeama_tarkastuspiste,
+       null                   AS laatupoikkeama_selvityspyydetty,
+       null                   AS laatupoikkeama_selvitysannettu,
+       null                   AS yllapitokohde_tr_numero,
+       null                   AS yllapitokohde_tr_alkuosa,
+       null                   AS yllapitokohde_tr_alkuetaisyys,
+       null                   AS yllapitokohde_tr_loppuosa,
+       null                   AS yllapitokohde_tr_loppuetaisyys,
+       null                   AS yllapitokohde_numero,
+       null                   AS yllapitokohde_nimi,
+       null                   AS yllapitokohde_id,
+       null                   AS tyyppi_nimi,
+       null                   AS tyyppi_id,
+       null                   AS tyyppi_toimenpidekoodi
+FROM urakka_paatos p
+WHERE p."urakka-id" = :urakka
+  AND p.tyyppi IN ('lupaus-bonus', 'lupaus-sanktio')
+  AND p.poistettu IS NOT TRUE;
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
