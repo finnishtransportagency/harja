@@ -380,12 +380,19 @@
             suolarajoitus-alku-sama3 (merge perusrajoitus tr-alku-sama3)
             tr-tiedot-alku-sama3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                    :tierekisterin-tiedot
-                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama3)]
+                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama3)
+
+            tr-alku-sama4 {:tie 5 :aosa 20 :aet 2000 :losa 21 :let 2001}
+            suolarajoitus-alku-sama4 (merge perusrajoitus tr-alku-sama4)
+            tr-tiedot-alku-sama4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                   :tierekisterin-tiedot
+                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama4)]
         (is (= 400 (:status tr-tiedot-sama)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= 400 (:status tr-tiedot-sama2)) "Tierekisteriosoitteessa on jo rajoitus.")
-        (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa talentaa.")
-        (is (= 5511 (:pituus tr-tiedot-alku-sama2)) "Alku sama, mutta saa talentaa.")
-        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, mutta saa talentaa.")))
+        (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa tallentaa.")
+        (is (= 5511 (:pituus tr-tiedot-alku-sama2)) "Alku sama, mutta saa tallentaa.")
+        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, mutta saa tallentaa.")
+        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, mutta saa tallentaa.")))
 
     (testing "Tierekisteri on olemassa olevan välissä"
       (let [ tr {:tie 25 :aosa 3 :aet 200 :losa 3 :let 2000}
@@ -917,3 +924,29 @@
                            [] urakan-vuodet)]
     ;; Jokaiselle tulevalle vuodelle luodaan uusi rajoitus, joten niitä pitää olla yhtä monta kuin lista * vuodet
     (is (= (* (count pohjavesirajoitukset) (count urakan-vuodet)) (count suolarajoitukset)))))
+
+(deftest tierekisteri-muokattu?-toimii
+  (testing "Sama tierekisteri"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (false? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: tie"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 2 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: aosa"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 2 :aet 1 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: aet"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 2 :losa 2 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: losa"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 3 :let 2}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue)))))
+  (testing "Muuttunut tierekisteri :: let"
+    (let [uusi-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 3}
+          vanha-rajoitusalue {:tie 1 :aosa 1 :aet 1 :losa 2 :let 2}]
+      (is (true? (suolarajoitus-palvelu/tierekisteri-muokattu? uusi-rajoitusalue vanha-rajoitusalue))))))

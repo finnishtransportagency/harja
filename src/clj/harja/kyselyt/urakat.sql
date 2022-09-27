@@ -1097,3 +1097,6 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.hallintayksikko = :hallintayksikko-id
   AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
   AND u.loppupvm > NOW();
+
+-- name: hae-urakan-hoitokaudet
+SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);

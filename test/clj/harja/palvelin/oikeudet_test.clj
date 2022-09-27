@@ -114,7 +114,9 @@
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
   (is (oikeudet/voi-lukea? oikeudet/raportit-laskutusyhteenveto 1 jvh))
-  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot 2 jvh)))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot 2 jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto nil jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu nil jvh)))
 
 (deftest ely-uv-voi-lukea-kaikista-ja-kirjoittaa-omaan
   (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-materiaalit 42 ely-uv))

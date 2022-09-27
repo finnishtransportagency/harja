@@ -50,7 +50,7 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji     AS tyyppi_laji
+  t.koodi           AS tyyppi_koodi
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE laatupoikkeama = :laatupoikkeama
@@ -102,7 +102,9 @@ SELECT
 
   t.nimi                             AS tyyppi_nimi,
   t.id                               AS tyyppi_id,
-  t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
+  t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi,
+  t.koodi                            AS tyyppi_koodi
+
 
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -145,20 +147,15 @@ WHERE tyyppi = 'sakko' AND
 -- Hakee kaikki sanktiotyypit
 SELECT
   id,
+  koodi,
   nimi,
-  toimenpidekoodi,
-  sanktiolaji AS laji
+  toimenpidekoodi
 FROM sanktiotyyppi;
 
---name: hae-urakkatyypin-sanktiolajit
-SELECT id, nimi, sanktiolaji, urakkatyyppi
-  FROM sanktiotyyppi
- WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
-
---name: hae-sanktiotyyppi-sanktiolajilla
+--name: hae-sanktiotyyppi-koodilla
 SELECT id
   FROM sanktiotyyppi
- WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];
+ WHERE koodi IN (:koodit);
 
 
 --name: hae-sanktion-urakka-id

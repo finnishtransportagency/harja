@@ -89,19 +89,20 @@
   "Näyttää muokkaus-gridin laatupoikkeaman sanktioista. Ottaa kaksi parametria, sanktiot (muokkaus-grid muodossa)
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [_sanktiot-atom _paatosoikeus? _laatupoikkeama _muokattava? optiot]
-  (let [yllapito? @urakka/yllapidon-urakka?
+  (let [urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        yllapito? @urakka/yllapidon-urakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
-        mahdolliset-sanktiolajit (keep 
-                                   ;; TODO: Paranna mahdollisesti tätä? Ei mitään järkeä että käytännössä tehdään
-                                   ;;       oma lista sen jälkeen kun nämä on haettu tietokannasta.
-                                   (set [:A :B :C :muistutus :arvonvahennyssanktio])
-                                   @urakka/urakkatyypin-sanktiolajit)
+        ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
+        mahdolliset-sanktiolajit @urakka/valitun-urakan-sanktiolajit
+        ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
+        ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
+        kaikki-sanktiotyypit @sanktiot/sanktiotyypit
         mahdolliset-indeksivalinnat (cond-> [nil]
                                       (urakka/indeksi-kaytossa-sakoissa?)
                                       (conj (:indeksi @nav/valittu-urakka)))]
     (fn [sanktiot-atom paatosoikeus? laatupoikkeama muokattava? _optiot]
-      (if mahdolliset-sanktiolajit
+      (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit))
         [:div.sanktiot
          [grid/muokkaus-grid
           {:tyhja "Ei kirjattuja sanktioita."
@@ -113,8 +114,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                             vesivayla? :vesivayla_sakko
                                             ;; Oletettavasti hoito
                                             :default :A)
-                          :toimenpideinstanssi (when (= 1 (count urakan-tpit))
-                                                 (:tpi_id (first urakan-tpit)))))}
+                                    :toimenpideinstanssi (when (= 1 (count urakan-tpit))
+                                                           (:tpi_id (first urakan-tpit)))))}
 
           [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
             :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
@@ -130,7 +131,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                          (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
                            (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                            paivitetty)))
-              :valinnat (sort-by v-sanktiot/lajien-sorttaus mahdolliset-sanktiolajit)
+              :valinnat mahdolliset-sanktiolajit
               :valinta-nayta v-sanktiot/laji->teksti
               :validoi [[:ei-tyhja "Valitse laji"]]})
 
@@ -153,10 +154,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                        (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
                          (if (sanktio-domain/muu-kuin-muistutus? paivitetty)
                            (assoc paivitetty :toimenpideinstanssi
-                             (when tpk
-                               (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                             (when tpk
+                                               (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
                            (assoc paivitetty :toimenpideinstanssi nil))))
-              :valinnat-fn #(sanktiot/lajin-sanktiotyypit (:laji %))
+              :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit
+                                   (:laji %) kaikki-sanktiotyypit urakan-alkupvm))
               :valinta-nayta :nimi
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
 

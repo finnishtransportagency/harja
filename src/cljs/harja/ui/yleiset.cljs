@@ -640,6 +640,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +vari-lemon-dark+ "#654D00")
 (def +vari-black-light+ "#5C5C5C")
+(def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
   ([teksti] (vihje teksti nil))
@@ -697,14 +698,15 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
 
 (defn info-laatikko [tyyppi ensisijainen-viesti toissijainen-viesti leveys]
-  (assert (#{:varoitus :onnistunut :neutraali} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut tai neutraali")
+  (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
   [:div {:class ["info-laatikko" (name tyyppi)]
          :style {:width leveys}}
    [:div.infolaatikon-ikoni
     (case tyyppi
       :varoitus (ikonit/livicon-warning-sign)
       :onnistunut (ikonit/livicon-check)
-      :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+      :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
+      :neutraali (ikonit/status-info-inline-svg +vari-blue-dark+))]
    [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
     [:div {:style {:padding-left "8px"}}
      ensisijainen-viesti]
