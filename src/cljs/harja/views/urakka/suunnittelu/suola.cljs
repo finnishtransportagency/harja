@@ -403,16 +403,18 @@
         :varoita [tarkasta-sakko-ja-bonus]
         :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"
         :vayla-tyyli? false}
-       (when (urakka/indeksi-kaytossa-sakoissa?)
-         {:otsikko "Indeksi"
-          :nimi :indeksi
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [:div.kentta-indeksi
-                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                          [:div (-> @tila/yleiset :urakka :indeksi)]])
-          :palstoja 1})]
+
+       {:otsikko "Indeksi"
+        :nimi :indeksi
+        :tyyppi :komponentti
+        :komponentti (fn [_]
+                       [:div.kentta-indeksi
+                        ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                        ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse
+                        (if (urakka/indeksi-kaytossa-sakoissa?)
+                          [:div (-> @tila/yleiset :urakka :indeksi)]
+                          [:div "Ei indeksiä"])])
+        :palstoja 1}]
       lomake]]))
 
 
@@ -451,17 +453,17 @@
           :yksikko "€"
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true}
-
-         (when (urakka/indeksi-kaytossa-sakoissa?)
-           {:otsikko "Indeksi"
-            :nimi :indeksi
-            :tyyppi :komponentti
-            :komponentti (fn [_]
-                           [:div.kentta-indeksi
-                            ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                            ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                            [:div (-> @tila/yleiset :urakka :indeksi)]])
-            :palstoja 1}))]
+         {:otsikko "Indeksi"
+          :nimi :indeksi
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.kentta-indeksi
+                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse.
+                          (if (urakka/indeksi-kaytossa-sakoissa?)
+                            [:div (-> @tila/yleiset :urakka :indeksi)]
+                            [:div "Ei indeksiä"])])
+          :palstoja 1})]
       (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
 (defn taulukko-rajoitusalueet
@@ -516,7 +518,7 @@
     (fn [e! app]
       (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
             urakan-alkuvuosi (pvm/vuosi alkupvm)
-            urakan-loppuvuosi (pvm/vuosi alkupvm)
+            urakan-loppuvuosi (pvm/vuosi loppupvm)
             rajoitusalueet (:suolarajoitukset app)
             lomake-auki? (:rajoitusalue-lomake-auki? app)
             urakka @nav/valittu-urakka
