@@ -518,7 +518,7 @@
     (fn [e! app]
       (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
             urakan-alkuvuosi (pvm/vuosi alkupvm)
-            urakan-loppuvuosi (pvm/vuosi alkupvm)
+            urakan-loppuvuosi (pvm/vuosi loppupvm)
             rajoitusalueet (:suolarajoitukset app)
             lomake-auki? (:rajoitusalue-lomake-auki? app)
             urakka @nav/valittu-urakka
