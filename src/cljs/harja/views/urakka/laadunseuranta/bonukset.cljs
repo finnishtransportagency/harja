@@ -15,13 +15,17 @@
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
 
-            [harja.views.urakka.toteumat.erilliskustannukset :as ek]))
+            [harja.views.urakka.toteumat.erilliskustannukset :as ek]
+
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
 (defrecord PoistaTallennettuLiite [liite])
 (defrecord PaivitaLomaketta [lomake])
 (defrecord TallennaBonus [])
+(defrecord TallennusOnnistui [vastaus])
+(defrecord TallennusEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
   PoistaLisattyLiite
@@ -40,11 +44,30 @@
     [{lomake :lomake} app]
     (println "paivita" lomake)
     (assoc app :lomake lomake))
+  TallennusOnnistui
+  (process-event    
+    [vastaus app]
+    (println "succ" vastaus)
+    app)
+  TallennusEpaonnistui
+  (process-event
+    [vastaus app]
+    (println "fail" vastaus)
+    app)
   TallennaBonus
   (process-event
-    [_ app]
-    (println "save!")
-    app))
+    [_ app]    
+    (let [lomakkeen-tiedot (select-keys (:lomake app) [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto
+                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi])
+          payload (merge lomakkeen-tiedot
+                    {:urakka-id (:id @nav/valittu-urakka)
+                     :tyyppi (-> lomakkeen-tiedot :tyyppi name)})]
+      (println "save!" payload)
+      (tuck-apurit/post! :tallenna-erilliskustannus
+          payload
+          {:onnistui ->TallennusOnnistui
+           :epaonnistui ->TallennusEpaonnistui})
+      app)))
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []
