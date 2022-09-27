@@ -361,14 +361,26 @@
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset (:urakka-id ek) user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset (:urakka-id ek) user))
     (jdbc/with-db-transaction
-      [db db]
-      (let [parametrit [db (:tyyppi ek) (:urakka-id ek) (:sopimus ek) (:toimenpideinstanssi ek)
-                        (konv/sql-date (:pvm ek)) (:rahasumma ek) (:indeksin_nimi ek) (:lisatieto ek) (:id user)]]
-        (if (not (:id ek))
-          (apply toteumat-q/luo-erilliskustannus<! parametrit)
-          (apply toteumat-q/paivita-erilliskustannus! (concat parametrit [(or (:poistettu ek) false)
-                                                                          (:id ek)
-                                                                          (:urakka-id ek)])))
+      [db db]      
+      (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
+                    pvm rahasumma indeksin_nimi lisatieto poistettu id
+                    kasittelytapa laskutuskuukausi]} ek
+            parametrit {:tyyppi tyyppi
+                        :urakka urakka-id
+                        :sopimus sopimus
+                        :toimenpideinstanssi toimenpideinstanssi
+                        :pvm (konv/sql-date pvm)
+                        :rahasumma rahasumma
+                        :indeksin_nimi indeksin_nimi
+                        :lisatieto lisatieto
+                        :laskutuskuukausi (:pvm laskutuskuukausi)
+                        :kasittelytapa (when kasittelytapa (name kasittelytapa))
+                        :luoja (:id user)}]
+        (if (not id)
+          (toteumat-q/luo-erilliskustannus<! db parametrit)
+          (toteumat-q/paivita-erilliskustannus! db (merge parametrit
+                                                     {:poistettu (or poistettu false)
+                                                      :id id})))
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                                  :alkupvm   (:alkupvm ek)
