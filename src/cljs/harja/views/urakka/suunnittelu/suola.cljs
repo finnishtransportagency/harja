@@ -239,7 +239,7 @@
                      [:div.flex-row
                       [:div.alkuun {:style {:padding-left "0"}}
                        [napit/tallenna
-                        "Tallenna 1"
+                        "Tallenna"
                         #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
                         {:disabled disabled? :paksu? true}]
                        [napit/tallenna
