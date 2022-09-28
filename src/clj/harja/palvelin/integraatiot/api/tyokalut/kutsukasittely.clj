@@ -119,20 +119,23 @@
    :otsikko (str (walk/keywordize-keys (:headers viesti)))
    :parametrit (str (:params viesti))})
 
-(defn lokita-kutsu [integraatioloki resurssi request body]
-  (let [xml? (= (kutsun-formaatti request) "xml")
-        loki-viesti (if xml?
-                     (tee-xml-lokiviesti "sisään" body request)
-                     (tee-lokiviesti "sisään" body request))]
-    ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
-    ;(log/debug "Kutsu:" request)
-    ;(log/debug "Parametrit: " (:params request))
-    ;(log/debug "Headerit: " (:headers request))
-    ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
-    ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
-    ;(log/debug "Logitusviesti:" loki-viesti)
+(defn lokita-kutsu
+  ([integraatioloki resurssi request body]
+   (lokita-kutsu integraatioloki resurssi request body))
+  ([integraatioloki resurssi request body integraatio]
+   (let [xml? (= (kutsun-formaatti request) "xml")
+         loki-viesti (if xml?
+                       (tee-xml-lokiviesti "sisään" body request)
+                       (tee-lokiviesti "sisään" body request))]
+     ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+     ;(log/debug "Kutsu:" request)
+     ;(log/debug "Parametrit: " (:params request))
+     ;(log/debug "Headerit: " (:headers request))
+     ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
+     ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
+     ;(log/debug "Logitusviesti:" loki-viesti)
 
-    (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil loki-viesti)))
+     (integraatioloki/kirjaa-alkanut-integraatio integraatioloki integraatio (name resurssi) nil loki-viesti))))
 
 (defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
   ;(log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
