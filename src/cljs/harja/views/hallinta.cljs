@@ -15,6 +15,8 @@
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
+            [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
+            [harja.views.hallinta.pohjavesialueidensiirto_nakyma :as pohjavesialueidensiirto-nakyma]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -72,7 +74,7 @@
    "Vesiväyläurakat"
    :vesivayla-hallinta
    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
-              (oikeudet/hallinta-vesivaylat))
+           (oikeudet/hallinta-vesivaylat))
      ^{:key "vesivaylaurakat"}
      [vu/vesivayla-hallinta])
 
@@ -86,4 +88,17 @@
    :jarjestelma-asetukset
    (when true
      ^{:key "jarjestelma-asetukset"}
-     [jarjestelma-asetukset/jarjestelma-asetukset])])
+     [jarjestelma-asetukset/jarjestelma-asetukset])
+
+   "Toteumatyökalu"
+   :toteumatyokalu
+   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+     ^{:key "toteumatyokalu"}
+     [toteumatyokalu-nakyma/simuloi-toteuma])
+
+  "Pohjavesialueiden siirto"
+  :pohjavesialueiden-siirto
+  (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto)
+    ^{:key "pohjavesialueiden-siirto"}
+    [pohjavesialueidensiirto-nakyma/nakyma])])

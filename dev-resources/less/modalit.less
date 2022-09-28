@@ -9,6 +9,7 @@
   .modal-content {
     max-height: 90%;
     overflow-y: auto;
+    padding: @valistys-32;
   }
 }
 
@@ -16,6 +17,8 @@
     .kuvaus {
         margin-bottom: 30px;
     }
+    margin-bottom:40px;
+    padding:0;
 }
 
 .kuva-modal .modal-body {
@@ -68,7 +71,19 @@
 }
 
 .modal-content {
-    width: 100%;
+    width: 100%;   
+}
+
+.modal-footer {
+    border:0;
+    padding: 0;
+}
+
+.modal-header {
+    padding: 0;
+    h2.modal-title {
+        margin:0 0 @valistys-16;
+    }
 }
 
 .kuva-modalissa {

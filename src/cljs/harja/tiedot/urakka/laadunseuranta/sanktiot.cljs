@@ -69,7 +69,8 @@
   (go
     (let [sanktiot-tallennuksen-jalkeen
           (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
-     (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
+      (reset! valittu-sanktio nil)
+      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
@@ -91,7 +92,3 @@
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
-
-(defn lajin-sanktiotyypit
-  [laji]
-  (filter #((:laji %) laji) @sanktiotyypit))

@@ -334,6 +334,14 @@ tr.uusitehtavakoodi td {
   }
   &.neutraali {
     color: @gray25;
+    background: @blue-lighter;
+    border: 1px solid @blue-default;
+    svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+  &.vahva-ilmoitus {
     background: @lemon-light;
     border: 1px solid @lemon-default;
     svg {
@@ -343,7 +351,9 @@ tr.uusitehtavakoodi td {
   }
   > .infolaatikon-ikoni {
     font-size: 18px;
-    padding-top: 14px;
+    margin-bottom: auto;
+    margin-top: auto;
+    padding-right: 8px;
   }
   padding-left: 16px;
   padding-right: 16px;

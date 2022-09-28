@@ -342,8 +342,8 @@
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko    
           [:<>
-           [:div "Urakan aluksi syötä tehtäville  tarjouksen tehtävä- ja määräluettelosta määrät. “Aluetiedot” syötetään sellaisenaan tarjouksesta. Määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
-           [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’.  Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
+           [:div "Urakan aluksi syötä tehtäville tarjouksen tehtävä- ja määräluettelosta määrät. Hoitoluokkatiedot syötetään sellaisenaan tarjouksesta. Suunnitellut määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
+           [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
        (when (not sopimukset-syotetty?) 
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])

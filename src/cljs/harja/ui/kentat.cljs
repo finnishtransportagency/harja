@@ -164,12 +164,12 @@
   (or placeholder
       (and placeholder-fn (placeholder-fn rivi))))
 
-(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id]
+(defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe? regex focus on-focus on-blur lomake? toiminta-f disabled? vihje elementin-id muokattu?]
                                 :as kentta} data]
   [:input {:class (cond-> nil
                           (and lomake?
                                (not vayla-tyyli?)) (str "form-control ")
-                          vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
+                          vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
                           disabled? (str "disabled"))
            :placeholder (placeholder kentta data)
            :on-change #(let [v (-> % .-target .-value)]
@@ -289,7 +289,7 @@
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
-                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete?] :as kentta} data]
+                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
@@ -319,7 +319,7 @@
                     :class (cond-> nil
                                    (and lomake?
                                         (not vayla-tyyli?)) (str "form-control ")
-                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default komponentin-input ")
+                                   vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
                                    disabled? (str "disabled")
                                    input-luokka (str " " input-luokka)
                                    veda-oikealle? (str " veda-oikealle"))
@@ -761,7 +761,7 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen? tarkenne]} data]
+            pakollinen? tarkenne muokattu?]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
@@ -792,6 +792,7 @@
                              (or jos-tyhja-fn (constantly (or jos-tyhja "Ei valintoja")))
                              (or (and valinta-nayta #(valinta-nayta % true)) str))
                 :disabled disabled?
+                :muokattu? muokattu?
                 :pakollinen? pakollinen?
                 :vayla-tyyli? vayla-tyyli?
                 :elementin-id elementin-id
@@ -989,7 +990,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? ikoni-sisaan?]} data]
+                    kentan-tyylit virhe? ikoni-sisaan? muokattu?]} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1006,7 +1007,7 @@
                input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
                                                                  (cond
                                                                    kentan-tyylit (apply str kentan-tyylit)
-                                                                   vayla-tyyli? (str "input-" (if virhe? "error-" "") "default ")
+                                                                   vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
                                                                    lomake? "form-control"))
                          :placeholder (or placeholder "pp.kk.vvvv")
                          :value nykyinen-teksti

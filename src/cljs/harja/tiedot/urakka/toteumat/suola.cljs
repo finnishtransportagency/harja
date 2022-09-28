@@ -2,19 +2,26 @@
   "Tämän nimiavaruuden avulla voidaan hakea urakan suola- ja lämpötilatietoja."
   (:require [reagent.core :refer [atom] :as r]
             [harja.asiakas.kommunikaatio :as k]
-            [cljs.core.async :refer [<! >! chan]]
+            [cljs.core.async :refer [<! >! chan close!]]
             [harja.loki :refer [log logt tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<!]]
             [reagent.ratom :refer [reaction]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka]
             [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (declare hae-toteumat hae-toteumat-tr-valille hae-materiaalit hae-toteumien-reitit! valittu-suolatoteuma? hae-toteuman-sijainti)
 
 (defonce urakan-pohjavesialueet (atom nil))
+
+(defonce urakan-rajoitusalueet (atom nil))
+
+(defonce urakan-rajoitusalueiden-summatiedot (atom {}))
+(defonce urakan-rajoitusalueiden-toteumat (atom {}))
 
 (defonce suolatoteumissa? (atom false))
 
@@ -64,8 +71,8 @@
 (def karttataso-suolatoteumat (atom false))
 
 (defn hae-toteuman-sijainti [toteuma]
-  
-  (:sijainti toteuma))
+  (some #(when (= (:tid toteuma) (:id %))
+           (:sijainti %)) @valitut-toteumat-kartalla))
 
 (def suolatoteumat-kartalla
   (reaction
@@ -82,8 +89,6 @@
                yksittaiset-toteumat))
         #(constantly false)))))
 
-(defonce pohjavesialueen-toteuma (atom nil))
-
 (defn eriteltavat-toteumat [toteumat]
   (map #(hash-map :tid (:tid %)) toteumat))
 
@@ -97,10 +102,13 @@
                 (concat @valitut-toteumat
                         (eriteltavat-toteumat toteumat)))))
 
+
+;; FIXME: Vanha implementaatio (poista)
 (defn hae-urakan-pohjavesialueet [urakka-id]
   {:pre [(int? urakka-id)]}
   (k/post! :hae-urakan-pohjavesialueet {:urakka-id urakka-id}))
 
+;; FIXME: Vanha implementaatio (poista)
 (defn hae-pohjavesialueen-suolatoteuma [pohjavesialue [alkupvm loppupvm]]
   (k/post! :hae-pohjavesialueen-suolatoteuma {:pohjavesialue pohjavesialue
                                               :alkupvm alkupvm
