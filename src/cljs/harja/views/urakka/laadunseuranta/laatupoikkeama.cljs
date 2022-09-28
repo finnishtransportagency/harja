@@ -108,6 +108,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
           {:tyhja "Ei kirjattuja sanktioita."
            :lisaa-rivi "Lisää sanktio"
            :voi-muokata? (and paatosoikeus? muokattava?)
+           ;; Piilotetaan toimintosarake kokonaan, kun gridiä ei voi muokata
+           :piilota-toiminnot? (not (and paatosoikeus? muokattava?))
            :uusi-rivi (fn [rivi]
                         (assoc rivi :laji (cond
                                             yllapito? :yllapidon_sakko
