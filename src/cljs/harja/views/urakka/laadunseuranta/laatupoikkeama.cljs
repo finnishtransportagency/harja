@@ -118,6 +118,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                                            (:tpi_id (first urakan-tpit)))))}
 
           [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
+            :fmt pvm/pvm
             :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
                       [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
 
