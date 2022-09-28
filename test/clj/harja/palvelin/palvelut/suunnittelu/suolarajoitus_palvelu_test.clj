@@ -203,7 +203,6 @@
 
 ;; TODO: Tarkista poistossa, että se ei poista menneitä rajoituksia
 
-
 (deftest laske-tierekisteriosoitteelle-pituus-onnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 50}
@@ -258,7 +257,25 @@
                    :tierekisterin-tiedot
                    t/+kayttaja-jvh+ suolarajoitus)]
     (is (= (+ (- osan-19-pituus aet) let) (:pituus pituudet)))
-    (is (= (+ (- osan-19-pituus aet) let) (:pituus pituudet)))))
+    (is (= (+ (- osan-19-pituus aet) let) (:ajoratojen_pituus pituudet)))))
+
+(deftest laske-tierekisteriosoitteelle-pituus6-onnistuu-test
+  (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        osan-125-pituus (+ (- 3170 3100) 2007)
+        osan-126-pituus 3950
+        pituus (+ osan-125-pituus osan-126-pituus)
+        osan-125-apituus (+ 70 (* 2007 2))
+        osan-126-apituus (* 3950 2)
+        ajoradan-pituus (+ osan-125-apituus osan-126-apituus)
+        tierekisteriosoite {:tie 12 :aosa 125 :aet 3100 :losa 126 :let 3950}
+        ;; tie 12, osan 125 pituus on yht: 5177. Osa 125, koostuu kolmesta ajoradasta joka vaihtuu 0 -> 1+2 kohdasta:3170 . Sen jälkeen ajoratojen (1,2) pituus: 2007
+        ;; tie 12, osan 126 pituus on yht: 6365. Osa 126, koostuu kahdesta ajoradasta 1,2
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
+        vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                   :tierekisterin-tiedot
+                   t/+kayttaja-jvh+ suolarajoitus)]
+    (is (= pituus (:pituus vastaus)))
+    (is (= ajoradan-pituus (:ajoratojen_pituus vastaus)))))
 
 ;; Lasketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
 ;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa

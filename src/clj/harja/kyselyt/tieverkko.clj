@@ -153,7 +153,7 @@
                         (and (not= (:aosa k) (:losa k))
                           (= (:losa k) (:osa rivi)))
                         (if (:ajoratojen-pituus rivi)
-                          ;; LAskennat useammalle ajoradalle
+                          ;; Laskennat useammalle ajoradalle
                           (assoc k :pituus (+
                                              (:pituus k)    ;; Nykyinen pituus
                                              ;; Tarkistetaan osuuko vaadittu pituus ensimmäiselle ajoradalle
@@ -163,9 +163,7 @@
                                                ;; Jos ei osu, niin otetaan koko pituus + ajoratojen pituus siltä osalta, kun tarvitaan
                                                (+ (:pituus rivi) ;; Ensimmäiosen ajoradan pituus
                                                  (*
-                                                   (-
-                                                     (- (:let k) (:pituus rivi)) ;;Jäljelle jäävä määrä
-                                                     (:ajoratojen-pituus rivi))
+                                                   (- (:let k) (:pituus rivi)) ;;Jäljelle jäävä määrä
                                                    (:ajoratojen-maara rivi)) ;; Kerrotaan ajoratojen jäljelle jäävä pituus ajoratojen määrällä
                                                  ))))
 
