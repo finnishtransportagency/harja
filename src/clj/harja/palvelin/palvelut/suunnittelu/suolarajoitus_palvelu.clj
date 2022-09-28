@@ -563,5 +563,6 @@
       :hae-rajoitusalueen-paivan-toteumat
       :hae-pohjavesialueurakat
       :hae-urakan-siirrettavat-pohjavesialueet
-      :siirra-urakan-pohjavesialueet)
+      :siirra-urakan-pohjavesialueet
+      :tarkista-onko-suolatoteumia)
     this))
