@@ -159,6 +159,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko IS not null AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
@@ -221,6 +222,7 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko IS not null AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
