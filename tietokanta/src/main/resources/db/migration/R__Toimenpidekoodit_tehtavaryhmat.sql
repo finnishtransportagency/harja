@@ -370,12 +370,19 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sillat ja laiturit (I)'), jarjestys = 1230;
 -- Sorateiden hoito
 
+-- Soratieluokat vuoteen 2022 saakka
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorateiden pinnan hoito, hoitoluokka I', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1250;
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1250, voimassaolo_loppuvuosi = 2022;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorateiden pinnan hoito, hoitoluokka II', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1255;
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1255, voimassaolo_loppuvuosi = 2022;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorateiden pinnan hoito, hoitoluokka III', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	126, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
-ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1260;
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1260, voimassaolo_loppuvuosi = 2022;
+-- Soratieluokat vuodesta 2023 lähtien
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Soratieluokka I', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1250, voimassaolo_alkuvuosi = 2023;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Soratieluokka II', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1255, voimassaolo_alkuvuosi = 2023;
+
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorapintaisten kävely- ja pyöräilyväylienhoito', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	127, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1270;
 UPDATE toimenpidekoodi set emo = (select id from toimenpidekoodi where koodi = '23124') WHERE nimi = 'Maakivien (>1m3) poisto' AND emo = (select id from toimenpidekoodi where koodi ='20191'); -- korjataan ensin emo, jos rivi löytyy
@@ -1199,6 +1206,12 @@ WHERE nimi like ('%Äkillinen hoitotyö%');
 UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null
 WHERE nimi like ('%Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen%');
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = null
+WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon';
+UPDATE toimenpidekoodi
+SET suunnitteluyksikko = null
+WHERE nimi IN ('Vesakonraivaus N1','Vesakonraivaus N2','Vesakonraivaus N3','Nurmetuksen hoito / niitto N1','Nurmetuksen hoito / niitto N2','Nurmetuksen hoito / niitto N3');
 
 -- Siivotaan suunnitteluyksikkö. Kun arvo on null, ei Tehtävä- ja määräluettelossa suunnitella tehtävän määriä.
 UPDATE toimenpidekoodi
@@ -1209,7 +1222,7 @@ WHERE suunnitteluyksikko = ''
 -- Korjaa yksiköt
 UPDATE toimenpidekoodi SET yksikko = 'm3' WHERE nimi = 'Maakivien (>1m3) poisto';
 UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
-UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi = 'Is rampit';
+UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi IN ('Is rampit', 'Is ohituskaistat', 'Ib ohituskaistat', 'Ib rampit');
 
 -- Yhtenäistetään tapa merkitä yksikkö
 UPDATE toimenpidekoodi SET yksikko = 'tonni' WHERE yksikko IN ('t', 'tonnia');
@@ -1224,13 +1237,16 @@ UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Is 2-ajorat.', 'Is 1
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Ib 2-ajorat.', 'Ib 1-ajorat.', 'Ib ohituskaistat', 'Ib rampit');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Ic 2-ajorat', 'Ic 1-ajorat', 'Ic ohituskaistat', 'Ic rampit');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('II', 'III', 'Kävely- ja pyöräilyväylien laatukäytävät', 'K1', 'K2');
+UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Suolaus','Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)','Liukkaudentorjunta hiekoituksella','Ennalta arvaamattomien kuljetusten avustaminen');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Levähdys- ja pysäköimisalueet', 'Talvihoidon kohotettu laatu');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Pysäkkikatosten puhdistus','Hiekkalaatikoiden täyttö ja hiekkalaatikoiden edustojen lumityöt', 'Portaiden talvihoito', 'Lisäkalustovalmius/-käyttö');
+UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Valvontakameratolppien puhdistus/tarkistus keväisin', 'Reunapaalujen kp (uusien)');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus', 'Reunapaalujen kunnossapito (oikominen, pesu, yms.)', 'Porttaalien tarkastus ja huolto');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset', 'Meluesteiden siisteydestä huolehtiminen ja pienten vaurioiden korjaus');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)', 'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pinnan hoito, hoitoluokka I', 'Sorateiden pinnan hoito, hoitoluokka II', 'Sorateiden pinnan hoito, hoitoluokka III', 'Sorapintaisten kävely- ja pyöräilyväylienhoito');
+UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pölynsidonta','Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen','Liikenteen varmistaminen kelirikkokohteessa');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Nopeusnäyttötaulun huolto ja ylläpito, siirto kohteiden välillä, akkujen lataaminen ja näyttötaulujen varastointi');
 
 DELETE from tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kiveykset (U)'; -- Väärin kirjoitettu versio, poistetaan roikkumasta
@@ -1307,28 +1323,6 @@ UPDATE toimenpidekoodi SET jarjestys = 1344 WHERE nimi = 'Valuasfaltti';
 UPDATE toimenpidekoodi SET jarjestys = 1341 WHERE nimi = 'Päällysteiden paikkaus, kylmäpäällyste';
 UPDATE toimenpidekoodi SET jarjestys = 1342 WHERE nimi = 'Päällysteiden paikkaus -saumojen juottaminen bitumilla';
 UPDATE toimenpidekoodi SET jarjestys = 1343 WHERE nimi = 'Päällysteiden paikkaus (ml. sillat ja siltapaikat) -konetivistetty valuasvaltti';
-
--- Muutokset tehtäviin lokakuussa 2023
-UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2022 WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III';
--- TODO: Soratieluokittelu muuttuu, tarvitaanko uudet tehtävät vai miten näitä täytyy pystyä tulevaisuudessa seuraamaan?
--- TODO: Sorateitä kaventava ojitus
-
--- Täsmätään tehtävä- ja määräluettelon kanssa
--- TODO: vie tämä tuotantoon vain jos sovitaan niin. Nurmetuksessa on ollut yksikkö ja vesakonraivaus N1 on ollut voimassa vuoteen 2018
-UPDATE toimenpidekoodi
-SET suunnitteluyksikko = NULL
-WHERE nimi IN
-      ('Nurmetuksen hoito / niitto N1',
-       'Nurmetuksen hoito / niitto N2',
-       'Nurmetuksen hoito / niitto N3');
-UPDATE toimenpidekoodi
-SET suunnitteluyksikko     = NULL,
-    voimassaolo_loppuvuosi = NULL
-WHERE nimi = 'Vesakonraivaus N1';
-
-
--- TODO: Päivitetään nimmiä vastaamaan luetteloita??
--- Päivitettävä myös insert-lauseissa, muuten käy köpelösti
 
 -- Korjaa virhe HJ-urakkatehtävien voimassaolon loppuvuodessa
 UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2018 WHERE voimassaolo_alkuvuosi = 2018 AND voimassaolo_loppuvuosi = 2019 AND nimi != 'Päällysteiden paikkaus, kylmäpäällyste';
