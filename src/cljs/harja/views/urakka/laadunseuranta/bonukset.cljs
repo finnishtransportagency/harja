@@ -14,6 +14,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
             [harja.views.urakka.toteumat.erilliskustannukset :as ek]
 
@@ -24,8 +25,10 @@
 (defrecord PoistaTallennettuLiite [liite])
 (defrecord PaivitaLomaketta [lomake])
 (defrecord TallennaBonus [])
+(defrecord PoistaBonus [])
 (defrecord TallennusOnnistui [vastaus])
 (defrecord TallennusEpaonnistui [vastaus])
+(defrecord TyhjennaLomake [sulje-fn])
 
 (extend-protocol tuck/Event
   PoistaLisattyLiite
@@ -39,6 +42,13 @@
   (process-event
     [{liite :liite} app]
     (assoc-in app [:uusi-liite] liite))
+  TyhjennaLomake
+  (process-event
+    [{sulje-fn :sulje-fn} app]
+    (sulje-fn)
+    (-> app
+      (dissoc :lomake)
+      (assoc :voi-sulkea? false)))
   PaivitaLomaketta
   (process-event
     [{lomake :lomake} app]
@@ -48,12 +58,27 @@
   (process-event    
     [vastaus app]
     (println "succ" vastaus)
-    app)
+    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true))
   TallennusEpaonnistui
   (process-event
     [vastaus app]
     (println "fail" vastaus)
-    app)
+    (assoc app :tallennus-kaynnissa? false))
+  PoistaBonus
+  (process-event
+    [_ app]
+    (let [lomakkeen-tiedot (select-keys (:lomake app) [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto
+                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi :id])
+          payload (assoc lomakkeen-tiedot
+            :poistettu true
+            :urakka-id (:id @nav/valittu-urakka)
+            :tyyppi (-> lomakkeen-tiedot :tyyppi name))]
+      (-> app
+        (tuck-apurit/post! :tallenna-erilliskustannus
+               payload
+               {:onnistui ->TallennusOnnistui
+                :epaonnistui ->TallennusEpaonnistui})
+        (assoc :tallennus-kaynnissa? true))))
   TallennaBonus
   (process-event
     [_ app]    
@@ -63,11 +88,12 @@
                     {:urakka-id (:id @nav/valittu-urakka)
                      :tyyppi (-> lomakkeen-tiedot :tyyppi name)})]
       (println "save!" payload)
-      (tuck-apurit/post! :tallenna-erilliskustannus
-          payload
-          {:onnistui ->TallennusOnnistui
-           :epaonnistui ->TallennusEpaonnistui})
-      app)))
+      (-> app
+        (tuck-apurit/post! :tallenna-erilliskustannus
+               payload
+               {:onnistui ->TallennusOnnistui
+                :epaonnistui ->TallennusEpaonnistui})
+        (assoc :tallennus-kaynnissa? true)))))
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []
@@ -92,9 +118,10 @@
 
 (defn bonukset-lomake
   [sulje-fn e! app]
-  (let [{lomakkeen-tiedot :lomake uusi-liite :uusi-liite} app
+  (let [{lomakkeen-tiedot :lomake uusi-liite :uusi-liite voi-sulkea? :voi-sulkea?} app
         urakka-id (:id @nav/valittu-urakka)
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
+    (when voi-sulkea? (e! (->TyhjennaLomake sulje-fn)))
     [:<>
      [:h2
       "Bonukset"]
@@ -111,8 +138,15 @@
                      [:div (pr-str bonus)]
                      [:span.nappiwrappi.flex-row
                       [napit/yleinen-ensisijainen "Tallenna" #(e! (->TallennaBonus))]
-                      [napit/kielteinen "Poista" #(println %)]
-                      [napit/peruuta "Sulje" sulje-fn]]])}
+                      (when (:id lomakkeen-tiedot)
+                        [napit/kielteinen "Poista" (fn [e]
+                                                     (varmista-kayttajalta/varmista-kayttajalta
+                                                       {:otsikko "Bonuksen poistaminen"
+                                                        :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
+                                                        :modal-luokka "varmistus-modal"
+                                                        :hyvaksy "Poista"
+                                                        :toiminto-fn #(e! (->PoistaBonus))}))])
+                      [napit/peruuta "Sulje" #(e! (->TyhjennaLomake sulje-fn))]]])}
       [{:otsikko "Bonus"
         :nimi :tyyppi
         :tyyppi :valinta
