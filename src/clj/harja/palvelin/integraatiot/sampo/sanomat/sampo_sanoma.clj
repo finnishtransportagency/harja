@@ -93,3 +93,12 @@
      :toimenpideinstanssit (z/xml-> data :Operation lue-toimenpideinstanssi)
      :organisaatiot (z/xml-> data :Company lue-organisaatio)
      :yhteyshenkilot (z/xml-> data :Resource lue-yhteyshenkilo)}))
+
+
+(defn lue-api-viesti [data]
+  {:hankkeet (z/xml-> data :Program lue-hanke)
+   :urakat (z/xml-> data :Project lue-urakka)
+   :sopimukset (z/xml-> data :Order lue-sopimus)
+   :toimenpideinstanssit (z/xml-> data :Operation lue-toimenpideinstanssi)
+   :organisaatiot (z/xml-> data :Company lue-organisaatio)
+   :yhteyshenkilot (z/xml-> data :Resource lue-yhteyshenkilo)})
