@@ -76,7 +76,7 @@
               vesivayla? (:vesivayla? optiot)
               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
               muokataan-vanhaa? (some? (:id @muokattu))
-              suorasanktio? (some? (:suorasanktio @muokattu))
+              suorasanktio? (:suorasanktio @muokattu)
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
 
           [:div.padding-16.ei-sulje-sivupaneelia
@@ -90,7 +90,11 @@
                   :else
                   "Lisää uusi")]
            (when (and lukutila? muokataan-vanhaa?)
-             [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)])
+             [:div.flex-row.alkuun.valistys16
+              [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)
+               {:disabled (not suorasanktio?)}]
+              (when (not suorasanktio?)
+                [yleiset/vihje "Laatupoikkeaman sanktiota ei voi muokata."])])
                       
            ;; Vaadi tarvittavat tiedot ennen rendausta
            (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
