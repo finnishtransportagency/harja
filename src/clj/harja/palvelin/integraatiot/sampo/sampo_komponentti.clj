@@ -20,7 +20,7 @@
   (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
   (jms/kuuntele! sonja lahetysjono-sisaan
                   (fn [viesti]
-                    (tuonti/kasittele-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
+                    (tuonti/kasittele-jms-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [{:keys [db integraatioloki sonja]} kuittausjono-ulos]
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
