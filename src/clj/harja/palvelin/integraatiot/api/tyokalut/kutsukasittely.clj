@@ -492,3 +492,33 @@
                                                  vastauksen-skeema
                                                  kasittele-kutsu-fn)))]
         (send! channel vastaus)))))
+
+
+(defn kasittele-sampo-kutsu
+  "Samanlainen käsittelijä, kuin ylläolevat. Räätälöity Sampo viestiin, koska se on logiikaltaan niin erilainen."
+  [db integraatioloki resurssi request kutsun-skeema kasittele-kutsu-fn integraatio]
+  (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
+    {:status 415
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body integraatio))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    body
+                    parametrit
+                    #(let
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                        origin-header (get (:headers request) "origin")
+                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+
+                       {:status 200
+                        :headers (lisaa-request-headerit false origin-header)
+                        :body vastauksen-data}))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
