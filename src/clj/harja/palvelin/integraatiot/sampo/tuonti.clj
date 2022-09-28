@@ -50,7 +50,13 @@
           kuittaukset (tuo-sampo-viestin-data db data)]
       kuittaukset)))
 
-(defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
+(defn- kasittele-api-sisaanluku [db viestin-sisalto]
+  (jdbc/with-db-transaction [db db]
+    (let [data (sampo-sanoma/lue-api-viesti viestin-sisalto)
+          kuittaukset (tuo-sampo-viestin-data db data)]
+      kuittaukset)))
+
+(defn kasittele-jms-viesti [sonja integraatioloki db kuittausjono viesti]
   (log/debug "Vastaanotettiin Sampon viestijonosta viesti:" viesti)
   (let [viesti-id (.getJMSMessageID viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
@@ -77,3 +83,8 @@
           (str "Poikkeus: " e)
           tapahtuma-id
           nil)))))
+
+(defn kasittele-api-viesti [db integraatioloki viesti]
+  (log/debug "Vastaanotettiin Sampon viesti api:sta:" viesti)
+  (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
+    (first kuittaukset)))
