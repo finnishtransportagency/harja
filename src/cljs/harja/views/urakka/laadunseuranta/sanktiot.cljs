@@ -397,7 +397,7 @@
 (defn- sanktion-kuvaus [{:keys [suorasanktio laatupoikkeama]}]
   (let [kohde (:kohde laatupoikkeama)]
     (if suorasanktio
-      kohde
+      (or kohde "–")
       [:span
        (str "Laatupoikkeama: " kohde)
        [:br]
@@ -405,7 +405,6 @@
               (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
 
 (defn- sanktion-perustelu [{:keys [suorasanktio laatupoikkeama] :as param}]
-  (println param)
   (let [perustelu (get-in laatupoikkeama [:paatos :perustelu])
         kuvaus (:kuvaus laatupoikkeama)]
     (if suorasanktio
@@ -456,7 +455,8 @@
        (if yllapito?
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
-         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
+         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
+          :leveys 3 :fmt #(or % "–")})
        (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
                               :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
        {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3
