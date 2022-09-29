@@ -114,7 +114,13 @@
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiot (into []
+  (let [urakan-sanktiot (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                          :alku (konv/sql-timestamp alku)
+                                                          :loppu (konv/sql-timestamp loppu)})
+        urakan-bonukset (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
+                                                          :alku (konv/sql-timestamp alku)
+                                                          :loppu (konv/sql-timestamp loppu)})
+        sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
                              (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
@@ -123,9 +129,9 @@
                              (map #(konv/decimal->double % :summa))
                              (map #(konv/decimal->double % :indeksikorjaus))
                              (map #(assoc % :laji (keyword (:laji %)))))
-                       (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
-                                                         :alku (konv/sql-timestamp alku)
-                                                         :loppu (konv/sql-timestamp loppu)}))]
+                   (concat
+                     urakan-sanktiot
+                     urakan-bonukset))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))
