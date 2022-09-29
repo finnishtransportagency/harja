@@ -122,8 +122,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
             [{:otsikko "Perintäpvm" :nimi :perintapvm :tyyppi :pvm :leveys 1.5
               :fmt pvm/pvm
-              :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]
-                        [:pvm-toisen-pvmn-jalkeen (:aika @laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
+              :validoi [[:ei-tyhja "Anna sanktion päivämäärä"]]}
 
              (if vesivayla?
                {:otsikko "Laji" :tyyppi :string :leveys 2 :hae (constantly "Sakko")

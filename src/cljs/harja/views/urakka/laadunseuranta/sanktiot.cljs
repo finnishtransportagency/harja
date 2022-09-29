@@ -301,15 +301,12 @@
                    :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                    :fmt pvm/pvm :tyyppi :pvm
-                   :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                             [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
+                   :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                   {:otsikko "Perintä" :nimi :perintapvm
                    :pakollinen? true
                    ::lomake/col-luokka "col-xs-4"
                    :fmt pvm/pvm :tyyppi :pvm
-                   :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                             [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
-                              "Ei voi olla ennen havaintoa"]]})
+                   :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
                 {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                  :pakollinen? true
