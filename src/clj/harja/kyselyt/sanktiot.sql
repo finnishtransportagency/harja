@@ -129,7 +129,7 @@ WHERE
         OR
              lp.yllapitokohde IS NOT NULL AND
              (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
--- TODO: Siirrä ehkä eri funktioon?
+-- TODO Siirrä ehkä eri funktioon?
 UNION ALL
 -- Bonukset erilliskustannuksista
 SELECT ek.id,
@@ -144,7 +144,7 @@ SELECT ek.id,
            WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
                THEN (SELECT korotus FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::integer, null::sanktiolaji))
            ELSE 0
-           END                AS indeksikorjaus,                  -- TODO: Varmista laskusäännöt
+           END                AS indeksikorjaus,                  -- TODO Varmista laskusäännöt
        null                   AS laatupoikkeama_id,
        null                   AS laatupoikkeama_kohde,
        null                   AS laatupoikkeama_aika,
@@ -156,7 +156,7 @@ SELECT ek.id,
        null                   AS laatupoikkeama_paatos_kasittelytapa,
        null                   AS laatupoikkeama_paatos_muukasittelytapa,
        null                   AS laatupoikkeama_kuvaus,
-       ek.lisatieto           AS laatupoikkeama_paatos_perustelu, -- TODO: Varmista, mutta näyttää hyvältä
+       ek.lisatieto           AS laatupoikkeama_paatos_perustelu, -- TODO Varmista, mutta näyttää hyvältä
        null                   AS laatupoikkeama_tr_numero,
        null                   AS laatupoikkeama_tr_alkuosa,
        null                   AS laatupoikkeama_tr_loppuosa,
@@ -198,9 +198,9 @@ SELECT p.id,
        p.tyyppi::text        AS laji,
        null       AS indeksi,
        TRUE                   AS suorasanktio,
-       null AS toimenpideinstanssi, -- TODO: Tarkista
+       null AS toimenpideinstanssi, -- TODO Tarkista
        null                   AS vakiofraasi,
-       0 AS indeksikorjaus,                  -- TODO: Varmista laskusäännöt
+       0 AS indeksikorjaus,                  -- TODO Varmista laskusäännöt
        null                   AS laatupoikkeama_id,
        null                   AS laatupoikkeama_kohde,
        null                   AS laatupoikkeama_aika,
