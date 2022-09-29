@@ -432,7 +432,7 @@
     [:div.sanktiot
      [suodattimet-ja-toiminnot valittu-urakka]
      [grid/grid
-      {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot")
+      {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
        :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(valitse-sanktio! % tiedot/valittu-sanktio)
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
