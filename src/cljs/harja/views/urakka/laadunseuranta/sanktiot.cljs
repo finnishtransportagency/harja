@@ -50,7 +50,8 @@
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
 
-    :lupausbonus "Lupausbonus"
+    ;; FIXME: Tietokannassa tyyppi on hämäävästi 'lupaus-bonus', eikä lupausbonus
+    :lupaus-bonus "Lupausbonus"
     :alihankintabonus "Alihankintabonus"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     "- valitse laji -"))
