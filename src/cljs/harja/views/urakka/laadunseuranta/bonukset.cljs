@@ -123,8 +123,9 @@
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
     (when voi-sulkea? (e! (->TyhjennaLomake sulje-fn)))
     [:<>
-     [:h2
-      "Bonukset"]
+     [:h2 "Bonukset"]
+     [:div (for [l (:lomake app)]
+             [:div (str (first l) " :: " (second l))])]
      [lomake/lomake
       {:otsikko "Bonuksen tiedot"
        :ei-borderia? true
@@ -135,7 +136,6 @@
        :muokkaa! #(e! (->PaivitaLomaketta %))
        :footer-fn (fn [bonus]
                     [:<>
-                     [:div (pr-str bonus)]
                      [:span.nappiwrappi.flex-row
                       [napit/yleinen-ensisijainen "Tallenna" #(e! (->TallennaBonus))]
                       (when (:id lomakkeen-tiedot)
@@ -162,10 +162,12 @@
         :nimi :toimenpideinstanssi
         :tyyppi :valinta
         :pakollinen? true
+        :valitse-oletus? true
         :valinta-arvo :tpi_id
         :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-        :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
-        ::lomake/col-luokka "col-xs-12"}
+        :valinnat (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
+        ::lomake/col-luokka "col-xs-12"
+        :disabled? true}
        (lomake/ryhma
          {:rivi? true}
          {:otsikko "Summa"
@@ -201,7 +203,7 @@
           :nimi :laskutuskuukausi
           :tyyppi :valinta
           :valinnat laskutuskuukaudet
-         ; :valinta-arvo :pvm
+          :valinta-arvo :pvm
           :valinta-nayta :teksti
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
@@ -246,9 +248,25 @@
                                                     liitteet))))}))}])}]
       lomakkeen-tiedot]]))
 
-(defonce bonukset-tila (r/atom {:lomake {}}))
+(defn- avainten-munklaus
+  [avain]
+  (case avain
+    :perintapvm :pvm
+    avain))
+
+(defn- mankeli
+  ([bonus]
+   (mankeli bonus {}))
+  ([bonus acc]
+   (reduce (fn [acc curr]
+             (if (map? (second curr))
+               (mankeli (second curr) acc)
+               (assoc acc (keyword (str (name (avainten-munklaus (first curr))) (when (some? (get acc (first curr))) (gensym)))) (second curr)))) acc bonus)))
 
 (defn bonukset*
-  [auki?]
-  (let [sulje-fn #(reset! auki? false)]
-    [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn)]))
+  [auki? avattu-bonus]
+  (let [sulje-fn #(reset! auki? false)
+        bonukset-tila (r/atom {:lomake (or (when avattu-bonus (mankeli avattu-bonus)) {})})]
+    (fn [_ _]
+      [:div (pr-str avattu-bonus)
+       [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn)]])))
