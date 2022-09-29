@@ -176,7 +176,8 @@ SELECT ek.id,
        null                   AS yllapitokohde_id,
        null                   AS tyyppi_nimi,
        null                   AS tyyppi_id,
-       null                   AS tyyppi_toimenpidekoodi
+       null                   AS tyyppi_toimenpidekoodi,
+       null                   AS tyyppi_koodi
 FROM erilliskustannus ek
 WHERE ek.urakka = :urakka
   AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
@@ -232,7 +233,8 @@ SELECT p.id,
        null                   AS yllapitokohde_id,
        null                   AS tyyppi_nimi,
        null                   AS tyyppi_id,
-       null                   AS tyyppi_toimenpidekoodi
+       null                   AS tyyppi_toimenpidekoodi,
+       null                   AS tyyppi_koodi
 FROM urakka_paatos p
 WHERE p."urakka-id" = :urakka
   AND p.tyyppi IN ('lupaus-bonus', 'lupaus-sanktio')
