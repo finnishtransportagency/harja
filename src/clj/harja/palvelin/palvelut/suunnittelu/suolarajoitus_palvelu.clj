@@ -15,6 +15,16 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.big :as big]))
 
+(defn tierekisteri-muokattu? [uusi-rajoitusalue vanha-rajoitusalue]
+  (if (and
+        (= (:tie uusi-rajoitusalue) (:tie vanha-rajoitusalue))
+        (= (:aosa uusi-rajoitusalue) (:aosa vanha-rajoitusalue))
+        (= (:aet uusi-rajoitusalue) (:aet vanha-rajoitusalue))
+        (= (:losa uusi-rajoitusalue) (:losa vanha-rajoitusalue))
+        (= (:let uusi-rajoitusalue) (:let vanha-rajoitusalue)))
+    false
+    true))
+
 (defn pituuden-laskennan-data-validi?
   [{:keys [tie aosa losa aet let] :as suolarajoitus}]
   (and
@@ -135,9 +145,13 @@
 
              ;; Päivitä tai tallenna uutena
              rajoitusalue (if (:id db-rajoitusalue)
-                            (do
-                              (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
-                              (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)})))
+                            (let [;; Haetaan rajoitusalue kannasta, jotta voidaan verrata, onko tierekisteriosoite muuttunut
+                                  vanha-rajoitusalue (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id db-rajoitusalue)}))
+                                  tierekisteri_muokattu? (tierekisteri-muokattu? db-rajoitusalue vanha-rajoitusalue)
+                                  db-rajoitusalue (assoc db-rajoitusalue :tierekisteri_muokattu? tierekisteri_muokattu?)]
+                              (do
+                                (suolarajoitus-kyselyt/paivita-rajoitusalue! db db-rajoitusalue)
+                                (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:rajoitusalue_id suolarajoitus)}))))
                             (let [vastaus (suolarajoitus-kyselyt/tallenna-rajoitusalue<! db (dissoc db-rajoitusalue :id))]
                               (first (suolarajoitus-kyselyt/hae-suolarajoitusalue db {:id (:id vastaus)}))))
 
@@ -388,7 +402,7 @@
 
 (defn hae-rajoitusalueen-paivan-toteumat
   "Haetaan yhden päivän toteumat rajoitusalueelle materiaali-id:n perusteella"
-  [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id] :as tiedot}]
+  [db user {:keys [rajoitusalue-id pvm materiaali-id urakka-id koneellinen?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (log/debug "hae-rajoitusalueen-paivan-toteumat :: tiedot" (pr-str tiedot))
   (let [alkupaiva (c/to-sql-time pvm)
@@ -397,13 +411,13 @@
                           {:urakka-id urakka-id
                            :rajoitusalue-id rajoitusalue-id
                            :materiaali-id materiaali-id
+                           :koneellinen? koneellinen?
                            :alkupvm alkupaiva
-                           :loppupvm loppupaiva})
-        paivan-toteumat (mapv #(assoc % :maara (or (:formiaattimaara %) (:suolamaara %))) paivan-toteumat)]
+                           :loppupvm loppupaiva})]
     paivan-toteumat))
 
 (defn hae-pohjavesialueidenurakat [db user tiedot]
-  ;;TODO: Varmista oikeat käyttöoikeudet
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-pohjavesialueidensiirto user)
   (log/debug "hae-pohjavesialueidenurakat :: urakat" hae-pohjavesialueidenurakat)
   (let [urakat (suolarajoitus-kyselyt/hae-pohjavesialueidenurakat db)]
     urakat))
@@ -453,6 +467,11 @@
               ;; Tallennetaan ensin rajoitusalue uutena tai päivityksenä
               (tallenna-suolarajoitus db user tallennettava-suolarajoitus)))]
     urakan-pohjavesialueet))
+
+(defn tarkista-onko-suolatoteumia [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user (:urakka-id tiedot))
+  (let [onko? (:exists (first (suolarajoitus-kyselyt/onko-urakalla-suolatoteumia db {:urakka-id (:urakka-id tiedot)})))]
+    onko?))
 
 (defrecord Suolarajoitus []
   component/Lifecycle
@@ -523,6 +542,11 @@
       :siirra-urakan-pohjavesialueet
       (fn [user tiedot]
         (siirra-urakan-pohjavesialueet (:db this) user tiedot)))
+
+    (julkaise-palvelu (:http-palvelin this)
+      :tarkista-onko-suolatoteumia
+      (fn [user tiedot]
+        (tarkista-onko-suolatoteumia (:db this) user tiedot)))
     this)
 
   (stop [this]
@@ -539,5 +563,6 @@
       :hae-rajoitusalueen-paivan-toteumat
       :hae-pohjavesialueurakat
       :hae-urakan-siirrettavat-pohjavesialueet
-      :siirra-urakan-pohjavesialueet)
+      :siirra-urakan-pohjavesialueet
+      :tarkista-onko-suolatoteumia)
     this))

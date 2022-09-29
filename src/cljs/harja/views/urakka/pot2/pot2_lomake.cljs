@@ -125,7 +125,7 @@
        ;; näytetään jos lähetys on onnistunut
        (and lahetys-onnistunut lahetetty)
        [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
-                                :neutraali
+                                :vahva-ilmoitus
                                 :onnistunut)
         (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
         (when muokattu-yhaan-lahettamisen-jalkeen?
@@ -137,7 +137,7 @@
        ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
        (and (nil? lahetetty) (false? lahetys-onnistunut)
             (#{:valmis :lukittu} tila))
-       [yleiset/info-laatikko :neutraali
+       [yleiset/info-laatikko :vahva-ilmoitus
         (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
 
        :else
