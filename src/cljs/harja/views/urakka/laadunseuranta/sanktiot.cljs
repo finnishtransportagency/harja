@@ -94,7 +94,7 @@
               [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)
                {:disabled (not suorasanktio?)}]
               (when (not suorasanktio?)
-                [yleiset/vihje "Laatupoikkeaman sanktiota ei voi muokata."])])
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata."])])
                       
            ;; Vaadi tarvittavat tiedot ennen rendausta
            (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
