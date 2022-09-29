@@ -90,6 +90,10 @@
                                         ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
               _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                   (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
+              _ (when (and
+                        (true? (:bonus @muokattu))
+                        (not= :bonukset (:lomake @tila)))
+                  (swap! tila assoc :lomake :bonukset))
               voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                              (:id @nav/valittu-urakka))
               tallennus-kaynnissa (atom false)
@@ -105,7 +109,7 @@
           [:div.padding-16.ei-sulje-sivupaneelia           
            [bonus-sanktio-valikko (r/cursor tila [:lomake]) #()]
            (if bonusten-syotto?
-             [bonukset/bonukset* auki?]
+             [bonukset/bonukset* auki? @muokattu]
              [:<>
               [:h2 (cond
                      (and lukutila? muokataan-vanhaa?)
