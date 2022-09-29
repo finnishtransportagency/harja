@@ -444,7 +444,7 @@
                             {:teksti (str (fmt/euro-opt true yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
                             {:teksti (fmt/euro-opt true yhteensa-indeksit)
                              :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm :leveys 1}
+      [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt laji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
@@ -460,9 +460,9 @@
           :leveys 3 :fmt #(or % "–")})
        (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
                               :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
-       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3
+       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3.5
         :tyyppi :komponentti :komponentti sanktion-perustelu}
-       {:otsikko "Määrä (€)" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
+       {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (let [summa (:summa %)]
                     (fmt/euro-opt false
                                   (when summa
