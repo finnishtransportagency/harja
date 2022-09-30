@@ -125,6 +125,13 @@
                       kuukaudet)))
           vuodet)))))
 
+(defn- hae-tpi-idlla
+  [tpi-id]
+  (some
+    #(when (= tpi-id (:tpi_id %))
+       %)
+    @tiedot-urakka/urakan-toimenpideinstanssit))
+
 (defn bonukset-lomake
   [sulje-fn e! app]
   (let [{lomakkeen-tiedot :lomake uusi-liite :uusi-liite voi-sulkea? :voi-sulkea?} app
@@ -132,9 +139,7 @@
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
     (when voi-sulkea? (e! (->TyhjennaLomake sulje-fn)))
     [:<>
-     [:h2 "Bonukset"]
-     [:div (for [l (:lomake app)]
-             [:div (str (first l) " :: " (second l))])]
+     [:h2 "Bonukset"]     
      [lomake/lomake
       {:otsikko "Bonuksen tiedot"
        :ei-borderia? true
@@ -158,13 +163,14 @@
                                                         :toiminto-fn #(e! (->PoistaBonus))}))
                          {:luokka "oikealle"}])
                       [napit/peruuta "Sulje" #(e! (->TyhjennaLomake sulje-fn))]]])}
-      [(let [hae-tpin-tiedot (comp (fn [tpi-id] (some #(do (println "-->" %) (when (= tpi-id (:tpi_id %)) %)) @tiedot-urakka/urakan-toimenpideinstanssit)) :toimenpideinstanssi)
+      [(let [hae-tpin-tiedot (comp hae-tpi-idlla :toimenpideinstanssi)
              tpi (hae-tpin-tiedot lomakkeen-tiedot)]
            {:otsikko "Bonus"
             :nimi :tyyppi
             :tyyppi :valinta
             :pakollinen? true
             :valinnat (ek/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
+            :valinta-nayta ek/erilliskustannustyypin-teksti
             ::lomake/col-luokka "col-xs-12"})
        {:otsikko "Perustelu"
         :nimi :lisatieto
@@ -304,5 +310,4 @@
                                            (bonus->lomake avattu-bonus))
                                          {})})]
     (fn [_ _]
-      [:div (pr-str avattu-bonus)
-       [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn)]])))
+      [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn)])))
