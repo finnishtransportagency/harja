@@ -466,9 +466,9 @@
 (deftest hae-urakan-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku (pvm/luo-pvm 2015 10 1)
-                                                                     :loppu (pvm/luo-pvm 2016 10 30)})]
+                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                 :alku (pvm/luo-pvm 2015 10 1)
+                                                                                 :loppu (pvm/luo-pvm 2016 10 30)})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
@@ -489,10 +489,10 @@
 (deftest hae-urakan-jalkeiset-sanktiot
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku (pvm/luo-pvm 2018 10 1)
-                                                                     :loppu (pvm/luo-pvm 2019 10 30)
-                                                                     :vain-yllapitokohteettomat? nil})]
+                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                 :alku (pvm/luo-pvm 2018 10 1)
+                                                                                 :loppu (pvm/luo-pvm 2019 10 30)
+                                                                                 :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
 ;;  Tämä testi varmistaa, että hoidon alueurakoissa (urakan tyyppi = 'hoito'), jotka ovat alkaneet 2018 tai aiemmin, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
@@ -501,10 +501,10 @@
         alkupvm (pvm/luo-pvm 2016 9 1)
         loppupvm (pvm/luo-pvm 2017 8 30)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku alkupvm
-                                                                     :loppu loppupvm
-                                                                     :vain-yllapitokohteettomat? nil})
+                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                 :alku alkupvm
+                                                                                 :loppu loppupvm
+                                                                                 :vain-yllapitokohteettomat? nil})
         sanktio-100e (first (filter #(= 100.0 (:summa %)) vastaus))
         summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
@@ -558,10 +558,14 @@
         alkupvm (pvm/luo-pvm 2020 2 1)
         loppupvm (pvm/luo-pvm 2020 2 31)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku alkupvm
-                                                                     :loppu loppupvm
-                                                                     :vain-yllapitokohteettomat? nil})
+                  :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                   :alku alkupvm
+                                                                   :loppu loppupvm
+                                                                   :vain-yllapitokohteettomat? nil
+                                                                   ;; Haetaan vain sanktiot sanktioraporttiin
+                                                                   ;; vertailua varten
+                                                                   :hae-sanktiot? true
+                                                                   :hae-bonukset? false})
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
@@ -609,10 +613,10 @@
         alkupvm (pvm/luo-pvm 2022 8 1)
         loppupvm (pvm/luo-pvm 2022 8 30)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-urakan-sanktiot +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                     :alku alkupvm
-                                                                     :loppu loppupvm
-                                                                     :vain-yllapitokohteettomat? nil})
+                                :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                 :alku alkupvm
+                                                                                 :loppu loppupvm
+                                                                                 :vain-yllapitokohteettomat? nil})
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
@@ -672,7 +676,7 @@
 
          [:laatupoikkeama :tr :numero] [:laatupoikkeama :tr :alkuosa] [:laatupoikkeama :tr :loppuosa]
          [:laatupoikkeama :tr :alkuetaisyys] [:laatupoikkeama :tr :loppuetaisyys]]
-        :hae-urakan-sanktiot
+        :hae-urakan-sanktiot-ja-bonukset
         {:urakka-id (hae-oulun-alueurakan-2014-2019-id)
          :alku (pvm/luo-pvm 2015 10 1)
          :loppu (pvm/luo-pvm 2016 10 30)

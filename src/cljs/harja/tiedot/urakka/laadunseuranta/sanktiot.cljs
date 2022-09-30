@@ -28,13 +28,17 @@
 
 (defonce valittu-sanktio (atom nil))
 
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot annetulle hoitokaudelle."
-  [{:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
-  (k/post! :hae-urakan-sanktiot {:urakka-id urakka-id
-                                 :alku      alku
-                                 :loppu     loppu
-                                 :vain-yllapitokohteettomat? vain-yllapitokohteettomat?}))
+(defn hae-urakan-sanktiot-ja-bonukset
+  "Hakee urakan sanktiot ja bonukset annetulle hoitokaudelle.
+  Kohderajapinta palauttaa oletuksena sekä sanktiot, että bonukset. Tarvittaessa sanktiot tai bonukset haun
+  voi estää :hae-sanktiot? false tai :hae-bonukset? false optiolla."
+  [{:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
+  (k/post! :hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka-id
+                                             :alku      alku
+                                             :loppu     loppu
+                                             :vain-yllapitokohteettomat? vain-yllapitokohteettomat?
+                                             :hae-sanktiot? hae-sanktiot?
+                                             :hae-bonukset? hae-bonukset?}))
 
 (defonce haetut-sanktiot
   (reaction<! [urakka (:id @nav/valittu-urakka)
@@ -42,9 +46,9 @@
                _ @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
-                (hae-urakan-sanktiot {:urakka-id urakka
-                                      :alku (first hoitokausi)
-                                      :loppu (second hoitokausi)}))))
+                (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
+                                                  :alku (first hoitokausi)
+                                                  :loppu (second hoitokausi)}))))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
