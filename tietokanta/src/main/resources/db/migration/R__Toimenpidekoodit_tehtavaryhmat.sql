@@ -546,6 +546,8 @@ UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE WHERE nimi IN ('Kolmansi
 -- Poistetaan ylimääräinen tehtäväryhmä:
 DELETE from tehtavaryhma where otsikko = '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' and nimi = 'Alataso Liikenteen varmistaminen';
 
+-- Muuta nimi
+UPDATE toimenpidekoodi SET nimi = 'Sorateiden pölynsidonta (materiaali)' WHERE nimi = 'Sorateiden pölynsidonta';
 
 ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 --- MHU: Olemassa olleiden tehtävien tehtäväryhmämäppäykset     --------------------------------------------------------------------------------------------------------------------
@@ -717,7 +719,7 @@ UPDATE toimenpidekoodi SET tehtavaryhma = (select id from tehtavaryhma where nim
 -- Sorateiden hoito --
 ------------------------------------
 UPDATE toimenpidekoodi SET tehtavaryhma = null,	jarjestys = 1240, ensisijainen = FALSE, muokattu = current_timestamp, muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') WHERE taso = 4 and nimi = 'Sorateiden hoito, hoitoluokka I'	AND yksikko = 'tiekm' AND poistettu is not true AND piilota is not true AND emo = (select id from toimenpidekoodi where koodi = '23124');
-UPDATE toimenpidekoodi SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1280, ensisijainen = TRUE, muokattu = current_timestamp, muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') WHERE taso = 4 and nimi = 'Sorateiden pölynsidonta' AND poistettu is not true AND piilota is not true AND emo = (select id from toimenpidekoodi where koodi = '23124');
+UPDATE toimenpidekoodi SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1280, ensisijainen = TRUE, muokattu = current_timestamp, muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio') WHERE taso = 4 and nimi = 'Sorateiden pölynsidonta (materiaali)' AND poistettu is not true AND piilota is not true AND emo = (select id from toimenpidekoodi where koodi = '23124');
 -- Tehtävän yksikkö on jkm, materiaalit erikseen (t)
 
 -- Sorastus
@@ -789,7 +791,7 @@ UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nim
                                   'Päällysteiden paikkaus (ml. sillat ja siltapaikat) - Valuasvaltti');
 
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Kesäsuola, materiaali (D)' and tyyppi = 'alataso') WHERE
-    tehtavaryhma IS NOT NULL and nimi = 'Sorateiden pölynsidonta';
+    tehtavaryhma IS NOT NULL and nimi = 'Sorateiden pölynsidonta (materiaali)';
 
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)') WHERE nimi = 'Äkillinen hoitotyö (talvihoito)' AND emo = (select id from toimenpidekoodi where koodi = '23104');
 UPDATE toimenpidekoodi set tehtavaryhma = (select id from tehtavaryhma where nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)') WHERE nimi = 'Äkillinen hoitotyö (l.ymp.hoito)' AND emo = (select id from toimenpidekoodi where koodi = '23116');
@@ -942,7 +944,7 @@ UPDATE toimenpidekoodi SET jarjestys = 1250	WHERE nimi = 'Sorateiden pinnan hoit
 UPDATE toimenpidekoodi SET jarjestys = 1255	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka II' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1260	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270	WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1280	WHERE nimi = 'Sorateiden pölynsidonta' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1280	WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1290, kasin_lisattava_maara = TRUE	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1290	WHERE nimi = 'Sorastus km' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270, kasin_lisattava_maara = TRUE WHERE nimi = 'Maakivien (>1m3) poisto' AND tehtavaryhma IS NOT NULL;
@@ -1159,7 +1161,7 @@ UPDATE toimenpidekoodi
 SET suunnitteluyksikko = 'tonni'
 WHERE taso = 4
   AND nimi in
-      ('Liukkaudentorjunta hiekoituksella', 'Ennalta arvaamattomien kuljetusten avustaminen', 'Sorateiden pölynsidonta',
+      ('Liukkaudentorjunta hiekoituksella', 'Ennalta arvaamattomien kuljetusten avustaminen', 'Sorateiden pölynsidonta (materiaali)',
        'Liikenteen varmistaminen kelirikkokohteessa');
 
 UPDATE toimenpidekoodi
@@ -1246,7 +1248,7 @@ UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Pysäkkikatosten sii
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)', 'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pinnan hoito, hoitoluokka I', 'Sorateiden pinnan hoito, hoitoluokka II', 'Sorateiden pinnan hoito, hoitoluokka III', 'Sorapintaisten kävely- ja pyöräilyväylienhoito');
-UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pölynsidonta','Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen','Liikenteen varmistaminen kelirikkokohteessa');
+UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pölynsidonta (materiaali)','Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen','Liikenteen varmistaminen kelirikkokohteessa');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Nopeusnäyttötaulun huolto ja ylläpito, siirto kohteiden välillä, akkujen lataaminen ja näyttötaulujen varastointi');
 
 DELETE from tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kiveykset (U)'; -- Väärin kirjoitettu versio, poistetaan roikkumasta
