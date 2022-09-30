@@ -151,7 +151,8 @@
 
    (s/optional-key :yha) {:url s/Str
                           :kayttajatunnus s/Str
-                          :salasana s/Str}
+                          :salasana s/Str
+                          :api-key s/Str}
 
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
                             :token-url s/Str

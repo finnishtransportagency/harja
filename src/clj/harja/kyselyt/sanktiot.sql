@@ -50,7 +50,7 @@ SELECT
   t.id              AS tyyppi_id,
   t.nimi            AS tyyppi_nimi,
   t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-  t.sanktiolaji     AS tyyppi_laji
+  t.koodi           AS tyyppi_koodi
 FROM sanktio s
   LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE laatupoikkeama = :laatupoikkeama
@@ -75,7 +75,7 @@ SELECT
   lp.aika                             AS laatupoikkeama_aika,
   lp.tekija                           AS laatupoikkeama_tekija,
   lp.urakka                           AS laatupoikkeama_urakka,
-  CONCAT(k.etunimi, ' ', k.sukunimi) AS laatupoikkeama_tekijanimi,
+  CONCAT(k.etunimi, ' ', k.sukunimi)  AS laatupoikkeama_tekijanimi,
   lp.kasittelyaika                    AS laatupoikkeama_paatos_kasittelyaika,
   lp.paatos                           AS laatupoikkeama_paatos_paatos,
   lp.kasittelytapa                    AS laatupoikkeama_paatos_kasittelytapa,
@@ -92,18 +92,20 @@ SELECT
   lp.selvitys_pyydetty                AS laatupoikkeama_selvityspyydetty,
   lp.selvitys_annettu                 AS laatupoikkeama_selvitysannettu,
 
-  ypk.tr_numero        AS yllapitokohde_tr_numero,
-  ypk.tr_alkuosa       AS yllapitokohde_tr_alkuosa,
-  ypk.tr_alkuetaisyys  AS yllapitokohde_tr_alkuetaisyys,
-  ypk.tr_loppuosa      AS yllapitokohde_tr_loppuosa,
-  ypk.tr_loppuetaisyys AS yllapitokohde_tr_loppuetaisyys,
-  ypk.kohdenumero      AS yllapitokohde_numero,
-  ypk.nimi             AS yllapitokohde_nimi,
-  ypk.id               AS yllapitokohde_id,
+  ypk.tr_numero                       AS yllapitokohde_tr_numero,
+  ypk.tr_alkuosa                      AS yllapitokohde_tr_alkuosa,
+  ypk.tr_alkuetaisyys                 AS yllapitokohde_tr_alkuetaisyys,
+  ypk.tr_loppuosa                     AS yllapitokohde_tr_loppuosa,
+  ypk.tr_loppuetaisyys                AS yllapitokohde_tr_loppuetaisyys,
+  ypk.kohdenumero                     AS yllapitokohde_numero,
+  ypk.nimi                            AS yllapitokohde_nimi,
+  ypk.id                              AS yllapitokohde_id,
 
-  t.nimi                             AS tyyppi_nimi,
-  t.id                               AS tyyppi_id,
-  t.toimenpidekoodi                  AS tyyppi_toimenpidekoodi
+  t.nimi                              AS tyyppi_nimi,
+  t.id                                AS tyyppi_id,
+  t.toimenpidekoodi                   AS tyyppi_toimenpidekoodi,
+  t.koodi                             AS tyyppi_koodi
+
 
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -240,6 +242,56 @@ WHERE p."urakka-id" = :urakka
   AND p.tyyppi IN ('lupaus-bonus', 'lupaus-sanktio')
   AND p.poistettu IS NOT TRUE;
 
+-- name: hae-urakan-bonukset
+-- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
+-- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
+
+-- Bonukset erilliskustannuksista
+SELECT ek.id,
+       ek.pvm                 AS perintapvm,
+       ek.rahasumma           AS summa,
+       ek.tyyppi::TEXT        AS laji,
+       ek.indeksin_nimi       AS indeksi,
+       TRUE                   AS suorasanktio,
+       ek.toimenpideinstanssi AS toimenpideinstanssi,
+       CASE
+           WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
+               THEN (SELECT korotus
+                       FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::INTEGER,
+                                                    NULL::SANKTIOLAJI))
+           ELSE 0
+           END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
+       ek.lisatieto           AS laatupoikkeama_paatos_perustelu -- TODO Varmista, mutta näyttää hyvältä
+  FROM erilliskustannus ek
+ WHERE ek.urakka = :urakka
+   AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
+                                   FROM toimenpideinstanssi tpi
+                                            JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                                            JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                        maksuera m
+                                  WHERE tpi.urakka = :urakka
+                                    AND m.toimenpideinstanssi = tpi.id
+                                    AND tpk2.koodi = '23150'
+                                  LIMIT 1)
+   AND ek.pvm BETWEEN :alku AND :loppu
+   AND ek.poistettu IS NOT TRUE
+ UNION ALL
+-- Lupausbonukset
+SELECT p.id,
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
+       p."tilaajan-maksu"                              AS summa,
+       p.tyyppi::TEXT                                  AS laji,
+       NULL                                            AS indeksi,
+       TRUE                                            AS suorasanktio,
+       NULL                                            AS toimenpideinstanssi, -- TODO Tarkista
+       0                                               AS indeksikorjaus,         -- TODO Varmista laskusäännöt
+       CONCAT('Urakoitsija sai ', p."lupaus-toteutuneet-pisteet", ' pistettä ja lupasi ',
+              p."lupaus-luvatut-pisteet", ' pistettä') AS laatupoikkeama_paatos_perustelu
+  FROM urakka_paatos p
+ WHERE p."urakka-id" = :urakka
+   AND p.tyyppi IN ('lupaus-bonus', 'lupaus-sanktio')
+   AND p.poistettu IS NOT TRUE;
+
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
 -- Merkitään vain jos toimenpideinstanssi on voimassa tai sen vanhenemisesta on 3 kk.
@@ -257,20 +309,15 @@ WHERE tyyppi = 'sakko' AND
 -- Hakee kaikki sanktiotyypit
 SELECT
   id,
+  koodi,
   nimi,
-  toimenpidekoodi,
-  sanktiolaji AS laji
+  toimenpidekoodi
 FROM sanktiotyyppi;
 
---name: hae-urakkatyypin-sanktiolajit
-SELECT id, nimi, sanktiolaji, urakkatyyppi
-  FROM sanktiotyyppi
- WHERE urakkatyyppi @> ARRAY[:urakkatyyppi::urakkatyyppi];
-
---name: hae-sanktiotyyppi-sanktiolajilla
+--name: hae-sanktiotyyppi-koodilla
 SELECT id
   FROM sanktiotyyppi
- WHERE sanktiolaji @> ARRAY[:sanktiolaji::sanktiolaji];
+ WHERE koodi IN (:koodit);
 
 
 --name: hae-sanktion-urakka-id

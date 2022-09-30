@@ -2,7 +2,6 @@
   "Tämä nimiavaruus hallinnoi urakan usealle toiminnolle yhteisiä tietoja."
   (:require [reagent.core :refer [atom] :as r]
             [cljs-time.core :as time]
-            [cljs-time.coerce :as tc]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakan-toimenpiteet :as urakan-toimenpiteet]
@@ -14,10 +13,11 @@
             [harja.loki :refer [log tarkkaile!]]
             [harja.pvm :as pvm]
             [harja.atom :refer-macros [reaction<! reaction-writable]]
-            [cljs-time.core :as t]
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.urakka :as urakka-domain])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]))
@@ -133,8 +133,8 @@
   "Palauttaa N edellistä hoitokautta alkaen nykyajasta."
   ([n] (edelliset-hoitokaudet n false :hoito))
   ([n nykyinenkin? valittu-urakkatyyppi]
-   (let [ensimmainen-vuosi (- (t/year (pvm/nyt)) n)
-         viimeinen-vuosi (+ (t/year (pvm/nyt))
+   (let [ensimmainen-vuosi (- (time/year (pvm/nyt)) n)
+         viimeinen-vuosi (+ (time/year (pvm/nyt))
                             (if nykyinenkin? 1 0))
          hoitokauden-alkupvm-fn (fn [vuosi]
                                   (if (= :vesivayla valittu-urakkatyyppi)
@@ -201,7 +201,6 @@
             ;; ultimate fallback, jos ei löydy jostain syystä, käytä ensimmäistä
             (first hoitokaudet))))))
 
-
 (defonce valittu-hoitokausi
   (reaction-writable (paattele-valittu-hoitokausi @valitun-urakan-hoitokaudet)))
 
@@ -225,8 +224,8 @@
 
 (defn- urakan-oletusvuosi [urakka]
   (when urakka
-    (min (t/year (:loppupvm urakka))
-         (t/year (pvm/nyt)))))
+    (min (time/year (:loppupvm urakka))
+         (time/year (pvm/nyt)))))
 
 (def valittu-urakan-vuosi (reaction-writable
                             (let [ur @nav/valittu-urakka]
@@ -293,7 +292,6 @@
                          (assoc rivi :alkupvm alku :loppupvm loppu)) rivit)))
         (tulevat-hoitokaudet ur hoitokausi)))
 
-
 (defn rivit-tulevillekin-kausille-kok-hint-tyot [ur rivit hoitokausi]
   (into []
         (mapcat (fn [[alku loppu]]
@@ -336,7 +334,6 @@
        (if (contains? ryhmitelty kausi)
          (recur ryhmitelty hoitokaudet)
          (recur (assoc ryhmitelty kausi []) hoitokaudet))))))
-
 
 (defonce urakan-toimenpiteet-ja-tehtavat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
@@ -486,15 +483,20 @@
           tehtavat @urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat]
       (boolean (and toimenpideinstanssit tehtavat)))))
 
-(def urakkatyypin-sanktiolajit
-  (reaction<! [urakka @nav/valittu-urakka
-               ls-sivu (nav/valittu-valilehti :laadunseuranta)
-               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
-              (when (and urakka (or (= :laatupoikkeamat ls-sivu)
-                                    (= :sanktiot ls-sivu)
-                                    (= :vesivayla-sanktiot vv-ls-sivu)))
-                (k/post! :hae-urakkatyypin-sanktiolajit {:urakka-id (:id urakka)
-                                                         :urakkatyyppi (:tyyppi urakka)}))))
+(def valitun-urakan-sanktiolajit
+  "Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan."
+  (reaction
+    (let [urakka @nav/valittu-urakka
+          ls-sivu (nav/valittu-valilehti :laadunseuranta)
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)]
+      (when (and urakka (or (= :laatupoikkeamat ls-sivu)
+                          (= :sanktiot ls-sivu)
+                          (= :vesivayla-sanktiot vv-ls-sivu)))
+        (if (= :laatupoikkeamat ls-sivu)
+          ;; Laatupoikkeamille on omat karsitut sanktiolajien listaukset riippuen urakkatyypistä
+          (sanktio-domain/laatupoikkeaman-sanktiolajit urakka)
+          ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
+          (sanktio-domain/urakan-sanktiolajit urakka))))))
 
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
@@ -504,10 +506,7 @@
 
 (def yllapidon-urakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (or (= :paallystys urakkatyyppi)
-                  (= :paikkaus urakkatyyppi)
-                  (= :tiemerkinta urakkatyyppi)
-                  (= :valaistus urakkatyyppi)))))
+              (urakka-domain/yllapidon-urakka? urakkatyyppi))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
 

@@ -92,7 +92,3 @@
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
-
-(defn lajin-sanktiotyypit
-  [laji]
-  (filter #((:laji %) laji) @sanktiotyypit))

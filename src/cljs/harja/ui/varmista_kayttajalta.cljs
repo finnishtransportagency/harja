@@ -3,7 +3,8 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
-            [harja.ui.grid :as grid]))
+            [harja.ui.grid :as grid]
+            [harja.ui.ikonit :as ikonit]))
 
 (defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
   "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
@@ -34,6 +35,12 @@
                                               {:luokka "pull-right"}]
                                     :takaisin [napit/takaisin "Peruuta" #(modal/piilota!)
                                                {:luokka "pull-right"}]
+                                    :tallenna [napit/yleinen-ensisijainen
+                                               hyvaksy #(do
+                                                          (modal/piilota!)
+                                                          (toiminto-fn))
+                                               {:ikoni (ikonit/harja-icon-action-save)
+                                                :luokka "pull-left"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
                    :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}

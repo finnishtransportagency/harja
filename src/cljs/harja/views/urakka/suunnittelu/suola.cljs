@@ -228,49 +228,57 @@
                     " (" (pvm/hoitokausi-str-alkuvuodesta-vuodet valittu-hoitovuosi) ")")]]
        :muokkaa! (r/partial #(e! (suolarajoitukset-tiedot/->PaivitaLomake % false)))
        :footer-fn (fn [lomake-tila]
-                    [:div.flex-row
-                     [:div.alkuun {:style {:padding-left "0"}}
-                      [napit/tallenna
-                       "Tallenna"
-                       #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
-                       {:disabled disabled? :paksu? true}]
-                      [napit/tallenna
-                       "Tallenna ja lisää seuraava"
-                       #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
-                       {:disabled disabled? :paksu? true}]]
-                     [:div.loppuun
-                      (when muokkaustila?
-                        [napit/poista
-                         "Poista"
-                         #(let [poista-kaikilta-vuosilta?-atom (atom false)]
-                            (modal/nayta!
-                              {:otsikko "Rajoitusalueen poistaminen"
-                               :footer [rajoituksen-poiston-varmistus-modaali-footer e!
-                                        {:varmistus-fn
-                                         (fn []
-                                           (modal/piilota!)
-                                           (e! (suolarajoitukset-tiedot/map->PoistaSuolarajoitus
-                                                 {:rajoitusalue_id (:rajoitusalue_id lomake-tila)
-                                                  :hoitokauden-alkuvuosi (if @poista-kaikilta-vuosilta?-atom
-                                                                           ;; Jos poistetaan kaikilta vuosilta, niin asetetaan alkuvuodeksi
-                                                                           ;; urakan ensimmäinen hoitokausi
-                                                                           (pvm/vuosi (:alkupvm urakka))
-                                                                           (:hoitokauden-alkuvuosi lomake-tila))
-                                                  :kopioidaan-tuleville-vuosille?
-                                                  (or
-                                                    ;; Kun poistetaan kaikilta vuosilta, niin aloitetaan urakan ensimmäisestä hoitokaudesta
-                                                    ;; ja jatketaan myös tuleville vuosille
-                                                    @poista-kaikilta-vuosilta?-atom
-                                                    (:kopioidaan-tuleville-vuosille? lomake-tila))})))}]}
-                              [rajoituksen-poiston-varmistus-modaali e! {:lomake-tila lomake-tila
-                                                                         :poista-kaikilta-vuosilta?-atom poista-kaikilta-vuosilta?-atom
-                                                                         :urakka urakka}]))
-                         {:vayla-tyyli? true
-                          :disabled disabled?}])
-                      [napit/yleinen-toissijainen
-                       "Peruuta"
-                       #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
-                       {:paksu? true}]]])}
+                    [:div
+                     (when (:onko-suolatoteumia? app)
+                       [:div.flex-row {:style {:padding-bottom "1rem"}}
+                        (if muokkaustila?
+                          [yleiset/info-laatikko :neutraali "Rajoitusalueen tierekisteriosoitteen muokkaaminen vaikuttaa siihen, miten suolamäärät kohdistuvat
+                        rajoitusalueille toteuma- ja raporttisivuilla. Muutokset tehdään yöllisinä ajoina ja ovat nähtävillä seuraavana päivänä."]
+                          [yleiset/info-laatikko :neutraali "Rajoitusalueen lisääminen vaikuttaa siihen, miten suolamäärät kohdistuvat
+                        rajoitusalueille toteuma- ja raporttisivuilla. Muutokset tehdään yöllisinä ajoina ja ovat nähtävillä seuraavana päivänä."])])
+                     [:div.flex-row
+                      [:div.alkuun {:style {:padding-left "0"}}
+                       [napit/tallenna
+                        "Tallenna"
+                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
+                        {:disabled disabled? :paksu? true}]
+                       [napit/tallenna
+                        "Tallenna ja lisää seuraava"
+                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
+                        {:disabled disabled? :paksu? true}]]
+                      [:div.loppuun
+                       (when muokkaustila?
+                         [napit/poista
+                          "Poista"
+                          #(let [poista-kaikilta-vuosilta?-atom (atom false)]
+                             (modal/nayta!
+                               {:otsikko "Rajoitusalueen poistaminen"
+                                :footer [rajoituksen-poiston-varmistus-modaali-footer e!
+                                         {:varmistus-fn
+                                          (fn []
+                                            (modal/piilota!)
+                                            (e! (suolarajoitukset-tiedot/map->PoistaSuolarajoitus
+                                                  {:rajoitusalue_id (:rajoitusalue_id lomake-tila)
+                                                   :hoitokauden-alkuvuosi (if @poista-kaikilta-vuosilta?-atom
+                                                                            ;; Jos poistetaan kaikilta vuosilta, niin asetetaan alkuvuodeksi
+                                                                            ;; urakan ensimmäinen hoitokausi
+                                                                            (pvm/vuosi (:alkupvm urakka))
+                                                                            (:hoitokauden-alkuvuosi lomake-tila))
+                                                   :kopioidaan-tuleville-vuosille?
+                                                   (or
+                                                     ;; Kun poistetaan kaikilta vuosilta, niin aloitetaan urakan ensimmäisestä hoitokaudesta
+                                                     ;; ja jatketaan myös tuleville vuosille
+                                                     @poista-kaikilta-vuosilta?-atom
+                                                     (:kopioidaan-tuleville-vuosille? lomake-tila))})))}]}
+                               [rajoituksen-poiston-varmistus-modaali e! {:lomake-tila lomake-tila
+                                                                          :poista-kaikilta-vuosilta?-atom poista-kaikilta-vuosilta?-atom
+                                                                          :urakka urakka}]))
+                          {:vayla-tyyli? true
+                           :disabled disabled?}])
+                       [napit/yleinen-toissijainen
+                        "Peruuta"
+                        #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli false nil))
+                        {:paksu? true}]]]])}
 
       (lomake-rajoitusalue-skeema rajoituslomake muokkaustila?)
       rajoituslomake]]))
@@ -395,16 +403,18 @@
         :varoita [tarkasta-sakko-ja-bonus]
         :vihje "Jos urakassa käytössä vain suolasakko eikä bonusta, täytä vain tämä"
         :vayla-tyyli? false}
-       (when (urakka/indeksi-kaytossa-sakoissa?)
-         {:otsikko "Indeksi"
-          :nimi :indeksi
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [:div.kentta-indeksi
-                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                          [:div (-> @tila/yleiset :urakka :indeksi)]])
-          :palstoja 1})]
+
+       {:otsikko "Indeksi"
+        :nimi :indeksi
+        :tyyppi :komponentti
+        :komponentti (fn [_]
+                       [:div.kentta-indeksi
+                        ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                        ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse
+                        (if (urakka/indeksi-kaytossa-sakoissa?)
+                          [:div (-> @tila/yleiset :urakka :indeksi)]
+                          [:div "Ei indeksiä"])])
+        :palstoja 1}]
       lomake]]))
 
 
@@ -443,17 +453,17 @@
           :yksikko "€"
           :piilota-yksikko-otsikossa? true
           :vayla-tyyli? true}
-
-         (when (urakka/indeksi-kaytossa-sakoissa?)
-           {:otsikko "Indeksi"
-            :nimi :indeksi
-            :tyyppi :komponentti
-            :komponentti (fn [_]
-                           [:div.kentta-indeksi
-                            ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
-                            ;; Indeksin nimi asetetaan aina automaattisesti back-endissä. Käyttäjä ei saa valita sitä itse.
-                            [:div (-> @tila/yleiset :urakka :indeksi)]])
-            :palstoja 1}))]
+         {:otsikko "Indeksi"
+          :nimi :indeksi
+          :tyyppi :komponentti
+          :komponentti (fn [_]
+                         [:div.kentta-indeksi
+                          ;; Näytetään käyttäjälle aina urakan indeksin nimi rajoitusalueiden suolasanktioissa.
+                          ;; Indeksin nimi asetetaan aina automaattisesti back-endissä urakan indeksiksi. Käyttäjä ei saa valita sitä itse.
+                          (if (urakka/indeksi-kaytossa-sakoissa?)
+                            [:div (-> @tila/yleiset :urakka :indeksi)]
+                            [:div "Ei indeksiä"])])
+          :palstoja 1})]
       (get-in app [:kayttorajat :rajoitusalueiden-suolasanktio])]]))
 
 (defn taulukko-rajoitusalueet
@@ -497,6 +507,7 @@
   (komp/luo
     (komp/sisaan
       #(do
+         (e! (suolarajoitukset-tiedot/->TarkistaOnkoSuolatoteumia))
          (e! (suolarajoitukset-tiedot/->HaeSuolarajoitukset (pvm/vuosi (first @urakka/valittu-hoitokausi))))
          (e! (suolarajoitukset-tiedot/->HaeTalvisuolanKayttorajat (pvm/vuosi (first @urakka/valittu-hoitokausi))))))
     (komp/ulos
@@ -507,7 +518,7 @@
     (fn [e! app]
       (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
             urakan-alkuvuosi (pvm/vuosi alkupvm)
-            urakan-loppuvuosi (pvm/vuosi alkupvm)
+            urakan-loppuvuosi (pvm/vuosi loppupvm)
             rajoitusalueet (:suolarajoitukset app)
             lomake-auki? (:rajoitusalue-lomake-auki? app)
             urakka @nav/valittu-urakka

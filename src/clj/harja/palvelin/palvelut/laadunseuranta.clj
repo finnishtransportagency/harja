@@ -114,7 +114,13 @@
   "Hakee urakan sanktiot perintäpvm:n mukaan"
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiot (into []
+  (let [urakan-sanktiot (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                          :alku (konv/sql-timestamp alku)
+                                                          :loppu (konv/sql-timestamp loppu)})
+        urakan-bonukset (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
+                                                          :alku (konv/sql-timestamp alku)
+                                                          :loppu (konv/sql-timestamp loppu)})
+        sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
                              (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
@@ -123,21 +129,25 @@
                              (map #(konv/decimal->double % :summa))
                              (map #(konv/decimal->double % :indeksikorjaus))
                              (map #(assoc % :laji (keyword (:laji %)))))
-                       (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
-                                                         :alku (konv/sql-timestamp alku)
-                                                         :loppu (konv/sql-timestamp loppu)}))]
+                   (concat
+                     urakan-sanktiot
+                     urakan-bonukset))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
-  [db sanktiolaji sanktiotyypin-id]
-  (let [mahdolliset-sanktiotyypit (into #{}
-                                        (map :id (sanktiot/hae-sanktiotyyppi-sanktiolajilla
-                                                   db {:sanktiolaji (name sanktiolaji)})))]
+  [db sanktiolaji sanktiotyypin-id urakan-alkupvm]
+  (let [lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
+                                       (keyword sanktiolaji) urakan-alkupvm)
+        kaikki-sanktiotyypit (group-by :id (sanktiot/hae-sanktiotyypit db))
+        mahdolliset-sanktiotyypit (into #{}
+                                        (map :id (sanktiot/hae-sanktiotyyppi-koodilla
+                                                   db {:koodit lajin-sanktiotyyppien-koodit})))
+        sanktiotyyppi (first (kaikki-sanktiotyypit sanktiotyypin-id))]
     (when-not (mahdolliset-sanktiotyypit sanktiotyypin-id)
-      (throw (SecurityException. (str "Sanktiolaji" sanktiolaji " ei mahdollinen sanktiotyypille "
-                                      sanktiotyypin-id))))))
+      (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
+                                      sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
 (defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
@@ -159,11 +169,13 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
+        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
+                                       (keyword laji) (:alkupvm urakan-tiedot))
         sanktiotyyppi (if (:id tyyppi)
                         (:id tyyppi)
                         (when laji
-                          (:id (first (sanktiot/hae-sanktiotyyppi-sanktiolajilla db {:sanktiolaji (name laji)})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi)
+                          (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
+        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
         params {:perintapvm (konv/sql-timestamp perintapvm)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
@@ -277,8 +289,6 @@
   [db user]
   (oikeudet/ei-oikeustarkistusta!)
   (into []
-        ;; Muunnetaan sanktiolajit arraysta, keyword setiksi
-        (map #(konv/array->set % :laji keyword))
         (sanktiot/hae-sanktiotyypit db)))
 
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
@@ -305,18 +315,6 @@
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
       (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
-
-(defn hae-urakkatyypin-sanktiolajit
-  "Palauttaa urakkatyypin sanktiotyypit [sic] settinä"
-  [db user urakka-id urakkatyyppi]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiotyypit (into []
-                            (map #(konv/array->set % :sanktiolaji keyword))
-                            (sanktiot/hae-urakkatyypin-sanktiolajit
-                              db (name urakkatyyppi)))
-        sanktiolajit (apply clojure.set/union
-                            (map :sanktiolaji sanktiotyypit))]
-    sanktiolajit))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -356,10 +354,6 @@
       (fn [user]
         (hae-sanktiotyypit db user))
 
-      :hae-urakkatyypin-sanktiolajit
-      (fn [user {:keys [urakka-id urakkatyyppi]}]
-        (hae-urakkatyypin-sanktiolajit db user urakka-id urakkatyyppi))
-
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
         (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
@@ -373,6 +367,5 @@
                      :hae-urakan-sanktiot
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
-                     :hae-urakkatyypin-sanktiolajit
                      :hae-sanktion-liitteet)
     this))

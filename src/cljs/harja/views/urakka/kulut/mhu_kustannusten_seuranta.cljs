@@ -294,7 +294,7 @@
      [:div.col-xs-12.col-md-9
       [:h2 "Tavoitehintaan kuuluvat"]
       (when-not kaikki-vahvistettu?
-        [yleiset/info-laatikko :neutraali "Merkityt indeksikorjatut luvut eivät ole vielä vahvistettuja. Vahvista luvut kustannussuunnitelmassa."])
+        [yleiset/info-laatikko :vahva-ilmoitus "Merkityt indeksikorjatut luvut eivät ole vielä vahvistettuja. Vahvista luvut kustannussuunnitelmassa."])
       [:div.table-default {:style {:padding-top "1rem"}}
        [:table.table-default-header-valkoinen
         [:thead
