@@ -468,7 +468,7 @@
                                   (when summa
                                     (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1.5}]
       sanktiot]
      (when yllapito?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))

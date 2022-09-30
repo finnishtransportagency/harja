@@ -105,7 +105,8 @@ SELECT
   t.toimenpidekoodi                   AS tyyppi_toimenpidekoodi,
   t.koodi                             AS tyyppi_koodi
 
-
+-- FIXME Pitääkö hakea kaveriksi vielä 'lupaus-sanktio' urakka-paatos taulusta?
+-- FIXME HOX, urakka_paatoksessa 'lupaus-sanktio' tyyppi on eriniminen kuin varsinainen sanktiolaji 'lupaussanktio'
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
   JOIN urakka u ON lp.urakka = u.id
@@ -143,6 +144,7 @@ SELECT ek.id,
        TRUE                   AS suorasanktio,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
        CASE
+           -- FIXME Meillä voi olla lajeina 'lupausbonus' erilliskustannuksista tai 'lupaus-bonus' urakka_paatos
            WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
                THEN (SELECT korotus
                        FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::INTEGER,
@@ -169,15 +171,28 @@ SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
        p."tilaajan-maksu"                              AS summa,
        p.tyyppi::TEXT                                  AS laji,
-       NULL                                            AS indeksi,
+       u.indeksi                                       AS indeksi,
        TRUE                                            AS suorasanktio,
        NULL                                            AS toimenpideinstanssi, -- TODO Tarkista
-       0                                               AS indeksikorjaus,         -- TODO Varmista laskusäännöt
+       CASE
+           -- FIXME Meillä voi olla lajeina 'lupausbonus' erilliskustannuksista tai 'lupaus-bonus' urakka_paatos taulusta
+           WHEN p.tyyppi::TEXT IN ('lupaus-bonus')
+               THEN (SELECT korotus
+               -- FIXME speksin mukaan indeksikorotus pitää laskea MHU 2018 & 2020 lupausbonukselle.
+                       FROM sanktion_indeksikorotus(MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15), u.indeksi,
+                                                    p."tilaajan-maksu", :urakka::INTEGER,
+                                                    NULL::SANKTIOLAJI))
+           ELSE 0
+           END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
        CONCAT('Urakoitsija sai ', p."lupaus-toteutuneet-pisteet", ' pistettä ja lupasi ',
               p."lupaus-luvatut-pisteet", ' pistettä') AS laatupoikkeama_paatos_perustelu
   FROM urakka_paatos p
+     JOIN urakka u ON u.id = p."urakka-id"
  WHERE p."urakka-id" = :urakka
+   -- FIXME 'lupaus-sanktio' taitaa olla vielä erillinen sanktiotyyppi. Pitää varmaan hakea se ylempänä: 'hae-urakan-sanktiot'
+   -- FIXME HOX, urakka_paatoksessa 'lupaus-sanktio' tyyppi on eriniminen kuin varsinainen sanktiolaji 'lupaussanktio'
    AND p.tyyppi IN ('lupaus-bonus', 'lupaus-sanktio')
+   AND MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) BETWEEN :alku AND :loppu
    AND p.poistettu IS NOT TRUE;
 
 -- name: merkitse-maksuera-likaiseksi!

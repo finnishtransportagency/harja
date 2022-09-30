@@ -114,11 +114,13 @@
   "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
   Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
   Tarvittaessa optioilla voi estää sanktioiden/bonusten palauttamisen ja hakea vain toista tyyppiä."
-  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]
-            :or {hae-sanktiot? true hae-bonukset? true}}]
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
 
-  (let [urakan-sanktiot (if hae-sanktiot?
+  ;; Haetaan oletuksena sankiot ja bonukset.
+  (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
+        hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
+        urakan-sanktiot (if hae-sanktiot?
                           (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
