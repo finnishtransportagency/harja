@@ -40,7 +40,7 @@
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
 
-(defonce haetut-sanktiot
+(defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
                _ @nakymassa?]
@@ -74,7 +74,7 @@
     (let [sanktiot-tallennuksen-jalkeen
           (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
       (reset! valittu-sanktio nil)
-      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
+      (reset! haetut-sanktiot-ja-bonukset sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
@@ -84,12 +84,12 @@
             (get-in sanktio [:laatupoikkeama :aika])
             (first @urakka/valittu-hoitokausi)
             (second @urakka/valittu-hoitokausi)))
-    (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
-     (reset! haetut-sanktiot
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot)))
+    (if (some #(= (:id %) palautettu-id) @haetut-sanktiot-ja-bonukset)
+      (reset! haetut-sanktiot-ja-bonukset
+             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
 
-     (reset! haetut-sanktiot
-             (into [] (concat @haetut-sanktiot [(assoc sanktio :id palautettu-id)]))))))
+      (reset! haetut-sanktiot-ja-bonukset
+             (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
 
 
 (defonce sanktiotyypit

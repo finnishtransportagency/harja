@@ -420,7 +420,7 @@
 
 (defn sanktiolistaus
   [optiot valittu-urakka]
-  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
+  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot-ja-bonukset))
         yllapito? (:yllapito? optiot)
         vesivayla? (:vesivayla? optiot)
         yhteensa (reduce + (map :summa sanktiot))
@@ -433,7 +433,7 @@
      [suodattimet-ja-toiminnot valittu-urakka]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
-       :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+       :tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(valitse-sanktio! % tiedot/valittu-sanktio)
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
                                ;; Ylläpidossa sekä bonuksia että sanktioita, käsiteltävä sakot miinusmerkkisinä
