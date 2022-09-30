@@ -53,7 +53,16 @@
   (process-event
     [{lomake :lomake} app]
     (println "paivita" lomake)
-    (assoc app :lomake lomake))
+    (let [{viimeksi-muokattu ::lomake/viimeksi-muokattu-kentta
+           muokatut ::lomake/muokatut} lomake
+          pvm-muokattu-viimeksi? (= :pvm viimeksi-muokattu)
+          laskutuskuukausi-muokattuihin? (and pvm-muokattu-viimeksi?
+                                           (nil? (:laskutuskuukausi muokatut))
+                                           (some? (:laskutuskuukausi lomake)))
+          lomake (if laskutuskuukausi-muokattuihin?
+                   (update lomake ::lomake/muokatut conj :laskutuskuukausi)
+                   lomake)]
+      (assoc app :lomake lomake)))
   TallennusOnnistui
   (process-event    
     [vastaus app]
@@ -83,7 +92,7 @@
   (process-event
     [_ app]    
     (let [lomakkeen-tiedot (select-keys (:lomake app) [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto
-                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi])
+                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi :id])
           payload (merge lomakkeen-tiedot
                     {:urakka-id (:id @nav/valittu-urakka)
                      :tyyppi (-> lomakkeen-tiedot :tyyppi name)})]
@@ -130,6 +139,7 @@
       {:otsikko "Bonuksen tiedot"
        :ei-borderia? true
        :vayla-tyyli? true
+       :tarkkaile-ulkopuolisia-muutoksia? true
        :luokka "padding-16 taustavari-taso3"
        :validoi-alussa? false
        :voi-muokata? true
@@ -139,20 +149,23 @@
                      [:span.nappiwrappi.flex-row
                       [napit/yleinen-ensisijainen "Tallenna" #(e! (->TallennaBonus))]
                       (when (:id lomakkeen-tiedot)
-                        [napit/kielteinen "Poista" (fn [e]
+                        [napit/kielteinen "Poista" (fn [_]
                                                      (varmista-kayttajalta/varmista-kayttajalta
                                                        {:otsikko "Bonuksen poistaminen"
                                                         :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
                                                         :modal-luokka "varmistus-modal"
                                                         :hyvaksy "Poista"
-                                                        :toiminto-fn #(e! (->PoistaBonus))}))])
+                                                        :toiminto-fn #(e! (->PoistaBonus))}))
+                         {:luokka "oikealle"}])
                       [napit/peruuta "Sulje" #(e! (->TyhjennaLomake sulje-fn))]]])}
-      [{:otsikko "Bonus"
-        :nimi :tyyppi
-        :tyyppi :valinta
-        :pakollinen? true
-        :valinnat (ek/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) (:toimenpideinstanssi lomakkeen-tiedot))
-        ::lomake/col-luokka "col-xs-12"}
+      [(let [hae-tpin-tiedot (comp (fn [tpi-id] (some #(do (println "-->" %) (when (= tpi-id (:tpi_id %)) %)) @tiedot-urakka/urakan-toimenpideinstanssit)) :toimenpideinstanssi)
+             tpi (hae-tpin-tiedot lomakkeen-tiedot)]
+           {:otsikko "Bonus"
+            :nimi :tyyppi
+            :tyyppi :valinta
+            :pakollinen? true
+            :valinnat (ek/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
+            ::lomake/col-luokka "col-xs-12"})
        {:otsikko "Perustelu"
         :nimi :lisatieto
         :tyyppi :text
@@ -189,14 +202,14 @@
           :tyyppi :pvm
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
-          :aseta (fn [rivi arvo]
-                   (println rivi arvo (keys rivi))
+          :aseta (fn [rivi arvo & muut]
+                   (println rivi arvo (keys rivi) muut)
                    (cond-> rivi
                      (nil? (:laskutuskuukausi rivi)) (assoc :laskutuskuukausi
                                                        (some #(when (and
                                                                       (= (:kuukausi %) (pvm/kuukausi arvo))
                                                                       (= (:vuosi %) (pvm/vuosi arvo)))
-                                                                 %)
+                                                                (:pvm %))
                                                          laskutuskuukaudet))
                      true (assoc :pvm arvo)))}
          {:otsikko "Laskutuskuukausi"
@@ -248,25 +261,48 @@
                                                     liitteet))))}))}])}]
       lomakkeen-tiedot]]))
 
-(defn- avainten-munklaus
+(defn- kannasta->lomake
   [avain]
   (case avain
     :perintapvm :pvm
+    :summa :rahasumma
+    :perustelu :lisatieto
+    :laji :tyyppi
+    :indeksi :indeksin_nimi
+    :kasittelyaika :laskutuskuukausi
     avain))
 
-(defn- mankeli
+(defn- bonus->lomake
   ([bonus]
-   (mankeli bonus {}))
+   (bonus->lomake bonus {}))
   ([bonus acc]
-   (reduce (fn [acc curr]
-             (if (map? (second curr))
-               (mankeli (second curr) acc)
-               (assoc acc (keyword (str (name (avainten-munklaus (first curr))) (when (some? (get acc (first curr))) (gensym)))) (second curr)))) acc bonus)))
+   (reduce (fn [acc [avain tiedot]]
+             (cond
+               (map? tiedot)
+               (bonus->lomake tiedot acc)
+
+               (and
+                 (some? tiedot)
+                 (nil? (get acc avain))
+                 (not= avain (kannasta->lomake avain)))
+               (assoc acc (kannasta->lomake avain) tiedot)
+
+               (and (some? tiedot)
+                 (nil? (get acc avain)))
+               (assoc acc avain tiedot)
+               
+               :else
+               acc))
+     acc bonus)))
+
 
 (defn bonukset*
   [auki? avattu-bonus]
   (let [sulje-fn #(reset! auki? false)
-        bonukset-tila (r/atom {:lomake (or (when avattu-bonus (mankeli avattu-bonus)) {})})]
+        bonukset-tila (r/atom {:lomake (or
+                                         (when (some? (:id avattu-bonus))
+                                           (bonus->lomake avattu-bonus))
+                                         {})})]
     (fn [_ _]
       [:div (pr-str avattu-bonus)
        [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn)]])))
