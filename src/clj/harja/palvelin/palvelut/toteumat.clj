@@ -373,14 +373,15 @@
                         :rahasumma rahasumma
                         :indeksin_nimi indeksin_nimi
                         :lisatieto lisatieto
-                        :laskutuskuukausi (:pvm laskutuskuukausi)
+                        :laskutuskuukausi laskutuskuukausi
                         :kasittelytapa (when kasittelytapa (name kasittelytapa))
                         :luoja (:id user)}]
         (if (not id)
           (toteumat-q/luo-erilliskustannus<! db parametrit)
-          (toteumat-q/paivita-erilliskustannus! db (merge parametrit
+          (toteumat-q/paivita-erilliskustannus! db (merge (dissoc parametrit :luoja)
                                                      {:poistettu (or poistettu false)
-                                                      :id id})))
+                                                      :id id
+                                                      :muokkaaja (:id user)})))
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                                  :alkupvm   (:alkupvm ek)
