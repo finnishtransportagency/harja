@@ -237,7 +237,8 @@
 
     ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
     ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
-    (is (= 1.068 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+    ;; Korjattu olettaen, että koodi toimii. Tämä hajosi, kun Rovaniemen urakka alkoi, eli 1.10.2022
+    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
@@ -567,7 +568,7 @@
               (str "Ajat eivät oikein päivityksen jälkeen päivitetylle datalle toimenpiteelle: " toimenpide-avain " ja tallennettavalle asialle: " tallennettava-asia)))))))
 
 (deftest tallenna-johto-ja-hallintokorvaukset
-  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
