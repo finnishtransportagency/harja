@@ -124,7 +124,9 @@
                                                      {:vuosi urakan-aloitusvuosi
                                                       :kuukausi kuukausi
                                                       :osa-kuukaudesta osa-kuukaudesta
-                                                      :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                                      :tunnit (if (>= urakan-aloitusvuosi 2022)
+                                                                1
+                                                                (gen/generate (s/gen ::bs-p/tunnit)))
                                                       :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))}))
                                            []
                                            kuukaudet-hoitokausille)
@@ -137,7 +139,9 @@
                                                                     {:vuosi (yleiset-tyokalut/vuosi-hoitokauden-numerosta-ja-kuukaudesta hoitokauden-numero kuukausi urakan-aloitusvuosi)
                                                                      :kuukausi kuukausi
                                                                      :osa-kuukaudesta osa-kuukaudesta
-                                                                     :tunnit (gen/generate (s/gen ::bs-p/tunnit))
+                                                                     :tunnit (if (>= urakan-aloitusvuosi 2022)
+                                                                               1
+                                                                               (gen/generate (s/gen ::bs-p/tunnit)))
                                                                      :tuntipalkka (gen/generate (s/gen ::bs-p/tuntipalkka))})
                                                                hoitokauden-kuukaudet)))])
                                              [1 []]

@@ -602,9 +602,12 @@
             td-ryhmitelty (reduce-kv (fn [m toimenkuva data-toimenkuvalle]
                                        (assoc m
                                               toimenkuva
-                                              (if (#{"päätoiminen apulainen"
-                                                     "apulainen/työnjohtaja"}
-                                                   toimenkuva)
+                                              (if (and
+                                                    ;; 2022 alkaen käytetään koko vuotta myös näille toimenkuville
+                                                    (< urakan-aloitus-vuosi 2022)
+                                                    (#{"päätoiminen apulainen"
+                                                          "apulainen/työnjohtaja"}
+                                                        toimenkuva))
                                                 {:kesa (filter #(<= 5 (:kuukausi %) 9)
                                                                data-toimenkuvalle)
                                                  :talvi (remove #(<= 5 (:kuukausi %) 9)
