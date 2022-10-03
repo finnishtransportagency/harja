@@ -8,6 +8,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
             [harja.domain.urakka :as urakka]
+            [harja.domain.tehtavamaarat :as tm-domain]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [clojure.set :as set]))
@@ -295,11 +296,11 @@
                    :maara 1234M})
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-yksityisten-rumpujen
-                  ::tehtavamaarat/maara 1234M
-                  ::tehtavamaarat/hoitovuosi 2021
+                  ::tm-domain/maara 1234M
+                  ::tm-domain/hoitovuosi 2021
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
-          (dissoc vastaus ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
+          (dissoc vastaus ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
           odotettu))))
 
 (deftest muokkaa-sopimuksen-tehtavamaaraa-testi
@@ -319,15 +320,15 @@
                     :maara 9001M})
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-suolaus
-                  ::tehtavamaarat/maara 9001M
-                  ::tehtavamaarat/hoitovuosi 2022
+                  ::tm-domain/maara 9001M
+                  ::tm-domain/hoitovuosi 2022
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
-          (dissoc muokattu ::muokkaustiedot/muokattu ::tehtavamaarat/sopimus-tehtavamaara-id)
+          (dissoc muokattu ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
           odotettu))
     (is (=
-          (::tehtavamaarat/sopimus-tehtavamaara-id muokattava)
-          (::tehtavamaarat/sopimus-tehtavamaara-id muokattu)))))
+          (::tm-domain/sopimus-tehtavamaara-id muokattava)
+          (::tm-domain/sopimus-tehtavamaara-id muokattu)))))
 
 (deftest sopimuksen-tehtavamaara-vaara-tehtava-testi
   (let [vastaus (try (kutsu-palvelua (:http-palvelin jarjestelma)
