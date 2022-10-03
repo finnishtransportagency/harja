@@ -215,7 +215,7 @@
                             :tietoja [["Kohde"
                                        "Koko maa"]
                                       ["Tyypin hoito urakoita käynnissä"
-                                       3]]}]]
+                                       2]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
 
 ;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
