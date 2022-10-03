@@ -275,6 +275,8 @@ tr.uusitehtavakoodi td {
 .toast-viesti {
   padding-left: 12px;
   padding-right: 12px;
+  padding-top: 14px;
+  padding-bottom: 14px;
   font-weight: 600;
   min-height: 40px;
   display: flex;
@@ -315,6 +317,7 @@ tr.uusitehtavakoodi td {
 .info-laatikko {
   max-width: 900px;
   &.varoitus {
+    color: @gray25;
     background: @red-lighter;
     border: 1px solid @red-light;
     span.livicon-exclamation-triangle {
@@ -322,6 +325,7 @@ tr.uusitehtavakoodi td {
     }
   }
   &.onnistunut {
+    color: @gray25;
     background: @green-lighter;
     border: 1px solid @green-dark;
     span.livicon-check {
@@ -329,6 +333,7 @@ tr.uusitehtavakoodi td {
     }
   }
   &.neutraali {
+    color: @gray25;
     background: @blue-lighter;
     border: 1px solid @blue-default;
     svg {
@@ -457,6 +462,10 @@ tr.uusitehtavakoodi td {
 .raksiboksi {
   background-color: @harjan-taustavari;
   width: 315px;
+  &.tiivis {
+      width: fit-content;
+      margin-right: 15px;
+  }
   > div {
     margin: 8px 0;
   }
@@ -492,4 +501,8 @@ tr.uusitehtavakoodi td {
 
 .col-xs-offset-1-right {
     margin-right: 8.33333333%;
+}
+
+.ala-margin-16 {
+    margin-bottom:@valistys-16;
 }

@@ -283,12 +283,13 @@
                                 :as kentta} data]
   (let [fmt (or (numero-fmt kentta) str)
         teksti (atom nil)
-        kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)]
+        kokonaisosan-maara (or (:kokonaisosan-maara kentta) 10)
+        id (or elementin-id (gensym))]
     (komp/luo
       (komp/nimi "Numerokenttä")
       (komp/piirretty #(when (and oletusarvo (nil? @data)) (reset! data oletusarvo)))
       (fn [{:keys [lomake? kokonaisluku? vaadi-ei-negatiivinen? vaadi-negatiivinen? toiminta-f on-blur on-focus
-                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? muokattu?] :as kentta} data]
+                   disabled? vayla-tyyli? virhe? yksikko validoi-kentta-fn salli-whitespace? disabloi-autocomplete? muokattu?] :as kentta} data]
         (let [nykyinen-data @data
               nykyinen-teksti (or @teksti
                                   (normalisoi-numero (fmt nykyinen-data) salli-whitespace?)
@@ -312,8 +313,9 @@
                                                      "}((\\.|,)\\d{0,"
                                                      desimaalien-maara
                                                      "})?"))]
+          
           [:span.numero
-           [:input {:id (or elementin-id (gensym))
+           [:input {:id id
                     :class (cond-> nil
                                    (and lomake?
                                         (not vayla-tyyli?)) (str "form-control ")
@@ -325,6 +327,7 @@
                              {:padding-right (str "calc(19px + " (count yksikko) "ch")})
                     :type "text"
                     :disabled disabled?
+                    :auto-complete (if disabloi-autocomplete? "off" "on")
                     :placeholder (placeholder kentta data)
                     :size (or koko nil)
                     :on-key-down (or on-key-down nil)
@@ -1756,8 +1759,8 @@
   [:div [:h3 teksti]])
 
 (defn raksiboksi
-  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  [:span.raksiboksi
+  [{:keys [tiivis? teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
+  [:span {:class (merge #{"raksiboksi"} (when tiivis? #{"tiivis"}))}
    [:div.input-group
     [tee-kentta
      {:tyyppi :checkbox
