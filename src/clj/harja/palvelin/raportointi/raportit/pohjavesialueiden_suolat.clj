@@ -69,7 +69,7 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
   (let [tulos (laske db urakka-id alkupvm loppupvm)
-        raportin-nimi "Pohjavesialueiden suolatoteumat"
+        raportin-nimi "Suolatoteumat (kaikki pohjavesialueet)"
         otsikko (raportin-otsikko
                   (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                   raportin-nimi alkupvm loppupvm)]
