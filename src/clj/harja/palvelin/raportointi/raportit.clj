@@ -362,14 +362,14 @@
    {:nimi         :pohjavesialueiden-suolatoteumat
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
-    :kuvaus       "Pohjavesialueiden suolatoteumat"
+    :kuvaus       "Suolatoteumat - Kaikki pohjavesialueet"
     :suorita      #'harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :suolatoteumat-rajoitusalueilla
     :parametrit   [{:tyyppi "aikavali", :konteksti "urakka", :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
-    :kuvaus       "Rajoitusalueiden suolatoteumat"
+    :kuvaus       "Suolatoteumat - Urakkasopimuksen rajoitusalueet"
     :suorita      #'harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
