@@ -41,7 +41,7 @@
                         "23116"))
 (def id-K2 (hae-toimenpidekoodin-id "K2" "23104"))
 (def id-ib-rampit (hae-toimenpidekoodin-id "Ib rampit" "23104"))
-(def rumpujen-tarkastus (hae-toimenpidekoodin-id "Rumpujen tarkastus" "23116"))
+(def rumpujen-korjaus (hae-toimenpidekoodin-id "Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm" "20191"))
 
 ;; Uudet lisättävät tehtävät
 (def id-ise-rampit (hae-toimenpidekoodin-id "Ise rampit" "23104"))
@@ -54,7 +54,7 @@
 ;; Tehtäviä, joilla sopimuksen tehtävämäärä
 (def id-III (hae-toimenpidekoodin-id "III" "23104"))
 (def id-katupolyn-sidonta (hae-toimenpidekoodin-id "Katupölynsidonta" "23116"))
-(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Sorateiden pölynsidonta" "23124"))
+(def id-soratoiden-polynsidonta (hae-toimenpidekoodin-id "Sorateiden pölynsidonta (materiaali)" "23124"))
 (def id-id-ohituskaistat (hae-toimenpidekoodin-id "Is ohituskaistat" "23104"))
 
 
@@ -90,7 +90,7 @@
                                   +kayttaja-jvh+
                                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id})]
     #_(is (= (count hierarkia) 108) "Hierarkiassa on 108 osaa.")
-    (is (= (:tehtava (first (filter #(= rumpujen-tarkastus (:tehtava-id %)) hierarkia))) "Rumpujen tarkastus") "Tehtävähierarkiassa palautuu tietoja.")))
+    (is (= (:tehtava (first (filter #(= rumpujen-korjaus (:tehtava-id %)) hierarkia))) "Soratien rumpujen korjaus ja uusiminen  Ø> 600  <=800 mm") "Tehtävähierarkiassa palautuu tietoja.")))
 
 
 
@@ -251,7 +251,8 @@
                                                  +kayttaja-jvh+
                                                  {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                                   :hoitokauden-alkuvuosi 2028})]
-    (is (empty? (filter #(and
+
+       (is (empty? (filter #(and
                          (not= 0 (:maara %))
                          (some? (:maara %))) tehtavat-ja-maarat-urakan-ulkopuolelta)) "Urakan ulkopuolella ei löydy määriä"))
   (let [tehtavat-ja-maarat-kaikki (kutsu-palvelua
@@ -260,7 +261,8 @@
                                     +kayttaja-jvh+
                                     {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                      :hoitokauden-alkuvuosi :kaikki})]
-    (is (true? (let [maaralliset (filter 
+
+       (is (true? (let [maaralliset (filter
                                  #(some? (:maarat %)) 
                                  (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
                
@@ -272,7 +274,8 @@
                                         +kayttaja-jvh+
                                         {:urakka-id             904569045
                                          :hoitokauden-alkuvuosi 2020})]
-    (is (every? #(and (nil? (:urakka %))
+
+       (is (every? #(and (nil? (:urakka %))
                  (nil? (:hoitokauden-alkuvuosi %))
                  (or (= 0 (:maara %))
                    (nil? (:maara %)))) tehtavat-ja-maarat-ei-urakkaa) "Tietoja ei löydy, jos ei urakkaa"))
@@ -287,11 +290,11 @@
                   :tallenna-sopimuksen-tehtavamaara
                   +kayttaja-jvh+
                   {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                   :tehtava-id id-ise-rampit
+                   :tehtava-id id-yksityisten-rumpujen
                    :hoitovuosi 2021
                    :maara 1234M})
         odotettu {::urakka/id 35
-                  ::toimenpidekoodi/id id-ise-rampit
+                  ::toimenpidekoodi/id id-yksityisten-rumpujen
                   ::tehtavamaarat/maara 1234M
                   ::tehtavamaarat/hoitovuosi 2021
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
