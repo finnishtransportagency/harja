@@ -81,12 +81,12 @@
          (list "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" 0 0)
          (list "Alataso Lisätyöt" 0 0)
          (list "Digitalisaatio ja innovaatiot (T4)" 0 0)
-         ["Yhteensä" 44461.24M 20666.20M]]]
+         ["Yhteensä" 48905.68M 20666.20M]]]
        [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
         [{:leveys 1, :otsikko ""} {:leveys 1, :otsikko "", :fmt :raha}]
         [["Tavoitehinta: " 250000M]
-         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 44461.24M]
-         ["Jäljellä: " 205538.76M]]]])
+         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 48905.68M]
+         ["Jäljellä: " 201094.32M]]]])
 
 (deftest kulut-tehtavaryhmittain-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
