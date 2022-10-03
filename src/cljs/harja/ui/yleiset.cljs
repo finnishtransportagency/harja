@@ -643,12 +643,13 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
-  ([teksti] (vihje teksti nil))
-  ([teksti luokka]
+  ([teksti] (vihje teksti nil 24))
+  ([teksti luokka] (vihje teksti luokka 24))
+  ([teksti luokka ikonin-koko]
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
+     (ikonit/ikoni-ja-teksti (ikonit/nelio-info ikonin-koko) teksti)]]))
 
 (defn toast-viesti
   "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"

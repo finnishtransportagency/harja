@@ -109,7 +109,9 @@
                                                     :as sarake}
                                                    i]
                                                 (let [arvo (if hae (hae rivi) (nimi rivi))
-                                                      valinta (some #(when (= (valinta-arvo %) arvo) %) valinnat)]
+                                                      valinta (if valinta-arvo
+                                                                (some #(when (= (valinta-arvo %) arvo) %) valinnat)
+                                                                arvo)]
                                                   (if valinta-nayta
                                                     (valinta-nayta valinta)
                                                     arvo)))]

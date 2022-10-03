@@ -19,6 +19,7 @@
             [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.domain.urakka :as u-domain]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
@@ -75,7 +76,7 @@
               vesivayla? (:vesivayla? optiot)
               yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
               muokataan-vanhaa? (some? (:id @muokattu))
-              suorasanktio? (some? (:suorasanktio @muokattu))
+              suorasanktio? (:suorasanktio @muokattu)
               lukutila? (if (not muokataan-vanhaa?) false @lukutila)]
 
           [:div.padding-16.ei-sulje-sivupaneelia
@@ -89,7 +90,11 @@
                   :else
                   "Lisää uusi")]
            (when (and lukutila? muokataan-vanhaa?)
-             [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)])
+             [:div.flex-row.alkuun.valistys16
+              [napit/yleinen-reunaton "Muokkaa" #(swap! lukutila not)
+               {:disabled (not suorasanktio?)}]
+              (when (not suorasanktio?)
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
                       
            ;; Vaadi tarvittavat tiedot ennen rendausta
            (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
@@ -296,15 +301,12 @@
                    :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                    :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                    :fmt pvm/pvm :tyyppi :pvm
-                   :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                             [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama) "Ei voi olla ennen havaintoa"]]}
+                   :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                   {:otsikko "Perintä" :nimi :perintapvm
                    :pakollinen? true
                    ::lomake/col-luokka "col-xs-4"
                    :fmt pvm/pvm :tyyppi :pvm
-                   :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                             [:pvm-kentan-jalkeen (comp :aika :laatupoikkeama)
-                              "Ei voi olla ennen havaintoa"]]})
+                   :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
                 {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                  :pakollinen? true
@@ -394,6 +396,30 @@
     (viesti/nayta! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
 
+(defn- sanktion-kuvaus [{:keys [suorasanktio laatupoikkeama]}]
+  (let [kohde (:kohde laatupoikkeama)]
+    (if suorasanktio
+      kohde
+      [:span
+       (str "Laatupoikkeama: " kohde)
+       [:br]
+       (str (when (get-in laatupoikkeama [:tr :numero])
+              (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
+
+(defn- sanktion-perustelu [{:keys [suorasanktio laatupoikkeama] :as param}]
+  (println param)
+  (let [perustelu (get-in laatupoikkeama [:paatos :perustelu])
+        kuvaus (:kuvaus laatupoikkeama)]
+    (if suorasanktio
+      [:span
+       perustelu]
+
+      [:<>
+       (str "Laatupoikkeaman kuvaus: " kuvaus)
+       [:br]
+       [:br]
+       (str "Päätöksen selitys: " perustelu)])))
+
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
@@ -433,8 +459,10 @@
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi) :leveys 3})
-       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae (comp :kohde :laatupoikkeama) :leveys 3})
-       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :hae (comp :perustelu :paatos :laatupoikkeama) :leveys 3}
+       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
+                              :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
+       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3
+        :tyyppi :komponentti :komponentti sanktion-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1 :tyyppi :numero :tasaa :oikea
         :hae #(or (let [summa (:summa %)]
                     (fmt/euro-opt false
