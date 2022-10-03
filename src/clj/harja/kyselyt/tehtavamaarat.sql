@@ -163,14 +163,13 @@ WHERE tr1.emo is null
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
--- Hakee ne
-select st.maara as "sopimuksen-tehtavamaara",
-       st.tehtava as "tehtava",
-       st.hoitovuosi as "hoitovuosi",
-       tpk.aluetieto as "aluetieto"
-       from sopimus_tehtavamaara st
+select st.maara                    as "sopimuksen-tehtavamaara",
+       st.tehtava                  as "tehtava",
+       st.hoitovuosi               as "hoitovuosi",
+       tpk.aluetieto               as "aluetieto"
+from sopimus_tehtavamaara st
        join toimenpidekoodi tpk on st.tehtava = tpk.id
-       where st.urakka = :urakka;
+where st.urakka = :urakka;
 
 -- name: hae-tehtavahierarkia-maarineen
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
