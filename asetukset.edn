@@ -185,9 +185,10 @@
                         :kanavien-osoite "https://ava.vayla.fi/harja/Kanavat.shz"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"}
 
- :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
-       :kayttajatunnus "restusr"
-       :salasana #=(slurp "../.harja/yha-salasana")}
+ :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
+       :kayttajatunnus "restusr" ;; Poistetaan kun pilviversio käytössä
+       :salasana #=(slurp "../.harja/yha-salasana") ;; Poistetaan kun pilviversio käytössä
+       :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
  :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
          :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
@@ -227,6 +228,7 @@
  ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
  ;; :reittitarkistukset
+ ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :varusteet-ulkoiset

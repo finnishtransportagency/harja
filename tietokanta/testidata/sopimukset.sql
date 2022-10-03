@@ -22,6 +22,7 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pirkanma
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Lapin tiemerkinnän palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','2A06228/10', (SELECT id FROM urakka WHERE nimi='Lapin tiemerkinnän palvelusopimus 2013-2018'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Kempeleen valaistuksen pääsopimus', '2007-03-01','2012-05-30','9H05224/01', (SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tampereen alueurakka pääsopimus','2017-10-01','2022-09-30','6A16339/01', (SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tampereen MHU 22 pääsopimus','2022-10-01','2027-09-30','8ASEGE39/01', (SELECT id FROM urakka WHERE nimi = 'Tampereen MHU 2022-2026'));
 
 -- Kajaanin pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
@@ -103,3 +104,7 @@ VALUES ('Kemin hoitourakka sopimus', '2019-10-01', '2023-09-30', '133337-LAP1',
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Kittilän MHU sopimus', '2019-10-01', '2023-09-30', '11333377-LAP1',
         (SELECT id FROM urakka WHERE nimi = 'Kittilän MHU 2019-2024'));
+-- Raaseporin sopimus
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES
+    ('Raaseporin sopimus',NOW(),NOW() + INTERVAL '2 year','SemiProj23423', (SELECT id FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'));

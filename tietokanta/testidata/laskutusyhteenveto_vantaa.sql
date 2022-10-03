@@ -233,11 +233,54 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019') AND tyyppi = 'muu'));
 
 -- Sanktioita
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
-VALUES ('A'::sanktiolaji, 100, '2015-01-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Talvihoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 500, '2015-05-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 700, '2015-07-12 06:06.37', null, null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 1000, '2015-08-01 00:00.00', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 800, '2015-08-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 900, '2015-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'), 1, true, 2),
-  ('A'::sanktiolaji, 20160, '2016-09-12 06:06.37', 'MAKU 2010', null, (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'), 1, true, 2);
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+                     luoja)
+VALUES ('A'::SANKTIOLAJI, 100, '2015-01-12 06:06.37', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Talvihoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1), TRUE,
+        2),
+       ('A'::SANKTIOLAJI, 500, '2015-05-12 06:06.37', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2),
+       ('A'::SANKTIOLAJI, 700, '2015-07-12 06:06.37', NULL, NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2),
+       ('A'::SANKTIOLAJI, 1000, '2015-08-01 00:00.00', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2),
+       ('A'::SANKTIOLAJI, 800, '2015-08-12 06:06.37', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2),
+       ('A'::SANKTIOLAJI, 900, '2015-09-12 06:06.37', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2),
+       ('A'::SANKTIOLAJI, 20160, '2016-09-12 06:06.37', 'MAKU 2010', NULL,
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
+        (SELECT id
+           FROM sanktiotyyppi
+                -- 1, Muu tuote
+          WHERE koodi = 1),
+        TRUE, 2);

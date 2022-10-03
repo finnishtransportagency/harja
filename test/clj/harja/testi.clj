@@ -1435,7 +1435,7 @@
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (pystyta-harja-tarkkailija!)
-     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti) ;; Pakota sonja-sahkoposti pois käytöstä
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti :toteumatyokalu) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1633,13 +1633,15 @@
   <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
 
 (defn hae-ulos-lahtevat-integraatiotapahtumat []
-  (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
-          FROM integraatioviesti WHERE suunta = 'ulos' AND sisalto is not null and sisalto != '';")))
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+                 FROM integraatioviesti
+                WHERE suunta = 'ulos'
+                  AND sisalto is not null and sisalto != ''
+                ORDER BY integraatiotapahtuma ASC;")))
 
 (defn hae-kaikki-integraatioviestit []
-  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit,
-                      osoite, kasitteleva_palvelin
-                 FROM integraatioviesti;")))
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
+                 FROM integraatioviesti ORDER BY integraatiotapahtuma ASC, id asc ;")))
 
 (defn nykyhetki-iso8061-formaatissa-menneisyyteen
   "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."

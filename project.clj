@@ -32,6 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
+                 [cljs-http "0.1.46"]
                  [http-kit "2.5.3"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
@@ -43,7 +44,7 @@
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.2.5"]
+                 [org.postgresql/postgresql "42.4.1"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]
@@ -144,7 +145,7 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.11"]
+                 [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
@@ -204,7 +205,7 @@
                                     "dev-resources/tmp"
                                     "target"
                                     "resources/public/js/harja.js"
-                                    "resource/public/js/harja"]
+                                    "resources/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"

@@ -125,7 +125,7 @@
         (is (= 200 (:status @vastaus)))
 
         ;; Leppäjärvi oli jo merkitty valmiiksi tiemerkintään, mutta sitä päivitettiin -> pitäisi lähteä maili
-        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
+        (is (= sahkoposti-lahetys-url (:osoite (second integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Laitetaan sama pyyntö uudelleen, maili ei lähde koska valmis tiemerkintään -pvm sama kuin aiempi
         (let [vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-paallystys")]
@@ -154,8 +154,10 @@
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
         (is (= 200 (:status @vastaus)))
 
+        ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty
+        (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "Aikataulu kirjattu onnistuneesti") "Aikataulu kirjattu onnistuneesti")
         ;; Valmiiksi tiemerkintään annettiin ekaa kertaa tälle kohteelle -> pitäisi lähteä maili
-        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")))))
+        (is (= sahkoposti-lahetys-url (:osoite (second integraatioviestit))) "Sähköposti lähetettiin")))))
 
 (deftest tiemerkinnan-paivittaminen-valittaa-sahkopostin-kun-kohde-valmis
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))
@@ -174,8 +176,10 @@
             integraatioviestit (hae-ulos-lahtevat-integraatiotapahtumat)]
         (is (= 200 (:status @vastaus)))
 
+        ;; Integraatioviesteihin tulee merkintä, että aikataulu on päivitetty
+        (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "Aikataulu kirjattu onnistuneesti") "Aikataulu kirjattu onnistuneesti")
         ;; Tiemerkintä valmis oli annettu aiemmin, mutta nyt se päivittyi -> mailia menemään
-        (is (= sahkoposti-lahetys-url (:osoite (first integraatioviestit))) "Sähköposti lähetettiin")
+        (is (= sahkoposti-lahetys-url (:osoite (second integraatioviestit))) "Sähköposti lähetettiin")
 
         ;; Lähetetään sama pyyntö uudelleen, pvm ei muutu, ei lennä mailit
         ;; FIXME Onkohan tämä bugi? Maili ei kai saisi lähteä jos pvm on sama kuin ennen. Nyt näyttää siltä että joskus menee testi läpi ja joskus ei

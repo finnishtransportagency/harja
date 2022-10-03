@@ -44,6 +44,7 @@
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
   [harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat]
+  [harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -363,6 +364,13 @@
     :konteksti    #{"urakka"}
     :kuvaus       "Pohjavesialueiden suolatoteumat"
     :suorita      #'harja.palvelin.raportointi.raportit.pohjavesialueiden-suolat/suorita
+    :urakkatyyppi #{:hoito :teiden-hoito}}
+
+   {:nimi         :suolatoteumat-rajoitusalueilla
+    :parametrit   [{:tyyppi "aikavali", :konteksti "urakka", :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"urakka"}
+    :kuvaus       "Rajoitusalueiden suolatoteumat"
+    :suorita      #'harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :kulut-tehtavaryhmittain

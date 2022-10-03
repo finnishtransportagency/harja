@@ -329,6 +329,13 @@ WHERE urakka = :urakka AND
       (muokattu > :aika OR luotu > :aika);
 
 -- name: hae-ilmoitukset-ytunnuksella
+WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
+                           FROM urakka u
+                                JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
+                                -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
+                                -- 12 h urakan päättymisvuorokauden jälkeenkin.
+                          WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
+                                (u.loppupvm IS NULL AND u.alkupvm <= NOW())))
 SELECT
     i.ilmoitusid,
     i.tunniste,
@@ -361,18 +368,16 @@ SELECT
     i.lahettaja_puhelinnumero,
     i.lahettaja_sahkoposti,
     i."aiheutti-toimenpiteita",
-    json_agg(row_to_json(row(it.kuitattu, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
+    json_agg(row_to_json(row(it.kuitattu::timestamptz, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
         it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
-        coalesce(it.kuittaaja_organisaatio_ytunnus, '')))) AS kuittaukset
+        coalesce(it.kuittaaja_organisaatio_ytunnus, ''), it.kanava))) AS kuittaukset
 FROM ilmoitus i
-    JOIN urakka u ON u.id = i.urakka
-                         -- Haetaan vain käynnissäolevista urakoista
-                         AND ((u.loppupvm >= NOW() AND u.alkupvm <= NOW()) OR (u.loppupvm IS NULL AND u.alkupvm <= NOW()))
-    JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = :ytunnus
-    JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
-WHERE (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+     JOIN ilmoitus_urakat u ON u.id = i.urakka,
+     ilmoitustoimenpide it
+where it.ilmoitus = i.id AND
+    (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
       OR
-       it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
+      it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
