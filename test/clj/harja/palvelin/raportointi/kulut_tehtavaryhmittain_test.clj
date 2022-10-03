@@ -47,8 +47,6 @@
          (list "Vesakonraivaukset ja puun poisto (V)" 333.33M 0)
          (list "Nurmetukset ja muut vihertyöt (N)" 222.22M 0)
          (list "Kuivatusjärjestelmät (K)" 2222.22M 0)
-         (list "Rummut, päällystetiet (R)" 0 0)
-         (list "Rummut, soratiet (S)" 0 0)
          (list "Kaiteet, aidat ja kivetykset (U)" 0 0)
          (list "Kuumapäällyste (Y1)" 11001.94M 5500.40M)
          (list "Kylmäpäällyste (Y2)" 0 0)
@@ -64,8 +62,8 @@
          (list "Kesäsuola, materiaali (D)" 0 0)
          (list "Äkilliset hoitotyöt, Soratiet (T1)" 0 0)
          (list "Vahinkojen korjaukset, Soratiet (T2)" 0 0)
+         (list "Rummut, soratiet (S)" 0 0)
          (list "Avo-ojitus, päällystetyt tiet (X)" 0 0)
-         (list "Avo-ojitus, soratiet (Z)" 15401.94M 7700.40M)
          (list "RKR-korjaus (Q)" 13201.94M 6600.40M)
          (list "Muut, MHU ylläpito (F)" 0 0)
          (list "ELY-rahoitteiset, liikenneympäristön hoito (E)" 0 0)
@@ -79,12 +77,12 @@
          (list "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä" 0 0)
          (list "Alataso Lisätyöt" 0 0)
          (list "Digitalisaatio ja innovaatiot (T4)" 0 0)
-         ["Yhteensä" 59863.18M 28366.60M]]]
+         ["Yhteensä" 44461.24M 20666.20M]]]
        [:taulukko {:otsikko "Urakkavuoden alusta", :viimeinen-rivi-yhteenveto? true}
         [{:leveys 1, :otsikko ""} {:leveys 1, :otsikko "", :fmt :raha}]
         [["Tavoitehinta: " 250000M]
-         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 59863.18M]
-         ["Jäljellä: " 190136.82M]]]])
+         ["Urakkavuoden alusta tav.hintaan kuuluvia: " 44461.24M]
+         ["Jäljellä: " 205538.76M]]]])
 
 (deftest kulut-tehtavaryhmittain-testi
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
