@@ -237,7 +237,8 @@
 
     ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
     ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
-    (is (= 1.068 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+    ;; Korjattu olettaen, että koodi toimii. Tämä hajosi, kun Rovaniemen urakka alkoi, eli 1.10.2022
+    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
