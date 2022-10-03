@@ -20,7 +20,7 @@
 (defrecord PoistaKulu [id])
 (defrecord PoistoOnnistui [tulos])
 (defrecord AsetaHakukuukausi [kuukausi])
-(defrecord AsetaHakuPaivamaara [polku arvo])
+(defrecord AsetaHakuPaivamaara [alkupvm loppupvm])
 
 (defrecord KuluHaettuLomakkeelle [kulu])
 
@@ -424,15 +424,11 @@
 
   AsetaHakuPaivamaara
   (process-event
-    [{:keys [polku arvo]} app]
-    (let [arvo (if (nil? arvo)
-                 (-> @tila/yleiset :urakka polku)
-                 arvo)]
-      (-> app
-          (assoc-in [:parametrit :haun-kuukausi] nil)
-          (assoc-in [:parametrit (case polku
-                                       :alkupvm :haun-alkupvm
-                                       :loppupvm :haun-loppupvm)] arvo))))
+    [{:keys [alkupvm loppupvm]} app]
+    (-> app
+        (assoc-in [:parametrit :haun-kuukausi] nil)
+        (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
+        (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
 
   ;; FORMITOIMINNOT
 
