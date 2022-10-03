@@ -51,7 +51,7 @@
    ["sanktioraportti" "Sanktioraportti"]
    ["materiaaliraportti" "Materiaaliraportti"]
    ["yks-hint-tehtavien-summat" "Yksikköhintaisten tehtävien summat"]
-   ["pohjavesialueiden-suolatoteumat" "Pohjavesialueiden suolatoteumat"]
+   ["pohjavesialueiden-suolatoteumat" "Suolatoteumat (kaikki pohjavesialueet)"]
    ["laatupoikkeamaraportti" "Laatupoikkeamaraportti"]
    ["yks-hint-kuukausiraportti" "Yksikköhintaisten töiden kuukausiraportti"]
    ["tehtavamaarat" "Tehtävämäärät"]

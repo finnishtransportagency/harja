@@ -77,7 +77,7 @@
 
       (is (= vastaus
              [:raportti
-              {:nimi (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))
+              {:nimi (str "Aktiivinen Oulu Testi, Suolatoteumat (kaikki pohjavesialueet) ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))
                :orientaatio :landscape}
               [:taulukko
                {:otsikko "11244001-Kempeleenharju"
