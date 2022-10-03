@@ -378,9 +378,9 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorateiden pinnan hoito, hoitoluokka III', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	126, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1260, voimassaolo_loppuvuosi = 2022;
 -- Soratieluokat vuodesta 2023 lähtien
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Soratieluokka I', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi) VALUES (	'Soratieluokka I', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 2023)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1250, voimassaolo_alkuvuosi = 2023;
-INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Soratieluokka II', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, voimassaolo_alkuvuosi) VALUES (	'Soratieluokka II', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	125, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 2023)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1255, voimassaolo_alkuvuosi = 2023;
 
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Sorapintaisten kävely- ja pyöräilyväylienhoito', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'tiekm',	127, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
@@ -1266,6 +1266,28 @@ UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2020 WHERE nimi = 'Seurantaj
 -- Muutokset tehtäviin lokakuussa 2022
 UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2021 WHERE nimi = 'Oja- ja luiskamateriaalien käyttö kulutuskerrokseen';
 -- TODO: Tarkista tehtäväryhmän (K) tehtävät ja niiden sijoittelu, Rumpujen hoito-otsikko puuttuu.
+
+-- Tehtäväryhmien järjestysnumeroita. Kuluraportti ei salli samaa numeroa monelle tehtäväryhmälle.
+UPDATE tehtavaryhma SET jarjestys = 102 WHERE nimi = 'Kuumapäällyste (Y1)';
+UPDATE tehtavaryhma SET jarjestys = 103 WHERE nimi = 'KT-Valu (Y3)';
+UPDATE tehtavaryhma SET jarjestys = 104 WHERE nimi = 'Kylmäpäällyste (Y2)';
+UPDATE tehtavaryhma SET jarjestys = 105 WHERE nimi = 'Käsipaikkaus pikapaikkausmassalla (Y4)';
+UPDATE tehtavaryhma SET jarjestys = 106 WHERE nimi = 'Puhallus-SIP (Y5)';
+UPDATE tehtavaryhma SET jarjestys = 107 WHERE nimi = 'Saumojen juottaminen bitumilla (Y6)';
+UPDATE tehtavaryhma SET jarjestys = 108 WHERE nimi = 'Valu (Y7)';
+UPDATE tehtavaryhma SET jarjestys = 109 WHERE nimi = 'Siltapäällysteet (H)';
+UPDATE tehtavaryhma SET jarjestys = 135 WHERE nimi = 'Äkilliset hoitotyöt, Talvihoito (T1)';
+UPDATE tehtavaryhma SET jarjestys = 136 WHERE nimi = 'Äkilliset hoitotyöt, Liikenneympäristön hoito (T1)';
+UPDATE tehtavaryhma SET jarjestys = 137 WHERE nimi = 'Äkilliset hoitotyöt, Soratiet (T1)';
+UPDATE tehtavaryhma SET jarjestys = 138 WHERE nimi = 'Vahinkojen korjaukset, Talvihoito (T2)';
+UPDATE tehtavaryhma SET jarjestys = 139 WHERE nimi = 'Vahinkojen korjaukset, Liikenneympäristön hoito (T2)';
+UPDATE tehtavaryhma SET jarjestys = 140 WHERE nimi = 'Vahinkojen korjaukset, Soratiet (T2)';
+UPDATE tehtavaryhma SET jarjestys = 141 WHERE nimi = 'Rummut, päällystetiet (R)';
+UPDATE tehtavaryhma SET jarjestys = 142 WHERE nimi = 'Rummut, soratiet (S)';
+UPDATE tehtavaryhma SET jarjestys = 143 WHERE nimi = 'Avo-ojitus, päällystetyt tiet (X)';
+UPDATE tehtavaryhma SET jarjestys = 144 WHERE nimi = 'Avo-ojitus, soratiet (Z)';
+UPDATE tehtavaryhma SET jarjestys = 152 WHERE nimi = 'Muut, MHU ylläpito (F)';
+UPDATE tehtavaryhma SET jarjestys = 153 WHERE nimi = 'Muut, liikenneympäristön hoito (F)';
 
 -- Tehtäväryhmien otsikkomuutoksia ja järjestysmuutoksia 2022, muutokset näkyvät myös aiemmille urakoille
 UPDATE tehtavaryhma SET otsikko = '2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito' WHERE otsikko = '2.9 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito';
