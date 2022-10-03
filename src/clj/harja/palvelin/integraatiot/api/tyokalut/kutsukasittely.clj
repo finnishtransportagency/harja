@@ -461,8 +461,9 @@
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
-                    nil
                     parametrit
+                    (:headers request)
+                    nil
                     #(let
                        [_ (vaadi-jarjestelmaoikeudet db kayttaja vaadi-analytiikka-oikeus?)]
                        (tee-optimoitu-json-vastaus 200 (kasittele-kutsu-fn parametrit kayttaja db) request-origin)))]
