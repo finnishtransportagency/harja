@@ -108,7 +108,9 @@
                                                     :as sarake}
                                                    i]
                                                 (let [arvo (if hae (hae rivi) (nimi rivi))
-                                                      valinta (some #(when (= (valinta-arvo %) arvo) %) valinnat)]
+                                                      valinta (if valinta-arvo
+                                                                (some #(when (= (valinta-arvo %) arvo) %) valinnat)
+                                                                arvo)]
                                                   (if valinta-nayta
                                                     (valinta-nayta valinta)
                                                     arvo)))]
@@ -252,7 +254,7 @@
                 fmt
                 tyyppi
                 (if (and (= tyyppi :valinta)
-                             valinta-arvo valinta-nayta)
+                             valinta-nayta)
                       (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
                       arvo)]))))})))
 
