@@ -365,8 +365,6 @@
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))
-        optiot {:nimi  urakka-nimi
-                :tyhja (when (empty? kulut) "Ei kuluja valitulla aikavälillä.")}
         sarakkeet [{:otsikko "Eräpäivä"}
                    {:otsikko
                     "Maksuerä"}
@@ -374,15 +372,12 @@
                     "Toimenpide"}
                    {:otsikko "Tehtäväryhmä"}
                    {:otsikko "Summa" :fmt :raha}]
-        luo-rivi (fn [rivi] [(-> rivi
-                                 :erapaiva
-                                 pvm/pvm
-                                 str)
-                             (str "HA" (:maksuera rivi))
-                             (:toimenpide rivi)
-                             (or (:tehtavaryhma rivi)
-                                 "Lisätyö")
-                             [:arvo-ja-yksikko {:arvo (:summa rivi)}]])
+        luo-rivi (fn [rivi]
+                   [(-> rivi :erapaiva pvm/pvm str)
+                    (str "HA" (:maksuera rivi))
+                    (:toimenpide rivi)
+                    (or (:tehtavaryhma rivi) "Lisätyö")
+                    [:arvo-ja-yksikko {:arvo (:summa rivi)}]])
         eka-rivi-jossa-kustannuksia 4
         luo-data (fn [kaikki [vuosi-kuukausi rivit]]
                    (let [yhteenvetorivi [[nil nil nil "Yhteensä:" [:kaava {:kaava :summaa-yllaolevat
@@ -390,24 +385,23 @@
                                                                            :loppurivi (+ (count rivit)
                                                                                          (- eka-rivi-jossa-kustannuksia 1))}]]]]
                      (conj kaikki
-                           [:taulukko (merge optiot
-                                             {:sheet-nimi vuosi-kuukausi
-                                              :viimeinen-rivi-yhteenveto? true})
+                           [:taulukko {:nimi urakka-nimi
+                                       :sheet-nimi vuosi-kuukausi
+                                       :viimeinen-rivi-yhteenveto? true}
                             sarakkeet (into []
                                             (concat
                                               (mapv luo-rivi rivit)
                                               yhteenvetorivi))])))
         taulukot (reduce luo-data [] kulut-kuukausien-mukaan)
-        _ (println "Jarno taulukot " taulukot)
         taulukko (concat
-                   [:raportti {:nimi        (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
-                               :raportin-yleiset-tiedot {:urakka urakka-nimi
+                   [:raportti {:raportin-yleiset-tiedot {:urakka urakka-nimi
                                                          :alkupvm (pvm/pvm alkupvm)
                                                          :loppupvm (pvm/pvm loppupvm)
                                                          :raportin-nimi "Kulujen kohdistus"}
                                :orientaatio :landscape}]
                    (if (empty? taulukot)
-                     [[:taulukko optiot [{:otsikko (str urakka-nimi " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}]
+                     [[:taulukko {:nimi urakka-nimi}
+                       [{:otsikko (str urakka-nimi " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}]
                        [["Ei kuluja valitulla aikavälillä"]]]]
                        taulukot))]
     (excel/muodosta-excel (vec taulukko)
