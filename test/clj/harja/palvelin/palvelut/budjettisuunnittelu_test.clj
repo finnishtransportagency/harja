@@ -567,7 +567,7 @@
               (str "Ajat eivät oikein päivityksen jälkeen päivitetylle datalle toimenpiteelle: " toimenpide-avain " ja tallennettavalle asialle: " tallennettava-asia)))))))
 
 (deftest tallenna-johto-ja-hallintokorvaukset
-  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
