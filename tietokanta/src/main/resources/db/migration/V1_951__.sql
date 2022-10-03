@@ -73,4 +73,3 @@ ALTER TABLE suolasakko DROP CONSTRAINT uniikki_suolasakko;
 ALTER TABLE suolasakko
     ADD CONSTRAINT uniikki_suolasakko
         UNIQUE (urakka, hoitokauden_alkuvuosi, tyyppi);
-
