@@ -195,8 +195,8 @@ SELECT ut.urakka                   as "urakka",
        tpk4.ensisijainen           as "Ensisijainen",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
-       tpk4.aluetieto as "aluetieto",
-       sp.tallennettu as "sopimus-tallennettu"  
+       tpk4.aluetieto              as "aluetieto",
+       sp.tallennettu              as "sopimus-tallennettu"  
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
        JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
@@ -221,7 +221,8 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND tpk4.suunnitteluyksikko IS not null AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+  AND tpk4.suunnitteluyksikko IS not null
+  AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 
