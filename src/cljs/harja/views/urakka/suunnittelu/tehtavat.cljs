@@ -35,37 +35,37 @@
         [:<>
          [:div.flex-row.sticky-ylos.valkoinen-tausta
           {:style {:justify-content "flex-start"
-                   :align-items     "flex-end"}}
+                   :align-items "flex-end"}}
           [:div
-           {:style {:width        "840px"
+           {:style {:width "840px"
                     :margin-right "15px"}}
            [:label.alasvedon-otsikko "Toimenpide"]
-           [yleiset/livi-pudotusvalikko {:valinta      toimenpide
-                                         :valitse-fn   #(e! (t/->ValitseTaso % :toimenpide))
-                                         :format-fn    #(:nimi %)
+           [yleiset/livi-pudotusvalikko {:valinta toimenpide
+                                         :valitse-fn #(e! (t/->ValitseTaso % :toimenpide))
+                                         :format-fn #(:nimi %)
                                          :vayla-tyyli? true
-                                         :disabled     (or
-                                                         (not sopimukset-syotetty?)
-                                                         (disabloitu-alasveto? toimenpide-valikko-valinnat))}
+                                         :disabled (or
+                                                     (not sopimukset-syotetty?)
+                                                     (disabloitu-alasveto? toimenpide-valikko-valinnat))}
             toimenpide-valikko-valinnat]]
           [:div
-           {:style {:width        "220px"
+           {:style {:width "220px"
                     :margin-right "15px"}}
            [:label.alasvedon-otsikko "Hoitokausi"]
-           [yleiset/livi-pudotusvalikko {:valinta      hoitokausi
-                                         :valitse-fn   #(e! (t/->ValitseTaso % :hoitokausi))
+           [yleiset/livi-pudotusvalikko {:valinta hoitokausi
+                                         :valitse-fn #(e! (t/->ValitseTaso % :hoitokausi))
                                          :format-fn pvm/hoitokausi-str-alkuvuodesta
-                                         :disabled     (or
-                                                         (not sopimukset-syotetty?)
-                                                         (disabloitu-alasveto? hoitokaudet))
+                                         :disabled (or
+                                                     (not sopimukset-syotetty?)
+                                                     (disabloitu-alasveto? hoitokaudet))
                                          :vayla-tyyli? true}
             hoitokaudet]]
           [:div
            [:input#kopioi-tuleville-vuosille.vayla-checkbox
-            {:type      "checkbox"
-             :checked   samat-tuleville
+            {:type "checkbox"
+             :checked samat-tuleville
              :on-change #(e! (t/->SamatTulevilleMoodi (not samat-tuleville)))
-             :disabled  (not sopimukset-syotetty?)}]
+             :disabled (not sopimukset-syotetty?)}]
            [:label
             {:for "kopioi-tuleville-vuosille"}
             "Samat suunnitellut määrät tuleville hoitokausille"]]]

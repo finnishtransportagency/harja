@@ -73,15 +73,15 @@
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
                 (update taso :tehtavat conj (merge
-                                              {:id        tehtava-id
-                                               :nimi      tehtava
-                                               :vanhempi  valitaso-id
+                                              {:id tehtava-id
+                                               :nimi tehtava
+                                               :vanhempi valitaso-id
                                                :jarjestys jarjestys
                                                :aluetieto? aluetieto
                                                :urakka urakka                                               
-                                               :yksikko   yksikko
+                                               :yksikko yksikko
                                                :maarat maarat
-                                               :taso      4}
+                                               :taso 4}
                                               (if aluetieto
                                                 {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
@@ -243,7 +243,8 @@
 
 (defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi samat-maarat-vuosittain?]}]
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
-        validit-tehtavat (hae-validit-tehtavat db)]
+        validit-tehtavat (hae-validit-tehtavat db)
+        hoitokauden-alkuvuosi hoitovuosi] ; FIXME kun aikaa
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (empty?
           (filter #(= tehtava-id
@@ -265,9 +266,9 @@
                      pvm/vuosi)]
     (if samat-maarat-vuosittain?
       (doall 
-        (for [hoitovuosi (range alkuvuosi loppuvuosi)]
-          (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi)))
-      (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitovuosi)))))
+        (for [hoitokauden-alkuvuosi (range alkuvuosi loppuvuosi)]
+          (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)))
+      (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)))))
 
 (defn poista-namespace 
   [[avain arvo]]

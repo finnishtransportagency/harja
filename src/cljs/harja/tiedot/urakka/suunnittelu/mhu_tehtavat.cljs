@@ -223,11 +223,6 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-(defn yksikoton
-  "Tämä näyttää hölmöltä mutta toimii, lambda palauttaa funktion cond->:issa"
-  [_]
-  true)
-
 (defn sopimuksen-tehtavamaarallinen
   [_]
   true)
@@ -392,9 +387,11 @@
   NaytaAluetehtavat
   (process-event [{tila :tila} app]
     (assoc-in app [:valinnat :nayta-aluetehtavat?] tila))
+  
   NaytaSuunniteltavatTehtavat
   (process-event [{tila :tila} app]
     (assoc-in app [:valinnat :nayta-suunniteltavat-tehtavat?] tila))
+  
   AsetaOletusHoitokausi
   (process-event 
     [_ app]
@@ -410,7 +407,7 @@
         (fn [e!]
           (e! (->HaeTehtavat {:hoitokausi :kaikki}))))
 
-      (viesti/nayta! "Tallennus onnistui")
+      (viesti/nayta-toast! "Tallennus onnistui")
       (swap! taulukko-tila paivita-kaikki-maarat valinnat)
       (-> app
         (assoc :sopimukset-syotetty? (:tallennettu vastaus))
@@ -419,7 +416,7 @@
   SopimuksenTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} app]
-    (viesti/nayta! "Sopimuksen määrien tallennus epäonnistui" :danger)
+    (viesti/nayta-toast! "Sopimuksen määrien tallennus epäonnistui" :danger)
     (update-in app [:valinnat :noudetaan] dec))
 
   TallennaSopimus
@@ -445,7 +442,7 @@
   SopimuksenTilaEiHaettu
   (process-event 
     [{:keys [vastaus]} app]
-    (viesti/nayta! "Sopimuksen määrien tilan tarkastus epäonnistui!" :danger)
+    (viesti/nayta-toast! "Sopimuksen määrien tilan tarkastus epäonnistui!" :danger)
     (update-in app [:valinnat :noudetaan] dec))
 
   SopimuksenTilaHaettu
@@ -487,7 +484,7 @@
   SopimuksenTehtavaTallennusEpaonnistui
   (process-event 
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
-    (viesti/nayta! "Tallennus epäonnistui" :danger)
+    (viesti/nayta-toast! "Tallennus epäonnistui" :danger)
     (let [{:keys [id]} tallennettava
           virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
       (reset! taulukko-virheet virheet))      
@@ -505,10 +502,7 @@
                                      #(-> {:tehtava-id id
                                            :hoitokauden-alkuvuosi %
                                            :maara      muuttunut-aluetieto-maara}))
-                            (range hoitokausi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)))
-           #_[{:tehtava-id id
-                              :hoitokauden-alkuvuosi hoitokausi
-                              :maara      muuttunut-aluetieto-maara}]})           
+                            (range hoitokausi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)))})           
         (update :valinnat 
           assoc 
           :virhe-tallennettaessa false
@@ -517,8 +511,7 @@
   TallennaSopimuksenAluemaara
   (process-event
     [{:keys [tehtava]} app]
-    (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]
-      #_(swap! taulukko-tila paivita-vuosien-maarat tehtava)
+    (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]     
       (-> app                             
         (assoc :tallennettava tehtava)
         (tallenna-sopimuksen-tehtavamaara {:maara sopimuksen-aluetieto-maara
@@ -567,7 +560,7 @@
                                                                                  js/parseInt)}]}))
         (tallenna-tehtavamaarat app {:hoitokausi hoitokausi
                                      :tehtavamaarat [{:tehtava-id id
-                                                      :maara      maara
+                                                      :maara maara
                                                       :hoitokauden-alkuvuosi hoitokausi}]})) 
       (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava)
       
@@ -619,10 +612,10 @@
       (tuck-apurit/post! :tehtavamaarat-hierarkiassa
         {:urakka-id (:id (-> @tiedot/tila :yleiset :urakka))
          :hoitokauden-alkuvuosi :kaikki}
-        {:onnistui            ->TehtavaHakuOnnistui
-         :epaonnistui         ->HakuEpaonnistui
+        {:onnistui ->TehtavaHakuOnnistui
+         :epaonnistui ->HakuEpaonnistui
          :onnistui-parametrit [parametrit]
-         :paasta-virhe-lapi?  true})
+         :paasta-virhe-lapi? true})
       (update :valinnat #(assoc %
                            :virhe-noudettaessa false
                            :noudetaan (inc (:noudetaan %))))))
