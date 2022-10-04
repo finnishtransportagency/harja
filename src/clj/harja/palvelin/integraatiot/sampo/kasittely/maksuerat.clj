@@ -11,6 +11,7 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.vayla-rest.sampo-lahetys :as sampo-lahetys]
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]])
   (:import (java.util UUID)))
@@ -133,11 +134,49 @@
                :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
-  (jdbc/with-db-transaction [db db]
-                            (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
-                              (if (contains? kuittaus :virhe)
-                                (do
-                                  (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-                                  (merkitse-maksueralle-lahetysvirhe db maksueranumero))
-                                (merkitse-maksuera-lahetetyksi db maksueranumero))
-                              (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
+  (do
+(println "maksuerat :: kasittele-maksuera-kuittaus :: kuittaus " kuittaus)
+    (jdbc/with-db-transaction [db db]
+      (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
+        (if (contains? kuittaus :virhe)
+          (do
+            (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+            (merkitse-maksueralle-lahetysvirhe db maksueranumero))
+          (merkitse-maksuera-lahetetyksi db maksueranumero))
+        (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää.")))))
+
+(defn laheta-api-maksuera [db api-sampo-asetukset integraatioloki numero summat]
+  (if (maksuerat/onko-olemassa? db numero)
+    (try
+      (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
+      (if (lukitse-maksuera db numero)
+        (let [viesti-id (str (UUID/randomUUID))
+              maksuera (hae-maksueran-tiedot db numero summat)
+              _ (tarkista-maksueran-tiedot maksuera)
+              sampo-maksuera-xml (maksuera-sanoma/maksuera-xml maksuera)
+              vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
+                        "maksuera-lahetys" sampo-maksuera-xml)
+              ;; Jos ulkoiseen järjestelmään ei saada yhteyttä, vastaus on false
+              _ (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
+                  ;; Merkitse virhe
+                (merkitse-maksueralle-lahetysvirhe db numero)
+                (merkitse-maksuera-odottamaan-vastausta db numero viesti-id))
+              _ (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+              ;; Kuittaus pitänee käsitellä samantien
+              kuittaus-vastaus (when-not (false? vastaus)
+                                 (kasittele-maksuera-kuittaus db vastaus viesti-id))]
+          ;; Palautetaan vastaus true/false
+          (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
+            false
+            true))
+        (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
+
+      (catch Exception e
+        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä API-Sonjaan tapahtui poikkeus: %s." numero e))
+        (merkitse-maksueralle-lahetysvirhe db numero)
+        (throw e)))
+
+    (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
+      (log/error virheviesti)
+      (throw+ {:type virheet/+tuntematon-maksuera+
+               :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
