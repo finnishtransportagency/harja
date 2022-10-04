@@ -15,9 +15,9 @@
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
 
 ;; Multipointin rakenne:
- #_{:type :multipoint,
-    [{:type :point, :coordinates [204441.1091 6783735.807300001]}
-     {:type :point, :coordinates [104441.1091 6783735.80730002]}] }
+;; {:type :multipoint,
+;;  [{:type :point, :coordinates [204441.1091 6783735.807300001]}
+;;   {:type :point, :coordinates [104441.1091 6783735.80730002]}]}
 (s/def ::multiple-points (s/every map?))
 (s/def ::coordinates
   ;; :coordinates avainta käytetään joko yhden [x y] koordinaatin
