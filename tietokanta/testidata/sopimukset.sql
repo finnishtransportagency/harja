@@ -79,7 +79,7 @@ BEGIN
     ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)')),
 
     -- Päällystysurakat
-    ('Utajärven päällystyksen pääsopimus', urakan_aloitus_pvm,urakan_paattymis_pvm,'5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
+    ('Utajärven päällystyksen pääsopimus', '2021-01-01','2022-12-31','5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
 END $$;
 
 -- Aktiivinen oulu

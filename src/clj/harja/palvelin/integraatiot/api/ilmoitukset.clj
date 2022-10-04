@@ -102,6 +102,7 @@
       "laheta-ilmoitus"
       nil
       nil
+      nil
       (fn []
         (let [data {:ilmoitukset (mapv (fn [ilmoitus]
                                          (sanomat/rakenna-ilmoitus
@@ -130,11 +131,13 @@
                                   true)}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki request]
-  (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)]
+  (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)
+        headerit (:headers request)]
     (aja-virhekasittelyn-kanssa
      "hae-ilmoitukset"
-     nil
      parametrit
+     headerit
+     nil
      (fn []
        (let [{urakka-id :urakka-id
               muuttunut-jalkeen :muuttunut-jalkeen

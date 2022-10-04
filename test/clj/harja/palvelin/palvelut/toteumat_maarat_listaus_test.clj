@@ -95,6 +95,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2019'::INT
                                                               AND urakka = " urakka-id)))
@@ -103,6 +104,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2020'::INT
                                                               AND urakka = " urakka-id)))
@@ -111,6 +113,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2021'::INT
                                                               AND urakka = " urakka-id)))]
@@ -160,9 +163,10 @@
                                                            AND tr.id = tk.tehtavaryhma
                                                            AND tr.emo = valitaso.id
                                                            AND valitaso.emo = ylataso.id
-                                                           AND ylataso.otsikko = '6 MUUTA'
+                                                           AND ylataso.otsikko = '8 MUUTA'
                                                            AND ut.\"hoitokauden-alkuvuosi\" = 2020
                                                            AND ut.poistettu IS NOT TRUE
                                                            AND ut.urakka = " urakka-id))]
+    ;; FIXME: edellisissä testeissä pitäisi tuo otsikko korvata jollain muulla hakutermillä, koska otsikot voi muuttua
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))
