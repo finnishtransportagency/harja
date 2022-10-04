@@ -37,7 +37,7 @@
         paivittainen-lahetysaika
         (do
           (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Alkaa " (pvm/nyt))
-          (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos)))))
+          (fn [_] (vienti/aja-paivittainen-jms-lahetys sonja integraatioloki db lahetysjono-ulos)))))
     (constantly nil)))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
@@ -49,7 +49,9 @@
                   :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
                   :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika
                                                                                   lahetysjono-ulos))
-      this))
+      (do
+        (log/error "Yritettiin käynnistää JMS sampo yhteydet, mutta ominaisuus ei ole käytössä.")
+        this)))
   (stop [this]
     (when (ominaisuus-kaytossa? :sampo)
       (let [poista-viestikuuntelija (:sonja-viestikuuntelija this)
