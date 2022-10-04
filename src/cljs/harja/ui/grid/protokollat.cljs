@@ -152,15 +152,18 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 (defn vetolaatikko-rivi
   "Funktio, joka palauttaa vetolaatikkorivin tai nil. Huom: kutsu tätä funktiona, koska voi palauttaa nil."
-  [vetolaatikot vetolaatikot-auki id colspan]
-  (when-let [vetolaatikko (get vetolaatikot id)]
-    (let [auki (@vetolaatikot-auki id)]
-      ^{:key (str "vetolaatikko" id)}
-      [:tr.vetolaatikko {:class (if auki "vetolaatikko-auki" "vetolaatikko-kiinni")}
-       [:td {:colSpan colspan}
-        [:div.vetolaatikko-sisalto
-         (when auki
-           vetolaatikko)]]])))
+  ([vetolaatikot vetolaatikot-auki id colspan]
+   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan {}))
+  ([vetolaatikot vetolaatikot-auki id colspan {:keys [ei-paddingia] :as optiot}]
+   (when-let [vetolaatikko (get vetolaatikot id)]
+     (let [auki (@vetolaatikot-auki id)]
+       ^{:key (str "vetolaatikko" id)}
+       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni")]) )}
+        [:td {:colSpan colspan
+              :class (apply conj #{} (keep identity [(when ei-paddingia "vetolaatikko-ei-paddingia")]))}
+         [:div.vetolaatikko-sisalto
+          (when auki
+            vetolaatikko)]]]))))
 
 (defn avaa-tai-sulje-vetolaatikko!
   "Vaihtaa vetolaatikon tilaa. Avaa vetolaatikon, jos se on suljettu, muuten sulkee sen."

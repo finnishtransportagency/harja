@@ -32,6 +32,8 @@
                                :valittu-hoitovuosi kuluva-alkuvuosi})
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
+                                                                  :nayta-aluetehtavat? true
+                                                                  :nayta-suunniteltavat-tehtavat? true
                                                                   :toimenpide      nil
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}

@@ -186,8 +186,6 @@
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"}
 
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
-       :kayttajatunnus "restusr" ;; Poistetaan kun pilviversio käytössä
-       :salasana #=(slurp "../.harja/yha-salasana") ;; Poistetaan kun pilviversio käytössä
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
  :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
