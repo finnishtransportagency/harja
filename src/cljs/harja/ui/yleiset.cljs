@@ -711,11 +711,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
   (keltainen-vihjelaatikko ensisijainen-viesti toissijainen-viesti))
 
-(defn info-laatikko 
+(defn info-laatikko
+  ([tyyppi ensisijainen-viesti]
+   (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
    (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
   ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka]}]
-   (assert (#{:varoitus :onnistunut :neutraali} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut tai neutraali")
+   (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
+     "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
    [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
           :style {:width leveys}}
     [:div.infolaatikon-ikoni
@@ -727,8 +730,9 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
      [:div {:style {:padding-left "8px"}}
       ensisijainen-viesti]
-     [:div {:style {:padding-left "8px" :font-weight 400}}
-      toissijainen-viesti]]]))
+     (when toissijainen-viesti
+       [:div {:style {:padding-left "8px" :font-weight 400}}
+        toissijainen-viesti])]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
