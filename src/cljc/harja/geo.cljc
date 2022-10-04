@@ -13,11 +13,19 @@
 
 (s/def ::single-coordinate (s/every number? :min-count 2 :max-count 2))
 (s/def ::multiple-coordinates (s/every ::single-coordinate))
+
+;; Multipointin rakenne:
+ #_{:type :multipoint,
+    [{:type :point, :coordinates [204441.1091 6783735.807300001]}
+     {:type :point, :coordinates [104441.1091 6783735.80730002]}] }
+(s/def ::multiple-points (s/every map?))
 (s/def ::coordinates
   ;; :coordinates avainta käytetään joko yhden [x y] koordinaatin
   ;; tai [[x1 y1] ... [xN yN]] vektorin esittämiseen.
   (s/or :single-coordinate ::single-coordinate
-        :multiple-coordinates ::multiple-coordinates))
+        :multiple-coordinates ::multiple-coordinates
+        ;; multipointin tapauksessa coordinates on vektori point-rakenteita
+        :multiple-points ::multiple-points))
 (s/def ::points (s/every ::single-coordinate))
 
 (defmulti geometria-spec
@@ -327,13 +335,13 @@
   ;; Käytetään estämään liian lähelle zoomaamista
   (if (> haluttu-ala (extent-pinta-ala ext))
     (let [x-pituus (- maxx minx)
-         y-pituus (- maxy miny)
-         laajennos (/ (apply max (toisen-asteen-yhtalo
-                                   1
-                                   (+ x-pituus y-pituus)
-                                   (- (* x-pituus y-pituus) haluttu-ala)))
-                      2)]
-     (laajenna-extent ext laajennos))
+          y-pituus (- maxy miny)
+          laajennos (/ (apply max (toisen-asteen-yhtalo
+                                    1
+                                    (+ x-pituus y-pituus)
+                                    (- (* x-pituus y-pituus) haluttu-ala)))
+                       2)]
+      (laajenna-extent ext laajennos))
 
     ext))
 
@@ -370,7 +378,11 @@
       :polygon (:coordinates g)
       :multipolygon (mapcat :coordinates (:polygons g))
       :point [(:coordinates g)]
-      :multipoint (:coordinates g)
+      ;; Multipointit tulevat muodossa
+      ;; {:type :multipoint,
+      ;          :coordinates [{:type :point, :coordinates [204441.1091 6783735.807300001]}
+      ;                        {:type :point, :coordinates [104441.1091 6783735.80730002]}]}
+      :multipoint (mapv #(:coordinates %) (:coordinates g))
       :icon [(:coordinates g)]
       :circle [(:coordinates g)]
       :viiva (:points g)
@@ -451,6 +463,13 @@ Tähän lienee parempiakin tapoja, ks. https://en.wikipedia.org/wiki/Centroid "
 
 (defmethod extent :point [geo]
   (extent-point-circle (pisteet geo)))
+
+(defmethod extent :multipoint [geo]
+  ;; Multipoint voi sisältää yhden tai useamman pisteen. Yksi piste vaatii pistemäisen extent-käsittelyn
+  (let [pisteet (pisteet geo)]
+    (if (> (count pisteet) 1)
+      (laske-pisteiden-extent pisteet)
+      (extent-point-circle pisteet))))
 
 (defmethod extent :circle [geo]
   (extent-point-circle (pisteet geo)))
