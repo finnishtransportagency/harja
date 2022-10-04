@@ -1,3 +1,5 @@
+import {kuluvaHoitovuosi} from "../support/apurit.js";
+
 Cypress.on('uncaught:exception', (err, runnable) => {
   // returning false here prevents Cypress from
   // failing the test
@@ -22,7 +24,7 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
 
     cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('666').blur()
     cy.wait('@sop1')
-    cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('td.muokattava').find('input').clear().type('666').blur()
+    cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.muokattava').find('input').clear().type('666').blur()
     cy.wait('@sop1')
   })
 
@@ -37,18 +39,18 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.viewport(1100, 2000)
     cy.server()
     cy.route('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
-    cy.get('table.grid').contains('Ennalta arvaamattomien kuljetusten avustaminen').parent().find('td.vetolaatikon-tila.klikattava').click()
+    cy.get('table.grid').contains('Opastustaulun/-viitan uusiminen').parent().find('td.vetolaatikon-tila.klikattava').click()
     cy.get('table.grid').contains('Haluan syöttää joka vuoden erikseen').parent().find('input.vayla-checkbox').click()
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2019').should('not.be.disabled')
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2019').clear({force:true}).type('661', {force:true}).blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2020').should('not.be.disabled')
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2020').clear({force:true}).type('661', {force:true}).blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2020').clear().type('662').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2021').clear().type('662').blur()
     cy.wait('@sop1')    
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2021').clear().type('663').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2022').clear().type('663').blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2022').clear().type('664').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2023').clear().type('664').blur()
     cy.wait('@sop1')
-    cy.get('table.grid').find('input#vetolaatikko-input-ennalta-arvaamattomien-kuljetusten-avustaminen-2023').clear().type('665').blur()
+    cy.get('table.grid').find('input#vetolaatikko-input-opastustaulun\\/-viitan-uusiminen-2024').clear().type('665').blur()
     cy.wait('@sop1')
   })
 
@@ -75,18 +77,21 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
   })
 
   it('Hoitokautta voi vaihtaa', () => {
+    let hoitokausiNyt = kuluvaHoitovuosi();
+    let hoitokausiViimeinen = kuluvaHoitovuosi(2);
+
     cy.server()
     cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').clear().type('667')
-    cy.get('div.select-default').contains('01.10.2021-30.09.2022').click()
-    cy.contains('01.10.2023-30.09.2024').click()
-    //cy.wait('@tehtavamaarat')
-    cy.wait(2000)
+    cy.get('div.select-default').contains(hoitokausiNyt).click()
+    cy.contains(hoitokausiViimeinen).click()
+    cy.get('div.select-default').contains(hoitokausiViimeinen, {timeout: 2000}).should('be.visible');
+
     cy.get('table.grid').contains('667').should('not.exist')
-    cy.get('div.select-default').contains('01.10.2023-30.09.2024').click()
-    cy.get('.harja-alasvetolistaitemi').contains('01.10.2021-30.09.2022').click()
-    //cy.wait('@tehtavamaarat')
-    cy.wait(2000)
+    cy.get('div.select-default').contains(hoitokausiViimeinen).click()
+    cy.get('.harja-alasvetolistaitemi').contains(hoitokausiNyt).click()
+    cy.get('div.select-default').contains(hoitokausiNyt, {timeout: 2000}).should('be.visible');
+
     cy.get('table.grid').contains('Sorateiden pölynsidonta (materiaali)').parent().find('td.muokattava').find('input').should('have.value', '667')
   })
 
