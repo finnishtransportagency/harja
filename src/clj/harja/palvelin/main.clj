@@ -285,7 +285,7 @@
                                                (:paivittainen-lahetysaika sampo)))
                               [:sonja :db :integraatioloki])
       :api-sampo (component/using
-                        (api-sampo/->ApiSampo)
+                        (api-sampo/->ApiSampo (:sampo-api asetukset))
                         [:http-palvelin :db :integraatioloki])
 
       ;; T-LOIK
