@@ -86,6 +86,12 @@ INSERT INTO urakka_tehtavamaara
   (urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
 VALUES (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja);
 
+-- name: lisaa-tehtavamaara-mutta-ala-paivita<!
+insert into urakka_tehtavamaara
+(urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
+values (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja)
+on conflict do nothing;
+
 -- name: paivita-tehtavamaara!
 -- Päivittää urakan hoitokauden tehtävämäärät
 UPDATE urakka_tehtavamaara
@@ -153,7 +159,17 @@ FROM tehtavaryhma tr1
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko IS not null AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
+
+-- name: hae-sopimuksen-tehtavamaarat-urakalle
+select st.maara                    as "sopimuksen-tehtavamaara",
+       st.tehtava                  as "tehtava",
+       st.hoitovuosi               as "hoitovuosi",
+       tpk.aluetieto               as "aluetieto"
+from sopimus_tehtavamaara st
+       join toimenpidekoodi tpk on st.tehtava = tpk.id
+where st.urakka = :urakka;
 
 -- name: hae-tehtavahierarkia-maarineen
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
@@ -179,7 +195,8 @@ SELECT ut.urakka                   as "urakka",
        tpk4.ensisijainen           as "Ensisijainen",
        tpk4.voimassaolo_alkuvuosi  as "voimassaolo_alkuvuosi",
        tpk4.voimassaolo_loppuvuosi as "voimassaolo_loppuvuosi",
-       st.maara                    as "sopimuksen-tehtavamaara"
+       tpk4.aluetieto              as "aluetieto",
+       sp.tallennettu              as "sopimus-tallennettu"  
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
        JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
@@ -195,14 +212,17 @@ FROM tehtavaryhma tr1
                                                                                   '49b7388b-419c-47fa-9b1b-3797f1fab21d' --'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)'
                                                                                    -- ei ehkä samassa järjestyksessä, mutta nuo tehtävät
                                                                                    ) or tpk4.yksiloiva_tunniste is null)
+                                                                                   AND tpk4.suunnitteluyksikko IS NOT NULL
        JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
        LEFT OUTER JOIN urakka_tehtavamaara ut
-                       ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" in (:hoitokausi)
+                       ON tpk4.id = ut.tehtava AND ut.urakka = :urakka AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR tpk4.aluetieto IS TRUE) 
        LEFT OUTER JOIN urakka u ON ut.urakka = u.id
-       LEFT JOIN sopimus_tehtavamaara st on tpk4.id = st.tehtava
+       LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp on sp.urakka = :urakka
 WHERE tr1.emo is null
   AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tpk4.suunnitteluyksikko IS not null
+  AND tpk4.suunnitteluyksikko != 'euroa' -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
 ORDER BY tpk4.jarjestys, tpk4.ensisijainen desc;
 
 

@@ -54,7 +54,7 @@
 ;; MH-urakoille määrien toteumat, äkilliset hoitotyöt ja lisätyöt
 (def default-toteuma-maara {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                             :toimenpide {:id (hae-tehtavaryhman-id "ELY-rahoitteiset, ylläpito (E)")
-                                         :otsikko "6 MUUTA"}
+                                         :otsikko "8 MUUTA"}
                             :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "24.06.2020")
                             :tyyppi :maaramitattava
                             :toteumat [{:tehtava {:id (hae-toimenpidekoodin-id "Pysäkkikatoksen uusiminen" "20191")
@@ -73,7 +73,7 @@
 
 (def default-akillinen-hoitotyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                  :toimenpide {:id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Talvihoito (T1)")
-                                              :otsikko "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
+                                              :otsikko "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA"}
                                  :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "25.06.2020")
                                  :tyyppi :akillinen-hoitotyo
                                  :toteumat [{:tehtava {:id (hae-toimenpidekoodin-id "Äkillinen hoitotyö (talvihoito)" "23104")
@@ -96,7 +96,7 @@
      :yksikko (nth res 2)}))
 (def default-lisatyo {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                       :toimenpide {:id (hae-tehtavaryhman-id "Alataso Lisätyöt")
-                                   :otsikko "7.0 LISÄTYÖT"}
+                                   :otsikko "9 LISÄTYÖT"}
                       :loppupvm (.parse (java.text.SimpleDateFormat. "dd.MM.yyyy") "26.06.2020")
                       :tyyppi :lisatyo
                       :toteumat [{:tehtava {:id (:id (hae-default-lisatyon-tehtava))

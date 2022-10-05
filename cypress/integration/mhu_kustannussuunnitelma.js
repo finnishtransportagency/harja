@@ -862,7 +862,9 @@ describe('Erillishankinnat osio', function () {
 // --- Johto- ja hallintokorvaus osio ---
 // --------------------------------------
 
-describe('Johto- ja hallintokorvaus osio', function () {
+// FIXME: Tämäkin osio on muuttunut erilaiseksi 2022 ja myöhemmin alkaneille urakoille.
+//        Katso tavoite- ja kattohintaosion kommentti.
+describe.skip('Johto- ja hallintokorvaus osio', function () {
     describe('Testaa "tuntimäärät ja -palkat" taulukkoa', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-budjettitavoite').as('tallenna-budjettitavoite');
@@ -2074,15 +2076,15 @@ describe('Tarkasta tallennetut arvot', function () {
         it('Testaa arvot tavoite- ja kattohinta osiossa', function () {
             // Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri',
-                [4711, 822, 1740, 1740, 1740]);
+                [591, 822, 1020, 1020, 1020]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri',
-                [4711, 822, 1740, 1740, 1740]);
+                [591, 822, 1020, 1020, 1020]);
 
             // (Hankintakustannukset + Erillishankinnat + Johto- ja hallintokorvaus + Hoidonjohtopalkkio) x 1,1
             ks.tarkastaHintalaskurinYhteensaArvo('kattohinnan-hintalaskuri',
-                [4711 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
             ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'kattohinnan-indeksilaskuri',
-                [4711 * 1.1, 822 * 1.1, 1740 * 1.1, 1740 * 1.1, 1740 * 1.1]);
+                [591 * 1.1, 822 * 1.1, 1020 * 1.1, 1020 * 1.1, 1020 * 1.1]);
         });
     });
 })
