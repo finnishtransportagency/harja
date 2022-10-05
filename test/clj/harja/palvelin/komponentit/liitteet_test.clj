@@ -28,10 +28,10 @@
 
 (deftest tallenna-xml-liite
   (let [liitteiden-hallinta (:liitteiden-hallinta jarjestelma)
-        tiedosto "test/resurssit/sampo/maksuera_ack.xml"
+        tiedosto "test/resurssit/sampo/kustannussuunnitelma_ack.xml"
         tiedoston-sisalto-tekstina (slurp tiedosto)
         tiedoston-sisalto (IOUtils/toByteArray (io/input-stream tiedosto))
-        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "maksuera_ack.xml" "text/xml" 581 tiedoston-sisalto nil "harja-ui")
+        luotu-liite (liitteet/luo-liite liitteiden-hallinta nil 1 "kustannussuunnitelma_ack.xml" "text/xml" 581 tiedoston-sisalto nil "harja-ui")
         liite-id (:id luotu-liite)
         luettu-liite (liitteet/lataa-liite liitteiden-hallinta liite-id)
         liitteen-sisalto-tekstina (slurp (:data luettu-liite))]

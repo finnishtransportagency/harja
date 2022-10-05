@@ -3,7 +3,7 @@
             [harja.palvelin.integraatiot.sampo.sanomat.kuittaus-samposta-sanoma :as kuittaus-sisaan-sanoma]))
 
 (deftest lue-onnistunut-kuittaus
-  (let [xml (slurp "test/resurssit/sampo/maksuera_ack.xml")]
+  (let [xml (slurp "test/resurssit/sampo/kustannussuunnitelma_ack.xml")]
     (let [vastaus (kuittaus-sisaan-sanoma/lue-kuittaus xml)]
       (is (= "ID:6c321b59:1460814e5:14AE0F721BF" (:viesti-id vastaus))
           "Kuittaus tulkittiin onnistuneeksi ja siltä saatiin luettua oikea viesti id")
