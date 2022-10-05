@@ -524,11 +524,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                           {:urakka_idt kontekstin-urakka-idt
                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
-        talvisuolaa-suunniteltu-yhteensa (reduce (fn [yht rivi]
-                                                   (if (:talvisuolaraja rivi)
-                                                     (+ yht (:talvisuolaraja rivi))
-                                                     yht))
-                                           0 talvisuolarajat)
+        talvisuolaa-suunniteltu-yhteensa (apply + (keep :talvisuolaraja talvisuolarajat))
 
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
