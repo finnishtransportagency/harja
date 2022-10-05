@@ -84,7 +84,30 @@
           tapahtuma-id
           nil)))))
 
-(defn kasittele-api-viesti [db integraatioloki viesti]
+(defn kasittele-api-viesti [db integraatioloki viesti tapahtuma-id]
   (log/debug "Vastaanotettiin Sampon viesti api:sta:" viesti)
-  (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
-    (first kuittaukset)))
+  (let [viestin-sisalto (first (:content (first viesti)))
+        viesti-id (get-in viestin-sisalto [:attrs :messageId])
+        viestityyppi (:tag viestin-sisalto)]
+
+    (try+
+      (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
+        (first kuittaukset))
+      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
+        (do
+          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
+          ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
+          (kuittaus-sampoon-sanoma/tee-xml-sanoma
+            (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" virheet))))
+
+      (catch Exception e
+        (log/error e "Sampo sisäänluvussa tapahtui poikkeus." e)
+        (integraatioloki/kirjaa-epaonnistunut-integraatio
+          integraatioloki
+          "Sampo sisäänluvussa tapahtui poikkeus"
+          (str "Poikkeus: " e)
+          tapahtuma-id
+          nil)
+        ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
+        (kuittaus-sampoon-sanoma/tee-xml-sanoma
+          (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" "Vakava virhe. Käsittely ei onnistunut"))))))
