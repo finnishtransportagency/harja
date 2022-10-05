@@ -124,6 +124,25 @@
                                   AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
+
+(deftest laheta-virheellin-tuonti-harjaan-test
+  (let [viestit (atom [])]
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+    (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ (slurp "test/resurssit/sampo/Sampo2Harja_virheellinen_testisanoma.xml"))
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (println "viestit " @viestit)
+
+    (tarkista-vastaus (first @viestit))
+
+    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
+      (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
     [])
