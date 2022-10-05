@@ -579,7 +579,7 @@
           [:div.header
            [:h3 {:class "pull-left"}
             "Pohjavesialueiden suolarajoitukset"]
-           [napit/uusi "Lisää rajoitus"
+           [napit/uusi "Lisää rajoitusalue"
             #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true {:kopioidaan-tuleville-vuosille? true}))
             {:luokka "pull-right"
              :disabled (not saa-muokata?)}]]
