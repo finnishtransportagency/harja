@@ -515,15 +515,21 @@
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
-                    body
                     parametrit
+                    (:headers request)
+                    body
                     #(let
                        [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db tapahtuma-id)
+                        ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
+                        ;; käsittely onnistunut
+                        status (if (str/includes? vastauksen-data "ErrorMessage")
+                                 400
+                                 200)]
 
-                       {:status 200
+                       {:status status
                         :headers (lisaa-request-headerit false origin-header)
                         :body vastauksen-data}))]
       (when integraatioloki
