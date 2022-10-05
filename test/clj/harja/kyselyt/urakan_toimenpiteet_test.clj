@@ -27,13 +27,15 @@
 (deftest hae-oulun-urakan-toimenpiteet-ja-tehtavat-tasot
     (let [db (:db jarjestelma)
           urakka-id @oulun-alueurakan-2005-2010-id
-          maara-kannassa (- (ffirst (q
+          maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
                                            FROM toimenpidekoodi t4
                                                 LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
+                                                (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
+                                                (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
-                                                          @oulun-alueurakan-2005-2010-id ")"))) 1) ;; kokonaismääräästä vähennetään testitoimenpidekoodi, joka ei ole urakassa alunperinkään voimassa
+                                                          @oulun-alueurakan-2005-2010-id ")")))
          response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
     (is (not (nil? response)))
     (is (= (count response) maara-kannassa))
@@ -48,13 +50,15 @@
 (deftest hae-pudun-urakan-toimenpiteet-ja-tehtavat-tasot 
     (let [db (:db jarjestelma)
        urakka-id @pudasjarven-alueurakan-id
-          maara-kannassa (- (ffirst (q
+          maara-kannassa (ffirst (q
                                    (str "SELECT count(*)
                                            FROM toimenpidekoodi t4
                                                 LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
+                                            (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2007) AND
+                                            (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2007) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
-                                     urakka-id ")"))) 1) ;; kokonaismääräästä vähennetään testitoimenpidekoodi, joka ei ole urakassa alunperinkään voimassa
+                                     urakka-id ")")))
        response (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id)]
      (is (not (nil? response)))
      (is (= (count response) maara-kannassa))))
@@ -62,13 +66,15 @@
 (deftest testaa-tehtavien-voimassaolo
          (let [db (:db jarjestelma)
                urakka-id @oulun-alueurakan-2005-2010-id
-               maara-kannassa (- (ffirst (q
+               maara-kannassa (ffirst (q
                                         (str "SELECT count(*)
                                            FROM toimenpidekoodi t4
                                                 LEFT JOIN toimenpidekoodi t3 ON t3.id=t4.emo
                                            WHERE t4.taso = 4 AND
+                                            (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= 2005) AND
+                                            (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= 2005) AND
                                                 t3.id in (SELECT toimenpide FROM toimenpideinstanssi WHERE urakka = "
-                                             @oulun-alueurakan-2005-2010-id ")"))) 1) ;; kokonaismääräästä vähennetään testitoimenpidekoodi, joka ei ole urakassa alunperinkään voimassa
+                                             @oulun-alueurakan-2005-2010-id ")")))
                lahtotilanne (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))
                _ (u "UPDATE toimenpidekoodi SET voimassaolo_alkuvuosi = 2015, voimassaolo_loppuvuosi = 2025 WHERE nimi = 'Graffitien poisto'")
                tehtava-tulossa (count (urakan-toimenpiteet/hae-urakan-toimenpiteet-ja-tehtavat-tasot db urakka-id))

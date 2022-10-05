@@ -302,7 +302,7 @@ describe("POT2", function() {
                 kaista: 11
             })
     })
-    it('Avaa POT2-lomake jos vuosi on 2021', function () {
+    it('Avaa POT2-lomake jos vuosi on 2021 tai sen jälkeen', function () {
         cy.viewport(1100, 2000)
         avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa')
         cy.get('div.pot2-lomake')

@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.urakka
   "MHU-urakoiden tila täällä. Hyvä olisi joskus saada muutkin tänne, yhden atomin alle."
-  (:require [reagent.core :refer [atom cursor]]
+  (:require [reagent.core :refer [atom cursor partial]]
             [clojure.core.async :refer [chan]]
             [clojure.spec.alpha :as s]
             [harja.tiedot.navigaatio :as nav]
@@ -9,7 +9,6 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [reagent.core :as r]
             [harja.tiedot.urakka :as u]))
 
 (def kuluva-alkuvuosi
@@ -32,6 +31,8 @@
                                :valittu-hoitovuosi kuluva-alkuvuosi})
 
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
+                                                                  :nayta-aluetehtavat? true
+                                                                  :nayta-suunniteltavat-tehtavat? true
                                                                   :toimenpide      nil
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
@@ -39,7 +40,7 @@
                                 :suolarajoitukset suolarajoitukset-default})
 
 (defn parametreilla [v-fn & parametrit]
-  (apply r/partial v-fn parametrit))
+  (apply partial v-fn parametrit))
 
 (defn silloin-kun [pred v-fn]
   (fn [arvo]
