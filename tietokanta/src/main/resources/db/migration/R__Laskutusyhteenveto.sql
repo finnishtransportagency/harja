@@ -408,9 +408,9 @@ BEGIN
                   LEFT JOIN muutoshintainen_tyo mht
 		       ON (tt.toimenpidekoodi = mht.tehtava AND
 		           mht.urakka = tot.urakka AND
-			   mht.sopimus = tot.sopimus)
+                   mht.sopimus = tot.sopimus AND
+		           mht.poistettu IS NOT TRUE)
                  WHERE tot.urakka = ur AND
-                   mht.poistettu IS NOT TRUE AND
 		       tpk3.id = t.tpk3_id AND
 		       tot.alkanut::DATE >= hk_alkupvm AND tot.alkanut::DATE <= aikavali_loppupvm
     LOOP
