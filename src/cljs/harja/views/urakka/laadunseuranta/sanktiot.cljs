@@ -24,12 +24,15 @@
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
 
+            [harja.ui.debug :as debug]
+
             [harja.loki :refer [log]]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as u-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.domain.tierekisteri :as tierekisteri]
             
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -88,7 +91,7 @@
               yllapitokohteet (conj (:yllapitokohteet optiot) {:id nil})
 
                 ;; Valitulle urakalle mahdolliset sanktiolajit. Nämä voivat vaihdella urakan tyypin ja aloitusvuoden mukaan.
-              mahdolliset-sanktiolajit @tiedot-urakka/urakkatyypin-sanktiolajit
+              mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
               ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
               ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
               {:keys [yllapito? vesivayla? auki?]} optiot
@@ -426,8 +429,9 @@
                    (if yllapito?
                      (- yhteensa) ; ylläpidossa sakot miinusmerkkisiä
                      yhteensa))
-        yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
+     [debug/debug sanktiot]
      [suodattimet-ja-toiminnot valittu-urakka auki?]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
