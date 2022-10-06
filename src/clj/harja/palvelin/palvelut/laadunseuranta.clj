@@ -120,6 +120,9 @@
         urakan-bonukset (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
                                                           :alku (konv/sql-timestamp alku)
                                                           :loppu (konv/sql-timestamp loppu)})
+        urakan-lupausbonukset (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
+                                                                      :alku (konv/sql-timestamp alku)
+                                                                      :loppu (konv/sql-timestamp loppu)})
         sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
@@ -128,10 +131,12 @@
                              (map konv/alaviiva->rakenne)
                              (map #(konv/decimal->double % :summa))
                              (map #(konv/decimal->double % :indeksikorjaus))
+                             (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %))
                              (map #(assoc % :laji (keyword (:laji %)))))
                    (concat
                      urakan-sanktiot
-                     urakan-bonukset))]
+                     urakan-bonukset
+                     urakan-lupausbonukset))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))
