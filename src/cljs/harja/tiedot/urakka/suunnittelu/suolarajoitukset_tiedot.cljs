@@ -479,25 +479,16 @@
 
   TallennaLomakeOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [tallennettu-lomake (:lomake app)
-          ;; Muokataan tallennetusta lomakkeesta sopiva uuden rajoituksen pohjaksi
-          tallennettu-lomake (-> tallennettu-lomake
-                               (assoc :aosa (get-in app [:lomake :losa])) ;; loppuosasta uuden alkuosa
-                               (assoc :aet (get-in app [:lomake :let])) ;; loppuetäisyydesta uuden alkuetäisyys
-                               (dissoc :rajoitusalue_id :rajoitus_id :losa :let))
-          _ (when (app :rajoitusalue-lomake-auki?)
-              (.setTimeout js/window
-                (tuck/send-async! ->PaivitaLomake tallennettu-lomake true)
-                100))]
-      (do
-        (viesti/nayta-toast! "Rajoitusalueen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
-        (hae-suolarajoitukset (:valittu-hoitovuosi app))
+    (viesti/nayta-toast! "Rajoitusalueen tallennus onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (let [lomake (:lomake app)]
+      (hae-suolarajoitukset (:valittu-hoitovuosi app))
 
-        (-> (if (app :rajoitusalue-lomake-auki?)
-              (assoc app :lomake tallennettu-lomake)
-              (assoc app :lomake nil))
-          (assoc :suolarajoitukset-haku-kaynnissa? true)
-          (assoc :tallennus-kaynnissa? false)))))
+      (-> app
+        ;; Poimitaan uudelle lomakepohjalle aiemmin asetettu ":kopioidaan-tuleville-vuosille?"-asetus
+        ;; Muutoin, tyhjennetään lomake.
+        (assoc :lomake {:kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? lomake)})
+        (assoc :suolarajoitukset-haku-kaynnissa? true)
+        (assoc :tallennus-kaynnissa? false))))
 
   TallennaLomakeEpaonnistui
   (process-event [{vastaus :vastaus} app]
