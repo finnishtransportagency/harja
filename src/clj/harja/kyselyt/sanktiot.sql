@@ -105,7 +105,6 @@ SELECT
   t.toimenpidekoodi                   AS tyyppi_toimenpidekoodi,
   t.koodi                             AS tyyppi_koodi
 
--- FIXME HOX, urakka_paatoksessa 'lupaus-sanktio' tyyppi on eriniminen kuin varsinainen sanktiolaji 'lupaussanktio'
 FROM sanktio s
   JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
   JOIN urakka u ON lp.urakka = u.id
@@ -182,8 +181,7 @@ SELECT p.id,
 FROM urakka_paatos p
          JOIN urakka u ON u.id = p."urakka-id"
 WHERE p."urakka-id" = :urakka
-  -- FIXME HOX, urakka_paatoksessa 'lupaus-sanktio' tyyppi on eriniminen kuin varsinainen sanktiolaji 'lupaussanktio'
-  AND p.tyyppi = 'lupaus-sanktio'
+  AND p.tyyppi = 'lupaussanktio'
   AND MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) BETWEEN :alku AND :loppu
   AND p.poistettu IS NOT TRUE;
 
@@ -200,7 +198,6 @@ SELECT ek.id,
        TRUE                   AS suorasanktio,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
        CASE
-           -- FIXME Meillä voi olla lajeina 'lupausbonus' erilliskustannuksista tai 'lupaus-bonus' urakka_paatos
            WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
                THEN (SELECT korotus
                        FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::INTEGER,
@@ -230,7 +227,6 @@ SELECT p.id,
        u.indeksi                                       AS indeksi,
        TRUE                                            AS suorasanktio,
        NULL                                            AS toimenpideinstanssi,
-       -- FIXME Meillä voi olla lajeina 'lupausbonus' erilliskustannuksista tai 'lupaus-bonus' urakka_paatos taulusta
        (SELECT korotus
         FROM sanktion_indeksikorotus(MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15), u.indeksi,
                                      p."tilaajan-maksu", :urakka::INTEGER,
@@ -241,7 +237,7 @@ SELECT p.id,
 FROM urakka_paatos p
      JOIN urakka u ON u.id = p."urakka-id"
  WHERE p."urakka-id" = :urakka
-   AND p.tyyppi = 'lupaus-bonus'
+   AND p.tyyppi = 'lupausbonus'
    AND MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) BETWEEN :alku AND :loppu
    AND p.poistettu IS NOT TRUE;
 

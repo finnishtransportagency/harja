@@ -380,16 +380,16 @@
 (defn etsi-lupaus-kuukausi [kuukaudet kohdekuukausi]
   (first (filter #(= kohdekuukausi (:kuukausi %)) kuukaudet)))
 
-(defn lupaus-paatokset
-  "Suodata lupaus-tyyppiset päätökset urakan päätöksistä."
+(defn lupauspaatokset
+  "Suodata lupaustyyppiset päätökset urakan päätöksistä."
   [urakan-paatokset]
   (->> urakan-paatokset
-       (filter #(#{"lupaus-bonus" "lupaus-sanktio"} (:harja.domain.kulut.valikatselmus/tyyppi %)))))
+       (filter #(#{"lupausbonus" "lupaussanktio"} (:harja.domain.kulut.valikatselmus/tyyppi %)))))
 
 (defn valikatselmus-tehty?
   "Palauttaa true, jos päätöksissä on lupaus-tyyppinen päätös."
   [urakan-paatokset]
-  (->> (lupaus-paatokset urakan-paatokset)
+  (->> (lupauspaatokset urakan-paatokset)
        first
        boolean))
 
@@ -398,12 +398,12 @@
     tilaajan-maksu :harja.domain.kulut.valikatselmus/tilaajan-maksu
     urakoitsijan-maksu :harja.domain.kulut.valikatselmus/urakoitsijan-maksu}]
   (case tyyppi
-    "lupaus-bonus" {:bonus tilaajan-maksu}
-    "lupaus-sanktio" {:sanktio urakoitsijan-maksu}
+    "lupausbonus" {:bonus tilaajan-maksu}
+    "lupaussanktio" {:sanktio urakoitsijan-maksu}
     nil))
 
 (defn urakan-paatokset->lupauspaatos [urakan-paatokset]
-  (first (lupaus-paatokset urakan-paatokset)))
+  (first (lupauspaatokset urakan-paatokset)))
 
 (defn urakan-paatokset->bonus-tai-sanktio [urakan-paatokset]
   (->>
