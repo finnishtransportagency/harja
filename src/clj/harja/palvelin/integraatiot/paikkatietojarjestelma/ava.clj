@@ -8,27 +8,9 @@
     [harja.palvelin.tyokalut.arkisto :as arkisto]
     [harja.palvelin.integraatiot.integraatiopisteet.tiedosto :as tiedosto]
     [harja.kyselyt.geometriapaivitykset :as geometriapaivitykset]
-    [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma])
+    [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
+    [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
-
-(defn kasittele-tiedoston-muutospaivamaaran-hakuvastaus [otsikko]
-  (when-let [muutospaivamaara (:last-modified otsikko)]
-    (time-coerce/to-sql-time (java.util.Date. muutospaivamaara))))
-
-(defn hae-tiedoston-muutospaivamaara
-  ([db integraatioloki integraatio url]
-   (hae-tiedoston-muutospaivamaara db integraatioloki integraatio url nil nil))
-  ([db integraatioloki integraatio url kayttajatunnus salasana]
-   (log/debug "Haetaan tiedoston muutospäivämäärä AVA:sta URL:lla: " url)
-   (let [http-asetukset (cond-> {:metodi :HEAD
-                                 :url url}
-                                (not (nil? kayttajatunnus)) (assoc :kayttajatunnus kayttajatunnus)
-                                (not (nil? salasana)) (assoc :salasana salasana))]
-     (integraatiotapahtuma/suorita-integraatio
-       db integraatioloki "ptj" integraatio
-       (fn [konteksti]
-         (let [{otsikot :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
-           (kasittele-tiedoston-muutospaivamaaran-hakuvastaus otsikot)))))))
 
 (defn hae-tiedosto
   ([integraatioloki db integraatio url kohde]
@@ -42,16 +24,17 @@
                     paivitystunnus
                     kohdetiedoston-polku
                     tiedostourl
-                    tiedoston-muutospvm
+                    paivitystyyppi
                     paivitys
                     kayttajatunnus
                     salasana]
-  (log/debug (format "Päivitetään geometria-aineisto: %s" paivitystunnus))
-  (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
-  (hae-tiedosto integraatioloki db (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku kayttajatunnus salasana)
-  (arkisto/pura-paketti kohdetiedoston-polku)
-  (paivitys)
-  (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus tiedoston-muutospvm))
+  (log/debug (format "Päivitetään geometria-aineisto: %s. Päivitystyyppi on %s." paivitystunnus paivitystyyppi))
+      (when (= :palvelimelta paivitystyyppi)
+            (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
+            (hae-tiedosto integraatioloki db (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku kayttajatunnus salasana)
+            (arkisto/pura-paketti kohdetiedoston-polku))
+      (paivitys)
+      (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus (pvm/nyt)))
 
 (defn kohdetiedosto-ok? [kohdepolku]
   (let [file (io/file kohdepolku)
@@ -63,30 +46,27 @@
         true)
       false)))
 
+;; Tiedoston muutospäivää (ladattavan aineiston päivittymisajankohta) ei saada enää tutkittua.
+;; Tiedoston päivittymistarvetta voi hallita GEOMETRIAPAIVITYS-taulun seuraava_paivitys-sarakkeessa.
+;; Päivitystyypit ovat :palvelimelta ja :paikallinen. Paikallinen päivitys ei vaatisi tiedostourlia eikä kohdetiedoston polkua, mutta
+;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku paivitys kayttajatunnus salasana]
-  (log/debug (format "Tarkistetaan onko geometria-aineisto: %s päivittynyt AVA:ssa." paivitystunnus))
+  (log/debug (format "Tarkistetaan halutaanko geometria-aineisto: %s paivittaa." paivitystunnus))
   (when (and (not-empty tiedostourl) (kohdetiedosto-ok? kohdetiedoston-polku))
     (try+
-      (let [integraatio (str paivitystunnus "-muutospaivamaaran-haku")
-            tiedoston-muutospvm (hae-tiedoston-muutospaivamaara
-                                  db
-                                  integraatioloki
-                                  integraatio
-                                  tiedostourl
-                                  kayttajatunnus
-                                  salasana)
+      (let [paivitystyyppi      (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
             ava-paivitys (fn [] (aja-paivitys
                                   integraatioloki
                                   db
                                   paivitystunnus
                                   kohdetiedoston-polku
                                   tiedostourl
-                                  tiedoston-muutospvm
+                                  paivitystyyppi
                                   paivitys
                                   kayttajatunnus
                                   salasana))]
-        (if (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus tiedoston-muutospvm)
+        (if paivitystyyppi
           (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
-          (log/debug (format "Geometria-aineisto: %s, ei ole päivittynyt viimeisimmän haun jälkeen. Päivitystä ei tehdä." paivitystunnus))))
+          (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))))
       (catch Exception e
-        (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus." paivitystunnus))))))
+        (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. Tarkista konfiguraatio asetukset-tiedostossa ja tietokantatauluissa." paivitystunnus))))))

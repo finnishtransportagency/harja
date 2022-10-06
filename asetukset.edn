@@ -125,13 +125,13 @@
 
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali 60
+ :geometriapaivitykset {:tarkistusvali 60
                         :kayttajatunnus "ava-harja"
                         :salasana #=(slurp "../.harja/ava-salasana")
 
-                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+                        :tieosoiteverkon-osoite "https://ava.vaylapilvi.fi/ava/Tie/Tieosoiteverkko/[AINEISTO].zip"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
 
                         :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
 
@@ -147,8 +147,8 @@
                         :soratien-hoitoluokkien-osoite "https://ava.vayla.fi/harja/PTV_tl149.shz"
                         :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV.tl261_H.shp"
-                        :siltojen-osoite "https://ava.vayla.fi/harja/PTV.tl261_H.shz"
+                        :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
+                        :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
                         :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
 
                         ; Inspire-asetukset
@@ -157,7 +157,7 @@
                         ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
-                        :urakoiden-osoite "https://ava.vayla.fi/harja/[AINEISTO].shz"
+                        :urakoiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:tie_hoitourakat&outputFormat=SHAPE-ZIP"
                         :urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
