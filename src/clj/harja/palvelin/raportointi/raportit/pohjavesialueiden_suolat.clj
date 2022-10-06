@@ -32,7 +32,7 @@
    (:maara_t_per_km rivi)
    (:kayttoraja rivi)])
 
-(defn sarakkeet []
+(defn sarakkeet [{:keys [nayta-kayttoraja?]}]
   [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
    {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADosa"}
    {:leveys 2 :fmt :kokonaisluku :otsikko "Alku\u00ADetäisyys"}
@@ -41,14 +41,18 @@
    {:leveys 3 :fmt :numero :otsikko "Pituus"}
    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
-   {:leveys 5 :fmt :numero :otsikko "Käyttö\u00ADraja (t/km)"}])
+   (when nayta-kayttoraja?
+     {:leveys 5 :fmt :numero :otsikko "Käyttö\u00ADraja (t/km)"})])
 
-(defn pohjavesialueen-taulukko [rivit]
-  (let [eka (first rivit)]
+(defn pohjavesialueen-taulukko [urakka rivit]
+  (let [urakan-loppuvuosi (pvm/vuosi (:loppupvm urakka))
+        eka (first rivit)]
     [:taulukko {:otsikko (str (:tunnus eka) "-" (:nimi eka))
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja (if (empty? rivit) "Ei raportoitavia suolatoteumia.")}
-     (sarakkeet)
+     (sarakkeet
+       ;; Näytetään käyttöroja vanhoille päättyville urakoille
+       {:nayta-kayttoraja? (<= urakan-loppuvuosi 2021)})
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
 (defn laske [db urakka-id alkupvm loppupvm]
@@ -70,8 +74,9 @@
   (log/debug "urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
   (let [tulos (laske db urakka-id alkupvm loppupvm)
         raportin-nimi "Suolatoteumat (kaikki pohjavesialueet)"
+        urakka (first (urakat-q/hae-urakka db urakka-id))
         otsikko (raportin-otsikko
-                  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                  (:nimi urakka)
                   raportin-nimi alkupvm loppupvm)]
     (vec
      (concat
@@ -79,6 +84,7 @@
                   :nimi otsikko}]
       (if (empty? tulos)
         [:teksti yleinen/ei-tuloksia-aikavalilla-str]
-        (mapv pohjavesialueen-taulukko (sort-by #(->> % first :nimi)
-                                                (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
-                                                     (vals (group-by :tunnus tulos))))))))))
+        (mapv #(pohjavesialueen-taulukko urakka %)
+          (sort-by #(->> % first :nimi)
+            (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
+              (vals (group-by :tunnus tulos))))))))))
