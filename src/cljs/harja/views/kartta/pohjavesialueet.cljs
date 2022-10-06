@@ -1,7 +1,7 @@
 (ns harja.views.kartta.pohjavesialueet
   "Pohjavesialueet karttataso. Hakee palvelimelta valitun hallintayksikön alueella olevat pohjavesialueet."
   (:require [reagent.core :refer [atom]]
-            [harja.tiedot.navigaatio :refer [valittu-hallintayksikko]]
+            [harja.tiedot.navigaatio :refer [valittu-hallintayksikko valittu-urakka]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.protokollat :refer [Haku hae]]
             [cognitect.transit :as t]
@@ -63,23 +63,26 @@
         alueet))
 
 (run! (let [nakyvissa? @karttataso-pohjavesialueet
-            hal (:id @valittu-hallintayksikko)]
+            urakka-id (:id @valittu-urakka)]
         (if (or (not nakyvissa?)
-                (nil? hal))
-          ;; jos taso ei ole näkyvissä tai hallintayksikköä ei valittu => asetetaan heti tyhjä
+                (nil? urakka-id))
+          ;; Jos taso ei ole näkyvissä tai urakkaa ei ole valittu => asetetaan heti tyhjä
           (reset! pohjavesialueet-kartalla [])
 
-          ;; taso näkyvissä ja hallintayksikkö valittu, haetaan alueet
-          (if-let [pa (lue-pohjavesialueet hal)]
+          ;; Taso näkyvissä ja hallintayksikkö valittu, haetaan alueet
+          ;; NOTE: Pohjavesialueiden tallentaminen ja hakeminen localstoragesta on otettu pois käytöstä.
+          (if-let [pa nil #_(lue-pohjavesialueet hal)]
             ;; muistissa oli aiemmin ladatut alueet, palautetaan ne
             (reset! pohjavesialueet-kartalla (alueet pa))
 
-            ;; ei muistissa, haetaan ne
+            ;; Ei muistissa, haetaan ne
             (go
-              (let [res (<! (k/post! :hae-pohjavesialueet hal))]
-                (tallenna-pohjavesialueet hal res)
-                (when (= hal (:id @valittu-hallintayksikko))
-                  ;; jos hallintayksikköä ei ole ehditty muuttaa ennen kuin vastaus tuli
+              (let [res (<! (k/post! :hae-urakan-pohjavesialueet urakka-id))]
+                ;; NOTE: Pohjavesialueiden tallentaminen ja hakeminen localstoragesta on otettu pois käytöstä.
+                #_(tallenna-pohjavesialueet hal res)
+
+                (when (= urakka-id (:id @valittu-urakka))
+                  ;; Jos urakka ei ole ehditty vaihtaa ennen kuin vastaus tuli
                   (reset! pohjavesialueet-kartalla (alueet res)))))))))
 
   

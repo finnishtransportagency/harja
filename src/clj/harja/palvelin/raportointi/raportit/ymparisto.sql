@@ -97,7 +97,7 @@ SELECT
 FROM urakka_tehtavamaara ut
          JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
          JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
-         JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id AND ml.materiaalityyppi != 'talvisuola'
+         JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
 WHERE ut.poistettu IS NOT TRUE
   -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
