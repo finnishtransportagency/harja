@@ -326,7 +326,7 @@ ORDER BY pvm DESC;
 -- name: hae-suolamateriaalit
 SELECT *
 FROM materiaalikoodi
-WHERE materiaalityyppi IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
+WHERE materiaalityyppi IN ('talvisuola' :: MATERIAALITYYPPI);
 
 -- name: hae-talvisuolauksen-materiaalit
 SELECT id,
