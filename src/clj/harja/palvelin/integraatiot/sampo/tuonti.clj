@@ -92,7 +92,7 @@
 
     (try+
       (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
-        (first kuittaukset))
+        kuittaukset)
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
         (do
           (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)

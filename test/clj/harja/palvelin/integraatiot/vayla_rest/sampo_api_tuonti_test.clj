@@ -39,25 +39,29 @@
   (first (q-map (str "SELECT iv.id, iv.suunta, iv.sisaltotyyppi, iv.siirtotyyppi, iv.sisalto, iv.otsikko, iv.parametrit, iv.osoite
             FROM integraatioviesti iv WHERE iv.integraatiotapahtuma = "integraatiotapahtuma-id";" ))))
 
-(defn- tarkista-lahetettava-vastaus [viesti]
-  (let [xml viesti
-        data (xml/lue xml)]
-    (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" xml) "Kuittaus on validia XML:ää.")
-
-    (is (= "UrakkaMessageId" (first (z/xml-> data
+(defn- tarkista-lahetettava-messageid [viesti message-id] ;"UrakkaMessageId"
+  (let [data (xml/lue viesti)]
+    (is (= message-id (first (z/xml-> data
                                       (fn [kuittaus]
                                         (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :MessageId))))))
-      "Kuittaus on tehty oikeaan viestiin.")
+      "Kuittaus on tehty oikeaan viestiin.")))
 
-    (is (= "Project" (first (z/xml-> data
+(defn- tarkista-lahetettava-object-type [viesti object-type] ;"Project"
+  (let [data (xml/lue viesti)]
+    (is (= object-type (first (z/xml-> data
                               (fn [kuittaus]
                                 (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ObjectType))))))
-      "Kuittauksen tyyppi on Project eli urakka.")
+      (str "Kuittauksen tyyppi on " object-type))))
 
+(defn- tarkista-virheet [viesti]
+  (let [data (xml/lue viesti)]
     (is (= "NA" (first (z/xml-> data
                          (fn [kuittaus]
                            (z/xml1-> (z/xml1-> kuittaus) :Ack (z/attr :ErrorCode))))))
       "Virheitä ei tapahtunut käsittelyssä.")))
+
+(defn- onko-valid-vastaus [viesti]
+  (is (xml/validi-xml? +xsd-polku+ "HarjaToSampoAcknowledgement.xsd" viesti) "Kuittaus on validia XML:ää."))
 
 ;; Testit
 
@@ -66,10 +70,14 @@
     (let [urakat-alkuun (hae-urakat-sampoidlla "TESTIURAKKA")
           vastaus (api-tyokalut/post-kutsu [sampo-vastaanotto-url] kayttaja-yit portti
                     sampo-tyokalut/+testi-hoitourakka-sanoma+ nil true)
-          sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")]
+          sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")
+          _ (println " vastaus:" (:body vastaus))]
       (is (= 0 (count urakat-alkuun)) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
 
-      (tarkista-lahetettava-vastaus (:body vastaus))
+      (onko-valid-vastaus (:body vastaus))
+      (tarkista-lahetettava-messageid (:body vastaus) "UrakkaMessageId")
+      (tarkista-virheet (:body vastaus))
+      (tarkista-lahetettava-object-type (:body vastaus) "Project")
       (is (= 1 (count sampo-urakat-loppuun)) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä."))
 
 
@@ -106,7 +114,10 @@
     (is (= 0 (count sampo-urakat-alkuun)) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (is (= 1 (count sampo-urakat-loppuun)) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
 
-    (tarkista-lahetettava-vastaus (:body vastaus))
+    (onko-valid-vastaus (:body vastaus))
+    (tarkista-lahetettava-messageid (:body vastaus) "UrakkaMessageId")
+    (tarkista-virheet (:body vastaus))
+    (tarkista-lahetettava-object-type (:body vastaus) "Project")
 
 
     (let [urakan-tpi (ffirst (q "SELECT id
@@ -122,7 +133,10 @@
         sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")]
 
     (is (= 0 (count sampo-urakat-alkuun)) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (tarkista-lahetettava-vastaus (:body vastaus))
+    (onko-valid-vastaus (:body vastaus))
+    (tarkista-lahetettava-messageid (:body vastaus) "UrakkaMessageId")
+    (tarkista-virheet (:body vastaus))
+    (tarkista-lahetettava-object-type (:body vastaus) "Project")
 
     (is (= 1 (count sampo-urakat-loppuun)) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
     (let [urakan-tpi (ffirst (q "SELECT id
@@ -138,7 +152,10 @@
         sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")]
 
     (is (= 0 (count sampo-urakat-alkuun)) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
-    (tarkista-lahetettava-vastaus (:body vastaus))
+    (onko-valid-vastaus (:body vastaus))
+    (tarkista-lahetettava-messageid (:body vastaus) "UrakkaMessageId")
+    (tarkista-virheet (:body vastaus))
+    (tarkista-lahetettava-object-type (:body vastaus) "Project")
     (is (= 1 (count sampo-urakat-loppuun)) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
@@ -176,3 +193,15 @@
     (is (str/includes? integraatioviesti "javascript"))
     (is (= "HTTP" (:siirtotyyppi integraatioviesti)))
     (is (= "sisään" (:suunta integraatioviesti)))))
+
+(deftest lisaa-toimenpiden-instassi-tuonti-onnistuu
+  (let [aineisto (slurp "test/resurssit/sampo/Sampo2Harja_onnistunut_aineisto.xml")
+        maara-ennen (count (q-map "SELECT id FROM toimenpideinstanssi"))
+        vastaus (api-tyokalut/post-kutsu [sampo-vastaanotto-url] kayttaja-yit portti aineisto nil true)
+        _ (println "vastaus: " (:body vastaus))
+        maara-jalkeen (count (q-map "SELECT id FROM toimenpideinstanssi"))]
+    (is (= (+ 1 maara-ennen) maara-jalkeen))
+    (onko-valid-vastaus (:body vastaus))
+    (tarkista-lahetettava-messageid (:body vastaus) "38068257-OP-PR00043638")
+    (tarkista-virheet (:body vastaus))
+    (tarkista-lahetettava-object-type (:body vastaus) "Operation")))
