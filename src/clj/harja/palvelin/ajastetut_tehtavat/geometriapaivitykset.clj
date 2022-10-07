@@ -35,7 +35,7 @@
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
-(defn ajasta-paivitys [this paivitystunnus tarkistusvali osoite kohdetiedoston-polku paivitys kayttajatunnus salasana]
+(defn ajasta-paivitys [this paivitystunnus tarkistusvali osoite kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
   (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] Ajastetaan geometria-aineiston %s päivitystarve tarkistettavaksi %s minuutin välein." paivitystunnus tarkistusvali))
   (chime-at (periodic-seq (tee-alkuajastus) (-> tarkistusvali time/minutes))
             (fn [_]
@@ -44,6 +44,7 @@
                                       paivitystunnus
                                       osoite
                                       kohdetiedoston-polku
+                                      shapefile
                                       paivitys
                                       kayttajatunnus
                                       salasana))
@@ -62,18 +63,13 @@
                                   shapefile-avain
                                   paivitys]
   (fn [this {:keys [tarkistusvali] :as asetukset}]
-      (println "*************** PÄIVITYSTEHTÄVÄN MÄÄRITTELY " paivitystunnus)
     (let [db (:db this)
           url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
           tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
           shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
-         (println "tarkistusvali" tarkistusvali)
-         (println "url" url)
-         (println "tuontikohdepolku" tuontikohdepolku)
-         (println "shapefile" shapefile)
-      (when (and tarkistusvali
+         (when (and tarkistusvali
                  url
                  tuontikohdepolku
                  shapefile)
@@ -82,6 +78,7 @@
                          tarkistusvali
                          url
                          tuontikohdepolku
+                         shapefile
                          (fn [] (paivitys (:db this) shapefile))
                          kayttajatunnus
                          salasana)))))
