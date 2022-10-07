@@ -124,8 +124,8 @@
               (is (= :paikallinen (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-null-paivitetaan")) "Geometria-aineisto, jonka seuraavaa päivitysajankohtaa ei ole määritelty, pitää päivittää.")
               (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
               (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
-              (is (= nil (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
-              (is (= nil (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= :ei-kaytossa (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= :ei-kaytossa (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
               (is (= :palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "uusi")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")))
 
 (deftest testaa-tiedoston-lataus-ava-alustalla
