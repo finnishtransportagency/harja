@@ -10,7 +10,7 @@
              :refer [raportin-otsikko vuosi-ja-kk vuosi-ja-kk-fmt kuukaudet
                      pylvaat-kuukausittain ei-osumia-aikavalilla-teksti rivi]]
 
-            [harja.domain.raportointi :refer [info-solu]]
+            [harja.domain.raportointi :refer [info-solu virhetyylit]]
             [taoensso.timbre :as log]
             [jeesql.core :refer [defqueries]]
             [clojure.string :as str]
@@ -77,14 +77,22 @@
         urakka (first (urakat-q/hae-urakka db urakka-id))
         otsikko (raportin-otsikko
                   (:nimi urakka)
-                  raportin-nimi alkupvm loppupvm)]
+                  raportin-nimi alkupvm loppupvm)
+        ;; Näytetään infolaatikko urakoille, jotka ovat vielä käynnissä
+        nayta-infolaatikko? (> (pvm/vuosi (:loppupvm urakka)) 2021)
+        raportin-runko [:raportti {:orientaatio :landscape
+                                   :nimi otsikko}
+
+                        (when nayta-infolaatikko?
+                          [:infolaatikko
+                           "Huom: tämä raportti on vanhentunut rajoitusaluetietojen osalta. Tarkista voimassaolevat rajoitusalueet raportilta 'Suolatoteumat - urakan rajoitusalueet'."
+                           {:tyyppi :vahva-ilmoitus}])]]
     (vec
      (concat
-      [:raportti {:orientaatio :landscape
-                  :nimi otsikko}]
-      (if (empty? tulos)
-        [:teksti yleinen/ei-tuloksia-aikavalilla-str]
-        (mapv #(pohjavesialueen-taulukko urakka %)
-          (sort-by #(->> % first :nimi)
-            (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
-              (vals (group-by :tunnus tulos))))))))))
+       raportin-runko
+       (if (empty? tulos)
+         [[:teksti yleinen/ei-tuloksia-aikavalilla-str]]
+         (mapv #(pohjavesialueen-taulukko urakka %)
+           (sort-by #(->> % first :nimi)
+             (map #(sort-by (juxt :tie :alkuosa :alkuet) %)
+               (vals (group-by :tunnus tulos))))))))))
