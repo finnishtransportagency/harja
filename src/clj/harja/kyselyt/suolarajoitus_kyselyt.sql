@@ -372,21 +372,34 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
          -- Annettu alkuosa osuu kannassa olevan väliin
          (:aosa != :losa AND ((:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
              -- Sallitaan tilanne, jossa uusi rajoitusalue alkaa samasta pisteestä, mihin joku toinen loppuu
-             OR (:aosa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let - 1 >= :aet)
-             ))
+             OR (:aosa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let - 1 >= :aet)))
          OR
          -- Annettu loppuosa osuu kannassa olevan väliin
-         (:aosa != :losa AND ((:losa > (ra.tierekisteriosoite).aosa AND :losa < (ra.tierekisteriosoite).losa)
-             OR (:losa = (ra.tierekisteriosoite).losa AND (ra.tierekisteriosoite).let <= :let)
-             OR (:losa = (ra.tierekisteriosoite).aosa AND (ra.tierekisteriosoite).aet <= :let)))
+         (:aosa != :losa
+           AND (
+                 -- Loppuosa selkeästi välissä
+                 (:losa > (ra.tierekisteriosoite).aosa AND :losa < (ra.tierekisteriosoite).losa)
+                  -- Loppuosa välissä, mutta alkuosa edestä ulkona selkeästi
+                  OR (:aosa < (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa  AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
+                  -- Loppuosa välissä, mutta alkuosa edestä ulkona vain vähän
+                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet >= (ra.tierekisteriosoite).aet AND :losa <= (ra.tierekisteriosoite).losa)))
          -- Alkuosa ja loppuosa on samat, tarkista etäisyydet
          OR
          -- Kun alkuosa ja loppuosa on samat
          (:aosa = :losa AND (
-             -- Alkuosa osuu kokonaan kannassa olevien aosan ja losan väliin
+                -- Alkuosa osuu kokonaan kannassa olevien aosan ja losan väliin
                  (:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
+                 OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let)
+                 -- Alkuosa osuu väliin ja loppuosa menee yli
+                 --OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa <= (ra.tierekisteriosoite).losa  )
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet <= (ra.tierekisteriosoite).let-1 AND :let >= (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
-                 OR (:aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let))));
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).let AND :aet >= (ra.tierekisteriosoite).aet)
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let >= (ra.tierekisteriosoite).let)
+             )));
+
+
 
 
 -- name: hae-pohjavesialueidenurakat
