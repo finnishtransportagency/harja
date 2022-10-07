@@ -114,15 +114,19 @@
 
 (deftest testaa-pitaako-paivittaa
          (let [testitietokanta (:db jarjestelma)]
-              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, kayta_paikallista_tiedostoa) values ('testi-mennyt', '2022-09-05 07:50:24.479550', '2022-10-05 08:55:24.479550', false)"))
-              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, kayta_paikallista_tiedostoa) values ('testi-null', '2022-09-05 07:50:24.479550', null, true)"))
-              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, kayta_paikallista_tiedostoa) values ('testi-tulossa', '2022-09-05 07:50:24.479550', '2034-11-05 08:55:24.479550', true)"))
-              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, kayta_paikallista_tiedostoa, ei_ajeta) values ('testi-mennyt-estetty', '2020-09-05 07:50:24.479550', '2021-11-05 08:55:24.479550', true, true)"))
-              (is (:palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "testi-mennyt")) "Geometria-aineisto, jonka seuraava päivitysajankohta on mennyt, pitää päivittää.")
-              (is (:paikallinen (gp-kyselyt/pitaako-paivittaa? testitietokanta "testi-null")) "Geometria-aineisto, jonka seuraavaa päivitysajankohtaa ei ole määritelty, pitää päivittää.")
-              (is (= nil (gp-kyselyt/pitaako-paivittaa? testitietokanta "testi-tulossa")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
-              (is (:palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "testi-puuttuu")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")))
-
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('palvelimelta-paivitetaan', '2022-09-05 07:50:24.479550', '2022-10-05 08:55:24.479550', false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('paikallinen-null-paivitetaan', '2022-09-05 07:50:24.479550', null, true)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('palvelimelta-ei-paiviteta', '2022-09-05 07:50:24.479550', '2034-11-05 08:55:24.479550', false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('paikallinen-ei-paiviteta', '2022-09-05 07:50:24.479550', '2034-11-05 08:55:24.479550', true)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen, kaytossa) values ('palvelimelta-ei-kaytossa', '2020-09-05 07:50:24.479550', '2021-11-05 08:55:24.479550', false, false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen, kaytossa) values ('paikallinen-ei-kaytossa', '2020-09-05 07:50:24.479550', '2021-11-05 08:55:24.479550', true, false)"))
+              (is (= :palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-paivitetaan")) "Geometria-aineisto, jonka seuraava päivitysajankohta on mennyt, pitää päivittää.")
+              (is (= :paikallinen (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-null-paivitetaan")) "Geometria-aineisto, jonka seuraavaa päivitysajankohtaa ei ole määritelty, pitää päivittää.")
+              (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
+              (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
+              (is (= nil (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= nil (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= :palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "uusi")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")))
 
 (deftest testaa-tiedoston-lataus-ava-alustalla
   (let [testitietokanta (:db jarjestelma)
@@ -131,7 +135,6 @@
         kohdetiedosto "test/resurssit/download_test.zip"
         fake-vastaus {:status 200 :body (IOUtils/toByteArray (io/input-stream "test/resurssit/arkistot/test_zip.zip"))}]
     (component/start integraatioloki)
-
     (with-fake-http
       [{:url fake-tiedosto-url :method :get} fake-vastaus]
       (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
