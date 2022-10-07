@@ -15,10 +15,98 @@
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.ui.debug :as debug]
 
             [harja.views.urakka.toteumat.erilliskustannukset :as ek]
 
             [harja.tyokalut.tuck :as tuck-apurit]))
+
+(defn- reversoi-mappi
+  [mappi]
+  (into {}
+    (map (fn [[avain arvo]]
+           [arvo avain]))
+    mappi))
+
+(def konversioavaimet
+  {:perintapvm :pvm
+   :summa :rahasumma
+   :perustelu :lisatieto
+   :laji :tyyppi
+   :indeksi :indeksin_nimi
+   :kasittelyaika :laskutuskuukausi})
+
+(def valitut-avaimet [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto :indeksikorjaus :sijainti
+                      :laskutuskuukausi :kasittelytapa :indeksin_nimi :id :suorasanktio])
+
+(defn- kannasta->lomake
+  [avain]
+  (or (get konversioavaimet avain)    
+    avain))
+
+(defn- keywordisoi
+  [avain tiedot]
+  (let [keywordisoi? (some? (get #{:laji :kasittelytapa} avain))]
+    (println avain tiedot keywordisoi?)
+    (if keywordisoi?
+      (keyword tiedot)
+      tiedot)))
+
+(defn- assoc-in-muotoon
+  [[avain tiedot]]
+  (let [konversiot {:sijainti [:laatupoikkeama :sijainti]
+                    :kasittelyaika [:laatupoikkeama :paatos :kasittelyaika]
+                    :perustelu [:laatupoikkeama :paatos :perustelu]}]
+    (println "aim" avain tiedot (or (get konversiot avain) [avain]))
+
+    [(or (get konversiot avain) [avain]) tiedot]))
+
+(defn- lomake->sanktiolistaus
+  [lomake]
+  (let [konversiot (reversoi-mappi konversioavaimet)
+        tee-valitut-avaimet (map #(-> [% (get lomake %)]))
+        keywordisoi-tiedot (map #(let [[avain tiedot] %]
+                                   [avain (keywordisoi avain tiedot)]))
+        konvertoi-avaimet (map #(let [[avain tiedot] %]
+                                 
+                                  [(or (get konversiot avain) avain) tiedot]))        
+        assoc-in-avaimet (map assoc-in-muotoon)]
+    (merge
+      (reduce
+        (fn [acc [avain tieto]]
+          (println avain tieto acc)
+          (assoc-in acc avain tieto))
+        {}
+        (into [] (comp tee-valitut-avaimet konvertoi-avaimet keywordisoi-tiedot assoc-in-avaimet) valitut-avaimet))
+      {:bonus true :suorasanktio true})
+    #_(reduce (fn [acc [avain tiedot]]
+              (let [avain (or (get konversiot avain) avain)
+                    vec-avain (assoc-in-muotoon avain)]
+                (assoc-in acc vec-avain (keywordisoi avain tiedot))))
+      {} lomake)))
+
+(defn- bonus->lomake
+  ([bonus]
+   (bonus->lomake bonus {}))
+  ([bonus acc]
+   (reduce (fn [acc [avain tiedot]]
+             (cond
+               (map? tiedot)
+               (bonus->lomake tiedot acc)
+
+               (and
+                 (some? tiedot)
+                 (nil? (get acc avain))
+                 (not= avain (kannasta->lomake avain)))
+               (assoc acc (kannasta->lomake avain) tiedot)
+
+               (and (some? tiedot)
+                 (nil? (get acc avain)))
+               (assoc acc avain tiedot)
+               
+               :else
+               acc))
+     acc bonus)))
 
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
@@ -44,8 +132,8 @@
     (assoc-in app [:uusi-liite] liite))
   TyhjennaLomake
   (process-event
-    [{sulje-fn :sulje-fn} app]
-    (sulje-fn)
+    [{sulje-fn :sulje-fn} {:keys [tallennettu-lomake] :as app}]
+    (sulje-fn (lomake->sanktiolistaus tallennettu-lomake))
     (-> app
       (dissoc :lomake)
       (assoc :voi-sulkea? false)))
@@ -65,23 +153,23 @@
       (assoc app :lomake lomake)))
   TallennusOnnistui
   (process-event    
-    [vastaus app]
+    [{vastaus :vastaus} app]
     (println "succ" vastaus)
-    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true))
+    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true :tallennettu-lomake vastaus))
   TallennusEpaonnistui
   (process-event
-    [vastaus app]
+    [{vastaus :vastaus} app]
     (println "fail" vastaus)
     (assoc app :tallennus-kaynnissa? false))
   PoistaBonus
   (process-event
     [_ app]
-    (let [lomakkeen-tiedot (select-keys (:lomake app) [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto
-                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi :id])
+    (let [lomakkeen-tiedot (select-keys (:lomake app) valitut-avaimet)
           payload (assoc lomakkeen-tiedot
             :poistettu true
             :urakka-id (:id @nav/valittu-urakka)
-            :tyyppi (-> lomakkeen-tiedot :tyyppi name))]
+            :tyyppi (-> lomakkeen-tiedot :tyyppi name)
+            :palauta-tallennettu? true)]
       (-> app
         (tuck-apurit/post! :tallenna-erilliskustannus
                payload
@@ -91,11 +179,11 @@
   TallennaBonus
   (process-event
     [_ app]    
-    (let [lomakkeen-tiedot (select-keys (:lomake app) [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto
-                                                       :laskutuskuukausi :kasittelytapa :indeksin_nimi :id])
+    (let [lomakkeen-tiedot (select-keys (:lomake app) valitut-avaimet)
           payload (merge lomakkeen-tiedot
                     {:urakka-id (:id @nav/valittu-urakka)
-                     :tyyppi (-> lomakkeen-tiedot :tyyppi name)})]
+                     :tyyppi (-> lomakkeen-tiedot :tyyppi name)
+                     :palauta-tallennettu? true})]
       (println "save!" payload)
       (-> app
         (tuck-apurit/post! :tallenna-erilliskustannus
@@ -139,7 +227,8 @@
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
     (when voi-sulkea? (e! (->TyhjennaLomake sulje-fn)))
     [:<>
-     [:h2 "Bonukset"]     
+     [:h2 "Bonukset"]
+     [debug/debug lomakkeen-tiedot]
      [lomake/lomake
       {:otsikko "Bonuksen tiedot"
        :ei-borderia? true
@@ -267,44 +356,21 @@
                                                     liitteet))))}))}])}]
       lomakkeen-tiedot]]))
 
-(defn- kannasta->lomake
-  [avain]
-  (case avain
-    :perintapvm :pvm
-    :summa :rahasumma
-    :perustelu :lisatieto
-    :laji :tyyppi
-    :indeksi :indeksin_nimi
-    :kasittelyaika :laskutuskuukausi
-    avain))
-
-(defn- bonus->lomake
-  ([bonus]
-   (bonus->lomake bonus {}))
-  ([bonus acc]
-   (reduce (fn [acc [avain tiedot]]
-             (cond
-               (map? tiedot)
-               (bonus->lomake tiedot acc)
-
-               (and
-                 (some? tiedot)
-                 (nil? (get acc avain))
-                 (not= avain (kannasta->lomake avain)))
-               (assoc acc (kannasta->lomake avain) tiedot)
-
-               (and (some? tiedot)
-                 (nil? (get acc avain)))
-               (assoc acc avain tiedot)
-               
-               :else
-               acc))
-     acc bonus)))
-
-
 (defn bonukset*
-  [auki? avattu-bonus]
-  (let [sulje-fn #(reset! auki? false)
+  [auki? avattu-bonus haetut-sanktiot]
+  (let [sulje-fn #(do
+                    (println "bonus sulje" %)
+                    (when (some? (:id %))
+                      (println "swapping with" %)
+                      (if (some (fn [rivi] (= (:id rivi) (:id %))) @haetut-sanktiot)
+                        (swap! haetut-sanktiot (fn [sanktiolistaus]
+                                                 (mapv (fn [rivi]
+                                                         (if (= (:id rivi) (:id %))
+                                                           %
+                                                           rivi))
+                                                   sanktiolistaus)))
+                        (swap! haetut-sanktiot conj %)))
+                    (reset! auki? false))
         bonukset-tila (r/atom {:lomake (or
                                          (when (some? (:id avattu-bonus))
                                            (bonus->lomake avattu-bonus))
