@@ -391,7 +391,6 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
                  (:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
                  OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu väliin ja loppuosa menee yli
-                 --OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa <= (ra.tierekisteriosoite).losa  )
                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet <= (ra.tierekisteriosoite).let-1 AND :let >= (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).let AND :aet >= (ra.tierekisteriosoite).aet)
