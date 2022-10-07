@@ -835,8 +835,11 @@
                                   (let [[rivi-validointi taulukko-validointi] (case tyyppi
                                                                                 :validoi [rivi-validointi taulukko-validointi]
                                                                                 :varoita [rivi-varoitus taulukko-varoitus]
-                                                                                :huomauta [rivi-huomautus taulukko-huomautus])]
-                                    (validointi/validoi-ja-anna-virheet uudet-tiedot skeema rivi-validointi taulukko-validointi tyyppi :harja.ui.grid/poistettu)))
+                                                                                :huomauta [rivi-huomautus taulukko-huomautus])
+                                        ;; Jos on käytetty yhteenvetoriviä, poista se ennen validointia
+                                        ilman-yhteenvetoa-tiedot (into {} (remove (comp :yhteenveto second))
+                                                                   uudet-tiedot)]
+                                    (validointi/validoi-ja-anna-virheet ilman-yhteenvetoa-tiedot skeema rivi-validointi taulukko-validointi tyyppi :harja.ui.grid/poistettu)))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
                    (let [id (or (tunniste rivin-tiedot) (swap! uusi-id dec))

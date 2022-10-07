@@ -370,8 +370,8 @@
            #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
          [yhteenveto e! app urakka]
          [ennuste e! app]
-         ;; Näytetään vuonna 2021 alkaville urakoille lupausryhmät
-         (when (= 2021 (pvm/vuosi (:alkupvm urakka)))
+         ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
+         (when (>= (pvm/vuosi (:alkupvm urakka)) 2021 )
            (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
             [:div.row {:style (merge {}
                                      (when (not (empty? (:lupausryhmat app)))
