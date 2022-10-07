@@ -24,7 +24,7 @@ node {
                          branches                         : [[name: '*/develop']],
                          doGenerateSubmoduleConfigurations: false,
                          extensions                       : [[$class: 'CheckoutOption', timeout: 15],
-                                                             [$class: 'CloneOption', depth: 0, noTags: false, reference: '', timeout: 15],
+                                                             [$class: 'CloneOption', depth: 0, noTags: false, reference: '', shallow: true, timeout: 15],
                                                              [$class: 'SparseCheckoutPaths', sparseCheckoutPaths: [[path: 'Jenkins/*']]]],
                          submoduleCfg                     : [],
                          userRemoteConfigs                : [[url: 'https://github.com/finnishtransportagency/harja.git']]]])
