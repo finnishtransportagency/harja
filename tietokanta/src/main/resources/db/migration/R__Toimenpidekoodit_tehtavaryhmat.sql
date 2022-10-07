@@ -1215,7 +1215,7 @@ WHERE suunnitteluyksikko = ''
 
 -- Korjaa yksiköt
 UPDATE toimenpidekoodi SET yksikko = 'm3' WHERE nimi = 'Maakivien (>1m3) poisto';
-UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
+UPDATE toimenpidekoodi SET yksikko = 'm2', suunnitteluyksikko = 'm2' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
 UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi IN ('Is rampit', 'Is ohituskaistat', 'Ib ohituskaistat', 'Ib rampit');
 
 -- Yhtenäistetään tapa merkitä yksikkö
