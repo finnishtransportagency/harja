@@ -523,9 +523,10 @@
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
                         vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db tapahtuma-id)
+                        purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
                         ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
                         ;; käsittely onnistunut
-                        status (if (str/includes? vastauksen-data "ErrorMessage")
+                        status (if (not (nil? (get-in (first purettu-vastauksen-data) [:tag :content :ErrorMessage])))
                                  400
                                  200)]
 
