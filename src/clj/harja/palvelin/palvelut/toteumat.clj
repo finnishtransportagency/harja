@@ -354,7 +354,7 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn tallenna-erilliskustannus [db user ek]
+(defn tallenna-erilliskustannus [db user {:keys [palauta-tallennettu?] :as ek}]
   (log/debug "tallenna erilliskustannus:" ek)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user (:urakka-id ek))
   (tarkistukset/vaadi-erilliskustannus-kuuluu-urakkaan db (:id ek) (:urakka-id ek))
@@ -375,17 +375,28 @@
                         :lisatieto lisatieto
                         :laskutuskuukausi laskutuskuukausi
                         :kasittelytapa (when kasittelytapa (name kasittelytapa))
-                        :luoja (:id user)}]
-        (if (not id)
-          (toteumat-q/luo-erilliskustannus<! db parametrit)
-          (toteumat-q/paivita-erilliskustannus! db (merge (dissoc parametrit :luoja)
-                                                     {:poistettu (or poistettu false)
-                                                      :id id
-                                                      :muokkaaja (:id user)})))
+                        :luoja (:id user)}
+            tallennettu (if (not id)
+                          (toteumat-q/luo-erilliskustannus<! db parametrit)
+                          (toteumat-q/paivita-erilliskustannus! db (merge (dissoc parametrit :luoja)
+                                                                     {:poistettu (or poistettu false)
+                                                                      :id id
+                                                                      :muokkaaja (:id user)})))]
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
-        (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
-                                                 :alkupvm   (:alkupvm ek)
-                                                 :loppupvm  (:loppupvm ek)})))
+        (cond
+          (and
+            palauta-tallennettu?
+            (map? tallennettu))
+          tallennettu
+
+          (and palauta-tallennettu?
+            (number? tallennettu))
+          ek
+
+          :else
+          (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
+                                                   :alkupvm   (:alkupvm ek)
+                                                   :loppupvm  (:loppupvm ek)}))))
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
