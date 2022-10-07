@@ -67,7 +67,7 @@
 
 (defn bonus-sanktio-valikko
   [tila]
-  [kentat/tee-kentta {:tyyppi :radio-group :vaihtoehdot [:sanktiot :bonukset] :vayla-tyyli? true} tila])
+  [kentat/tee-kentta {:tyyppi :radio-group :vaihtoehdot [:sanktiot :bonukset] :vayla-tyyli? true :nayta-rivina? true} tila])
 
 (defn sanktion-tiedot
   [optiot]
@@ -102,9 +102,10 @@
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))]                      
           [:div.padding-16.ei-sulje-sivupaneelia           
-           [bonus-sanktio-valikko (r/cursor tila [:lomake]) #()]
+           (when-not muokataan-vanhaa?
+             [bonus-sanktio-valikko (r/cursor tila [:lomake]) #()])
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu]
+             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot]
              [:<>
               [:h2 (cond
                      (and lukutila? muokataan-vanhaa?)
