@@ -179,8 +179,12 @@
 
 (defn talvisuolatoteumat []
   (komp/luo
+    ;; Piilotetaan pohjavesialueet karttataso komponentin renderöinnin yhteydessä,
+    ;; palautetaan takaisin alkuperäinen arvo näkymästä pois siirtyessä.
+    (komp/lippu-arvo
+      false @pohjavesialueet/karttataso-pohjavesialueet
+      pohjavesialueet/karttataso-pohjavesialueet)
     (komp/lippu tiedot/suolatoteumissa?
-                pohjavesialueet/karttataso-pohjavesialueet
                 tiedot-urakka/aseta-kuluva-kk-jos-hoitokaudella?
                 tiedot/karttataso-suolatoteumat)
     (fn []

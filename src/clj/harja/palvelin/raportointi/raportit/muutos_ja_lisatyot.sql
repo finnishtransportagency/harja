@@ -46,13 +46,13 @@ FROM toteuma_tehtava tt
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
     ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
+        mht.sopimus = t.sopimus AND
+        mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
   tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
                                    (:urakkatyyppi :: urakkatyyppi IS NULL OR
@@ -98,13 +98,13 @@ FROM toteuma_tehtava tt
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
     ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
+        mht.sopimus = t.sopimus AND
+        mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
   tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE AND
   ((:urakka_annettu IS FALSE AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
   AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND
                                    (:urakkatyyppi :: urakkatyyppi IS NULL OR (
@@ -152,13 +152,13 @@ FROM toteuma_tehtava tt
     ON (tpi.toimenpide = tpk4.emo AND tpi.urakka = t.urakka)
   LEFT JOIN muutoshintainen_tyo mht
     ON (mht.tehtava = tt.toimenpidekoodi AND mht.urakka = t.urakka AND
-        mht.sopimus = t.sopimus)
+        mht.sopimus = t.sopimus AND
+        mht.poistettu IS NOT TRUE)
   JOIN sopimus s ON t.sopimus = s.id
   JOIN urakka u ON t.urakka = u.id
   JOIN organisaatio hy ON hy.id = u.hallintayksikko
 WHERE
-  tt.poistettu IS NOT TRUE AND
-  mht.poistettu IS NOT TRUE
+  tt.poistettu IS NOT TRUE
   AND (:urakkatyyppi :: urakkatyyppi IS NULL OR (
     CASE WHEN :urakkatyyppi = 'hoito' THEN
          u.tyyppi IN ('hoito', 'teiden-hoito')

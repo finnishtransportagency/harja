@@ -239,13 +239,14 @@
                      [:div.flex-row
                       [:div.alkuun {:style {:padding-left "0"}}
                        [napit/tallenna
-                        "Tallenna"
+                        (if muokkaustila? "Tallenna muutokset" "Tallenna")
                         #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila false))
                         {:disabled disabled? :paksu? true}]
-                       [napit/tallenna
-                        "Tallenna ja lisää seuraava"
-                        #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
-                        {:disabled disabled? :paksu? true}]]
+                       (when-not muokkaustila?
+                         [napit/tallenna
+                          "Tallenna ja lisää seuraava"
+                          #(e! (suolarajoitukset-tiedot/->TallennaLomake lomake-tila true))
+                          {:disabled disabled? :paksu? true}])]
                       [:div.loppuun
                        (when muokkaustila?
                          [napit/poista
@@ -578,7 +579,7 @@
           [:div.header
            [:h3 {:class "pull-left"}
             "Pohjavesialueiden suolarajoitukset"]
-           [napit/uusi "Lisää rajoitus"
+           [napit/uusi "Lisää rajoitusalue"
             #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true {:kopioidaan-tuleville-vuosille? true}))
             {:luokka "pull-right"
              :disabled (not saa-muokata?)}]]
