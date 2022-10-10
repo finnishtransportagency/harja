@@ -46,7 +46,8 @@
     {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu\u00ADetäisyys"}
     {:leveys 3 :fmt :numero :otsikko "Pituus"}
     {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
-    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}))
+    {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
+    {}))
 
 (deftest raportin-suoritus-urakalle-toimii-aktiivinen-urakka
   (let [nyt (java.util.Date.)
