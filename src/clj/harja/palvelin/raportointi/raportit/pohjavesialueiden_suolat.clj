@@ -51,8 +51,8 @@
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja (if (empty? rivit) "Ei raportoitavia suolatoteumia.")}
      (sarakkeet
-       ;; Näytetään käyttöraja vanhoille päättyville urakoille
-       {:nayta-kayttoraja? (<= urakan-loppuvuosi 2021)})
+       ;; Näytetään käyttöraja vanhoille päättyville urakoille (Urakka päättynyt 30.9.2022)
+       {:nayta-kayttoraja? (<= urakan-loppuvuosi 2022)})
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
 (defn laske [db urakka-id alkupvm loppupvm]
@@ -78,8 +78,8 @@
         otsikko (raportin-otsikko
                   (:nimi urakka)
                   raportin-nimi alkupvm loppupvm)
-        ;; Näytetään infolaatikko urakoille, jotka ovat vielä käynnissä
-        nayta-infolaatikko? (> (pvm/vuosi (:loppupvm urakka)) 2021)
+        ;; Näytetään infolaatikko urakoille, jotka ovat vielä käynnissä (Urakka päättyy vuonna 2023 tai myöhemmin)
+        nayta-infolaatikko? (> (pvm/vuosi (:loppupvm urakka)) 2022)
         raportin-runko [:raportti {:orientaatio :landscape
                                    :nimi otsikko}
 
