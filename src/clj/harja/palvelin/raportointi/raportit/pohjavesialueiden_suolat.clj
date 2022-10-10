@@ -51,7 +51,7 @@
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja (if (empty? rivit) "Ei raportoitavia suolatoteumia.")}
      (sarakkeet
-       ;; Näytetään käyttöroja vanhoille päättyville urakoille
+       ;; Näytetään käyttöraja vanhoille päättyville urakoille
        {:nayta-kayttoraja? (<= urakan-loppuvuosi 2021)})
      (into [] (map rivi-xf (loppusumma rivit)))]))
 
