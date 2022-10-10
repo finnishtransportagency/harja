@@ -7,6 +7,12 @@ properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '',
             pipelineTriggers([cron('0 7 * * 1-5'), pollSCM('H/5 * * * *')])])
 
 node {
+    // Enabloi uudempi git Jenkinsille
+    environment {
+        PATH="/opt/rh/rh-git218/root/usr/bin:$PATH"
+        LD_LIBRARY_PATH="/opt/rh/httpd24/root/usr/lib64:${LD_LIBRARY_PATH}"
+    }
+
     withEnv(["HARJA_DEV_YMPARISTO=${params.HARJA_DEV_YMPARISTO}",
              "HARJA_TIETOKANTA_HOST=${params.HARJA_TIETOKANTA_HOST}",
              "HARJA_TIETOKANTA_HOST_KAANNOS=${params.HARJA_TIETOKANTA_HOST_KAANNOS}",
