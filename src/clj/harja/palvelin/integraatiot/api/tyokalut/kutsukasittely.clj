@@ -121,7 +121,7 @@
 
 (defn lokita-kutsu
   ([integraatioloki resurssi request body]
-   (lokita-kutsu integraatioloki resurssi request body))
+   (lokita-kutsu integraatioloki resurssi request body "api"))
   ([integraatioloki resurssi request body integraatio]
    (let [xml? (= (kutsun-formaatti request) "xml")
          loki-viesti (if xml?
@@ -281,8 +281,10 @@
         (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) body)
         (json/validoi skeema body)))
     (if xml?
-      ;(xml/lue body "UTF-8")
-      (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+      ;; Sisääntuleva sähköposti käsitellään eri tavalla kuin muut xml viestits
+      (if (str/includes? body "sahkoposti:sahkoposti")
+        (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+        (xml/lue body "UTF-8"))
       (cheshire/decode body true))))
 
 (defn hae-kayttaja [db kayttajanimi]
