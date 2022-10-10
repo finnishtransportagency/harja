@@ -528,7 +528,8 @@
                         purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
                         ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
                         ;; käsittely onnistunut
-                        status (if (not (nil? (get-in (first purettu-vastauksen-data) [:tag :content :ErrorMessage])))
+                        mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
+                        status (if (and (not (nil? mahdollinen-virhe)) (not= "" mahdollinen-virhe))
                                  400
                                  200)]
 
