@@ -20,8 +20,9 @@
                           {:coordinates [[100 100] [200 200]]}]}
               {:type :point
                :coordinates [20 20]}
-              {:type        :multipoint
-               :coordinates [[20 20] [30 30]]}
+              {:type :multipoint,
+               :coordinates [{:type :point, :coordinates [204441.1091 6783735.807300001]}
+                             {:type :point, :coordinates [104441.1091 6783735.80730002]}]}
               {:type :icon
                :coordinates [20 20]}
               {:type :circle
