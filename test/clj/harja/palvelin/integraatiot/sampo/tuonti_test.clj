@@ -13,7 +13,8 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.string :as str]))
 
 (def +xsd-polku+ "xsd/sampo/inbound/")
 
@@ -125,7 +126,7 @@
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
 
 
-(deftest laheta-virheellin-tuonti-harjaan-test
+(deftest laheta-virheellinen-tuonti-harjaan-test
   (let [viestit (atom [])]
     (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
     (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
@@ -134,14 +135,14 @@
 
     (println "viestit " @viestit)
 
-    (tarkista-vastaus (first @viestit))
+    (is (str/includes? (first @viestit) "No operation code provided."))
 
-    (is (= 1 (count (hae-urakat))) "Viesti on käsitelty ja tietokannasta löytyy urakka Sampo id:llä.")
+    (is (= 0 (count (hae-urakat))) "Virheellisellä viestillä ei luoda mitään uutta")
     (let [urakan-tpi (ffirst (q "SELECT id
                                   FROM toimenpideinstanssi
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
                                   AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
-      (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+      (is (empty? urakan-tpi) "Urakalle on ei luoda toimenpideinstanssia"))))
 
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
