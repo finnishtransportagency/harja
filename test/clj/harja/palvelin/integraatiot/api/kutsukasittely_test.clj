@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.xml-skeemat :as xml-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsukasittely]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki] :as integraatioloki]
@@ -51,6 +52,22 @@
               (is (= 415 (:status vastaus)))
               (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
               (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+
+(deftest huomaa-kutsu-jossa-vaara-content-type
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+        vastaus (kutsukasittely/kasittele-sampo-kutsu
+                  (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  "/sampo/api/harja"
+                  {:body kutsun-data
+                   :request-method :post
+                   :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
+                  xml-skeemat/+sampo-kutsu+
+                  (fn [_])
+                  "sampo")]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
+    (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
 (deftest huomaa-kutsu-jossa-tuntematon-kayttaja
          (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
