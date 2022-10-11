@@ -36,7 +36,7 @@
         (POST "/sampo/api/harja" request
           (kutsukasittely/kasittele-sampo-kutsu db integraatioloki :sisaanluku
             request xml-skeemat/+sampo-kutsu+
-            (fn [kutsun-parametrit kutsun-data kayttaja db tapahtuma-id]
+            (fn [db kutsun-data tapahtuma-id]
               (tuonti/kasittele-api-viesti db integraatioloki kutsun-data tapahtuma-id))
             "sampo"))))
     (if (ominaisuus-kaytossa? :api-sampo)
