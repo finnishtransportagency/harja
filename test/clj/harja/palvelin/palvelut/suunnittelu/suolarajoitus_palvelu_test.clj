@@ -366,6 +366,25 @@
                       urakka-id
                       (:id t/+kayttaja-jvh+)
                       {:tie 5 :aosa 20 :aet 200 :losa 20 :let 2000}
+                      hk-alkuvuosi))
+
+        ;; Rajoitus jonka alkuosa ja loppuosa ovat samoja, vain alkuet ja loppuet poikkeaa ja on vähä myöhemmin, kun edellinen
+        rajoitus3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :tallenna-suolarajoitus
+                    t/+kayttaja-jvh+
+                    (suolarajoitus-pohja
+                      urakka-id
+                      (:id t/+kayttaja-jvh+)
+                      {:tie 25 :aosa 1 :aet 200 :losa 1 :let 950}
+                      hk-alkuvuosi))
+
+        rajoitus4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :tallenna-suolarajoitus
+                    t/+kayttaja-jvh+
+                    (suolarajoitus-pohja
+                      urakka-id
+                      (:id t/+kayttaja-jvh+)
+                      {:tie 25 :aosa 1 :aet 1030 :losa 1 :let 1224}
                       hk-alkuvuosi))]
 
     (testing "Varmistetaan, että samaa tierekisteriosoitetta ei voi käyttää muissa rajoituksissa"
@@ -436,10 +455,17 @@
             suolarajoitus-loppu-keskella3 (merge perusrajoitus tr-loppu-keskella3)
             tr-tiedot-loppu-keskella3 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                         :tierekisterin-tiedot
-                                        t/+kayttaja-jvh+ suolarajoitus-loppu-keskella3)]
+                                        t/+kayttaja-jvh+ suolarajoitus-loppu-keskella3)
+
+            tr-loppu-keskella4 {:tie 5 :aosa 19 :aet 1 :losa 20 :let 300}
+            suolarajoitus-loppu-keskella4 (merge perusrajoitus tr-loppu-keskella4)
+            tr-tiedot-loppu-keskella4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                        :tierekisterin-tiedot
+                                        t/+kayttaja-jvh+ suolarajoitus-loppu-keskella4)]
         (is (= 400 (:status tr-tiedot-loppu-keskella)) "Loppu keskellä, eikä saa tallentaa")
         (is (= 400 (:status tr-tiedot-loppu-keskella2)) "Loppu keskellä, eikä saa tallentaa")
-        (is (= 400 (:status tr-tiedot-loppu-keskella3)) "Loppu keskellä, eikä saa tallentaa")))
+        (is (= 400 (:status tr-tiedot-loppu-keskella3)) "Loppu keskellä, eikä saa tallentaa")
+        (is (= 400 (:status tr-tiedot-loppu-keskella4)) "Loppu keskellä, eikä saa tallentaa")))
 
     (testing "Ei voi tallentaa tierekisteriä, jonka alkuosa on keskellä rajoitusaluetta"
       (let [tr-alku-keskella {:tie 25 :aosa 3 :aet 1 :losa 7 :let 2001}
@@ -501,6 +527,16 @@
        :kopioidaan-tuleville-vuosille? true})
     (poista-suolarajoitus
       {:rajoitusalue_id (:rajoitusalue_id rajoitus2)
+       :hoitokauden-alkuvuosi hk-alkuvuosi
+       :urakka_id urakka-id
+       :kopioidaan-tuleville-vuosille? true})
+    (poista-suolarajoitus
+      {:rajoitusalue_id (:rajoitusalue_id rajoitus3)
+       :hoitokauden-alkuvuosi hk-alkuvuosi
+       :urakka_id urakka-id
+       :kopioidaan-tuleville-vuosille? true})
+    (poista-suolarajoitus
+      {:rajoitusalue_id (:rajoitusalue_id rajoitus4)
        :hoitokauden-alkuvuosi hk-alkuvuosi
        :urakka_id urakka-id
        :kopioidaan-tuleville-vuosille? true})))
