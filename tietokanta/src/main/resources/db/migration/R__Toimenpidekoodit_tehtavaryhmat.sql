@@ -1342,3 +1342,12 @@ UPDATE toimenpidekoodi SET jarjestys = 1343 WHERE nimi = 'Päällysteiden paikka
 
 -- Korjaa virhe HJ-urakkatehtävien voimassaolon loppuvuodessa
 UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2018 WHERE voimassaolo_alkuvuosi = 2018 AND voimassaolo_loppuvuosi = 2019 AND nimi != 'Päällysteiden paikkaus, kylmäpäällyste';
+
+-- Reunapaalujen kunnossapito suunnitellaan juoksumetreinä 2022 alkaneista urakoista eteenpäin
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2021 WHERE nimi = 'Reunapaalujen kp (uusien)' AND voimassaolo_loppuvuosi IS NULL AND yksikko = 'tiekm';
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, suunnitteluyksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen,
+                             voimassaolo_alkuvuosi, hinnoittelu, aluetieto)
+VALUES ('Reunapaalujen kunnossapito', (select id from tehtavaryhma where nimi = 'Liikennemerkit ja liikenteenohjauslaitteet (L)'), 'jkm', 'jkm', 370, NULL,
+        (select id from toimenpidekoodi where koodi = '23116'), current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 2022, '{muutoshintainen}', TRUE)
+ON CONFLICT(nimi, emo) DO NOTHING;
