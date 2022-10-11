@@ -77,7 +77,7 @@
 
       (is (= vastaus
             [:raportti {:orientaatio :landscape
-                        :nimi "Aktiivinen Oulu Testi, Suolatoteumat (kaikki pohjavesialueet) ajalta 10.10.2021 - 10.10.2023"}
+                        :nimi (str "Aktiivinen Oulu Testi, Suolatoteumat (kaikki pohjavesialueet) ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))}
              [:infolaatikko "Huom: tämä raportti on vanhentunut rajoitusaluetietojen osalta. Tarkista voimassaolevat rajoitusalueet raportilta 'Suolatoteumat - urakan rajoitusalueet'." {:tyyppi :vahva-ilmoitus}]
              [:taulukko {:otsikko "11244001-Kempeleenharju", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
               [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
