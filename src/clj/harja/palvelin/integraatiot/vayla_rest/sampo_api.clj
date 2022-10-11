@@ -38,7 +38,7 @@
             request xml-skeemat/+sampo-kutsu+
             (fn [db kutsun-data tapahtuma-id]
               (tuonti/kasittele-api-viesti db integraatioloki kutsun-data tapahtuma-id))
-            "sampo"))))
+            "sampo-api"))))
     (if (ominaisuus-kaytossa? :api-sampo)
       (assoc this :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this api-sampo-asetukset))
       this))

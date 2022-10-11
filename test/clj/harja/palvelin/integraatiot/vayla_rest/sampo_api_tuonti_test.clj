@@ -106,7 +106,7 @@
         integ-tapahtumat-loppuun (hae-integraatiotapahtumat-tietokannasta)]
     (is (empty? integ-tapahtumat-alkuun))
     (is (not (empty? integ-tapahtumat-loppuun)))
-    (is (= "sampo" (:jarjestelma (first integ-tapahtumat-loppuun))))
+    (is (= "sampo-api" (:jarjestelma (first integ-tapahtumat-loppuun))))
     (is (= "sisaanluku" (:nimi (first integ-tapahtumat-loppuun))))
     (is (true? (:onnistunut (first integ-tapahtumat-loppuun))))
 
@@ -170,7 +170,7 @@
 
     (is (empty? integ-tapahtumat-alkuun))
     (is (not (empty? integ-tapahtumat-lopuksi)))
-    (is (= "sampo" (:jarjestelma (first integ-tapahtumat-lopuksi))))
+    (is (= "sampo-api" (:jarjestelma (first integ-tapahtumat-lopuksi))))
     (is (= "sisaanluku" (:nimi (first integ-tapahtumat-lopuksi))))
     (is (false? (:onnistunut (first integ-tapahtumat-lopuksi))))))
 
@@ -184,7 +184,7 @@
 
     (is (empty? integ-tapahtumat-alkuun))
     (is (not (empty? integ-tapahtumat-lopuksi)))
-    (is (= "sampo" (:jarjestelma (first integ-tapahtumat-lopuksi))))
+    (is (= "sampo-api" (:jarjestelma (first integ-tapahtumat-lopuksi))))
     (is (= "sisaanluku" (:nimi (first integ-tapahtumat-lopuksi))))
     (is (false? (:onnistunut (first integ-tapahtumat-lopuksi))))
 
