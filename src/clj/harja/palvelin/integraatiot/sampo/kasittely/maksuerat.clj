@@ -161,7 +161,7 @@
                 (merkitse-maksuera-odottamaan-vastausta db numero viesti-id))
               _ (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
               ;; Kuittaus pitänee käsitellä samantien
-              kuittaus-vastaus (when-not (false? vastaus)
+              _ (when-not (false? vastaus)
                                  (kasittele-maksuera-kuittaus db vastaus viesti-id))]
           ;; Palautetaan vastaus true/false
           (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))

@@ -529,9 +529,7 @@
                         ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
                         ;; käsittely onnistunut
                         mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
-                        status (if (and (not (nil? mahdollinen-virhe)) (not= "" mahdollinen-virhe))
-                                 400
-                                 200)]
+                        status (if-not (str/blank? mahdollinen-virhe) 400 200)]
 
                        {:status status
                         :headers (lisaa-request-headerit false origin-header)

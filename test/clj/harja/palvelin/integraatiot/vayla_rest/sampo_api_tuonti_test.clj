@@ -70,8 +70,7 @@
     (let [urakat-alkuun (hae-urakat-sampoidlla "TESTIURAKKA")
           vastaus (api-tyokalut/post-kutsu [sampo-vastaanotto-url] kayttaja-yit portti
                     sampo-tyokalut/+testi-hoitourakka-sanoma+ nil true)
-          sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")
-          _ (println " vastaus:" (:body vastaus))]
+          sampo-urakat-loppuun (hae-urakat-sampoidlla "TESTIURAKKA")]
       (is (= 0 (count urakat-alkuun)) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
 
       (onko-valid-vastaus (:body vastaus))
@@ -198,7 +197,17 @@
   (let [aineisto (slurp "test/resurssit/sampo/Sampo2Harja_onnistunut_aineisto.xml")
         maara-ennen (count (q-map "SELECT id FROM toimenpideinstanssi"))
         vastaus (api-tyokalut/post-kutsu [sampo-vastaanotto-url] kayttaja-yit portti aineisto nil true)
-        _ (println "vastaus: " (:body vastaus))
+        maara-jalkeen (count (q-map "SELECT id FROM toimenpideinstanssi"))]
+    (is (= (+ 1 maara-ennen) maara-jalkeen))
+    (onko-valid-vastaus (:body vastaus))
+    (tarkista-lahetettava-messageid (:body vastaus) "38068257-OP-PR00043638")
+    (tarkista-virheet (:body vastaus))
+    (tarkista-lahetettava-object-type (:body vastaus) "Operation")))
+
+(deftest laheta-www-form-urlencoded-viesti-test
+  (let [aineisto (slurp "test/resurssit/sampo/Sampo2Harja_onnistunut_aineisto.xml")
+        maara-ennen (count (q-map "SELECT id FROM toimenpideinstanssi"))
+        vastaus (api-tyokalut/post-kutsu [sampo-vastaanotto-url] kayttaja-yit portti aineisto nil true)
         maara-jalkeen (count (q-map "SELECT id FROM toimenpideinstanssi"))]
     (is (= (+ 1 maara-ennen) maara-jalkeen))
     (onko-valid-vastaus (:body vastaus))

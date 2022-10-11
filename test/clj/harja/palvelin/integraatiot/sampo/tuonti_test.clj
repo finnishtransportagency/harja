@@ -133,8 +133,6 @@
     (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ (slurp "test/resurssit/sampo/Sampo2Harja_virheellinen_testisanoma.xml"))
     (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
 
-    (println "viestit " @viestit)
-
     (is (str/includes? (first @viestit) "No operation code provided."))
 
     (is (= 0 (count (hae-urakat))) "Virheellisellä viestillä ei luoda mitään uutta")
