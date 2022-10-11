@@ -134,16 +134,14 @@
                :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
 
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
-  (do
-(println "maksuerat :: kasittele-maksuera-kuittaus :: kuittaus " kuittaus)
-    (jdbc/with-db-transaction [db db]
-      (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
-        (if (contains? kuittaus :virhe)
-          (do
-            (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
-            (merkitse-maksueralle-lahetysvirhe db maksueranumero))
-          (merkitse-maksuera-lahetetyksi db maksueranumero))
-        (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää.")))))
+  (jdbc/with-db-transaction [db db]
+    (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
+      (if (contains? kuittaus :virhe)
+        (do
+          (log/error "Vastaanotettiin virhe Sampon maksuerälähetyksestä: " kuittaus)
+          (merkitse-maksueralle-lahetysvirhe db maksueranumero))
+        (merkitse-maksuera-lahetetyksi db maksueranumero))
+      (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
 (defn laheta-api-maksuera [db api-sampo-asetukset integraatioloki numero summat]
   (if (maksuerat/onko-olemassa? db numero)
