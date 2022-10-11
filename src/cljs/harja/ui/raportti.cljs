@@ -262,6 +262,14 @@
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
 
+(defmethod muodosta-html :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
+  (let [tyyppi (or tyyppi :neutraali)]
+    [:div {:style (merge
+                    {:margin-bottom "1rem"}
+                    (when rivita? {:white-space "pre-line"}))}
+     [yleiset/info-laatikko tyyppi teksti toissijainen-viesti leveys teksti]]))
+
+
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   (let [w (int (* 0.85 @dom/leveys))
         h (int (/ w 2.9))]
