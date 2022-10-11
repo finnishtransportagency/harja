@@ -20,8 +20,8 @@
                                             :otsikot {"Content-Type" "application/xml"}
                                             :kayttajatunnus kayttajatunnus
                                             :salasana salasana}
-                            {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sampoviesti-xml)]
-                        (kuittaus-sampoon-sanoma/lue-kuittaus body))))
+                            vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset sampoviesti-xml)]
+                        (kuittaus-sampoon-sanoma/lue-kuittaus (:body vastaus)))))
           _ (log/debug "rest-api Sampo lähetys onnistui")]
       vastaus)
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
