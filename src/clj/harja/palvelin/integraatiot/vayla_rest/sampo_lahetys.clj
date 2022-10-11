@@ -13,7 +13,7 @@
            salasana :salasana} api-sampo-asetukset
           url (str palvelin lahetys-url)
           vastaus (integraatiotapahtuma/suorita-integraatio
-                    db integraatioloki "sampo" integraatio nil
+                    db integraatioloki "sampo-api" integraatio nil
                     (fn [konteksti]
                       (let [http-asetukset {:metodi :POST
                                             :url url
