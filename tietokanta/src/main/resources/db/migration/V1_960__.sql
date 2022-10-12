@@ -13,8 +13,6 @@ ALTER TABLE hoitoluokka
     ADD COLUMN paivitetty TIMESTAMP;
 ALTER TABLE valaistusurakka
     ADD COLUMN paivitetty TIMESTAMP;
-ALTER TABLE alueurakka
-    ADD COLUMN paivitetty TIMESTAMP;
 ALTER TABLE tr_osoitteet
     ADD COLUMN paivitetty TIMESTAMP;
 ALTER TABLE tr_ajoratojen_pituudet
