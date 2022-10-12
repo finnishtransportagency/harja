@@ -509,7 +509,7 @@
   (if (not= (kutsun-formaatti request) "xml")
     {:status 415
      :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
-     :body "Virhe: Saatiin kutsu lomakedatan content-typellä\n"}
+     :body "Error: Wrong content type. Please use: application/xml\n"}
     (let [xml? (= (kutsun-formaatti request) "xml")
           body (lue-body request)
           tapahtuma-id (when integraatioloki
