@@ -468,7 +468,8 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
                                                                                  :alku (pvm/luo-pvm 2015 10 1)
-                                                                                 :loppu (pvm/luo-pvm 2016 10 30)})]
+                                                                                 :loppu (pvm/luo-pvm 2016 10 30)
+                                                                                 :hae-bonukset? false})]
     (is (not (empty? vastaus)))
     (is (>= (count vastaus) 8))))
 
@@ -566,6 +567,14 @@
                                                                    ;; vertailua varten
                                                                    :hae-sanktiot? true
                                                                    :hae-bonukset? false})
+        vastaus-bonuksineen (kutsu-palvelua (:http-palvelin jarjestelma)
+                              :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                               :alku alkupvm
+                                                                               :loppu loppupvm
+                                                                               :vain-yllapitokohteettomat? nil
+                                                                               :hae-sanktiot? true
+                                                                               :hae-bonukset? true})
+        ei-bonus-pred #(not (str/includes? (name (:laji %)) "bonus"))
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
         indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
@@ -593,6 +602,8 @@
                                                   :loppupvm loppupvm
                                                   :urakkatyyppi "teiden-hoito"}))
         sakot-indeksikorotuksineen-laskutusyhteenvedosta (reduce + 0 (remove nil? laskutusyhteenvedosta-samat-sanktiot))]
+    (is (= (count vastaus-bonuksineen) 3))
+    (is (= (filter ei-bonus-pred vastaus-bonuksineen) vastaus))
     (is (= (count vastaus) 1))
     (is (= (:summa sanktio) 100.2) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio) 8.1162) "sanktion indeksikorjaus laskettu oikein")
