@@ -63,6 +63,7 @@
 ;; Päivitystyypit ovat :palvelimelta ja :paikallinen. Paikallinen päivitys ei vaatisi tiedostourlia eikä kohdetiedoston polkua, mutta
 ;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
+      (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus shapefile))
       (try+
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
               ava-paivitys (fn [] (aja-paivitys
@@ -82,8 +83,9 @@
                    (when (or (empty tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
                          (throw (Exception. "Virhe geometria-aineston haun osoitteessa tai kohdekansiossa.")))
                    :paikallinen
-                   (when (not (tiedosto-loytyy? kohdetiedoston-polku))
-                         (throw (Exception. "Paikallisessa geometria-aineistopäivityksessä käytettävää tiedostoa ei löydy.")))
+                   ;; FIXME: Tämä tarkastus palauttaa false vaikka tiedosto on olemassa.
+                   ;;(when (not (tiedosto-loytyy? shapefile))
+                   ;;      (throw (Exception. "Paikallisessa geometria-aineistopäivityksessä käytettävää tiedostoa ei löydy.")))
                    :ei-paivitystarvetta
                    (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
                    :ei-kaytossa
@@ -93,4 +95,4 @@
                    (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)))
         (catch Exception e
           (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. Tarkista konfiguraatio asetukset-tiedostossa ja tietokantatauluissa." paivitystunnus))
-          (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus nil))))
+          geometriapaivitykset/paivita-viimeisin-paivitys (db paivitystunnus nil))))

@@ -35,9 +35,9 @@
 (defn tee-alkuajastus []
   (time/plus- (time/now) (time/seconds 10)))
 
-(defn ajasta-paivitys [this paivitystunnus tarkistusvali osoite kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
-  (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] Ajastetaan geometria-aineiston %s päivitystarve tarkistettavaksi %s minuutin välein." paivitystunnus tarkistusvali))
-  (chime-at (periodic-seq (tee-alkuajastus) (-> tarkistusvali time/minutes))
+(defn ajasta-paivitys [this paivitystunnus tuontivali osoite kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
+  (log/debug (format "[AJASTETTU-GEOMETRIAPAIVITYS] %s päivitystarve ajastetaan tarkistettavaksi %s minuutin välein. Päivitystarpeeseen vaikuttavat GEOMETRIAPAIVITYS-taulun tiedot sekä LUKKO-taulu." paivitystunnus tuontivali))
+  (chime-at (periodic-seq (tee-alkuajastus) (-> tuontivali time/minutes))
             (fn [_]
               (ava/kaynnista-paivitys (:integraatioloki this)
                                       (:db this)
@@ -62,20 +62,20 @@
                                   tuontikohdepolku-avain
                                   shapefile-avain
                                   paivitys]
-  (fn [this {:keys [tarkistusvali] :as asetukset}]
+  (fn [this {:keys [tuontivali] :as asetukset}]
     (let [db (:db this)
           url (rakenna-osoite db paivitystunnus (get asetukset url-avain))
           tuontikohdepolku (rakenna-osoite db paivitystunnus (get asetukset tuontikohdepolku-avain))
           shapefile (rakenna-osoite db paivitystunnus (get asetukset shapefile-avain))
           kayttajatunnus (:kayttajatunnus asetukset)
           salasana (:salasana asetukset)]
-         (when (and tarkistusvali
+         (when (and tuontivali
                  url
                  tuontikohdepolku
                  shapefile)
         (ajasta-paivitys this
                          paivitystunnus
-                         tarkistusvali
+                         tuontivali
                          url
                          tuontikohdepolku
                          shapefile
