@@ -282,7 +282,7 @@
         (json/validoi skeema body)))
     (if xml?
       ;; Sisääntuleva sähköposti käsitellään eri tavalla kuin muut xml viestits
-      (if (str/includes? body "sahkoposti:sahkoposti")
+      (if (str/includes? body ":sahkoposti")
         (sonja-sahkoposti-sanomat/lue-sahkoposti body)
         (xml/lue body "UTF-8"))
       (cheshire/decode body true))))
