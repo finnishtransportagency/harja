@@ -369,8 +369,6 @@
           tehtavat (into #{}
                          (map (comp :tehtavat #(konv/array->set % :tehtavat)))
                          rivit)
-          _ (println "*** TEHTÄVÄT " tehtavat)
-          _ (println "*** tyokoneiden-toimenpiteet " (tyokoneiden-toimenpiteet talvi kesa yllapito tarkastukset user))
           viimeisin (if (empty? rivit)
                       0
                       (apply max (map (comp #(.getTime %) :viimeisin) rivit)))]
