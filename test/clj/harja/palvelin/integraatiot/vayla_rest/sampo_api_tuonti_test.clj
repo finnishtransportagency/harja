@@ -11,7 +11,7 @@
             [harja.palvelin.integraatiot.vayla-rest.sampo-api :as sampo-api]
             [clojure.string :as str]))
 
-(def sampo-vastaanotto-url "/sampo/api/harja")
+(def sampo-vastaanotto-url "/sampo/harja")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
 (def +xsd-polku+ "xsd/sampo/inbound/")

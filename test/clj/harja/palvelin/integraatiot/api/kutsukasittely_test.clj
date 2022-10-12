@@ -53,7 +53,7 @@
               (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
               (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
-(deftest huomaa-kutsu-jossa-vaara-content-type
+(deftest huomaa-kutsu-jossa-vaara-content-type2
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
         vastaus (kutsukasittely/kasittele-sampo-kutsu
                   (:db jarjestelma)
@@ -67,7 +67,7 @@
                   "sampo")]
     (is (= 415 (:status vastaus)))
     (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
-    (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
+    (is (.contains (:body vastaus) "Error: Wrong content type. Please use"))))
 
 (deftest huomaa-kutsu-jossa-tuntematon-kayttaja
          (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
