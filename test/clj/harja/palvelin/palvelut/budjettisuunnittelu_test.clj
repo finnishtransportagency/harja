@@ -29,9 +29,11 @@
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
-(defn maksukausi-jhlle-kannasta [{:keys [toimenkuva ennen-urakkaa kuukausi]}]
-  (if ennen-urakkaa
+(defn maksukausi-jhlle-kannasta [{:keys [toimenkuva ennen-urakkaa kuukausi]} urakan-alkuvuosi]
+  (if (and ennen-urakkaa (<= urakan-alkuvuosi 2021))
     nil
+    (if (>= urakan-alkuvuosi 2022)
+      :molemmat
     (cond
       (= toimenkuva "sopimusvastaava") :molemmat
       (= toimenkuva "vastuunalainen työnjohtaja") :molemmat
@@ -45,7 +47,7 @@
       (= toimenkuva "apulainen/työnjohtaja") :kesa
       (= toimenkuva "viherhoidosta vastaava henkilö") :molemmat
       (= toimenkuva "hankintavastaava") :molemmat
-      (= toimenkuva "harjoittelija") :molemmat)))
+      (= toimenkuva "harjoittelija") :molemmat))))
 
 (s/def ::aika-kuukaudella-ivalon-urakalle
   (s/with-gen ::bs-p/aika
@@ -235,7 +237,8 @@
 
     ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
     ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
-    (is (= 1.068 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+    ;; Korjattu olettaen, että koodi toimii. Tämä hajosi, kun Rovaniemen urakka alkoi, eli 1.10.2022
+    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
@@ -565,7 +568,7 @@
               (str "Ajat eivät oikein päivityksen jälkeen päivitetylle datalle toimenpiteelle: " toimenpide-avain " ja tallennettavalle asialle: " tallennettava-asia)))))))
 
 (deftest tallenna-johto-ja-hallintokorvaukset
-  (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
         urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
@@ -694,7 +697,7 @@
                                              (when (and (< hoitokausi
                                                            paivitys-hoitokaudennumero)
                                                         (= toimenkuva (:toimenkuva data))
-                                                        (= maksukausi (maksukausi-jhlle-kannasta data)))
+                                                        (= maksukausi (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi)))
                                                data))
                                            tallennettu-data-hoitokaudella)
 
@@ -702,7 +705,7 @@
                                                  (when (and (>= hoitokausi
                                                                 paivitys-hoitokaudennumero)
                                                             (= toimenkuva (:toimenkuva data))
-                                                            (= maksukausi (maksukausi-jhlle-kannasta data)))
+                                                            (= maksukausi (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi)))
                                                    data))
                                                tallennettu-data-hoitokaudella)
                 sorttaus-fn (juxt :vuosi :kuukausi)]
@@ -720,6 +723,160 @@
                                                 #{:vuosi :kuukausi :tunnit :tuntipalkka :tuntipalkka_indeksikorjattu :osa-kuukaudesta})
                                           paivitetyt-kannassa-jhkt)))
                 (str "Päivitetty data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
+
+(deftest tallenna-johto-ja-hallintokorvaukset-22-alkavalle-urakalle
+  (let [urakka-id (hae-urakan-id-nimella "Tampereen MHU 2022-2026")
+        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+        urakan-aloitus-vuosi (pvm/vuosi urakan-alkupvm)
+        urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
+        paivitys-hoitokaudennumero 1
+        paivitys-hoitokauden-vuosi 2022
+        generoitu-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi)
+
+        ;; Poistetaan tunnit ja osa-kuukaudesta
+        generoitu-data (map
+          (fn [rivi]
+            (let [jhk-tiedot (:jhk-tiedot rivi)
+                  jhk-tiedot (map #(-> %
+                                     (dissoc :tunnit)
+                                     (dissoc :osa-kuukaudesta)) jhk-tiedot)]
+              (assoc rivi :jhk-tiedot jhk-tiedot)))
+          generoitu-data)
+        paivitettava-data (data-gen/tallenna-johto-ja-hallintokorvaus-data urakka-id urakan-aloitus-vuosi {:hoitokaudet (into #{} (range paivitys-hoitokaudennumero 6)) :ennen-urakkaa-mukaan? false})
+        ;; Poistetaan tunnit ja osa-kuukaudesta päivitetyltä datalta
+        paivitettava-data (map
+            (fn [rivi]
+              (let [jhk-tiedot (:jhk-tiedot rivi)
+                    jhk-tiedot (map #(-> %
+                                       (dissoc :tunnit)
+                                       (dissoc :osa-kuukaudesta)) jhk-tiedot)]
+                (assoc rivi :jhk-tiedot jhk-tiedot)))
+            paivitettava-data)]
+    (testing "Tallennus onnistuu kaikille generoiduille johto-ja-hallintkorvauksille"
+      (doseq [{:keys [toimenkuva maksukausi] :as johto-ja-hallintokorvaus} generoitu-data]
+        (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ johto-ja-hallintokorvaus)]
+          (is (:onnistui? vastaus) (str "Tallennus ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+
+     (testing "Data kannassa on oikein vuoden -22 alkaneelle urakalle, jolle tunteja ei enää erikseen tallenneta"
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
+                                                 tk.toimenkuva, j_h.luotu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
+                                          FROM johto_ja_hallintokorvaus j_h
+                                            JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
+                                          WHERE j_h.\"urakka-id\"=" urakka-id " AND tk.\"urakka-id\" IS NULL"))
+            tallennettu-data (map (fn [data]
+                                    (-> data
+                                      (update :tuntipalkka float)
+                                      (update :kuukausi int)
+                                      (update :vuosi int)))
+                               tallennettu-data)
+            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa tallennettu-data)
+            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa tallennettu-data)
+
+            tallennettu-data-toimenkuvittain-ilman-ennen-urakan-alkua (group-by :toimenkuva tallennettu-data-ilman-ennen-urakkaa)
+            tallennettu-data-toimenkuvittain-ilman-ennen-urakan-alkua (reduce-kv (fn [m toimenkuva data-toimenkuvalle]
+                                                                                   (assoc m
+                                                                                     toimenkuva
+                                                                                     (if (and (< urakan-aloitus-vuosi 2022)
+                                                                                           (#{"päätoiminen apulainen"
+                                                                                              "apulainen/työnjohtaja"}
+                                                                                            toimenkuva))
+                                                                                       {:kesa (filter #(<= 5 (:kuukausi %) 9)
+                                                                                                data-toimenkuvalle)
+                                                                                        :talvi (remove #(<= 5 (:kuukausi %) 9)
+                                                                                                 data-toimenkuvalle)}
+                                                                                       {:molemmat data-toimenkuvalle})))
+                                                                        {}
+                                                                        tallennettu-data-toimenkuvittain-ilman-ennen-urakan-alkua)]
+        (is (every? :luotu tallennettu-data))
+        (doseq [{:keys [toimenkuva maksukausi ennen-urakkaa? jhk-tiedot]} generoitu-data
+                :let [tallennettu-data-ilman-ennen-urakan-alkua (get-in tallennettu-data-toimenkuvittain-ilman-ennen-urakan-alkua [toimenkuva maksukausi])]
+                :when (not ennen-urakkaa?)]
+          (doseq [{:keys [kuukausi vuosi] :as jhk} jhk-tiedot
+                  :let [tallennettu-data-kuukaudelle (some #(when (and (= (:kuukausi %) kuukausi)
+                                                                    (= (:vuosi %) vuosi))
+                                                              %)
+                                                       tallennettu-data-ilman-ennen-urakan-alkua)
+                        generoitu-tulos (into (sorted-map) (-> jhk
+                                                             ;; Jotta voidaan vertailla :tunnit avaimen asettumista, niin laitetaan se aina näille tapauksille = 1
+                                                             (assoc :tunnit 1M)
+                                                             ;; Jotta voidaan vertailla :osa-kuukaudesta avaimen asettumista, niin laitetaan se aina näille tapauksille = 1
+                                                             (assoc :osa-kuukaudesta 1M)
+                                                             (update :tuntipalkka float)
+                                                             (assoc :tuntipalkka_indeksikorjattu
+                                                                    ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
+                                                                    (let [hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                                                       urakan-alkupvm (pvm/luo-pvm-dec-kk
+                                                                                                        vuosi
+                                                                                                        kuukausi 1))
+                                                                          kerroin (bs/indeksikerroin urakan-indeksit hoitovuosi)]
+                                                                      (when (and (:tuntipalkka jhk) kerroin)
+                                                                        (bigdec (bs/indeksikorjaa kerroin (:tuntipalkka jhk))))))))
+
+                        tietokannasta-tulos (into (sorted-map) (select-keys tallennettu-data-kuukaudelle #{:tunnit :tuntipalkka :tuntipalkka_indeksikorjattu
+                                                                                                           :vuosi :kuukausi :osa-kuukaudesta}))]]
+            (is (= generoitu-tulos tietokannasta-tulos))))
+        (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
+        (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))))
+    (testing "Päivitys onnistuu"
+      (doseq [{:keys [toimenkuva maksukausi] :as parametrit} paivitettava-data]
+        (let [vastaus (bs/tallenna-johto-ja-hallintokorvaukset (:db jarjestelma) +kayttaja-jvh+ parametrit)]
+          (is (:onnistui? vastaus) (str "Päivittäminen ei onnistunut toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi)))))
+    (testing "Päivitetty data kannassa on oikein"
+      (let [tallennettu-data (q-map (str "SELECT j_h.tunnit, j_h.tuntipalkka, j_h.tuntipalkka_indeksikorjattu, j_h.kuukausi, j_h.vuosi,
+                                                 tk.toimenkuva, j_h.muokattu, j_h.\"ennen-urakkaa\", j_h.\"osa-kuukaudesta\"
+                                          FROM johto_ja_hallintokorvaus j_h
+                                            JOIN johto_ja_hallintokorvaus_toimenkuva tk ON tk.id = j_h.\"toimenkuva-id\"
+                                          WHERE j_h.\"urakka-id\"=" urakka-id " AND tk.\"urakka-id\" IS NULL"))
+            tallennettu-data (map (fn [data]
+                                    (-> data
+                                      (update :tunnit float)
+                                      (update :tuntipalkka float)
+                                      (update :kuukausi int)
+                                      (update :vuosi int)
+                                      (update :osa-kuukaudesta int)))
+                               tallennettu-data)
+            tallennettu-data-ilman-ennen-urakkaa (remove :ennen-urakkaa tallennettu-data)
+            tallennettu-data-kentalle-ennen-urakkaa (filter :ennen-urakkaa tallennettu-data)
+            tallennettu-data-hoitokaudella (mapv (fn [{:keys [vuosi kuukausi] :as data}]
+                                                   (assoc data :hoitokausi (inc (- (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/luo-pvm vuosi (dec kuukausi) 15))))
+                                                                                  (pvm/vuosi (pvm/hoitokauden-alkupvm urakan-aloitus-vuosi))))))
+                                             tallennettu-data-ilman-ennen-urakkaa)]
+        ;; Loopataan toimenkuvat läpi
+        (doseq [{:keys [toimenkuva maksukausi jhk-tiedot]} paivitettava-data]
+          (let [;; Otetaan vain ensimmäisen hoitovuoden kuukaudet vertailuun
+                paivitetyt-generoidut (keep (fn [{:keys [vuosi kuukausi] :as data}]
+                                              (when (= vuosi paivitys-hoitokauden-vuosi)
+                                                (-> data
+                                                  (update :tuntipalkka float))))
+                                    (some (fn [{vanha-toimenkuva :toimenkuva
+                                                vanha-jhkt :jhk-tiedot
+                                                vanha-maksukausi :maksukausi
+                                                ennen-urakkaa? :ennen-urakkaa?}]
+                                            (when (and (= vanha-toimenkuva toimenkuva)
+                                                    (= vanha-maksukausi maksukausi)
+                                                    (not ennen-urakkaa?))
+                                              vanha-jhkt))
+                                      paivitettava-data))
+                paivitetyt-kannassa-jhkt (keep (fn [{:keys [vuosi] :as data}]
+                                                 (when
+                                                   ;; Otetaan mukaan vain yhden hoitokauden data
+                                                   (and (= vuosi paivitys-hoitokauden-vuosi)
+                                                     (= toimenkuva (:toimenkuva data))
+                                                     (= maksukausi (maksukausi-jhlle-kannasta data urakan-aloitus-vuosi)))
+                                                   ;; Testivertailu tehdään generoituun, joten otetaan automaattisesti täydennetyt arvot pois
+                                                   (-> data
+                                                     (dissoc :tunnit)
+                                                     (dissoc :osa-kuukaudesta))))
+                                       tallennettu-data-hoitokaudella)
+                sorttaus-fn (juxt :vuosi :kuukausi)
+                paivitetyt-generoidut-sortatut (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-generoidut))
+                paivitetyt-tietokannasta-sortatut (sort-by sorttaus-fn (map #(select-keys % #{:vuosi :kuukausi :tunnit :tuntipalkka :osa-kuukaudesta}) paivitetyt-kannassa-jhkt))]
+
+            (is (every? :muokattu paivitetyt-kannassa-jhkt))
+            (is (= 5 (count tallennettu-data-kentalle-ennen-urakkaa)))
+            (is (every? #(= 10 (:kuukausi %)) tallennettu-data-kentalle-ennen-urakkaa))
+            (is (= paivitetyt-generoidut-sortatut paivitetyt-tietokannasta-sortatut)
+              (str "Vanha data ei kannassa oikein toimenkuvalle: " toimenkuva " ja maksukaudelle: " maksukausi))))))))
 
 (deftest budjettitavoite-haku
   (let [parametrit {:urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")}

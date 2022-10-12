@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.xml-skeemat :as xml-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :as kutsukasittely]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki] :as integraatioloki]
@@ -33,7 +34,7 @@
                                                 json-skeemat/kirjausvastaus
                                                 (fn [_]))]
     (is (= 400 (:status vastaus)))
-       ;; Lisätään myöhemmin kun virhekäsittelyiden CORS-headerit palautetaan (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
+    (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
     (is (.contains (:body vastaus) "invalidi-json"))))
 
 (deftest huomaa-kutsu-jossa-vaara-content-type
@@ -52,6 +53,22 @@
               (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
               (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
+(deftest huomaa-kutsu-jossa-vaara-content-type2
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+        vastaus (kutsukasittely/kasittele-sampo-kutsu
+                  (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  "/sampo/api/harja"
+                  {:body kutsun-data
+                   :request-method :post
+                   :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
+                  xml-skeemat/+sampo-kutsu+
+                  (fn [_])
+                  "sampo")]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
+    (is (.contains (:body vastaus) "Error: Wrong content type. Please use"))))
+
 (deftest huomaa-kutsu-jossa-tuntematon-kayttaja
          (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
                vastaus (kutsukasittely/kasittele-kutsu
@@ -59,12 +76,13 @@
                          (:integraatioloki jarjestelma)
                          "hae-urakka"
                          {:body kutsun-data
-                          :request-method :post
-                          :headers {"oam_remote_user" "tuntematon",}}
+                          :request-method :get
+                          :headers {"oam_remote_user" "tuntematon", "origin" "http://localhost:3000"}}
                          json-skeemat/laatupoikkeaman-kirjaus
                          json-skeemat/kirjausvastaus
                          (fn [_]))]
               (is (= 403 (:status vastaus)))
+              (is (= "http://localhost:3000" (get (:headers vastaus) "Access-Control-Allow-Origin")) "CORS-headerit palautuvat.")
               (is (.contains (:body vastaus) "tuntematon-kayttaja"))))
 
 (deftest testaa-response-headerien-lisaaminen
@@ -79,5 +97,7 @@
          (is (= {"Content-Type" "application/json" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (kutsukasittely/lisaa-request-headerit false "http://localhost:3000")) "Palauta json. Palauta Origin, jos Origin on annettu."))
 
 
-
-
+(deftest testaa-tee-virhevastaus
+         (let [vastaus (kutsukasittely/tee-virhevastaus "Voivoi" "Nyt ei onnistunu!" "http://localhost:3000")]
+              (is (= "Voivoi" (:status vastaus)) "Status palautuu oikein")
+              (is (= {"Content-Type" "application/json", "Access-Control-Allow-Origin" "http://localhost:3000", "Vary" "Origin"} (:headers vastaus)) "Headerit palautuvat oikein")))

@@ -35,6 +35,14 @@
 
 (defmethod muodosta-html :vain-arvo [arvo] arvo)
 
+(defmethod muodosta-html :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
+  [:span (if-not (nil? arvo)
+           (cond
+             desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+             fmt (fmt arvo)
+             :else arvo)
+           jos-tyhja)])
+
 (defmethod muodosta-html :liitteet [[_ liitteet]]
   (liitteet/liitteet-numeroina liitteet))
 
@@ -84,8 +92,13 @@
       (str "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
 (defmethod muodosta-html :teksti-ja-info [[_ {:keys [arvo info]}]]
-  [:span.teksti-ja-info [:span.arvo (str arvo "\u00A0")]
-   [:span.info [yleiset/tooltip {:suunta :oikea :leveys :levea} [ikonit/harja-icon-status-info] info]]])
+  [:span.teksti-ja-info
+   [:span.arvo (str arvo "\u00A0")]
+   [yleiset/tooltip {:suunta :oikea :leveys :levea
+                     :wrapper-luokka "tooltip-wrapper"
+                     :wrapperin-koko {:leveys 20 :korkeus 20}}
+    [ikonit/harja-icon-status-info]
+    info]])
 
 (defmethod muodosta-html :varillinen-teksti
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
@@ -234,17 +247,28 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:color (when vari vari)}} teksti
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita?]}]]
+  [:div {:style (merge
+                {:color (when vari vari)}
+                (when rivita? {:white-space "pre-line"}))}
+   teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura]}]]
-  [:p {:style {:font-weight 700
+  [:div {:style {:font-weight 700
                :color (when vari vari)}} teksti
    (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
+
+(defmethod muodosta-html :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
+  (let [tyyppi (or tyyppi :neutraali)]
+    [:div {:style (merge
+                    {:margin-bottom "1rem"}
+                    (when rivita? {:white-space "pre-line"}))}
+     [yleiset/info-laatikko tyyppi teksti toissijainen-viesti leveys teksti]]))
+
 
 (defmethod muodosta-html :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   (let [w (int (* 0.85 @dom/leveys))

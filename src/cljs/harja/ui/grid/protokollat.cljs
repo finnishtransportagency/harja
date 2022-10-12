@@ -69,6 +69,8 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
   (sulje-vetolaatikko! [this id] "sulje vetolaatikko rivin id:llä.")
 
+  (sulje-vetolaatikot! [this] "Sulje kaikki vetolaatikot")
+
   (avattavat-rivit-auki? [this id] "Tarkista onko avattavat-rivit auki annetulla rivin id:llä.")
 
   (avaa-avattavat-rivit! [this id] "Avaa avattavat-rivit rivin id:llä.")
@@ -125,6 +127,9 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
       (sulje-vetolaatikko! [_ id]
         (sulje-vetolaatikko! @gridi id))
 
+      (sulje-vetolaatikot! [_]
+        (sulje-vetolaatikot! @gridi))
+
       (avattavat-rivit-auki? [_ id]
         (avattavat-rivit-auki? @gridi id))
 
@@ -147,15 +152,18 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 
 (defn vetolaatikko-rivi
   "Funktio, joka palauttaa vetolaatikkorivin tai nil. Huom: kutsu tätä funktiona, koska voi palauttaa nil."
-  [vetolaatikot vetolaatikot-auki id colspan]
-  (when-let [vetolaatikko (get vetolaatikot id)]
-    (let [auki (@vetolaatikot-auki id)]
-      ^{:key (str "vetolaatikko" id)}
-      [:tr.vetolaatikko {:class (if auki "vetolaatikko-auki" "vetolaatikko-kiinni")}
-       [:td {:colSpan colspan}
-        [:div.vetolaatikko-sisalto
-         (when auki
-           vetolaatikko)]]])))
+  ([vetolaatikot vetolaatikot-auki id colspan]
+   (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan {}))
+  ([vetolaatikot vetolaatikot-auki id colspan {:keys [ei-paddingia] :as optiot}]
+   (when-let [vetolaatikko (get vetolaatikot id)]
+     (let [auki (@vetolaatikot-auki id)]
+       ^{:key (str "vetolaatikko" id)}
+       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni")]) )}
+        [:td {:colSpan colspan
+              :class (apply conj #{} (keep identity [(when ei-paddingia "vetolaatikko-ei-paddingia")]))}
+         [:div.vetolaatikko-sisalto
+          (when auki
+            vetolaatikko)]]]))))
 
 (defn avaa-tai-sulje-vetolaatikko!
   "Vaihtaa vetolaatikon tilaa. Avaa vetolaatikon, jos se on suljettu, muuten sulkee sen."
@@ -174,11 +182,12 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
 (defn vetolaatikon-tila [ohjaus vetolaatikot id luokat]
   (let [vetolaatikko? (contains? vetolaatikot id)]
     ^{:key (str "vetolaatikontila" id)}
-    [:td {:class luokat
+    [:td {:class (conj (if (coll? luokat) luokat [luokat])
+                   (when vetolaatikko? "klikattava"))
           :on-click (when vetolaatikko?
                       #(do (.preventDefault %)
-                           (.stopPropagation %)
-                           (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
+                         (.stopPropagation %)
+                         (avaa-tai-sulje-vetolaatikko! ohjaus id)))}
      (when vetolaatikko?
        [:div.vetolaatikon-sailio
         [:div.inline-block.vetolaatikon-pylvas]

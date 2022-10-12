@@ -160,7 +160,7 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :salli-hallinnan-apin-kaytto)))))
+          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

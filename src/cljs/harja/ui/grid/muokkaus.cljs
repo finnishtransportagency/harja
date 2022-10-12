@@ -2,30 +2,21 @@
   "Harjan käyttöön soveltuva geneerinen jatkuvassa
    muokkaustilassa oleva ruudukkokomponentti."
   (:require [reagent.core :refer [atom] :as r]
-            [harja.loki :refer [log tarkkaile! logt] :refer-macros [mittaa-aika]]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje vihje] :as y]
+            [harja.ui.yleiset :refer [virheen-ohje] :as y]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
-            [goog.events :as events]
             [goog.events.EventType :as EventType]
 
-            [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.dom :as dom]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.grid.protokollat :refer
              [Grid aseta-grid vetolaatikko-rivi lisaa-rivi!
               vetolaatikko-rivi vetolaatikon-tila validoi-grid]]
-            [harja.ui.ikonit :as ikonit]
-            [cljs-time.core :as t]
             [harja.ui.grid.yleiset :as grid-yleiset]
-            [harja.ui.napit :as napit])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction]]
-                   [harja.makrot :refer [fnc]]))
+            [harja.ui.napit :as napit]
+            [harja.fmt :as fmt]))
 
 (defn- muokkauspaneeli [{:keys [otsikko voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
@@ -59,11 +50,21 @@
         (map-indexed (fn [i komponentti]
                        ^{:key i}
                        [komponentti])
-                     paneelikomponentit))])])
+          paneelikomponentit))])])
+
+(defmulti ei-muokattava-tyypillinen-fmt identity)
+
+(defmethod ei-muokattava-tyypillinen-fmt :numero
+  [_]
+  (fn [arvo] (when (number? arvo)
+               (fmt/desimaaliluku-opt arvo 2)) ))
+
+(defmethod ei-muokattava-tyypillinen-fmt :default
+  [_] nil)
 
 (defn ei-muokattava-elementti
-  [luokat fmt arvo]
-  (let [fmt (or fmt str)
+  [luokat fmt tyyppi arvo]
+  (let [fmt (or fmt (ei-muokattava-tyypillinen-fmt tyyppi) str)
         arvo (fmt arvo)]
     [:td {:class luokat}
      arvo]))
@@ -108,7 +109,9 @@
                                                     :as sarake}
                                                    i]
                                                 (let [arvo (if hae (hae rivi) (nimi rivi))
-                                                      valinta (some #(when (= (valinta-arvo %) arvo) %) valinnat)]
+                                                      valinta (if valinta-arvo
+                                                                (some #(when (= (valinta-arvo %) arvo) %) valinnat)
+                                                                arvo)]
                                                   (if valinta-nayta
                                                     (valinta-nayta valinta)
                                                     arvo)))]
@@ -152,11 +155,12 @@
                                                               (@grid-tilan-muokkaus-fn uusi)))))))
        :reagent-render
        (fn [{:keys [nimi aseta fmt muokattava? tyyppi tasaa elementin-id
-                    komponentti hae kentta-arity-3? komponentti-args
+                    komponentti hae kentta-arity-3? komponentti-args sarake-disabloitu-arvo-fn
                     valinta-arvo valinta-nayta valinnat] :as sarake}
             {:keys [ohjaus id rivi rivi-index gridin-tietoja
                     nayta-virheet? i voi-muokata? disable-input?
-                    muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu]}
+                    muokatut-atom muokkaa! virheet skeema sisalto-kun-rivi-disabloitu
+                    disabloi-autocomplete?]}
             rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset tulevat-elementit]
          (let [sarake (assoc sarake :rivi rivi)
                hae-fn (or hae #(get % nimi))
@@ -213,6 +217,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
+                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                  :disabled? (not voi-muokata?)
                                                                  :elementin-id elementin-id)
                                         arvo
@@ -220,6 +225,7 @@
                                        ^{:key kentan-key}
                                        [tee-kentta (assoc sarake :on-focus fokus-elementille
                                                                  :on-blur fokus-pois-elementilta
+                                                                 :disabloi-autocomplete? disabloi-autocomplete?
                                                                  :disabled? (not voi-muokata?)
                                                                  :elementin-id elementin-id)
                                         arvo-atom])]
@@ -242,27 +248,36 @@
                 [tee-kentta (assoc sarake :on-focus fokus-elementille
                                           :on-blur fokus-pois-elementilta
                                           :disabled? (not voi-muokata?)
+                                          :disabloi-autocomplete? disabloi-autocomplete?
                                           :elementin-id elementin-id)
                  arvo-atom]]
 
-               :else
+               :else 
                [ei-muokattava-elementti (y/luokat "ei-muokattava"
-                                                  tasaus-luokka
-                                                  (grid-yleiset/tiivis-tyyli skeema))
-                fmt (if (and (= tyyppi :valinta)
-                             valinta-arvo valinta-nayta)
-                      (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
-                      arvo)]))))})))
+                                          tasaus-luokka
+                                          (grid-yleiset/tiivis-tyyli skeema))
+                fmt
+                tyyppi
+                (cond 
+                  (and (= tyyppi :valinta)
+                    valinta-arvo valinta-nayta)
+                  (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
+                  
+                  (some? sarake-disabloitu-arvo-fn)
+                  (sarake-disabloitu-arvo-fn sarake i)
+                  
+                  :else
+                  arvo)]))))})))
 
 (defn- muokkauselementti [{:keys [tyyppi hae nimi] :as sarake}
-                          {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema] :as elementin-asetukset}
+                          {:keys [ohjaus vetolaatikot id tulevat-rivit i skeema muokattava?] :as elementin-asetukset}
                           rivi-disabloitu? kentan-virheet kentan-varoitukset kentan-huomautukset tulevat-elementit]
   (let [elementin-asetukset (dissoc elementin-asetukset :vetolaatikot :tulevat-rivit)]
     (if (= :vetolaatikon-tila tyyppi)
       ^{:key (str "vetolaatikontila" id)}
       [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                          "klikattava"
-                                                          (grid-yleiset/tiivis-tyyli skeema))]
+                                                  "ei-muokattava"
+                                                  (grid-yleiset/tiivis-tyyli skeema))]
       ^{:keys (str i "-" nimi)}
       [muokkauselementin-tila sarake elementin-asetukset rivi-disabloitu? kentan-virheet
        kentan-varoitukset kentan-huomautukset tulevat-elementit])))
@@ -271,11 +286,12 @@
 (def on-blur-fn (atom nil))
 
 (defn- muokkausrivi [{:keys [rivinumerot? ohjaus vetolaatikot id rivi rivi-index
-                             nayta-virheet? i voi-muokata? tulevat-rivit
+                             nayta-virheet? i voi-muokata? tulevat-rivit gridin-id
                              muokatut-atom muokkaa! virheet varoitukset huomautukset piilota-toiminnot? skeema
-                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu
+                             disabloi-rivi? voi-poistaa? toimintonappi-fn rivi-klikattu disabloi-autocomplete?
                              sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?] :as rivi-asetukset}]
-  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))]
+  (let [rivi-disabloitu? (and disabloi-rivi? (disabloi-rivi? rivi))
+        rivi-grid-tunniste (str gridin-id "-" i)]
     [:tr.muokataan {:class (y/luokat
                              (if (even? (+ i 1))
                                "parillinen"
@@ -288,7 +304,7 @@
                                                        {:muokkaus-grid-id id})))
                     :on-blur #(when on-rivi-blur
                                 (.stopPropagation %)
-                                (reset! blurred-from-idx i)
+                                (reset! blurred-from-idx rivi-grid-tunniste)
                                 (reset! on-blur-fn
                                         (yleiset/fn-viiveella (fn []
                                                                 (on-rivi-blur rivi id)))))
@@ -296,7 +312,7 @@
                                  (do
                                    (.stopPropagation %)
                                    (when on-rivi-focus (on-rivi-focus rivi id))
-                                   (when (= i @blurred-from-idx)
+                                   (when (= rivi-grid-tunniste @blurred-from-idx)
                                      (.clearTimeout js/window @on-blur-fn)
                                      (reset! on-blur-fn nil))))}
      (when rivinumerot? [:td.rivinumero.ei-muokattava {:class (y/luokat (grid-yleiset/tiivis-tyyli skeema))}
@@ -313,6 +329,7 @@
                                                                    :muokatut-atom :muokkaa! :disable-input?
                                                                    :virheet :varoitukset :huomautukset :skeema
                                                                    :gridin-tietoja :disabloi-rivi?
+                                                                   :disabloi-autocomplete?
                                                                    :sisalto-kun-rivi-disabloitu})
                  hae (or hae #(get % nimi))
                  tulevat-elementit (when tayta-alas?
@@ -351,8 +368,10 @@
       (fn [{:keys [muokatut skeema tyhja virheet varoitukset huomautukset valiotsikot ohjaus vetolaatikot disable-input?
                    nayta-virheet? rivinumerot? voi-muokata? jarjesta-kun-kasketaan rivin-avaimet
                    disabloi-rivi? muokkaa! piilota-toiminnot? voi-poistaa? jarjesta jarjesta-avaimen-mukaan
-                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args
-                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?]}]
+                   vetolaatikot-auki virheet-ylos? toimintonappi-fn tyhja-komponentti? tyhja-args gridin-id
+                   rivi-klikattu sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus nayta-virheikoni?
+                   sarake-disabloitu-arvo-fn disabloi-autocomplete?
+                   vetolaatikko-optiot piilota-rivi]}]
         (let [muokatut-atom muokatut
               muokatut @muokatut
               colspan (if piilota-toiminnot?
@@ -396,6 +415,8 @@
                              muokkausrivit)
                       (let [[id rivi] rivi-indeksineen
                             otsikko (valiotsikot id)
+                            piilota-rivi (or piilota-rivi (constantly false))
+                            piilota-rivi-fn #(when-not (piilota-rivi rivi) %)
                             muokkausrivi (doall
                                           (into (if otsikko
                                                   [^{:key (str "otsikko" i)}
@@ -407,7 +428,7 @@
                                                  [muokkausrivi {:rivinumerot? rivinumerot? :ohjaus ohjaus
                                                                 :vetolaatikot vetolaatikot :id id :rivi rivi
                                                                 :nayta-virheet? nayta-virheet? :disable-input? disable-input?
-                                                                :i i :voi-muokata? voi-muokata?
+                                                                :i i :voi-muokata? voi-muokata? :gridin-id gridin-id
                                                                 :tulevat-rivit tulevat-rivit :rivi-index i
                                                                 :muokatut-atom muokatut-atom :muokkaa! muokkaa!
                                                                 :disabloi-rivi? disabloi-rivi?
@@ -418,15 +439,17 @@
                                                                 :gridin-tietoja gridin-tietoja
                                                                 :rivi-klikattu rivi-klikattu
                                                                 :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                                                                :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo-fn
                                                                 :on-rivi-blur on-rivi-blur
+                                                                :disabloi-autocomplete? disabloi-autocomplete?
                                                                 :on-rivi-focus on-rivi-focus
                                                                 :nayta-virheikoni? nayta-virheikoni?}]
 ^{:key (str i "-" id "veto")}
-                                                 [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan]]))]
+                                                 [vetolaatikko-rivi vetolaatikot vetolaatikot-auki id colspan vetolaatikko-optiot]]))]
                         (recur (inc i)
                                loput-rivit
                                (map second (rest loput-rivit))
-                               (concat muokkausrivit muokkausrivi)))))))))]))})))
+                               (concat muokkausrivit (piilota-rivi-fn muokkausrivi))))))))))]))})))
 
 (defn- gridin-otsikot
   [skeema rivinumerot? piilota-toiminnot?]
@@ -510,7 +533,15 @@
   :on-rivi-blur                   Funktio, jota kutsutaan rivin on-blurissa. Funktiolle passataan rivin id ja tiedot.
   :on-rivi-focus                  Funktio, jota kutsutaan rivin on-focuksessa. Funktiolle passataan rivin id ja tiedot.
   :nayta-virheikoni?              Boolean, jolla voi piilottaa virheikonin.
-  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan."
+  :vetolaatikko-optiot            Mappi, jossa voi määrittää optioita tyylittelyyn. Tällä hetkellä optiona 
+                                  :ei-paddingia - jos true, ei määritellä vetolaatikon riville 
+                                    paddingeja tr/td-elementissä
+  :disabloi-autocomplete?         True, jos ei haluta inputeilla autofilliä
+  :validoi-uusi-rivi?             False, jos ei haluta validoida uutta riviä, kun se luodaan.
+  :piilota-table-header?          True, niin ei piirretä thead -elementtiä.
+  :piilota-rivi                   Funktio, jolle passataan rivin tiedot. Piilottaa rivin palautusarvon ollessa truthy
+  :korostusrajaus?                Tekee borderin ylä- ja alareunaan korostusborderit"
+
   [{:keys [otsikko yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
@@ -519,6 +550,7 @@
            sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi?] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0)                                    ;; tästä dekrementoidaan aina uusia id:tä
+        gridin-id (keyword (gensym "grid"))
         historia (atom [])
         virheet-atom (or (:virheet opts) (atom {}))         ;; validointivirheet: (:id rivi) => [virheet]
         varoitukset-atom (or (:varoitukset opts) (atom {}))
@@ -592,6 +624,8 @@
                         (swap! vetolaatikot-auki conj id))
                       (sulje-vetolaatikko! [_ id]
                         (swap! vetolaatikot-auki disj id))
+                      (sulje-vetolaatikot! [_]
+                        (reset! vetolaatikot-auki #{}))
                       (validoi-grid [_]
                         (let [gridin-tiedot @muokatut]
                           (swap! virheet (fn [_]
@@ -660,7 +694,8 @@
                     rivi-klikattu rivinumerot? muokkaa-footer muokkaa-aina uusi-rivi tyhja tyhja-komponentti? tyhja-args
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
-                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus] :as opts} skeema muokatut]
+                    sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
+                    piilota-table-header? piilota-rivi korostusrajaus?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -688,9 +723,10 @@
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
                                 :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto}])
             [:div.panel-body
-             [:table.grid
-              [gridin-otsikot skeema rivinumerot? piilota-toiminnot?]
-              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja
+             [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
+              (when-not (true? piilota-table-header?)
+                [gridin-otsikot skeema rivinumerot? piilota-toiminnot?])
+              [gridin-runko {:muokatut muokatut :skeema skeema :tyhja tyhja :gridin-id gridin-id
                              :virheet virheet :varoitukset varoitukset :huomautukset huomautukset
                              :valiotsikot valiotsikot :disable-input? disable-input?
                              :rivinumerot? rivinumerot? :ohjaus ohjaus
@@ -701,9 +737,12 @@
                              :piilota-toiminnot? piilota-toiminnot? :voi-poistaa? voi-poistaa?
                              :jarjesta jarjesta :jarjesta-avaimen-mukaan jarjesta-avaimen-mukaan
                              :vetolaatikot-auki vetolaatikot-auki :virheet-ylos? virheet-ylos?
+                             :vetolaatikko-optiot vetolaatikko-optiot
                              :toimintonappi-fn (or toimintonappi-fn nil-fn) :tyhja-komponentti? tyhja-komponentti?
                              :tyhja-args tyhja-args :rivi-klikattu rivi-klikattu
                              :sisalto-kun-rivi-disabloitu sisalto-kun-rivi-disabloitu
+                             :disabloi-autocomplete? disabloi-autocomplete?
+                             :piilota-rivi piilota-rivi
                              :on-rivi-blur on-rivi-blur
                              :on-rivi-focus on-rivi-focus}]]
              (when (and (not= false voi-muokata?) muokkaa-footer)

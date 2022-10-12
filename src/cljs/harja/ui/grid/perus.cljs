@@ -144,7 +144,6 @@
             (if (= :vetolaatikon-tila tyyppi)
               ^{:key (str "vetolaatikontila" id)}
               [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                  "klikattava"
                                                                   (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
               ^{:key (str nimi)}
               [muokkauselementti sarake asetukset skeema rivi index esta-tiivis-grid?])))
@@ -233,7 +232,6 @@
                   (= :vetolaatikon-tila tyyppi)
                   ^{:key (str "vetolaatikontila" id)}
                   [vetolaatikon-tila ohjaus vetolaatikot id (y/luokat "vetolaatikon-tila"
-                                                                      "klikattava"
                                                                       (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?))]
                   :else
                   ^{:key (str i nimi)}
@@ -650,6 +648,7 @@
                                                       (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
+                                                      (when (:yhteenveto-vayla rivi) "yhteenveto-vayla ")
                                                       (when rivin-luokka
                                                         (rivin-luokka rivi))
                                                       (:rivin-luokka rivi))
@@ -836,8 +835,11 @@
                                   (let [[rivi-validointi taulukko-validointi] (case tyyppi
                                                                                 :validoi [rivi-validointi taulukko-validointi]
                                                                                 :varoita [rivi-varoitus taulukko-varoitus]
-                                                                                :huomauta [rivi-huomautus taulukko-huomautus])]
-                                    (validointi/validoi-ja-anna-virheet uudet-tiedot skeema rivi-validointi taulukko-validointi tyyppi :harja.ui.grid/poistettu)))
+                                                                                :huomauta [rivi-huomautus taulukko-huomautus])
+                                        ;; Jos on käytetty yhteenvetoriviä, poista se ennen validointia
+                                        ilman-yhteenvetoa-tiedot (into {} (remove (comp :yhteenveto second))
+                                                                   uudet-tiedot)]
+                                    (validointi/validoi-ja-anna-virheet ilman-yhteenvetoa-tiedot skeema rivi-validointi taulukko-validointi tyyppi :harja.ui.grid/poistettu)))
         ohjaus (reify Grid
                  (lisaa-rivi! [this rivin-tiedot]
                    (let [id (or (tunniste rivin-tiedot) (swap! uusi-id dec))
@@ -1224,9 +1226,11 @@
                                                  (vals @muokatut)
                                                  alkup-tiedot)))]
                   [:tr {:class (:luokka (meta rivi-jalkeen))}
-                   (for* [{:keys [teksti sarakkeita luokka]} rivi-jalkeen]
+                   (for* [{:keys [teksti sarakkeita luokka tasaa]} rivi-jalkeen]
                      [:td {:colSpan (or sarakkeita 1) :class luokka}
-                      teksti])])]])
+                      (case tasaa
+                        :oikea [:span.pull-right teksti]
+                        teksti)])])]])
 
             (when (and max-rivimaara (> (count alkup-tiedot) max-rivimaara))
               [:div.alert-warning (or max-rivimaaran-ylitys-viesti

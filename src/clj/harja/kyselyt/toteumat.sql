@@ -451,7 +451,7 @@ FROM osa_toteumat ot
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
-         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
+         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -469,7 +469,7 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        tk.suunnitteluyksikko    AS yk,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
+         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen

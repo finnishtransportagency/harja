@@ -12,6 +12,7 @@
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.vayla-rest.sampo-lahetys :as sampo-lahetys]
             [harja.kyselyt.konversio :as konversio])
   (:use [slingshot.slingshot :only [throw+ try+]])
   (:import (java.util UUID Calendar TimeZone)))
@@ -170,3 +171,28 @@
                                   (merkitse-kustannussuunnitelmalle-lahetysvirhe db maksuera))
                                 (merkitse-kustannussuunnitelma-lahetetyksi db maksuera))
                               (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
+
+(defn laheta-api-kustannusuunnitelma [db api-sampo-asetukset integraatioloki numero]
+  (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
+  (if (kustannussuunnitelmat/onko-olemassa? db numero)
+    (when (voi-lahettaa? db numero)
+      (try+
+        (if (lukitse-kustannussuunnitelma db numero)
+          (let [viesti-id (str (UUID/randomUUID))
+                sampo-kustannussuunnitelma-xml (kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))
+                vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
+                          "kustannussuunnitelma-lahetys" sampo-kustannussuunnitelma-xml)
+                _ (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
+                _ (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
+                ;; Käsitellään kuittaus heti, koska se saadaan rajapinnasta
+                kuittaus (kasittele-kustannussuunnitelma-kuittaus db vastaus viesti-id)]
+
+            kuittaus)
+          (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+        (catch Object e
+          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+          (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
+    (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
+      (log/error virheviesti)
+      (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+
+               :virheet [{:koodi :tuntematon-kustannussuunnitelma :viesti virheviesti}]}))))

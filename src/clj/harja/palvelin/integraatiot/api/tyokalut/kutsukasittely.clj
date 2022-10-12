@@ -119,20 +119,23 @@
    :otsikko (str (walk/keywordize-keys (:headers viesti)))
    :parametrit (str (:params viesti))})
 
-(defn lokita-kutsu [integraatioloki resurssi request body]
-  (let [xml? (= (kutsun-formaatti request) "xml")
-        loki-viesti (if xml?
-                     (tee-xml-lokiviesti "sisään" body request)
-                     (tee-lokiviesti "sisään" body request))]
-    ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
-    ;(log/debug "Kutsu:" request)
-    ;(log/debug "Parametrit: " (:params request))
-    ;(log/debug "Headerit: " (:headers request))
-    ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
-    ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
-    ;(log/debug "Logitusviesti:" loki-viesti)
+(defn lokita-kutsu
+  ([integraatioloki resurssi request body]
+   (lokita-kutsu integraatioloki resurssi request body "api"))
+  ([integraatioloki resurssi request body integraatio]
+   (let [xml? (= (kutsun-formaatti request) "xml")
+         loki-viesti (if xml?
+                       (tee-xml-lokiviesti "sisään" body request)
+                       (tee-lokiviesti "sisään" body request))]
+     ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+     ;(log/debug "Kutsu:" request)
+     ;(log/debug "Parametrit: " (:params request))
+     ;(log/debug "Headerit: " (:headers request))
+     ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
+     ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
+     ;(log/debug "Logitusviesti:" loki-viesti)
 
-    (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil loki-viesti)))
+     (integraatioloki/kirjaa-alkanut-integraatio integraatioloki integraatio (name resurssi) nil loki-viesti))))
 
 (defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
   ;(log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
@@ -154,7 +157,7 @@
 
 (defn tee-virhevastaus
   "Luo virhevastauksen annetulla statuksella ja asettaa vastauksen bodyksi JSON muodossa virheet."
-  [status virheet]
+  [status virheet request-origin]
   (let [body (cheshire/encode
                {:virheet
                 (mapv (fn [virhe]
@@ -163,23 +166,23 @@
                           :viesti (:viesti virhe)}})
                       virheet)})]
     {:status status
-     :headers {"Content-Type" "application/json"}
+     :headers (lisaa-request-headerit false request-origin)
      :body body}))
 
 (defn tee-sisainen-kasittelyvirhevastaus
-  [virheet]
-  (tee-virhevastaus 500 virheet))
+  [virheet request-origin]
+  (tee-virhevastaus 500 virheet request-origin))
 
 (defn tee-viallinen-kutsu-virhevastaus
-  [virheet]
-  (tee-virhevastaus 400 virheet))
+  [virheet request-origin]
+  (tee-virhevastaus 400 virheet request-origin))
 
 (defn tee-ei-hakutuloksia-virhevastaus
-  [virheet]
-  (tee-virhevastaus 404 virheet))
+  [virheet request-origin]
+  (tee-virhevastaus 404 virheet request-origin))
 
-(defn tee-sisainen-autentikaatiovirhevastaus [virheet]
-  (tee-virhevastaus 403 virheet))
+(defn tee-sisainen-autentikaatiovirhevastaus [virheet request-origin]
+  (tee-virhevastaus 403 virheet request-origin))
 
 (defn tee-vastaus
   "Luo JSON/XML-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
@@ -209,51 +212,50 @@
                 :virheet [{:koodi virheet/+tyhja-vastaus+
                            :viesti "Tyhjä vastaus vaikka skeema annettu"}]})
        {:status status
-        :headers (lisaa-request-headerit xml? request-origin)}
-       ))))
+        :headers (lisaa-request-headerit xml? request-origin)}))))
 
 (defn tee-optimoitu-json-vastaus
   "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
   Payload on Clojure dataa, joka muunnetaan JSON-dataksi."
-  [status payload request-origin ]
-   (if payload
-     {:status status
-      :headers (lisaa-request-headerit false request-origin)
-      :body (cheshire/generate-string payload)}
-     {:status status
-      :headers (lisaa-request-headerit false request-origin)}))
+  [status payload request-origin]
+  (if payload
+    {:status status
+     :headers (lisaa-request-headerit false request-origin)
+     :body (cheshire/generate-string payload)}
+    {:status status
+     :headers (lisaa-request-headerit false request-origin)}))
 
-(defn kasittele-invalidi-json [virheet kutsu resurssi]
+(defn kasittele-invalidi-json [resurssi otsikot kutsu virheet]
   (if (> (count kutsu) 10000)
     (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON:n 10000 ensimmäistä merkkiä: %s. " resurssi virheet (pr-str (str/join (take 10000 kutsu)))))
     (log/warn (format "Resurssin: %s kutsun JSON on invalidi: %s. JSON: %s. " resurssi virheet (pr-str kutsu))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-viallinen-kutsu-virhevastaus virheet))
+  (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
 
-(defn kasittele-viallinen-kutsu [virheet kutsu parametrit resurssi]
-  (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str (str/join (take 10000 kutsu)))))
+(defn kasittele-viallinen-kutsu [resurssi parametrit otsikot kutsu virheet]
+      (log/warn (format "Resurssin: %s kutsu on viallinen: %s. Parametrit: %s. Kutsu: %s." resurssi virheet parametrit (pr-str (str/join (take 10000 kutsu)))))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-viallinen-kutsu-virhevastaus virheet))
+  (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
 
-(defn kasittele-ei-hakutuloksia [virheet resurssi]
+(defn kasittele-ei-hakutuloksia [resurssi otsikot virheet]
   (log/warn (format "Resurssin: %s kutsu ei palauttanut hakutuloksia: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-ei-hakutuloksia-virhevastaus virheet))
+  (tee-ei-hakutuloksia-virhevastaus virheet (get otsikot "origin")))
 
-(defn kasittele-puutteelliset-parametrit [virheet resurssi]
+(defn kasittele-puutteelliset-parametrit [resurssi otsikot virheet]
   (log/warn (format "Resurssin: %s kutsussa puutteelliset parametrit: %s " resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-viallinen-kutsu-virhevastaus virheet))
+  (tee-viallinen-kutsu-virhevastaus virheet (get otsikot "origin")))
 
-(defn kasittele-sisainen-kasittelyvirhe [virheet resurssi]
+(defn kasittele-sisainen-kasittelyvirhe [resurssi otsikot virheet]
   (log/error (format "Resurssin: %s kutsussa tapahtui sisäinen käsittelyvirhe: %s" resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-sisainen-kasittelyvirhevastaus virheet))
+  (tee-sisainen-kasittelyvirhevastaus virheet (get otsikot "origin")))
 
-(defn kasittele-sisainen-autentikaatio-virhe [virheet resurssi]
+(defn kasittele-sisainen-autentikaatio-virhe [resurssi otsikot virheet]
   (log/error (format "Resurssin: %s kutsussa tapahtui autentikaatiovirhe: %s" resurssi virheet))
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-  (tee-sisainen-autentikaatiovirhevastaus virheet))
+  (tee-sisainen-autentikaatiovirhevastaus virheet (get otsikot "origin")))
 
 (defn tarkista-tyhja-kutsu [skeema body]
   (when (and (fn? skeema) (nil? body))
@@ -279,8 +281,10 @@
         (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) body)
         (json/validoi skeema body)))
     (if xml?
-      ;(xml/lue body "UTF-8")
-      (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+      ;; Sisääntuleva sähköposti käsitellään eri tavalla kuin muut xml viestits
+      (if (str/includes? body ":sahkoposti")
+        (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+        (xml/lue body "UTF-8"))
       (cheshire/decode body true))))
 
 (defn hae-kayttaja [db kayttajanimi]
@@ -307,30 +311,30 @@
       true)))
 
 
-(defn aja-virhekasittelyn-kanssa [resurssi kutsu parametrit ajo]
+(defn aja-virhekasittelyn-kanssa [resurssi parametrit headerit body ajo]
   (try+
     (ajo)
     ;; Tunnetut poikkeustilanteet, virhetiedot voidaan julkaista
     (catch [:type virheet/+invalidi-json+] {:keys [virheet]}
-      (kasittele-invalidi-json virheet kutsu resurssi))
+      (kasittele-invalidi-json resurssi headerit body virheet))
     (catch [:type virheet/+viallinen-kutsu+] {:keys [virheet]}
-      (kasittele-viallinen-kutsu virheet kutsu parametrit resurssi))
+      (kasittele-viallinen-kutsu parametrit resurssi headerit body virheet))
     (catch [:type virheet/+ei-hakutuloksia+] {:keys [virheet]}
-      (kasittele-ei-hakutuloksia virheet resurssi))
+      (kasittele-ei-hakutuloksia resurssi headerit virheet))
     (catch [:type virheet/+puutteelliset-parametrit+] {:keys [virheet]}
-      (kasittele-puutteelliset-parametrit virheet resurssi))
+      (kasittele-puutteelliset-parametrit resurssi headerit virheet))
     (catch [:type virheet/+sisainen-kasittelyvirhe+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
+      (kasittele-sisainen-kasittelyvirhe resurssi headerit virheet))
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
+      (kasittele-sisainen-kasittelyvirhe resurssi headerit virheet))
     (catch [:type virheet/+virheellinen-liite+] {:keys [virheet]}
-      (kasittele-sisainen-kasittelyvirhe virheet resurssi))
+      (kasittele-sisainen-kasittelyvirhe resurssi headerit virheet))
     (catch [:type virheet/+tuntematon-kayttaja+] {:keys [virheet]}
-      (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
+      (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
     (catch [:type virheet/+kayttajalla-puutteelliset-oikeudet+] {:keys [virheet]}
-      (kasittele-sisainen-autentikaatio-virhe virheet resurssi))
+      (kasittele-sisainen-autentikaatio-virhe resurssi headerit virheet))
     (catch #(get % :virheet) poikkeus
-      (kasittele-sisainen-kasittelyvirhe (:virheet poikkeus) resurssi))
+      (kasittele-sisainen-kasittelyvirhe resurssi headerit (:virheet poikkeus) ))
     ;; Odottamattomat poikkeustilanteet (virhetietoja ei julkaista):
     (catch SQLException e
       (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui SQL-poikkeus: %s." resurssi e))
@@ -341,21 +345,24 @@
             (recur (.getNextException ex))))
         (log/error "Sisemmät virheet: " (.toString w)))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
+        headerit
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]
-        resurssi))
+          :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Exception e
       (log/error e (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
+        headerit
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]
-        resurssi))
+          :viesti "Sisäinen käsittelyvirhe"}]))
     (catch Object e
       (log/error (:throwable &throw-context) (format "Resurssin kutsun: %s yhteydessä tapahtui poikkeus: %s." resurssi e))
       (kasittele-sisainen-kasittelyvirhe
+        resurssi
+        headerit
         [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-          :viesti "Sisäinen käsittelyvirhe"}]
-        resurssi))))
+          :viesti "Sisäinen käsittelyvirhe"}]))))
 
 (defn- lue-body [request]
   (let [body (:body request)]
@@ -383,10 +390,12 @@
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request body))
           parametrit (:params request)
+          headerit (:headers request)
           vastaus (aja-virhekasittelyn-kanssa
                    resurssi
-                   body
                    parametrit
+                   headerit
+                   body
                    #(let
                         [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                          origin-header (get (:headers request) "origin")
@@ -419,11 +428,13 @@
           xml? (= (kutsun-formaatti request) "xml")
           tapahtuma-id (when integraatioloki
                          (lokita-kutsu integraatioloki resurssi request nil))
+          otsikot (:headers request)
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
-                    nil
                     parametrit
+                    otsikot
+                    nil
                     #(let
                        [_ (vaadi-jarjestelmaoikeudet db
                             (hae-kayttaja db (get (:headers request) "oam_remote_user")) vaadi-analytiikka-oikeus?)
@@ -455,8 +466,9 @@
           parametrit (:params request)
           vastaus (aja-virhekasittelyn-kanssa
                     resurssi
-                    nil
                     parametrit
+                    (:headers request)
+                    nil
                     #(let
                        [_ (vaadi-jarjestelmaoikeudet db kayttaja vaadi-analytiikka-oikeus?)]
                        (tee-optimoitu-json-vastaus 200 (kasittele-kutsu-fn parametrit kayttaja db) request-origin)))]
@@ -489,3 +501,39 @@
                                                  vastauksen-skeema
                                                  kasittele-kutsu-fn)))]
         (send! channel vastaus)))))
+
+
+(defn kasittele-sampo-kutsu
+  "Samanlainen käsittelijä, kuin ylläolevat. Räätälöity Sampo viestiin, koska se on logiikaltaan niin erilainen."
+  [db integraatioloki resurssi request kutsun-skeema kasittele-kutsu-fn integraatio]
+  (if (not= (kutsun-formaatti request) "xml")
+    {:status 415
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Error: Wrong content type. Please use: application/xml\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body integraatio))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    parametrit
+                    (:headers request)
+                    body
+                    #(let
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                        origin-header (get (:headers request) "origin")
+                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                        vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
+                        purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
+                        ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
+                        ;; käsittely onnistunut
+                        mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
+                        status (if-not (str/blank? mahdollinen-virhe) 400 200)]
+
+                       {:status status
+                        :headers (lisaa-request-headerit false origin-header)
+                        :body vastauksen-data}))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))

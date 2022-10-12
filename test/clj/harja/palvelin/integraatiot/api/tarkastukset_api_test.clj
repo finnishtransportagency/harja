@@ -214,9 +214,9 @@
         (is (-> poista-vastaus :status (= 200)))
         (is (empty? poista-tark))))))
 
-(deftest tilaajan-konsulttin-tarkastus-ei-nay-urakoitsijalle
+(deftest tilaajan-konsultin-tarkastus-ei-nay-urakoitsijalle
   (let [db (luo-testitietokanta)
-        hoitokausi (pvm/paivamaaran-hoitokausi (pvm/nyt))
+        hoitokausi (pvm/paivamaaran-hoitokausi (pvm/->pvm "1.10.2021")) ;; Pakotetaan käyttämään päivämäärää, jolle on olemassa tarkastuksia
         hoitokauden-alku (first hoitokausi)
         hoitokauden-loppu (second hoitokausi)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

@@ -524,7 +524,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                           {:urakka_idt kontekstin-urakka-idt
                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
-        talvisuolaa-suunniteltu-yhteensa (apply + (map :talvisuolaraja talvisuolarajat))
+        talvisuolaa-suunniteltu-yhteensa (apply + (keep :talvisuolaraja talvisuolarajat))
 
         ;; Lisätään suolasummiin talvisuolojen käyttörajat
         talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
@@ -539,15 +539,6 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
 
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
 
-        talvisuolan-toteutunut-maara (some->> materiaalit
-                                              (filter (fn [[materiaali _]]
-                                                        (and
-                                                          (not= true (get-in materiaali [:materiaali :yht-rivi]))
-                                                          (= "talvisuola" (get-in materiaali [:materiaali :tyyppi]))))) ;; vain talvisuolat
-                                              (mapcat second)
-                                              (filter #(and (nil? (:talvitieluokka %)) (nil? (:soratieluokka %)))) ;; luokka on nil toteumariveillä (lihavoidut raportissa)
-                                              (map :maara)
-                                              (reduce +))
         kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         materiaalit-tyypin-mukaan (fn [materiaalityyppi]
                                     (keep (fn [rivi]

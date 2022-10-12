@@ -241,11 +241,13 @@
         ;; Ja varmistetaan, että sen urakka on päivitetty sen jälkeen kun T-LOIK on korjannut ilmoituksen sijainnin
         (is (= oikea-urakka-id (:urakka uusi-ilmoitus-db)))
 
-        ;; 1. Varmistetaan, että jonoista saatiin ilmoitus toimenpiteestä
+        ;; 1. Varmistetaan, että jonoista saatiin ilmoitus toimenpiteestä, joka on valaistusurakalle tarkoitettu ja kuuluu väärään urakkaan
         (is (= "sisään" (:suunta (first integraatioviestit))))
         (is (= "JMS" (:siirtotyyppi (first integraatioviestit))))
         (is (= "tloik-ilmoituskuittausjono" (:osoite (first integraatioviestit))))
         (is (clojure.string/includes? (:sisalto (first integraatioviestit)) viesti-id))
+        (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "valaistus"))
+        (is (clojure.string/includes? (:sisalto (first integraatioviestit)) "Hailuodossa"))
         (is (= 1 (:integraatiotapahtuma (first integraatioviestit))))
 
         ;; 2. Harja ilmoittaa T-LOIKILLE, että on vastaanottanut viestin
@@ -269,32 +271,42 @@
         ;(is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 3)))
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 3)) "sahkoposti:kuittaus"))
 
-        ;; Varmistetaan, että urakoitsija vastaa sähköpostiin "väärä urakka"
+        ;; 5. Urakoitsijan päivystäjä vastaa, että tämä toimenpidepyyntö on tullut väärään urakkaan
         (is (= "sisään" (:suunta (nth integraatioviestit 4))))
         (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 4))))
         (is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 4)))
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 4)) "Väärä urakka"))
 
+        ;; 6. Varmistetaan, että "turha" kuittauslogi löytyy tietokannasta. Onnistuneissa sähköpostin vastaanotoissa ei lähetetä oikeasti sähköpostiin kuittausta, kuten jonohommissa tapahtuu
+        (is (= "ulos" (:suunta (nth integraatioviestit 5))))
+        (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 5))))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 5)) "sahkoposti:kuittaus"))
 
-        ;; Harjan kuittaus T-LOIKille, että ollaan välitetty viestit eteenpäin
+        ;; 7. Harjan kuittaus T-LOIKille, että ollaan välitetty viestit eteenpäin
         (is (= "ulos" (:suunta (nth integraatioviestit 6))))
         (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 6))))
         ;Varmistetaan, että T-LOIKia informoitiin väärästä urakasta
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 6)) "<tyyppi>vaara-urakka</tyyppi>"))
 
-        ;; 5. T-LOIK lähettää ilmoituksen uudestaan
+        ;; 8. T-LOIK lähettää ilmoituksen uudestaan
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) "harja:ilmoitus"))
         (is (= "sisään" (:suunta (nth integraatioviestit 7))))
         (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 7))))
         (is (= "tloik-ilmoituskuittausjono" (:osoite (nth integraatioviestit 7))))
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 7)) viesti-id))
 
-        ;; 6. Harja ilmoittaa toiselle päivystäjälle saapuneesta ilmoituksesta
+        ;; 9. Harja ilmoittaa T-LOIKIlle, että toimenpideviesti tullaan välittämään oikealle urakalle sähköpostilla
         (is (= "ulos" (:suunta (nth integraatioviestit 8))))
         (is (= "JMS" (:siirtotyyppi (nth integraatioviestit 8))))
         (is lokaali-sahkopostipalvelin (:osoite (nth integraatioviestit 8)))
         (is (clojure.string/includes? (:sisalto (nth integraatioviestit 8)) (str ilmoitus-id)))
 
+        ;; 10. Harja ilmoittaa toiselle päivystäjälle saapuneesta ilmoituksesta sähköpostitse
         (is (= "ulos" (:suunta (nth integraatioviestit 9))))
         (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 9))))
-        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 9)) (format "[%s/%s]" oikea-urakka-id ilmoitus-id)))))))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 9)) (format "[%s/%s]" oikea-urakka-id ilmoitus-id)))
+
+        ;; 11. Sähköpostipalvelin kuittaa, että on saanut sähköpostin välitettäväkseen
+        (is (= "sisään" (:suunta (nth integraatioviestit 10))))
+        (is (= "HTTP" (:siirtotyyppi (nth integraatioviestit 10))))
+        (is (clojure.string/includes? (:sisalto (nth integraatioviestit 10)) "sahkoposti:kuittaus"))))))

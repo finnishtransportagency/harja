@@ -58,6 +58,15 @@
 
 (defmethod muodosta-pdf :vain-arvo [arvo] arvo)
 
+(defmethod muodosta-pdf :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
+  [:fo:inline
+   [:fo:inline (if-not (nil? arvo)
+                 (cond
+                   desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                   fmt (fmt arvo)
+                   :else arvo)
+                 jos-tyhja)]])
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
@@ -342,6 +351,10 @@
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
+
+(defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
+  ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
+  nil)
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg

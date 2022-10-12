@@ -75,18 +75,19 @@
 (defn aikavali-hoitokauden-sisalla []
   [valinnat/aikavali u/valittu-aikavali-hoitokauden-sisalla])
 
-(def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
-                        ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
-                        ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
-                        ["Valittu aikaväli" nil]])
+(def aikavali-valinnat-oletus [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
+                               ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
+                               ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
+                               ["Valittu aikaväli" nil]])
 
 (defn aikavali-nykypvm-taakse
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
   ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?
-                                    aikavalin-rajoitus vayla-tyyli?] :as optiot}]
-   (let [[valittu-aikavali-alku valittu-aikavali-loppu
+                                    aikavali-valinnat aikavalin-rajoitus vayla-tyyli?] :as optiot}]
+   (let [aikavali-valinnat (if (seq aikavali-valinnat) aikavali-valinnat aikavali-valinnat-oletus)
+         [valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
          vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
                                               vaihda-filtteri-urakan-paattyessa?

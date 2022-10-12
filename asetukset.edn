@@ -82,6 +82,12 @@
  ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
  ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
  ;        :paivittainen-lahetysaika [16 44 0]}
+ :sampo-api {:lahetys-url "/harja/api/sampo/xml"
+             :paivittainen-lahetysaika [16 44 0]
+             :palvelin "http://localhost:8084"
+             :kayttajatunnus "harja"
+             :salasana #=(slurp "../.harja/api-sahkoposti-salasana")}
+
  ;:tloik {:ilmoitusviestijono "Harja.T-LOIKToHarja.Msg"
  ;        :ilmoituskuittausjono "Harja.HarjaToT-LOIK.Ack"
  ;        :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"
@@ -185,9 +191,8 @@
                         :kanavien-osoite "https://ava.vayla.fi/harja/Kanavat.shz"
                         :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"}
 
- :yha {:url "https://harja-test.solitaservices.fi/harja/integraatiotesti/yha/"
-       :kayttajatunnus "restusr"
-       :salasana #=(slurp "../.harja/yha-salasana")}
+ :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
+       :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
  :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
          :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
@@ -227,7 +232,7 @@
  ;; :varusteet-ulkoiset
  ;; :tietyoilmoitusten-lahetys
  ;; :reittitarkistukset
- ;; :salli-hallinnan-apin-kaytto - sallittu vain gc ja local ympäristöissä, muualla päällä.
+ ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  :pois-kytketyt-ominaisuudet #{:fileyard
                                ; :tietyoilmoitusten-lahetys
                                :varusteet-ulkoiset

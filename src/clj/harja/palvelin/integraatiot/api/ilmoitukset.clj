@@ -8,7 +8,7 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer
-             [kasittele-kutsu kasittele-get-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
+             [kasittele-kutsu kasittele-kevyesti-get-kutsu lokita-kutsu lokita-vastaus tee-vastaus aja-virhekasittelyn-kanssa hae-kayttaja tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
@@ -23,7 +23,8 @@
             [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [clojure.string :as str])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -39,7 +40,7 @@
 
 (defn luo-ilmoitustoimenpide
   [db id ilmoitusid ilmoitustoimenpide ilmoittaja kasittelija kuittaustyyppi aiheutti-toimenpiteita vapaateksti suunta kanava]
-  
+
   (when (not (nil? aiheutti-toimenpiteita))
     (tieliikenneilmoitukset-kyselyt/ilmoitus-aiheutti-toimenpiteita! db aiheutti-toimenpiteita id))
 
@@ -101,6 +102,7 @@
       "laheta-ilmoitus"
       nil
       nil
+      nil
       (fn []
         (let [data {:ilmoitukset (mapv (fn [ilmoitus]
                                          (sanomat/rakenna-ilmoitus
@@ -129,11 +131,13 @@
                                   true)}))
 
 (defn kaynnista-ilmoitusten-kuuntelu [db integraatioloki request]
-  (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)]
+  (let [parametrit (pura-ilmoitusten-kuuntelun-kutsuparametrit request)
+        headerit (:headers request)]
     (aja-virhekasittelyn-kanssa
      "hae-ilmoitukset"
-     nil
      parametrit
+     headerit
+     nil
      (fn []
        (let [{urakka-id :urakka-id
               muuttunut-jalkeen :muuttunut-jalkeen
@@ -162,8 +166,18 @@
                                          (when kuuntelun-lopetus-fn
                                            (kuuntelun-lopetus-fn)))))))))))))
 
-(s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
-(s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
+;; Sallitaan ajalle kaksi eri formaattia
+(def pvm-aika-muoto1 "yyyy-MM-dd'T'HH:mm:ssX")
+(def pvm-aika-muoto2 "yyyy-MM-dd'T'HH:mm:ss.SSSX")
+(defn valid-aikamuoto? [string]
+  (try
+    (if (< (count string) 25)
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto1) string))
+      (inst? (.parse (SimpleDateFormat. pvm-aika-muoto2) string)))
+    (catch Exception e
+      false)))
+(s/def ::alkuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
+(s/def ::loppuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
 
 (defn- tarkista-ilmoitus-haun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
@@ -173,11 +187,15 @@
   (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Alkuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX esim: 2005-01-01T00:00:00+03" (:alkuaika parametrit))}))
+       :viesti (format "Alkuaika väärässä muodossa: %s
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-01T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:alkuaika parametrit))}))
   (when (and (not (nil? (:loppuaika parametrit))) (not (s/valid? ::loppuaika (:loppuaika parametrit))))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
-       :viesti (format "Loppuaika väärässä muodossa: %s Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX esim: 2005-01-02T00:00:00+03" (:loppuaika parametrit))})))
+       :viesti (format "Loppuaika väärässä muodossa: %s
+       Anna muodossa: yyyy-MM-dd'T'HH:mm:ssX tai yyyy-MM-dd'T'HH:mm:ss.SSSX tai yyyy-MM-dd'T'HH:mm:ss.SSSZ
+       esim: 2005-01-02T03:00:00+03 tai 2005-01-01T03:00:00.123+03 tai 2005-01-01T00:00:00.123Z" (:loppuaika parametrit))})))
 
 (def db-kuittaus->avaimet
   {:f1 :kuitattu
@@ -187,7 +205,13 @@
    :f5 :kuittaaja_henkilo_etunimi
    :f6 :kuittaaja_henkilo_sukunimi,
    :f7 :kuittaaja_organisaatio_nimi,
-   :f8 :kuittaaja_organisaatio_ytunnus})
+   :f8 :kuittaaja_organisaatio_ytunnus
+   :f9 :kanava})
+
+(defn- parsi-aika [aika]
+  (if (< (count aika) 25)
+    (.parse (SimpleDateFormat. pvm-aika-muoto1) aika)
+    (.parse (SimpleDateFormat. pvm-aika-muoto2) aika)))
 
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
@@ -196,8 +220,10 @@
   (log/info "Hae ilmoitukset ytunnuksella :: parametrit:" parametrit)
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
-  (let [loppuaika (if loppuaika
-                    loppuaika
+  (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
+        alkuaika (parsi-aika alkuaika)
+        loppuaika (if loppuaika
+                    (parsi-aika loppuaika)
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
@@ -206,20 +232,23 @@
                        :loppuaika loppuaika})
         ilmoitukset
         (->> ilmoitukset
-          (mapv #(update % :kuittaukset konversio/jsonb->clojuremap))
-          (mapv #(update % :kuittaukset
+          (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+          (map #(update % :kuittaukset
                    (fn [rivit]
                      (let [tulos (keep
                                    (fn [r]
                                      ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
                                      (when (not (nil? (:f1 r)))
                                        (let [r (-> r
-                                                 (clojure.set/rename-keys db-kuittaus->avaimet))]
+                                                 (clojure.set/rename-keys db-kuittaus->avaimet)
+                                                 (update :kuitattu
+                                                   (fn [rivi]
+                                                     (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSX") rivi))))]
                                          r)))
                                    rivit)]
                        tulos)))))
         vastaus {:ilmoitukset
-                 (mapv (fn [ilmoitus]
+                 (map (fn [ilmoitus]
                          (sanomat/rakenna-ilmoitus
                            (konversio/alaviiva->rakenne ilmoitus)))
                    ilmoitukset)}]
@@ -237,16 +266,14 @@
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika/:loppuaika" request
-        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
-          json-skeemat/ilmoitusten-haku
+        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           false)))
     (julkaise-reitti
       http :hae-ilmoitukset-ytunnuksella
       (GET "/api/ilmoitukset/:ytunnus/:alkuaika" request
-        (kasittele-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
-          json-skeemat/ilmoitusten-haku
+        (kasittele-kevyesti-get-kutsu db integraatioloki :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
           false)))
@@ -258,7 +285,7 @@
            (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
                          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
-  
+
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)

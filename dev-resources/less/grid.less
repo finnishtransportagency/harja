@@ -170,11 +170,19 @@
       padding-bottom: 30px;
       padding-left: 15px;
     }
+
+    > td.vetolaatikko-ei-paddingia {
+        padding: 0;
+    }
   }
 
   // tablen rivien korkeutta ei oikein voi animoida, tarvittaisiin pure div pohjainen grid
   tr.vetolaatikko-kiinni {
     display: none;
+  }
+
+  .vetolaatikon-sailio {
+    text-align: right;
   }
   // halutaan sisentää vain avatun väliotsikon alla olevat tr:t, ja tällöin piirtää sininen palkki
   // käytetään ns. general sibling selectoria (~)
@@ -301,6 +309,12 @@
     background-color: @harmaa15;
     border-bottom: 2px solid @harmaa7;
     border-top: 2px solid @harmaa7;
+    font-weight: bold;
+  }
+  tr.yhteenveto-vayla {
+    background-color: @harmaa15;
+    border-bottom: 1px solid @white-darker;
+    border-top: 1px solid @white-darker;
     font-weight: bold;
   }
   tr.korostettu-rivi {
@@ -845,4 +859,9 @@ span.ajax-loader-pisteet {
     width: 1rem;
     height: 1rem;
   }
+}
+
+.grid-korostettu {
+    border-top: 2px solid #004D99;
+    border-bottom: 2px solid #004d99;
 }

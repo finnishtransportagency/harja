@@ -1,7 +1,7 @@
 (ns harja.palvelin.integraatiot.vayla-rest.sahkoposti
   (:require [com.stuartsierra.component :as component]
-            [harja.kyselyt.integraatiot :as q]
-            [compojure.core :refer [PUT GET POST]]
+            [clojure.string :as str]
+            [compojure.core :refer [POST]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut julkaise-palvelu]]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.api.tyokalut.xml-skeemat :as xml-skeemat]
@@ -72,22 +72,27 @@
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
   [db asetukset integraatioloki sahkoposti-xml liite?]
   (try+
-    (integraatiotapahtuma/suorita-integraatio
-      db integraatioloki "api" (if liite?
-                                 "sahkoposti-ja-liite-lahetys"
-                                 "sahkoposti-lahetys") nil
-      (fn [konteksti]
-        (let [http-asetukset {:metodi :POST
-                              :url (muodosta-lahetys-uri asetukset liite?)
-                              :otsikot {"Content-Type" "application/xml"}
-                              :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
-                              :salasana (get-in asetukset [:api-sahkoposti :salasana])}
-              {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
-          (if liite?
-            (kasittele-sahkoposti-ja-liite-vastaus status body db)
-            (kasittele-sahkoposti-vastaus status body)))))
+    (let [_ (log/info "Lähetä rest-api sähköposti.")
+          vastaus (integraatiotapahtuma/suorita-integraatio
+                    db integraatioloki "api" (if liite?
+                                               "sahkoposti-ja-liite-lahetys"
+                                               "sahkoposti-lahetys") nil
+                    (fn [konteksti]
+                      (let [http-asetukset {:metodi :POST
+                                            :url (muodosta-lahetys-uri asetukset liite?)
+                                            :otsikot {"Content-Type" "application/xml"}
+                                            :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
+                                            :salasana (get-in asetukset [:api-sahkoposti :salasana])}
+                            {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
+                        (if liite?
+                          (kasittele-sahkoposti-ja-liite-vastaus status body db)
+                          (kasittele-sahkoposti-vastaus status body)))))
+          _ (log/info "rest-api sähköpostin lähetys onnistui")]
+      vastaus)
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      false)))
+      (do
+        (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
+        false))))
 
 (defn muodosta-kuittaus
   "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"
@@ -100,7 +105,23 @@
      (for [virhe virheet]
        [:virheet virhe]))])
 
+(defn muodosta-ilmoitus-virheellisesta-sahkopostista
+  "Jos saamme virheellisen sähköpostin, niin vastataan siihen parhaan tietämyksen mukaan ohjeistetulla vastauksella."
+  [harja-lahettaja {:keys [viesti-id lahettaja otsikko sisalto] :as kutsun-data} virheet]
+  (let [;; Muodostetaan vastaus lähetettyyn sähköpostiin jolloin lahettajasta tulee vastaanottaja
+        vastaanottaja lahettaja
+        otsikko (str "Re: " otsikko)
+        virheet-html (str/join "<br>" virheet)
+        viesti-html (str "<html><body>"
+                      virheet-html
+                      "<br> Saatu viesti: <br>"
+                      sisalto
+                      "</body></html>")
+        sahkoposti (sahkoposti-sanomat/sahkoposti viesti-id harja-lahettaja vastaanottaja otsikko viesti-html)]
+    sahkoposti))
+
 (defn vastaanota-sahkoposti [kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki]
+  (log/info "RestApi - Sähköposti :: vastaanota-sahkoposti")
   (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys")
                         itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
         viesti-id (:viesti-id kutsun-data)
@@ -109,9 +130,18 @@
         virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
                   nil)
+        vastaus-virheelliseen-viestiin (when-not (nil? virheet)
+                                         (-> (muodosta-ilmoitus-virheellisesta-sahkopostista
+                                               (get-in asetukset [:api-sahkoposti :vastausosoite])
+                                               kutsun-data virheet)
+                                           (xml/tee-xml-sanoma)))
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
         kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
-    ;; Palautetaan käsitelty vastaus
+
+    ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
+    (when-not (nil? virheet)
+      (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
+        vastaus-virheelliseen-viestiin false))
     kuittaus-xml))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
@@ -167,5 +197,5 @@
   (rekisteroi-kuuntelija!
     [this kuuntelija-fn]
     ;; Ei tee tarkoituksellisesti mitään, mutta toteuttaa Protokollan
-    (log/error "ApiSahkoposti palvelu ei tue rekisteroi-kuuntelija! toiminnallisuutta!")
+    (log/debug "ApiSahkoposti palvelu ei tue rekisteroi-kuuntelija! toiminnallisuutta.")
     nil))

@@ -1,0 +1,54 @@
+@import "../yleiset";
+@import "../vayla/colors";
+
+.urakan-suolarajoitukset {
+  .tooltip-wrapper {
+    margin-top: 8px;
+
+    .harja-icon-status-info {
+      color: blue;
+      font-size: 1.25rem;
+    }
+
+    .tooltip-inner {
+      // Asetetaan ilmavampi padding toistaiseksi vain tähän näkymään tooltipille
+      // Alkuperäiseen .tooltip-inner luokkaan sitä ei kannata vielä vaihtaa, sillä monessa muussa paikassa
+      // oletetaan paddingin olevan pienempi.
+      padding: @valistys-16;
+    }
+  }
+
+  .kontrollit {
+    margin-bottom: 2rem;
+  }
+
+  .kayttoraja-lomakkeet {
+    margin-bottom: 1.5rem;
+
+    .lomake {
+      background-color: @gray240;
+
+      .kentta-indeksi {
+        display: flex;
+        align-items: center;
+        height: 35px;
+      }
+    }
+  }
+
+  .lomake-rajoitusalue {
+    .lomakeryhman-rivi-tausta {
+      background-color: @harmaa12;
+      margin: -10px 16px 0 16px;
+      padding-bottom: 16px;
+    }
+  }
+
+  .pohjavesialueiden-suolarajoitukset {
+    .livi-grid {
+      .sarake-pohjavesialueet {
+        white-space: nowrap;
+      }
+    }
+  }
+}
