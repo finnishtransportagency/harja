@@ -127,7 +127,7 @@ WHERE
         AND (lp.yllapitokohde IS NULL
         OR
              lp.yllapitokohde IS NOT NULL AND
-             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
+             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS FALSE)
 UNION ALL
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
