@@ -13,7 +13,8 @@
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
             [harja.jms-test :refer [feikki-jms]]
             [harja.tyokalut.xml :as xml]
-            [clj-time.core :as t]))
+            [clj-time.core :as t]
+            [clojure.string :as str]))
 
 (def +xsd-polku+ "xsd/sampo/inbound/")
 
@@ -123,6 +124,23 @@
                                   WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
                                   AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
       (is (some? urakan-tpi) "Urakalle on luotu toimenpideinstanssi"))))
+
+
+(deftest laheta-virheellinen-tuonti-harjaan-test
+  (let [viestit (atom [])]
+    (is (= 0 (count (hae-urakat))) "TESTIURAKKA Sampo ID:llä ei löydy urakkaa ennen tuontia.")
+    (jms/kuuntele! (:sonja jarjestelma) +kuittausjono-sisaan+ #(swap! viestit conj (.getText %)))
+    (jms/laheta (:sonja jarjestelma) +lahetysjono-sisaan+ (slurp "test/resurssit/sampo/Sampo2Harja_virheellinen_testisanoma.xml"))
+    (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." 10000)
+
+    (is (str/includes? (first @viestit) "No operation code provided."))
+
+    (is (= 0 (count (hae-urakat))) "Virheellisellä viestillä ei luoda mitään uutta")
+    (let [urakan-tpi (ffirst (q "SELECT id
+                                  FROM toimenpideinstanssi
+                                  WHERE urakka = (SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA')
+                                  AND toimenpide = (SELECT id FROM toimenpidekoodi WHERE koodi = 'VALA_YKSHINT')"))]
+      (is (empty? urakan-tpi) "Urakalle on ei luoda toimenpideinstanssia"))))
 
 ;; REPL-testausta varten. Älä poista.
 #_(def testidatapatteri
