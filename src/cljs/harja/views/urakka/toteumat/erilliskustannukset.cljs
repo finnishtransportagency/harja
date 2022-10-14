@@ -70,8 +70,9 @@
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
 
-(defn erilliskustannustyypin-teksti [avainsana]
+(defn erilliskustannustyypin-teksti
   "Erilliskustannustyypin teksti avainsanaa vastaan"
+  [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :muu "Muu"
@@ -79,23 +80,6 @@
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
     +valitse-tyyppi+))
-
-(defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
-  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
-  ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
-  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
-  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
-             (= :muu %)
-             true)
-          (cond
-            (= :hoito urakkatyyppi)
-            [:asiakastyytyvaisyysbonus :muu]
-            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
-            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:muu]
-            :default
-            [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -255,31 +239,19 @@
             :valinta-arvo identity
             :valinta-nayta (fn [arvo]
                              (if arvo (erilliskustannustyypin-teksti arvo) +valitse-tyyppi+))
-            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))
+            ;; Ainoa valinta tällä hetkellä on ":muu", bonukset lisätään bonuslomakkeella Laadunseuranta -> Sanktiot ja Bonukset
+            :valinnat [:muu]
             :fmt #(erilliskustannustyypin-teksti %)
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
             :aseta (fn [rivi arvo]
                      (assoc (cond
                               (and
-                                (not= :teiden-hoito urakan-tyyppi)
-                                urakan-indeksi
-                                (= :asiakastyytyvaisyysbonus arvo))
-                              (assoc rivi :indeksin_nimi urakan-indeksi
-                                          :maksaja :tilaaja)
-                              (and
                                 (= :teiden-hoito urakan-tyyppi)
-                                (or (= :lupausbonus arvo)
-                                    (= :asiakastyytyvaisyysbonus arvo)))
-                              (assoc rivi :indeksin_nimi urakan-indeksi
-                                          :maksaja :tilaaja)
-                              (and
-                                (= :teiden-hoito urakan-tyyppi)
-                                (or (not= :lupausbonus arvo)
-                                    (not= :asiakastyytyvaisyysbonus arvo)))
+                                (= :muu arvo))
                               (assoc rivi :indeksin_nimi "Ei sidota indeksiin"
                                           :maksaja :tilaaja)
-                              :default rivi)
+                              :else rivi)
                        :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen? true
