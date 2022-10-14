@@ -4,35 +4,26 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
 
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<! >! chan]]
             [cljs.core.async :refer [<! timeout]]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as urakka-domain]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [reagent.ratom :refer [reaction]]))
 
 (defonce valittu-kustannus (atom nil))
 
@@ -41,7 +32,7 @@
             sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (or (not (urakka/indeksi-kaytossa?))
+            indeksi (if (or (not (u/indeksi-kaytossa?))
                             (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu)))
                       nil
                       (:indeksin_nimi muokattu))
@@ -265,7 +256,7 @@
             :validoi [[:ei-tyhja "Anna rahamäärä"]]
             :palstoja 1}
 
-           (when (urakka/indeksi-kaytossa?)
+           (when (u/indeksi-kaytossa?)
              {:otsikko "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
               :pakollinen? true
               ;; Hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan - indeksi pakotetaan
