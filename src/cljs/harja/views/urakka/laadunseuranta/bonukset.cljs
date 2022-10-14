@@ -12,16 +12,11 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
 
-            [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.debug :as debug]
-
-            [harja.views.urakka.toteumat.erilliskustannukset :as ek]))
-
-
+            [harja.ui.debug :as debug]))
 
 (defn- kannasta->lomake
   [avain]
@@ -129,8 +124,8 @@
           :nimi :tyyppi
           :tyyppi :valinta
           :pakollinen? true
-          :valinnat (ek/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
-          :valinta-nayta ek/erilliskustannustyypin-teksti
+          :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
+          :valinta-nayta sanktio-domain/bonustyypin-teksti
           ::lomake/col-luokka "col-xs-12"})
        {:otsikko "Perustelu"
         :nimi :lisatieto

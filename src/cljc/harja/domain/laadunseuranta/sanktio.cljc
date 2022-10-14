@@ -198,3 +198,31 @@
 
 (def hoidon-indeksivalinnat
   ["MAKU 2015" "MAKU 2010" "MAKU 2005"])
+
+
+(defn bonustyypin-teksti [avainsana]
+  "Erilliskustannustyypin teksti avainsanaa vastaan"
+  (case avainsana
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
+    :muu "Muu"
+    :alihankintabonus "Alihankintabonus"
+    :tavoitepalkkio "Tavoitepalkkio"
+    :lupausbonus "Lupausbonus"    
+    "- Valitse tyyppi -"))
+
+(defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
+  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
+  ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
+  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
+  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
+             (= :muu %)
+             true)
+          (cond
+            (= :hoito urakkatyyppi)
+            [:asiakastyytyvaisyysbonus :muu]
+            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:asiakastyytyvaisyysbonus :alihankintabonus :muu] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
+            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:muu]
+            :default
+            [:asiakastyytyvaisyysbonus :muu])))
