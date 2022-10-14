@@ -364,7 +364,7 @@
       [db db]      
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
-                    kasittelytapa laskutuskuukausi]} ek
+                    kasittelytapa laskutuskuukausi liitteet]} ek
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
@@ -382,6 +382,9 @@
                                                                      {:poistettu (or poistettu false)
                                                                       :id id
                                                                       :muokkaaja (:id user)})))]
+        (when (not (empty? liitteet))
+          (doseq [l liitteet]
+            (toteumat-q/tallenna-erilliskustannukselle-liitteet<! db {:bonus (or (:id tallennettu) id) :liite (:id l)})))
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (cond
           (and
