@@ -88,7 +88,6 @@
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
-    (println "halp 2" sulje-fn e! app)
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [:<>
@@ -103,8 +102,8 @@
        :luokka "padding-16 taustavari-taso3"
        :validoi-alussa? false
        :voi-muokata? true
-       :muokkaa! #(do (println "halp" e! %)(e! (tiedot/->PaivitaLomaketta %)))
-       :footer-fn (fn [bonus]
+       :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
+       :footer-fn (fn [_bonus]
                     [:<>
                      [:span.nappiwrappi.flex-row
                       [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))]
@@ -164,7 +163,6 @@
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
           :aseta (fn [rivi arvo & muut]
-                   (println rivi arvo (keys rivi) muut)
                    (cond-> rivi
                      (nil? (:laskutuskuukausi rivi)) (assoc :laskutuskuukausi
                                                        (some #(when (and

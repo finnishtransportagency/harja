@@ -53,7 +53,6 @@
     (merge
       (reduce
         (fn [acc [avain tieto]]
-          (println avain tieto acc)
           (assoc-in acc avain tieto))
         {}
         (into [] (comp tee-valitut-avaimet konvertoi-avaimet keywordisoi-tiedot assoc-in-avaimet) valitut-avaimet))
@@ -111,7 +110,6 @@
   LiitteidenHakuOnnistui
   (process-event
     [{:keys [liitteet]} app]
-    (println "liitteet" liitteet)
     (-> app
       (assoc :liitteet-haettu? true)
       (assoc-in [:lomake :liitteet] liitteet)))
