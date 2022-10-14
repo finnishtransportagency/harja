@@ -104,7 +104,7 @@
            (when-not muokataan-vanhaa?
              [bonus-sanktio-valikko (r/cursor tila [:lomake]) #()])
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot]
+             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset]
              [:<>
               [:h2 (cond
                      (and lukutila? muokataan-vanhaa?)

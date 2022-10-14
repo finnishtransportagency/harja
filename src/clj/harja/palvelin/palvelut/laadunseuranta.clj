@@ -135,9 +135,11 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           [])
-         urakan-lupausbonukset (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
-                                                                      :alku (konv/sql-timestamp alku)
-                                                                      :loppu (konv/sql-timestamp loppu)})
+        urakan-lupausbonukset (if hae-bonukset?
+                                (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
+                                                                        :alku (konv/sql-timestamp alku)
+                                                                        :loppu (konv/sql-timestamp loppu)})
+                                [])
         sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
