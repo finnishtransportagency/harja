@@ -72,7 +72,13 @@
     (let [laatupoikkeaman-urakka (:urakka (first (laatupoikkeamat-q/hae-laatupoikkeaman-urakka-id db {:laatupoikkeamaid laatupoikkeama-id})))]
       (when-not (= laatupoikkeaman-urakka urakka-id)
         (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
-                                        urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+                                     urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+
+(defn- hae-bonuksen-liitteet
+  "Hakee bonuksen liitteet"
+  [db user urakka-id bonus-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
+  (into [] (laatupoikkeamat-q/hae-bonuksen-liitteet db bonus-id)))
 
 (defn- hae-sanktion-liitteet
   "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
@@ -361,7 +367,11 @@
 
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
-        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
+        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id))
+      
+      :hae-bonuksen-liitteet
+      (fn [user {:keys [urakka-id bonus-id]}]
+        (hae-bonuksen-liitteet db user urakka-id bonus-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -372,5 +382,6 @@
                      :hae-urakan-sanktiot
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
-                     :hae-sanktion-liitteet)
+                     :hae-sanktion-liitteet
+                     :hae-bonuksen-liitteet)
     this))
