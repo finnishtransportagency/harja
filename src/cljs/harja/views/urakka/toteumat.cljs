@@ -24,7 +24,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [tuck.core :as tuck])
+            [tuck.core :as tuck]
+            [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
                    [harja.atom :refer [reaction<!]]))
@@ -33,7 +34,8 @@
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))]
+  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))
+        hj-urakka? (and (= :teiden-hoito (:tyyppi ur)) (< (pvm/vuosi (:alkupvm ur)) 2019))]
     (komp/luo
       (komp/sisaan-ulos #(do
                            (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -78,7 +80,11 @@
            [muut-materiaalit-nakyma ur])
 
          "Erilliskustannukset" :erilliskustannukset
-         (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+         (when (and (oikeudet/urakat-toteumat-erilliskustannukset id)
+                 ;; Piilotetaan Erilliskustannukset-tab 'teiden-hoito' (eli mh-urakoilta), paitsi HJ-urakoilta.
+                 ;; HJ-urakat ovat 'teiden-hoito'-urakoita, jotka ovat alkaneet ennen vuotta 2019
+                 ;; VHAR-6675
+                 (or hj-urakka? (not mhu-urakka?)))
            [erilliskustannukset/erilliskustannusten-toteumat ur])
 
          "Varusteet" :varusteet
