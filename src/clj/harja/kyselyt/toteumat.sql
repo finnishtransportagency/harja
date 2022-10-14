@@ -588,6 +588,12 @@ WHERE tk.tehtavaryhma = tr.id
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
+-- name: tallenna-erilliskustannukselle-liitteet<!
+-- Lisää liitteet
+insert into erilliskustannus_liite
+  (bonus, liite)
+values (:bonus, :liite);
+
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
