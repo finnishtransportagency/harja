@@ -53,8 +53,8 @@
 
 (def tyyppi->lomake
   {::valikatselmus/kattohinnan-ylitys :kattohinnan-ylitys-lomake
-   ::valikatselmus/lupaus-bonus :lupaus-bonus-lomake
-   ::valikatselmus/lupaus-sanktio :lupaus-sanktio-lomake})
+   ::valikatselmus/lupausbonus :lupausbonus-lomake
+   ::valikatselmus/lupaussanktio :lupaussanktio-lomake})
 
 (defn nollaa-paatokset [app]
   (assoc app :urakan-paatokset nil
@@ -71,8 +71,8 @@
   (let [filtteroi-paatos (fn [tyyppi]
                            (filtteroi-paatos hoitokauden-alkuvuosi tyyppi paatokset))
         kattohinnan-ylitys (filtteroi-paatos ::valikatselmus/kattohinnan-ylitys)
-        lupausbonus (filtteroi-paatos ::valikatselmus/lupaus-bonus)
-        lupaussanktio (filtteroi-paatos ::valikatselmus/lupaus-sanktio)]
+        lupausbonus (filtteroi-paatos ::valikatselmus/lupausbonus)
+        lupaussanktio (filtteroi-paatos ::valikatselmus/lupaussanktio)]
     {:kattohinnan-ylitys-lomake (when (some? kattohinnan-ylitys)
                                   {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id kattohinnan-ylitys)
                                    :maksun-tyyppi (cond (and
@@ -81,9 +81,9 @@
                                                         (pos? (::valikatselmus/siirto kattohinnan-ylitys)) :siirto
                                                         :else :maksu)
                                    :siirto (when (pos? (::valikatselmus/siirto kattohinnan-ylitys)) (::valikatselmus/siirto kattohinnan-ylitys))})
-     :lupaus-bonus-lomake (when (not (nil? lupausbonus))
+     :lupausbonus-lomake (when (not (nil? lupausbonus))
                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupausbonus)})
-     :lupaus-sanktio-lomake (when (not (nil? lupaussanktio))
+     :lupaussanktio-lomake (when (not (nil? lupaussanktio))
                             {::valikatselmus/paatoksen-id (::valikatselmus/paatoksen-id lupaussanktio)})}))
 
 (defn hae-lupaustiedot [app]
@@ -264,12 +264,12 @@
   HaeUrakanPaatoksetOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [{kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
-           lupaus-bonus-lomake :lupaus-bonus-lomake
-           lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
+           lupausbonus-lomake :lupausbonus-lomake
+           lupaussanktio-lomake :lupaussanktio-lomake} (alusta-paatos-lomakkeet vastaus (:hoitokauden-alkuvuosi app))]
       (cond-> app
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
-              lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
-              lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake)
+              lupausbonus-lomake (assoc :lupausbonus-lomake lupausbonus-lomake)
+              lupaussanktio-lomake (assoc :lupaussanktio-lomake lupaussanktio-lomake)
               :aina (assoc :urakan-paatokset vastaus))))
 
   HaeUrakanPaatoksetEpaonnistui
@@ -282,12 +282,12 @@
   (process-event [{paatokset :paatokset hoitokauden-alkuvuosi :hoitokauden-alkuvuosi} app]
     (let [;; Tyhjennetään vanhat lomakkeet
           {kattohinnan-ylitys-lomake :kattohinnan-ylitys-lomake
-           lupaus-bonus-lomake :lupaus-bonus-lomake
-           lupaus-sanktio-lomake :lupaus-sanktio-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
+           lupausbonus-lomake :lupausbonus-lomake
+           lupaussanktio-lomake :lupaussanktio-lomake} (alusta-paatos-lomakkeet paatokset hoitokauden-alkuvuosi)]
       (cond-> app
               kattohinnan-ylitys-lomake (assoc :kattohinnan-ylitys-lomake kattohinnan-ylitys-lomake)
-              lupaus-bonus-lomake (assoc :lupaus-bonus-lomake lupaus-bonus-lomake)
-              lupaus-sanktio-lomake (assoc :lupaus-sanktio-lomake lupaus-sanktio-lomake))))
+              lupausbonus-lomake (assoc :lupausbonus-lomake lupausbonus-lomake)
+              lupaussanktio-lomake (assoc :lupaussanktio-lomake lupaussanktio-lomake))))
 
   NollaaPaatoksetJosUrakkaVaihtui
   (process-event [_ app]

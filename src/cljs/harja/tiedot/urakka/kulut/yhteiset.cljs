@@ -78,15 +78,15 @@
         tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
         tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
-        lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
-        lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)]
+        lupausbonus-paatos (filtteroi-paatos-fn :lupaus-onus)
+        lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)]
     (and
       (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))
       (or
         (and tavoitehinta-alitettu? (nil? tavoitehinnan-alitus-paatos))
         (and tavoitehinta-ylitetty? (nil? tavoitehinnan-ylitys-paatos))
         (and kattohinta-ylitetty? (nil? kattohinnan-ylitys-paatos))
-        (and (nil? lupaus-sanktio-paatos) (nil? lupaus-bonus-paatos))))))
+        (and (nil? lupaussanktio-paatos) (nil? lupausbonus-paatos))))))
 
 (defrecord NollaaValikatselmuksenPaatokset [])
 
@@ -94,4 +94,4 @@
 
   NollaaValikatselmuksenPaatokset
   (process-event [_ app]
-    (dissoc app :kattohinnan-ylitys-lomake :lupaus-bonus-lomake :lupaus-sanktio-lomake :kattohinnan-oikaisu)))
+    (dissoc app :kattohinnan-ylitys-lomake :lupausbonus-lomake :lupaussanktio-lomake :kattohinnan-oikaisu)))

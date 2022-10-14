@@ -109,7 +109,7 @@
       ;; Tarkista siirto
       (tarkista-ei-siirtoa-tavoitehinnan-ylityksessa tiedot))))
 
-(defn tarkista-lupaus-bonus
+(defn tarkista-lupausbonus
   "Varmista, että annettu bonus täsmää lupauksista saatavaan bonukseen"
   [db kayttaja tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
@@ -127,7 +127,7 @@
         laskettu-bonus (bigdec (or (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus]) 0M))]
     (cond (and
             ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupausbonus)
             ;; Tarkistetaan, että bonus on annettu, jotta voidaan tarkistaa luvut
             (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :bonus])
             ;; Varmistetaan, että lupauksissa laskettu bonus täsmää päätöksen bonukseen
@@ -135,7 +135,7 @@
           true
           (and
             ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-bonus)
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupausbonus)
             ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
             (get-in lupaustiedot [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
             ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
@@ -147,7 +147,7 @@
             Laskettu bonus: " laskettu-bonus " tilaajan maksu: " tilaajan-maksu)
             (heita-virhe "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa.")))))
 
-(defn tarkista-lupaus-sanktio
+(defn tarkista-lupaussanktio
   "Varmista, että tuleva sanktio täsmää lupauksista saatavaan sanktioon"
   [db kayttaja tiedot]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id (::urakka/id tiedot)}))
@@ -163,7 +163,7 @@
                     (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db hakuparametrit))]
     (cond (and
             ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaussanktio)
             ;; Tarkistetaan, että sanktio on annettu, jotta voidaan tarkistaa luvut
             (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :sanktio])
             ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
@@ -171,7 +171,7 @@
           true
           (and
             ;; Varmistetaan, että tyyppi täsmää
-            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaus-sanktio)
+            (= (::valikatselmus/tyyppi tiedot) ::valikatselmus/lupaussanktio)
             ;; Tarkistetaan, että tavoite on täytetty, eli nolla case, jotta voidaan tarkistaa luvut
             (get-in lupaukset [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
             ;; Varmistetaan, että lupauksissa laskettu sanktio täsmää päätöksen sanktioon
@@ -367,8 +367,8 @@
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
-      ::valikatselmus/lupaus-bonus (tarkista-lupaus-bonus db kayttaja tiedot)
-      ::valikatselmus/lupaus-sanktio (tarkista-lupaus-sanktio db kayttaja tiedot))
+      ::valikatselmus/lupausbonus (tarkista-lupausbonus db kayttaja tiedot)
+      ::valikatselmus/lupaussanktio (tarkista-lupaussanktio db kayttaja tiedot))
     (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
 
 (defn poista-paatos
