@@ -1,13 +1,9 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
-            [harja.tiedot.urakka :as u]
+  (:require [harja.ui.bootstrap :as bs]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
-            [harja.views.urakka.toteumat.maarien-toteuma-lomake :as akilliset-htyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.maarien-toteumat :as maarien-toteumat-nakyma]
             [harja.views.urakka.toteumat.muut-materiaalit :refer [muut-materiaalit-nakyma]]
@@ -15,20 +11,11 @@
             [harja.views.urakka.toteumat.talvisuola :refer [talvisuolatoteumat]]
             [harja.views.urakka.toteumat.pohjavesialueiden-suola :as pohjavesialueiden-suola]
             [harja.views.urakka.toteumat.velho-varusteet :as velho-varusteet]
-            [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
-            [cljs.core.async :refer [<! >! chan]]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [tuck.core :as tuck]
-            [harja.pvm :as pvm])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+            [harja.pvm :as pvm]))
 
 
 (defn toteumat
