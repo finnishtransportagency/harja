@@ -381,8 +381,8 @@
         [yleiset/tooltip {} :%
          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                          oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää sanktio"}
-        [napit/uusi "Lisää sanktio"
+        ^{:key "Lisää sanktio tai bonus"}
+        [napit/uusi "Lisää sanktio tai bonus"
          #(do
             (reset! auki? true)
             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
