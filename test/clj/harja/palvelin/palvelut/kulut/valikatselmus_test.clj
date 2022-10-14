@@ -492,7 +492,7 @@
                      (catch Exception e e))]
     (is (= "Urakoitsijalle maksettava summa ei saa ylittää 3% tavoitehinnasta" (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaus-bonus-paatos-test-toimii
+(deftest lupausbonus-paatos-test-toimii
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         bonuksen-maara 1500M
         hoitokauden-alkuvuosi 2021
@@ -514,13 +514,13 @@
                                    (kayttaja urakka-id)
                                    {::urakka/id urakka-id
                                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                    ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                    ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))]
     (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")
     (is (= {:bonus bonuksen-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio (:db jarjestelma) urakka-id hoitokauden-alkuvuosi)) "Tallennetun bonuksen määrä pitäisi täsmätä")))
 
-(deftest lupaus-bonus-paatos-test-epaonnistuu
+(deftest lupausbonus-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         bonuksen-maara 1500M
         hoitokauden-alkuvuosi 2021
@@ -542,12 +542,12 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi 2021
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                      ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))]
     (is (= "Lupausbonuksen tilaajan maksun summa ei täsmää lupauksissa lasketun bonuksen kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaus-sanktio-paatos-test-toimii
+(deftest lupaussanktio-paatos-test-toimii
   (let [db (:db jarjestelma)
         urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
@@ -573,7 +573,7 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaussanktio
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
     (is (= sanktion-maara (::valikatselmus/urakoitsijan-maksu vastaus)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")
@@ -581,7 +581,7 @@
     (is (true? (lupaus-palvelu/valikatselmus-tehty-hoitokaudelle? db urakka-id hoitokauden-alkuvuosi)) "Välikatselmus pitäisi nyt olla tehty")
     (is (= {:sanktio sanktion-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio db urakka-id hoitokauden-alkuvuosi)) "Tallennetun sanktion määrä pitäisi täsmätä")))
 
-(deftest lupaus-sanktio-paatos-test-epaonnistuu
+(deftest lupaussanktio-paatos-test-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         hoitokauden-alkuvuosi 2021
@@ -603,12 +603,12 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaussanktio
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
     (is (= "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaus-sanktio-paatos-test-epaonnistuu-tulevaisuuteen
+(deftest lupaussanktio-paatos-test-epaonnistuu-tulevaisuuteen
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         hoitokauden-alkuvuosi 2021
@@ -631,13 +631,13 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-sanktio
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupaussanktio
                                      ::valikatselmus/urakoitsijan-maksu sanktion-maara}))
                   (catch Exception e e))]
     (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
 
 
-(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2022-onnistuu
+(deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2022-onnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
@@ -659,12 +659,12 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                      ::valikatselmus/tilaajan-maksu bonus-maara}))
                   (catch Exception e e))]
     (is (= (::valikatselmus/tilaajan-maksu vastaus) bonus-maara))))
 
-(deftest lupaus-bonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
+(deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
@@ -686,7 +686,7 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                      ::valikatselmus/tilaajan-maksu bonus-maara}))
                   (catch Exception e e))]
     (is (= "Urakan päätöksiä saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
@@ -713,7 +713,7 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                      ::valikatselmus/tilaajan-maksu bonus-maara}))
                   (catch Exception e e))
         paatos-id (::valikatselmus/paatoksen-id vastaus)
@@ -748,7 +748,7 @@
                                     (kayttaja urakka-id)
                                     {::urakka/id urakka-id
                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                     ::valikatselmus/tyyppi ::valikatselmus/lupaus-bonus
+                                     ::valikatselmus/tyyppi ::valikatselmus/lupausbonus
                                      ::valikatselmus/tilaajan-maksu bonus-maara}))
                   (catch Exception e e))
         _ (println "vastaus" (pr-str vastaus))

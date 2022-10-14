@@ -28,23 +28,27 @@
 
 (defonce valittu-sanktio (atom nil))
 
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot annetulle hoitokaudelle."
-  [{:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
-  (k/post! :hae-urakan-sanktiot {:urakka-id urakka-id
-                                 :alku      alku
-                                 :loppu     loppu
-                                 :vain-yllapitokohteettomat? vain-yllapitokohteettomat?}))
+(defn hae-urakan-sanktiot-ja-bonukset
+  "Hakee urakan sanktiot ja bonukset annetulle hoitokaudelle.
+  Kohderajapinta palauttaa oletuksena sekä sanktiot, että bonukset. Tarvittaessa sanktiot tai bonukset haun
+  voi estää :hae-sanktiot? false tai :hae-bonukset? false optiolla."
+  [{:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
+  (k/post! :hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka-id
+                                             :alku      alku
+                                             :loppu     loppu
+                                             :vain-yllapitokohteettomat? vain-yllapitokohteettomat?
+                                             :hae-sanktiot? hae-sanktiot?
+                                             :hae-bonukset? hae-bonukset?}))
 
-(defonce haetut-sanktiot
+(defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
                _ @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
-                (hae-urakan-sanktiot {:urakka-id urakka
-                                      :alku (first hoitokausi)
-                                      :loppu (second hoitokausi)}))))
+                (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
+                                                  :alku (first hoitokausi)
+                                                  :loppu (second hoitokausi)}))))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
@@ -70,7 +74,7 @@
     (let [sanktiot-tallennuksen-jalkeen
           (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
       (reset! valittu-sanktio nil)
-      (reset! haetut-sanktiot sanktiot-tallennuksen-jalkeen))))
+      (reset! haetut-sanktiot-ja-bonukset sanktiot-tallennuksen-jalkeen))))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
@@ -80,12 +84,12 @@
             (get-in sanktio [:laatupoikkeama :aika])
             (first @urakka/valittu-hoitokausi)
             (second @urakka/valittu-hoitokausi)))
-    (if (some #(= (:id %) palautettu-id) @haetut-sanktiot)
-     (reset! haetut-sanktiot
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot)))
+    (if (some #(= (:id %) palautettu-id) @haetut-sanktiot-ja-bonukset)
+      (reset! haetut-sanktiot-ja-bonukset
+             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
 
-     (reset! haetut-sanktiot
-             (into [] (concat @haetut-sanktiot [(assoc sanktio :id palautettu-id)]))))))
+      (reset! haetut-sanktiot-ja-bonukset
+             (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
 
 
 (defonce sanktiotyypit

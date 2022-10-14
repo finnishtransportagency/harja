@@ -59,8 +59,8 @@
         tavoitehhinnan-ylitys-prosentit (paatoksen-maksu-prosentit tavoitehinnan-ylitys-paatos tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
-        lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
-        lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)
+        lupausbonus-paatos (filtteroi-paatos-fn :lupausbonus)
+        lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)
         valikatselmus-tekematta? (t/valikatselmus-tekematta? app)]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
@@ -145,10 +145,10 @@
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/euro-opt (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
        [:div.rivi [:span "Tavoitehinnan ulkopuoliset rahavaraukset"] [:span (fmt/euro-opt (:bonukset-toteutunut data))]])
-     (when lupaus-bonus-paatos
-       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt (::valikatselmus/tilaajan-maksu lupaus-bonus-paatos))]])
-     (when lupaus-sanktio-paatos
-       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu lupaus-sanktio-paatos))]])
+     (when lupausbonus-paatos
+       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt (::valikatselmus/tilaajan-maksu lupausbonus-paatos))]])
+     (when lupaussanktio-paatos
+       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu lupaussanktio-paatos))]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
         [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))

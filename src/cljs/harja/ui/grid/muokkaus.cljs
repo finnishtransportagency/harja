@@ -259,8 +259,7 @@
                 fmt
                 tyyppi
                 (cond 
-                  (and (= tyyppi :valinta)
-                    valinta-arvo valinta-nayta)
+                  (and (= tyyppi :valinta) valinta-nayta)
                   (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
                   
                   (some? sarake-disabloitu-arvo-fn)

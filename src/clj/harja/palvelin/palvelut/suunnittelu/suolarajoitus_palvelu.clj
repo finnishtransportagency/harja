@@ -52,7 +52,9 @@
         paallekaiset (when tierekisteri-valid?
                        (suolarajoitus-kyselyt/onko-tierekisteriosoite-paallekainen db tarkistettava-suolarajoitus))
         validaatiovirheet (if-not (empty? paallekaiset)
-                            (str validaatiovirheet " Tierekisteriosoitteessa on jo rajoitus. ")
+                            (do
+                              (log/debug "tierekisterin-tiedot :: Löydettiin päällekäiset: " (into [] paallekaiset))
+                             (str validaatiovirheet " Tierekisteriosoitteessa on jo rajoitus. "))
                             validaatiovirheet)
 
         ;; Pilkotaan tierekisteri osiin tien osien mukaan

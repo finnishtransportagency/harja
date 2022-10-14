@@ -59,8 +59,7 @@
     :vesivayla_sakko "Sakko"
     :vesivayla_bonus "Bonus"
 
-    ;; FIXME: Tietokannassa tyyppi on hämäävästi 'lupaus-bonus', eikä lupausbonus
-    :lupaus-bonus "Lupausbonus"
+    :lupausbonus "Lupausbonus"
     :alihankintabonus "Alihankintabonus"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     "- valitse laji -"))
@@ -423,7 +422,7 @@
 
 (defn sanktiolistaus
   [optiot valittu-urakka]
-  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot))
+  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot-ja-bonukset))
         {:keys [yllapito? vesivayla? auki?]} optiot
         yhteensa (reduce + (map :summa sanktiot))
         yhteensa (when yhteensa
@@ -436,7 +435,7 @@
      [suodattimet-ja-toiminnot valittu-urakka auki?]
      [grid/grid
       {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
-       :tyhja (if @tiedot/haetut-sanktiot "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+       :tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do
                          (reset! auki? true)
                          (valitse-sanktio! % tiedot/valittu-sanktio))
@@ -473,7 +472,7 @@
                                   (when summa
                                     (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1.5}]
       sanktiot]
      (when yllapito?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))

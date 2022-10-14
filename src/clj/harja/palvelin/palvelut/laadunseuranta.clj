@@ -116,17 +116,26 @@
                         (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
+(defn hae-urakan-sanktiot-ja-bonukset
+  "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
+  Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
+  Tarvittaessa optioilla voi estää sanktioiden/bonusten palauttamisen ja hakea vain toista tyyppiä."
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [urakan-sanktiot (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
-                                                          :alku (konv/sql-timestamp alku)
-                                                          :loppu (konv/sql-timestamp loppu)})
-        urakan-bonukset (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
-                                                          :alku (konv/sql-timestamp alku)
-                                                          :loppu (konv/sql-timestamp loppu)})
-        urakan-lupausbonukset (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
+  ;; Haetaan oletuksena sankiot ja bonukset.
+  (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
+        hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
+        urakan-sanktiot (if hae-sanktiot?
+                          (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                            :alku (konv/sql-timestamp alku)
+                                                            :loppu (konv/sql-timestamp loppu)})
+                          [])
+        urakan-bonukset (if hae-bonukset?
+                          (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
+                                                            :alku (konv/sql-timestamp alku)
+                                                            :loppu (konv/sql-timestamp loppu)})
+                          [])
+         urakan-lupausbonukset (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
                                                                       :alku (konv/sql-timestamp alku)
                                                                       :loppu (konv/sql-timestamp loppu)})
         sanktiot (into []
@@ -325,7 +334,7 @@
                                                         id)
       (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
       (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
-      (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
+      (hae-urakan-sanktiot-ja-bonukset c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -357,9 +366,9 @@
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
         (hae-laatupoikkeaman-tiedot db user urakka-id laatupoikkeama-id))
 
-      :hae-urakan-sanktiot
+      :hae-urakan-sanktiot-ja-bonukset
       (fn [user tiedot]
-        (hae-urakan-sanktiot db user tiedot))
+        (hae-urakan-sanktiot-ja-bonukset db user tiedot))
 
       :hae-sanktiotyypit
       (fn [user]
@@ -379,7 +388,7 @@
                      :hae-urakan-laatupoikkeamat
                      :tallenna-laatupoikkeama
                      :hae-laatupoikkeaman-tiedot
-                     :hae-urakan-sanktiot
+                     :hae-urakan-sanktiot-ja-bonukset
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
                      :hae-sanktion-liitteet
