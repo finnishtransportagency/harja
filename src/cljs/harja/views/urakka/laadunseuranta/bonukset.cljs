@@ -183,7 +183,8 @@
                           {:data-cy "koontilaskun-kk-dropdown"
                            :vayla-tyyli?  true
                            :skrollattava? true
-                           :valinta      (or (-> data :laskutuskuukausi-komp-tiedot) (-> data :laskutuskuukausi)) 
+                           :valinta      (or (-> data :laskutuskuukausi-komp-tiedot)
+                                           (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet)) 
                            :valitse-fn   #(muokkaa-lomaketta
                                             (assoc data
                                               :laskutuskuukausi-komp-tiedot %
