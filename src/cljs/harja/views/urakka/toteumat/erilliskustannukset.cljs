@@ -81,9 +81,6 @@
 (defn maksajavalinnat
   [ek]
   (case (:tyyppi ek)
-    :asiakastyytyvaisyysbonus
-    [:tilaaja]
-
     :muu
     [:tilaaja :urakoitsija]
 
@@ -107,12 +104,6 @@
       +rivin-luokka+
       "")))
 
-(defn- mhu-bonuksen-indeksi [bonus-tyyppi urakan-indeksi]
-  (if (or
-        (= :asiakastyytyvaisyysbonus bonus-tyyppi)
-        (= :lupausbonus bonus-tyyppi))
-    urakan-indeksi
-    yleiset/+ei-sidota-indeksiin+))
 
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
@@ -262,31 +253,20 @@
               ;; Hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan - indeksi pakotetaan
               ;; Maanteiden hoitourakoissa (MHU) as.tyyt.bonuksen laskennan indeksi ja lupausbonus menee urakan alkamisvuoden mukaan - indeksi pakotetaan
               ;; Sen sijaan maanteiden hoitourakoissa (MHU) alihankintabonukselle ja tavoitepalkkiolle ei saa valita indeksiä.
-              :muokattava? #(not (or
-                                   (and
-                                     (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                     (= :hoito (:tyyppi ur)))
-                                   (= :teiden-hoito (:tyyppi ur))))
+              :muokattava? #(not (= :teiden-hoito (:tyyppi ur)))
               :valinnat (if (= :teiden-hoito (:tyyppi ur))
-                          (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
+                          yleiset/+ei-sidota-indeksiin+
                           (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+))
               :fmt #(cond
                       (and (= :hoito (:tyyppi ur)) (nil? %))
                       yleiset/+valitse-indeksi+
                       (and (= :teiden-hoito (:tyyppi ur)) (nil? %))
-                      (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
-                      :default (str %))
-              :palstoja 1
-              :vihje (when (and
-                             (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                             (= :hoito (:tyyppi ur)))
-                       (str "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan"
-                            " automaattisesti laskutusyhteenvedossa. Käytettävä indeksi"
-                            " määräytyy urakan kilpailuttamisajankohdan perusteella."))})
+                      yleiset/+ei-sidota-indeksiin+
+                      :else (str %))
+              :palstoja 1})
 
-           ;; asiakastyytyväisyysbonuksen voi maksaa vain tilaaja
            {:otsikko "Maksaja" :nimi :maksaja :tyyppi :valinta
-            :muokattava? #(not= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+            :muokattava? (constantly true)
             :pakollinen? true
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat-fn #(maksajavalinnat @muokattu)
