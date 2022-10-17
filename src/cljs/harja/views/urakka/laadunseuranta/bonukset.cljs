@@ -12,6 +12,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
 
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
@@ -82,9 +83,6 @@
 
 (defn bonukset-lomake
   [sulje-fn e! app]
-  #_(komp/luo
-    (komp/sisaan #(e! (tiedot/->HaeLiitteet))))
-  #_(fn [e! app sulje-fn])
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
@@ -163,24 +161,35 @@
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
           :aseta (fn [rivi arvo & muut]
-                   (cond-> rivi
-                     (nil? (:laskutuskuukausi rivi)) (assoc :laskutuskuukausi
-                                                       (some #(when (and
-                                                                      (some? (:kuukausi %))
-                                                                      (= (:kuukausi %) (pvm/kuukausi arvo))
-                                                                      (= (:vuosi %) (pvm/vuosi arvo)))
-                                                                (:pvm %))
-                                                         laskutuskuukaudet))
-                     true (assoc :pvm arvo)))}
-         {:otsikko "Laskutuskuukausi"
-          :nimi :laskutuskuukausi
-          :tyyppi :valinta
-          :valinnat laskutuskuukaudet
-          :valinta-arvo :pvm
-          :valinta-nayta :teksti
-          :pakollinen? true
+                   (let [lk (some #(when (and
+                                           (some? (:kuukausi %))
+                                           (= (:kuukausi %) (pvm/kuukausi arvo))
+                                           (= (:vuosi %) (pvm/vuosi arvo)))
+                                     %)
+                              laskutuskuukaudet)]
+                       (cond-> rivi
+                         (nil? (:laskutuskuukausi rivi))
+                         (assoc :laskutuskuukausi (:pvm lk))
+
+                         (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                         (assoc :laskutuskuukausi-komp-tiedot lk)
+
+                         true (assoc :pvm arvo))))}         
+         {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi-komp
+          :tyyppi :komponentti
           ::lomake/col-luokka "col-xs-4"
-          :hae :laskutuskuukausi})
+          :komponentti (fn [{:keys [muokkaa-lomaketta data]}]                          
+                         [yleiset/livi-pudotusvalikko
+                          {:data-cy "koontilaskun-kk-dropdown"
+                           :vayla-tyyli?  true
+                           :skrollattava? true
+                           :valinta      (or (-> data :laskutuskuukausi-komp-tiedot) (-> data :laskutuskuukausi)) 
+                           :valitse-fn   #(muokkaa-lomaketta
+                                            (assoc data
+                                              :laskutuskuukausi-komp-tiedot %
+                                              :laskutuskuukausi (:pvm %)))
+                           :format-fn    :teksti}
+                          laskutuskuukaudet])})
        {:otsikko "Käsittelytapa"
         :nimi :kasittelytapa
         :tyyppi :valinta
@@ -206,19 +215,8 @@
                          :salli-poistaa-lisatty-liite? true
                          :poista-lisatty-liite-fn #(e! (tiedot/->PoistaLisattyLiite))
                          :salli-poistaa-tallennettu-liite? true
-                         :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))
-                         #_(fn [liite-id]
-                             (liitteet/poista-liite-kannasta
-                               {:urakka-id urakka-id
-                                :domain :laatupoikkeama
-                                :domain-id (get-in @tiedot/valittu-sanktio [:laatupoikkeama :id])
-                                :liite-id liite-id
-                                :poistettu-fn (fn []
-                                                (let [liitteet (get-in @muokattu [:laatupoikkeama :liitteet])]
-                                                  (swap! tiedot/valittu-sanktio assoc-in [:laatupoikkeama :liitteet]
-                                                    (filter (fn [liite]
-                                                              (not= (:id liite) liite-id))
-                                                      liitteet))))}))}])}]
+                         :nayta-lisatyt-liitteet? false
+                         :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])}]
       lomakkeen-tiedot]]))
 
 (defn bonukset*
