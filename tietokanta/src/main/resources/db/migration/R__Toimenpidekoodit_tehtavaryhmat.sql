@@ -1215,7 +1215,7 @@ WHERE suunnitteluyksikko = ''
 
 -- Korjaa yksiköt
 UPDATE toimenpidekoodi SET yksikko = 'm3' WHERE nimi = 'Maakivien (>1m3) poisto';
-UPDATE toimenpidekoodi SET yksikko = 'm3', suunnitteluyksikko = 'm3' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
+UPDATE toimenpidekoodi SET yksikko = 'm2', suunnitteluyksikko = 'm2' WHERE nimi = 'Kalliokynsien louhinta ojituksen yhteydessä';
 UPDATE toimenpidekoodi SET yksikko = 'kaistakm', suunnitteluyksikko = 'kaistakm' WHERE nimi IN ('Is rampit', 'Is ohituskaistat', 'Ib ohituskaistat', 'Ib rampit');
 
 -- Yhtenäistetään tapa merkitä yksikkö
@@ -1342,3 +1342,13 @@ UPDATE toimenpidekoodi SET jarjestys = 1343 WHERE nimi = 'Päällysteiden paikka
 
 -- Korjaa virhe HJ-urakkatehtävien voimassaolon loppuvuodessa
 UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2018 WHERE voimassaolo_alkuvuosi = 2018 AND voimassaolo_loppuvuosi = 2019 AND nimi != 'Päällysteiden paikkaus, kylmäpäällyste';
+
+-- Reunapaalujen kunnossapito suunnitellaan juoksumetreinä 2022 alkaneista urakoista eteenpäin
+-- Laitetaan myös uudelle ja vanhalle käsin lisättävä määrä päälle
+UPDATE toimenpidekoodi SET voimassaolo_loppuvuosi = 2021, kasin_lisattava_maara = TRUE WHERE nimi = 'Reunapaalujen kp (uusien)' AND voimassaolo_loppuvuosi IS NULL AND yksikko = 'tiekm';
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, suunnitteluyksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen,
+                             voimassaolo_alkuvuosi, hinnoittelu, aluetieto, kasin_lisattava_maara)
+VALUES ('Reunapaalujen kunnossapito', (select id from tehtavaryhma where nimi = 'Liikennemerkit ja liikenteenohjauslaitteet (L)'), 'jkm', 'jkm', 370, NULL,
+        (select id from toimenpidekoodi where koodi = '23116'), current_timestamp,
+        (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 2022, '{muutoshintainen}', TRUE, TRUE)
+ON CONFLICT(nimi, emo) DO NOTHING;
