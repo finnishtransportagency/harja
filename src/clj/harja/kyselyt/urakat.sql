@@ -855,8 +855,8 @@ FROM valaistusurakka
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka);
+INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro, paivitetty)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
 DELETE
@@ -868,8 +868,8 @@ FROM paallystyspalvelusopimus
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-paallystyspalvelusopimus<!
-INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
+INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro, paivitetty)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestamp);
 
 -- name: hae-lahin-hoidon-alueurakka
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.

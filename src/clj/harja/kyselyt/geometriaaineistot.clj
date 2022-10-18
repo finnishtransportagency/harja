@@ -19,7 +19,7 @@
   (fetch db ::ga/geometria-aineistot ga/kaikki-kentat {}))
 
 (defn hae-voimassaoleva-geometria-aineisto [db nimi]
-  (first (fetch db ::ga/geometria-aineistot ga/kaikki-kentat
+      (first (fetch db ::ga/geometria-aineistot ga/kaikki-kentat
                 (op/and
                   {::ga/nimi nimi}
                   (op/or {::ga/voimassaolo-alkaa op/null?}
