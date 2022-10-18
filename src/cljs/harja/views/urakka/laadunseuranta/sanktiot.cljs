@@ -61,10 +61,6 @@
     (komp/luo      
       (fn [optiot]      
         (let [muokattu (atom @tiedot/valittu-sanktio)
-                                        ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
-                                        ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
-              _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                  (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
               voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                              (:id @nav/valittu-urakka))
               tallennus-kaynnissa (atom false)
@@ -279,9 +275,9 @@
                                      :muokattava? (constantly (not lukutila?)) 
                                      :hae (if (urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                      :disabled? (not (urakka/indeksi-kaytossa-sakoissa?))
-                                     :valinnat (into [] (keep identity [(when (urakka/indeksi-kaytossa-sakoissa?)
-                                                                          (:indeksi @nav/valittu-urakka))
-                                                                        "Ei indeksiä"]))
+                                     :valinnat (if (urakka/indeksi-kaytossa-sakoissa?)
+                                                 [(:indeksi @nav/valittu-urakka) nil]
+                                                 [nil])
                                      :valinta-nayta #(or % "Ei indeksiä")})]))
 
                 (lomake/ryhma {:rivi? true}
