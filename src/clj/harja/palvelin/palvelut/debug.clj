@@ -10,7 +10,9 @@
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
+            [harja.geo :as geo]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
   (let [tulos (konv/sarakkeet-vektoriin
@@ -36,6 +38,20 @@
                       reitti)]
     (reittitoteuma/hae-reitti db pisteet)))
 
+(defn geometrisoi-tarkastus [db json]
+  (let [tarkastukset (get-in (cheshire/decode json) ["tarkastukset"])
+        geometriat (mapv (fn [{tarkastus "tarkastus"}]
+                        (let [alkusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["alkusijainti"]))
+                              loppusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["loppusijainti"]))
+                              tr-osoite (sijainnit/hae-tierekisteriosoite db alkusijainti loppusijainti)
+                              geometria (if tr-osoite
+                                          (:geometria tr-osoite)
+                                          (sijainnit/tee-geometria alkusijainti loppusijainti))]
+                          (geo/pg->clj geometria)))
+                      tarkastukset)
+        yhtena-geometriana (reittitoteuma/yhdista-viivat geometriat)]
+    yhtena-geometriana))
+
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
 
@@ -58,6 +74,8 @@
       (vaadi-jvh! (partial #'hae-toteuman-reitti-ja-pisteet db))
       :debug-geometrisoi-reittitoteuma
       (vaadi-jvh! (partial #'geometrisoi-reittoteuma db))
+      :debug-geometrisoi-tarkastus
+      (vaadi-jvh! (partial #'geometrisoi-tarkastus db))
       :debug-geometrisoi-reittipisteet
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
@@ -69,6 +87,7 @@
       http
       :debug-hae-toteuman-reitti-ja-pisteet
       :debug-geometrisoi-reittitoteuma
+      :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet)
     this))
