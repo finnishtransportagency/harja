@@ -105,7 +105,10 @@
           kaikki
           (assoc kaikki (:tehtava-id rivi) rivi))]
     (if (:hoitokauden-alkuvuosi rivi)
-      (assoc-in kaikki [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:maara rivi))
+      (-> kaikki
+        (assoc-in [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:sopimuksen-aluetieto-maara rivi))
+        (assoc-in [(:tehtava-id rivi) :suunnitellut-maarat (:hoitokauden-alkuvuosi rivi)] (:suunniteltu-maara rivi))
+        (assoc-in [(:tehtava-id rivi) :muuttuneet-tarjouksesta (:hoitokauden-alkuvuosi rivi)] (:muuttunut-tarjouksesta? rivi)))
       kaikki)))
 
 (defn- saman-tehtavan-maarat-yhteen-rakenteeseen
