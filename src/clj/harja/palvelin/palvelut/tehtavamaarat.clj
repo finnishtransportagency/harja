@@ -149,15 +149,11 @@
   "Haetaan kaikkien hoitokausien tehtävämäärät"
   [db {:keys [urakka]}]
   (let [urakkatiedot (first (urakat-q/hae-urakka db {:id urakka}))
-        alkuvuosi (-> urakkatiedot
-                      :alkupvm
-                      pvm/vuosi)
-        loppuvuosi (-> urakkatiedot
-                       :loppupvm
-                       pvm/vuosi)]
-    (q/hae-tehtavahierarkia-maarineen db {:urakka     urakka
+        alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
+        loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)]
+    (q/hae-tehtavahierarkia-maarineen db {:urakka urakka
                                           :hoitokausi (range alkuvuosi
-                                                             (inc loppuvuosi))})))
+                                                        (inc loppuvuosi))})))
 
 (defn laske-tehtavien-sopimusmaarat-urakalle
   [tehtavat]
@@ -196,6 +192,7 @@
 (defn hae-tehtavahierarkia-maarineen
   "Palauttaa tehtävähierarkian otsikko- ja tehtävärivit Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten."
   [db user {:keys [urakka-id hoitokauden-alkuvuosi] :as tiedot}]
+  (log/debug "hae-tehtavahierarkia-maarineen :: tiedot" tiedot)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (or (nil? urakka-id)
           (nil? hoitokauden-alkuvuosi))
@@ -204,6 +201,9 @@
   (muodosta-hierarkia
     (let [urakan-sopimusmaarat (laske-tehtavien-sopimusmaarat-urakalle
                                  (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
+          ;; Varmistetaan, että urakalle on tallennettu sopimuksen tiedot (sopimuksella olevat tehtävien määrätiedot)
+          _ (when (empty? urakan-sopimusmaarat)
+              (throw (IllegalArgumentException. (str "Urakan sopimusmäärät on tallentamatta."))))
           tehtavat (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
           yhdistetyt (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) tehtavat)]
       yhdistetyt)))
@@ -272,32 +272,31 @@
     (hae-tehtavahierarkia-maarineen db user {:urakka-id urakka-id
                                              :hoitokauden-alkuvuosi nykyinen-hoitokausi})))
 
-(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi]}]
+(defn tallenna-sopimuksen-tehtavamaara [db user {:keys [urakka-id tehtava-id maara hoitovuosi] :as tiedot}]
+  (log/debug "tallenna-sopimuksen-tehtavamaara :: tiedot" tiedot)
   (let [urakkatyyppi (keyword (:tyyppi (first (urakat-q/hae-urakan-tyyppi db urakka-id))))
         validit-tehtavat (hae-validit-tehtavat db)
-        hoitokauden-alkuvuosi hoitovuosi] ; FIXME kun aikaa
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
-  (when (empty?
-          (filter #(= tehtava-id
-                     (:tehtava-id %))
-            validit-tehtavat))
-    (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi suunnitella määrätietoja."))))
+        hoitokauden-alkuvuosi hoitovuosi]                   ; FIXME kun aikaa
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
+    (when (empty?
+            (filter #(= tehtava-id
+                       (:tehtava-id %))
+              validit-tehtavat))
+      (throw (IllegalArgumentException. (str "Tehtävälle " tehtava-id " ei voi antaa sopimuksessa määrätietoja."))))
 
-  (if-not (= urakkatyyppi :teiden-hoito)
-    (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja."))))
-  (let [maara (if (big/big? maara)
-                maara
-                (-> maara big/->big big/unwrap))
-        urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        alkuvuosi (-> urakkatiedot
-                    :alkupvm
-                    pvm/vuosi)
-        loppuvuosi (-> urakkatiedot
-                     :loppupvm
-                     pvm/vuosi)]
-    ;; Tallenna aina jokaiselle vuodelle arvot
-    (doseq [hoitokauden-alkuvuosi (range alkuvuosi loppuvuosi)]
-      (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi)))))
+    (if-not (= urakkatyyppi :teiden-hoito)
+      (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
+    (let [maara (if (big/big? maara)
+                  maara
+                  (-> maara big/->big big/unwrap))
+          urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+          alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
+          loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
+          ;; Tallenna aina jokaiselle vuodelle arvot
+          sopimuksen-tehtavamaarat (mapv (fn [hoitokauden-alkuvuosi]
+                                           (q/tallenna-sopimuksen-tehtavamaara db user urakka-id tehtava-id maara hoitokauden-alkuvuosi))
+                                     (range alkuvuosi loppuvuosi))]
+      sopimuksen-tehtavamaarat)))
 
 (defn poista-namespace 
   [[avain arvo]]
