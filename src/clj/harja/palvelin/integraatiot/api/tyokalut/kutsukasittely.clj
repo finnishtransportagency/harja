@@ -119,20 +119,23 @@
    :otsikko (str (walk/keywordize-keys (:headers viesti)))
    :parametrit (str (:params viesti))})
 
-(defn lokita-kutsu [integraatioloki resurssi request body]
-  (let [xml? (= (kutsun-formaatti request) "xml")
-        loki-viesti (if xml?
-                     (tee-xml-lokiviesti "sisään" body request)
-                     (tee-lokiviesti "sisään" body request))]
-    ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
-    ;(log/debug "Kutsu:" request)
-    ;(log/debug "Parametrit: " (:params request))
-    ;(log/debug "Headerit: " (:headers request))
-    ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
-    ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
-    ;(log/debug "Logitusviesti:" loki-viesti)
+(defn lokita-kutsu
+  ([integraatioloki resurssi request body]
+   (lokita-kutsu integraatioloki resurssi request body "api"))
+  ([integraatioloki resurssi request body integraatio]
+   (let [xml? (= (kutsun-formaatti request) "xml")
+         loki-viesti (if xml?
+                       (tee-xml-lokiviesti "sisään" body request)
+                       (tee-lokiviesti "sisään" body request))]
+     ;(log/debug "Vastaanotetiin kutsu resurssiin:" resurssi ".")
+     ;(log/debug "Kutsu:" request)
+     ;(log/debug "Parametrit: " (:params request))
+     ;(log/debug "Headerit: " (:headers request))
+     ;(log/debug "Otsikko: " (str (walk/keywordize-keys (:headers request))))
+     ;(log/debug "Sisältö:" (poista-liitteet-logituksesta body xml?))
+     ;(log/debug "Logitusviesti:" loki-viesti)
 
-    (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "api" (name resurssi) nil loki-viesti)))
+     (integraatioloki/kirjaa-alkanut-integraatio integraatioloki integraatio (name resurssi) nil loki-viesti))))
 
 (defn lokita-vastaus [integraatioloki resurssi response tapahtuma-id]
   ;(log/debug "Lähetetään vastaus resurssiin:" resurssi "kutsuun.")
@@ -278,8 +281,10 @@
         (xml/validoi-xml (first (parsi-skeeman-polku skeema)) (second (parsi-skeeman-polku skeema)) body)
         (json/validoi skeema body)))
     (if xml?
-      ;(xml/lue body "UTF-8")
-      (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+      ;; Sisääntuleva sähköposti käsitellään eri tavalla kuin muut xml viestits
+      (if (str/includes? body ":sahkoposti")
+        (sonja-sahkoposti-sanomat/lue-sahkoposti body)
+        (xml/lue body "UTF-8"))
       (cheshire/decode body true))))
 
 (defn hae-kayttaja [db kayttajanimi]
@@ -496,3 +501,39 @@
                                                  vastauksen-skeema
                                                  kasittele-kutsu-fn)))]
         (send! channel vastaus)))))
+
+
+(defn kasittele-sampo-kutsu
+  "Samanlainen käsittelijä, kuin ylläolevat. Räätälöity Sampo viestiin, koska se on logiikaltaan niin erilainen."
+  [db integraatioloki resurssi request kutsun-skeema kasittele-kutsu-fn integraatio]
+  (if (not= (kutsun-formaatti request) "xml")
+    {:status 415
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Error: Wrong content type. Please use: application/xml\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body integraatio))
+          parametrit (:params request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    parametrit
+                    (:headers request)
+                    body
+                    #(let
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                        origin-header (get (:headers request) "origin")
+                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                        vastauksen-data (kasittele-kutsu-fn db kutsun-data tapahtuma-id)
+                        purettu-vastauksen-data (xml/lue vastauksen-data "UTF-8")
+                        ;; Kutsujalle pyritään vastaamaan aina, joten päätellään itse viestistä, että onko
+                        ;; käsittely onnistunut
+                        mahdollinen-virhe (get-in (first (:content (first purettu-vastauksen-data))) [:attrs :ErrorMessage])
+                        status (if-not (str/blank? mahdollinen-virhe) 400 200)]
+
+                       {:status status
+                        :headers (lisaa-request-headerit false origin-header)
+                        :body vastauksen-data}))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))

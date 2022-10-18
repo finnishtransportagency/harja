@@ -132,6 +132,7 @@
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
+    [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
@@ -283,6 +284,9 @@
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
                               [:sonja :db :integraatioloki])
+      :api-sampo (component/using
+                        (api-sampo/->ApiSampo (:sampo-api asetukset))
+                        [:http-palvelin :db :integraatioloki])
 
       ;; T-LOIK
       :tloik (component/using

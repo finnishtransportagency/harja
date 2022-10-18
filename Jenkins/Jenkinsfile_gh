@@ -17,6 +17,7 @@ node {
              "HARJA_DEV_RESOURCES_PATH=${params.HARJA_DEV_RESOURCES_PATH}",
              "HARJA_SONJA_BROKER_PORT=${params.HARJA_SONJA_BROKER_PORT}",
              "HARJA_SONJA_BROKER_HOST=${params.HARJA_SONJA_BROKER_HOST}"]) {
+
         // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
         // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
         checkout([poll: true,

@@ -47,7 +47,7 @@
   ;; Merkataan kaikki kannassa oleva testidata lähetetyksi ennen testien ajoa ja purgetaan jono.
   ;; Mikäli joku testi riippuu siitä, että testidataa ei olla merkattu lähetetyksi, tämä aiheuttaa
   ;; sen epäonnistumisen
-  (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
+  (vienti/aja-paivittainen-jms-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
   (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
   (testit)
   (alter-var-root #'jarjestelma component/stop)
@@ -117,7 +117,7 @@
         (is (= "kokonaishintainen" (:tyyppi (first kustannussuunnitelma))) "Johto- ja hallintokorvauksen maksuerän tyypin pitäisi olla 'kokonaishintainen'")
         (is (:likainen (first kustannussuunnitelma)) "Johto- ja hallintokorvauksen tallentamien ei merkkaa kustannussuunnitelmaa likaiseksi")))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kiintahintainen sekä johto- ja hallintokorvaus)"
-      (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
+      (vienti/aja-paivittainen-jms-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
       (let [sonja-broker-tila (fn [jonon-nimi attribuutti]
                                 (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
             viestit-jonossa (- (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
@@ -144,7 +144,7 @@
         (is (every? :likainen kustannussuunnitelmat))))
     (testing "Sampokomponentin päivittäinen työ lähettää likaiseksimerkatun kustannuksen Sampoon (kustannusarvioitu)"
       (s-tk/sonja-jolokia-jono (get-in asetukset [:sampo :lahetysjono-ulos]) nil :purge)
-      (vienti/aja-paivittainen-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
+      (vienti/aja-paivittainen-jms-lahetys (:sonja jarjestelma) (:integraatioloki jarjestelma) (:db jarjestelma) (get-in asetukset [:sampo :lahetysjono-ulos]))
       (let [sonja-broker-tila (fn [jonon-nimi attribuutti]
                                 (-> (s-tk/sonja-jolokia-jono jonon-nimi attribuutti nil) :body (cheshire/decode) (get "value")))
             viestit-jonossa (- (sonja-broker-tila (get-in asetukset [:sampo :lahetysjono-ulos])
