@@ -250,10 +250,10 @@
   (let [payload (atom "")]
     (fn []
       [:div
-       [:h5 "Reittitoteuma JSON pisteet"]
+       [:h5 "Reittitoteuma JSON (API)"]
        [:textarea {:rows 10
                    :cols 80
-                   :placeholder "Pasteappa urakoitsijan lähettämä reittitoteuma JSON tähän"
+                   :placeholder "Liitä urakoitsijan lähettämä reittitoteuma-JSON tähän"
                    :value @payload
                    :on-change #(let [v (-> % .-target .-value)]
                                  (reset! payload v))}]
@@ -262,7 +262,36 @@
                                                  js->clj)]
                               (nayta-reittitoteuman-pisteet p)
                               (geometrisoi-ja-nayta-reittitoteuma @payload))}
-        "piirteleppä!"]])))
+        "Piirrä"]])))
+
+(defn- geometrisoi-ja-nayta-tarkastus [json]
+  (go
+    (let [reitti (<! (k/post! :debug-geometrisoi-tarkastus json))]
+      (tasot/nayta-geometria! :geometrisoitu-tarkastus
+                              {:type :geometrisoitu-tarkastus
+                               :nimi "Geometrisoitu tarkastus"
+                               :alue (assoc reitti
+                                       :fill "orange"
+                                       :radius 4
+                                       :stroke {:color "orange"
+                                                :width 3})}))))
+
+(defn- tarkastus-payload []
+  (let [payload (atom "")]
+    (fn []
+      [:div
+       [:h5 "Tarkastus JSON (API)"]
+       [:textarea {:rows 10
+                   :cols 80
+                   :placeholder "Liitä urakoitsijan lähettämä tarkastus-JSON tähän"
+                   :value @payload
+                   :on-change #(let [v (-> % .-target .-value)]
+                                 (reset! payload v))}]
+       [:button {:on-click #(when-let [p (some-> @payload
+                                                 js/JSON.parse
+                                                 js->clj)]
+                              (geometrisoi-ja-nayta-tarkastus @payload))}
+        "Piirrä"]])))
 
 (defn tierekisteri []
   (komp/luo
@@ -296,7 +325,8 @@
       [:hr]
       [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
-      [reittitoteuma-payload]])))
+      [reittitoteuma-payload]
+      [tarkastus-payload]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120

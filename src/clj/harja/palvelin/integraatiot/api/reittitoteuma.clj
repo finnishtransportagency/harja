@@ -32,7 +32,7 @@
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
 
-(defn- yhdista-viivat [viivat]
+(defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
     {:type :multiline
      :lines (mapcat
