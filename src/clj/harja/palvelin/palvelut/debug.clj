@@ -30,8 +30,9 @@
   (let [parsittu  (cheshire/decode json)
         reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
                    (get-in parsittu ["reittitoteumat" 0 "reittitoteuma" "reitti"]))
-        pisteet (mapv (fn [{{koordinaatit "koordinaatit"} "reittipiste"}]
-                        [(get koordinaatit "x") (get koordinaatit "y")])
+        pisteet (mapv (fn [{{koordinaatit "koordinaatit"
+                             aika "aika"} "reittipiste"}]
+                        [(get koordinaatit "x") (get koordinaatit "y") aika])
                       reitti)]
     (reittitoteuma/hae-reitti db pisteet)))
 
