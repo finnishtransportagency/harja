@@ -47,15 +47,11 @@
 
       ;; Hae geometria-aineisto palvelimelta, jos niin määritelty
       (when (= :palvelimelta paivitystyyppi)
-            (println "Poistetaan tiedostot kansiosta " kohdetiedoston-polku)
             (kansio/poista-tiedostot (.getParent (io/file kohdetiedoston-polku)))
-            (println "Haetaan tiedosto kansiosta " tiedostourl)
             (hae-tiedosto integraatioloki db (str paivitystunnus "-haku") tiedostourl kohdetiedoston-polku kayttajatunnus salasana)
-            (println "Puretaan tiedosto kansiosta " kohdetiedoston-polku)
             (arkisto/pura-paketti kohdetiedoston-polku))
       ;; Päivitä tiedoston sisältö kantaan
       (paivitys)
-      (println "Päivitetään taulun tiedot " shapefile)
       (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus (pvm/nyt)))
 
 ;; Tiedoston muutospäivää (ladattavan aineiston päivittymisajankohta) ei saada enää tutkittua.
@@ -63,7 +59,7 @@
 ;; Päivitystyypit ovat :palvelimelta ja :paikallinen. Paikallinen päivitys ei vaatisi tiedostourlia eikä kohdetiedoston polkua, mutta
 ;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
-      (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus shapefile))
+      (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
       (try+
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
               ava-paivitys (fn [] (aja-paivitys
@@ -82,10 +78,6 @@
                    :palvelimelta
                    (when (or (empty tiedostourl) (not (kohdekansio-ok? kohdetiedoston-polku)))
                          (throw (Exception. "Virhe geometria-aineston haun osoitteessa tai kohdekansiossa.")))
-                   :paikallinen
-                   ;; FIXME: Tämä tarkastus palauttaa false vaikka tiedosto on olemassa.
-                   ;;(when (not (tiedosto-loytyy? shapefile))
-                   ;;      (throw (Exception. "Paikallisessa geometria-aineistopäivityksessä käytettävää tiedostoa ei löydy.")))
                    :ei-paivitystarvetta
                    (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
                    :ei-kaytossa
