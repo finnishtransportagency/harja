@@ -71,6 +71,7 @@
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
   [db asetukset integraatioloki sahkoposti-xml liite?]
+      (println "LÄHETÄ SÄHKÖPOSTI!! ")
   (try+
     (let [_ (log/info "Lähetä rest-api sähköposti.")
           vastaus (integraatiotapahtuma/suorita-integraatio
@@ -126,8 +127,9 @@
                         itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
+        _ (println "VASTAUS " kasitelty-vastaus)
         ;; Lisää mahdolliset virheet kuittausviestiin
-        virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
+        virheet (if (#{"Virheellinen kuittausviesti" "Kuittausta ei voitu käsitellä"} (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
                   nil)
         vastaus-virheelliseen-viestiin (when-not (nil? virheet)
@@ -136,7 +138,11 @@
                                                kutsun-data virheet)
                                            (xml/tee-xml-sanoma)))
         ;; Rakenna kuittaus xml välitettäväksi rajapinnan kutsujalle
-        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)]
+        kuittaus-xml (muodosta-kuittaus {:viesti-id viesti-id} virheet)
+        _ (println "Virheet " virheet)
+        _ (println "KUITTAUS " kuittaus-xml)
+        _ (println "VASTAUS KÄYTTÄJÄLLE " vastaus-virheelliseen-viestiin)
+        ]
 
     ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
     (when-not (nil? virheet)

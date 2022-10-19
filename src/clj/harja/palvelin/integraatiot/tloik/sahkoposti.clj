@@ -124,6 +124,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
 (defn lue-kuittausviesti
   "Lukee annetun kuittausviestin otsikosta ja sisällöstä kuittauksen tiedot mäpiksi"
   [otsikko sisalto]
+      (println "SISÄLTÖ LUE KUITTAUSVIESTI " sisalto)
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
         kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))
