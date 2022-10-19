@@ -161,10 +161,8 @@
   (into {} 
     (map
       (fn [[id vuodet]]
-        [id (reduce (fn [kaikki {rivin-maara :sopimuksen-tehtavamaara hoitovuosi :hoitovuosi aluetieto? :aluetieto}]
-                      (if aluetieto?
-                        rivin-maara
-                        (assoc-in kaikki [hoitovuosi] rivin-maara)))
+        [id (reduce (fn [kaikki {:keys [sopimuksen-tehtavamaara hoitovuosi]} ]
+                      (assoc-in kaikki [hoitovuosi] sopimuksen-tehtavamaara))
               {}
               vuodet)]))
     (group-by :tehtava tehtavat)))
@@ -199,15 +197,13 @@
           (nil? hoitokauden-alkuvuosi))
     (throw (IllegalArgumentException. (str "Urakan id ja/tai hoitokauden alkuvuosi puuttuu."))))
   (log/debug "hae-tehtavahierarkia-maarineen :: tiedot: " tiedot)
-  (muodosta-hierarkia
-    (let [urakan-sopimusmaarat (laske-tehtavien-sopimusmaarat-urakalle
-                                 (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
-          ;; Varmistetaan, että urakalle on tallennettu sopimuksen tiedot (sopimuksella olevat tehtävien määrätiedot)
-          _ (when (empty? urakan-sopimusmaarat)
-              (throw (IllegalArgumentException. (str "Urakan sopimusmäärät on tallentamatta."))))
-          tehtavat (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
-          yhdistetyt (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) tehtavat)]
-      yhdistetyt)))
+  (let [hierarkia (muodosta-hierarkia
+                    (let [urakan-sopimusmaarat (laske-tehtavien-sopimusmaarat-urakalle
+                                                 (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id}))
+                          tehtavat (hae-tehtavahierarkia-koko-urakan-ajalle db {:urakka urakka-id})
+                          yhdistetyt (mapv (partial yhdista-sopimusmaarat urakan-sopimusmaarat) tehtavat)]
+                      yhdistetyt))]
+    hierarkia))
 
 (defn tallenna-tehtavamaarat
   "Luo tai päivittää urakan tehtävämääriä."
