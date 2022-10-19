@@ -82,7 +82,6 @@
                                                :aluetieto? aluetieto
                                                :urakka urakka                                               
                                                :yksikko yksikko
-                                               :maarat maarat
                                                :suunnitellut-maarat suunnitellut-maarat
                                                :muuttuneet-tarjouksesta muuttuneet-tarjouksesta
                                                :taso 4
