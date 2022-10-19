@@ -275,7 +275,7 @@
                                           :tehtavamaarat-hierarkiassa
                                           +kayttaja-jvh+
                                           {:urakka-id 904569045
-                                           :hoitokauden-alkuvuosi 2020})) "Urakan sopimusmäärät on tallentamatta.")
+                                           :hoitokauden-alkuvuosi 2020})) "Urakkaa ei löydy.")
   ;; Muutakin pielessä, kuin urakan id
   (is (thrown? IllegalArgumentException (kutsu-palvelua
                                           (:http-palvelin jarjestelma)

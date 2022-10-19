@@ -146,14 +146,8 @@
        [:div.flex-row.tasaa-alas.loppuun
         (doall 
           (for [vuosi (range
-                        (-> @tila/yleiset
-                          :urakka
-                          :alkupvm
-                          pvm/vuosi)
-                        (-> @tila/yleiset
-                          :urakka
-                          :loppupvm
-                          pvm/vuosi))]
+                        (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                        (-> @tila/yleiset :urakka :loppupvm pvm/vuosi))]
             ^{:key (str "vetolaatikko-input-" nimi "-" vuosi)}
             [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]

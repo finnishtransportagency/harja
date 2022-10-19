@@ -231,44 +231,40 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-
-(defn sopimus-maara-syotetty 
+(defn sopimus-maara-syotetty
   [virheet-kaikki r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimuksen-tehtavamaara sopimuksen-aluetieto-maara aluetieto?]} (second r)
-        hoitokaudet (range 
-                      (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
-                      (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
+  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimus-maara sopimuksen-aluetieto-maara aluetieto?]} (second r)
         id (first r)
-        kaikki-maarat-fn (r/partial kaikki-sopimusmaarat 
-                           sopimuksen-tehtavamaarat
-                           hoitokaudet)
         virheviesti ["Syötä 0 tai luku"]
         syotetty? (cond-> false
                     (or (nil? yksikko)
                       (= "" yksikko)
-                      (= "-" yksikko)) ((constantly true)) 
+                      (= "-" yksikko)) ((constantly true))
 
                     (and
                       aluetieto?
-                      (some? sopimuksen-aluetieto-maara)) ((constantly true))
-                    
-                    (and
-                      (not aluetieto?)
-                      (some? sopimuksen-tehtavamaara)) ((constantly true))
+                      (or
+                        (some #(when (some? %) %) (vals sopimuksen-aluetieto-maara))
+                        sopimus-maara)) ((constantly true))
 
                     (and
                       (not aluetieto?)
-                      (some? sopimuksen-tehtavamaarat)) kaikki-maarat-fn)] 
+                      (or
+                        (some #(when (some? %) %) (vals sopimuksen-tehtavamaarat))
+                        sopimus-maara)) ((constantly true)))]
     (cond
+      ;; Määrä riveille virhe
       (and
         (not syotetty?)
         (not aluetieto?))
       (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
 
+      ;; Alue riveille virhe
       (and
         (not syotetty?)
         aluetieto?)
       (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
+
       :else
       virheet-kaikki)))
 
@@ -628,15 +624,22 @@
 
   JokaVuosiErikseenKlikattu
   (process-event [{:keys [ruksittu? vanhempi id]} app]
-    (let [vuosi (-> @tiedot/yleiset
-                  :urakka
-                  :alkupvm
-                  pvm/vuosi)
-          loppuvuosi (-> @tiedot/yleiset
-                       :urakka
-                       :loppupvm
-                       pvm/vuosi)
-          sopimuksen-tehtavamaara (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaara])]
+    (let [vuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)
+          loppuvuosi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)
+          sopimuksen-tehtavamaara (get-in @taulukko-tila [:maarat vanhempi id :sopimus-maara])
+          sopimuksen-tehtavamaarat (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat])
+          sopimuksen-tehtavamaara (if (nil? sopimuksen-tehtavamaara)
+                                    (let [uusi-tehtavamaara (first (filter #(when-not (nil? %) %)
+                                                                     (vals sopimuksen-tehtavamaarat)))
+                                          _ (swap! taulukko-tila assoc-in [:maarat vanhempi id :sopimus-maara] uusi-tehtavamaara)]
+                                      uusi-tehtavamaara)
+                                    sopimuksen-tehtavamaara)
+          ;; Päivitä yhdestä arvosta jokaiselle vuodelle arvo, jos ruksittu?
+          _ (when (and ruksittu? (not (nil? sopimuksen-tehtavamaara)))
+              (swap! taulukko-tila assoc-in [:maarat vanhempi id :sopimuksen-tehtavamaarat]
+                (reduce (fn [lopputulos vuosi] (assoc-in lopputulos [vuosi] sopimuksen-tehtavamaara))
+                  sopimuksen-tehtavamaarat (range vuosi loppuvuosi))))]
+
       (if-not ruksittu?
         (tallenna-sopimuksen-tehtavamaara
           app
