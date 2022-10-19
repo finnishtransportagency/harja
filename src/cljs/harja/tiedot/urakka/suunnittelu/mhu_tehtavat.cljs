@@ -44,14 +44,6 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
-(defn maarille-tehtavien-tiedot
-  [maarat-map {:keys [id maarat] :as _r}]
-  (assoc-in maarat-map [id] maarat))
-
-(defn sopimuksen-maarille-tehtavien-tiedot
-  [maarat-map {:keys [tehtava-id] :as rivi}]
-  (assoc-in maarat-map [tehtava-id] rivi))
-
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
   (cond 
