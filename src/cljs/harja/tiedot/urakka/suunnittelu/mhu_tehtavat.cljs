@@ -104,7 +104,7 @@
                                       (not samat-maarat-vuosittain?)
                                       false))
        (get-in rivi [:muuttuneet-tarjouksesta hoitokausi]) (assoc :maara-muuttunut-tarjouksesta (get-in rivi [:suunnitellut-maarat hoitokausi])) ;; Hoitovuoden suunniteltu määrä (input kenttä)
-       aluetieto? (assoc :sopimus-maara (get-in rivi [:maarat hoitokausi]))
+       aluetieto? (assoc :sopimus-maara (get-in rivi [:sopimuksen-aluetieto-maara hoitokausi]))
        (not aluetieto?) (assoc :sopimus-maara (get-in rivi [:sopimuksen-tehtavamaarat hoitokausi]))
        (not aluetieto?) laske-sopimusmaarat)]))
 
@@ -152,7 +152,7 @@
   "Taulukolla näkyvälle kentälle päivitetään valitun hoitokauden määrät"
   [hoitokausi [id tehtava]]
   (let [muuttunut-tarjouksesta? (if (:aluetieto? tehtava)
-                                  (not= (get-in tehtava [:maarat hoitokausi]) (get-in tehtava [:suunnitellut-maarat hoitokausi]))
+                                  (not= (get-in tehtava [:sopimuksen-aluetieto-maara hoitokausi]) (get-in tehtava [:suunnitellut-maarat hoitokausi]))
                                   ;; Suunniteltavat määrät ovat aina "muuttuneet" tarjouksesta
                                   true)]
     [id (assoc tehtava :maara-muuttunut-tarjouksesta (if muuttunut-tarjouksesta?
@@ -231,10 +231,6 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-(defn kaikki-sopimusmaarat
-  [sopimuksen-tehtavamaarat hoitokaudet _]
-  (every? (fn [vuosi]
-            (some? (get sopimuksen-tehtavamaarat vuosi))) hoitokaudet))
 
 (defn sopimus-maara-syotetty 
   [virheet-kaikki r]
@@ -267,13 +263,12 @@
       (and
         (not syotetty?)
         (not aluetieto?))
-      (assoc-in virheet-kaikki [id :sopimuksen-tehtavamaara] virheviesti)
+      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
 
       (and
         (not syotetty?)
         aluetieto?)
-      (assoc-in virheet-kaikki [id :sopimuksen-aluetieto-maara] virheviesti)
-      
+      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
       :else
       virheet-kaikki)))
 
@@ -490,7 +485,7 @@
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
     (viesti/nayta-toast! "Tallennus epäonnistui" :danger)
     (let [{:keys [id]} tallennettava
-          virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
+          virheet (assoc-in {} [id :sopimus-maara] ["Tallennus epäonnistui"])]
       (reset! taulukko-virheet virheet))      
     (dissoc app :tallennettava))
 
