@@ -148,6 +148,8 @@
   "Haetaan kaikkien hoitokausien tehtävämäärät"
   [db {:keys [urakka]}]
   (let [urakkatiedot (first (urakat-q/hae-urakka db {:id urakka}))
+        _ (when (nil? urakkatiedot)
+            (throw (IllegalArgumentException. (str "Urakka ei ole olemassa."))))
         alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
         loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)]
     (q/hae-tehtavahierarkia-maarineen db {:urakka urakka
