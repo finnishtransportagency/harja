@@ -381,7 +381,6 @@
   käsittelyvirhe."
 
   [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
-      (println "KÄSITELLÄÄN KUTSUA!!!")
   (if (-> request :headers (get "content-type") (= "application/x-www-form-urlencoded"))
     {:status 415
      :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
