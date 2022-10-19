@@ -81,9 +81,10 @@
                    :ei-paivitystarvetta
                    (log/debug (format "Geometria-aineiston %s seuraava päivitysajankohta on määritelty myöhemmäksi. Päivitystä ei tehdä." paivitystunnus))
                    :ei-kaytossa
-                   (log/warn (format "Geometriapäivitystä %s ei ajeta lainkaan. Päivitä geometriapaivitys-taulun tiedot, jos päivitys täytyy ajaa." paivitystunnus)))
+                   (log/warn (format "Geometriapäivitystä %s ei ajeta lainkaan. Päivitä geometriapaivitys-taulun tiedot, jos päivitys täytyy ajaa." paivitystunnus))
+                   nil)
              ;; Päivitetään jos tarvetta
-             (when (some #{paivitystyyppi} #{:palvelimelta :paikallinen})
+             (when (#{:palvelimelta :paikallinen} paivitystyyppi)
                    (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)))
         (catch Exception e
           (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. Tarkista konfiguraatio asetukset-tiedostossa ja tietokantatauluissa." paivitystunnus))
