@@ -21,9 +21,7 @@
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.ui.protokollat :as protokollat]
             [reagent.core :as r]
-            [harja.ui.leijuke :as leijuke]
-
-            )
+            [harja.ui.leijuke :as leijuke])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -146,8 +144,7 @@
 
        ;; Välitysviestien tapauksessa vapaatekstissä on viestin määrämittainen raakadata, eli sähköpostin tapauksessa
        ;; HTML:ää. Ei näytetä sitä turhaan, tärkeää on joka tapauksessa tieto, kenelle välitysviesti on lähtenyt
-      "Vapaateksti: " (when-not valitys? (:vapaateksti kuittaus))
-       "Vapaa HTML: " (when-not valitys?  (:vapaateksti kuittaus))
+       "Vapaateksti: " (when-not valitys? (:vapaateksti kuittaus))
        "Kanava: " (apurit/kanavan-otsikko (:kanava kuittaus))]
       [:br]
       ^{:key "kuittaaja"}
