@@ -40,17 +40,17 @@
         tee-valitut-avaimet (map #(-> [% (get lomake %)]))
         keywordisoi-tiedot (map #(let [[avain tiedot] %]
                                    [avain (keywordisoi avain tiedot)]))
-        konvertoi-avaimet (map #(let [[avain tiedot] %]
-                                 
+        konvertoi-avaimet (map #(let [[avain tiedot] %]                                 
                                   [(or (get konversiot avain) avain) tiedot]))        
-        assoc-in-avaimet (map assoc-in-muotoon)]
+        assoc-in-avaimet (map assoc-in-muotoon)
+        poistettu? (:poistettu lomake)]
     (merge
       (reduce
         (fn [acc [avain tieto]]
           (assoc-in acc avain tieto))
         {}
         (into [] (comp tee-valitut-avaimet konvertoi-avaimet keywordisoi-tiedot assoc-in-avaimet) valitut-avaimet))
-      {:bonus true :suorasanktio true})))
+      {:bonus true :suorasanktio true :poistettu poistettu?})))
 
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
@@ -138,9 +138,9 @@
       (assoc app :lomake lomake)))
   TallennusOnnistui
   (process-event    
-    [{vastaus :vastaus} app]
+    [{vastaus :vastaus optiot :optiot} app]
     (viesti/nayta-toast! "Tallennus onnistui")
-    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true :tallennettu-lomake vastaus))
+    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true :tallennettu-lomake (merge vastaus optiot)))
   TallennusEpaonnistui
   (process-event
     [{vastaus :vastaus} app]

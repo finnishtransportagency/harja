@@ -231,11 +231,16 @@
                     (when (some? (:id %))
                       (if (some (fn [rivi] (= (:id rivi) (:id %))) @haetut-sanktiot)
                         (swap! haetut-sanktiot (fn [sanktiolistaus]
-                                                 (mapv (fn [rivi]
-                                                         (if (= (:id rivi) (:id %))
-                                                           %
-                                                           rivi))
-                                                   sanktiolistaus)))
+                                                 (if (:poistettu %)
+                                                   (into []
+                                                     (remove (fn [rivi]
+                                                               (= (:id rivi) (:id %)))
+                                                       sanktiolistaus))
+                                                   (mapv (fn [rivi]
+                                                           (if (= (:id rivi) (:id %))
+                                                             %
+                                                             rivi))
+                                                     sanktiolistaus))))
                         (swap! haetut-sanktiot conj %)))
                     (reset! auki? false))
         bonukset-tila (r/atom {:liitteet-haettu? false
