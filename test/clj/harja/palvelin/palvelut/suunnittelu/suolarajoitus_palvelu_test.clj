@@ -660,7 +660,11 @@
 
         ;; Lisää tehtävälle suunniteltu määrä
         _ (t/u (str (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
-        (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja)))]))
+        (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja)))
+
+        ;; Merkitse urakan sopimus tallennetuksi
+        _ (t/u (str (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)"
+                      urakka-id)))]))
 
 (deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
