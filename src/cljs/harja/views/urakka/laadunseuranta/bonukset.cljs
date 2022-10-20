@@ -98,10 +98,11 @@
        :validoi-alussa? false
        :voi-muokata? true
        :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
-       :footer-fn (fn [_bonus]
+       :footer-fn (fn [bonus]
                     [:<>
                      [:span.nappiwrappi.flex-row
-                      [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))]
+                      [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
+                       {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}]
                       (when (:id lomakkeen-tiedot)
                         [napit/kielteinen "Poista" (fn [_]
                                                      (varmista-kayttajalta/varmista-kayttajalta
@@ -144,12 +145,15 @@
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
           :yksikko "€"}
-         {:otsikko "Indeksi"
-          :nimi :indeksin_nimi
-          :tyyppi :valinta
-          :disabled? true
-          ::lomake/col-luokka "col-xs-4"
-          :valinnat ["Ei"]})
+         (let [valinnat nil]
+           {:otsikko "Indeksi"
+            :nimi :indeksin_nimi
+            :tyyppi :valinta
+            :disabled? (if valinnat
+                         false
+                         true)
+            ::lomake/col-luokka "col-xs-4"
+            :valinnat (or valinnat [nil])}))
        (lomake/ryhma
          {:rivi? true}
          {:otsikko "Käsitelty"
@@ -172,21 +176,23 @@
                          (assoc :laskutuskuukausi-komp-tiedot lk)
 
                          true (assoc :pvm arvo))))}         
-         {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi-komp
+         {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
+          :pakollinen? true
           :tyyppi :komponentti
           ::lomake/col-luokka "col-xs-4"
           :komponentti (fn [{:keys [muokkaa-lomaketta data]}]                          
                          [yleiset/livi-pudotusvalikko
                           {:data-cy "koontilaskun-kk-dropdown"
-                           :vayla-tyyli?  true
+                           :vayla-tyyli? true
                            :skrollattava? true
-                           :valinta      (or (-> data :laskutuskuukausi-komp-tiedot)
-                                           (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet)) 
-                           :valitse-fn   #(muokkaa-lomaketta
-                                            (assoc data
-                                              :laskutuskuukausi-komp-tiedot %
-                                              :laskutuskuukausi (:pvm %)))
-                           :format-fn    :teksti}
+                           :pakollinen? true
+                           :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                      (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet)) 
+                           :valitse-fn #(muokkaa-lomaketta
+                                          (assoc data
+                                            :laskutuskuukausi-komp-tiedot %
+                                            :laskutuskuukausi (:pvm %)))
+                           :format-fn :teksti}
                           laskutuskuukaudet])})
        {:otsikko "Käsittelytapa"
         :nimi :kasittelytapa

@@ -277,7 +277,7 @@
                                         :muokattava? (constantly (not lukutila?)) 
                                         :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                         :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
-                                        :valinnat (if (urakka/indeksi-kaytossa-sakoissa?)
+                                        :valinnat (if (tiedot-urakka/indeksi-kaytossa-sakoissa?)
                                                     [(:indeksi @nav/valittu-urakka) nil]
                                                     [nil])
                                         :valinta-nayta #(or % "Ei indeksiä")})]))
@@ -378,8 +378,8 @@
         [yleiset/tooltip {} :%
          (oikeudet/oikeuden-puute-kuvaus :kirjoitus
                                          oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää sanktio tai bonus"}
-        [napit/uusi "Lisää sanktio tai bonus"
+        ^{:key "Lisää uusi"}
+        [napit/uusi "Lisää uusi"
          #(do
             (reset! auki? true)
             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
