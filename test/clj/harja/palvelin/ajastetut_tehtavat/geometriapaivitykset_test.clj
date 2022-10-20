@@ -5,6 +5,7 @@
             [harja.palvelin.integraatiot.paikkatietojarjestelma.ava :as alk]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko :as tieverkon-tuonti]
             [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
+            [harja.kyselyt.geometriapaivitykset :as gp-kyselyt]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -17,6 +18,8 @@
            (org.apache.commons.io IOUtils)))
 
 (use-fixtures :once tietokantakomponentti-fixture)
+
+(def kayttaja "jvh")
 
 (defn aja-tieverkon-paivitys
   "REPL-testiajofunktio"
@@ -80,13 +83,15 @@
     (alk/kaynnista-paivitys
       integraatioloki
       testitietokanta
-      "tieverkko"
+      "urakat"
       "http://185.26.50.104/tl132.tgz"
       "/Users/mikkoro/Desktop/Soratiehoitoluokat-testi/"
       (fn []
         (tieverkon-tuonti/vie-tieverkko-kantaan
           testitietokanta
-          "file:///Users/mikkoro/Desktop/Soratiehoitoluokat-testi/Sorateiden-hoitoluokat.shp")))))
+          "file:///Users/mikkoro/Desktop/Soratiehoitoluokat-testi/Sorateiden-hoitoluokat.shp"))
+      ""
+      "")))
 
 
 (defn aja-turvalaitteiden-paivitys
@@ -107,21 +112,21 @@
           "file:///Users/maaritla/Downloads/Turvalaite-testi/Turvalaitteet.shp")))))
 
 
-(def kayttaja "jvh")
-
-(deftest testaa-tiedoston-muokkausajan-selvitys-alustalla
-  (let [testitietokanta (:db jarjestelma)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)
-        fake-tiedosto-url "http://www.example.com/file.zip"
-        fake-muokkausaika "Tue, 15 Nov 1994 12:45:26 GMT"
-        fake-vastaus {:status 200 :headers {:last-modified fake-muokkausaika} :body "ok"}]
-    (component/start integraatioloki)
-
-    (with-fake-http
-      [{:url fake-tiedosto-url :method :head} fake-vastaus]
-      (let [muokkausaika (alk/hae-tiedoston-muutospaivamaara
-                           testitietokanta integraatioloki "tieverkko-muutospaivamaaran-haku" fake-tiedosto-url)]
-        (is (= muokkausaika (time-coerce/to-sql-time (Date. fake-muokkausaika))))))))
+(deftest testaa-pitaako-paivittaa
+         (let [testitietokanta (:db jarjestelma)]
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('palvelimelta-paivitetaan', '2022-09-05 07:50:24.479550', '2022-10-05 08:55:24.479550', false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('paikallinen-null-paivitetaan', '2022-09-05 07:50:24.479550', null, true)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('palvelimelta-ei-paiviteta', '2022-09-05 07:50:24.479550', '2034-11-05 08:55:24.479550', false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen) values ('paikallinen-ei-paiviteta', '2022-09-05 07:50:24.479550', '2034-11-05 08:55:24.479550', true)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen, kaytossa) values ('palvelimelta-ei-kaytossa', '2020-09-05 07:50:24.479550', '2021-11-05 08:55:24.479550', false, false)"))
+              (i (str "INSERT INTO geometriapaivitys (nimi, viimeisin_paivitys, seuraava_paivitys, paikallinen, kaytossa) values ('paikallinen-ei-kaytossa', '2020-09-05 07:50:24.479550', '2021-11-05 08:55:24.479550', true, false)"))
+              (is (= :palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-paivitetaan")) "Geometria-aineisto, jonka seuraava päivitysajankohta on mennyt, pitää päivittää.")
+              (is (= :paikallinen (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-null-paivitetaan")) "Geometria-aineisto, jonka seuraavaa päivitysajankohtaa ei ole määritelty, pitää päivittää.")
+              (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
+              (is (= :ei-paivitystarvetta (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-paiviteta")) "Geometria-aineistoa, jonka seuraava päivitysajankohta on vasta tulossa, ei päivitetä.")
+              (is (= :ei-kaytossa (gp-kyselyt/pitaako-paivittaa? testitietokanta "palvelimelta-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= :ei-kaytossa (gp-kyselyt/pitaako-paivittaa? testitietokanta "paikallinen-ei-kaytossa")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")
+              (is (= :palvelimelta (gp-kyselyt/pitaako-paivittaa? testitietokanta "uusi")) "Jos geometria-aineiston tiedot puuttuvat tietokannasta, tehdään päivitys aineistopalvelimelta.")))
 
 (deftest testaa-tiedoston-lataus-ava-alustalla
   (let [testitietokanta (:db jarjestelma)
@@ -130,7 +135,6 @@
         kohdetiedosto "test/resurssit/download_test.zip"
         fake-vastaus {:status 200 :body (IOUtils/toByteArray (io/input-stream "test/resurssit/arkistot/test_zip.zip"))}]
     (component/start integraatioloki)
-
     (with-fake-http
       [{:url fake-tiedosto-url :method :get} fake-vastaus]
       (alk/hae-tiedosto integraatioloki testitietokanta "tieverkko-haku" fake-tiedosto-url kohdetiedosto)
