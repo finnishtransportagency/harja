@@ -196,10 +196,6 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
-(def hoidon-indeksivalinnat
-  ["MAKU 2015" "MAKU 2010" "MAKU 2005"])
-
-
 (defn bonustyypin-teksti [avainsana]
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   (case avainsana
