@@ -127,55 +127,55 @@
 ; käyttää ennakkoon tallennettua testidataa
 (deftest tallenna-tehtavamaarat-testi
   (let [tehtavamaarat-ja-hierarkia (kutsu-palvelua (:http-palvelin jarjestelma)
-                                     :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                     :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                  :hoitokauden-alkuvuosi 2020})
         tehtavamaarat (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                        :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                        :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-kannassa (ffirst (q (str "SELECT count(*)
                                                              FROM urakka_tehtavamaara
                                                             WHERE \"hoitokauden-alkuvuosi\" = 2020 AND urakka = " @oulun-maanteiden-hoitourakan-2019-2024-id)))
 
         tehtavamaarat-ennen-paivitysta (kutsu-palvelua (:http-palvelin jarjestelma)
-                                         :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                         :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                         :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-paivita (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                         :nykyinen-hoitokausi 2020
-                                                                        :tehtavamaarat         paivitettavat-olemassaolevat-tehtavat})
+                                                                        :tehtavamaarat paivitettavat-olemassaolevat-tehtavat})
         tehtavamaarat-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                            :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                            :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                            :hoitokauden-alkuvuosi 2020})
         tehtavahierarkia-paivityksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                               :tehtavamaarat-hierarkiassa +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                                            :hoitokauden-alkuvuosi 2020})
         tehtavamaarat-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                              :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                       :nykyinen-hoitokausi 2020
-                                                                      :tehtavamaarat         uudet-tehtavat})
+                                                                      :tehtavamaarat uudet-tehtavat})
         tehtavamaarat-lisayksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
-                                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                          :hoitokauden-alkuvuosi 2020})
         hoitokausi-2022-lisaa (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                                :tallenna-tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                                         :nykyinen-hoitokausi 2022
-                                                                        :tehtavamaarat         uuden-hoitokauden-tehtavat})
+                                                                        :tehtavamaarat uuden-hoitokauden-tehtavat})
         hoitokausi-2022 (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                          :hoitokauden-alkuvuosi 2022})
         hoitokausi-2020 (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
+                          :tehtavamaarat +kayttaja-jvh+ {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
                                                          :hoitokauden-alkuvuosi 2020})
         hae-tehtava (fn [tehtava urakka maarat]
-                      (first (filter 
-                           #(and 
-                              (= tehtava (:id %))
-                              (= urakka (:urakka %))) 
-                           (apply concat (mapv :tehtavat maarat)))))]
+                      (first (filter
+                               #(and
+                                  (= tehtava (:id %))
+                                  (= urakka (:urakka %)))
+                               (apply concat (mapv :tehtavat maarat)))))]
     ;; tehtävähierarkia
     #_(is (= (count tehtavamaarat-ja-hierarkia) 115) "Hierarkiassa on 115 osaa.")
-    (let [tehtava (hae-tehtava id-palteiden-poisto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-ja-hierarkia)] 
-      (is (=  (get-in tehtava [:maarat 2020]) 33.4M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa."))
+    (let [tehtava (hae-tehtava id-palteiden-poisto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-ja-hierarkia)]
+      (is (= (get-in tehtava [:suunnitellut-maarat 2020]) 33.4M) "Hoitokauden tehtävämäärä palautuu oikein hierarkiassa."))
 
     ;; tehtävämäärä
     (is (= (count tehtavamaarat) tehtavamaarat-kannassa) "Palutuneiden rivien lukumäärä vastaa kantaan tallennettuja.")
@@ -185,39 +185,39 @@
 
     ;; hoitokauden tietojen päivitys
     (is (= (count tehtavamaarat-ennen-paivitysta) (count tehtavamaarat-paivityksen-jalkeen)) "Rivejä ei lisätty, kun tietoja päivitettiin.")
-    (let [poista-sisaiset-idt #(let [vanhempi-key-poistettu (update % 
-                                                              :tehtavat 
-                                                              (fn [t] 
-                                                                (mapv 
-                                                                  (fn [r] 
-                                                                    (dissoc r :vanhempi)) 
-                                                                  t)))] 
-                                 (dissoc 
+    (let [poista-sisaiset-idt #(let [vanhempi-key-poistettu (update %
+                                                              :tehtavat
+                                                              (fn [t]
+                                                                (mapv
+                                                                  (fn [r]
+                                                                    (dissoc r :vanhempi))
+                                                                  t)))]
+                                 (dissoc
                                    vanhempi-key-poistettu
-                                   :id))] 
+                                   :id))]
       (is (= (mapv poista-sisaiset-idt tehtavamaarat-paivita) (mapv poista-sisaiset-idt tehtavahierarkia-paivityksen-jalkeen)) "Tallennusfunktio palauttaa vastauksena kannan tilan samanlaisena kuin erillinen hierarkianhakufunktio."))
-    (let [tehtava (hae-tehtava id-palteiden-poisto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-paivita) ] 
-      (is (= (get-in tehtava [:maarat 2020]) 666.7M) "Päivitys päivitti määrän."))
+    (let [tehtava (hae-tehtava id-palteiden-poisto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-paivita)]
+      (is (= (get-in tehtava [:suunnitellut-maarat 2020]) 666.7M) "Päivitys päivitti määrän."))
 
     ;; hoitokauden tietojen lisäys
     (is (= (count tehtavamaarat-lisayksen-jalkeen) 19) "Uudet rivit lisättiin, vanhat säilyivät.")
 
     ;; määrätieto lisättiin
     (let [tehtava (hae-tehtava id-portaiden-talvihuolto @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)]
-      (is (= (get-in tehtava [:maarat 2020]) 88.8M) "Lisäys lisäsi määrän."))
-    
+      (is (= (get-in tehtava [:suunnitellut-maarat 2020]) 88.8M) "Lisäys lisäsi määrän."))
+
     ;; aluetieto muuttui
     (let [tehtava (hae-tehtava id-ise-rampit @oulun-maanteiden-hoitourakan-2019-2024-id tehtavamaarat-lisaa)]
-      (is (= (get-in tehtava [:maarat 2020]) 666M) "Lisäys lisäsi muuttuneen aluemaaran."))
+      (is (= (get-in tehtava [:suunnitellut-maarat 2020]) 666M) "Lisäys lisäsi muuttuneen aluemaaran."))
 
     ;; uuden hoitokauden lisäys
     #_(is (= (count hoitokausi-2022-lisaa) 115) "Uuden hoitokauden hierarkiassa palautuu oikea määrä tehtäviä.")
     (is (= (count hoitokausi-2022) 2) "Uudet rivit lisättiin oikealle hoitokaudelle.")
-    (let [tehtava (hae-tehtava id-portaiden-talvihuolto @oulun-maanteiden-hoitourakan-2019-2024-id hoitokausi-2022-lisaa) ]
-      (is (and 
-            (contains? (:maarat tehtava) 2022)
-            (= 
-              (get-in tehtava [:maarat 2022]) 6.66M)) "Uuden hoitokauden tiedot palautettiin hierarkiassa."))
+    (let [tehtava (hae-tehtava id-portaiden-talvihuolto @oulun-maanteiden-hoitourakan-2019-2024-id hoitokausi-2022-lisaa)]
+      (is (and
+            (contains? (:suunnitellut-maarat tehtava) 2022)
+            (=
+              (get-in tehtava [:suunnitellut-maarat 2022]) 6.66M)) "Uuden hoitokauden tiedot palautettiin hierarkiassa."))
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2022))) 999M) "Uuden hoitokauden tehtävässä on oikea määrä.")
     (is (= (:maara (first (filter #(= id-opastustaulut (:tehtava-id %)) hoitokausi-2020))) 111M) "Uuden hoitokauden lisäys ei päivittänyt vanhaa hoitokautta.")))
 
@@ -263,23 +263,26 @@
                                     {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                      :hoitokauden-alkuvuosi :kaikki})]
 
-       (is (true? (let [maaralliset (filter
-                                 #(some? (:maarat %)) 
+       (is (true? (let [alue-tehtavat (filter
+                                 #(some? (:sopimuksen-aluetieto-maara %))
                                  (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
-               
-               (and (some #(contains? (:maarat %) 2020) maaralliset)
-                 (some #(contains? (:maarat %) 2022) maaralliset)))) "Palauttaa kaikki määrät"))
-  (let [tehtavat-ja-maarat-ei-urakkaa (kutsu-palvelua
-                                        (:http-palvelin jarjestelma)
-                                        :tehtavamaarat-hierarkiassa
-                                        +kayttaja-jvh+
-                                        {:urakka-id             904569045
-                                         :hoitokauden-alkuvuosi 2020})]
 
-       (is (every? #(and (nil? (:urakka %))
-                 (nil? (:hoitokauden-alkuvuosi %))
-                 (or (= 0 (:maara %))
-                   (nil? (:maara %)))) tehtavat-ja-maarat-ei-urakkaa) "Tietoja ei löydy, jos ei urakkaa"))
+               (and (some #(contains? (:sopimuksen-aluetieto-maara %) 2020) alue-tehtavat)
+                 (some #(contains? (:sopimuksen-aluetieto-maara %) 2022) alue-tehtavat)))) "Palauttaa kaikki aluetieto tehtävät.")
+       (is (true? (let [maara-tehtavat (filter
+                                        #(some? (:sopimuksen-tehtavamaarat %))
+                                        (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
+
+                    (and (some #(contains? (:sopimuksen-tehtavamaarat %) 2020) maara-tehtavat)
+                      (some #(contains? (:sopimuksen-tehtavamaarat %) 2022) maara-tehtavat)))) "Palauttaa kaikki aluetieto tehtävät."))
+  ;; Annetulla urakalla ei voi olla sopimustietoja, koska urakan id on aivan väärä
+  (is (thrown? IllegalArgumentException (kutsu-palvelua
+                                          (:http-palvelin jarjestelma)
+                                          :tehtavamaarat-hierarkiassa
+                                          +kayttaja-jvh+
+                                          {:urakka-id 904569045
+                                           :hoitokauden-alkuvuosi 2020})) "Urakkaa ei löydy.")
+  ;; Muutakin pielessä, kuin urakan id
   (is (thrown? IllegalArgumentException (kutsu-palvelua
                                           (:http-palvelin jarjestelma)
                                           :tehtavamaarat-hierarkiassa
@@ -294,13 +297,14 @@
                    :tehtava-id id-yksityisten-rumpujen
                    :hoitovuosi 2021
                    :maara 1234M})
+        vastaus-2021 (nth vastaus 2) ;; Tallennus palauttaa kaikkien vuosien tehtävät, joten otetaan niistä vuodelle 2021 osuva
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-yksityisten-rumpujen
                   ::tm-domain/maara 1234M
                   ::tm-domain/hoitovuosi 2021
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
-          (dissoc vastaus ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
+          (dissoc vastaus-2021 ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
           odotettu))))
 
 (deftest muokkaa-sopimuksen-tehtavamaaraa-testi
@@ -318,13 +322,14 @@
                     :tehtava-id id-suolaus
                     :hoitovuosi 2022
                     :maara 9001M})
+        muokattu-2022 (nth muokattu 3) ;; Tallennus palauttaa kaikkien vuosien tehtävät, joten otetaan niistä vuodelle 2022 osuva
         odotettu {::urakka/id 35
                   ::toimenpidekoodi/id id-suolaus
                   ::tm-domain/maara 9001M
                   ::tm-domain/hoitovuosi 2022
                   ::muokkaustiedot/muokkaaja-id (:id +kayttaja-jvh+)}]
     (is (=
-          (dissoc muokattu ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
+          (dissoc muokattu-2022 ::muokkaustiedot/muokattu ::tm-domain/sopimus-tehtavamaara-id)
           odotettu))
     (is (=
           (::tm-domain/sopimus-tehtavamaara-id muokattava)
@@ -339,7 +344,7 @@
                         :maara 1234M})
                      (catch Exception e e))]
     (is (= IllegalArgumentException (type vastaus)))
-    (is (= "Tehtävälle 666 ei voi suunnitella määrätietoja." (ex-message vastaus)))))
+    (is (= "Tehtävälle 666 ei voi antaa sopimuksessa määrätietoja." (ex-message vastaus)))))
 
 (deftest sopimuksen-tehtavamaara-vaara-urakka-testi
   (let [kemin-alueurakka-id @kemin-alueurakan-2019-2023-id
@@ -353,7 +358,7 @@
     (is (= IllegalArgumentException (type vastaus)))
     (is (=
           (str "Urakka " kemin-alueurakka-id " on tyyppiä: :paallystys. "
-            "Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")
+            "Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja.")
           (ex-message vastaus)))))
 
 (deftest sopimuksen-tehtavamaarat-haku-test
@@ -377,8 +382,10 @@
                                             (= tehtava (:id r))) 
                                           (mapcat :tehtavat vastaus)))]
                                   (if (:aluetieto? oikea-tehtava)
-                                    (:sopimuksen-aluetieto-maara oikea-tehtava)
+                                    (get (:sopimuksen-aluetieto-maara oikea-tehtava) vuosi)
                                     (get (:sopimuksen-tehtavamaarat oikea-tehtava) vuosi))))]
     (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
     (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut 2019)))
+    (is (= 500M (hae-tehtavan-maara-fn id-III 2019)))
+    (is (= 10000M (hae-tehtavan-maara-fn id-katupolyn-sidonta 2020)))
     (is (= 1000M (hae-tehtavan-maara-fn id-K2 2019)))))
