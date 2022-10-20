@@ -16,8 +16,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.debug :as debug]))
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
 (defn- kannasta->lomake
   [avain]
@@ -90,8 +89,6 @@
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [:<>
      [:h2 "Bonukset"]
-     [debug/debug lomakkeen-tiedot]
-     [debug/debug app]
      [lomake/lomake
       {:otsikko "Bonuksen tiedot"
        :ei-borderia? true

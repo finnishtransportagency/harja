@@ -14,7 +14,7 @@
             [harja.palvelin.palvelut.toteumat :as toteumap]
             [harja.domain.turvallisuuspoikkeama :as turpo]
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
-            [harja.domain.laadunseuranta.tarkastus :as tarkastus]            
+            [harja.domain.laadunseuranta.tarkastus :as tarkastus]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.erilliskustannus :as erilliskustannus]
             [harja.domain.kommentti :as kommentti]

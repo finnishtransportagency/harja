@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.bonukset
-  (:require [tuck.core :as tuck]
+  (:require [clojure.set :as set]
+            [tuck.core :as tuck]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
@@ -19,13 +20,6 @@
 (def valitut-avaimet [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto :indeksikorjaus :sijainti
                       :laskutuskuukausi :kasittelytapa :indeksin_nimi :id :suorasanktio])
 
-(defn- reversoi-mappi
-  [mappi]
-  (into {}
-    (map (fn [[avain arvo]]
-           [arvo avain]))
-    mappi))
-
 (defn- keywordisoi
   [avain tiedot]
   (let [keywordisoi? (some? (get #{:laji :kasittelytapa} avain))]
@@ -42,7 +36,7 @@
 
 (defn- lomake->sanktiolistaus
   [lomake]
-  (let [konversiot (reversoi-mappi konversioavaimet)
+  (let [konversiot (set/map-invert konversioavaimet)
         tee-valitut-avaimet (map #(-> [% (get lomake %)]))
         keywordisoi-tiedot (map #(let [[avain tiedot] %]
                                    [avain (keywordisoi avain tiedot)]))
