@@ -374,8 +374,8 @@
         (doseq [tr-tieto tr-tiedot]
           (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))
         (k/paivita-tr-tiedot db)
-        (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
-    (log/debug "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+        (log/info "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
+    (log/info "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))
