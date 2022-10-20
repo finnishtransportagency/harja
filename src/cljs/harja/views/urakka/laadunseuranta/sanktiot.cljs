@@ -277,9 +277,9 @@
                                         :muokattava? (constantly (not lukutila?)) 
                                         :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                         :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
-                                        :valinnat (into [] (keep identity [(when (tiedot-urakka/indeksi-kaytossa-sakoissa?)
-                                                                             (:indeksi @nav/valittu-urakka))
-                                                                           "Ei indeksiä"]))
+                                        :valinnat (if (urakka/indeksi-kaytossa-sakoissa?)
+                                                    [(:indeksi @nav/valittu-urakka) nil]
+                                                    [nil])
                                         :valinta-nayta #(or % "Ei indeksiä")})]))
 
                    (lomake/ryhma {:rivi? true}

@@ -125,71 +125,66 @@
                   :salasana #=(slurp "../.harja/api-sahkoposti-salasana")}
 
  :tierekisteri {:url ""
-                :uudelleenlahetys-aikavali-minuutteina 60}
+                :uudelleenlahetys-aikavali-minuutteina nil}
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
 
- :geometriapaivitykset {:tuontivali 60
-                        :kayttajatunnus "ava-harja"
-                        :salasana #=(slurp "../.harja/ava-salasana")
+ ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
+ ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
+ ;; Huom. Kutsut julkinen.vayla.fi-palveluun epäonnistuvat, jos käyttäjätunnus ja salasana on asetettu. Kutsut ava.vaylapilvi.fi-osoitteeseen epäonnistuvat, jos käyttäjätiedot puuttuvat.
+ :geometriapaivitykset {:tarkistusvali 60
+                        :kayttajatunnus nil
+                        :salasana nil
 
-                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"
-                        :tieosoiteverkon-osoite "https://ava.vayla.fi/harja/PTK_tieosoiteverkko.shz"
-                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/PTK_tieosoiteverkko.shz"
+                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+                        :tieosoiteverkon-osoite "https://ava.vaylapilvi.fi/ava/Tie/Tieosoiteverkko/[AINEISTO].zip"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
 
                         :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
 
-                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/PTV_tl141.shp"
-                        :pohjavesialueen-osoite "https://ava.vayla.fi/harja/PTV_tl141.shz"
-                        :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/PTV_tl141.shz"
+                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/TL141.shp"
+                        :pohjavesialueen-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL141&outputFormat=SHAPE-ZIP"
+                        :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/TL141.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/PTV_tl132.shp"
-                        :talvihoidon-hoitoluokkien-osoite "https://ava.vayla.fi/harja/PTV_tl132.shz"
-                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/PTV_tl132.shz"
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/TL132.shp"
+                        :talvihoidon-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL132&outputFormat=SHAPE-ZIP"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/TL132.shz"
 
-                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/PTV_tl149.shp"
-                        :soratien-hoitoluokkien-osoite "https://ava.vayla.fi/harja/PTV_tl149.shz"
-                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/PTV_tl149.shz"
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/TL149.shp"
+                        :soratien-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL149&outputFormat=SHAPE-ZIP"
+                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/TL149.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/PTV.tl261_H.shp"
-                        :siltojen-osoite "https://ava.vayla.fi/harja/PTV.tl261_H.shz"
-                        :siltojen-tuontikohde "./shp/Sillat/PTV.tl261_H.shz"
+                        :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
+                        :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
+                        :siltojen-tuontikohde "./shp/Sillat/TL261_H.shz"
 
-                        ; Inspire-asetukset
-                        ; :siltojen-shapefile "file://shp/Sillat/PTV_tl261_H.shp"
-                        ; :siltojen-osoite "https://julkinen.vayla.fi/inspirepalvelu/wfs?SERVICE=wfs&version=1.0.0&request=GetFeature&srsName=EPSG:3067&outputFormat=SHAPE-ZIP&typeNames=TL261"
-                        ; :siltojen-tuontikohde "./shp/Sillat/PTV_tl261_H.shz"
+                        :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakat.shp"
+                        :urakoiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:tie_hoitourakat&outputFormat=SHAPE-ZIP"
+                        :urakoiden-tuontikohde "./shp/Hoitourakat/tie_hoitourakat.shz"
 
-                        :urakoiden-shapefile "file://shp/Hoitourakat/[AINEISTO].shp"
-                        :urakoiden-osoite "https://ava.vayla.fi/harja/[AINEISTO].shz"
-                        :urakoiden-tuontikohde "./shp/Hoitourakat/[AINEISTO].shz"
+                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp"
-                        :ely-alueiden-osoite "https://ava.vayla.fi/harja/ULKOISET_Elyt_infra.shz"
-                        :ely-alueiden-tuontikohde "./shp/ELYt/ULKOISET_Elyt_infra.shz"
+                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/TL167.shp"
+                        :valaistusurakoiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL167&outputFormat=SHAPE-ZIP"
+                        :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/TL167.shz"
 
-                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/PTV_tl167.shp"
-                        :valaistusurakoiden-osoite "https://ava.vayla.fi/harja/PTV_tl167.shz"
-                        :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/PTV_tl167.shz"
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/TL151.shp"
+                        :paallystyspalvelusopimusten-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL151&outputFormat=SHAPE-ZIP"
+                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/TL151.shz"
 
-                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/PTV_tl151.shp"
-                        :paallystyspalvelusopimusten-osoite "https://ava.vayla.fi/harja/PTV_tl151.shz"
-                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/PTV_tl151.shz"
+                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp"
+                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp"
-
-                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/Turvalaitteet.shp"
-                        :turvalaitteiden-osoite "https://ava.vayla.fi/harja/Turvalaitteet.shz"
+                        :turvalaitteiden-shapefile "file://shp/Vesivaylien_turvalaitteet/turvalaitteet.shp"
+                        :turvalaitteiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:turvalaitteet&outputFormat=SHAPE-ZIP"
                         :turvalaitteiden-tuontikohde "./shp/Vesivaylien_turvalaitteet/Turvalaitteet.shz"
 
-                        ;;kanavasulut
-                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/Kanavat.shp"
-                        :kanavien-osoite "https://ava.vayla.fi/harja/Kanavat.shz"
-                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Kanavat.shz"}
+                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat.shp"
+                        :kanavien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:sulkukanavat&outputFormat=SHAPE-ZIP"
+                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat.shz"}
 
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
