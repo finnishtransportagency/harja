@@ -84,6 +84,7 @@
   [sulje-fn e! app]
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
         laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
@@ -145,13 +146,14 @@
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
           :yksikko "€"}
-         (let [valinnat nil]
+         (let [valinnat (when (and
+                                (<= urakan-alkuvuosi 2020)
+                                (= :asiakastyytyvaisyysbonus (:tyyppi lomakkeen-tiedot)))
+                          [(:indeksi @nav/valittu-urakka) nil])]
            {:otsikko "Indeksi"
             :nimi :indeksin_nimi
             :tyyppi :valinta
-            :disabled? (if valinnat
-                         false
-                         true)
+            :disabled? (nil? valinnat)
             ::lomake/col-luokka "col-xs-4"
             :valinnat (or valinnat [nil])}))
        (lomake/ryhma
@@ -161,7 +163,7 @@
           :tyyppi :pvm
           :pakollinen? true
           ::lomake/col-luokka "col-xs-4"
-          :aseta (fn [rivi arvo & muut]
+          :aseta (fn [rivi arvo]
                    (let [lk (some #(when (and
                                            (some? (:kuukausi %))
                                            (= (:kuukausi %) (pvm/kuukausi arvo))
