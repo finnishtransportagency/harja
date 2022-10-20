@@ -1,10 +1,12 @@
--- name: hae-hoitokauden-tehtavamaarat-urakassa
+-- name: hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa
 -- Hakee kannasta nykytilanteen, jota käytetään päättelemään luodaanko vai päivitetäänkö tallennettavaa tietoa.
 SELECT ut.urakka                  as "urakka",
        ut."hoitokauden-alkuvuosi" as "hoitokauden-alkuvuosi",
        ut.tehtava                 as "tehtava-id",
-       ut.maara                   as "maara"
+       ut.maara                   as "maara",
+       tk.aluetieto               as "aluetieto?"
 FROM urakka_tehtavamaara ut
+     JOIN toimenpidekoodi tk on tk.id = ut.tehtava
 WHERE ut.urakka = :urakka
   AND ut."hoitokauden-alkuvuosi" = :hoitokausi
   AND ut.poistettu IS NOT TRUE;
@@ -83,13 +85,13 @@ order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 -- name: lisaa-tehtavamaara<!
 INSERT INTO urakka_tehtavamaara
-  (urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
-VALUES (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja);
+  (urakka, "hoitokauden-alkuvuosi", tehtava, maara, "muuttunut-tarjouksesta?", luotu, luoja)
+VALUES (:urakka, :hoitokausi, :tehtava, :maara, true, current_timestamp, :kayttaja);
 
--- name: lisaa-tehtavamaara-mutta-ala-paivita<!
+-- name: lisaa-urakka-tehtavamaara-mutta-ala-paivita<!
 insert into urakka_tehtavamaara
-(urakka, "hoitokauden-alkuvuosi", tehtava, maara, luotu, luoja)
-values (:urakka, :hoitokausi, :tehtava, :maara, current_timestamp, :kayttaja)
+(urakka, "hoitokauden-alkuvuosi", tehtava, maara, "muuttunut-tarjouksesta?", luotu, luoja)
+values (:urakka, :hoitokauden-alkuvuosi, :tehtava, :maara, :muuttunut-tarjouksesta?, current_timestamp, :kayttaja)
 on conflict do nothing;
 
 -- name: paivita-tehtavamaara!
@@ -97,7 +99,8 @@ on conflict do nothing;
 UPDATE urakka_tehtavamaara
 SET maara     = :maara,
     muokattu  = current_timestamp,
-    muokkaaja = :kayttaja
+    muokkaaja = :kayttaja,
+    "muuttunut-tarjouksesta?" = :muuttunut-tarjouksesta?
 WHERE urakka = :urakka
   AND "hoitokauden-alkuvuosi" = :hoitokausi
   AND tehtava = :tehtava;
@@ -171,6 +174,16 @@ from sopimus_tehtavamaara st
        join toimenpidekoodi tpk on st.tehtava = tpk.id
 where st.urakka = :urakka;
 
+-- name: hae-sopimuksen-tehtavamaaran-maara
+select st.maara                    as "sopimuksen-maara",
+       st.tehtava                  as "tehtava",
+       st.hoitovuosi               as "hoitokauden-alkuvuosi",
+       tpk.aluetieto               as "aluetieto?"
+from sopimus_tehtavamaara st
+         join toimenpidekoodi tpk on st.tehtava = tpk.id
+where st.urakka = :urakka-id
+  and st.tehtava = :tehtava-id;
+
 -- name: hae-tehtavahierarkia-maarineen
 -- Palauttaa tehtävähierarkian käyttöliittymän Suunnittelu > Tehtävä- ja määräluettelo-näkymää varten.
 -- Äkillistä hoitotyötä ja Kolmansien osapuolten aiheuttaminen vahinkojen korjausta ei suunnitella tehtävälistalla.
@@ -179,7 +192,8 @@ SELECT ut.urakka                   as "urakka",
        tr1.jarjestys               as "otsikon-jarjestys",
        tpk4.jarjestys              as "jarjestys",
        tpk4.id                     as "tehtava-id",
-       ut.maara                    as "maara",
+       ut.maara                    as "suunniteltu-maara",
+       ut."muuttunut-tarjouksesta?" as "muuttunut-tarjouksesta?",
        tr3.otsikko                 as "otsikko",
        tpk3.nimi                   as "Toimenpide",
        tpk3.koodi                  as "Toimenpidekoodi",

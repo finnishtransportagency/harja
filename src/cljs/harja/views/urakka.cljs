@@ -109,6 +109,7 @@
                                         (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
                                         (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
                                         (= :suola (nav/valittu-valilehti :suunnittelu))
+                                        (= :tehtavat (nav/valittu-valilehti :suunnittelu))
                                         (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat))
                                         )
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
