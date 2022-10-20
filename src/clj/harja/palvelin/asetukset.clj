@@ -84,6 +84,11 @@
                             :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :sampo-api) {:lahetys-url s/Str
+                                :paivittainen-lahetysaika [s/Num]
+                                :palvelin s/Str
+                                :kayttajatunnus s/Str
+                                :salasana s/Str}
    (s/optional-key :itmf) {:url s/Str
                            :kayttaja s/Str
                            :salasana s/Str
