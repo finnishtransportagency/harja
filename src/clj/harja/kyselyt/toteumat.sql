@@ -590,9 +590,9 @@ WHERE tk.tehtavaryhma = tr.id
 
 -- name: tallenna-erilliskustannukselle-liitteet<!
 -- Lisää liitteet
-insert into erilliskustannus_liite
+INSERT INTO erilliskustannus_liite
   (bonus, liite)
-values (:bonus, :liite);
+VALUES (:bonus, :liite);
 
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
