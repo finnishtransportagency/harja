@@ -70,7 +70,7 @@
 (defn ryhmittele-tehtavat-valitasojen-perusteella 
   [idt]
   (fn [tasot {:keys [tehtava-id sopimuksen-tehtavamaarat urakka tehtava otsikko yksikko samat-maarat-vuosittain?
-                     sopimuksen-aluetieto-maara jarjestys maarat suunnitellut-maarat aluetieto muuttuneet-tarjouksesta suunniteltu-maara] :as rivi}]
+                     sopimuksen-aluetieto-maara jarjestys suunnitellut-maarat aluetieto muuttuneet-tarjouksesta] :as rivi}]
     (let [valitaso-id (luo-id-fn otsikko idt)]
       (mapv (fn [{:keys [id] :as taso}]
               (if (= id valitaso-id)
@@ -85,8 +85,7 @@
                                                :suunnitellut-maarat suunnitellut-maarat
                                                :muuttuneet-tarjouksesta muuttuneet-tarjouksesta
                                                :taso 4
-                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?
-                                               :suunniteltu-maara suunniteltu-maara}
+                                               :samat-maarat-vuosittain? samat-maarat-vuosittain?}
                                                (if aluetieto
                                                 {:sopimuksen-aluetieto-maara sopimuksen-aluetieto-maara}
                                                 {:samat-maarat-vuosittain? samat-maarat-vuosittain?
@@ -111,7 +110,6 @@
           (assoc kaikki (:tehtava-id rivi) rivi))]
     (if (:hoitokauden-alkuvuosi rivi)
       (-> kaikki
-        (assoc-in [(:tehtava-id rivi) :maarat (:hoitokauden-alkuvuosi rivi)] (:sopimuksen-aluetieto-maara rivi))
         (assoc-in [(:tehtava-id rivi) :suunnitellut-maarat (:hoitokauden-alkuvuosi rivi)] (:suunniteltu-maara rivi))
         (assoc-in [(:tehtava-id rivi) :muuttuneet-tarjouksesta (:hoitokauden-alkuvuosi rivi)] (:muuttunut-tarjouksesta? rivi)))
       kaikki)))

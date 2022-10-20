@@ -263,12 +263,18 @@
                                     {:urakka-id             @oulun-maanteiden-hoitourakan-2019-2024-id
                                      :hoitokauden-alkuvuosi :kaikki})]
 
-       (is (true? (let [maaralliset (filter
-                                 #(some? (:maarat %))
+       (is (true? (let [alue-tehtavat (filter
+                                 #(some? (:sopimuksen-aluetieto-maara %))
                                  (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
 
-               (and (some #(contains? (:maarat %) 2020) maaralliset)
-                 (some #(contains? (:maarat %) 2022) maaralliset)))) "Palauttaa kaikki määrät"))
+               (and (some #(contains? (:sopimuksen-aluetieto-maara %) 2020) alue-tehtavat)
+                 (some #(contains? (:sopimuksen-aluetieto-maara %) 2022) alue-tehtavat)))) "Palauttaa kaikki aluetieto tehtävät.")
+       (is (true? (let [maara-tehtavat (filter
+                                        #(some? (:sopimuksen-tehtavamaarat %))
+                                        (apply concat (mapv :tehtavat tehtavat-ja-maarat-kaikki)))]
+
+                    (and (some #(contains? (:sopimuksen-tehtavamaarat %) 2020) maara-tehtavat)
+                      (some #(contains? (:sopimuksen-tehtavamaarat %) 2022) maara-tehtavat)))) "Palauttaa kaikki aluetieto tehtävät."))
   ;; Annetulla urakalla ei voi olla sopimustietoja, koska urakan id on aivan väärä
   (is (thrown? IllegalArgumentException (kutsu-palvelua
                                           (:http-palvelin jarjestelma)
@@ -376,8 +382,10 @@
                                             (= tehtava (:id r))) 
                                           (mapcat :tehtavat vastaus)))]
                                   (if (:aluetieto? oikea-tehtava)
-                                    (:sopimuksen-aluetieto-maara oikea-tehtava)
+                                    (get (:sopimuksen-aluetieto-maara oikea-tehtava) vuosi)
                                     (get (:sopimuksen-tehtavamaarat oikea-tehtava) vuosi))))]
     (is (set/subset? odotettuja-tehtavia loydetyt-tehtavat) "Kaikkien odotettujen tehtävien pitäisi olla mukana kirjatuissa sopimuksen tehtävämäärissä.")
     (is (= 25000M (hae-tehtavan-maara-fn id-opastustaulut 2019)))
+    (is (= 500M (hae-tehtavan-maara-fn id-III 2019)))
+    (is (= 10000M (hae-tehtavan-maara-fn id-katupolyn-sidonta 2020)))
     (is (= 1000M (hae-tehtavan-maara-fn id-K2 2019)))))
