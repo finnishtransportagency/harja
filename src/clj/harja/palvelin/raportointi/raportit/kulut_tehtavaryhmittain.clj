@@ -49,9 +49,12 @@
         alkupvm-valittu-kuu-tai-vali (cond
                                        hoitokausi-valittu? (pvm/kuukauden-ensimmainen-paiva alkupvm)
                                        :default alkupvm)
+        alkupvm-str (konv/java-util-date->sql-date-str alkupvm-valittu-kuu-tai-vali)
         loppupvm-valittu-kuu-tai-vali (cond
                                         hoitokausi-valittu? (pvm/kuukauden-viimeinen-paiva loppupvm)
                                         :default loppupvm)
+        loppupvm-str (konv/java-util-date->sql-date-str loppupvm-valittu-kuu-tai-vali)
+
         alkupvm-hoitokausi
         (cond
           hoitokausi-valittu?
