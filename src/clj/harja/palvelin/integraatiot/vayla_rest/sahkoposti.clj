@@ -127,7 +127,7 @@
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
         ;; Lisää mahdolliset virheet kuittausviestiin
-        virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
+        virheet (if (#{"Virheellinen kuittausviesti" "Kuittausta ei voitu käsitellä"} (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
                   nil)
         vastaus-virheelliseen-viestiin (when-not (nil? virheet)
@@ -141,7 +141,8 @@
     ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
     (when-not (nil? virheet)
       (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
-        vastaus-virheelliseen-viestiin false))
+        vastaus-virheelliseen-viestiin false)
+      kuittaus-xml)
     kuittaus-xml))
 
 (def ^:const +xsd-polku+ "xsd/sahkoposti/")
@@ -163,7 +164,7 @@
     (julkaise-reitti
       http :sahkoposti-vastaanotto
       (POST "/sahkoposti/toimenpidekuittaus" request
-        (kutsukasittely/kasittele-kutsu db integraatioloki :sahkoposti-vastaanotto
+        (kutsukasittely/kasittele-sahkoposti-kutsu db integraatioloki :sahkoposti-vastaanotto
           request xml-skeemat/+sahkoposti-kutsu+ xml-skeemat/+sahkoposti-vastaus+
           (fn [kutsun-parametrit kutsun-data kayttaja db] (vastaanota-sahkoposti kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki)))))
     this)
