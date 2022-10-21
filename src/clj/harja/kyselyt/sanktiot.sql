@@ -196,6 +196,9 @@ SELECT ek.id,
        ek.tyyppi::TEXT        AS laji,
        ek.indeksin_nimi       AS indeksi,
        TRUE                   AS suorasanktio,
+       TRUE                   as bonus,
+       ek.laskutuskuukausi    as laskutuskuukausi,
+       ek.kasittelytapa       as kasittelytapa,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
        CASE
            WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
@@ -217,8 +220,9 @@ SELECT ek.id,
                                     AND tpk2.koodi = '23150'
                                   LIMIT 1)
    AND ek.pvm BETWEEN :alku AND :loppu
-   AND ek.poistettu IS NOT TRUE
- UNION ALL
+   AND ek.poistettu IS NOT TRUE;
+
+-- name: hae-urakan-lupausbonukset
 -- Lupausbonukset
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
@@ -226,6 +230,7 @@ SELECT p.id,
        p.tyyppi::TEXT                                  AS laji,
        u.indeksi                                       AS indeksi,
        TRUE                                            AS suorasanktio,
+       TRUE                                            as bonus,
        NULL                                            AS toimenpideinstanssi,
        (SELECT korotus
         FROM sanktion_indeksikorotus(MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15), u.indeksi,

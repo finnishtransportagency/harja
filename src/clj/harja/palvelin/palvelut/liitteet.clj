@@ -16,6 +16,7 @@
             [harja.domain.laadunseuranta.laatupoikkeama :as lp]
             [harja.domain.laadunseuranta.tarkastus :as tarkastus]
             [harja.domain.toteuma :as toteuma]
+            [harja.domain.erilliskustannus :as erilliskustannus]
             [harja.domain.kommentti :as kommentti]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.toteumat-tarkistukset :as tarkistukset]
@@ -94,7 +95,15 @@
              :domain-taulu-id ::toteuma/id
              :domain-taulu-urakka-id ::toteuma/urakka-id
              :oikeustarkistus (fn [db user urakka-id domain-id]
-                                (toteumap/toteumatyypin-oikeustarkistus db user urakka-id domain-id))}})
+                                (toteumap/toteumatyypin-oikeustarkistus db user urakka-id domain-id))}
+   :bonukset {:linkkitaulu ::liite-domain/erilliskustannus<->liite
+              :linkkitaulu-domain-id ::liite-domain/erilliskustannus-id
+              :linkkitaulu-liite-id ::liite-domain/liite-id
+              :domain-taulu ::erilliskustannus/erilliskustannus
+              :domain-taulu-id ::erilliskustannus/id
+              :domain-taulu-urakka-id ::erilliskustannus/urakka
+              :oikeustarkistus (fn [_ user urakka-id _]
+                                       (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id))}})
 
 (defn- poista-kommentin-liite-linkitys [db user {:keys [urakka-id domain liite-id domain-id]}]
   ;; Etsitään kommentti, joka kuuluu annettuun domain-asiaan ja jolla on liitteenä liite-id.

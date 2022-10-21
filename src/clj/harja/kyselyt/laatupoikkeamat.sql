@@ -299,6 +299,19 @@ FROM liite l
 WHERE hl.laatupoikkeama = :laatupoikkeamaid
 ORDER BY l.luotu ASC;
 
+-- name: hae-bonuksen-liitteet
+-- Hakee bonuksen liitteet
+select
+  l.id        as id,
+  l.tyyppi    as tyyppi,
+  l.koko      as koko,
+  l.nimi      as nimi,
+  l.liite_oid as oid
+from liite l
+  join erilliskustannus_liite el on l.id = el.liite
+where el.bonus = :bonus
+order by l.luotu asc;
+
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama

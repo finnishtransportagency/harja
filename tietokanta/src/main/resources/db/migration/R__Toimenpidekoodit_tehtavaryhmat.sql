@@ -1242,6 +1242,7 @@ UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Siltojen hoito (kev�
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pinnan hoito, hoitoluokka I', 'Sorateiden pinnan hoito, hoitoluokka II', 'Sorateiden pinnan hoito, hoitoluokka III', 'Sorapintaisten kävely- ja pyöräilyväylienhoito');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Sorateiden pölynsidonta (materiaali)','Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen','Liikenteen varmistaminen kelirikkokohteessa');
 UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Nopeusnäyttötaulun huolto ja ylläpito, siirto kohteiden välillä, akkujen lataaminen ja näyttötaulujen varastointi');
+UPDATE toimenpidekoodi SET aluetieto = TRUE WHERE nimi IN ('Reunantäyttö');
 
 DELETE from tehtavaryhma WHERE nimi = 'Kaiteet, aidat ja kiveykset (U)'; -- Väärin kirjoitettu versio, poistetaan roikkumasta
 
