@@ -1,13 +1,9 @@
 (ns harja.views.urakka.toteumat
   "Urakan 'Toteumat' välilehti:"
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.ui.bootstrap :as bs]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
-            [harja.tiedot.urakka :as u]
+  (:require [harja.ui.bootstrap :as bs]
             [harja.views.urakka.toteumat.yksikkohintaiset-tyot :as yks-hint-tyot]
             [harja.views.urakka.toteumat.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.toteumat.muut-tyot :as muut-tyot]
-            [harja.views.urakka.toteumat.maarien-toteuma-lomake :as akilliset-htyot]
             [harja.views.urakka.toteumat.erilliskustannukset :as erilliskustannukset]
             [harja.views.urakka.toteumat.maarien-toteumat :as maarien-toteumat-nakyma]
             [harja.views.urakka.toteumat.muut-materiaalit :refer [muut-materiaalit-nakyma]]
@@ -15,25 +11,18 @@
             [harja.views.urakka.toteumat.talvisuola :refer [talvisuolatoteumat]]
             [harja.views.urakka.toteumat.pohjavesialueiden-suola :as pohjavesialueiden-suola]
             [harja.views.urakka.toteumat.velho-varusteet :as velho-varusteet]
-            [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
-            [cljs.core.async :refer [<! >! chan]]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [tuck.core :as tuck])
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+            [harja.pvm :as pvm]))
 
 
 (defn toteumat
   "Toteumien pääkomponentti"
   [ur]
-  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))]
+  (let [mhu-urakka? (= :teiden-hoito (:tyyppi ur))
+        hj-urakka? (and (= :teiden-hoito (:tyyppi ur)) (< (pvm/vuosi (:alkupvm ur)) 2019))]
     (komp/luo
       (komp/sisaan-ulos #(do
                            (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -78,7 +67,11 @@
            [muut-materiaalit-nakyma ur])
 
          "Erilliskustannukset" :erilliskustannukset
-         (when (oikeudet/urakat-toteumat-erilliskustannukset id)
+         (when (and (oikeudet/urakat-toteumat-erilliskustannukset id)
+                 ;; Piilotetaan Erilliskustannukset-tab 'teiden-hoito' (eli mh-urakoilta), paitsi HJ-urakoilta.
+                 ;; HJ-urakat ovat 'teiden-hoito'-urakoita, jotka ovat alkaneet ennen vuotta 2019
+                 ;; VHAR-6675
+                 (or hj-urakka? (not mhu-urakka?)))
            [erilliskustannukset/erilliskustannusten-toteumat ur])
 
          "Varusteet" :varusteet
