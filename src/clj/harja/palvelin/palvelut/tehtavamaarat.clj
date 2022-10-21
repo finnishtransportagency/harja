@@ -318,7 +318,7 @@
         sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id})
         sopimuksen-tehtavamaarat (reduce (fn [lopputulos rivi]
                                            (if (:aluetieto rivi)
-                                             (let [lopputulos (disj rivi)]
+                                             (let [lopputulos (remove #(= % rivi) lopputulos)]
                                                (flatten
                                                     (conj (if (seq? lopputulos) lopputulos [lopputulos])
                                                       (reduce (fn [r vuosi]
@@ -343,8 +343,11 @@
     (when-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei suunnitella tehtävä- ja määräluettelon tietoja.")))))
   (jdbc/with-db-transaction [db db]
-    (kopioi-tarjouksen-tiedot-suunnitelmaksi db user urakka-id)
-    (poista-tuloksista-namespace 
+    ;; Kopioi sopimuksen tiedot urakka_tehtavamaarat tauluun (eli suunnitelmaksi) vain jos
+    ;; sopimus tallennetaan, ei silloin kun sitä aletaan muokkaamaan
+    (when (:tallennettu parametrit)
+      (kopioi-tarjouksen-tiedot-suunnitelmaksi db user urakka-id))
+    (poista-tuloksista-namespace
       (q/tallenna-sopimuksen-tila db parametrit (:tallennettu parametrit)))))
 
 (defn hae-sopimuksen-tila
