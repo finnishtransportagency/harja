@@ -465,7 +465,10 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
         raportin-nimi "Ympäristöraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka  (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                    :urakka (let [{nimi :nimi urakkanro :alueurakkanumero} (first (urakat-q/hae-urakka db urakka-id))]
+                              (if urakkanro
+                                (format "%s (%s)" nimi urakkanro)
+                                nimi))
                     :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
                                                     db hallintayksikko-id)))
                     :koko-maa "KOKO MAA")
