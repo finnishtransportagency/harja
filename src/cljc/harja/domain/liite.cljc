@@ -74,4 +74,7 @@
     "liite" ::liite-id}]
   ["toteuma_liite" ::toteuma<->liite
    {"toteuma" ::toteuma-id
+    "liite" ::liite-id}]
+  ["erilliskustannus_liite" ::erilliskustannus<->liite
+   {"bonus" ::erilliskustannus-id
     "liite" ::liite-id}])
