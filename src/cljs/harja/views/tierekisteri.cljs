@@ -170,7 +170,7 @@
     [:button {:on-click hae!} "Hae"]
     [:button {:on-click kaanna!} "Käännä alku/loppu"]
     [:button {:on-click ajoratojen-geometriat!} "Piirrä ajoradat"]
-    [yleiset/vihje "Ajorata vaikuttaa vain ajoradan geometrian piirtämiseen. Ajoradan piirrossa huomioidaan tie, aosa ja ajorata (jos jätät ajoradat pois, piirretään kaikkien ajoratojen geometriat ko. tiellä ja osalla."]
+    [yleiset/vihje "Ajorata vaikuttaa vain ajoradan geometrian piirtämiseen. Ajoradan piirrossa huomioidaan tie, aosa ja ajorata (jos jätät ajoradan tyhjäksi, piirretään kaikkien ajoratojen geometriat ko. tiellä ja osalla."]
     ;; Toistaiseksi piilotettu, koska ei toimi nykyisellään.
     #_[:button {:on-click hae-vkm!} "Hae VKM polut"]]])
 
