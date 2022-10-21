@@ -9,7 +9,8 @@
             [harja.domain
              [oikeudet :as oikeudet]
              [yllapitokohde :as yllapitokohde]
-             [tierekisteri :as tr-domain]])
+             [tierekisteri :as tr-domain]]
+            [clojure.string :as str])
   (:import (org.postgresql.util PSQLException)))
 
 (def +threshold+ 250)
@@ -90,6 +91,15 @@
 (defn hae-tieosan-ajoradat [db params]
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
+
+(defn hae-tieosan-ajoratojen-geometriat [db {:keys [tie osa ajorata]}]
+  "Hakee annetun tien osan ajoratojen geometriat. Parametri-mapissa täytyy olla ainakin :tie ja :osa"
+  (mapv
+    :geom
+    (tv/hae-tieosan-ajoratojen-geometriat db {:tie tie
+                                              :osa osa
+                                              :ajorata (when-not (str/blank? ajorata)
+                                                         ajorata)})))
 
 (defn validoi-tr-osoite-tieverkolla
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
@@ -181,6 +191,9 @@
       :hae-tr-osan-ajoradat (fn [_ params]
                               (oikeudet/ei-oikeustarkistusta!)
                               (hae-tieosan-ajoradat db params))
+      :hae-tr-osan-ajoratojen-geometriat (fn [_ params]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-tieosan-ajoratojen-geometriat db params))
       :hae-tr-gps-koordinaateilla (fn [_ params]
                                     (oikeudet/ei-oikeustarkistusta!)
                                     (hae-tr-osoite-gps-koordinaateilla db params)))
@@ -194,5 +207,6 @@
                      :hae-tr-pituudet
                      :hae-tr-tiedot
                      :hae-tr-osan-ajoradat
+                     :hae-tr-osan-ajoratojen-geometriat
                      :hae-tr-gps-koordinaateilla)
     this))

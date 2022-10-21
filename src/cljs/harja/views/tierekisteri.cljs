@@ -54,11 +54,24 @@
                   :loppuetaisyys alkuetaisyys)))
   (hae!))
 
+(defn ajoratojen-geometriat! []
+  (tasot/poista-geometria! :ajoratojen-geometriat)
+  (go
+    (let [tulos (<! (vkm/tieosan-ajoratojen-geometriat @tr))]
+      (reset! sijainti tulos)
+      (tasot/nayta-geometria! :ajoratojen-geometriat
+                              {:alue (maarittele-feature
+                                       (first tulos)
+                                       false
+                                       asioiden-ulkoasu/tr-ikoni
+                                       asioiden-ulkoasu/tr-viiva)}))))
+
 (def tr-kentat [["Tie" :numero]
                 ["Aosa" :alkuosa]
                 ["Aet" :alkuetaisyys]
                 ["Losa" :loppuosa]
-                ["Let" :loppuetaisyys]])
+                ["Let" :loppuetaisyys]
+                ["Ajorata" :ajorata]])
 
 (defn hae-tr-osoite! []
   ;; Hae TR osoite koordinaatille
@@ -156,6 +169,8 @@
    [:div
     [:button {:on-click hae!} "Hae"]
     [:button {:on-click kaanna!} "Käännä alku/loppu"]
+    [:button {:on-click ajoratojen-geometriat!} "Piirrä ajoradat"]
+    [yleiset/vihje "Ajorata vaikuttaa vain ajoradan geometrian piirtämiseen. Ajoradan piirrossa huomioidaan tie, aosa ja ajorata (jos jätät ajoradat pois, piirretään kaikkien ajoratojen geometriat ko. tiellä ja osalla."]
     ;; Toistaiseksi piilotettu, koska ei toimi nykyisellään.
     #_[:button {:on-click hae-vkm!} "Hae VKM polut"]]])
 
