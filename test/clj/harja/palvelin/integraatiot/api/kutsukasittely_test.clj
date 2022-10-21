@@ -53,6 +53,22 @@
               (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
               (is (.contains (:body vastaus) "kutsu lomakedatan content-typellä"))))
 
+(deftest huomaa-kutsu-sahkoposti-jossa-vaara-content-type
+  (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
+        vastaus (kutsukasittely/kasittele-sahkoposti-kutsu
+                  (:db jarjestelma)
+                  (:integraatioloki jarjestelma)
+                  "hae-urakka"
+                  {:body kutsun-data
+                   :request-method :post
+                   :headers {"oam_remote_user" "yit-rakennus", "content-type" "application/x-www-form-urlencoded" "origin" "http://localhost:3000"}}
+                  xml-skeemat/+sahkoposti-kutsu+
+                  xml-skeemat/+sahkoposti-vastaus+
+                  (fn [_]))]
+    (is (= 415 (:status vastaus)))
+    (is (= {"Content-Type" "text/plain" "Access-Control-Allow-Origin" "http://localhost:3000" "Vary" "Origin"} (:headers vastaus)) "CORS-headerit on lisätty palautuvan virhesanoman headereihin.")
+    (is (.contains (:body vastaus) "Virhe: Väärä content-type. Käytä application/xml"))))
+
 (deftest huomaa-kutsu-jossa-vaara-content-type2
   (let [kutsun-data (IOUtils/toInputStream "{\"asdfasdfa\":234}")
         vastaus (kutsukasittely/kasittele-sampo-kutsu
