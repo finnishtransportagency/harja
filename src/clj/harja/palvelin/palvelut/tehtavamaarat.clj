@@ -318,7 +318,7 @@
         sopimuksen-tehtavamaarat (q/hae-sopimuksen-tehtavamaarat-urakalle db {:urakka urakka-id})
         sopimuksen-tehtavamaarat (reduce (fn [lopputulos rivi]
                                            (if (:aluetieto rivi)
-                                             (let [lopputulos (disj rivi)]
+                                             (let [lopputulos (remove #(= % rivi) lopputulos)]
                                                (flatten
                                                     (conj (if (seq? lopputulos) lopputulos [lopputulos])
                                                       (reduce (fn [r vuosi]
