@@ -588,24 +588,38 @@ WHERE tk.tehtavaryhma = tr.id
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
+-- name: tallenna-erilliskustannukselle-liitteet<!
+-- Lisää liitteet
+INSERT INTO erilliskustannus_liite
+  (bonus, liite)
+VALUES (:bonus, :liite);
+
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
 INTO erilliskustannus
 (tyyppi, urakka, sopimus, toimenpideinstanssi, pvm,
- rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
+ rahasumma, indeksin_nimi, lisatieto, luotu, luoja, laskutuskuukausi, kasittelytapa)
 VALUES (:tyyppi :: erilliskustannustyyppi, :urakka, :sopimus, :toimenpideinstanssi, :pvm,
-        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja);
+        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja, :laskutuskuukausi,
+        :kasittelytapa :: laatupoikkeaman_kasittelytapa);
 
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
-SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sopimus = :sopimus,
-  toimenpideinstanssi = :toimenpideinstanssi,
-  pvm                 = :pvm,
-  rahasumma           = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
-  muokkaaja           = :muokkaaja,
-  poistettu           = :poistettu
+SET tyyppi              = :tyyppi :: erilliskustannustyyppi,
+    urakka              = :urakka,
+    sopimus             = :sopimus,
+    toimenpideinstanssi = :toimenpideinstanssi,
+    pvm                 = :pvm,
+    rahasumma           = :rahasumma,
+    indeksin_nimi       = :indeksin_nimi,
+    kasittelytapa       = :kasittelytapa :: laatupoikkeaman_kasittelytapa,
+    laskutuskuukausi    = :laskutuskuukausi,
+    lisatieto           = :lisatieto,
+    muokattu            = NOW(),
+    muokkaaja           = :muokkaaja,
+    poistettu           = :poistettu
 WHERE id = :id
       AND urakka = :urakka;
 

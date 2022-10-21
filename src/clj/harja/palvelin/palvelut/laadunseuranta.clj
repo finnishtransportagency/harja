@@ -72,7 +72,13 @@
     (let [laatupoikkeaman-urakka (:urakka (first (laatupoikkeamat-q/hae-laatupoikkeaman-urakka-id db {:laatupoikkeamaid laatupoikkeama-id})))]
       (when-not (= laatupoikkeaman-urakka urakka-id)
         (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
-                                        urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+                                     urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+
+(defn- hae-bonuksen-liitteet
+  "Hakee bonuksen liitteet"
+  [db user urakka-id bonus-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
+  (into [] (laatupoikkeamat-q/hae-bonuksen-liitteet db bonus-id)))
 
 (defn- hae-sanktion-liitteet
   "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
@@ -116,7 +122,6 @@
   Tarvittaessa optioilla voi estää sanktioiden/bonusten palauttamisen ja hakea vain toista tyyppiä."
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-
   ;; Haetaan oletuksena sankiot ja bonukset.
   (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
         hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
@@ -130,6 +135,11 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           [])
+        urakan-lupausbonukset (if hae-bonukset?
+                                (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
+                                                                        :alku (konv/sql-timestamp alku)
+                                                                        :loppu (konv/sql-timestamp loppu)})
+                                [])
         sanktiot (into []
                        (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
                              (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
@@ -138,10 +148,12 @@
                              (map konv/alaviiva->rakenne)
                              (map #(konv/decimal->double % :summa))
                              (map #(konv/decimal->double % :indeksikorjaus))
+                             (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %))
                              (map #(assoc % :laji (keyword (:laji %)))))
                    (concat
                      urakan-sanktiot
-                     urakan-bonukset))]
+                     urakan-bonukset
+                     urakan-lupausbonukset))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
       sanktiot)))
@@ -366,7 +378,11 @@
 
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
-        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
+        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id))
+      
+      :hae-bonuksen-liitteet
+      (fn [user {:keys [urakka-id bonus-id]}]
+        (hae-bonuksen-liitteet db user urakka-id bonus-id)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -377,5 +393,6 @@
                      :hae-urakan-sanktiot-ja-bonukset
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
-                     :hae-sanktion-liitteet)
+                     :hae-sanktion-liitteet
+                     :hae-bonuksen-liitteet)
     this))
