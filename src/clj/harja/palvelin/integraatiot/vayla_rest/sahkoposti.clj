@@ -127,7 +127,7 @@
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
         ;; Lisää mahdolliset virheet kuittausviestiin
-        virheet (if (= "Virheellinen kuittausviesti" (:otsikko kasitelty-vastaus))
+        virheet (if (#{"Virheellinen kuittausviesti" "Kuittausta ei voitu käsitellä"} (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
                   nil)
         vastaus-virheelliseen-viestiin (when-not (nil? virheet)
