@@ -138,7 +138,6 @@
                                                  JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
                                                WHERE tpi.id IN (" (apply str (interpose ", " (conj kiinteahintaisten-toimenpideinstanssit mhu-johto-toimenpideinstanssi))) ") AND
                                                      ks.likainen IS TRUE;"))]
-        (println "KUSTANNUSSUUNNITELMAT " kustannussuunnitelmat)
         (is (every? :onnistui? vastaukset) "Kiinteähintaisen työn tallentaminen epäonnistui")
         (is (= 7 (count kustannussuunnitelmat))) ;; MHU-urakoissa on seitsemän toimenpideinstainssia ja niillä kullakin yksi kustannussuunnitelma
         (is (every? :likainen kustannussuunnitelmat))))
