@@ -440,13 +440,14 @@
                        [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
                         origin-header (get (:headers request) "origin")
                         kutsun-data (lue-kutsu xml? kutsun-skeema request body)
-                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)]
+                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
+                        vastauksen-xml (xml/tee-xml-sanoma vastauksen-data)]
 
                        ;; Jos vain mahdollista, eikä todella vakavia virheitä satu, raportoidaan 200 ok vastaukseksi, vaikka
                        ;; itse käsittely ei ole välttämättä onnistunut
                        {:status 200
                         :headers (lisaa-request-headerit false origin-header)
-                        :body vastauksen-data}))]
+                        :body vastauksen-xml}))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
