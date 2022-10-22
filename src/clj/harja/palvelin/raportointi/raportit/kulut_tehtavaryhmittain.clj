@@ -1,10 +1,11 @@
 (ns harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain
   (:require
-    [clojure.string :as cstr]
+    [taoensso.timbre :as log]
     [harja.kyselyt
      [urakat :as urakat-q]
      [kulut :as kulut-q]
-     [budjettisuunnittelu :as budjetti-q]]
+     [budjettisuunnittelu :as budjetti-q]
+     [konversio :as konv]]
     [harja.pvm :as pvm]))
 
 
@@ -49,67 +50,53 @@
         alkupvm-valittu-kuu-tai-vali (cond
                                        hoitokausi-valittu? (pvm/kuukauden-ensimmainen-paiva alkupvm)
                                        :default alkupvm)
+        alkupvm-str (konv/java-util-date->sql-date-str alkupvm-valittu-kuu-tai-vali)
         loppupvm-valittu-kuu-tai-vali (cond
                                         hoitokausi-valittu? (pvm/kuukauden-viimeinen-paiva loppupvm)
                                         :default loppupvm)
+        loppupvm-str (konv/java-util-date->sql-date-str loppupvm-valittu-kuu-tai-vali)
+
         alkupvm-hoitokausi
         (cond
           hoitokausi-valittu?
           alkupvm
 
-          (pvm/ennen? alkupvm
-                      (pvm/hoitokauden-alkupvm
-                        (pvm/vuosi alkupvm)))
-          (-> alkupvm
-              pvm/vuosi
-              dec
-              pvm/hoitokauden-alkupvm)
+          (pvm/ennen? alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi alkupvm)))
+          (-> alkupvm pvm/vuosi dec pvm/hoitokauden-alkupvm)
 
-          (pvm/sama-tai-jalkeen? alkupvm
-                                 (pvm/hoitokauden-alkupvm
-                                   (pvm/vuosi alkupvm)))
-          (-> alkupvm
-              pvm/vuosi
-              pvm/hoitokauden-alkupvm))
+          (pvm/sama-tai-jalkeen? alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi alkupvm)))
+          (-> alkupvm pvm/vuosi pvm/hoitokauden-alkupvm))
 
         loppupvm-hoitokausi
         (cond
-          (and hoitokausi-valittu?
-               (pvm/sama-tai-ennen? loppupvm (pvm/nyt))) loppupvm
+          (and hoitokausi-valittu? (pvm/sama-tai-ennen? loppupvm (pvm/nyt)))
+          loppupvm
 
-          (and hoitokausi-valittu?
-               (pvm/jalkeen? loppupvm (pvm/nyt))) (pvm/nyt)
+          (and hoitokausi-valittu? (pvm/jalkeen? loppupvm (pvm/nyt)))
+          (pvm/nyt)
 
           (pvm/jalkeen? loppupvm (pvm/nyt))
           (pvm/nyt)
 
           (pvm/sama-tai-ennen? loppupvm (pvm/nyt))
-          (-> loppupvm
-            pvm/vuosi
-            pvm/hoitokauden-loppupvm))
-        
+          (-> loppupvm pvm/paivamaaran-hoitokausi second))
+
+        hoitokausi-params {:alkupvm (konv/java-util-date->sql-date-str alkupvm-hoitokausi)
+                           :loppupvm (konv/java-util-date->sql-date-str loppupvm-hoitokausi)
+                           :urakka urakka-id}
+        kuukausi-params {:alkupvm alkupvm-str
+                         :loppupvm loppupvm-str
+                         :urakka urakka-id}
         kaikki-rivit-alusta (group-by :nimi
-                                      (concat
-                                        (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
-                                                                                                                :loppupvm loppupvm-hoitokausi
-                                                                                                                :urakka   urakka-id})
-                                        (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
-                                                                                                :loppupvm loppupvm-hoitokausi
-                                                                                                :urakka   urakka-id})
-                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-hoitokausi
-                                                                                             :loppupvm loppupvm-hoitokausi
-                                                                                             :urakka   urakka-id})))
+                              (concat
+                                (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db hoitokausi-params)
+                                (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db hoitokausi-params)
+                                (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db hoitokausi-params)))
         kaikki-rivit-kuussa (group-by :nimi
-                                      (concat
-                                        (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
-                                                                                                                :loppupvm loppupvm-valittu-kuu-tai-vali
-                                                                                                                :urakka   urakka-id})
-                                        (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
-                                                                                                :loppupvm loppupvm-valittu-kuu-tai-vali
-                                                                                                :urakka   urakka-id})
-                                        (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db {:alkupvm  alkupvm-valittu-kuu-tai-vali
-                                                                                             :loppupvm loppupvm-valittu-kuu-tai-vali
-                                                                                             :urakka   urakka-id})))
+                              (concat
+                                (kulut-q/hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla db kuukausi-params)
+                                (kulut-q/hae-urakan-hj-kulut-raporttiin-aikavalilla db kuukausi-params)
+                                (kulut-q/hae-urakan-kulut-raporttiin-aikavalilla db kuukausi-params)))
         rivin-muodostaja (comp
                            (map #(let [summa (reduce +
                                                      0
@@ -174,6 +161,7 @@
 
 (defn suorita
   [db user {:keys [alkupvm loppupvm testiversio?] :as parametrit}]
+  (log/debug "Suorita Raportti Kulut Tehtäväryhmittäin :: parametrit" parametrit)
   (let [{:keys [otsikot rivit yhteensa debug]} (kulut-urakalle db parametrit)
         tavoitehinta (hae-tavoitehinta db parametrit)
         yhteensa-hoitokauden-alusta (second yhteensa)]

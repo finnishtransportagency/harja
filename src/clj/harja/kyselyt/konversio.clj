@@ -11,7 +11,8 @@
             [harja.pvm :as pvm]
             [digest :as digest])
   (:import (clojure.lang Keyword)
-           (java.io ByteArrayOutputStream ObjectOutputStream)))
+           (java.io ByteArrayOutputStream ObjectOutputStream)
+           (java.text SimpleDateFormat)))
 
 
 (defn yksi
@@ -208,6 +209,10 @@
   [^java.util.Date dt]
   (when dt
     (java.sql.Date. (.getTime dt))))
+
+(defn java-util-date->sql-date-str [^java.util.Date dt]
+  (when dt
+    (.format (SimpleDateFormat. "yyyy-MM-dd") dt)))
 
 (defn sql-timestamp
   "Luo java.sql.Timestamp objektin annetusta java.util.Date objektista."
