@@ -49,7 +49,8 @@
                     kayttaja portti)
           encoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
-      (is (= [{:virhe {:koodi "virheellinen-aikavali", :viesti "Annettu aikaväli on liian suuri."}}]
+      (is (= [{:virhe {:koodi "virheellinen-aikavali"
+                       :viesti "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on 1 vuosi."}}]
             (:virheet encoodattu-body)))))
 
   (testing "Tuntematon urakka"

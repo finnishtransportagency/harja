@@ -212,4 +212,4 @@
     (pvm/liian-suuri-aikavali? alkupvm loppupvm [n yksikko])
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+virheelinen-aikavali+
-       :viesti "Annettu aikaväli on liian suuri."})))
+       :viesti (str "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on " n " " (name yksikko) ".")})))

@@ -54,5 +54,5 @@
                      %
                      virheet/+viallinen-kutsu+
                      virheet/+virheelinen-aikavali+
-                     "Annettu aikaväli on liian suuri.")
+                     "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on 1 vuosi.")
           (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2022-02-02") [1 :vuosi])))))
