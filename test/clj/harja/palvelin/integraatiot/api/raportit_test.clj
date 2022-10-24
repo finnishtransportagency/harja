@@ -12,10 +12,10 @@
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-raportit
-                                           (component/using
-                                             (api-raportit/->Raportit)
-                                             [:http-palvelin :db :integraatioloki])))
+    :api-raportit
+    (component/using
+      (api-raportit/->Raportit)
+      [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
 
@@ -47,11 +47,11 @@
           loppupvm "2019-12-31"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
-          encoodattu-body (cheshire/decode (:body vastaus) true)]
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
       (is (= [{:virhe {:koodi "virheellinen-aikavali"
                        :viesti "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on 1 vuosi."}}]
-            (:virheet encoodattu-body)))))
+            (:virheet dekoodattu-body)))))
 
   (testing "Tuntematon urakka"
     (let [urakka-id 3184391
@@ -59,10 +59,10 @@
           loppupvm "2015-09-30"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
-          encoodattu-body (cheshire/decode (:body vastaus) true)]
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
-      (is (=  [{:virhe {:koodi "tuntematon-urakka", :viesti "Urakkaa id:llä 3184391 ei löydy."}}]
-            (:virheet encoodattu-body)))))
+      (is (= [{:virhe {:koodi "tuntematon-urakka", :viesti "Urakkaa id:llä 3184391 ei löydy."}}]
+            (:virheet dekoodattu-body)))))
 
   (testing "Ei oikeuksia urakkaan"
     (let [urakka-id 5
@@ -70,7 +70,7 @@
           loppupvm "2019-12-31"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
-          encoodattu-body (cheshire/decode (:body vastaus) true)]
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 400 (:status vastaus)))
-      (is (=  [{:virhe {:koodi "kayttajalla-puutteelliset-oikeudet", :viesti "Käyttäjällä: yit-rakennus ei ole oikeuksia urakkaan: 5"}}]
-            (:virheet encoodattu-body))))))
+      (is (= [{:virhe {:koodi "kayttajalla-puutteelliset-oikeudet", :viesti "Käyttäjällä: yit-rakennus ei ole oikeuksia urakkaan: 5"}}]
+            (:virheet dekoodattu-body))))))
