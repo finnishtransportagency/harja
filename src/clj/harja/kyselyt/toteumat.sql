@@ -451,7 +451,7 @@ FROM osa_toteumat ot
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
-         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
+         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -469,7 +469,7 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        tk.suunnitteluyksikko    AS yk,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava
+         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -588,24 +588,38 @@ WHERE tk.tehtavaryhma = tr.id
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
+-- name: tallenna-erilliskustannukselle-liitteet<!
+-- Lisää liitteet
+INSERT INTO erilliskustannus_liite
+  (bonus, liite)
+VALUES (:bonus, :liite);
+
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
 INTO erilliskustannus
 (tyyppi, urakka, sopimus, toimenpideinstanssi, pvm,
- rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
+ rahasumma, indeksin_nimi, lisatieto, luotu, luoja, laskutuskuukausi, kasittelytapa)
 VALUES (:tyyppi :: erilliskustannustyyppi, :urakka, :sopimus, :toimenpideinstanssi, :pvm,
-        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja);
+        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja, :laskutuskuukausi,
+        :kasittelytapa :: laatupoikkeaman_kasittelytapa);
 
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
-SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sopimus = :sopimus,
-  toimenpideinstanssi = :toimenpideinstanssi,
-  pvm                 = :pvm,
-  rahasumma           = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
-  muokkaaja           = :muokkaaja,
-  poistettu           = :poistettu
+SET tyyppi              = :tyyppi :: erilliskustannustyyppi,
+    urakka              = :urakka,
+    sopimus             = :sopimus,
+    toimenpideinstanssi = :toimenpideinstanssi,
+    pvm                 = :pvm,
+    rahasumma           = :rahasumma,
+    indeksin_nimi       = :indeksin_nimi,
+    kasittelytapa       = :kasittelytapa :: laatupoikkeaman_kasittelytapa,
+    laskutuskuukausi    = :laskutuskuukausi,
+    lisatieto           = :lisatieto,
+    muokattu            = NOW(),
+    muokkaaja           = :muokkaaja,
+    poistettu           = :poistettu
 WHERE id = :id
       AND urakka = :urakka;
 

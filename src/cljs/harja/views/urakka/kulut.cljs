@@ -1099,7 +1099,7 @@
                                                    :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
    (fn [e! {kulut :kulut syottomoodi :syottomoodi 
-            {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]} 
+            {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]}
             :parametrit tehtavaryhmat :tehtavaryhmat 
             toimenpiteet :toimenpiteet maksuerat :maksuerat :as app}]
      (let [[hk-alkupvm hk-loppupvm] (pvm/paivamaaran-hoitokausi (pvm/nyt))
@@ -1121,9 +1121,8 @@
              [:input {:type "hidden" :name "parametrit"
                       :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
                                               :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                              :kuukausi haun-kuukausi
-                                              :alkupvm haun-alkupvm
-                                              :loppupvm haun-loppupvm})}]
+                                              :alkupvm (or (first haun-kuukausi) haun-alkupvm)
+                                              :loppupvm (or (second haun-kuukausi) haun-loppupvm)})}]
              [:button {:type "submit"
                        :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]
             ^{:key "raporttipdf"}
@@ -1134,9 +1133,8 @@
              [:input {:type "hidden" :name "parametrit"
                       :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
                                               :urakka-nimi (-> @tila/yleiset :urakka :nimi)
-                                              :kuukausi haun-kuukausi
-                                              :alkupvm haun-alkupvm
-                                              :loppupvm haun-loppupvm})}]
+                                              :alkupvm (or (first haun-kuukausi) haun-alkupvm)
+                                              :loppupvm (or (second haun-kuukausi) haun-loppupvm)})}]
              [:button {:type "submit"
                        :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]
             [napit/yleinen-ensisijainen
@@ -1156,7 +1154,8 @@
             [:div.label-ja-alasveto.aikavali
              [:span.alasvedon-otsikko "Aikaväli"]
              [valinnat/aikavali (r/wrap [haun-alkupvm haun-loppupvm] (fn [[alkupvm loppupvm :as parametrit]]
-                                                                       (when (every? some? parametrit) 
+                                                                       (when (every? some? parametrit)
+                                                                         (e! (tiedot/->AsetaHakuPaivamaara alkupvm loppupvm))
                                                                          (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                                                                        :alkupvm alkupvm
                                                                                                        :loppupvm loppupvm})))))

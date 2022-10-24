@@ -17,7 +17,6 @@
   (let [vastaus (into []
                       (map konv/alaviiva->rakenne)
                       (q/hae-urakan-valitavoitteet db urakka-id))]
-    (log/debug "Haettu urakan välitavoitteet: " (pr-str vastaus))
     vastaus))
 
 (defn- poista-poistetut-urakan-valitavoitteet [db user valitavoitteet urakka-id]

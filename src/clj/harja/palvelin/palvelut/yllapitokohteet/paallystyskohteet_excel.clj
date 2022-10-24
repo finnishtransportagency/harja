@@ -2,7 +2,7 @@
   "Vie päällystyskohteiden kustannukset exceliin ja tuo samat tiedot Excelistä sisään."
   (:require [dk.ative.docjure.spreadsheet :as xls]
             [clojure.set :as set]
-            [clojure.string :refer [trim]]
+            [clojure.string :refer [trim] :as str]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
@@ -44,8 +44,13 @@
         otsikot-ja-rivit (drop-while #(not= (first %) "Kohde-ID") raaka-data)
         otsikot (first otsikot-ja-rivit)
         _ (validoi-excelin-otsikot otsikot)
-        ;; Poistetaan rivi kokonaan, mikäli yhaid on nil. Poistaa myös yhteensä-rivin
-        rivit (remove #(nil? (first %)) (rest otsikot-ja-rivit))
+        rivit (remove #(let [sarake-a-sisalto (first %)]
+                         ;; Poistetaan rivi kokonaan, mikäli yhaid on nil. Poistaa myös yhteensä-rivin
+                         (or (nil? sarake-a-sisalto)
+                             (and sarake-a-sisalto
+                                  ;; Määrämuutosten ohjerivi on poistettava
+                                  (str/starts-with? sarake-a-sisalto "Määrämuutokset"))))
+                      (rest otsikot-ja-rivit))
         kohteet (into []
                       (keep
                         (fn [rivi]

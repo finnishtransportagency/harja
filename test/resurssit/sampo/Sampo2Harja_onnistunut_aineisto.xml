@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Sampo2harja xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="SampToharja.xsd">
+    <Operation financialDepartmentHash="KP921303"
+               financialDepartmentOBS="/Liikennevirasto-4560/ELYT TOA-456090/Varsinais-Suomen ELY VAR OSA-4560921/VAR Liikenne ja infrastruktuuri YK-45609213/VAR Tienpidon suunnittelu-4560921303"
+               id="PR00043638" managerId="A009675" messageId="38068257-OP-PR00043638"
+               name="VAR maanteiden hoitourakka Merikarvia 2022-2027 hoidon johto, TP" productHash="203"
+               productOBS="/Kunnossapito/Hoito" projectId="PR00043633" schedule_finish="2027-09-30T17:00:00.0"
+               schedule_start="2022-10-01T08:00:00.0" vv_code="" vv_operation="23151">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>

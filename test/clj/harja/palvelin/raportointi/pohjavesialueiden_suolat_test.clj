@@ -47,9 +47,9 @@
     {:leveys 3 :fmt :numero :otsikko "Pituus"}
     {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
     {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
-    {:leveys 5 :fmt :numero :otsikko "Käyttö\u00ADraja (t/km)"}))
+    {}))
 
-(deftest raportin-suoritus-urakalle-toimii
+(deftest raportin-suoritus-urakalle-toimii-aktiivinen-urakka
   (let [nyt (java.util.Date.)
         v (+ (.getYear nyt) 1900)
         kk (inc (.getMonth nyt))
@@ -76,64 +76,19 @@
       (tarkista-sarakkeet taulukko)
 
       (is (= vastaus
-             [:raportti
-              {:nimi (str "Aktiivinen Oulu Testi, Pohjavesialueiden suolatoteumat ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))
-               :orientaatio :landscape}
-              [:taulukko
-               {:otsikko "11244001-Kempeleenharju"
-                :tyhja nil
-                :viimeinen-rivi-yhteenveto? true}
-               [{:fmt :kokonaisluku
-                 :leveys 3
-                 :otsikko "Tie"}
-                {:fmt :kokonaisluku
-                 :leveys 2
-                 :otsikko "Alku­osa"}
-                {:fmt :kokonaisluku
-                 :leveys 2
-                 :otsikko "Alku­etäisyys"}
-                {:fmt :kokonaisluku
-                 :leveys 2
-                 :otsikko "Loppu­osa"}
-                {:fmt :kokonaisluku
-                 :leveys 2
-                 :otsikko "Loppu­etäisyys"}
-                {:fmt :numero
-                 :leveys 3
-                 :otsikko "Pituus"}
-                {:fmt :numero
-                 :leveys 5
-                 :otsikko "Tot. talvisuola yhteensä (t)"}
-                {:fmt :numero
-                 :leveys 5
-                 :otsikko "Tot. talvisuola (t/km)"}
-                {:fmt :numero
-                 :leveys 5
-                 :otsikko "Käyttö­raja (t/km)"}]
-               [[846
-                 1
-                 0
-                 1
-                 1016
-                 1389.2576055387608
-                 3.0M
-                 2.1594267240571163
-                 nil]
-                [18637
-                 1
-                 0
-                 1
-                 8953
-                 9324.379134279012
-                 5.0M
-                 0.5362287320148329
-                 nil]
-                ["Yhteensä"
-                 nil
-                 nil
-                 nil
-                 nil
-                 nil
-                 8.0M
-                 nil
-                 nil]]]])))))
+            [:raportti {:orientaatio :landscape
+                        :nimi (str "Aktiivinen Oulu Testi, Suolatoteumat (kaikki pohjavesialueet) ajalta " str-p "." str-kk "." (dec v) " - " str-p "." str-kk "." (inc v))}
+             [:infolaatikko "Huom: tämä raportti on vanhentunut rajoitusaluetietojen osalta. Tarkista voimassaolevat rajoitusalueet raportilta 'Suolatoteumat - urakan rajoitusalueet'." {:tyyppi :vahva-ilmoitus}]
+             [:taulukko {:otsikko "11244001-Kempeleenharju", :viimeinen-rivi-yhteenveto? true, :tyhja nil}
+              [{:leveys 3 :fmt :kokonaisluku :otsikko "Tie"}
+               {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­osa"}
+               {:leveys 2 :fmt :kokonaisluku :otsikko "Alku­etäisyys"}
+               {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu­osa"}
+               {:leveys 2 :fmt :kokonaisluku :otsikko "Loppu­etäisyys"}
+               {:leveys 3 :fmt :numero :otsikko "Pituus"}
+               {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola yhteensä (t)"}
+               {:leveys 5 :fmt :numero :otsikko "Tot. talvisuola (t/km)"}
+               nil]
+              [[18637 1 0 1 8953 9324.379134279012 5M 0.5362287320148329 nil]
+               [28409 56 0 56 605 573.3889406769638 3M 5.2320506852784625 nil]
+               ["Yhteensä" nil nil nil nil nil 8M nil nil]]]])))))

@@ -50,7 +50,7 @@
          [:fo:block
           {:font-weight "bold"
            :font-size   12}
-          (str "Kooste " otsikko " " alkupvm " - " loppupvm)]]]
+          (str "Kulut " otsikko " " alkupvm " - " loppupvm)]]]
        (if-not (empty? kulut)
          (for [[kk rivit] kulut]
            [:fo:block

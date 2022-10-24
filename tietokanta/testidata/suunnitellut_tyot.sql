@@ -162,6 +162,14 @@ VALUES
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Espoo Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
   ((SELECT id FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Espoo Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Espoon alueurakka 2014-2019'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
+-- Luodaan Raaseporin urakalle tärkeimmät toimenpideinstanssit
+INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+VALUES
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Raasepori Talvihoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Raasepori Liikenneympäristön hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku'),
+    ((SELECT id FROM urakka WHERE nimi = 'UUD Raasepori  MHU 2021- 2026, P'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Raasepori Sorateiden hoito TP 2021-2026', (SELECT alkupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), (SELECT loppupvm FROM urakka WHERE nimi='UUD Raasepori  MHU 2021- 2026, P'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+
+
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Tampere Talvihoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23116'), 'Tampere Liikenneympäristön hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT id FROM toimenpidekoodi WHERE koodi='23124'), 'Tampere Sorateiden hoito TP 2014-2019', (SELECT alkupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), (SELECT loppupvm FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
@@ -1851,39 +1859,34 @@ END $$;
 --'Hallinnolliset toimenpiteet TP'
 DO $$
 DECLARE
-  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP'];
-  hoito_toimenpidenimiet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP'];
-  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301'];
+  toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
+  toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
   urakan_nimi TEXT := 'Ivalon MHU testiurakka (uusi)';
   urakan2_nimi TEXT := 'Iin MHU 2021-2026';
-  toimenpideinstanssin_nimi TEXT;
-  toimenpidenimi TEXT;
-  urakan_sopimus INT := (SELECT id FROM sopimus WHERE nimi = 'Ivalon MHU testiurakan sopimus');
+  urakan3_nimi TEXT := 'Tampereen MHU 2022-2026';
   i INTEGER;
-  vuosi_ INTEGER;
 BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
-  FOR i IN 1..6 LOOP
+  FOR i IN 1..7 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
        VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
   END LOOP;
-  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
-               urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
-               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
 
-  FOR i IN 1..6 LOOP
+  FOR i IN 1..7 LOOP
           INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
           VALUES ((SELECT id FROM urakka WHERE nimi=urakan2_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
                   urakan2_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan2_nimi),
                   (SELECT loppupvm FROM urakka WHERE nimi=urakan2_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-      END LOOP;
-  INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-  VALUES ((SELECT id FROM urakka WHERE nimi=urakan2_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi='23151'),
-          urakan2_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan2_nimi),
-          (SELECT loppupvm FROM urakka WHERE nimi=urakan2_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
+  
+  FOR i IN 1..7 LOOP
+          INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+          VALUES ((SELECT id FROM urakka WHERE nimi=urakan3_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+                  urakan3_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan3_nimi),
+                  (SELECT loppupvm FROM urakka WHERE nimi=urakan3_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  END LOOP;
 END $$;
 
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku) VALUES ((SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT id FROM toimenpidekoodi WHERE koodi='23104'), 'Oulu Aktiivinen Talvihoito TP', (SELECT alkupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), (SELECT loppupvm FROM urakka WHERE nimi='Aktiivinen Oulu Testi'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');

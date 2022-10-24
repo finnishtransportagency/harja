@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
+    [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -131,6 +132,7 @@
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
     [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
     [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
+    [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
@@ -282,6 +284,9 @@
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
                               [:sonja :db :integraatioloki])
+      :api-sampo (component/using
+                        (api-sampo/->ApiSampo (:sampo-api asetukset))
+                        [:http-palvelin :db :integraatioloki])
 
       ;; T-LOIK
       :tloik (component/using
@@ -461,6 +466,9 @@
                           [:http-palvelin :db])
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
+                         [:http-palvelin :db])
+      :suolarajoitukset (component/using
+                         (suolarajoitus-palvelu/->Suolarajoitus)
                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)

@@ -14,3 +14,6 @@
   (let [kansio (clojure.java.io/file polku)]
     (when (not (.exists kansio))
       (.mkdirs kansio))))
+
+(defn onko-tiedosto-olemassa? [polku]
+      (.exists (clojure.java.io/file polku)))

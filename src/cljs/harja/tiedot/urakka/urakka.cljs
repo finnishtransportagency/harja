@@ -1,6 +1,6 @@
 (ns harja.tiedot.urakka.urakka
   "MHU-urakoiden tila täällä. Hyvä olisi joskus saada muutkin tänne, yhden atomin alle."
-  (:require [reagent.core :refer [atom cursor]]
+  (:require [reagent.core :refer [atom cursor partial]]
             [clojure.core.async :refer [chan]]
             [clojure.spec.alpha :as s]
             [harja.tiedot.navigaatio :as nav]
@@ -9,8 +9,12 @@
             [harja.loki :as loki]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [reagent.core :as r]
             [harja.tiedot.urakka :as u]))
+
+(def kuluva-alkuvuosi
+  (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+    (pvm/vuosi (pvm/nyt))
+    (dec (pvm/vuosi (pvm/nyt)))))
 
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
@@ -22,14 +26,21 @@
                                                                                                :laskutukseen-perustuen-valinta #{}}
                                                               :kopioidaan-tuleville-vuosille? true}})
 
+(def suolarajoitukset-default {:rajoitusalue-lomake-auki? false
+                               :lomake [:kopioidaan-tuleville-vuosille? true]
+                               :valittu-hoitovuosi kuluva-alkuvuosi})
+
 (def suunnittelu-default-arvot {:tehtavat             {:valinnat {:samat-tuleville false
+                                                                  :nayta-aluetehtavat? true
+                                                                  :nayta-suunniteltavat-tehtavat? true
                                                                   :toimenpide      nil
                                                                   :valitaso        nil
                                                                   :noudetaan       0}}
-                                :kustannussuunnitelma kustannussuunnitelma-default})
+                                :kustannussuunnitelma kustannussuunnitelma-default
+                                :suolarajoitukset suolarajoitukset-default})
 
 (defn parametreilla [v-fn & parametrit]
-  (apply r/partial v-fn parametrit))
+  (apply partial v-fn parametrit))
 
 (defn silloin-kun [pred v-fn]
   (fn [arvo]
@@ -318,7 +329,8 @@
                                                           :kuntoluokat nil
                                                           :varustetyypit nil
                                                           :toteuma nil}
-                                               :varusteet []}})
+                                               :varusteet []}
+                             :pohjavesialueiden-suolatoteumat {:valittu-hoitovuosi kuluva-alkuvuosi}})
 
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
@@ -389,6 +401,7 @@
 (defonce kustannusten-seuranta (cursor tila [:kustannusten-seuranta :kustannukset]))
 (defonce maarien-toteumat (cursor tila [:toteumat :maarien-toteumat]))
 (defonce velho-varusteet (cursor tila [:toteumat :velho-varusteet]))
+(defonce toteuma-pohjavesialueiden-suola (cursor tila [:toteumat :pohjavesialueiden-suolatoteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
 
@@ -400,24 +413,23 @@
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
+(defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
 
 (defonce tavoitehinnan-oikaisut (cursor tila [:kustannusten-seuranta :kustannukset :tavoitehinnan-oikaisut]))
 
-(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet          nil
-                                                             :toteutuneet-maarat    nil
-                                                             :hoitokauden-alkuvuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                                                                                      (pvm/vuosi (pvm/nyt))
-                                                                                      (dec (pvm/vuosi (pvm/nyt))))
-                                                             :aikavali-alkupvm      nil
-                                                             :aikavali-loppupvm     nil
-                                                             :toteuma               {:toimenpide         nil
-                                                                                     :tehtava            nil
-                                                                                     :toteuma-id         nil
-                                                                                     :toteuma-tehtava-id nil
-                                                                                     :lisatieto          nil
-                                                                                     :maara              nil
-                                                                                     :loppupvm           (pvm/nyt)}
-                                                             :syottomoodi           false}}))
+(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
+                                                             :toteutuneet-maarat nil
+                                                             :hoitokauden-alkuvuosi kuluva-alkuvuosi
+                                                             :aikavali-alkupvm nil
+                                                             :aikavali-loppupvm nil
+                                                             :toteuma {:toimenpide nil
+                                                                       :tehtava nil
+                                                                       :toteuma-id nil
+                                                                       :toteuma-tehtava-id nil
+                                                                       :lisatieto nil
+                                                                       :maara nil
+                                                                       :loppupvm (pvm/nyt)}
+                                                             :syottomoodi false}}))
 
 ;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
 ;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.

@@ -219,11 +219,17 @@
     font-size: @fontin-koko-taulukko-pienempi;
 }
 
-.teksti-ja-info .info {
-  color: @blue-dark;
- 
-    // Toistaiseksi ei haluta paddingia muualle.
-    .tooltip-inner {
-        padding: @valistys-16;
+.teksti-ja-info {
+  .tooltip-wrapper {
+    .harja-icon-status-info {
+      color: @blue-dark;
     }
+
+    .tooltip-inner {
+      // Asetetaan ilmavampi padding toistaiseksi vain tähän näkymään tooltipille
+      // Alkuperäiseen .tooltip-inner luokkaan sitä ei kannata vielä vaihtaa, sillä monessa muussa paikassa
+      // oletetaan paddingin olevan pienempi.
+      padding: @valistys-16;
+    }
+  }
 }

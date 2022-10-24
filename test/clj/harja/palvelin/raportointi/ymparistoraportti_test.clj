@@ -162,7 +162,7 @@ VALUES
         talvisuolojen-kaytto (nth vastaus 3)]
     (is (vector? vastaus))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           talvisuolataulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
@@ -270,7 +270,7 @@ VALUES
                :loppupvm (c/to-date (t/local-date 2015 9 30))
                :urakkatyyppi :hoito}
         raportin-nimi "Ympäristöraportti"
-        teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
+        teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -404,7 +404,7 @@ VALUES
           pop-ely-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 5))
 
 
-          teksti-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          teksti-oulu "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 1))
@@ -462,7 +462,7 @@ VALUES
 
     (is (vector? vastaus-oulu))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+          teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           _ (println "taulukko-oulu: " taulukko-oulu)
@@ -772,8 +772,7 @@ VALUES
                                      :urakkatyyppi :hoito}})]
 
     (is (vector? vastaus-oulu))
-    (let [raportin-nimi "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2019 - 31.12.2019"
-          otsikko-oulu "Talvisuolat"
+    (let [otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
           oulu-talvisuola-luokka-IsE-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))

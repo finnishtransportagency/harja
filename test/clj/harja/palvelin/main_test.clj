@@ -163,7 +163,9 @@
     :lupaukset
     :urakan-lupausmuistutukset
     :api-analytiikka
-    :yleiset-ajastukset})
+    :yleiset-ajastukset
+    :suolarajoitukset
+    :api-sampo})
 
 (def ei-statusta
   #{:metriikka
@@ -226,7 +228,9 @@
     :lupaukset
     :urakan-lupausmuistutukset
     :api-analytiikka
-    :yleiset-ajastukset})
+    :yleiset-ajastukset
+    :suolarajoitukset
+    :api-sampo})
 
 (def hidas-ok-status #{:sonja :itmf})
 

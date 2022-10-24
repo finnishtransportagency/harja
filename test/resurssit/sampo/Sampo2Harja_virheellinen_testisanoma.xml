@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<Sampo2harja xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="SampToharja.xsd">
+    <Operation financialDepartmentHash="KP981303"
+               financialDepartmentOBS="/Liikennevirasto-4560/ELYT TOA-456090/Pohjois-Pohjanmaan ELY POP OSA-4560981/POP Liikenne ja infrastruktuuri YK-45609813/POP Tienpidon suunnittelu-4560981303"
+               id="PR00039665" managerId="A009997" messageId="37985207-OP-PR00039665"
+               name="POP Pudasjärvi-Taivalkoski alueurakka 2018-2023, Ylläpidon lisätyöt, TP" productHash="205"
+               productOBS="/Kunnossapito/Korjaus" projectId="PR00028482" schedule_finish="2023-09-30T17:00:00.0"
+               schedule_start="2018-10-01T08:00:00.0" vv_code="" vv_operation="">
+        <documentLinks/>
+    </Operation>
+</Sampo2harja>
