@@ -4,49 +4,49 @@
             [compojure.core :refer [POST GET]]
             [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely
-             :refer [kasittele-kutsu tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
+            [harja.palvelin.integraatiot.api.tyokalut.json :as json]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
-            [harja.kyselyt.urakat :as q-urakat]
-            [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
-            [harja.kyselyt.materiaalit :as q-materiaalit]
-            [harja.kyselyt.konversio :as konv]
-            [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.pvm :as pvm]
-            [cheshire.core :as cheshire]))
+            [harja.palvelin.raportointi.raportit.materiaali :as raportit-materiaali]))
 
+(defn muodosta-materiaaliraportti [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
+  (let [materiaalien-toteumat (when (and urakka-id alkupvm loppupvm)
+                                (raportit-materiaali/muodosta-materiaaliraportti-urakalle db user
+                                  {:urakka-id urakka-id
+                                   :alkupvm (json/pvm-string->java-sql-date alkupvm)
+                                   :loppupvm (json/pvm-string->java-sql-date loppupvm)}))
+        materiaaliraportti (map #(hash-map
+                                   :materiaali (:materiaali-nimi %)
+                                   :maara {:yksikko (:materiaali-yksikko %)
+                                           :maara (:kokonaismaara %)})
+                             materiaalien-toteumat)]
+    {:raportti {:nimi "Materiaaliraportti"
+                :aikavali {:alkupvm alkupvm
+                           :loppupvm loppupvm}
+                :alueurakkanumero urakka-id,
+                :materiaaliraportti materiaaliraportti}}))
 
 (defn hae-urakan-materiaaliraportti [db {:keys [id alkupvm loppupvm] :as parametrit} kayttaja]
   (parametrivalidointi/tarkista-parametrit parametrit {:id "Urakka-id puuttuu"
                                                        :alkupvm "Alkupvm puuttuu"
                                                        :loppupvm "Loppupvm puuttuu"})
-  (let [urakka-id (Integer/parseInt id)
-        alkupvm (pvm/iso-8601->pvm alkupvm)
-        loppupvm (pvm/iso-8601->pvm loppupvm)]
+  (let [urakka-id (Integer/parseInt id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     ;; Aikaväli saa olla korkeintaan vuoden mittainen
-    (validointi/tarkista-aikavali alkupvm loppupvm [1 :vuosi])
+    (validointi/tarkista-aikavali (json/pvm-string->joda-date alkupvm) (json/pvm-string->joda-date loppupvm) [1 :vuosi])
 
-    ;; TODO: Dummy-vastaus, hae oikea data.
-    {:raportti {:nimi "Materiaaliraportti"
-                 :aikavali {:alkupvm "2022-01-01"
-                             :loppupvm "2022-01-31"
-                            }
-                  :alueurakkanumero 146,
-                  :materiaaliraportti [{:materiaali "Talvisuolaliuos CaCl2",
-                                         :maara {:yksikko "t",
-                                                  :maara 1}}]}}))
-
-
+    (muodosta-materiaaliraportti db kayttaja {:urakka-id urakka-id
+                                              :alkupvm alkupvm
+                                              :loppupvm loppupvm})))
 
 (def hakutyypit
-  [{:palvelu        :hae-urakan-materiaaliraportti
-    :polku          "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm"
+  [{:palvelu :hae-urakan-materiaaliraportti
+    :polku "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm"
     :vastaus-skeema json-skeemat/raportti-materiaaliraportti-response
-    :kasittely-fn   (fn [parametrit _ kayttaja db]
-                      (hae-urakan-materiaaliraportti db parametrit kayttaja))}])
+    :kasittely-fn (fn [parametrit _ kayttaja db]
+                    (hae-urakan-materiaaliraportti db parametrit kayttaja))}])
 
 
 (defrecord Raportit []

@@ -23,16 +23,22 @@
 
   (testing "Kysely OK"
     (let [urakka-id 4
-          alkupvm "2019-01-01"
-          loppupvm "2019-12-31"
+          alkupvm "2014-10-01"
+          loppupvm "2015-09-30"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
+
           dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
       (is (= "Materiaaliraportti" (get-in dekoodattu-body [:raportti :nimi])))
+      (is (= urakka-id (get-in dekoodattu-body [:raportti :alueurakkanumero])))
       (is (= alkupvm (get-in dekoodattu-body [:raportti :aikavali :alkupvm])))
-      (is (= alkupvm (get-in dekoodattu-body [:raportti :aikavali :loppupvm])))
-      (is (seq (get-in dekoodattu-body [:raportti :materiaaliraportti])))))
+      (is (= loppupvm (get-in dekoodattu-body [:raportti :aikavali :loppupvm])))
+      (is (= [{:materiaali "Natriumformiaatti" :maara {:yksikko "t" :maara 2000}}
+              {:materiaali "Talvisuola, rakeinen NaCl" :maara {:yksikko "t" :maara 200}}
+              {:materiaali "Talvisuolaliuos NaCl" :maara {:yksikko "t" :maara 1800}}
+              {:materiaali "Hiekoitushiekka" :maara {:yksikko "t" :maara 0}}]
+            (get-in dekoodattu-body [:raportti :materiaaliraportti])))))
 
   (testing "Annettu aikaväli on liian suuri"
     (let [urakka-id 4
@@ -47,8 +53,8 @@
 
   (testing "Tuntematon urakka"
     (let [urakka-id 3184391
-          alkupvm "2019-01-01"
-          loppupvm "2019-12-31"
+          alkupvm "2014-01-10"
+          loppupvm "2015-09-30"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
                     kayttaja portti)
           encoodattu-body (cheshire/decode (:body vastaus) true)]
