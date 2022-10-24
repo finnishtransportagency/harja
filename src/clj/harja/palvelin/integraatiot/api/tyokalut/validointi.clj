@@ -198,7 +198,18 @@
 
 
 (defn tarkista-aikavali [alkupvm loppupvm [n yksikko :as maksimi]]
-  (when (pvm/liian-suuri-aikavali? alkupvm loppupvm [n yksikko])
+  (cond
+    (pvm/sama-pvm? alkupvm loppupvm)
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti "'alkupvm' on sama kuin 'loppupvm'"})
+
+    (pvm/jalkeen? alkupvm loppupvm)
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti "'loppupvm' on ennen 'alkupvm'"})
+
+    (pvm/liian-suuri-aikavali? alkupvm loppupvm [n yksikko])
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+virheelinen-aikavali+
        :viesti "Annettu aikaväli on liian suuri."})))
