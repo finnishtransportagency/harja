@@ -5,13 +5,17 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.pvm :as pvm]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
   (and
     (= tyyppi type)
-    (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
-          virheet)))
+    (some (fn [virhe] (and (= koodi (:koodi virhe))
+                        (if viesti
+                          (.contains (:viesti virhe) viesti)
+                          true)))
+      virheet)))
 
 (deftest onko-liikenneviraston-jarjestelma
   (let [db (luo-testitietokanta)]
@@ -26,5 +30,17 @@
 
 
 
+(deftest tarkista-aikavali
+  (let [tarkasta-poikkeus #(tasmaa-poikkeus
+                             %
+                             virheet/+viallinen-kutsu+
+                             virheet/+virheelinen-aikavali+
+                             "Annettu aikaväli on liian suuri.")]
+    ;; Liian iso aikaväli
+    (is (thrown+? tarkasta-poikkeus
+          (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2022-02-02") [1 :vuosi]))
+      "Poikkeusta ei heitety, koska aikaväli on alle vuoden.")
 
-
+    ;; Aikaväli OK.
+    (is (nil? (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2020-12-31") [1 :vuosi]))
+      "Poikkeus heitettiin, koska aikaväli on yli vuoden.")))

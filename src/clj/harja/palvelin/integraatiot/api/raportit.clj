@@ -13,27 +13,38 @@
             [harja.kyselyt.materiaalit :as q-materiaalit]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]))
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
+            [harja.pvm :as pvm]
+            [cheshire.core :as cheshire]))
 
 
-(defn hae-urakan-materiaaliraportti [db {:keys [id] :as parametrit} kayttaja]
+(defn hae-urakan-materiaaliraportti [db {:keys [id alkupvm loppupvm] :as parametrit} kayttaja]
   (parametrivalidointi/tarkista-parametrit parametrit {:id "Urakka-id puuttuu"
                                                        :alkupvm "Alkupvm puuttuu"
                                                        :loppupvm "Loppupvm puuttuu"})
-
-  ;; TODO: Lisää aikavälin validointi
-
-  (let [urakka-id (Integer/parseInt id)]
+  (let [urakka-id (Integer/parseInt id)
+        alkupvm (pvm/iso-8601->pvm alkupvm)
+        loppupvm (pvm/iso-8601->pvm loppupvm)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    ;; Aikaväli saa olla korkeintaan vuoden mittainen
+    (validointi/tarkista-aikavali alkupvm loppupvm [1 :vuosi])
 
-    {:blaa "blaa"}))
+    ;; TODO: Dummy-vastaus, hae oikea data.
+    {:raportti {:nimi "Materiaaliraportti"
+                 :aikavali {:alkupvm "2022-01-01"
+                             :loppupvm "2022-01-31"
+                            }
+                  :alueurakkanumero 146,
+                  :materiaaliraportti [{:materiaali "Talvisuolaliuos CaCl2",
+                                         :maara {:yksikko "t",
+                                                  :maara 1}}]}}))
 
 
 
 (def hakutyypit
   [{:palvelu        :hae-urakan-materiaaliraportti
     :polku          "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm"
-    :vastaus-skeema nil ;; TODO: Lisää skeema
+    :vastaus-skeema json-skeemat/raportti-materiaaliraportti-response
     :kasittely-fn   (fn [parametrit _ kayttaja db]
                       (hae-urakan-materiaaliraportti db parametrit kayttaja))}])
 
