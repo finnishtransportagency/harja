@@ -2,8 +2,11 @@
   "Raporttien API"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
+            [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [throw+ try+]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
@@ -12,21 +15,24 @@
             [harja.palvelin.raportointi.raportit.materiaali :as raportit-materiaali]))
 
 (defn muodosta-materiaaliraportti [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
-  (let [materiaalien-toteumat (when (and urakka-id alkupvm loppupvm)
-                                (raportit-materiaali/muodosta-materiaaliraportti-urakalle db user
-                                  {:urakka-id urakka-id
-                                   :alkupvm (json/pvm-string->java-sql-date alkupvm)
-                                   :loppupvm (json/pvm-string->java-sql-date loppupvm)}))
-        materiaaliraportti (map #(hash-map
-                                   :materiaali (:materiaali-nimi %)
-                                   :maara {:yksikko (:materiaali-yksikko %)
-                                           :maara (:kokonaismaara %)})
-                             materiaalien-toteumat)]
-    {:raportti {:nimi "Materiaaliraportti"
-                :aikavali {:alkupvm alkupvm
-                           :loppupvm loppupvm}
-                :alueurakkanumero urakka-id,
-                :materiaaliraportti materiaaliraportti}}))
+  (jdbc/with-db-transaction [db db]
+    (let [urakka (first (urakat-kyselyt/hae-urakka db urakka-id))
+          alueurakkanumero (konv/konvertoi->int (:alueurakkanumero urakka))
+          materiaalien-toteumat (when (and urakka-id alkupvm loppupvm)
+                                  (raportit-materiaali/muodosta-materiaaliraportti-urakalle db user
+                                    {:urakka-id urakka-id
+                                     :alkupvm (json/pvm-string->java-sql-date alkupvm)
+                                     :loppupvm (json/pvm-string->java-sql-date loppupvm)}))
+          materiaaliraportti (map #(hash-map
+                                     :materiaali (:materiaali-nimi %)
+                                     :maara {:yksikko (:materiaali-yksikko %)
+                                             :maara (:kokonaismaara %)})
+                               materiaalien-toteumat)]
+      {:raportti {:nimi "Materiaaliraportti"
+                  :aikavali {:alkupvm alkupvm
+                             :loppupvm loppupvm}
+                  :alueurakkanumero alueurakkanumero,
+                  :materiaaliraportti materiaaliraportti}})))
 
 (defn hae-urakan-materiaaliraportti [db {:keys [id alkupvm loppupvm] :as parametrit} kayttaja]
   (parametrivalidointi/tarkista-parametrit parametrit {:id "Urakka-id puuttuu"

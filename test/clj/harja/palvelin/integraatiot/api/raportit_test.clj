@@ -23,6 +23,7 @@
 
   (testing "Kysely OK"
     (let [urakka-id 4
+          alueurakkanumero 1238
           alkupvm "2014-10-01"
           loppupvm "2015-09-30"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
@@ -31,7 +32,7 @@
           dekoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
       (is (= "Materiaaliraportti" (get-in dekoodattu-body [:raportti :nimi])))
-      (is (= urakka-id (get-in dekoodattu-body [:raportti :alueurakkanumero])))
+      (is (= alueurakkanumero (get-in dekoodattu-body [:raportti :alueurakkanumero])))
       (is (= alkupvm (get-in dekoodattu-body [:raportti :aikavali :alkupvm])))
       (is (= loppupvm (get-in dekoodattu-body [:raportti :aikavali :loppupvm])))
       (is (= [{:materiaali "Natriumformiaatti" :maara {:yksikko "t" :maara 2000}}
