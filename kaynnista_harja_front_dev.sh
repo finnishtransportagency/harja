@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+# Tapa less-tarkkailu, kun tämä prosessi tapetaan
+trap 'kill $( pgrep -f [t]arkkaile_less_muutoksia.sh || echo '' ); exit' INT TERM
+
 if [[ $# -eq 0 ]]
 then
   ENV_PROFILE=false
