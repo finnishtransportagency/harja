@@ -207,23 +207,31 @@
                       :valinta-nayta laji->teksti
                       :validoi [[:ei-tyhja "Valitse laji"]]})
                    (when-not (or yllapito? vesivayla?)
-                     {:otsikko "Tyyppi" :tyyppi :valinta
-                      :pakollinen? true
-                      ::lomake/col-luokka "col-xs-12"
-                      :nimi :tyyppi
-                      :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                               (assoc sanktio
-                                 :tyyppi tyyppi
-                                 :toimenpideinstanssi
-                                 (when tpk
-                                   (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-                      :valinta-arvo identity
-                      :aseta-vaikka-sama? true
-                      :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                                       (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
-                      :valinta-nayta (fn [arvo]
-                                       (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
-                      :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+                     (if (not lukutila?)
+                       {:otsikko "Tyyppi" :tyyppi :valinta
+                        :pakollinen? true
+                        ::lomake/col-luokka "col-xs-12"
+                        :nimi :tyyppi
+                        :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                                 (assoc sanktio
+                                   :tyyppi tyyppi
+                                   :toimenpideinstanssi
+                                   (when tpk
+                                     (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
+                        :valinta-arvo identity
+                        :aseta-vaikka-sama? true
+                        :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
+                                         (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
+                        :valinta-nayta (fn [arvo]
+                                         (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
+                        :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+
+                       ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+                       ;; Vanhat poistetut sanktiotyypit eivät tule valintakomponenttiin vaihtoehdoiksi vanhoissa kirjauksissa,
+                       ;; joten näytetään tyyppi pelkkänä tekstinä.
+                       {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
+                        ::lomake/col-luokka "col-xs-12"
+                        :hae (comp :nimi :tyyppi)}))
 
                    (when yllapitokohdeurakka?
                      {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
@@ -284,6 +292,7 @@
                         :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                         :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
                         :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+
                        ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
                        {:otsikko "Kulun kohdistus" :tyyppi :teksti :nimi :toimenpideinstanssi
                         ::lomake/col-luokka "col-xs-12"
