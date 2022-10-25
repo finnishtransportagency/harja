@@ -3,10 +3,11 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.urakat :as u]
             [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tuo-urakka [db alueurakkanro geometria valaistusurakkanro]
-  (if valaistusurakkanro
+  (if (and valaistusurakkanro (not (empty? valaistusurakkanro)))
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
             valaistusurakkanro (when (and valaistusurakkanro (not (empty? (str/trim valaistusurakkanro))))
@@ -18,13 +19,16 @@
     (log/warn "Geometriaa ei voida tuoda ilman valaistusurakkanumeroa")))
 
 (defn vie-urakat-kantaan [db shapefile]
-  (if shapefile
-    (do
-      (log/debug (str "Tuodaan valaistusurakat kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [db db]
-        (u/tuhoa-valaistusurakkadata! db)
-        (let [urakat (shapefile/tuo shapefile)]
-          (doseq [urakka urakat]
-            (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:valourakka urakka))))))
-      (log/debug "Valaistusurakoiden tuonti kantaan valmis."))
-    (log/debug "Valaistusurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+      (if shapefile
+        (do
+          (log/debug (str "Tuodaan valaistusurakat kantaan tiedostosta " shapefile))
+          (jdbc/with-db-transaction [db db]
+                                    (u/tuhoa-valaistusurakkadata! db)
+                                    (let [urakat (shapefile/tuo shapefile)]
+                                         (doseq [urakka urakat]
+                                                (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:valourakka urakka)))))
+                                    (when (= 0 (:lkm (first (u/tarkista-valaistusurakkadata db)))) (throw+ {:type    :virhe-geometria-aineistossa
+                                                                                                            :virheet [{:koodi :puuttuva-valaistusurakkanumero :viesti "Yhtään valaistusurakkaa ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa."}]})))
+          (log/debug "Valaistusurakoiden tuonti kantaan valmis."))
+        (log/debug "Valaistusurakoiden tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+
