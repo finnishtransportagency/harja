@@ -136,6 +136,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              paivitetty)))
                 :valinnat mahdolliset-sanktiolajit
                 :valinta-nayta v-sanktiot/laji->teksti
+                :sarake-disabloitu-arvo-fn #(v-sanktiot/laji->teksti (get-in % [:rivi :laji]))
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
