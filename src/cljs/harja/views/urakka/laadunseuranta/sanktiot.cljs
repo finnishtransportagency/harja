@@ -176,7 +176,37 @@
                                   #(do
                                      (reset! auki? false)
                                      (reset! tiedot/valittu-sanktio nil))]])}
-                  [(when-not (or yllapito? vesivayla?)
+                  [(when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+                     {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
+                      ::lomake/col-luokka "col-xs-12"
+                      :uusi-rivi? true :nimi :laji
+                      :hae (comp keyword :laji)
+                      :aseta (fn [rivi arvo]
+                               (let [rivi (-> rivi
+                                            (assoc :laji arvo)
+                                            (dissoc :tyyppi)
+                                            (assoc :tyyppi nil))
+                                     s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
+                                                arvo kaikki-sanktiotyypit urakan-alkupvm)
+                                     rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
+                                                   (and
+                                                     (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                                     ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                                     ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                                     (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                            (assoc rivi
+                                              :tyyppi tyyppi
+                                              :toimenpideinstanssi
+                                              (when tpk
+                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                            rivi)]
+                                 (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
+                                   (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                                   rivi)))
+                      :valinnat (vec mahdolliset-sanktiolajit)
+                      :valinta-nayta laji->teksti
+                      :validoi [[:ei-tyhja "Valitse laji"]]})
+                   (when-not (or yllapito? vesivayla?)
                      {:otsikko "Tyyppi" :tyyppi :valinta
                       :pakollinen? true
                       ::lomake/col-luokka "col-xs-12"
