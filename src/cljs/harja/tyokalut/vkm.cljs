@@ -38,3 +38,6 @@
 
 (defn tieosan-ajoradat [tie osa]
   (k/post! :hae-tr-osan-ajoradat {:tie tie :osa osa}))
+
+(defn tieosan-ajoratojen-geometriat [{:keys [numero alkuosa ajorata]}]
+  (k/post! :hae-tr-osan-ajoratojen-geometriat {:tie numero :osa alkuosa :ajorata ajorata}))
