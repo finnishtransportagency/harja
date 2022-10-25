@@ -50,7 +50,6 @@
                               geometria (if tr-osoite
                                           (:geometria tr-osoite)
                                           (sijainnit/tee-geometria alkusijainti loppusijainti))]
-                          (geo/pg->clj geometria)
                           {:reitit (geo/pg->clj geometria)
                            :alkupisteet pisteet-alku
                            :loppupisteet pisteet-loppu}))
