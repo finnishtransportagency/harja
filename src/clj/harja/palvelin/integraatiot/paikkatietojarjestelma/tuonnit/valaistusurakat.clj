@@ -26,7 +26,7 @@
                                     (u/tuhoa-valaistusurakkadata! db)
                                     (let [urakat (shapefile/tuo shapefile)]
                                          (doseq [urakka urakat]
-                                                (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:valourakka urakka)))))
+                                                (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:valourak urakka)))))
                                     (when (= 0 (:lkm (first (u/tarkista-valaistusurakkadata db)))) (throw+ {:type    :virhe-geometria-aineistossa
                                                                                                             :virheet [{:koodi :puuttuva-valaistusurakkanumero :viesti "Yhtään valaistusurakkaa ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa."}]})))
           (log/debug "Valaistusurakoiden tuonti kantaan valmis."))
