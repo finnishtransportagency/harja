@@ -33,7 +33,7 @@
     (when (ominaisuus-kaytossa? :api-sampo)
       (julkaise-reitti
         http :sampo-vastaanotto
-        (POST "/sampo/harja" request
+        (POST "/harja/api/sampo" request
           (kutsukasittely/kasittele-sampo-kutsu db integraatioloki :sisaanluku
             request xml-skeemat/+sampo-kutsu+
             (fn [db kutsun-data tapahtuma-id]
