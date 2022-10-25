@@ -75,10 +75,6 @@
     (komp/luo      
       (fn [{:keys [yllapito? vesivayla? auki?] :as optiot}]      
         (let [muokattu (atom @tiedot/valittu-sanktio)
-                                        ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
-                                        ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
-              _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                  (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
               _ (when (and
                         (true? (:bonus @muokattu))
                         (not= :bonukset (:lomake @tila)))
