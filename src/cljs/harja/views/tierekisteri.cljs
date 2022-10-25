@@ -311,7 +311,6 @@
           (tasot/nayta-geometria! (keyword (str "tarkastuksen-pisteet-alku-" idx))
                                   {:alue (assoc g
                                            :type :circle
-                                           :text "alkupiste"
                                            :fill (nth tayttovareja idx)
                                            :radius 10
                                            :stroke {:color "blue"
