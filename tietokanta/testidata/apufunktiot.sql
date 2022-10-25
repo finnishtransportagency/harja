@@ -38,8 +38,7 @@ declare
 	tpk_rivi record;
 	urakka_rivi record;
 begin
-	for v in urakan_alkuvuosi..urakan_loppuvuosi loop 
-		raise notice 'vuosi :: %', v;
+	for v in urakan_alkuvuosi..urakan_loppuvuosi loop
 		insert into sopimus_tehtavamaara(urakka, tehtava, maara, muokattu, hoitovuosi)
 		values (urakka_id, tpk, maara, now(), v) on conflict do nothing;
 	end loop ;
@@ -60,13 +59,11 @@ begin
 	select extract(year from urakka_rivi.alkupvm) into urakan_alkuvuosi;
 	select extract(year from urakka_rivi.loppupvm) into urakan_loppuvuosi;
 
-	for tpk_rivi in select tpk.id from toimenpidekoodi tpk join tehtavaryhma tr on tr.id = tpk.tehtavaryhma and tpk.yksikko is not null and tpk.poistettu is not null and tpk.aluetieto = true loop 
-	raise notice 'aluetiedot tpk id :: %', tpk_rivi.id;
+	for tpk_rivi in select tpk.id from toimenpidekoodi tpk join tehtavaryhma tr on tr.id = tpk.tehtavaryhma and tpk.yksikko is not null and tpk.poistettu is not null and tpk.aluetieto = true loop
 		insert into sopimus_tehtavamaara(urakka, tehtava, maara, muokattu, hoitovuosi) values (urakka_rivi.id, tpk_rivi.id, maara, now(), urakan_alkuvuosi) on conflict do nothing;
 	end loop ;
 
-for tpk_rivi in select tpk.id from toimenpidekoodi tpk join tehtavaryhma tr on tr.id = tpk.tehtavaryhma and tpk.yksikko is not null and tpk.poistettu is not null and tpk.aluetieto = false loop 
-	raise notice 'maaratiedot tpk id :: %', tpk_rivi.id;
+for tpk_rivi in select tpk.id from toimenpidekoodi tpk join tehtavaryhma tr on tr.id = tpk.tehtavaryhma and tpk.yksikko is not null and tpk.poistettu is not null and tpk.aluetieto = false loop
 		perform luo_testitarjousmaarat_tehtavalle(urakka_rivi.id, tpk_rivi.id, maara, urakan_alkuvuosi, urakan_loppuvuosi - 1);
 	end loop ;
 	return true;

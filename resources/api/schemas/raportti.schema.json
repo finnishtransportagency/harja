@@ -1,0 +1,36 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "raportti": {
+      "id": "urn:harja/raportti",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/raportti/raportinnimi",
+          "type": "string",
+          "required": true
+        },
+        "aikavali": {
+          "id": "urn:harja/paivamaaravali",
+          "$ref": "file:resources/api/schemas/entities/paivamaaravali.schema.json",
+          "required": true
+        },
+        "alueurakkanumero": {
+          "id": "urn:harja/raportti/alueurakkanumero",
+          "type": "integer",
+          "required": true
+        },
+        "materiaaliraportti": {
+          "id": "urn:harja/raportti/materiaaliraportti",
+          "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json",
+          "required": false
+        }
+      }
+    }
+  }
+}
+

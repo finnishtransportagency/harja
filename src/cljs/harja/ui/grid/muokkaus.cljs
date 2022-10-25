@@ -258,8 +258,8 @@
                                           (grid-yleiset/tiivis-tyyli skeema))
                 fmt
                 tyyppi
-                (cond 
-                  (and (= tyyppi :valinta) valinta-nayta)
+                (cond
+                  (and (= tyyppi :valinta) valinta-arvo valinta-nayta)
                   (sisalto-kun-rivi-disabloitu-oletus-fn sarake i)
                   
                   (some? sarake-disabloitu-arvo-fn)
