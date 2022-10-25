@@ -7,7 +7,7 @@
    (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
-  (if (and paallystyssopimusnro (not (empty? paallystyssopimusnro)))
+  (if (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
     (if geometria
       (let [alueurakkanro (str alueurakkanro)
             paallystyssopimusnro (when (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
