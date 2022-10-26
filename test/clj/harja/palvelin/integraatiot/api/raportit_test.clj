@@ -6,7 +6,8 @@
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.konversio :as konv]))
 
 (def kayttaja "yit-rakennus")
 
@@ -22,8 +23,11 @@
 (deftest hae-urakan-materiaaliraportti
 
   (testing "Kysely OK"
-    (let [urakka-id 4
-          alueurakkanumero 1238
+    (let [urakka (first (q-map (str "SELECT id, urakkanro
+                                       FROM urakka
+                                      WHERE nimi = 'Oulun alueurakka 2014-2019'")))
+          urakka-id (:id urakka)
+          alueurakkanumero (konv/konvertoi->int (:urakkanro urakka))
           alkupvm "2014-10-01"
           loppupvm "2015-09-30"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
@@ -42,7 +46,7 @@
             (get-in dekoodattu-body [:raportti :materiaaliraportti])))))
 
   (testing "Annettu aikaväli on liian suuri"
-    (let [urakka-id 4
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
           alkupvm "2014-01-01"
           loppupvm "2019-12-31"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
@@ -65,7 +69,7 @@
             (:virheet dekoodattu-body)))))
 
   (testing "Ei oikeuksia urakkaan"
-    (let [urakka-id 5
+    (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
           alkupvm "2019-01-01"
           loppupvm "2019-12-31"
           vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
