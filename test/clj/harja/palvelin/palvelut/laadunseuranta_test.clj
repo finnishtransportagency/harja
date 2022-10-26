@@ -630,7 +630,7 @@
                                                                                  :vain-yllapitokohteettomat? nil})
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :summa vastaus))))
-        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :indeksikorjaus vastaus))))
+        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
                                         :suorita-raportti
@@ -667,7 +667,7 @@
     (is (= (fmt/desimaaliluku sakot-indeksikorotuksineen-laskutusyhteenvedosta 2) "−1000,00") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
 
     (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
-           (fmt/desimaaliluku (Math/abs (double sakot-indeksikorotuksineen-laskutusyhteenvedosta)) 3)) "sanktiopalvelu ja laskutusyhteenveto antaa saman summat")))
+           (fmt/desimaaliluku (double sakot-indeksikorotuksineen-laskutusyhteenvedosta) 3)) "sanktiopalvelu ja laskutusyhteenveto antaa saman summat")))
 
 (deftest hae-sanktiotyypit
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
