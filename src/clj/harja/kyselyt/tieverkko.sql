@@ -88,6 +88,14 @@ FROM tr_ajoratojen_pituudet
 WHERE tie = :tie AND osa = :osa
 ORDER BY ajorata ASC;
 
+-- name: hae-tieosan-ajoratojen-geometriat
+-- jos ajorata on NULL, palautetaan kaikkien ajoratojen geometrioiden yhdistelmä
+SELECT st_union(geom) as geom
+  FROM tr_osan_ajorata
+ WHERE tie = :tie::INTEGER AND
+       osa = :osa::INTEGER AND TRUE AND
+       (:ajorata::INTEGER IS NULL OR ajorata = :ajorata::INTEGER);
+
 -- name: tuhoa-ajoratojen-pituudet!
 DELETE FROM tr_ajoratojen_pituudet;
 
