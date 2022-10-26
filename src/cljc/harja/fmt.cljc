@@ -46,13 +46,15 @@
             (if nayta-euromerkki (str tulos " \u20AC") tulos)))
 
         :clj
-        (s/replace (.format (doto
-                       (if nayta-euromerkki
-                         (NumberFormat/getCurrencyInstance)
-                         (NumberFormat/getNumberInstance))
-                     (.setMaximumFractionDigits 2)
-                     (.setMinimumFractionDigits 2)) eur)
-                   #" €" " €")))))
+        (s/replace (.format
+                     (doto
+                         (if nayta-euromerkki
+                           (NumberFormat/getCurrencyInstance)
+                           (NumberFormat/getNumberInstance))
+                       (.setMaximumFractionDigits 2)
+                       (.setMinimumFractionDigits 2)
+                       (.setNegativePrefix "\u002D")) eur)     ;; Try to fix VHAR-2391 replacing - with its unicode representation
+          #" €" " €")))))
 
 
 
@@ -551,9 +553,11 @@
 
 (defn kokonaisluku-opt
   [luku]
-  (assert (number? luku) "Luvun on oltava numerotyyppinen.")
   (if luku
-    (int luku)
+    (if (number? luku)
+      (int luku)
+      #?(:cljs (js/parseInt luku)
+         :clj  (Integer/parseInt luku)))
     ""))
 
 (defn pyorista-ehka-kolmeen [arvo]

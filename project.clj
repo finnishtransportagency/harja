@@ -32,6 +32,7 @@
                  [cheshire "5.8.1"]
 
                  ;; HTTP palvelin ja reititys
+                 [cljs-http "0.1.46"]
                  [http-kit "2.5.3"]
                  [compojure "1.6.1"]
                  ;; Ring tarvitsee
@@ -43,7 +44,7 @@
 
                  ;; Tietokanta: ajuri, kirjastot ja -migraatiot
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.2.5"]
+                 [org.postgresql/postgresql "42.4.1"]
                  [net.postgis/postgis-jdbc "2.5.0"]
                  [org.locationtech.jts/jts-core "1.16.1"]
                  [com.mchange/c3p0 "0.9.5.4"]
@@ -51,10 +52,10 @@
                  [specql "20190301"]
 
                  ;; GeoTools
-                 [org.geotools/gt-shapefile "21.0"]
-                 [org.geotools/gt-process-raster "21.0"]
-                 [org.geotools/gt-epsg-wkt "21.0"] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "21.0"] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-epsg-wkt "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "23.5" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; just for experimentation, remove when no longer needed
 
                  ;; XML zipper
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -71,7 +72,7 @@
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.15.9"]
-                 [org.apache.activemq/artemis-jms-client "2.17.0"]
+                 [org.apache.activemq/artemis-jms-client "2.20.0"]
 
 
                  ;; Fileyard  liitetiedostojen tallennus
@@ -144,7 +145,7 @@
 
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
-                 [com.bhauman/figwheel-main "0.2.11"]
+                 [com.bhauman/figwheel-main "0.2.18"]
                  [digest "1.4.9"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
@@ -153,7 +154,8 @@
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
-  :repositories [["osgeo" "https://repo.osgeo.org/repository/release/"]
+  :repositories [["osgeo-geotools" "https://repo.osgeo.org/repository/geotools-releases/"]
+                 ["osgeo" "https://repo.osgeo.org/repository/release/"]
                  ["atlassian" "https://maven.atlassian.com/content/repositories/atlassian-public/"]
                  ;; Tämä on tässä [org.clojure/data.zip "0.1.4-SNAPSHOT"] dependencyn takia
                  ;; ["sonatype-snapshots" "https://oss.sonatype.org/content/repositories/snapshots/"]
@@ -203,7 +205,7 @@
                                     "dev-resources/tmp"
                                     "target"
                                     "resources/public/js/harja.js"
-                                    "resource/public/js/harja"]
+                                    "resources/public/js/harja"]
 
   ;; Less CSS käännös tuotanto varten (dev modessa selain tekee less->css muunnoksen)
   :less {:source-paths ["dev-resources/less/application"

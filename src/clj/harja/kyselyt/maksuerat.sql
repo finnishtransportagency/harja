@@ -200,18 +200,28 @@ SELECT
      FROM toimenpidekoodi emo
      WHERE emo.id = tpk.emo) AS tuotenumero,
     -- Kustannussuunnitelman summa
-    COALESCE((SELECT Sum(COALESCE(summa, 0))
-              FROM kiinteahintainen_tyo
-              WHERE toimenpideinstanssi = tpi.id),0)
-                 +
-    COALESCE((SELECT Sum(COALESCE(summa, 0))
-              FROM kustannusarvioitu_tyo
-              WHERE toimenpideinstanssi = tpi.id),0)
-                 +
-    COALESCE((SELECT Sum(COALESCE((tunnit * tuntipalkka), 0))
-              FROM johto_ja_hallintokorvaus
-              WHERE "urakka-id" = u.id), 0)
-         AS kustannussuunnitelma_summa
+    COALESCE((SELECT SUM(COALESCE(summa_indeksikorjattu, summa, 0))
+                FROM kiinteahintainen_tyo
+               WHERE toimenpideinstanssi = tpi.id), 0)
+        +
+    COALESCE((SELECT SUM(COALESCE(summa_indeksikorjattu, summa, 0))
+                FROM kustannusarvioitu_tyo
+               WHERE toimenpideinstanssi = tpi.id), 0)
+        +
+    CASE
+        -- Otetaan johto- ja hallintokorvaus summa mukaan ainoastaan MHU Hoidonjohto-toimenpiteelle.
+        WHEN tpk.koodi = '23151'
+            THEN
+            COALESCE((SELECT SUM(CASE
+                                     WHEN tuntipalkka_indeksikorjattu IS NOT NULL
+                                         THEN COALESCE((tunnit * tuntipalkka_indeksikorjattu * "osa-kuukaudesta"), 0)
+                                     ELSE COALESCE((tunnit * tuntipalkka * "osa-kuukaudesta"), 0)
+                END)
+                        FROM johto_ja_hallintokorvaus
+                       WHERE "urakka-id" = u.id), 0)
+        ELSE 0
+        END
+        AS kustannussuunnitelma_summa
 FROM maksuera m
          JOIN toimenpideinstanssi tpi ON tpi.id = m.toimenpideinstanssi
          JOIN urakka u ON u.id = tpi.urakka

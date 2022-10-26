@@ -62,7 +62,9 @@
                   ;; Aluekohtaisia paikkauskohteita hakiessa, eli hoitourakan urakanvalvojana, alueen muita kohteita katsellessa,
                   ;; ei näytetä muokkaustietoa.
                   (and (not (:hae-aluekohtaiset-paikkauskohteet? app))
-                       (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+                       (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                             (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                             @istunto/kayttaja)
                            (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                 (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))))))
                   {:otsikko "Muokattu"
@@ -162,7 +164,7 @@
                                      kustannukset-kirjattu? (:toteutunut-hinta kohde)
                                      kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
                                      urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? kayttajaroolit)
-                                     tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
+                                     tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? kayttajaroolit @istunto/kayttaja)
                                      oikeudet-kustannuksiin? (oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset (-> @tila/tila :yleiset :urakka :id))]
                                  (do
                                    ;; Näytä valittu rivi kartalla
@@ -211,7 +213,9 @@
                                       ;; Päällysteurakalle näytetään muokkauspäivä. Mutta urakanvalvoja esiintyy myös
                                       ;; päällystysurkoitsijana joten tarkistetaan myös urakkaroolit
                                       ;; Joten yhteenvetoriville tyhjä column
-                                      (or (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+                                      (or (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                                            (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                                            @istunto/kayttaja)
                                           (and (= (-> @tila/tila :yleiset :urakka :tyyppi) :paallystys)
                                                (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))))
                                       {:teksti ""}
@@ -269,7 +273,7 @@
                 [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]])
 
            [liitteet/lataa-tiedosto
-            (-> @tila/tila :yleiset :urakka :id)
+            {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
             {:nappi-teksti "Tuo kohteet excelistä"
              :nappi-luokka "napiton-nappi"
              :url "lue-paikkauskohteet-excelista"
@@ -320,7 +324,7 @@
                 (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
                 (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
            [:div.col-xs-2
-            [:label.alasvedon-otsikko-vayla "ELY"]
+            [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-ely"} "ELY"]
             [valinnat/checkbox-pudotusvalikko
              valittavat-elyt
              (fn [ely valittu?]
@@ -336,7 +340,7 @@
            [" Tila valittu" " Tilaa valittu"]
            {:vayla-tyyli? true}]]
          [:div.col-xs-2
-          [:label.alasvedon-otsikko-vayla "Vuosi"]
+          [:label {:class "alasvedon-otsikko-vayla" :for "filtteri-vuosi"} "Vuosi"]
           [yleiset/livi-pudotusvalikko
            {:valinta valittu-vuosi
             :vayla-tyyli? true
@@ -367,15 +371,17 @@
 (defn wrap-paikkauskohteet [e! app]
   (komp/luo
     (komp/sisaan-ulos #(do
-                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                         (nav/vaihda-kartan-koko! :M) ;oletuksena pienesti näkyvissä
+
                          (kartta-tasot/taso-pois! :paikkaukset-toteumat)
                          (kartta-tasot/taso-pois! :organisaatio)
                          (kartta-tasot/taso-paalle! :paikkaukset-paikkauskohteet)
                          (e! (t-paikkauskohteet/->HaePaikkauskohteet))
                          (when (empty? (get-in app [:valinnat :tyomenetelmat])) (e! (t-yhteinen/->HaeTyomenetelmat)))
-                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true))
+                         (reset! t-paikkauskohteet-kartalle/karttataso-nakyvissa? true)
+                         (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
+                         (nav/vaihda-kartan-koko! :M))
                       #(do
+                         (kartta-tasot/taso-pois! :paikkaukset-paikkauskohteet)
                          (e! (t-paikkauskohteet/->SuljeLomake))))
     (fn [e! app]
       [:div.row

@@ -6,6 +6,8 @@ INSERT INTO kayttaja_rooli (kayttaja, rooli) VALUES
   ((SELECT id FROM kayttaja WHERE kayttajanimi='jvh'), 'liikennepaivystaja');
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('antero','Antero','Asfalttimies','antero@example.com','0401111111', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('veeti','Veeti','Velmu','vetsku@example.com','0401111523', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
+INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) VALUES ('paajehu','Pekka','Pääjehu','paajehu@example.com','0401112345', (SELECT id FROM organisaatio WHERE nimi='Skanska Asfaltti Oy'));
 
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('ulle', 'Ulle', 'Urakoitsija', 'ulle@example.org', 123123123, (SELECT id FROM organisaatio WHERE nimi='Destia Oy'));
 INSERT INTO kayttaja (kayttajanimi,etunimi,sukunimi,sahkoposti,puhelin,organisaatio) values ('yit_pk','Yitin', 'Pääkäyttäjä', 'yit_pk@example.org', 43223123, (SELECT id FROM organisaatio WHERE nimi='YIT Rakennus Oy'));

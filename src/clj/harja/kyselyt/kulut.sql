@@ -21,8 +21,8 @@ select tr.nimi as "nimi",
 from johto_ja_hallintokorvaus jhk
   join tehtavaryhma tr on tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54' -- johto- ja hallintokorvaus-tehtäväryhmän yksilöivä tunniste, näitä on muutamilla tehtäväryhmillä ja toimenpidekoodeilla, niin jos nimet muuttuu niin näillä ne löytyy luotettavasti
 where jhk."urakka-id" = :urakka
-  and format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE between :alkupvm and :loppupvm
-group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys
+  and format('%s-%s-%s', jhk.vuosi, jhk.kuukausi, 1)::DATE between :alkupvm::DATE and :loppupvm::DATE
+group by jhk."toimenkuva-id", tr.nimi, tr.id, tr.jarjestys;
 
 -- name: hae-urakan-hj-kulut-raporttiin-aikavalilla
 select rs.nimi as "nimi",
@@ -38,7 +38,7 @@ from (select tr.nimi      as "nimi",
              join toimenpidekoodi tpk
              join tehtavaryhma tr on tr.id = tpk.tehtavaryhma
                   on tpk.id = kt.tehtava and tpk.nimi = 'Hoidonjohtopalkkio'
-      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm
+      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm::DATE and :loppupvm::DATE
       union all
       select tr.nimi      as "nimi",
              tr.id        as "tehtavaryhma",
@@ -50,7 +50,7 @@ from (select tr.nimi      as "nimi",
              join tehtavaryhma tr
                   on tpk.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('a6614475-1950-4a61-82c6-fda0fd19bb54') -- Tilaajan varaukset -tehtäväryhmän yksilöivä tunniste
                   on tpk.id = kt.tehtava
-      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm
+      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm::DATE and :loppupvm::DATE
   union all
       select tr.nimi      as "nimi",
              tr.id        as "tehtavaryhma",
@@ -60,16 +60,21 @@ from (select tr.nimi      as "nimi",
              join toimenpideinstanssi tpi on kt.toimenpideinstanssi = tpi.id and tpi.urakka = :urakka
              join tehtavaryhma tr
                   on kt.tehtavaryhma = tr.id and tr.yksiloiva_tunniste in ('37d3752c-9951-47ad-a463-c1704cf22f4c') -- Erillishankinnat -tehtäväryhmän yksilöivä tunniste
-      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm and :loppupvm) rs
+      where format('%s-%s-%s', kt.vuosi, kt.kuukausi, 1)::DATE between :alkupvm::DATE and :loppupvm::DATE) rs
 group by rs.nimi, rs.tehtavaryhma, rs.jarjestys
 order by rs.jarjestys;
 
 
 -- name: hae-urakan-kulut-raporttiin-aikavalilla
 -- Annetulla aikavälillä haetaan urakan kaikki kulut tehtäväryhmittäin
-with kohdistukset_ajalla as (select summa, tehtavaryhma from kulu_kohdistus kk
-                                join kulu k on kk.kulu = k.id and k.urakka = :urakka and k.erapaiva >= :alkupvm ::date and k.erapaiva <= :loppupvm ::date
-                             where k.id = kk.kulu and kk.poistettu is not true)
+with kohdistukset_ajalla as (
+SELECT kk.summa, kk.tehtavaryhma
+  FROM kulu_kohdistus kk
+       JOIN kulu k ON kk.kulu = k.id
+                      AND k.urakka = :urakka
+                      AND k.erapaiva BETWEEN :alkupvm::DATE and :loppupvm::DATE
+ WHERE k.id = kk.kulu
+   AND kk.poistettu IS NOT TRUE)
 select tr3.id as "tehtavaryhma",
        sum(kohd.summa) as "summa",
        tr3.jarjestys as "jarjestys",

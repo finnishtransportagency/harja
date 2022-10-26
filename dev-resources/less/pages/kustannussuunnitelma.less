@@ -143,7 +143,6 @@
       }
 
       tbody tr {
-        border-bottom: none;
         padding: 0 0;
 
         &.otsikko {
@@ -167,13 +166,28 @@
           font-weight: 600;
 
           &.pariton {
-            color: @black;
+            color: @black-default;
           }
         }
 
         td {
           background-color: initial;
+          border-bottom: none;
         }
+      }
+    }
+  }
+
+  .poista-bottom-margin {
+    margin-bottom: 0px;
+  }
+
+  // johto-ja-hallintokorvaukset-osiossa käytetty toisen tyyppinen grid,
+  // säädetään ulkoasu täsmäämään muihin kustannussuunitelman grideihin.
+  .johto-ja-hallintokorvaukset {
+    table.grid {
+      td.muokattava {
+        border: 1px solid rgba(0, 0, 0, 0.16);
       }
     }
   }
@@ -406,7 +420,7 @@
 
   > span:first-child {
     font-weight: 600;
-    color: @black;
+    color: @black-default;
   }
 
   .hintalaskuri-vuodet {
@@ -421,7 +435,7 @@
   }
 
   .hintalaskurisarake-ala {
-    color: @black
+    color: @black-default
   }
 }
 
@@ -452,7 +466,7 @@
 }
 
 .hintalaskurisarake-ala {
-  color: @black;
+  color: @black-default;
 }
 
 .hintalaskuri-yhtakuin, .hintalaskuri-yhteensa {
@@ -533,7 +547,7 @@
   }
 
   .livicon-chevron {
-    color: @blue;
+    color: @blue-default;
     font-size: 20px;
   }
 }
@@ -562,15 +576,15 @@
   }
 
   .glyphicon-ok {
-    color: @green;
+    color: @green-default;
   }
 
   .livicon-question {
-    color: @blue;
+    color: @blue-default;
   }
 
   .glyphicon-remove {
-    color: @red;
+    color: @red-default;
   }
 }
 

@@ -44,10 +44,13 @@
                nakymassa? @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa? vuosi)
-                (tiedot-sanktiot/hae-urakan-sanktiot {:urakka-id valittu-urakka-id
-                                                      :alku (first (pvm/vuoden-aikavali vuosi))
-                                                      :loppu (second (pvm/vuoden-aikavali vuosi))
-                                                      :vain-yllapitokohteettomat? true}))))
+                (tiedot-sanktiot/hae-urakan-sanktiot-ja-bonukset {:urakka-id valittu-urakka-id
+                                                                  :alku (first (pvm/vuoden-aikavali vuosi))
+                                                                  :loppu (second (pvm/vuoden-aikavali vuosi))
+                                                                  :vain-yllapitokohteettomat? true
+                                                                  ;; Haetaan vain sanktiot
+                                                                  :hae-sanktiot? true
+                                                                  :hae-bonukset? false}))))
 
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))

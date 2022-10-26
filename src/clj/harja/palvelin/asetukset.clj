@@ -58,6 +58,16 @@
                             :salasana s/Str
                             (s/optional-key :tyyppi) s/Keyword
                             :julkaise-tila? s/Bool}
+   (s/optional-key :api-sahkoposti) {:vastausosoite s/Str
+                                     :suora? s/Bool
+                                     :sahkoposti-lahetys-url s/Str
+                                     :sahkoposti-ja-liite-lahetys-url s/Str
+                                     :palvelin s/Str
+                                     :kayttajatunnus s/Str
+                                     :salasana s/Str}
+
+   ;; Lisään vielä hetkeksi tämän takaisin. Saa poistaa, kunhan api-sahkoposti on otettu käyttöön.
+   ;; Tämän ennen aikainen poistaminen on jotanut turhiin virheisiin Harjan käynnistyksessä
    (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
                                        (s/optional-key :suora?) s/Bool
                                        (s/optional-key :palvelin) s/Str
@@ -66,6 +76,7 @@
                                                (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
                                                (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
                                                (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
+
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
    (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
@@ -73,6 +84,11 @@
                             :lahetysjono-ulos s/Str
                             :kuittausjono-ulos s/Str
                             :paivittainen-lahetysaika [s/Num]}
+   (s/optional-key :sampo-api) {:lahetys-url s/Str
+                                :paivittainen-lahetysaika [s/Num]
+                                :palvelin s/Str
+                                :kayttajatunnus s/Str
+                                :salasana s/Str}
    (s/optional-key :itmf) {:url s/Str
                            :kayttaja s/Str
                            :salasana s/Str
@@ -139,13 +155,18 @@
                                            (s/optional-key :kanavien-tuontikohde) s/Str}
 
    (s/optional-key :yha) {:url s/Str
-                          :kayttajatunnus s/Str
-                          :salasana s/Str}
+                          :api-key s/Str}
 
    (s/optional-key :velho) {:paallystetoteuma-url s/Str
                             :token-url s/Str
                             :kayttajatunnus s/Str
-                            :salasana s/Str}
+                            :salasana s/Str
+                            :varuste-api-juuri-url s/Str
+                            (s/optional-key :varuste-tuonti-suoritusaika) [s/Num]
+                            :varuste-kayttajatunnus s/Str
+                            :varuste-salasana s/Str
+                            :varuste-urakka-oid-url s/Str
+                            :varuste-urakka-kohteet-url s/Str}
 
    (s/optional-key :yha-velho) {}
 
@@ -164,9 +185,6 @@
                                           (s/optional-key :kayttajatunnus) s/Str
                                           (s/optional-key :salasana) s/Str}
 
-   (s/optional-key :sonja-jms-yhteysvarmistus) {(s/optional-key :ajovali-minuutteina) s/Int
-                                                (s/optional-key :jono) s/Str}
-
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
    (s/optional-key :sahke) {:lahetysjono s/Str
@@ -182,7 +200,7 @@
 
    (s/optional-key :kanavasillat) {:geometria-url s/Str
                                    :paivittainen-tarkistusaika [s/Num]
-                                   :paivitysvali-paivissa s/Num}
+                                   :paivitysvali-paivissa s/Any}
 
    (s/optional-key :tyotunti-muistutukset) {:paivittainen-aika [s/Num]}
 
@@ -192,16 +210,8 @@
 
    (s/optional-key :reimari) {:url s/Str
                               :kayttajatunnus s/Str
-                              :salasana s/Str
-                              (s/optional-key :toimenpidehakuvali) s/Int
-                              (s/optional-key :komponenttityyppihakuvali) s/Int
-                              (s/optional-key :turvalaitekomponenttihakuvali) s/Int
-                              (s/optional-key :vikahakuvali) s/Int
-                              (s/optional-key :turvalaiteryhmahakuaika) [s/Num]}
+                              :salasana s/Str}
 
-
-   (s/optional-key :ais-data) {:url s/Str
-                               :sekunnin-valein s/Int}
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
    :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}

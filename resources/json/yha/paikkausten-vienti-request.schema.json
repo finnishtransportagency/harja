@@ -177,9 +177,6 @@
           "$ref": "#/definitions/sijainti"
         },
         "tyomenetelma": {
-          "type": "integer"
-        },
-        "lahde": {
           "type": "string"
         },
         "massatyyppi": {

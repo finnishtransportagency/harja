@@ -718,18 +718,17 @@
 
 (defn ikoni-ja-teksti [ikoni teksti]
   [:span
-   ikoni
-   [:span (str " " teksti)]])
+   [:span.margin-right-8 ikoni]
+   [:span teksti]])
 
 (defn ikoni-ja-elementti [ikoni elementti]
   [:span
-   ikoni
-   [:span " "]
+   [:span.margin-right-8 ikoni]
    elementti])
 
 (defn teksti-ja-ikoni [teksti ikoni]
   [:span
-   [:span (str teksti " ")]
+   [:span.margin-right-8 teksti]
    ikoni])
 
 (maarittele-svg-spritet 24 24 "livicons-24.svg")

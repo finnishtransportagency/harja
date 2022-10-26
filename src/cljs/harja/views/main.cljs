@@ -68,7 +68,7 @@
 (defn harja-info []
   [:a {:class "klikattava"
        :id "infolinkki"
-       :href "http://finnishtransportagency.github.io/harja/"}
+       :href "https://finnishtransportagency.github.io/harja/"}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
 
 (defn- mobiiliselain? []
@@ -168,7 +168,7 @@
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
                         "hairioilmoitin-tyyppi-hairio")]
     [:div.hairioilmoitin {:class tyyppi-luokka}
-     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus!]
+     [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]
      [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
                 (::hairio/viesti hairiotiedot))]]))
 

@@ -33,7 +33,7 @@
 
 (deftest tarkista-yllapitokohteen-lahetys
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
         vuosi-nyt (pvm/vuosi (pvm/nyt))
         url (tee-url)
@@ -103,10 +103,11 @@
   (xml/luetun-xmln-tagien-sisalto alustarivit {:tagi :alustalle-tehty-toimenpide :positio positio} :tierekisteriosoitevali))
 
 (deftest tarkista-yllapitokohteen-lahetys-pot2
-  (let [kohde-id (hae-yllapitokohde-tarkea-kohde-pot2)
-        urakka-id (hae-utajarven-paallystysurakan-id)
+  (let [kohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         urakka-yhaid (:yhaid (first (q-map (str "SELECT yhaid FROM yhatiedot WHERE urakka = " urakka-id ";"))))
-        vuosi-nyt (pvm/vuosi (pvm/nyt))
+        ;; Kohteen vuosi ei muutu vuoden vaihtuessa, joten tehdään kova koodaatuna
+        vuosi-nyt  2021 #_ (pvm/vuosi (pvm/nyt))
         url (tee-url)
         onnistunut-kirjaus-vastaus "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<urakan-kohteiden-toteumatietojen-kirjausvastaus xmlns=\"http://www.vayla.fi/xsd/yha\">\n</urakan-kohteiden-toteumatietojen-kirjausvastaus>"]
     (with-fake-http
@@ -343,7 +344,7 @@
 
 (deftest tarkista-yllapitokohteen-lahetys-ilman-yha-yhteytta
   (let [kohde-id (hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta)
-        urakka-id (hae-utajarven-paallystysurakan-id)
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         onnistui? (yha/laheta-kohteet (:yha jarjestelma) urakka-id [kohde-id])
         lahetystiedot (hae-kohteen-lahetystiedot kohde-id)]
     (is (false? onnistui?))

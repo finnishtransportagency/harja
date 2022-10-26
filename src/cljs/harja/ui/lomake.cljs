@@ -431,6 +431,7 @@ ja kaikki pakolliset kentät on täytetty"
      (as-> opts opts
            (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
            (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+           (assoc opts :muokattu? muokattu?)
            (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
     (when (and muokattu?
@@ -579,6 +580,8 @@ ja kaikki pakolliset kentät on täytetty"
   :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
                   funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
                   avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat.
+                  
+  :footer-luokka  Mahdollinen luokka footerille, joka ylikirjoittaa vakion col-md-12.
 
   :voi-muokata?   voiko lomaketta muokata, oletuksena true
 
@@ -599,7 +602,8 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? footer-luokka
+                 tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -690,7 +694,8 @@ ja kaikki pakolliset kentät on täytetty"
                                               ::skeema skeema))
                                  footer)]
                [:div.lomake-footer.row
-                [:div.col-md-12 footer]])]))))))
+                [:div
+                 {:class (or footer-luokka "col-md-12")} footer]])]))))))
 
 (defn numero
   "Näyttää numeron tekstinä, yli kymmenen numeroina alle kymmenen sanoina."

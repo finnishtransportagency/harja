@@ -10,7 +10,8 @@
             [harja.palvelin.palvelut.lupaus.lupaus-muistutus :as lupaus-muistutus]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.integraatiot.sahkoposti :refer [Sahkoposti]]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.kyselyt.lukot :as qk]))
 
 (defn jarjestelma-fixture [testit]
   (pudota-ja-luo-testitietokanta-templatesta)
@@ -128,25 +129,32 @@
            :pisteet 77})
         "Luvattujen pisteiden tallennus pitäisi onnistua")
 
+      ;; avataan lukko käsin lähetysten välissä, koska todellisuudessa tapahtumien välillä pitkiä aikoja, ja
+      ;; uuden lukkomekaniikan myötä tällaisessa setupissa lukko jää nyt muka päälle, vaikka on oikeasti vain 2min päällä
+      (qk/avaa-lukko? db "lupaus-muistutukset")
       (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.11.2019"))
       (is
         (= #{oulun-vastaanottaja} (vastaanottajat @lahetetyt))
         "1.11.2019 pitäisi lähteä sähköposti Oulun urakalle")
       (reset! lahetetyt [])
 
+      (qk/avaa-lukko? db "lupaus-muistutukset")
       (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "01.11.2021"))
       (is
         (= #{oulun-vastaanottaja iin-vastaanottaja} (vastaanottajat @lahetetyt))
         "1.11.2021 pitäisi lähteä sähköpostit Oulun ja Iin urakoille")
       (reset! lahetetyt [])
 
+      (qk/avaa-lukko? db "lupaus-muistutukset")
       (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "1.9.2026"))
       (is
         (= #{iin-vastaanottaja} (vastaanottajat @lahetetyt))
         "1.9.2026 pitäisi lähteä sähköposti Iin urakalle (Oulun urakka on jo päättynyt)")
       (reset! lahetetyt [])
 
+      (qk/avaa-lukko? db "lupaus-muistutukset")
       (lupausmuistutukset/muistutustehtava db fim sahkoposti (pvm/->pvm "1.10.2026"))
       (is
         (empty? @lahetetyt)
-        "1.10.2026 ei lähde enää sähköposteja (urakat päättyneet)"))))
+        "1.10.2026 ei lähde enää sähköposteja (urakat päättyneet)")
+      (qk/avaa-lukko? db "lupaus-muistutukset"))))

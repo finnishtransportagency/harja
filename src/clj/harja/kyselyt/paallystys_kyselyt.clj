@@ -13,11 +13,7 @@
                     {:yllapitokohde yllapitokohde-id}))))
 
 (defn hae-urakan-paallystysilmoitukset-kohteineen [db {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat elyt]}]
-  (let [_ (println "hae-urakan-paallystysilmoitukset-kohteineen params" urakka-id sopimus-id vuosi paikkauskohteet?)
-
-        
-        
-        ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
+  (let [ilmoitukset (hae-urakan-paallystysilmoitukset db {:urakka urakka-id
                                                           :sopimus sopimus-id
                                                           :vuosi vuosi
                                                           :paikkauskohteet paikkauskohteet?})

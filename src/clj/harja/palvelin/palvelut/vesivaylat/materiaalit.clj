@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.vesivaylat.materiaalit
   "Vesiväylien materiaaliseurannan palvelut"
   (:require [specql.core :as specql]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [com.stuartsierra.component :as component]
             [harja.domain.vesivaylat.materiaali :as m]
@@ -119,13 +120,15 @@
   component/Lifecycle
   (start [{db :db
            http :http-palvelin
-           fim :fim
-           email :sonja-sahkoposti :as this}]
-    (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
-                                    (fn [user haku]
-                                      (hae-materiaalilistaus db user haku))
-                                    {:kysely-spec ::m/materiaalilistauksen-haku
-                                     :vastaus-spec ::m/materiaalilistauksen-vastaus})
+           fim :fim :as this}]
+    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
+      (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
+        (fn [user haku]
+          (hae-materiaalilistaus db user haku))
+        {:kysely-spec ::m/materiaalilistauksen-haku
+         :vastaus-spec ::m/materiaalilistauksen-vastaus})
     (http-palvelin/julkaise-palvelu http :kirjaa-vesivayla-materiaali
                                     (fn [user materiaali]
                                       (kirjaa-materiaali db user materiaali fim email))
@@ -141,7 +144,7 @@
                                       (muuta-materiaalien-alkuperaiset-tiedot db user tiedot))
                                     {:kysely-spec ::m/muuta-materiaalien-alkuperaiset-tiedot
                                      :vastaus-spec ::m/materiaalilistauksen-vastaus})
-    this)
+    this))
 
   (stop [this]
     (http-palvelin/poista-palvelut

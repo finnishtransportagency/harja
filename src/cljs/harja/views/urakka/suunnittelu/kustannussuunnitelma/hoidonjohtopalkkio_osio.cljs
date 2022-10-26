@@ -27,30 +27,34 @@
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio-yhteenveto
-  [hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+  [hoidonjohtopalkkio-yhteensa hoidonjohtopalkkio-yhteensa-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
   (if (and indeksit kantahaku-valmis?)
     (let [hinnat (mapv (fn [hjp]
                          {:summa hjp})
-                   hoidonjohtopalkkio-yhteensa)]
+                   hoidonjohtopalkkio-yhteensa)
+          hinnat-indeksikorjattu (mapv (fn [hjp]
+                                         {:summa hjp})
+                                   hoidonjohtopalkkio-yhteensa-indeksikorjattu)]
       [:div.summa-ja-indeksilaskuri
        [ks-yhteiset/hintalaskuri {:otsikko nil
                                   :selite "Hoidonjohtopalkkio"
                                   :hinnat hinnat
                                   :data-cy "hoidonjohtopalkkio-hintalaskuri"}
         kuluva-hoitokausi]
-       [ks-yhteiset/indeksilaskuri hinnat indeksit
+       [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta hinnat-indeksikorjattu indeksit
         {:data-cy "hoidonjohtopalkkio-indeksilaskuri"}]])
     [yleiset/ajax-loader]))
 
 (defn hoidonjohtopalkkio-sisalto
   [vahvistettu?
    hoidonjohtopalkkio-grid
-   suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi
+   suodattimet hoidonjohtopalkkio-yhteensa
+   hoidonjohtopalkkio-yhteensa-indeksikorjattu kuluva-hoitokausi
    indeksit
    kantahaku-valmis?]
   [:<>
    [:h2 {:id (str (get t/hallinnollisten-idt :hoidonjohtopalkkio) "-osio")} "Hoidonjohtopalkkio"]
-   [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?]
+   [hoidonjohtopalkkio-yhteenveto hoidonjohtopalkkio-yhteensa hoidonjohtopalkkio-yhteensa-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?]
 
    [:div {:data-cy "hoidonjohtopalkkio-taulukko-suodattimet"}
     [ks-yhteiset/yleis-suodatin suodattimet]]
@@ -66,10 +70,11 @@
   [vahvistettu?
    hoidonjohtopalkkio-grid
    hoidonjohtopalkkio-yhteensa
+   hoidonjohtopalkkio-yhteensa-indeksikorjattu
    indeksit
    kuluva-hoitokausi
    suodattimet
    kantahaku-valmis?]
   [hoidonjohtopalkkio-sisalto
    vahvistettu?
-   hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa kuluva-hoitokausi indeksit kantahaku-valmis?])
+   hoidonjohtopalkkio-grid suodattimet hoidonjohtopalkkio-yhteensa hoidonjohtopalkkio-yhteensa-indeksikorjattu kuluva-hoitokausi indeksit kantahaku-valmis?])

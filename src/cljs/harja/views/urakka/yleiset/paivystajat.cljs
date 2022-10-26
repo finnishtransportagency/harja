@@ -14,6 +14,7 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.asiakas.tapahtumat :as tapahtumat]
             [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.aikajana :as aikajana]
@@ -40,8 +41,10 @@
                            (:id %)))
                   uudet-paivystajat)
             vastaus (<! (tiedot/tallenna-urakan-paivystajat (:id ur) tallennettavat poistettavat))]
-        (if (k/virhe? vastaus)
-          (viesti/nayta! "Päivystäjien tallennus epäonnistui." :warning viesti/viestin-nayttoaika-keskipitka)
+        (if (or (k/virhe? vastaus) (get-in vastaus [:vastaus :virhe]))
+          (viesti/nayta! (str "Päivystäjien tallennus epäonnistui.\n\n"
+                              (get-in vastaus [:vastaus :virhe]))
+                         :warning viesti/viestin-nayttoaika-pitka)
           (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
               true)))))
 
@@ -79,11 +82,15 @@
      {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
       :validoi [[:ei-tyhja "Aseta alkupvm"]
                 (fn [alku rivi]
-                  (let [loppu (:loppu rivi)]
+                  (let [id (:id rivi)
+                        loppu (:loppu rivi)]
                     (when (and alku loppu
                                (t/before? loppu alku))
-                      "Alkupvm ei voi olla lopun jälkeen.")))
-                ]}
+                      "Loppupvm ei voi olla alkua ennen.")
+                    (when (and (neg? id)
+                               alku
+                               (t/before? alku (pvm/paivan-alussa-opt (pvm/nyt))))
+                      "Et saa asettaa uuden päivystyksen alkamishetkeä menneisyyteen.")))]}
      {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
       :validoi [[:ei-tyhja "Aseta loppupvm"]
                 (fn [loppu rivi]

@@ -94,12 +94,7 @@
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
-       (SELECT korotettuna
-        FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
-                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
-                                            coalesce(t.summa, 0),
-                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
-                                               AS toteutunut_summa,
+        coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma AND tr.nimi = 'Erillishankinnat (W)',
@@ -149,12 +144,7 @@
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
-          (SELECT korotettuna
-             FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
-                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
-                                            coalesce(t.summa, 0),
-                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
-                                               AS toteutunut_summa,
+          coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
@@ -213,12 +203,7 @@
           AND (tk.koodi = '23151' OR tk.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388')
         UNION ALL
         SELECT
-       (SELECT korotettuna
-        FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi ", 9,
-                                            (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = " urakka "),
-                                            coalesce(t.summa, 0),
-                                            (SELECT indeksilaskennan_perusluku(" urakka "::INTEGER))))
-                                               AS toteutunut_summa,
+        coalesce(sum(t.summa_indeksikorjattu), 0) AS toteutunut_summa,
         0 AS budjetoitu_summa
         FROM toteutuneet_kustannukset t
               LEFT JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
@@ -491,13 +476,13 @@ UNION ALL
                                 #(when (= "johto-ja-hallintakorvaus" (:paaryhma %))
                                    true)
                                 vastaus)
-        jjh-summa (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset))
+        jjh-summa (double (apply + (map #(:budjetoitu_summa %) johto_ja_h_korvaukset)))
         jjh-sql (q (johto-ja-hallintokorvaukset-budjetoidut-sql-haku urakka-id alkupvm loppupvm))
-        sql-summa (apply + (map #(first %) jjh-sql))]
+        sql-summa (double (apply + (map #(first %) jjh-sql)))]
     (is (= jjh-summa sql-summa))))
 
 ;; Testataan/vertaillaan Johto- ja hallintokorvauksen toteutuneita summia
-(deftest toteutuneet-johtoja-hallintokorvaukset-test
+(deftest toteutuneet-johto-ja-hallintokorvaukset-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
         loppupvm "2020-09-30"

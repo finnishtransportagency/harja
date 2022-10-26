@@ -3,12 +3,16 @@ FROM centos:7
 ENV POSTGRESQL_VERSION=12
 ENV POSTGIS_VERSION=3.1
 # Asennetaan riippuvuudet
-RUN ARCH=$(uname -i); yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-${ARCH}/pgdg-redhat-repo-latest.noarch.rpm; \
-    yum install -y postgresql${POSTGRESQL_VERSION}; \
-    yum install -y postgresql${POSTGRESQL_VERSION}-server; \
-    yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm; \
-    yum install -y postgis$(echo ${POSTGIS_VERSION} | sed -e "s/\.//")_${POSTGRESQL_VERSION}; \
-    yum install -y java-11-openjdk sudo wget which;
+# Käskyt omilla RUN komennoilla, koska flippasi muuten aarch64 arkkitehtuurilla eikä ilmoittanut virhettä.
+RUN ARCH=$(uname -i); yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-${ARCH}/pgdg-redhat-repo-latest.noarch.rpm
+# Poistetaan eheystarkastukset käytöstä, koska ne eivät toimi aarch64 arkkitehtuurin repossa.
+RUN [ "$(uname -i)" == "aarch64" ] && mv /etc/yum.repos.d/pgdg-redhat-all.repo / || exit 0
+RUN [ "$(uname -i)" == "aarch64" ] && cat pgdg-redhat-all.repo | sed 's/gpgcheck=1/gpgcheck=0/' >/etc/yum.repos.d/pgdg-redhat-all.repo || exit 0
+RUN yum install -y postgresql${POSTGRESQL_VERSION}
+RUN yum install -y postgresql${POSTGRESQL_VERSION}-server
+RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+RUN yum install -y postgis$(echo ${POSTGIS_VERSION} | sed -e "s/\.//")_${POSTGRESQL_VERSION}
+RUN yum install -y java-11-openjdk sudo wget which
 
 RUN wget https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz; \
     if [ "$(sha512sum /apache-maven-3.6.3-bin.tar.gz )" != "c35a1803a6e70a126e80b2b3ae33eed961f83ed74d18fcd16909b2d44d7dada3203f1ffe726c17ef8dcca2dcaa9fca676987befeadc9b9f759967a8cb77181c0  /apache-maven-3.6.3-bin.tar.gz" ]; then exit 1; fi; \

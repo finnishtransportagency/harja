@@ -1,0 +1,1 @@
+DELETE FROM integraatio WHERE jarjestelma = 'digitraffic' AND nimi = 'ais-data-paivitys';

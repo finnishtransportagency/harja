@@ -24,7 +24,7 @@
             <plugin>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>4.1.2</version>
+                <version>8.2.0</version>
                 <configuration>
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <allowMixedMigrations>false</allowMixedMigrations>
@@ -36,7 +36,7 @@
                     <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
-                        <version>42.2.5</version>
+                        <version>42.4.1</version>
                     </dependency>
                 </dependencies>
             </plugin>

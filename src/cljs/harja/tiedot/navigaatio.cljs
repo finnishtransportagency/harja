@@ -248,6 +248,7 @@
                         ;; Hallintavälilehdellä ei näytetä karttaa, paitsi jos ollaan kanavaurakoiden kohteiden luonnissa
                         ;; Tähän tarvitaan molemmat tarkastukset, koska vesiväylä-hallinan valituksi välilehdeksi
                         ;; voi jäädä kohteiden luonti, vaikka siirryttäisikiin esim integraatiolokiin
+                        (not= (valittu-valilehti :hallinta) :toteumatyokalu)
                         (not= (valittu-valilehti :hallinta) :vesivayla-hallinta)
                         (not= (valittu-valilehti :vesivayla-hallinta) :kanavaurakoiden-kohteiden-luonti))
                       :hidden
@@ -430,7 +431,7 @@
       (swap! reitit/url-navigaatio
              reitit/tulkitse-polku polku)
       ;; Käsitellään linkit yksittäisiin integraatiolokin viesteihin
-      (when (and (= polku "hallinta/integraatioloki")
+      (when (and (= polku "hallinta/integraatiotilanne/integraatioloki")
                  (.get parametrit "valittu-jarjestelma")
                  (.get parametrit "valittu-integraatio")
                  (.get parametrit "tapahtuma-id")

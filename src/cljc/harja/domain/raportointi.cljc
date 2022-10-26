@@ -23,15 +23,16 @@
 
 ;; https://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/IndexedColors.html
 (def virhetyylit-excel
-  {:virhe    (merge rajat-excel
-                    {:background :dark_red
-                     :font       {:color :white}})
+  {:virhe (merge rajat-excel
+                 {:background :dark_red
+                  :font {:color :white}})
    :varoitus (merge rajat-excel
                     {:background :orange
-                     :font       {:color :black}})
-   :info     (merge rajat-excel
-                    {:background :light_turquoise
-                     :font       {:color :black}})})
+                     :font {:color :black}})
+   :info (merge rajat-excel
+                {:background :light_turquoise
+                 :font {:color :black}})
+   :disabled {:font {:color :grey_80_percent}}})
 
 (defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti?]
   (let [deep-merge (partial merge-with merge)]
@@ -62,6 +63,11 @@
   (and (vector? solu)
        (> (count solu) 1)
        (keyword? (first solu))))
+
+(defn excel-kaava?
+  [solu]
+  (and (raporttielementti? solu)
+    (= :kaava (first solu))))
 
 (defn sarakkeessa-raporttielementteja? [sarakkeen-indeksi taulukko-riveja]
   (let [sarakkeen-solut
@@ -121,7 +127,26 @@
   (try
     (apply (partial fn arvo) args)
     #?(:cljs (catch js/Object _ arvo))
-    #?(:clj (catch Exception _ arvo))))
+    #?(:clj (catch Exception _ arvo))
+    #?(:clj (catch Error _ arvo))))
 
 (defn numero-fmt? [fmt]
   (boolean (#{:kokonaisluku :numero :numero-3desim :prosentti :prosentti-0desim :raha} fmt)))
+
+(def +mahdolliset-roolit+
+  [[nil "Kaikki"]
+   [:urakanvalvoja "Urakanvalvoja"]
+   [:ely-kayttaja "ELY:n käyttajä"]
+   [:ely-paakayttaja "ELY:n paakayttaja"]
+   [:jvh "Järjestelmävastaava"]
+   [:rakennuttajakonsultti "Rakennuttajakonsultti"]
+   [:urak-vastuuhenkilo "Urakoitsijan vastuuhenkilö"]
+   [:urak-paakayttaja "Urakoitsijan pääkäyttäjä"]])
+
+(def +mahdolliset-roolit-avaimet+
+  (keep #(first %) +mahdolliset-roolit+))
+
+(defn roolin-avain->nimi [avain]
+  (second
+    (first (filter #(= avain (first %))
+                   +mahdolliset-roolit+))))

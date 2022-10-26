@@ -38,13 +38,13 @@ FROM yllapitokohde ypk
   LEFT JOIN paikkauskohde_tyomenetelma pktm ON p.tyomenetelma = pktm.id
   left join urakka u on u.id = ypk.urakka
 WHERE ypk.urakka = :urakka
-      AND sopimus = :sopimus
-      AND yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
-      AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
+  AND ypk.sopimus = :sopimus
+  AND ypk.yllapitokohdetyotyyppi = 'paallystys' :: YLLAPITOKOHDETYOTYYPPI
+  AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
-      AND ypk.poistettu IS NOT TRUE
+  AND ypk.poistettu IS NOT TRUE
   AND ((:paikkauskohteet ::TEXT IS NULL)
-    OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
+   OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
 SELECT id
@@ -637,6 +637,191 @@ SELECT ypk.nimi, ypk.kohdenumero, (SELECT string_agg(pot.tila::TEXT, ',')) AS ti
            LEFT JOIN urakka u ON ypk.urakka = u.id
  WHERE a.murske = :id AND a.poistettu IS NOT TRUE
  group by ypk.nimi, ypk.kohdenumero;
+
+-- name: muut-urakat-joissa-materiaaleja
+SELECT id, nimi FROM urakka u
+        WHERE (u.id IN (:urakat) OR
+               u.urakoitsija IN (:organisaatiot) OR
+               :jarjestelmavastaava IS TRUE)
+          -- ei sallita missään tilanteessa eri urakoitsijan urakoihin näkyvyyttä
+          AND u.urakoitsija = (SELECT urakoitsija FROM urakka WHERE id = :valittu_urakka)
+          AND u.id != :valittu_urakka
+          AND
+            (exists(SELECT id FROM pot2_mk_urakan_massa ma WHERE ma.urakka_id = u.id AND ma.poistettu IS FALSE) OR
+             exists(SELECT id FROM pot2_mk_urakan_murske mu WHERE mu.urakka_id = u.id AND mu.poistettu IS FALSE))
+ORDER BY u.nimi;
+
+-- name: monista-massa<!
+INSERT INTO pot2_mk_urakan_massa (urakka_id,
+                                  tyyppi,
+                                  nimen_tarkenne,
+                                  max_raekoko,
+                                  kuulamyllyluokka,
+                                  dop_nro,
+                                  poistettu,
+                                  muokkaaja,
+                                  muokattu,
+                                  luoja,
+                                  luotu,
+                                  litteyslukuluokka)
+SELECT :urakka_id,
+        tyyppi,
+        nimen_tarkenne,
+        max_raekoko,
+        kuulamyllyluokka::kuulamyllyluokka,
+        dop_nro,
+        FALSE,
+        NULL,
+        NULL,
+        :kayttaja,
+        NOW(),
+        litteyslukuluokka::litteyslukuluokka
+  FROM pot2_mk_urakan_massa
+ WHERE id = :id;
+
+-- name: monista-massan-runkoaineet<!
+INSERT INTO pot2_mk_massan_runkoaine (pot2_massa_id,
+                                      tyyppi,
+                                      esiintyma,
+                                      fillerityyppi,
+                                      kuvaus,
+                                      kuulamyllyarvo,
+                                      litteysluku,
+                                      massaprosentti)
+SELECT :uusi_pot2_massa_id,
+       tyyppi,
+       esiintyma,
+       fillerityyppi,
+       kuvaus,
+       kuulamyllyarvo,
+       litteysluku,
+       massaprosentti
+  FROM pot2_mk_massan_runkoaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-massan-sideaineet<!
+INSERT INTO pot2_mk_massan_sideaine (pot2_massa_id,
+                                     "lopputuote?",
+                                     tyyppi,
+                                     pitoisuus)
+SELECT :uusi_pot2_massa_id,
+       "lopputuote?",
+       tyyppi,
+       pitoisuus
+  FROM pot2_mk_massan_sideaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-massan-lisaaineet<!
+INSERT INTO pot2_mk_massan_lisaaine (pot2_massa_id,
+                                     tyyppi,
+                                     pitoisuus)
+SELECT :uusi_pot2_massa_id,
+       tyyppi,
+       pitoisuus
+  FROM pot2_mk_massan_lisaaine WHERE pot2_massa_id = :vanha_pot2_massa_id;
+
+-- name: monista-murske<!
+INSERT INTO pot2_mk_urakan_murske (urakka_id,
+                                   nimen_tarkenne,
+                                   tyyppi,
+                                   esiintyma,
+                                   rakeisuus,
+                                   iskunkestavyys,
+                                   dop_nro,
+                                   poistettu,
+                                   muokkaaja,
+                                   muokattu,
+                                   luoja,
+                                   luotu,
+                                   rakeisuus_tarkenne,
+                                   tyyppi_tarkenne,
+                                   lahde)
+SELECT :urakka_id,
+       nimen_tarkenne,
+       tyyppi,
+       esiintyma,
+       rakeisuus,
+       iskunkestavyys,
+       dop_nro,
+       FALSE,
+       NULL,
+       NULL,
+       :kayttaja,
+       NOW(),
+       rakeisuus_tarkenne,
+       tyyppi_tarkenne,
+       lahde FROM pot2_mk_urakan_murske WHERE id = :id;
+
+-- name: hae-massan-urakka-id
+-- single?: true
+SELECT urakka_id
+  FROM pot2_mk_urakan_massa
+ WHERE id = :id;
+
+-- name: hae-murskeen-urakka-id
+-- single?: true
+SELECT urakka_id
+  FROM pot2_mk_urakan_murske
+ WHERE id = :id;
+
+-- name: poista-urakan-massa<!
+UPDATE pot2_mk_urakan_massa
+   SET poistettu = true
+ WHERE id = :id and urakka_id = :urakka_id;
+
+-- name: poista-urakan-murske<!
+UPDATE pot2_mk_urakan_murske
+   SET poistettu = true
+ WHERE id = :id and urakka_id = :urakka_id;
+
+-- name: hae-samannimiset-massat-urakasta
+SELECT *
+  FROM pot2_mk_urakan_massa
+ WHERE tyyppi = :tyyppi AND
+         max_raekoko = :max_raekoko AND
+         (nimen_tarkenne = :nimen_tarkenne OR nimen_tarkenne IS NULL) AND
+         dop_nro = :dop_nro AND
+         urakka_id = :urakka_id AND
+         id != :id;
+
+-- name: hae-samannimisten-massojen-viimeisin-tarkenne
+-- single?: true
+SELECT nimen_tarkenne
+  FROM pot2_mk_urakan_massa
+ WHERE tyyppi = :tyyppi AND
+         max_raekoko = :max_raekoko AND
+         dop_nro = :dop_nro AND
+         urakka_id = :urakka_id AND
+         id != :id AND nimen_tarkenne IS NOT NULL
+ORDER BY nimen_tarkenne DESC;
+
+-- name: hae-samannimiset-murskeet-urakasta
+SELECT *
+  FROM pot2_mk_urakan_murske
+ WHERE tyyppi = :tyyppi AND
+     (nimen_tarkenne = :nimen_tarkenne OR nimen_tarkenne IS NULL) AND
+     (dop_nro = :dop_nro OR dop_nro IS NULL) AND
+         urakka_id = :urakka_id AND
+         id != :id;
+
+-- name: hae-samannimisten-murskeiden-viimeisin-tarkenne
+-- single?: true
+SELECT nimen_tarkenne
+  FROM pot2_mk_urakan_murske
+ WHERE tyyppi = :tyyppi AND
+     (dop_nro = :dop_nro OR dop_nro IS NULL) AND
+         urakka_id = :urakka_id AND
+         id != :id AND
+     nimen_tarkenne IS NOT NULL
+ ORDER BY nimen_tarkenne DESC;
+
+-- name: paivita-massan-nimen-tarkennetta<!
+UPDATE pot2_mk_urakan_massa
+   SET nimen_tarkenne = :nimen_tarkenne
+ WHERE id = :id AND urakka_id = :urakka_id;
+
+-- name: paivita-murskeen-nimen-tarkennetta<!
+UPDATE pot2_mk_urakan_murske
+   SET nimen_tarkenne = :nimen_tarkenne
+ WHERE id = :id AND urakka_id = :urakka_id;
 
 -- name: hae-paikkauskohde-yllapitokohde-idlla
 select p.id FROM paikkauskohde p WHERE p."yllapitokohde-id" = :yllapitokohde-id;

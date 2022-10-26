@@ -15,4 +15,4 @@ then
 fi
 
 echo "Generoidaan less -> CSS taustalla..."
-bash ${HARJA_DIR}/sh/tarkkaile_less_muutoksia.sh "${1:-''}" &
+bash ${HARJA_DIR}/sh/tarkkaile_less_muutoksia.sh ${1:-''} &

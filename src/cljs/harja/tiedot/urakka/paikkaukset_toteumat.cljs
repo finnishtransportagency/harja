@@ -79,9 +79,9 @@
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)
                 (with-meta (mapv (fn [paikkaus]
                                    {:alue (merge {:tyyppi-kartalla :paikkaukset-toteumat
-                                            :stroke {:width 8
-                                                     :color "#58a006"}}
-                                           (::paikkaus/sijainti paikkaus))
+                                                  :stroke {:width 8
+                                                           :color (asioiden-ulkoasu/tilan-vari "valmis")}}
+                                                 (::paikkaus/sijainti paikkaus))
                                     :tyyppi-kartalla :paikkaukset-toteumat
                                     :stroke {:width 8 #_asioiden-ulkoasu/+normaali-leveys+}
                                     :infopaneelin-tiedot (infopaneelin-tiedot-fn paikkaus)})

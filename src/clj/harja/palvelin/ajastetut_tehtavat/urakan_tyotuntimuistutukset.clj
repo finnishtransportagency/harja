@@ -4,6 +4,7 @@
             [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clj-time.periodic :refer [periodic-seq]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.palvelin.palvelut.viestinta :as viestinta]
             [harja.domain.urakan-tyotunnit :as ut]
@@ -44,28 +45,32 @@
                   :viesti-body sisalto}]
       (viestinta/laheta-sposti-fim-kayttajarooleille viesti))))
 
-(defn urakan-tyotuntimuistutukset [{:keys [fim sonja-sahkoposti db]} paivittainen-ajoaika]
+(defn urakan-tyotuntimuistutukset [{:keys [fim api-sahkoposti sonja-sahkoposti db]} paivittainen-ajoaika]
   (log/info "Ajastetaan muistutukset urakan työtunneista ajettavaksi joka päivä " paivittainen-ajoaika)
   (ajastettu-tehtava/ajasta-paivittain
     paivittainen-ajoaika
-    (fn [_]
-      (let [kuluva-kolmannes (ut/kuluva-vuosikolmannes)
-            vuosi (::ut/vuosi kuluva-kolmannes)
-            kolmannes (::ut/vuosikolmannes kuluva-kolmannes)
-            kuluvan-kolmanneksen-paattymispaiva (ut/kuluvan-vuosikolmanneksen-paattymispaiva)
-            paivia-kolmanneksen-paattymiseen (pvm/paivia-valissa (t/now) kuluvan-kolmanneksen-paattymispaiva)]
-        (when (= 3 paivia-kolmanneksen-paattymiseen)
-          (let [tunnittomat-urakat (q/hae-urakat-joilla-puuttuu-kolmanneksen-tunnit
-                                     db
-                                     {:vuosi vuosi
-                                      :vuosikolmannes kolmannes})]
-            (laheta-muistutukset-urakoille
-              fim
-              sonja-sahkoposti
-              tunnittomat-urakat
-              vuosi
-              kolmannes
-              kuluvan-kolmanneksen-paattymispaiva)))))))
+    (do
+      (log/info "ajasta-paivittain :: muistutus urakan työtunneista :: Alkaa " (pvm/nyt))
+      (fn [_]
+       (let [kuluva-kolmannes (ut/kuluva-vuosikolmannes)
+             vuosi (::ut/vuosi kuluva-kolmannes)
+             kolmannes (::ut/vuosikolmannes kuluva-kolmannes)
+             kuluvan-kolmanneksen-paattymispaiva (ut/kuluvan-vuosikolmanneksen-paattymispaiva)
+             paivia-kolmanneksen-paattymiseen (pvm/paivia-valissa (t/now) kuluvan-kolmanneksen-paattymispaiva)]
+         (when (= 3 paivia-kolmanneksen-paattymiseen)
+           (let [tunnittomat-urakat (q/hae-urakat-joilla-puuttuu-kolmanneksen-tunnit
+                                      db
+                                      {:vuosi vuosi
+                                       :vuosikolmannes kolmannes})]
+             (laheta-muistutukset-urakoille
+               fim
+               (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                 sonja-sahkoposti
+                 api-sahkoposti )
+               tunnittomat-urakat
+               vuosi
+               kolmannes
+               kuluvan-kolmanneksen-paattymispaiva))))))))
 
 (defrecord UrakanTyotuntiMuistutukset [paivittainen-ajoaika]
   component/Lifecycle

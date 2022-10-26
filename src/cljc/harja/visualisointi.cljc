@@ -64,6 +64,13 @@
                colors (cycle +colors+)]
           (if-not label
             [:span.pie
+             [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
+                    :width  width
+                    :height height}
+              slices
+              (when-let [tip @tooltip]
+                [:text {:x (/ width 2) :y (- height 10) :text-anchor "middle"}
+                 tip])]
              (when show-legend
                [:div.pie-legend
                 (map (fn [l c]
@@ -72,14 +79,7 @@
                         [:div.pie-legend-color {:style {:background-color c}}]
                         l])
                      (map first all-items)
-                     (cycle +colors+))])
-             [:svg {#?@(:clj [:xmlns  "http://www.w3.org/2000/svg"])
-                    :width  width
-                    :height height}
-              slices
-              (when-let [tip @tooltip]
-                [:text {:x (/ width 2) :y (- height 10) :text-anchor "middle"}
-                 tip])]]
+                     (cycle +colors+))])]
 
             (let [slice-angle (* 360 (/ count total))
                   start-angle angle

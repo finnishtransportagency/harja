@@ -135,18 +135,12 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennus
 
 DO $$
 DECLARE
-  indeksin_aloitus_vuosi INTEGER;
+  indeksin_aloitus_vuosi INTEGER := 2018;
   indeksi_vuoteen_asti INTEGER;
   vuosi_ INTEGER;
   kuluva_kk INTEGER;
   arvo_ NUMERIC;
 BEGIN
-  IF ((SELECT date_part('month', now())) >= 10)
-  THEN
-      indeksin_aloitus_vuosi = (SELECT date_part('year', now())::INT - 3);
-  ELSE
-      indeksin_aloitus_vuosi = (SELECT date_part('year', now())::INT - 4);
-  END IF;
   indeksi_vuoteen_asti = (SELECT date_part('year', now()));
   kuluva_kk = (SELECT date_part('month', now()));
   FOR vuosi_ IN indeksin_aloitus_vuosi..indeksi_vuoteen_asti

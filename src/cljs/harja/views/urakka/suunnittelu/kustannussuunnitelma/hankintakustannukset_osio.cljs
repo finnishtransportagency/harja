@@ -90,6 +90,7 @@
                                                               :luokat #{"table-default"}
                                                               :fmt ks-yhteiset/summa-formatointi}
                                                              {:tyyppi :teksti
+                                                              :fmt ks-yhteiset/summa-formatointi
                                                               :luokat #{"table-default" "harmaa-teksti"}}]})))}]})
                              (range 1 6))
                            :footer [{:tyyppi :teksti
@@ -125,7 +126,7 @@
                                            :arvo arvo
                                            :solu maara-solu
                                            ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                           :ajettavat-jarejestykset #{:mapit}
+                                           :ajettavat-jarjestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
                       hoitokauden-numero
@@ -144,7 +145,7 @@
                                        :arvo arvo
                                        :solu solu/*this*
                                        ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                       :ajettavat-jarejestykset #{:mapit}
+                                       :ajettavat-jarjestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
                   hoitokauden-numero
@@ -153,7 +154,7 @@
               (t/paivita-solun-arvo {:paivitettava-asia :aseta-suunnitellut-hankinnat!
                                      :arvo arvo
                                      :solu solu/*this*
-                                     :ajettavat-jarejestykset true
+                                     :ajettavat-jarjestykset true
                                      :triggeroi-seuranta? true}
                 true
                 hoitokauden-numero
@@ -244,7 +245,7 @@
                                            :arvo arvo
                                            :solu maara-solu
                                            ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                           :ajettavat-jarejestykset #{:mapit}
+                                           :ajettavat-jarjestykset #{:mapit}
                                            :triggeroi-seuranta? true}
                       true
                       hoitokauden-numero
@@ -263,7 +264,7 @@
                                        :arvo arvo
                                        :solu solu/*this*
                                        ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                       :ajettavat-jarejestykset #{:mapit}
+                                       :ajettavat-jarjestykset #{:mapit}
                                        :triggeroi-seuranta? false}
                   false
                   hoitokauden-numero
@@ -272,7 +273,7 @@
               (t/paivita-solun-arvo {:paivitettava-asia :aseta-laskutukseen-perustuvat-hankinnat!
                                      :arvo arvo
                                      :solu solu/*this*
-                                     :ajettavat-jarejestykset true
+                                     :ajettavat-jarjestykset true
                                      :triggeroi-seuranta? true}
                 true
                 hoitokauden-numero
@@ -351,7 +352,7 @@
                                :arvo arvo
                                :solu maara-solu
                                ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                               :ajettavat-jarejestykset #{:mapit}
+                               :ajettavat-jarjestykset #{:mapit}
                                :triggeroi-seuranta? true}
           true)))
     (when (= asettajan-nimi :aseta-rahavaraukset!)
@@ -494,7 +495,7 @@
                                                                                                :arvo arvo
                                                                                                :solu solu/*this*
                                                                                                ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                                                                               :ajettavat-jarejestykset #{:mapit}})))
+                                                                                               :ajettavat-jarjestykset #{:mapit}})))
                                                          :on-focus (fn [event]
                                                                      (let [arvo (.. event -target -value)]
                                                                        (when (= arvo t/vaihtelua-teksti)
@@ -504,7 +505,7 @@
                                                                     (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                            :arvo arvo
                                                                                            :solu solu/*this*
-                                                                                           :ajettavat-jarejestykset true
+                                                                                           :ajettavat-jarjestykset true
                                                                                            :triggeroi-seuranta? true}
                                                                       true)
                                                                     (let [vanhempiosa (grid/osa-polusta solu/*this* [:.. :..])
@@ -568,7 +569,7 @@
                                                                                                         :arvo arvo
                                                                                                         :solu solu/*this*
                                                                                                         ;; Hox: Jarjestykset määritellään grid-kasittelija:ssa ":jarjestys [^{:nimi :mapit} ....]"
-                                                                                                        :ajettavat-jarejestykset #{:mapit}}
+                                                                                                        :ajettavat-jarjestykset #{:mapit}}
                                                                                    false)))
                                                                   :on-focus (fn [_]
                                                                               (grid/paivita-osa! solu/*this*
@@ -578,7 +579,7 @@
                                                                              (t/paivita-solun-arvo {:paivitettava-asia :aseta-rahavaraukset!
                                                                                                     :arvo arvo
                                                                                                     :solu solu/*this*
-                                                                                                    :ajettavat-jarejestykset true
+                                                                                                    :ajettavat-jarjestykset true
                                                                                                     :triggeroi-seuranta? true}
                                                                                true)
                                                                              (e! (t/->TallennaKustannusarvoitu tyyppi
@@ -602,7 +603,8 @@
                                                                {:key (str tyyppi "-" index "-yhteensa")})
                                                              ;; Indeksikorjattu
                                                              (with-meta
-                                                               (solu/teksti {:parametrit {:class #{"table-default"}}})
+                                                               (solu/teksti {:parametrit {:class #{"table-default"}}
+                                                                             :fmt ks-yhteiset/summa-formatointi})
                                                                {:key (str tyyppi "-" index "-indeksikorjattu")})]
                                                       :luokat #{"salli-ylipiirtaminen"}}
                                                      [{:sarakkeet [0 4] :rivit [0 1]}])
@@ -851,6 +853,12 @@
         laskutukseen-perustuva-taulukko-valmis? (and laskutukseen-perustuvat-hankinnat-grid kantahaku-valmis?)
         rahavaraukset-taulukko-valmis? (and rahavaraukset-grid kantahaku-valmis?)
         nayta-laskutukseen-perustuva-taulukko? (contains? laskutukseen-perustuen-valinta toimenpide)
+        yhteenveto-indeksikorjattu (mapv (fn [summa-indeksikorjattu]
+                                          {:summa summa-indeksikorjattu})
+                                     (mapv +
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :rahavaraukset]))
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :suunnitellut-hankinnat]))
+                                       (t/summaa-lehtivektorit (get-in hankintakustannukset-yhteenvedot [:indeksikorjatut-summat :laskutukseen-perustuvat-hankinnat]))))
         yhteenveto (mapv (fn [summa]
                            {:summa summa})
                      (mapv +
@@ -867,7 +875,9 @@
                                    :hinnat yhteenveto
                                    :data-cy "hankintakustannukset-hintalaskuri"}
          kuluva-hoitokausi]
-        [ks-yhteiset/indeksilaskuri yhteenveto indeksit
+        [ks-yhteiset/indeksilaskuri-ei-indeksikorjausta
+         yhteenveto-indeksikorjattu
+         indeksit
          {:data-cy "hankintakustannukset-indeksilaskuri"}]]
 
        ^{:key "hankintakustannusten-loader"}

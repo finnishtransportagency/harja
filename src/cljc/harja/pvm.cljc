@@ -314,6 +314,10 @@
    (defn tanaan? [pvm]
      (sama-pvm? (suomen-aikavyohykkeeseen (joda-timeksi pvm)) (nyt-suomessa))))
 
+(defn tanaan-aikavali []
+  [(aikana (t/today) 0 0 0 0)
+   (aikana (t/today) 23 59 59 999)])
+
 (defn- luo-format [str]
   #?(:cljs (df/formatter str)
      :clj  (SimpleDateFormat. str)))
@@ -360,6 +364,11 @@
 
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
+
+(defn jsondate
+  "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
+  [pvm]
+  (formatoi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm))
 
 (defn aika-iso8601-ilman-millisekunteja
   [pvm]
@@ -411,6 +420,13 @@
   (if p
     (pvm-aika p)
     ""))
+
+(defn aikavali-kellonajan-kanssa
+  "Palauttaa lähinnä käyttöliittymää varten aikavälin miellyttävässä formaatissa"
+  [[alkuhetki loppuhetki]]
+  (str (pvm-aika-opt alkuhetki)
+       " - "
+       (pvm-aika-opt loppuhetki)))
 
 (defn pvm-aika-sek
   "Formatoi päivämäärän ja ajan suomalaisessa muodossa sekuntitarkkuudella"
@@ -607,6 +623,24 @@
   [vuosi]
   (formatoi fi-pvm (hoitokauden-loppupvm vuosi)))
 
+(defn hoitokausi-str-alkuvuodesta
+  "Ottaa sisään hoitokauden alkuvuodesta, palauttaa formatoidun hoitokauden esim. alasvetovalintaa varten muodossa 1.10.2021-30.09.2022"
+  [hk-alkuvuosi]
+  (when hk-alkuvuosi
+    (str
+      (hoitokauden-alkupvm-str hk-alkuvuosi)
+      "-"
+      (hoitokauden-loppupvm-str (inc hk-alkuvuosi)))))
+
+(defn hoitokausi-str-alkuvuodesta-vuodet
+  "Ottaa sisään hoitokauden alkuvuodesta, palauttaa formatoidun hoitokauden muodossa 2021-2022"
+  [hk-alkuvuosi]
+  (when hk-alkuvuosi
+    (str
+      hk-alkuvuosi
+      "-"
+      (inc hk-alkuvuosi))))
+
 (defn vesivaylien-hoitokauden-alkupvm
   "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
   [vuosi]
@@ -750,6 +784,16 @@
     {:alkupvm hoitokauden-alkupvm
      :loppupvm hoitokauden-loppupvm}))
 
+(defn tulevat-hoitovuodet
+  "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
+  Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"
+  [nykyvuosi kopioidaan-tuleville-vuosille? urakka]
+  (let [urakan-loppuvuosi (vuosi (:loppupvm urakka))
+        hoitovuodet (if kopioidaan-tuleville-vuosille?
+                      (range nykyvuosi urakan-loppuvuosi)
+                      [nykyvuosi])]
+    hoitovuodet))
+
 (defn
   kuukauden-aikavali
   "Palauttaa kuukauden aikavälin vektorina [alku loppu], jossa alku on kuukauden ensimmäinen päivä
@@ -828,6 +872,23 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
     true
     false))
 
+(defn onko-hoitokausi?
+  "On tilanteita, joissa voi olla vaikea tietää, käsitelläänkö täydellistä hoitokautta. Tarkistus fn sellaiseen, missä
+  on syytä epäillä, että hoitokausi ei ole ihan kokonaan valittu."
+  [^java.util.Date alkupvm ^java.util.Date loppupvm]
+  (let [alkupvm-vuosi (vuosi alkupvm)
+        loppupvm-vuosi (vuosi loppupvm)
+        alkupvm-kuukausi (kuukausi alkupvm)
+        loppupvm-kuukausi (kuukausi loppupvm)
+        alkupvm-paiva (paiva alkupvm)
+        loppupvm-paiva (paiva loppupvm)]
+    (if (and
+          (= (+ 1 alkupvm-vuosi) loppupvm-vuosi) ;; Alkupvm:n vuosi on edellinen vuosi
+          (and (= alkupvm-kuukausi 10) (= loppupvm-kuukausi 9)) ;; Tarkistetaan lokakuu ja syyskuu
+          (and (= alkupvm-paiva 1) (= loppupvm-paiva 30))) ;; Tarkistetaan päivät
+      true
+      false)))
+
 (defn varmista-aikavali
   "Funktiolla voi varmistaa, että annettu aikaväli on maksimissaan tietyn mittainen.
   Jos ei ole, palauttaa aikavälistä sääntöä muokatun version. Palautettava versio riippuu
@@ -895,6 +956,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
   (let [pvm-ed-kkna (t/minus p (t/months 1))]
     [(aikana (t/first-day-of-the-month pvm-ed-kkna) 0 0 0 0)
      (aikana (t/last-day-of-the-month pvm-ed-kkna) 23 59 59 999)]))
+
+#?(:clj
+   (defn ed-kk-date-vektorina
+     "Sisään Joda LocalDateTime"
+     [p]
+     (let [pvm-ed-kkna (t/minus p (t/months 1))]
+       (map
+         paivan-alussa
+         [(t/first-day-of-the-month pvm-ed-kkna)
+          (t/last-day-of-the-month pvm-ed-kkna)]))))
 
 #?(:clj
    (defn kyseessa-kk-vali?
@@ -1054,7 +1125,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (cons alku
             (paivat-valissa* (t/plus alku (t/days 1)) loppu)))))
 
-(defn paivat-valissa [alku loppu]
+(defn paivat-valissa
+  "Palauttaa laiskan seqin päivistä org.joda.time.DateTime muodossa"
+  [alku loppu]
   (paivat-valissa* (d alku) (d loppu)))
 
 (defn vuodet-valissa [alku loppu]
@@ -1140,6 +1213,24 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                 myohaisin-aika
                 aika))
             ajat)))
+
+(defn hoitokauden-alkuvuosi-kk->pvm
+  "Muuttaa hoitokauden alkuvuoden ja kuukauden päivämääräksi oikealla vuodella, kk ensimmäiselle päivälle."
+  [hoitokauden-alkuvuosi kk]
+  (luo-pvm-dec-kk
+    (if (>= 9 kk)
+      (inc hoitokauden-alkuvuosi)
+      hoitokauden-alkuvuosi)
+    kk
+    1))
+
+(defn urakan-kuukausi-str
+  "Palauttaa kuukauden nimen ja vuoden kuukauden numeron ja hoitokauden alkuvuoden perusteella
+  esim. (urakan-kuukausi-str 11 2019) => Marraskuu 2020"
+  [kk hoitokauden-alkuvuosi]
+  (str (kuukauden-nimi kk true) " "
+    (cond-> hoitokauden-alkuvuosi
+      (>= 9 kk) inc)))
 
 #?(:clj
    (defn lisaa-n-kuukautta-ja-palauta-uuden-kuukauden-viimeinen-pvm [pvm kk-maara]

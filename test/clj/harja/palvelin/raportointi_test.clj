@@ -3,13 +3,16 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.raportointi.raportit.tyomaakokous :as tyomaakokous]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.kyselyt.pohjavesialueet :as p]
             [harja.palvelin.palvelut.raportit :as raportit]
             [clojure.test :refer [deftest is testing] :as t]
             [clj-time.coerce :as c]
             [clj-time.core :as time]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.excel :as excel]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -212,5 +215,65 @@
                             :tietoja [["Kohde"
                                        "Koko maa"]
                                       ["Tyypin hoito urakoita käynnissä"
-                                       3]]}]]
+                                       2]]}]]
     (is (= kuvaus-liitetty odotettu-liitetty) "Raporttiin liitetty suorituskonteksti ihan okei")))
+
+;; VHAR-5683 Materialisoitu näkymä unohtui päivittää
+;; Kaksi näkymää liittyy Suolauksen Käyttöraja arvon välittymiseen raporteille.
+;;   pohjavesialue_talvisuola.talvisuolaraja -> Materialized View - pohjavesialue_kooste.suolarajoitus
+;;   pohjavesialue_kooste.suolarajoitus -> raportti_pohjavesialueiden_suolatoteumat.kayttoraja
+;;
+;; Puuttui hoitokauden alkuvuosi pohjavesialue_kooste ja raportti_pohjavesialueiden_suolatoteumat käsittelyssä
+(deftest pohjavesialue-kooste-materialized-view-paivittyy-sql-toteutuksessa
+  (let [tunnus 11244001
+        vanha-suola 6.6M
+        odotettu-tie 846
+        suolaa 123
+        odotettu-suolaa 123M
+        suolaraja-materialized-viewsta (fn [tie] (-> (str "SELECT talvisuolaraja FROM pohjavesialue_kooste WHERE tunnus = '" tunnus "' AND tie = " tie " ORDER BY tunnus, tie")
+                                                     q-map
+                                                     first
+                                                     :talvisuolaraja))
+        db (:db jarjestelma)]
+    (p/paivita-pohjavesialue-kooste db)                     ; Päivitys voi tapahtua ennen muokkausta
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Alkutilanne
+    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = " suolaa "
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " odotettu-tie))))
+    (is (= vanha-suola (suolaraja-materialized-viewsta odotettu-tie))) ; Taulun päivitys ei päivitä MV:ta
+    (p/paivita-pohjavesialue-kooste db)
+    (is (= odotettu-suolaa (suolaraja-materialized-viewsta odotettu-tie)))
+    (is (= 2 (u (str "UPDATE pohjavesialue_talvisuola SET tie = " odotettu-tie ", talvisuolaraja = 6.6
+        WHERE pohjavesialue = '" tunnus "'
+        AND tie = " odotettu-tie))))))
+
+(deftest tyomaakokousraporttiin-oikea-laskutusyhteenveto
+  (let [mhu-oulu-urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        hoito-oulu-urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tiedot-mhu  {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id mhu-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :teiden-hoito}
+        tiedot-hoito {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id hoito-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :hoito}
+        laskutusyhteenveto-mhu-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
+                                                                                      +kayttaja-jvh+
+                                                                                      tiedot-mhu)
+        laskutusyhteenveto-hoito-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
+                                                                                        +kayttaja-jvh+
+                                                                                        tiedot-hoito)]
+    (is (= "Laskutusyhteenveto MHU"
+           (-> laskutusyhteenveto-mhu-raportti
+               second
+               :nimi)) "On MHU-tyypin laskutusyhteenveto")
+    (is (= "Laskutusyhteenveto"
+           (-> laskutusyhteenveto-hoito-raportti
+               second
+               :nimi)) "On hoito-tyypin laskutusyhteenveto")))
+
+(deftest parsi-excelin-rivinumero
+  (is (= 1 (excel/parsi-rivinumero "A1")) "A1 parsitaan rivi 1")
+  (is (= 12 (excel/parsi-rivinumero "AC12")) "AC12 parsitaan rivi 12")
+  (is (= 665 (excel/parsi-rivinumero "G665")) "G665 parsitaan rivi 665"))
+
+(deftest parsi-excelin-sarakekirjain
+  (is (= "A" (excel/parsi-sarakekirjain "A1")) "A1 parsitaan A")
+  (is (= "AC" (excel/parsi-sarakekirjain "AC12")) "AC12 parsitaan AC")
+  (is (= "ACHHHH" (excel/parsi-sarakekirjain "ACHHHH12")) "ACHHHH12 parsitaan ACHHHH")
+  (is (= "G" (excel/parsi-sarakekirjain "G665")) "G665 parsitaan G"))

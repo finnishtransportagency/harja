@@ -6,13 +6,13 @@
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet])
   (:use [slingshot.slingshot :only [try+]]))
 
-(defn laheta-ilmoitus-sahkopostilla [{:keys [email google-static-maps-key]} db {id :ilmoitus-id :as ilmoitus} {vastaanottaja :sahkoposti :as paivystaja}]
+(defn laheta-ilmoitus-sahkopostilla [{:keys [email]} db {id :ilmoitus-id :as ilmoitus} {vastaanottaja :sahkoposti :as paivystaja}]
   ;; Lähetetään vain vastaanottajalle, jolla on jonkinlainen emailosoite annettuna
   (if (and vastaanottaja (> (count vastaanottaja) 3))
     (do
       (log/debug "Lähetetään ilmoitus (id: " id ") sähköpostilla osoitteeseen: " vastaanottaja)
       (let [lahettaja (sahkoposti/vastausosoite email)
-            [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti lahettaja ilmoitus google-static-maps-key)]
+            [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti lahettaja ilmoitus)]
         (try
          (sahkoposti/laheta-viesti! email lahettaja vastaanottaja otsikko viesti)
          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide

@@ -17,7 +17,7 @@
       "$ref": "file:resources/api/schemas/entities/tiesijainti.schema.json"
     },
     "linkki": {
-      "id": "urn:harja/tiesijainti",
+      "id": "urn:harja/linkkisijainti",
       "type": "object",
       "additionalProperties": false,
       "$ref": "file:resources/api/schemas/entities/linkkisijainti.schema.json"

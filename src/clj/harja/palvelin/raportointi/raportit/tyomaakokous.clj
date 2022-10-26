@@ -2,10 +2,12 @@
   "Työmaakokouksen koosteraportti, joka kutsuu muita raportteja ja yhdistää niiden tiedot"
   (:require
     [taoensso.timbre :as log]
+    [harja.kyselyt.urakat :as urakat-q]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
     [harja.palvelin.raportointi.raportit.erilliskustannukset :as erilliskustannukset]
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
+    [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu :as laskutusyhteenveto-mhu]
     [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot :as muutos-ja-lisatyot]
     [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitus]
     [harja.palvelin.raportointi.raportit.sanktio :as sanktiot]
@@ -21,8 +23,17 @@
     [harja.palvelin.raportointi.raportit.laaduntarkastus :as laaduntarkastus]
     [harja.palvelin.raportointi.raportit.toimenpideajat :as toimenpideajat]))
 
-(defn suorita [db user {:keys [kuukausi urakka-id] :as tiedot}]
-  [:raportti {:nimi (str "Työmaakokousraportti" kuukausi)}
+(defn urakkatyypin-laskutusyhteenveto
+  "Ohjaa laskutusyhteenvedon oikeaan paikkaan urakkatyypin mukaisesti"
+  [db user tiedot]
+  (if (= :teiden-hoito (:urakkatyyppi tiedot))
+    (laskutusyhteenveto-mhu/suorita db user tiedot)
+    (laskutusyhteenveto/suorita db user tiedot)))
+
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]
+  [:raportti {:nimi (yleinen/raportin-otsikko
+                      (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                      "Työmaakokousraportti" alkupvm loppupvm)}
    (mapcat (fn [[aja-parametri otsikko raportti-fn]]
              (when (get tiedot aja-parametri)
                (concat [[:otsikko otsikko]]
@@ -33,7 +44,7 @@
             [:kelitarkastusraportti "Kelitarkastusraportti" kelitarkastukset/suorita]
             [:laaduntarkastusraportti "Laaduntarkastusraportti" laaduntarkastus/suorita]
             [:laatupoikkeamaraportti "Laatupoikkeamat" laatupoikkeamat/suorita]
-            [:laskutusyhteenveto "Laskutusyhteenveto" laskutusyhteenveto/suorita]
+            [:laskutusyhteenveto "Laskutusyhteenveto" urakkatyypin-laskutusyhteenveto]
             [:materiaaliraportti "Materiaaliraportti" materiaalit/suorita]
             [:muutos-ja-lisatyot "Muutos- ja lisätyöt" muutos-ja-lisatyot/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]

@@ -67,7 +67,7 @@
       (komp/dom-kuuntelija js/window
                            EventType/RESIZE paivita-suunta!
                            EventType/KEYUP sulje-esc-napilla!)
-      (fn [{:keys [luokka sulje! otsikko] :as optiot} sisalto]
+      (fn [{:keys [luokka sulje! otsikko tallenna-fn peruuta-fn tyhjenna-fn sulje-fn] :as optiot} sisalto]
         (let [suunta @suunta]
           [:div.leijuke-wrapper
            [:div.leijuke {:class luokka
@@ -81,10 +81,21 @@
                                      (avautumissuunta-tyyli :alas-vasen)
                                      {:visibility "hidden"}))}
             [:header
-             [napit/sulje-ruksi sulje!]
-             [:h4 otsikko]]
+             [napit/sulje-ruksi sulje! {:style {:margin 0}}]
+             (when otsikko [:div.fontti-20 otsikko])]
             [:div.leijuke-sisalto
-             sisalto]]])))))
+             sisalto]
+            ;; Käyttäjä voi halutessaan antaa toimintoja
+            (when (or tallenna-fn peruuta-fn tyhjenna-fn sulje-fn)
+              [:div.leijuke-toiminnot
+               (when tallenna-fn
+                 [napit/tallenna "Tallenna" tallenna-fn {:luokka "pull-left"}])
+               (when peruuta-fn
+                 [napit/peruuta "Peruuta" peruuta-fn {:luokka "pull-right leijuke-peruuta"}])
+               (when tyhjenna-fn
+                 [napit/yleinen-toissijainen "Tyhjennä" tyhjenna-fn {:luokka "pull-right"}])
+               (when sulje-fn
+                 [napit/sulje "Sulje" sulje-fn {:luokka "pull-right"}])])]])))))
 
 (defn vihjeleijuke [optiot leijuke-sisalto]
   (let [nakyvissa? (atom false)]

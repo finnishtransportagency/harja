@@ -51,6 +51,7 @@
             [harja.kyselyt.paallystys-kyselyt :as q-paallystys]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.api.tyokalut.palvelut :as palvelut]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -135,10 +136,13 @@
         alikohteet))
 
 (defn paivita-yllapitokohde [vkm db kayttaja {:keys [urakka-id kohde-id]} data]
-  (log/debug (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
-                     urakka-id
-                     kohde-id
-                     kayttaja))
+  ;; Oletamme että rajapintaa ei käytetä. Jos ao. varoitusviesti ilmestyy Graylogiin, voidaan ohjata
+  ;; ensin käyttäjä tekemään tarvittava muutos käyttöliittymältä. Sitten on vielä tehtävä VKM-rajapinnan muuttumiseen liittyviä tehtäviä VHAR-5246 mukaisesti
+  (log/warn "Rajapintaa paivita-yllapitokohde kutsuttiin.")
+  (log/info (format "Päivitetään urakan (id: %s) kohteelle (id: %s) tiedot käyttäjän: %s toimesta"
+                    urakka-id
+                    kohde-id
+                    kayttaja))
   (let [urakka-id (Integer/parseInt urakka-id)
         kohde-id (Integer/parseInt kohde-id)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
@@ -446,7 +450,8 @@
                        kayttaja
                        data))
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)]
+    (let [poistettujen-maara (tarkastukset-q/poista-tarkastus! db kayttaja-id urakka-id ulkoiset-idt)
+          poistettujen-liitteiden-maara (tarkastukset-q/poista-poistetut-liitteet! db {:urakka-id urakka-id})]
       (let [ilmoitukset (if (pos? poistettujen-maara)
                           (format "Tarkastukset poistettu onnistuneesti. Poistettiin: %s tarkastusta." poistettujen-maara)
                           "Tunnisteita vastaavia tarkastuksia ei löytynyt käyttäjän kirjaamista tarkastuksista.")]
@@ -569,11 +574,12 @@
            db :db
            integraatioloki :integraatioloki
            fim :fim
-           email :sonja-sahkoposti
            liitteiden-hallinta :liitteiden-hallinta
            vkm :vkm
            :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email email :vkm vkm
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                                                                            (:sonja-sahkoposti this)
+                                                                            (:api-sahkoposti this)) :vkm vkm
                                                           :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]

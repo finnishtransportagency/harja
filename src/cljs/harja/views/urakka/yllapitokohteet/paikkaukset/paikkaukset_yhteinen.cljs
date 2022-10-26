@@ -62,6 +62,7 @@
          :tyylit {:width "fit-content"
                   :margin-bottom "1rem"}}]
        [valinnat/aikavali aikavali-atom {:otsikko aikavali-otsikko
+                                         :for-teksti "filtteri-aikavali"
                                          :luokka #{"label-ja-aikavali " "ei-tiukkaa-leveytta "}
                                          :ikoni-sisaan? true
                                          :vayla-tyyli? true}]

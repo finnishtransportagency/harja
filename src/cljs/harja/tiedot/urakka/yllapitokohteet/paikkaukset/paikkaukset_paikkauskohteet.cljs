@@ -180,7 +180,10 @@
   (:name (first (filter #(= id (:id %)) (:paikkauskohteet app)))))
 
 (defn tallenna-tilamuutos! [paikkauskohde]
-  (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
+  (let [paikkauskohde (-> paikkauskohde
+                        (assoc :valmistumispvm (or (:valiaika-valmistumispvm paikkauskohde) (:valmistumispvm paikkauskohde)))
+                        (assoc :takuuaika (or (:valiaika-takuuaika paikkauskohde) (:takuuaika paikkauskohde))))
+        paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
              paikkauskohde)))
 
@@ -774,29 +777,6 @@
             urakkaroolit)
       true
       :else false)))
-
-(defn kayttaja-on-tilaaja? [roolit]
-  (let [roolit (if (set? roolit)
-                 roolit
-                 #{roolit})
-        tilaajaroolit #{"Jarjestelmavastaava"
-                        "Tilaajan_Asiantuntija"
-                        "Tilaajan_Kayttaja"
-                        "Tilaajan_Urakanvalvoja"
-                        "Tilaajan_laadunvalvoja"
-                        "Tilaajan_turvallisuusvastaava"
-                        "Tilaajan_Rakennuttajakonsultti"
-                        "ELY_Urakanvalvoja"}]
-    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
-    ;; myös aina tilaaja
-    (if (or
-          (roolit/jvh? @istunto/kayttaja)
-          (= :tilaaja (roolit/osapuoli @istunto/kayttaja)))
-      true
-      (some (fn [rooli]
-              (true?
-                (some #(= rooli %) tilaajaroolit)))
-            roolit))))
 
 (defn nayta-modal [otsikko viesti ok-nappi peruuta-nappi]
   (fn [] (modal/nayta!

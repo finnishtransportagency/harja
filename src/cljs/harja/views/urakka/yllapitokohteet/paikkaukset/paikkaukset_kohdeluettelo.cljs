@@ -19,7 +19,7 @@
 (defn- nayta-paallystysilmoitukset? [urakka]
   (let [kayttaja @istunto/kayttaja
         urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit kayttaja urakka))
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit kayttaja urakka))]
+        tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? (roolit/urakkaroolit kayttaja urakka) kayttaja)]
     (or (roolit/jvh? kayttaja)
         urakoitsija?
         tilaaja?)))
@@ -33,7 +33,9 @@
          (kartta-tasot/taso-pois! :paikkaukset-toteumat)))
     (fn [e! {ur :urakka :as app-state}]
       (let [hoitourakka? (or (= :hoito (:tyyppi ur)) (= :teiden-hoito (:tyyppi ur)))
-            tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+            tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                       (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                       @istunto/kayttaja)
             nayta-paallystysilmoitukset? (nayta-paallystysilmoitukset? (:id ur))]
         [:span.kohdeluettelo
          [bs/tabs {:style :tabs :classes "tabs-taso2"

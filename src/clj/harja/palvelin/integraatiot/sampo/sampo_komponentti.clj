@@ -10,7 +10,8 @@
             [harja.kyselyt.maksuerat :as q-maksuerat]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]))
+            [harja.palvelin.integraatiot.sampo.kasittely.kustannussuunnitelmat :as kustannussuunnitelmat]
+            [harja.pvm :as pvm]))
 
 (defprotocol Maksueralahetys
   (laheta-maksuera-sampoon [this numero]))
@@ -19,7 +20,7 @@
   (log/debug "Käynnistetään Sampon Sonja viestikuuntelija kuuntelemaan jonoa: " lahetysjono-sisaan)
   (jms/kuuntele! sonja lahetysjono-sisaan
                   (fn [viesti]
-                    (tuonti/kasittele-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
+                    (tuonti/kasittele-jms-viesti sonja integraatioloki db kuittausjono-sisaan viesti))))
 
 (defn tee-sonja-kuittauskuuntelija [{:keys [db integraatioloki sonja]} kuittausjono-ulos]
   (log/debug "Käynnistetään Sampon Sonja kuittauskuuntelija kuuntelemaan jonoa: " kuittausjono-ulos)
@@ -34,7 +35,9 @@
                  paivittainen-lahetysaika)
       (ajastettu-tehtava/ajasta-paivittain
         paivittainen-lahetysaika
-        (fn [_] (vienti/aja-paivittainen-lahetys sonja integraatioloki db lahetysjono-ulos))))
+        (do
+          (log/info "ajasta-paivittain :: maksuerien ja kustannussuunnitelmien lähetys :: Alkaa " (pvm/nyt))
+          (fn [_] (vienti/aja-paivittainen-jms-lahetys sonja integraatioloki db lahetysjono-ulos)))))
     (constantly nil)))
 
 (defrecord Sampo [lahetysjono-sisaan kuittausjono-sisaan lahetysjono-ulos kuittausjono-ulos paivittainen-lahetysaika]
@@ -46,7 +49,9 @@
                   :sonja-kuittauskuuntelija (tee-sonja-kuittauskuuntelija this kuittausjono-ulos)
                   :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this paivittainen-lahetysaika
                                                                                   lahetysjono-ulos))
-      this))
+      (do
+        (log/error "Yritettiin käynnistää JMS sampo yhteydet, mutta ominaisuus ei ole käytössä.")
+        this)))
   (stop [this]
     (when (ominaisuus-kaytossa? :sampo)
       (let [poista-viestikuuntelija (:sonja-viestikuuntelija this)

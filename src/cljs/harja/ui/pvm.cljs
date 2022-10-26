@@ -182,29 +182,24 @@ pvm-popupin-sulkevat-nappaimet
   [_]
   (let [auki? (r/atom false)
         suora-syotto-sisalto (r/atom "")]
-    (fn [{:keys [pvm valitse luokat valittava?-fn disabled vayla-tyyli? sumeutus-fn]}]
-      (let [kiinni #(do #_(loki/log "Suljen")
-                        (reset! % false))]
+    (fn [{:keys [paivamaara valitse luokat valittava?-fn disabled sumeutus-fn placeholder]}]
+      (let [kiinni #(reset! % false)]
         [:div.kalenteri-kontti
          [:input {:disabled    disabled
                   :type        :text
                   :class       (apply conj #{} (filter #(not (nil? %)) (conj luokat (when @auki? "auki"))))
                   :value       (cond
                                  (seq @suora-syotto-sisalto) @suora-syotto-sisalto
-                                 (not (nil? pvm)) (pvm/pvm pvm)
+                                 (not (nil? paivamaara)) (pvm/pvm paivamaara)
                                  :else "")
-
+                  :placeholder placeholder
                   :on-change   #(reset! suora-syotto-sisalto (-> % .-target .-value))
-                  :on-click    #(do
-                                  #_(loki/log "click" @auki?)
-                                  (reset! auki? true))
-                  :on-focus    #(do
-                                  #_(loki/log "fokus" @auki?)
-                                  (reset! auki? true))
+                  :on-click    #(reset! auki? true)
+                  :on-focus    #(reset! auki? true)
                   :on-key-down #(when (pvm-popupin-sulkevat-nappaimet (.-keyCode %))
                                   (kiinni auki?))
                   :on-blur     (fn []
-                                 #_(loki/log "blur" @auki?)
+                                 (when (not paivamaara) (kiinni auki?)) ; jos ei ole päivämäärää määritelty, niin valintoja ei voi tehdä. droppari jää auki, kunnes koontilaskun kuukausi klikataan. tällä estetään se tilanne.
                                  (when sumeutus-fn (sumeutus-fn))
                                  (when (seq @suora-syotto-sisalto)
                                    (let [pvm-sisalto (pvm/->pvm @suora-syotto-sisalto)]
@@ -212,12 +207,8 @@ pvm-popupin-sulkevat-nappaimet
                                        (valitse (pvm/->pvm @suora-syotto-sisalto))))
                                    (reset! suora-syotto-sisalto "")))}]
          (when @auki?
-           [pvm-valintakalenteri {:vayla-tyyli?  (if-not (nil? vayla-tyyli?)
-                                                   vayla-tyyli?
-                                                   true)
-                                  :valitse       #(do
-                                                    (loki/log "valinta" @auki?)
+           [pvm-valintakalenteri {:valitse       #(do
                                                     (kiinni auki?)
                                                     (valitse %))
                                   :valittava?-fn valittava?-fn
-                                  :pvm           pvm}])]))))
+                                  :pvm           paivamaara}])]))))

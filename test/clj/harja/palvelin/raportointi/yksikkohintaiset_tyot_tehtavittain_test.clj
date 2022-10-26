@@ -44,7 +44,7 @@
                                 +kayttaja-jvh+
                                 {:nimi       :yks-hint-tehtavien-summat
                                  :konteksti  "urakka"
-                                 :urakka-id  (hae-oulun-alueurakan-2005-2012-id)
+                                 :urakka-id  (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2005 10 10))
                                               :loppupvm (c/to-date (t/local-date 2010 10 10))}})
         taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2005-2012, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010")

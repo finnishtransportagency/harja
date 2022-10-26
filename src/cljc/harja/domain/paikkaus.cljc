@@ -154,12 +154,13 @@
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
-;; FIXME: keksitty lista. Hommaa YHA-jengiltä oikea lista
-(def tyomenetelmat-jotka-lahetetaan-yhaan
-  #{"massapintaus" "remix-pintaus"})
+;; VHAR-1384, huom. nämä lyhenteitä
+(def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
+  #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
 
-(defn pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelma]
-  (boolean (tyomenetelmat-jotka-lahetetaan-yhaan tyomenetelma)))
+(defn
+  pitaako-paikkauskohde-lahettaa-yhaan? [tyomenetelman-lyhenne]
+  (boolean (paikkaustyomenetelmat-jotka-kiinnostaa-yhaa tyomenetelman-lyhenne)))
 
 (defn fmt-tila [tila]
   (let [tila (if (= tila "hylatty") "hylätty" tila)]

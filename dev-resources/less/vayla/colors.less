@@ -1,4 +1,51 @@
-@black: #000000;
+/** VÄRIT Figma Design Library **/
+
+// Black
+@black-default: #000000;
+@black-light: #5C5C5C;
+@black-lighter: #858585;
+
+// Blue
+@blue-default: #0066CC;
+@blue-dark: #004D99;
+@blue-darker: #0B335A;
+@blue-light: #66A3E0;
+@blue-lighter: #E0EDF9;
+
+// White
+@white-default: #FFFFFF;
+@white-dark: #F0F0F0;
+@white-darker: #D6D6D6;
+
+// Red
+@red-default: #DE3618;
+@red-dark: #B40A14;
+@red-darker: #5C070C;
+@red-light: #D9A599;
+@red-lighter: #F8D7D1;
+
+// Green
+@green-default: #27B427;
+@green-dark: #1C891C;
+@green-darker: #0E430E;
+@green-light: #A7D2A0;
+@green-lighter: #E0F5DF;
+
+// Data
+@fig-default: #00B0CC;
+@fig-light: #AFE1E9;
+@lemon-dark: #654D00;
+@lemon-default: #FFC300;
+@lemon-light: #FFF0BF;
+@eggplant-default: #A050A0;
+@eggplant-light: #DEBBEE;
+@pitaya-default: #E50083;
+@pitaya-light: #FFC6E5;
+@pea-default: #8DCB6D;
+@pea-light: #E2FDC0;
+
+// tästä alaspäin värit ovat jostain muualta kuin Design Librarystä
+// Näitä allaolevia voi siis yhä parantaa ja refaktoroida
 @gray25: #191919;
 @gray50: #323232;
 @gray75: #4B4B4B;
@@ -19,18 +66,91 @@
 @white: #FFFFFF;
 @white-hack: #FFFFFE;
 
-@blue-light: #E6F0FA;
-@blue: #0065AF;
-@blue-dark: #00538F;
-@blue-darker: #003E6B;
-
-@green: #008A00;
-@green-dark: #006E00;
-@green-darker: #005300;
-
-@red-lighter: #F8D7D1;
-@red: #DD0000;
-@red-dark: #B40A14;
-@red-darker: #850000;
 
 @focus-color: #0068B3;
+
+@orange: #f1b371;
+@yellow: #fff0bf;
+
+/** Harmaat */
+@harmaa1: rgb(25,25,25);
+@harmaa2: rgb(50,50,50);
+@harmaa3: rgb(75,75,75);
+@harmaa4: rgb(100,100,100);
+@harmaa5: rgb(125,125,125);
+@harmaa6: rgb(150,150,150);
+@harmaa7: rgb(175,175,175);
+@harmaa8: rgb(200,200,200);
+@harmaa9: rgb(220,220,220);
+@harmaa10: rgb(225,225,225);
+@harmaa11: rgb(230,230,230);
+@harmaa12: rgb(235,235,235);
+@harmaa13: rgb(240,240,240);
+@harmaa14: rgb(245,245,245);
+@harmaa15: rgb(250,250,250);
+@harmaa-vaalea: #D6D6D6;
+@harmaa-tumma: #5c5c5c;
+
+
+/** Siniset */
+@sininen1: #0000cc;
+@sininen2: #0022cc;
+@sininen3: #0044cc;
+@sininen4: #0066cc;
+@sininen5: #0088cc;
+@sininen6: #00aacc;
+@primaari-sininen-valittuna: @sininen5;
+
+
+/** Vihreät */
+@vihrea2: #005500;
+@vihrea3: #007700;
+@vihrea4: #009900;
+@vihrea5: #00bb00;
+@vihrea6: #00dd00;
+
+
+/** Punaiset */
+@punainen1: #770000;
+@punainen2: #990000;
+@punainen3: #bb0000;
+@punainen4: #dd0000;
+@punainen5: #ff0000;
+@punainen6: #ff2200;
+@punainen7: #ff4400;
+
+/** Pinkit **/
+@pinkki: rgb(255,0,85);
+@pinkki-kevyt: rgb(255,51,119);
+@pinkki-kevyempi: rgb(255,102,153);
+
+/** Oranssit **/
+@oranssi: rgb(255,136,0);
+@oranssi-kevyt: rgb(255,160,51);
+@oranssi-kevyempi: rgb(255,184,102);
+
+/** Violetit **/
+@violetti: rgb(153,0,221);
+@violetti-kevyt: rgb(173,51,221);
+@violetti-kevyempi: rgb(194,102,235);
+
+/** Syaanit **/
+@syaani: rgb(0,170,187);
+@syaani-kevyt: rgb(51,187,201);
+@syaani-kevyempi: rgb(102,204,214);
+
+/** Huomiovärit */
+@onnistuminen: @vihrea4;
+@varoitus:     #ff9900;
+@vaara:        @punainen4;
+@muu:          #660099;
+@huomautus:    @sininen5;
+@raportin-tehostevari: @gray240;
+
+@harjan-taustavari: @harmaa15;
+
+// Tilavärit
+@tilavari-ehdotettu: @orange;
+@tilavari-tilattu: @blue-default;
+@tilavari-valmis: @green-default;
+@tilavari-hylatty: @red-dark;

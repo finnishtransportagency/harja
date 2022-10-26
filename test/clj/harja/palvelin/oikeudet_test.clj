@@ -114,7 +114,9 @@
 (deftest vaadi-jvh-saa-tehda-mita-vaan
   (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-lampotilat nil jvh))
   (is (oikeudet/voi-lukea? oikeudet/raportit-laskutusyhteenveto 1 jvh))
-  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot 2 jvh)))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot 2 jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto nil jvh))
+  (is (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu nil jvh)))
 
 (deftest ely-uv-voi-lukea-kaikista-ja-kirjoittaa-omaan
   (is (oikeudet/voi-lukea? oikeudet/urakat-suunnittelu-materiaalit 42 ely-uv))
@@ -133,6 +135,17 @@
   (is (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot 1 ur-uvh))
   (is (not (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot 2 ur-uvh)))
   (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-kokonaishintaisettyot 2 ur-uvh))))
+
+(deftest urakoitsijalla-ei-ole-maksuera-nakymaa
+  ;; oman urakan maksuerä-näkymä ei näy urakoitsijalle
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat 1 ur-uvh)))
+  (doseq [u [1 2 3]]
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat u ur-pk)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat u ur-pk))))
+  ;; muiden urakoiden maksuerät eivät näy urakoitsijalle
+  (is (not (oikeudet/voi-lukea? oikeudet/urakat-laskutus-maksuerat 2 ur-uvh)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat 1 ur-uvh)))
+  (is (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laskutus-maksuerat 2 ur-uvh))))
 
 (deftest vain-jvh-nakee-hallinnan
   (is (oikeudet/voi-lukea? oikeudet/hallinta nil jvh))

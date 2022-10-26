@@ -439,8 +439,6 @@
                   "Toimenpideinstansseja on urakassa nyt "
                   (count @urakka/urakan-toimenpideinstanssit) " kun niitä tarvitaan 7.")])
 
-             [debug/sticky-debug app]
-
              ;; -- Kustannussuunnitelman päämenu, jonka linkkejä klikkaamalla vieretetään näkymä liittyvään osioon.
              (let [osioiden-tilat (get-in app [:domain :osioiden-tilat])
                    hoitovuosi-nro (get-in app [:suodattimet :hoitokauden-numero])
@@ -486,8 +484,9 @@
                    :hoitovuosi-nro hoitovuosi-nro
                    :indeksit-saatavilla? indeksit-saatavilla?}]
 
-                 ::t/johto-ja-hallintokorvaukset
+                 ::t/johto-ja-hallintokorvaukset                 
                  [johto-ja-hallintokorvaus-osio/osio
+                  app
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :johto-ja-hallintokorvaus hoitovuosi-nro)
                   (get-in app [:gridit :johto-ja-hallintokorvaukset :grid])
                   (get-in app [:gridit :johto-ja-hallintokorvaukset-yhteenveto :grid])
@@ -495,6 +494,8 @@
                   (dissoc suodattimet :hankinnat)
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :johto-ja-hallintokorvaukset])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :toimistokulut])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :johto-ja-hallintokorvaukset])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :toimistokulut])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (get-in app [:domain :indeksit])
                   (:kantahaku-valmis? app)]
@@ -508,6 +509,7 @@
                   (ks-yhteiset/osio-vahvistettu? osioiden-tilat :hoidonjohtopalkkio hoitovuosi-nro)
                   (get-in app [:gridit :hoidonjohtopalkkio :grid])
                   (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :summat :hoidonjohtopalkkio])
+                  (get-in app [:yhteenvedot :johto-ja-hallintokorvaukset :indeksikorjatut-summat :hoidonjohtopalkkio])
                   (get-in app [:domain :indeksit])
                   (get-in app [:domain :kuluva-hoitokausi])
                   (dissoc suodattimet :hankinnat)

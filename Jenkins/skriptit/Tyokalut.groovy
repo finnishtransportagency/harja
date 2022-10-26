@@ -160,8 +160,16 @@ def ajaTestiserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_testiserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TESTIPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
@@ -213,8 +221,15 @@ def ajaStagingserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_stagingserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'STAGEPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
@@ -247,8 +262,15 @@ def ajaTuotantoserverinKanta(stagenNimi) {
         // config file plugariin lisätään feature, jossa noita kredentiaaleja voi antaa (JENKINS-43204)
         configFileProvider([configFile(fileId: 'Flyway_tuotantoserverin_konfiguraatio', replaceTokens: true, variable: 'FLYWAY_SETTINGS')]) {
             withCredentials([usernamePassword(credentialsId: 'TUOTANTOPANNU', passwordVariable: 'SALASANA', usernameVariable: 'KAYTTAJA')]) {
-                // Tässä käytetään Dflyway.configFile, mutta jos flyway päivitetään >5.0, niin täytyy vaihtaa tuo Dflyway.configFiles (katso dokumentaatio)
-                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFile=$FLYWAY_SETTINGS' +
+                // Korjaa migraatiot, mikäli KORJAA_FLYWAY_MIGRAATIOT build parametri on true.
+                // Flyway repair komento poistaa historiasta esimerkiksi poistetut (tai uudelleenimetyt) migraatiotiedostot.
+                // Lue lisää: https://flywaydb.org/documentation/usage/commandline/repair
+                if (params.KORJAA_FLYWAY_MIGRAATIOT) {
+                    sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:repair -Dflyway.configFiles=$FLYWAY_SETTINGS' +
+                            " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
+                }
+
+                sh([script: 'mvn -f tietokanta/pom.xml clean compile flyway:migrate -Dflyway.configFiles=$FLYWAY_SETTINGS' +
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }

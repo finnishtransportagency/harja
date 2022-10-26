@@ -1,6 +1,6 @@
 (ns harja.ui.kartta.asioiden-ulkoasu
   (:require [harja.ui.kartta.varit.puhtaat :as puhtaat]
-            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni]]
+            [harja.ui.kartta.ikonit :refer [sijainti-ikoni pinni-ikoni nuoli-ikoni vesipisara-pinni-ikoni]]
             [clojure.string :as str]
 
             [harja.domain.laadunseuranta.tarkastus :as domain-tarkastukset]
@@ -580,3 +580,34 @@ tr-ikoni {:img (pinni-ikoni "musta")
      nil]
 
     [nil nil nil nil]))
+
+(defn varustetoteuma [vt]
+  (conj (case (:toteuma vt)
+          "lisatty" ["Lisätty"
+                     (viiva-mustalla-rajalla puhtaat/fig-default)
+                     puhtaat/fig-default]
+          "paivitetty" ["Päivitetty"
+                        (viiva-mustalla-rajalla puhtaat/lemon-default)
+                        puhtaat/lemon-default]
+          "poistettu" ["Poistettu"
+                       (viiva-mustalla-rajalla puhtaat/eggplant-default)
+                       puhtaat/eggplant-default]
+          "tarkastus" ["Tarkistettu"
+                       (viiva-mustalla-rajalla puhtaat/pitaya-default)
+                       puhtaat/pitaya-default]
+          "korjaus" ["Korjattu"
+                     (viiva-mustalla-rajalla puhtaat/pea-default)
+                     puhtaat/pea-default]
+          "puhdistus" ["Puhdistettu"
+                       (viiva-mustalla-rajalla puhtaat/black-light)
+                       puhtaat/black-light]
+          ["Ei tietoa" (viiva-mustalla-rajalla puhtaat/valkoinen) puhtaat/valkoinen])
+    (vesipisara-pinni-ikoni)))
+
+(defn tilan-vari [tila]
+  (case tila
+    "ehdotettu" "#f1b371" ;; LESS @orange
+    "tilattu" "#0066CC"   ;; LESS @blue-default
+    "valmis" "#27B427"    ;; LESS @green-default
+    "hylatty" "#B40A14"   ;; LESS @red-dark
+    "#f1b371"))           ;; LESS @orange

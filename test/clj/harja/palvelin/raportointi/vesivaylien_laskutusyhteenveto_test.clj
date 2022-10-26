@@ -49,7 +49,7 @@
                                    +kayttaja-jvh+
                                    {:nimi :vesivaylien-laskutusyhteenveto
                                     :konteksti "urakka"
-                                    :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                    :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                     :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
                                                  :loppupvm (c/to-date (t/local-date 2018 7 31))}})
         elokuu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -57,7 +57,7 @@
                                +kayttaja-jvh+
                                {:nimi :vesivaylien-laskutusyhteenveto
                                 :konteksti "urakka"
-                                :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                 :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
                                              :loppupvm (c/to-date (t/local-date 2017 8 31))}})
         syyskuu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -65,7 +65,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "urakka"
-                                 :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2017 9 1))
                                               :loppupvm (c/to-date (t/local-date 2017 9 30))}})
         lokakuu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -73,7 +73,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "urakka"
-                                 :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2017 10 1))
                                               :loppupvm (c/to-date (t/local-date 2017 10 31))}})
         marraskuu (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -81,7 +81,7 @@
                                   +kayttaja-jvh+
                                   {:nimi :vesivaylien-laskutusyhteenveto
                                    :konteksti "urakka"
-                                   :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                   :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                    :parametrit {:alkupvm (c/to-date (t/local-date 2017 11 1))
                                                 :loppupvm (c/to-date (t/local-date 2017 11 30))}})
 
@@ -715,7 +715,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "urakka"
-                                 :urakka-id (hae-helsingin-vesivaylaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2017 8 1))
                                               :loppupvm (c/to-date (t/local-date 2018 7 31))}})
         _ (println "VASTAUS")
@@ -743,7 +743,7 @@
                                 +kayttaja-jvh+
                                 {:nimi :vesivaylien-laskutusyhteenveto
                                  :konteksti "urakka"
-                                 :urakka-id (hae-pyhaselan-vesivaylaurakan-id)
+                                 :urakka-id (hae-urakan-id-nimella "Pyhäselän urakka")
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2016 8 1))
                                               :loppupvm (c/to-date (t/local-date 2017 7 31))}})
         odotettu-otsikko "hae-pyhaselan-vesivaylaurakan-id, Laskutusyhteenveto ajalta 01.08.2016 - 31.07.2017"

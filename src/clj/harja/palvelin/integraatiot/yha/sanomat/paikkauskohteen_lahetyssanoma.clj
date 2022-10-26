@@ -33,7 +33,7 @@
                                                       (rename-keys {:kuulamylly-arvo :km-arvo})
                                                       )})
         kasittele-paikkaus (fn [p] {:paikkaus (-> p
-                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id)
+                                                  (dissoc :sijainti :urakka-id :paikkauskohde-id :ulkoinen-id :lahde)
                                                   (rename-keys {:tierekisteriosoite :sijainti})
                                                   (assoc :alkuaika (pvm/aika-yha-format (:alkuaika p)))
                                                   (assoc :loppuaika (pvm/aika-yha-format (:loppuaika p)))
@@ -62,6 +62,10 @@
                       ::paikkaus/tarkistettu
                       ::paikkaus/tarkistaja-id
                       ::paikkaus/ilmoitettu-virhe)
+        tyomenetelman-lyhenne (into {}
+                                    (map (fn [{:keys [id lyhenne]}]
+                                           {id lyhenne})
+                                         (q-paikkaus/hae-paikkauskohteen-tyomenetelmien-lyhenteet db)))
         paikkaukset (q-paikkaus/hae-paikkaukset-materiaalit db {::paikkaus/paikkauskohde-id kohde-id
                                                                 ::paikkaus/urakka-id urakka-id
                                                                 :harja.domain.muokkaustiedot/poistettu? false})
@@ -71,6 +75,8 @@
                                                                                  {::paikkaus/paikkaus-id (::paikkaus/id %)}))
                              tienkohdat-parsittu (parsi-tienkohdat tienkohdat)]
                          (-> %
+                             ;; YHA:n API haluaa merkkijonon eikä integeriä
+                             (assoc ::paikkaus/tyomenetelma (tyomenetelman-lyhenne (::paikkaus/tyomenetelma %)))
                              (assoc-in [::paikkaus/tierekisteriosoite :ajorata] (::paikkaus/ajorata tienkohdat))
                              (assoc-in [::paikkaus/tierekisteriosoite :tienkohdat] tienkohdat-parsittu)))
                       paikkaukset)

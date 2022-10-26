@@ -124,6 +124,12 @@
              (not (toinen-avain rivi)))
     (or viesti "Anna arvo")))
 
+(defmethod validoi-saanto :ei-tyhja-jos-toinen-avain-ei-joukossa
+  [_ _ data rivi _ & [toinen-avain arvot-jotka-sallivat-tyhja viesti]]
+  (when (and (str-clj/blank? data)
+             (not (contains? (set arvot-jotka-sallivat-tyhja) (toinen-avain rivi))))
+    (or viesti "Anna arvo")))
+
 (defmethod validoi-saanto :ei-tulevaisuudessa [_ _ data _ _ & [viesti]]
   (when (and data (t/after? data (pvm/nyt)))
     (or viesti "Päivämäärä ei voi olla tulevaisuudessa")))

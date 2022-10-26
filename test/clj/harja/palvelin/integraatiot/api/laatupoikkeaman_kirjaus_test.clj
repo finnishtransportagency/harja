@@ -22,12 +22,19 @@
 
 (deftest tallenna-laatupoikkeama
   (let [laatupoikkeamat-kannassa-ennen-pyyntoa (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
-
+        liitteiden-maara-ennen (first (first (q "select count(id) FROM liite")))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
-                                         (-> "test/resurssit/api/laatupoikkeama.json" slurp))]
+                                         (-> "test/resurssit/api/laatupoikkeama.json" slurp))
+        vastaus2 (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/laatupoikkeama"] kayttaja portti
+                  (-> "test/resurssit/api/laatupoikkeama.json" slurp))
+        liitteiden-maara-jalkeen (first (first (q "select count(id) FROM liite")))]
     (is (contains? (cheshire/decode (:body vastaus) true) :ilmoitukset))
 
     (is (= 200 (:status vastaus)))
+    (is (= 200 (:status vastaus2)))
+
+    ;; Vain yksi liite tallennetaan kantaan, vaikka samat tiedot tallennetaan kahdesti
+    (is (+ 1 liitteiden-maara-ennen) liitteiden-maara-jalkeen)
 
     (let [laatupoikkeamat-kannassa-pyynnon-jalkeen (ffirst (q (str "SELECT COUNT(*) FROM laatupoikkeama;")))
           liite-id (ffirst (q (str "SELECT id FROM liite WHERE nimi = 'testihavainto36934853.jpg';")))

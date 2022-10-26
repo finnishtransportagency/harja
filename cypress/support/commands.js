@@ -163,7 +163,15 @@ Cypress.Commands.add("terminaaliKomento", () => {
     })
 });
 
-Cypress.Commands.add("valinnatValitse", { prevSubject: 'element' }, ($valinnat, parametrit) => {
+
+
+Cypress.Commands.add("filtteriValitse", { prevSubject: 'element' }, ($valinnat, parametrit) => {
+    cy.wrap($valinnat).click()
+    cy.wrap($valinnat).should('have.css', 'display', 'block')
+    cy.wrap($valinnat).contains('ul li a', parametrit.valinta).should('exist').click({ force: true });
+});
+
+    Cypress.Commands.add("valinnatValitse", { prevSubject: 'element' }, ($valinnat, parametrit) => {
     cy.wrap($valinnat).find('button').click();
     // Pudotusvalikoissa pitää tarkistaa ensin, että onhan ne vaihtoehdot näkyvillä. Tämä siksi, että valikon
     // painaminen, jolloin lista vaihtoehtoja tulee näkyviin re-renderaa listan. Tämä taasen aiheuttaa sen,

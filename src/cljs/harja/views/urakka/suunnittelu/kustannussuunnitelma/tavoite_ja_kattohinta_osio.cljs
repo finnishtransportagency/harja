@@ -30,19 +30,19 @@
 ;; Kattohinnan grid käyttää harja.ui.grid/muokkaus-tyyppistä taulukkoa.
 ;; Tälle pitää antaa tiedot atomissa, jonka muoto on jotain tällaista:
 ;;
-;; {0 <- Pakollinen indeksi jokaisen rivin avaimena
+;; {:kattohinta
 ;;  {:kattohinta-vuosi-1 1234
 ;;   :kattohinta-vuosi-2 1234
 ;;   ...
 ;;   :yhteensa 5432
 ;;   :rivi :kattohinta}
-;;  1 <- uusi rivi
+;;  :indeksikorjaukset
 ;;  {:kattohinta-vuosi-1 1235
 ;;   :kattohinta-vuosi-2 1235
 ;;   ...
 ;;   :yhteensa 5436
 ;;   :rivi :indeksikorjattu} <- rivi-avaimesta päätellään, mitkä rivit disabloidaan.
-;;  2 <- Oikaistut kattohinnat
+;;  :oikaistut
 ;; {:kattohinta-vuosi-1 1236
 ;;  ...
 ;; :rivi :oikaistut
@@ -62,7 +62,7 @@
 
          [:div
           {:on-blur #(when (nil? (get-in @t/kattohinta-virheet
-                                   [0 (keyword (str "kattohinta-vuosi-" hoitokauden-numero))])) (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))}
+                                   [:kattohinta (keyword (str "kattohinta-vuosi-" hoitokauden-numero))])) (e! (t/->TallennaJaPaivitaTavoiteSekaKattohinta)))}
 
           [grid/muokkaus-grid
            {:ohjaus ohjauskahva
@@ -74,16 +74,16 @@
             :ulkoinen-validointi? false
             :virheet t/kattohinta-virheet
             :virheet-dataan? true
-            :muutos #(e! (t/->PaivitaKattohintaGrid %))
-            :valiotsikot {1 (grid/otsikko "Indeksikorjattu")
-                          2 (grid/otsikko "Kattohinta oikaistu")}
+            :muutos #(e! (t/->PaivitaKattohintaGrid))
+            :valiotsikot {:indeksikorjaukset (grid/otsikko "Indeksikorjattu")
+                          :oikaistut (grid/otsikko "Kattohinta oikaistu")}
             :disabloi-rivi? #(not= :kattohinta (:rivi %))
             :sisalto-kun-rivi-disabloitu #(fmt/euro-opt ((:nimi %) (:rivi %)))}
            (merge
              (mapv (fn [hoitokausi]
                      {:otsikko (str hoitokausi ".hoitovuosi")
                       :nimi (keyword (str "kattohinta-vuosi-" hoitokausi))
-                      :fmt #(fmt/euro-opt (or % 0))
+                      :fmt #(fmt/euro-opt %)
                       :validoi [[:manuaalinen-kattohinta (get-in tavoitehinnat [(dec hoitokausi) :summa])]]
                       :muokattava? #(= hoitokausi hoitokauden-numero)
                       :tyyppi :positiivinen-numero})

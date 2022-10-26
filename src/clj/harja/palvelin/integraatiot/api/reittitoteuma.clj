@@ -32,7 +32,7 @@
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
 
-(defn- yhdista-viivat [viivat]
+(defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
     {:type :multiline
      :lines (mapcat
@@ -121,21 +121,23 @@ maksimi-linnuntien-etaisyys 200)
   (log/debug "Luodaan uusi reittipiste")
   (toteumat/tallenna-toteuman-reittipisteet!
    db
-   {::rp/toteuma-id toteuma-id
-    ::rp/reittipisteet
-    (for [{:keys [aika koordinaatit tehtavat materiaalit]} (map :reittipiste reitti)]
-      (rp/reittipiste
-       (aika-string->java-sql-date aika)
-       koordinaatit
-       (toteumat/pisteen-hoitoluokat db koordinaatit)
-       (for [t tehtavat]
-         {::rp/toimenpidekoodi (get-in t [:tehtava :id])
-          ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
-       (for [m materiaalit]
-         {::rp/materiaalikoodi (->> m :materiaali
-                                    (materiaalit/hae-materiaalikoodin-id-nimella db)
-                                    first :id)
-          ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
+    {::rp/toteuma-id toteuma-id
+     ::rp/reittipisteet
+     (for [{:keys [aika koordinaatit tehtavat materiaalit]} (map :reittipiste reitti)]
+       (rp/reittipiste
+         (aika-string->java-sql-date aika)
+         koordinaatit
+         (toteumat/pisteen-hoitoluokat db koordinaatit
+           (map (comp :id :tehtava) tehtavat)
+           (map :materiaali materiaalit))
+         (for [t tehtavat]
+           {::rp/toimenpidekoodi (get-in t [:tehtava :id])
+            ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
+         (for [m materiaalit]
+           {::rp/materiaalikoodi (->> m :materiaali
+                                   (materiaalit/hae-materiaalikoodin-id-nimella db)
+                                   first :id)
+            ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
 
 (defn poista-toteuman-reitti [db toteuma-id]
   (log/debug "Poistetaan reittipisteet")
@@ -300,3 +302,21 @@ maksimi-linnuntien-etaisyys 200)
 ;;(def toteuma (cheshire.core/parse-string (slurp "reittitoteuma-urakka-125.json") keyword))
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))
 ;;(kirjaa-toteuma db db {:id "urakkaid"} toteuma {:id kayttajaid})
+
+#_(defn vertaa-toteuman-suolamaara-vs-reittipisteiden-suolamaaran-summa
+  "Ottaa sisään yo. toteuma deffissä tiedostosta parsitun toteuman, ja palauttaa paljonko siinä ilmoitetaan toteumamääräksi 1) otsikkotasolla ja
+  2) reittipisteistä summattuna: Tavoite funktiolla on helpottaa debuggausta Ympäristöraportin hoitoluokittaisen erittelyn osalta."
+  [toteuma]
+  (let [toteumassa-raportoitu-maara (for [{:keys [materiaali maara]} (get-in toteuma [:reittitoteuma :toteuma :materiaalit])
+                                          :let [yksikko (get maara :yksikko)
+                                                maara (get maara :maara)]]
+                                      {materiaali (str maara yksikko)})
+        reittipisteiden-materiaalit-ryhmiteltyna (flatten (map (fn [reittipiste]
+                                                                 (for [[nimi sisalto] (group-by :materiaali (get-in reittipiste [:reittipiste :materiaalit]))
+                                                                       :let [maara (get-in (first sisalto) [:maara :maara])]]
+                                                                   {nimi maara}))
+                                                               (get-in toteuma [:reittitoteuma :reitti])))
+        reittipisteiden-materiaalit-summattuna (apply merge-with + reittipisteiden-materiaalit-ryhmiteltyna)]
+
+    {:toteumassa-ilmoitettu-maara toteumassa-raportoitu-maara
+     :reittipisteista-laskettu-maara reittipisteiden-materiaalit-summattuna}))

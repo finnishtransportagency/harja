@@ -16,7 +16,7 @@
             [harja.ui.yleiset :as yleiset])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn palvelinkutsu-nappi                                   ;todo lisää onnistumisviesti
+(defn palvelinkutsu-nappi
   [teksti kysely asetukset]
   "Nappi, jonka painaminen laukaisee palvelukutsun.
 
@@ -152,7 +152,7 @@
                                   (dom/elementin-etaisyys-dokumentin-ylareunaan
                                     (r/dom-node %)))))
        (fn [teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? toiminto-args data-attributes tabindex type
-                                    ikoni-oikealle?] :as optiot}]
+                                    ikoni-oikealle? esta-prevent-default?] :as optiot}]
          [:button
           (merge
             {:class     (str (when disabled "disabled ")
@@ -164,10 +164,11 @@
              :style     style
              :title     title
              :type      (or type
-                            "button")
+                          "button")
              :on-click  #(do
-                           (.preventDefault %)
-                           (.stopPropagation %)
+                           (when-not esta-prevent-default?
+                             (.preventDefault %)
+                             (.stopPropagation %))
                            (apply toiminto toiminto-args))}
             (when (and data-attributes (every? #(and (keyword? %)
                                                      (re-find #"^data-" (name %)))

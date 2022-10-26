@@ -13,6 +13,9 @@
 (defn konfiguroi-activemq-jms-artemis-connection-factory [connection-factory url]
   (doto connection-factory
     (.setInitialConnectAttempts 5)
+    (.setReconnectAttempts -1)
+    (.setRetryIntervalMultiplier (double 2))
+    (.setMaxRetryInterval 300000)
     (.setCallFailoverTimeout 60000)
     (.setCallTimeout 6000)))
 

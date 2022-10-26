@@ -3,12 +3,6 @@
   (:require [clojure.string :as str]
             [cljs.core.async :refer [<! chan]]
             [reagent.core :refer [atom] :as r]
-            [tuck.core :as tuck]
-
-            [harja.ui.grid :as grid]
-            [harja.ui.debug :refer [debug]]
-            [harja.ui.dom :as dom]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
@@ -21,8 +15,7 @@
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.validointi :as v]
             [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset]
-            [harja.ui.komponentti :as komp]
-            [harja.fmt :as fmt])
+            [harja.ui.komponentti :as komp])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -285,6 +278,7 @@
         (let [{:keys [massatyypit runkoainetyypit sideainetyypit lisaainetyypit]} materiaalikoodistot
               sivulle? (:sivulle? pot2-massa-lomake)
               massa-id (::pot2-domain/massa-id pot2-massa-lomake)
+              massan-nimi (::pot2-domain/massan-nimi pot2-massa-lomake)
               muut-validointivirheet (pot2-validoinnit/runko-side-ja-lisaaineen-validointivirheet pot2-massa-lomake materiaalikoodistot)
               materiaali-kaytossa (::pot2-domain/kaytossa pot2-massa-lomake)
               materiaali-lukittu? (some #(str/includes? (:tila %) "lukittu") materiaali-kaytossa)
@@ -321,7 +315,8 @@
                                                                      :tyyppi :massa
                                                                      :id massa-id
                                                                      :materiaali-kaytossa materiaali-kaytossa
-                                                                     :voi-muokata? voi-muokata?}])
+                                                                     :voi-muokata? voi-muokata?
+                                                                     :materiaalin-nimi massan-nimi}])
              :vayla-tyyli? true}
             [{:otsikko "" :muokattava? (constantly false) :nimi ::pot2-domain/massan-nimi :tyyppi :string :palstoja 3
               :piilota-label? true :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}

@@ -167,21 +167,25 @@
     (catch Exception e
       (log/error e "Poikkeus siirrettäessä liitettä fileyardiin " nimi " (id: " id ")"))))
 
+(def liitteiden-ajastusvali-min 5)
+(def lukon-vanhenemisaika-s (* (dec liitteiden-ajastusvali-min) 60))
+
 (defn- siirra-liitteet-fileyard [db fileyard-url]
   (when (and (ominaisuus-kaytossa? :fileyard)
              fileyard-url)
-    (lukot/aja-lukon-kanssa
-     db "fileyard-liitesiirto"
-     #(let [client (fileyard-client/new-client fileyard-url)]
+    (lukot/yrita-ajaa-lukon-kanssa
+      db "fileyard-liitesiirto"
+      #(let [client (fileyard-client/new-client fileyard-url)]
         (doseq [liite (liitteet/hae-siirrettavat-liitteet db)]
-          (siirra-liite-fileyard db client liite))))))
+          (siirra-liite-fileyard db client liite)))
+      lukon-vanhenemisaika-s)))
 
 (defrecord Liitteet [fileyard-url]
   component/Lifecycle
   (start [{db :db :as this}]
     (assoc this ::lopeta-ajastettu-tehtava
                 (ajastettu-tehtava/ajasta-minuutin-valein
-                  5 11                                      ;; 5 min välein alkaen 11s käynnistyksestä
+                  liitteiden-ajastusvali-min 11                                      ;; 5 min välein alkaen 11s käynnistyksestä
                   (fn [_]
                     (siirra-liitteet-fileyard db fileyard-url)))))
   (stop [this]

@@ -4,7 +4,6 @@
             [harja.ui.dom-test]
             [harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test]
             [harja.tiedot.urakka.suunnittelu-test]
-            [harja.tiedot.urakka.yhatuonti-test]
             [harja.tiedot.muokkauslukko-test]
             [harja.views.kartta.infopaneeli-test]
             [harja.views.urakka.siltatarkastukset-test]
@@ -56,7 +55,6 @@
            'harja.ui.dom-test
            'harja.tiedot.urakka.toteumat.tiemerkinta-muut-kustannukset-test
            'harja.tiedot.urakka.suunnittelu-test
-           'harja.tiedot.urakka.yhatuonti-test
            'harja.tiedot.muokkauslukko-test
            'harja.views.kartta.infopaneeli-test
            'harja.views.urakka.siltatarkastukset-test

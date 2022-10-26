@@ -134,3 +134,9 @@
 
 (def +paikkausten-poisto-request+ "api/schemas/paikkausten-poisto-request.schema.json")
 (def paikkausten-poisto-request (tee-validaattori +paikkausten-poisto-request+))
+
+(def +analytiikkaportaali-toteuma-vastaus+ "api/schemas/entities/analytiikkaportaali.schema.json")
+(def analytiikkaportaali-toteuma-vastaus (tee-validaattori +analytiikkaportaali-toteuma-vastaus+))
+
+(def +raportti-materiaaliraportti-response+ "api/schemas/raportti.schema.json")
+(def raportti-materiaaliraportti-response (tee-validaattori +raportti-materiaaliraportti-response+))

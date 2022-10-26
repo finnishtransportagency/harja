@@ -24,7 +24,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sonja-sahkoposti]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [taoensso.timbre :as log]))
 
@@ -103,18 +103,17 @@
                                 [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
-                        :sonja-sahkoposti (component/using
-                                            (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                             {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                              :sahkoposti-ulos-jono "harja-to-email"
-                                                                              :sahkoposti-ulos-kuittausjono "harja-to-email-ack"})
-                                            [:sonja :db :integraatioloki])
+                        :http-palvelin (testi-http-palvelin)
+                        :api-sahkoposti (component/using
+                                                  (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                                                   :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                  [:http-palvelin :db :integraatioloki :itmf])
                         :testikomponentti (component/using
                                             (->Testikomponentti nil)
                                             [:itmf])
                         :tloik (component/using
                                  (tloik-tk/luo-tloik-komponentti)
-                                 [:db :itmf :integraatioloki :sonja-sahkoposti])))))
+                                 [:db :itmf :integraatioloki :api-sahkoposti])))))
   ;; aloita-itmf palauttaa kanavan.
   (binding [*itmf-yhteys* (go
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
@@ -210,6 +209,7 @@
                                                 (component/start
                                                   (component/system-map
                                                     :db (tietokanta/luo-tietokanta testitietokanta)
+                                                    :http-palvelin (testi-http-palvelin)
                                                     :itmf (component/using
                                                             (itmf/luo-oikea-itmf (:itmf asetukset))
                                                             [:db])
@@ -218,12 +218,10 @@
                                                              [:db])
                                                     :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                        [:db])
-                                                    :sonja-sahkoposti (component/using
-                                                                        (sonja-sahkoposti/luo-sahkoposti "foo@example.com"
-                                                                          {:sahkoposti-sisaan-jono "email-to-harja"
-                                                                           :sahkoposti-ulos-kuittausjono "harja-to-email-ack"
-                                                                           :sahkoposti-ja-liite-ulos-kuittausjono "harja-to-email-liite-ack"})
-                                                                        [:sonja :db :integraatioloki])))
+                                                    :api-sahkoposti (component/using
+                                                                              (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
+                                                                                                               :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                                              [:http-palvelin :db :integraatioloki :itmf])))
                                                 (catch Throwable e
                                                   (log/error "Virhe 'toinen-jarjestelma' käynnistyksessä:" e))))
                                             (timeout 10000)])
@@ -258,7 +256,8 @@
       ;; Tarkistetaan, että onhan kuuntelijoita enää yksi jäljellä
       (is (= 1 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara))))))
 
-(deftest viestin-lahetys-onnistuu
+;; Sonja-sähköpostin toimintaa ei tarvitse enää erikseen testata
+#_ (deftest viestin-lahetys-onnistuu
   ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
   (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
         _ (jms-tk/sonja-jolokia-jono "harja-to-email" nil :purge)

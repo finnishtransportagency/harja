@@ -9,7 +9,8 @@
             [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
-            [cheshire.core :as cheshire])
+            [cheshire.core :as cheshire]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-paikkauskohteen-lahetyksessa+ ::yha-virhe-paikkauskohteen-lahetyksessa)
@@ -44,7 +45,7 @@
      (paivita-lahetyksen-tila db kohde-id tila virheet)
      (if (= tila :virhe)
        (do
-         (log/warn (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui viheeseen " virheet))
+         (log/warn (str "Paikkauskohteen " kohde-id " lähettäminen YHA:an epäonnistui virheeseen " virheet))
          (throw+ {:type    +virhe-paikkauskohteen-lahetyksessa+
                   :virheet {:virhe virheet}}))))))
 
@@ -55,7 +56,6 @@
   [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
   (assert (integer? urakka-id) "Urakka-id:n on oltava numero")
   (assert (integer? kohde-id) "Kohde-id:n on oltava numero")
-
   (try+
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "laheta-paikkauskohde" nil
@@ -132,10 +132,12 @@
 
 (defn- laheta-tiedot-yhaan-uudelleen! [integraatioloki db asetukset]
   (ajastettu-tehtava/ajasta-paivittain [1 10 0]
-                                       (fn [_]
-                                         (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
-                                         (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
-                                         (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset))))
+    (do
+      (log/info "ajasta-paivittain :: YHA uudelleenlähetykset :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (log/debug "Ajastettu tehtävä käynnistyy: YHA uudelleenlähetykset.")
+          (laheta-paikkauskohteet-yhaan-uudelleen integraatioloki db asetukset)
+          (poista-paikkauskohteet-yhasta-uudelleen integraatioloki db asetukset)))))
 
 
 (defrecord YhaPaikkaukset [asetukset]

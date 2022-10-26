@@ -85,7 +85,7 @@
 (def odotettu
   [{:korosta? true
     :lihavoi? true
-    :rivi (list "Pohjois-Pohjanmaa"
+    :rivi (list "Oulun MHU 2019-2024"
             ""
             ""
             ""

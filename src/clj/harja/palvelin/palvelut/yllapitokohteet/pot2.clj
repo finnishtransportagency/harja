@@ -5,6 +5,7 @@
             [hiccup.core :refer [html]]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [fetch update! insert! upsert! delete!]]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.domain
              [pot2 :as pot2-domain]
@@ -267,16 +268,10 @@
                                                 ::pot2-domain/kuulamyllyluokka
                                                 ::pot2-domain/litteyslukuluokka
                                                 ::pot2-domain/dop-nro])))
-          _ (println "tallenna-urakan-paallystysmassa :: massa" (pr-str massa))
           massa-id (::pot2-domain/massa-id massa)
           runkoaineet-kannasta (tallenna-runkoaineet db runkoaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: runkoaineet-kannasta" (pr-str runkoaineet-kannasta))
-
           sideaineet-kannasta (tallenna-sideaineet db sideaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: sideaineet-kannasta" (pr-str sideaineet-kannasta))
-
-          lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)
-          _ (println "tallenna-urakan-paallystysmassa :: lisaaineet-kannasta" (pr-str lisaaineet-kannasta))]
+          lisaaineet-kannasta (tallenna-lisaaineet db lisaaineet massa-id)]
       (assoc massa :harja.domain.pot2/runkoaineet runkoaineet
                    :harja.domain.pot2/sideaineet sideaineet
                    :harja.domain.pot2/lisaaineet lisaaineet))))
@@ -322,13 +317,128 @@
           _ (println "tallenna-urakan-paallystysmurske onnistui, palautetaan:" (pr-str murske))]
       murske)))
 
+(defn hae-muut-urakat-joissa-materiaaleja
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (let [organisaatiot-jossa-rooleja (keys (:organisaatioroolit user))
+        urakat-jossa-rooleja (keys (:urakkaroolit user))
+        jarjestelmavastaava? (contains? (:roolit user) "Jarjestelmavastaava")]
+    (paallystys-q/muut-urakat-joissa-materiaaleja db {:valittu_urakka urakka-id
+                                                      :urakat urakat-jossa-rooleja
+                                                      :organisaatiot organisaatiot-jossa-rooleja
+                                                      :jarjestelmavastaava jarjestelmavastaava?})))
+
+(defn paivita-tarkennetta
+  "Päivittää massan/murskeen tarkennetta, käyttämällä tarkenteen perässä juoksevaa numerointia."
+  [tarkenne]
+  (if (empty? tarkenne)
+    " 2"
+    (let [tarkenteen-viimeinen-merkki (subs tarkenne (- (count tarkenne) 1))
+          uusi-viimeinen-merkki (try
+                                  ;; korvataan viimeisin merkki (numero) yhden isommalla numerolla
+                                  (str (subs tarkenne 0 (- (count tarkenne) 1))
+                                       (+ 1 (Integer/parseInt tarkenteen-viimeinen-merkki)))
+                                  (catch Exception e
+                                    ;; viimeisin ei ollut numero, joten lisätään tarkenteeseen 2
+                                    (str tarkenne " 2")))]
+      uusi-viimeinen-merkki)))
+
+(defn tuo-materiaalit-toisesta-urakasta
+  "Monistaa valitut massat ja murskeet toisesta käyttäjän urakasta."
+  [db user {:keys [urakka-id massa-idt murske-idt]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (jdbc/with-db-transaction
+    [db db]
+
+    (doseq [massa-id massa-idt
+            :let [uusi-massa (paallystys-q/monista-massa<! db {:id massa-id
+                                                               :kayttaja (:id user)
+                                                               :urakka_id urakka-id})
+                  samannimiset-massat-urakassa (paallystys-q/hae-samannimiset-massat-urakasta db {:tyyppi (:tyyppi uusi-massa)
+                                                                                                  :max_raekoko (:max_raekoko uusi-massa)
+                                                                                                  :nimen_tarkenne (:nimen_tarkenne uusi-massa)
+                                                                                                  :dop_nro (:dop_nro uusi-massa)
+                                                                                                  :urakka_id urakka-id
+                                                                                                  :id (:id uusi-massa)})]]
+      (when-not (empty? samannimiset-massat-urakassa)
+        ;; etsitään kannassaolevista samannimisistä massoista se, jonka tarkenne on "viimeisin" juoksevassa numeroinnissa
+        (let [viimeisin-tarkenne (paallystys-q/hae-samannimisten-massojen-viimeisin-tarkenne db {:tyyppi (:tyyppi uusi-massa)
+                                                                                                      :max_raekoko (:max_raekoko uusi-massa)
+                                                                                                      :dop_nro (:dop_nro uusi-massa)
+                                                                                                      :urakka_id urakka-id
+                                                                                                      :id (:id uusi-massa)})]
+(paallystys-q/paivita-massan-nimen-tarkennetta<! db {:id (:id uusi-massa)
+                                                               :urakka_id urakka-id
+                                                               :nimen_tarkenne (paivita-tarkennetta viimeisin-tarkenne)})))
+      ;; jos löytyi samannimisiä massoja urakassa, niin lisätään tarkenteeseen juoksevalla numeroinnilla 2, 3, 4, ...
+      ;; jotta käyttäjä voi erottaa ne helpommin käyttöliittmässä. Tilanne voi syntyä jos käyttäjä tuo saman materiaalin kahteen
+      ;; kertaan
+      (paallystys-q/monista-massan-runkoaineet<! db {:vanha_pot2_massa_id massa-id
+                                                     :uusi_pot2_massa_id (:id uusi-massa)})
+      (paallystys-q/monista-massan-sideaineet<! db {:vanha_pot2_massa_id massa-id
+                                                    :uusi_pot2_massa_id (:id uusi-massa)})
+      (paallystys-q/monista-massan-lisaaineet<! db {:vanha_pot2_massa_id massa-id
+                                                    :uusi_pot2_massa_id (:id uusi-massa)}))
+
+    (doseq [murske-id murske-idt
+            :let [uusi-murske (paallystys-q/monista-murske<! db {:id murske-id
+                                                                 :kayttaja (:id user)
+                                                                 :urakka_id urakka-id})
+                  samannimiset-murskeet-urakassa (paallystys-q/hae-samannimiset-murskeet-urakasta db {:tyyppi (:tyyppi uusi-murske)
+                                                                                                      :nimen_tarkenne (:nimen_tarkenne uusi-murske)
+                                                                                                      :dop_nro (:dop_nro uusi-murske)
+                                                                                                      :urakka_id urakka-id
+                                                                                                      :id (:id uusi-murske)})]]
+      (when-not (empty? samannimiset-murskeet-urakassa)
+        ;; etsitään kannassaolevista samannimisistä massoista se, jonka tarkenne on "viimeisin" juoksevassa numeroinnissa
+        (let [viimeisin-tarkenne (paallystys-q/hae-samannimisten-murskeiden-viimeisin-tarkenne db {:tyyppi (:tyyppi uusi-murske)
+                                                                                                 :dop_nro (:dop_nro uusi-murske)
+                                                                                                 :urakka_id urakka-id
+                                                                                                 :id (:id uusi-murske)})]
+          (paallystys-q/paivita-murskeen-nimen-tarkennetta<! db {:id (:id uusi-murske)
+                                                                 :urakka_id urakka-id
+                                                                 :nimen_tarkenne (paivita-tarkennetta viimeisin-tarkenne)}))))
+
+    ;; Palautetaan käyttäjälle tuoreet materiaalit kannasta monistamisen jälkeen
+    (hae-urakan-massat-ja-murskeet db user {:urakka-id urakka-id})))
+
+(defn poista-urakan-massa
+  [db user {:keys [id]}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [massan-urakka-id (paallystys-q/hae-massan-urakka-id db {:id id})
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user massan-urakka-id)
+          kaytossa? (paallystys-q/massan-kayttotiedot db {:id id})]
+      (if-not (empty? kaytossa?)
+        (throw (SecurityException. (str "Et voi poistaa käytössäolevaa massaa, massan id: " id)))
+        (paallystys-q/poista-urakan-massa<! db {:id id
+                                               :urakka_id massan-urakka-id}))
+
+      (hae-urakan-massat-ja-murskeet db user {:urakka-id massan-urakka-id}))))
+
+(defn poista-urakan-murske
+  [db user {:keys [id]}]
+  (jdbc/with-db-transaction
+    [db db]
+    (let [murskeen-urakka-id (paallystys-q/hae-murskeen-urakka-id db {:id id})
+          _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user murskeen-urakka-id)
+          kaytossa? (paallystys-q/murskeen-kayttotiedot db {:id id})]
+      (if-not (empty? kaytossa?)
+        (throw (SecurityException. (str "Et voi poistaa käytössäolevaa mursketta, murskeen id: " id)))
+        (paallystys-q/poista-urakan-murske<! db {:id id
+                                                 :urakka_id murskeen-urakka-id}))
+
+      (hae-urakan-massat-ja-murskeet db user {:urakka-id murskeen-urakka-id}))))
+
 (defrecord POT2 []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (:sonja-sahkoposti this)]
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
 
       (julkaise-palvelu http :hae-urakan-massat-ja-murskeet
                         (fn [user tiedot]
@@ -342,6 +452,18 @@
       (julkaise-palvelu http :tallenna-urakan-murske
                         (fn [user tiedot]
                           (tallenna-urakan-murske db user tiedot)))
+      (julkaise-palvelu http :hae-muut-urakat-joissa-materiaaleja
+                        (fn [user tiedot]
+                          (hae-muut-urakat-joissa-materiaaleja db user tiedot)))
+      (julkaise-palvelu http :tuo-materiaalit-toisesta-urakasta
+                        (fn [user tiedot]
+                          (tuo-materiaalit-toisesta-urakasta db user tiedot)))
+      (julkaise-palvelu http :poista-urakan-massa
+                        (fn [user tiedot]
+                          (poista-urakan-massa db user tiedot)))
+      (julkaise-palvelu http :poista-urakan-murske
+                        (fn [user tiedot]
+                          (poista-urakan-murske db user tiedot)))
       ;; POT2 liittyviä palveluita myös harja.palvelin.palvelut.yllapitokohteet.paallystys ns:ssä
       this))
 
@@ -351,5 +473,9 @@
       :hae-urakan-massat-ja-murskeet
       :hae-pot2-koodistot
       :tallenna-urakan-massa
-      :tallenna-urakan-murske)
+      :tallenna-urakan-murske
+      :hae-muut-urakat-joissa-materiaaleja
+      :tuo-materiaalit-toisesta-urakasta
+      :poista-urakan-massa
+      :poista-urakan-murske)
     this))

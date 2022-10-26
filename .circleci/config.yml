@@ -121,7 +121,7 @@ jobs:
     docker:
       - image: solita/harja-testit:latest # eka image = "primary container"
       - image: solita/harja-tapahtuma:latest
-      - image: solita/harjadb:centos-12-circle
+      - image: solita/harjadb:postgis-3.1-circle
         command: >
           bash -c "
           bash odota-tapahtumaa.sh env.git localhost 80;
@@ -241,7 +241,7 @@ jobs:
             cp /tmp/harja/.harja_env .
             mkdir -p ../.harja
             echo aaaa > ../.harja/anti-csrf-token
-            touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,labyrintti-salasana,velho-salasana}
+            touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana}
             java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
             for i in $(seq 10); do
               curl localhost:3000 > /dev/null 2>&1 && break

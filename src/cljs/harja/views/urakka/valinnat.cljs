@@ -13,23 +13,29 @@
             [harja.ui.komponentti :as komp]))
 
 (defn tienumero
-  ([tienumero-atom] (tienumero tienumero-atom nil))
-  ([tienumero-atom toiminta-f]
+  ([tienumero-atom] (tienumero tienumero-atom nil {}))
+  ([tienumero-atom toiminta-f] (tienumero tienumero-atom toiminta-f {}))
+  ([tienumero-atom toiminta-f {:keys [otsikon-luokka kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Tienumero"
-     :kentta-params {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f}
-     :arvo-atom tienumero-atom
-     :luokka "label-ja-kentta-puolikas"}
-    "Tienumero"]))
+    (merge
+      {:otsikko "Tienumero" :otsikon-luokka otsikon-luokka
+       :kentta-params (merge {:tyyppi :numero :placeholder "Rajaa tienumerolla" :kokonaisluku? true :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom tienumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn yllapitokohteen-kohdenumero
-  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil))
-  ([kohdenumero-atom toiminta-f]
+  ([kohdenumero-atom] (yllapitokohteen-kohdenumero kohdenumero-atom nil {}))
+  ([kohdenumero-atom toiminta-f] (yllapitokohteen-kohdenumero kohdenumero-atom toiminta-f {}))
+  ([kohdenumero-atom toiminta-f {:keys [kentan-parametrit komponentin-optiot] :as optiot}]
    [tee-otsikollinen-kentta
-    {:otsikko "Kohdenumero"
-     :kentta-params {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f}
-     :arvo-atom kohdenumero-atom
-     :luokka "label-ja-kentta-puolikas"}]))
+    (merge
+      {:otsikko "Kohdenumero"
+       :otsikon-luokka "alasvedon-otsikko-vayla"
+       :kentta-params (merge {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f} kentan-parametrit)
+       :arvo-atom kohdenumero-atom
+       :luokka "label-ja-kentta-puolikas"}
+      komponentin-optiot)]))
 
 (defn urakan-sopimus [ur]
   (valinnat/urakan-sopimus ur u/valittu-sopimusnumero u/valitse-sopimusnumero!))
@@ -69,18 +75,19 @@
 (defn aikavali-hoitokauden-sisalla []
   [valinnat/aikavali u/valittu-aikavali-hoitokauden-sisalla])
 
-(def aikavali-valinnat [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
-                        ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
-                        ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
-                        ["Valittu aikaväli" nil]])
+(def aikavali-valinnat-oletus [["Edellinen viikko" #(pvm/aikavali-nyt-miinus 7)]
+                               ["Edelliset 2 viikkoa" #(pvm/aikavali-nyt-miinus 14)]
+                               ["Edelliset 3 viikkoa" #(pvm/aikavali-nyt-miinus 21)]
+                               ["Valittu aikaväli" nil]])
 
 (defn aikavali-nykypvm-taakse
   "Näyttää aikavalinnan tästä hetkestä taaksepäin, jos urakka on käynnissä.
   Jos urakka ei ole käynnissä, näyttää hoitokausi ja kuukausi valinnat."
   ([urakka valittu-aikavali] (aikavali-nykypvm-taakse urakka valittu-aikavali nil))
   ([urakka valittu-aikavali {:keys [otsikko vaihda-filtteri-urakan-paattyessa?
-                                    aikavalin-rajoitus vayla-tyyli?] :as optiot}]
-   (let [[valittu-aikavali-alku valittu-aikavali-loppu
+                                    aikavali-valinnat aikavalin-rajoitus vayla-tyyli?] :as optiot}]
+   (let [aikavali-valinnat (if (seq aikavali-valinnat) aikavali-valinnat aikavali-valinnat-oletus)
+         [valittu-aikavali-alku valittu-aikavali-loppu
           :as valittu-aikavali-nyt] @valittu-aikavali
          vaihda-filtteri-urakan-paattyessa? (if (some? vaihda-filtteri-urakan-paattyessa?)
                                               vaihda-filtteri-urakan-paattyessa?

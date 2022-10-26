@@ -95,7 +95,9 @@
         false
         (every? #(if (map? %)
                    (not-every? some? (vals %))
-                   (empty? %))
+                   (if (seq? %)
+                     (empty? %)
+                     (nil? %)))
                 (vals mittaus))))))
 
 (defn tyhja-soratiemittaus? [data]

@@ -31,6 +31,7 @@
 (defrecord HaePot2Tiedot [paallystyskohde-id paikkauskohde-id])
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
+(defrecord AsetaTallennusKaynnissa [])
 (defrecord TallennaPot2Tiedot [])
 (defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
@@ -220,6 +221,10 @@
     (viesti/nayta! (str "Tietojen haku epäonnistui: " vastaus) :danger viesti/viestin-nayttoaika-pitka)
     app)
 
+  AsetaTallennusKaynnissa
+  (process-event [_ app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :tallennus-kaynnissa?] true))
+
   TallennaPot2Tiedot
   (process-event [_ {{urakka-id :id :as urakka} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
@@ -269,7 +274,8 @@
           avain-ja-rivi (fn [rivi]
                           {(select-keys rivi [:tr-numero :tr-ajorata :tr-kaista
                                               :tr-alkuosa :tr-alkuetaisyys
-                                              :tr-loppuosa :tr-loppuetaisyys])
+                                              :tr-loppuosa :tr-loppuetaisyys
+                                              :toimenpide])
                            rivi})
           haettavat-rivit (map avain-ja-rivi (concat kaikki-rivit rivit-idt-korjattuna))
           rivit-ja-kopiot (->> haettavat-rivit

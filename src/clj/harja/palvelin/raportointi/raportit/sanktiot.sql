@@ -2,8 +2,8 @@
 -- Hakee sanktiot
 SELECT
   s.id,
-  sakkoryhma,
-  maara AS summa,
+  s.sakkoryhma,
+  s.maara AS summa,
   s.indeksi,
   suorasanktio,
   st.id          AS sanktiotyyppi_id,
@@ -17,14 +17,12 @@ SELECT
   o.nimi         AS hallintayksikko_nimi,
   o.elynumero    AS hallintayksikko_elynumero,
   (SELECT nimi FROM toimenpidekoodi WHERE id = (SELECT emo FROM toimenpidekoodi WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2,
-  CASE WHEN s.indeksi IS NOT NULL THEN
-    kuukauden_indeksikorotus(s.perintapvm::DATE, s.indeksi, s.maara, u.id) - s.maara
-  END AS indeksikorotus
+  (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorotus
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
-  JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id)
+  JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id) AND u.alkupvm < :loppu AND u.loppupvm > :alku
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
       AND (:urakka::INTEGER IS NOT NULL OR (
@@ -37,7 +35,14 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
                                                                                         WHERE hallintayksikko =
                                                                                               :hallintayksikko) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
-      AND s.perintapvm BETWEEN :alku AND :loppu
+      -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen  
+      AND ((s.perintapvm BETWEEN :alku AND :loppu) OR
+          (CASE 
+                date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer 
+                AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+           WHEN TRUE THEN s.perintapvm > u.loppupvm 
+           ELSE FALSE
+           END))
       -- Ei kuulu poistettuun ylläpitokohteeseen
       AND (lp.yllapitokohde IS NULL
           OR
@@ -69,7 +74,7 @@ FROM sanktio s
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
-  JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id)
+  JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id) AND u.alkupvm < :loppu AND u.loppupvm > :alku
   JOIN organisaatio o ON u.hallintayksikko = o.id
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
       AND (:urakka::INTEGER IS NOT NULL OR
@@ -80,7 +85,14 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
                                                                                         WHERE hallintayksikko =
                                                                                               :hallintayksikko) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
-      AND s.perintapvm BETWEEN :alku AND :loppu
+      -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
+      AND ((s.perintapvm BETWEEN :alku AND :loppu) OR
+          (CASE 
+                date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer 
+                AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+           WHEN TRUE THEN s.perintapvm > u.loppupvm 
+           ELSE FALSE
+           END))
     -- Ei kuulu poistettuun ylläpitokohteeseen
       AND (lp.yllapitokohde IS NULL
           OR

@@ -34,6 +34,27 @@
         font-size: @fontin-koko-taulukko-pienempi;
     }
 }
+.aikataulu-valinnat {
+    background-color: @gray240;
+    padding: @valistys-16;
+    > .label-ja-alasveto, .label-ja-kentta-puolikas, .label-ja-aikavali-lyhyt, .label-ja-kentta {
+        label {
+            margin-top: 0;
+        }
+        input:not([type=checkbox]) {
+            height:36px;
+        }
+        .nappi-toissijainen {
+            padding:0.375rem 0.75rem;
+        }
+    }
+    > .label-ja-alasveto {
+        width: 180px;
+        .livi-alasvetolista {
+            min-width: 180px;
+        }
+    }
+}
 .asiatarkastus-checkbox > div {
     margin-bottom: 24px;
 }
@@ -90,13 +111,17 @@
             .form-group {
                 padding-left: 0;
             }
+            .pvm-kentta > .form-control {
+                max-width: 243px;
+            }
         }
     }
 }
 .pot2-rivin-toiminnot,
 .materiaalitoiminnot,
 .yllapitokohteet .toiminnot,
-.paallystysilmoituslomake .toiminnot{
+.paallystysilmoituslomake .toiminnot,
+.aikataulu-toiminnot {
     > div {
         padding-top: 2px;
         button.napiton-nappi {
@@ -107,11 +132,11 @@
             padding: 1px;
             margin-right: 4px;
             img {
-                width: 16px;
-                height: 16px;
+                width: @valistys-16;
+                height: @valistys-16;
                 padding: 1px;
                 &:hover {
-                    color: @valkoinen;
+                    color: @white-default;
                 }
             }
         }
@@ -126,8 +151,79 @@
         color: @black-light;
     }
 }
+.tietyoilmoitus-toast {
+    margin-top: @valistys-16;
+    .toast-viesti {
+        font-size: 0.75rem;
+        .tietyo-info {
+            margin-top: @valistys-4;
+        }
+    }
+}
+.tuoreusindikaattori {
+    .harja-icon-action-set-time {
+        margin-left: 4px;
+    }
+    .tooltip {
+        min-width: 170px;
+        .tooltip-arrow {
+            margin-left: -13px;
+        }
+    }
+}
+.aikataulu {
+    .aikataulu-spacer {
+        height: 24px;
+    }
+    .muokkaustoiminnot {
+        position: relative;
+        top: 32px;
+    }
+    // erikoiskäsittelyä ei haluta vetolaatikon sisälle
+    .vetolaatikko-sisalto {
+        .muokkaustoiminnot {
+            position: unset;
+            top: unset;
+        }
+    }
+    thead {
+        > tr:first-child > th {
+            text-align: center;
+        }
+    }
+    .tiemerkinta-tausta {
+        background-color: @lemon-light;
+    }
+    .paallystys-tausta {
+        background-color: @white-dark;
+    }
+    .paallystys-tausta-tumma {
+        background-color: @white-darker;
+    }
+}
 .tuoreusvihje {
+    display: flex;
+    float: right;
     font-size: 0.75rem;
+    line-height: 1rem;
+    font-weight: normal;
+    margin-right: @valistys-16;
+    margin-bottom: @valistys-32;
+    width: 300px;
+    position: relative;
+    top: 30px;
+    .kelloikoni {
+        > span {
+            top: 4px;
+            position: relative;
+        }
+        margin-right: 8px;
+        font-size: 1.5rem;
+    }
+}
+// ylläpitokohteet näkymässä headeri on matalampi, siinä tuoreusvihjettä ei ole tarvetta laskea keinotekoisesti alaspäin
+.paallystyskohteet .tuoreusvihje {
+    top: 0;
 }
 .pot2-alustan-vinkki {
     font-size: 0.75rem;
@@ -138,4 +234,57 @@
     > .info-laatikko {
         margin-top: 24px;
     }
+}
+.tm-takaraja-muokkaa {
+    + .tooltip {
+        width: 450px;
+        white-space: pre-line;
+    }
+}
+.tm-takaraja-info-btn {
+    position: relative;
+    top: 3px;
+    font-size: 1rem;
+    width: 1rem;
+    height: 1rem;
+    svg {
+        width: 1rem;
+        height: 1rem;
+    }
+    + .tooltip {
+        width: 450px;
+        white-space: pre-line;
+    }
+}
+.tm-lisatieto-leijuke {
+    width: 500px;
+}
+.yhteystiedot-urakka {
+    margin-bottom: @valistys-24;
+    > div.fontti-16 {
+        margin-bottom: @valistys-8;
+        font-weight: 600;
+    }
+}
+.hintatiedot-puuttuvat-container {
+    margin: @valistys-48 0;
+    font-weight: normal;
+}
+.pot2-hintatiedon-toast {
+    color: @black-default;
+    .hintatiedot-info {
+        margin-top: @valistys-4;
+        margin-left: 3.25rem;
+        font-weight: normal;
+    }
+}
+.yleinen-pikkuvihje > .vihjeen-sisalto .pot2-hintatiedon-toast {
+    position: relative;
+    top: -@valistys-4;
+}
+.paallystyskustannusten-toiminnot-container {
+    height: @valistys-32;
+}
+.paallystyskustannusten-toiminnot {
+    float: right;
 }

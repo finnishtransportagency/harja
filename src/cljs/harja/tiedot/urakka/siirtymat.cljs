@@ -172,14 +172,6 @@
     (nav/aseta-valittu-valilehti! :kohdeluettelo-paikkaukset :toteumat)
     (swap! urakka-tila/paikkaustoteumat assoc :harja.domain.paikkaus/toteumataulukon-tilat #{paikkauskohde-id})))
 
-(defn avaa-tietyoilmoitus
-  "Navigoi joko luomaan uutta tietyöilmoitusta tai avaa annetun tietyöilmoituksen näkymässä"
-  [{:keys [tietyoilmoitus-id] :as yllapitokohde} valittu-urakka-id]
-  (go
-    (nav/aseta-valittu-valilehti! :ilmoitukset :tietyo)
-    (nav/aseta-valittu-valilehti! :sivu :ilmoitukset)
-    (tietyoilmoitukset/avaa-tietyoilmoitus tietyoilmoitus-id yllapitokohde valittu-urakka-id)))
-
 (defn avaa-valikatselmus [valittu-hoitokausi]
   (go
     (let [app-state {:valikatselmus-auki? true
@@ -200,3 +192,16 @@
         (nav/aseta-valittu-valilehti! :valitavoitteet :lupaukset)
         (nav/aseta-valittu-valilehti! :urakat :valitavoitteet)
         (swap! urakka-tila/lupaukset merge app-state)))))
+
+(defn kustannusten-seurantaan [osio]
+  (go
+    (let [app-state {}]
+      (do
+        ;; Aseta oikea välilehti - ensin otetaan 2. tason tabi ja sitten 1. tason tabi. Sivua ei tarvitse vaihtaa.
+        (nav/aseta-valittu-valilehti! :suunnittelu :kustannussuunnitelma)
+        (nav/aseta-valittu-valilehti! :urakat :suunnittelu)
+        (swap! urakka-tila/suunnittelu-kustannussuunnitelma merge app-state)))))
+
+(defn paallystysten-kohdeluetteloon
+  []
+  (nav/aseta-valittu-valilehti! :kohdeluettelo-paallystys :paallystyskohteet))

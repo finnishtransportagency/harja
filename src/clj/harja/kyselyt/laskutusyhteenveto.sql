@@ -36,10 +36,10 @@ DELETE FROM laskutusyhteenveto_cache WHERE urakka = :urakka
 
 -- name: hae-urakat-joille-laskutusyhteenveto-voidaan-tehda
 -- Hakee käynnissä olevat urakat, joille voidaan laskea valmiiksi laskutyshteenveto
--- annetulle aikavälille.
+-- annetulle aikavälille. MHU / teiden-hoito ei tuettuna, koska ei käytä LYV-cachea.
 SELECT u.id, u.nimi, u.tyyppi
   FROM urakka u
- WHERE u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
+ WHERE u.tyyppi IN ('hoito'::urakkatyyppi) AND
        u.alkupvm < NOW() AND
        u.loppupvm > (date_trunc('month',NOW()) - '2 months'::interval) AND
        NOT EXISTS (SELECT rivit

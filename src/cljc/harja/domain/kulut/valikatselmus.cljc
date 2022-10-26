@@ -52,7 +52,7 @@
     "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paatosten-tyypit
-  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
+  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupausbonus ::lupaussanktio})
 
 (def luokat
   #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"
@@ -60,4 +60,5 @@
     "Materiaalit" "Muut"})
 
 (def +tavoitepalkkio-kerroin+ 0.3)
+(def +urakoitsijan-osuus-ylityksesta+ 0.3)
 (def +maksimi-tavoitepalkkio-prosentti+ 0.03)

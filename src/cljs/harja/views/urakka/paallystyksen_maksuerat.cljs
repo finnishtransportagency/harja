@@ -38,9 +38,9 @@
             voi-tayttaa-maksueratunnuksen?
             (oikeudet/on-muu-oikeus? "maksuerätunnus" oikeudet/urakat-kohdeluettelo-maksuerat urakka-id)]
         [:div.paallystyksen-maksuerat
-         [valinnat/urakan-vuosi valittu-urakka]
+         [valinnat/urakan-vuosi valittu-urakka {:vayla-tyyli? true}]
          [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero]
-         [valinnat/tienumero yllapito-tiedot/tienumero]
+         [valinnat/tienumero yllapito-tiedot/tienumero nil {:otsikon-luokka "alasvedon-otsikko-vayla"}]
          [grid/grid
           {:otsikko "Maksuerät"
            :tyhja (if (nil? maksuerat)

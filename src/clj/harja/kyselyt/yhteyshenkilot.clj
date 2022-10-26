@@ -11,8 +11,8 @@
 (defn onko-olemassa-paivystys-jossa-yhteyshenkilona-id? [db paivystaja-id]
   (:exists (first (onko-olemassa-paivystys-jossa-yhteyshenkilona-id db paivystaja-id))))
 
-(defn onko-olemassa-paivystys-ulkoisella-idlla? [db kayttaja-id ulkoinen-id]
-  (:exists (first (onko-olemassa-paivystys-ulkoisella-idlla db kayttaja-id ulkoinen-id))))
+(defn onko-olemassa-paivystys-ulkoisella-idlla? [db urakka-id ulkoinen-id]
+  (:exists (first (onko-olemassa-paivystys-ulkoisella-idlla db ulkoinen-id urakka-id))))
 
 (defn hae-urakan-tamanhetkiset-paivystajat
   "Palauttaa urakan tämän hetkiset päivystäjät"

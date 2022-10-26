@@ -125,7 +125,7 @@
        ;; näytetään jos lähetys on onnistunut
        (and lahetys-onnistunut lahetetty)
        [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
-                                :neutraali
+                                :vahva-ilmoitus
                                 :onnistunut)
         (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
         (when muokattu-yhaan-lahettamisen-jalkeen?
@@ -137,7 +137,7 @@
        ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
        (and (nil? lahetetty) (false? lahetys-onnistunut)
             (#{:valmis :lukittu} tila))
-       [yleiset/info-laatikko :neutraali
+       [yleiset/info-laatikko :vahva-ilmoitus
         (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
 
        :else
@@ -184,8 +184,7 @@
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
                       pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)
-              perustiedot (:perustiedot paallystysilmoitus-lomakedata)
-              lahetyksen-tila (:lahetyksen-tila paallystysilmoitus-lomakedata)
+              {:keys [perustiedot lahetyksen-tila tallennus-kaynnissa? muokattu?]} paallystysilmoitus-lomakedata
               perustiedot-app (select-keys paallystysilmoitus-lomakedata #{:perustiedot :kirjoitusoikeus? :ohjauskahvat})
               massalomake-app (select-keys app #{:pot2-massa-lomake :materiaalikoodistot})
               murskelomake-app (select-keys app #{:pot2-murske-lomake :materiaalikoodistot})
@@ -206,7 +205,7 @@
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
-                                  (:muokattu? paallystysilmoitus-lomakedata))]
+                                  muokattu?)]
           (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystekerros] ohjauskahva-paallystekerros))
           (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :ohjauskahvat :alusta] ohjauskahva-alusta))
           [:div.pot2-lomake
@@ -249,12 +248,12 @@
                  [:span])
            [yleiset/valitys-vertical]
            [lisatiedot e! perustiedot pot2-tiedot/lisatiedot-atom]
-           [:hr]
            (when-not (empty? @pot2-tiedot/kohdeosat-atom)
              [:span
               [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! pot2-validoinnit huomautukset]
-              [:hr]])
+              [yleiset/valitys-vertical]])
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
-                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?}]
+                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                   :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

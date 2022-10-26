@@ -144,8 +144,16 @@
     (assoc parametrit avain arvo)
     parametrit))
 
+(defn- yha-otsikot [api-key]
+  (merge {"Content-Type" "text/xml; charset=utf-8"}
+         (when api-key {"x-api-key" api-key})) )
+
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
-  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))]
+  (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))
+        ilmoitus (update ilmoitus :vuodet (fn [vuodet]
+                                            ;; Käytännössä tuotannossa on aina yksi vuosi vuodet-sarakkeessa. Jos sattuisi olemaan kaksi,
+                                            ;; otetaan suurempi arvo, koska se on aina kuluva vuosi, koska päällystyskohteita ei voi hakea tulevalle vuodelle YHA:sta
+                                            (apply max (konv/pgarray->vector vuodet))))]
     (konv/jsonb->clojuremap ilmoitus :ilmoitustiedot)))
 
 (defn hae-alikohteet [db kohde-id paallystysilmoitus]
@@ -192,9 +200,9 @@
         {:type +virhe-kohteen-lahetyksessa+
          :virheet {:virhe virhe}}))))
 
-(defn hae-urakat-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-nimi sampotunniste vuosi]
+(defn hae-urakat-yhasta [integraatioloki db {:keys [url api-key]} yha-nimi sampotunniste vuosi]
   (let [url (str url "urakkahaku")]
-    (log/debug (format "Haetaan YHA:sta urakata (tunniste: %s, sampotunnus: %s & vuosi: %s). URL: "
+    (log/debug (format "Haetaan YHA:sta urakasta (yha-nimi: %s, sampotunnus: %s & vuosi: %s). URL: %s"
                        yha-nimi sampotunniste vuosi url))
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "yha" "urakoiden-haku"
@@ -203,20 +211,18 @@
                              (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
                              (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
                              (conj (when vuosi ["vuosi" vuosi])))
-              otsikot {"Content-Type" "text/xml; charset=utf-8"}
+              otsikot (yha-otsikot api-key)
               http-asetukset {:metodi :GET
                               :url url
                               :parametrit parametrit
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana
                               :otsikot otsikot}
               {body :body headers :headers}
               (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
           (kasittele-urakoiden-hakuvastaus body headers))))))
 
-(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id hakijan-tunnus]
+(defn hae-urakan-kohteet-yhasta [integraatioloki db {:keys [url api-key]} urakka-id hakijan-tunnus]
   (if-let [yha-id (q-yha-tiedot/hae-urakan-yha-id db {:urakkaid urakka-id})]
-    (let [url (str url (format "haeUrakanKohteet" yha-id))
+    (let [url (str url "haeUrakanKohteet")
           vuosi (pvm/vuosi (pvm/nyt))]
       (log/debug (format "Haetaan urakan (id: %s, YHA-id: %s) kohteet YHA:sta. URL: %s" urakka-id yha-id url))
       (integraatiotapahtuma/suorita-integraatio
@@ -226,11 +232,11 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" hakijan-tunnus))
+                otsikot (yha-otsikot api-key)
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana}
+                                :otsikot otsikot}
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-urakan-kohdehakuvastaus body headers)))))
@@ -253,7 +259,7 @@
    lukko avataan, jotta mahdollisesti virheelliset tiedot voidaan korjata. Jos lähetys onnistuu, kohteiden
    päällystysilmoituksen lukitaan. Vuotta 2020 edeltäviä kohteita ei kaistamuutoksen jälkeen saa enää siirtää YHA:aan.
    Tämä on estetty funktiossa tarkista-lahetettavat-kohteet. Palauttaa true tai false sen mukaan onnistuiko kaikkien kohteiden lähetys."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-idt]
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-idt]
   (log/debug (format "Lähetetään urakan (id: %s) kohteet: %s YHAan URL:lla: %s." urakka-id kohde-idt url))
   (try+
     (integraatiotapahtuma/suorita-integraatio
@@ -265,11 +271,9 @@
                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                otsikot {"Content-Type" "text/xml; charset=utf-8"}
+                otsikot (yha-otsikot api-key)
                 http-asetukset {:metodi :POST
                                 :url url
-                                :kayttajatunnus kayttajatunnus
-                                :salasana salasana
                                 :otsikot otsikot}
                 {body :body headers :headers} (integraatiotapahtuma/laheta konteksti :http http-asetukset kutsudata)]
             (kasittele-urakan-kohdelahetysvastaus db body headers kohteet))
@@ -292,15 +296,14 @@
       false)))
 
 (defn poista-kohde-yhasta
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} yha-kohde-id]
+  [integraatioloki db {:keys [url api-key]} yha-kohde-id]
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "poista-kohde" nil
     (fn [konteksti]
       (let [url (str url "toteumakohde/" yha-kohde-id)
             http-asetukset {:metodi         :DELETE
                             :url            url
-                            :kayttajatunnus kayttajatunnus
-                            :salasana       salasana}
+                            :otsikot (yha-otsikot api-key)}
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
         (kasittele-kohteen-poistamisen-vastaus body yha-kohde-id)))))
 

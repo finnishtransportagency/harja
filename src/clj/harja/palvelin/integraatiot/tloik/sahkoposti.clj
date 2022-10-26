@@ -3,7 +3,9 @@
   (:require [hiccup.core :refer [html]]
             [harja.domain.tieliikenneilmoitukset :as apurit]
             [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
+            [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.yhteyshenkilot :as yhteyshenkilot]
             [harja.kyselyt.tieliikenneilmoitukset :as ilmoitukset]
             [harja.domain.tieliikenneilmoitukset :as ilm]
@@ -54,6 +56,10 @@ kuittaustyyppi-pattern #"\[(Vastaanotettu|Aloitettu|Toimenpiteet aloitettu|Lopet
 goole-static-map-url-template
   "http://maps.googleapis.com/maps/api/staticmap?zoom=15&markers=color:red|%s,%s&size=400x300&key=%s")
 
+(def ^{:doc "Template, jolla muodostetaan URL jonka avulla käyttäjä itse voi avata sijainnin Google Mapsissä" :private true :const true}
+  open-google-map-url-template
+  "https://maps.google.com/?q=%s,%s")
+
 (defn- otsikko
   "Luo sähköpostin otsikon. Otsikkorivin tulee olla täsmälleen tiettyä muotoa, koska
    sitä käytetään sisäisesti viestiketjujen yhdistämiseen."
@@ -72,15 +78,15 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (html-tyokalut/nappilinkki napin-teksti
                              (str "mailto:" vastausosoite "?subject=" subject "&body=" body)))
 
-(defn- viesti [vastausosoite otsikko ilmoitus google-static-maps-key]
+(defn- viesti [vastausosoite otsikko ilmoitus]
   (html
     [:div
      [:table
       (html-tyokalut/tietoja
         [["Urakka" (:urakkanimi ilmoitus)]
          ["Tunniste" (:tunniste ilmoitus)]
-         ["Ilmoitettu" (:ilmoitettu ilmoitus)]
-         ["Lähetetty HARJAan" (:valitetty ilmoitus)]
+         ["Ilmoitettu" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
+         ["Lähetetty HARJAan" (pvm/pvm-aika (konversio/java-date (:ilmoitettu ilmoitus)))]
          ;;TODO: ["Tiedotettu urakkaan" (:valitetty-urakkaan ilmoitus)]
          ["Yhteydenottopyyntö" (fmt/totuus (:yhteydenottopyynto ilmoitus))]
          ["Otsikko" (:otsikko ilmoitus)]
@@ -92,16 +98,16 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
      [:blockquote (sanitoi (:lisatieto ilmoitus))]
      (when-let [sijainti (:sijainti ilmoitus)]
        (let [[lat lon] (geo/euref->wgs84 [(:x sijainti) (:y sijainti)])]
-         [:img {:src (format goole-static-map-url-template
-                             lat lon google-static-maps-key)}]))
+         [:a {:href (format open-google-map-url-template lat lon)
+              :target "_blank"
+              :rel "noopener noreferrer"} "Avaa sijainti kartalla"]))
      (for [teksti (map first kuittaustyypit)]
        [:div {:style "padding-top: 10px;"}
         (html-mailto-nappi vastausosoite teksti otsikko (str "[" teksti "] " +vastausohje+))])]))
 
-(defn otsikko-ja-viesti [vastausosoite ilmoitus google-static-maps-key]
+(defn otsikko-ja-viesti [vastausosoite ilmoitus]
   (let [otsikko (otsikko ilmoitus)
-        viesti (viesti vastausosoite otsikko ilmoitus
-                       google-static-maps-key)]
+        viesti (viesti vastausosoite otsikko ilmoitus)]
     [otsikko viesti]))
 
 (defn viestin-kuittaustyyppi [sisalto]
@@ -121,7 +127,11 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
   (let [[_ urakka-id ilmoitus-id] (re-matches otsikko-pattern otsikko)
         kuittaustyyppi (viestin-kuittaustyyppi sisalto)
         kommentti (str/trim (viesti-ilman-kuittaustyyppia-ja-ohjetta sisalto))
-        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")]
+        aiheutti-toimenpiteita (.contains sisalto "Lopetettu toimenpitein")
+        virheviesti (str "Viestistä ei löytynyt kuittauksen tietoja."
+                      (when-not urakka-id " Urakka-id puuttuu. \n" )
+                      (when-not ilmoitus-id " Ilmoitus-id puuttuu.\n" )
+                      (when-not kuittaustyyppi " Kuittaustyyppi puuttuu.\n" ))]
     (if (and urakka-id ilmoitus-id kuittaustyyppi)
       {:urakka-id (Long/parseLong urakka-id)
        :ilmoitus-id (Long/parseLong ilmoitus-id)
@@ -129,7 +139,7 @@ resursseja liitää sähköpostiin mukaan luotettavasti."
        :kommentti (when-not (str/blank? kommentti)
                     kommentti)
        :aiheutti-toimenpiteita aiheutti-toimenpiteita}
-      {:virhe "Viestistä ei löytynyt kuittauksen tietoja"})))
+      {:virhe virheviesti})))
 
 (def ^{:doc "Vastaanotetun kuittauksen mäppäys kuittaustyyppi tietokantaenumiksi" :private true}
 kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
@@ -161,7 +171,11 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
   (let [paivystaja (first (yhteyshenkilot/hae-urakan-paivystaja-sahkopostilla db urakka-id lahettaja))
         {ilmoitus :id
          urakka :urakka
-         ilmoitustyyppi :ilmoitustyyppi} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))]
+         ilmoitustyyppi :ilmoitustyyppi :as ilmoituksen-tiedot} (first (ilmoitukset/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id))
+        _ (when-not (and paivystaja ilmoitus)
+            (log/error "Ilmoitustoimenpidettä ei voitu tallentaa! Päivystäjän tai ilmoituksen tiedot ovat väärin. Lähettäjä " (pr-str lahettaja) "urakka-id" (pr-str urakka-id) )
+            (log/error "Yritettiin lähettää päivystäjälle:" (pr-str paivystaja))
+            (log/error "Ilmoituksen tiedot:" (pr-str ilmoituksen-tiedot)))]
     (if-not (and paivystaja ilmoitus)
       +ilmoitustoimenpiteen-tallennus-epaonnistui+
       (let [tallenna (fn [kuittaustyyppi vapaateksti]
@@ -187,14 +201,40 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
                              :urakka-id urakka
                              :ilmoitustyyppi ilmoitustyyppi}))))))
 
+(defn- lokita-sahkopostikuittauksen-virhe [kuittaus {:keys [sisalto] :as viesti}]
+  "Annetaan errori kolmessa tilanteessa:
+   Urakka-id puuttuu
+   Ilmoitus-id puuttuu
+   Urakka-id on ja ilmoitus-id on, mutta sisältö on täysin tyhjä.
+
+  Varoitus annetaan, jos urakka-id löytyy ja ilmoitus-id löytyy ja sisältö löytyy, mutta se ei sisällä kuittaustyyppiä."
+  (cond
+    (or
+      (str/includes? (:virhe kuittaus) "Urakka-id puuttuu")
+      (str/includes? (:virhe kuittaus) "Ilmoitus-id puuttuu"))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    (or (nil? sisalto) (empty? sisalto))
+    (log/error (format "VIRHE! Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))
+
+    ;; Muuten riittää pelkkä varoitus, että ei sotketa logia turhilla erroreilla
+    :else
+    (log/warn (format "Varoitus: Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s. Virheviesti: %s " viesti kuittaus))))
+
 (defn vastaanota-sahkopostikuittaus
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
-  [jms-lahettaja db {:keys [lahettaja otsikko sisalto]}]
+  [jms-lahettaja db {:keys [lahettaja otsikko sisalto] :as viesti}]
   (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
   (let [v (lue-kuittausviesti otsikko sisalto)]
     (if (:ilmoitus-id v)
       (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
         (tallenna-toimenpiteiden-aloitus jms-lahettaja db lahettaja v)
         (tallenna-ilmoitustoimenpide jms-lahettaja db lahettaja v))
-      +virheellinen-toimenpide-viesti+)))
+      (do
+        ;; Logitetaan virhe, jos urakka-id tai ilmoitus-id puuttuu
+        (lokita-sahkopostikuittauksen-virhe v viesti)
+
+        ;; Palautetaan kutsujalle virheviesti ja tarkennus virheestä
+        (assoc +virheellinen-toimenpide-viesti+
+          :sisalto (str (:sisalto +virheellinen-toimenpide-viesti+) " Virhe: " (:virhe v)))))))

@@ -50,7 +50,13 @@
           kuittaukset (tuo-sampo-viestin-data db data)]
       kuittaukset)))
 
-(defn kasittele-viesti [sonja integraatioloki db kuittausjono viesti]
+(defn- kasittele-api-sisaanluku [db viestin-sisalto]
+  (jdbc/with-db-transaction [db db]
+    (let [data (sampo-sanoma/lue-api-viesti viestin-sisalto)
+          kuittaukset (tuo-sampo-viestin-data db data)]
+      kuittaukset)))
+
+(defn kasittele-jms-viesti [sonja integraatioloki db kuittausjono viesti]
   (log/debug "Vastaanotettiin Sampon viestijonosta viesti:" viesti)
   (let [viesti-id (.getJMSMessageID viesti)
         korrelaatio-id (.getJMSCorrelationID viesti)
@@ -62,8 +68,7 @@
                                                                  viestin-sisalto
                                                                  kuittausjono)]
     (try+
-      (let [tuonti (fn [] (kasittele-sisaanluku db viestin-sisalto))
-            kuittaukset (lukot/aja-lukon-kanssa db "sampo-sisaanluku" tuonti nil 2)]
+      (let [kuittaukset (kasittele-sisaanluku db viestin-sisalto)]
         (doseq [kuittaus kuittaukset]
           (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
@@ -78,3 +83,31 @@
           (str "Poikkeus: " e)
           tapahtuma-id
           nil)))))
+
+(defn kasittele-api-viesti [db integraatioloki viesti tapahtuma-id]
+  (log/debug "Vastaanotettiin Sampon viesti api:sta:" viesti)
+  (let [viestin-sisalto (first (:content (first viesti)))
+        viesti-id (get-in viestin-sisalto [:attrs :messageId])
+        viestityyppi (:tag viestin-sisalto)]
+
+    (try+
+      (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
+        (first kuittaukset))
+      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
+        (do
+          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet)
+          ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
+          (kuittaus-sampoon-sanoma/tee-xml-sanoma
+            (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" virheet))))
+
+      (catch Exception e
+        (log/error e "Sampo sisäänluvussa tapahtui poikkeus." e)
+        (integraatioloki/kirjaa-epaonnistunut-integraatio
+          integraatioloki
+          "Sampo sisäänluvussa tapahtui poikkeus"
+          (str "Poikkeus: " e)
+          tapahtuma-id
+          nil)
+        ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
+        (kuittaus-sampoon-sanoma/tee-xml-sanoma
+          (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" "Vakava virhe. Käsittely ei onnistunut"))))))

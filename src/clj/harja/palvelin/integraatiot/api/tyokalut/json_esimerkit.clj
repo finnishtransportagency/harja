@@ -87,3 +87,7 @@
 
 (def +paikkausten-kirjaus-request+ "api/examples/paikkausten-kirjaus-request.json")
 (def +paikkauskustannusten-kirjaus-request+ "api/examples/paikkauskustannusten-kirjaus-request.json")
+
+(def +analytiikka-reittitoteumat-response+ "api/examples/analytiikka-reittitoteumat-response.json")
+
+(def +raportti-materiaaliraportti-response+ "api/examples/raportti-materiaaliraportti-response.json")

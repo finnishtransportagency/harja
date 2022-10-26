@@ -230,6 +230,45 @@
     </harja:ilmoitus>
     ")))
 
+(defn testi-valaistusilmoitus-sanoma-eri-sijaintiin [viesti-id ilmoitus-id ilmoitettu valitetty tienumero x-koordinaatti y-koordinaatti]
+  (str
+    "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
+     <viestiId>"viesti-id"</viestiId>
+     <lahetysaika>" valitetty "</lahetysaika>
+      <ilmoitusId>"ilmoitus-id"</ilmoitusId>
+      <tunniste>UV-1509-1a</tunniste>
+      <versionumero>1</versionumero>
+      <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
+      <ilmoitettu>" ilmoitettu "</ilmoitettu>
+    <urakkatyyppi>valaistus</urakkatyyppi>
+    <otsikko>Valot pimeänä</otsikko>
+    <paikanKuvaus>Hailuodossa</paikanKuvaus>
+    <lisatieto>Valot ovat pimeänä.</lisatieto>
+    <yhteydenottopyynto>false</yhteydenottopyynto>
+    <sijainti>
+    <tienumero>"tienumero"</tienumero>
+    <x>"x-koordinaatti"</x>
+    <y>"y-koordinaatti"</y>
+    </sijainti>
+    <ilmoittaja>
+    <etunimi>Matti</etunimi>
+    <sukunimi>Meikäläinen</sukunimi>
+    <matkapuhelin>08023394852</matkapuhelin>
+    <sahkoposti>matti.meikalainen@palvelu.fi</sahkoposti>
+    <tyyppi>tienkayttaja</tyyppi>
+    </ilmoittaja>
+    <lahettaja>
+    <etunimi>Pekka</etunimi>
+    <sukunimi>Päivystäjä</sukunimi>
+    <matkapuhelin>929304449282</matkapuhelin>
+    <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
+    </lahettaja>
+    <seliteet>
+    <selite>tievalaistusVioittunutOnnettomuudessa</selite>
+    </seliteet>
+    </harja:ilmoitus>
+    "))
+
 (def +testi-paallystysilmoitus-sanoma+
   "<harja:ilmoitus xmlns:harja=\"http://www.liikennevirasto.fi/xsd/harja\">
    <viestiId>14324234</viestiId>
@@ -342,6 +381,11 @@
                             (konv/array->set :selitteet)
                             (set/rename-keys {:ilmoitusid :ilmoitus-id}))
                          (q-map (str "select * from ilmoitus where ilmoitusid = " ilmoitus-id ";"))))]
+    vastaus))
+
+(defn hae-ilmoitustoimenpiteet-ilmoitusidlla [ilmoitus-id]
+  (let [vastaus (q-map (str "select id, ilmoitus, ilmoitusid, kuitattu, tila, lahetetty, lahetysid,
+                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id ";"))]
     vastaus))
 
 (defn hae-ilmoitustoimenpide-ilmoitusidlla [ilmoitus-id]

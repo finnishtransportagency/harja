@@ -9,7 +9,8 @@
             [harja.domain
              [oikeudet :as oikeudet]
              [yllapitokohde :as yllapitokohde]
-             [tierekisteri :as tr-domain]])
+             [tierekisteri :as tr-domain]]
+            [clojure.string :as str])
   (:import (org.postgresql.util PSQLException)))
 
 (def +threshold+ 250)
@@ -91,6 +92,15 @@
   "Hakee annetun tien osan ajoradat. Parametri-mapissa täytyy olla :tie ja :osa"
   (mapv :ajorata (tv/hae-tieosan-ajoradat db params)))
 
+(defn hae-tieosan-ajoratojen-geometriat [db {:keys [tie osa ajorata]}]
+  "Hakee annetun tien osan ajoratojen geometriat. Parametri-mapissa täytyy olla ainakin :tie ja :osa"
+  (mapv
+    :geom
+    (tv/hae-tieosan-ajoratojen-geometriat db {:tie tie
+                                              :osa osa
+                                              :ajorata (when-not (str/blank? ajorata)
+                                                         ajorata)})))
+
 (defn validoi-tr-osoite-tieverkolla
   "Tarkistaa, onko annettu tieosoite validi Harjan tieverkolla. Palauttaa mapin, jossa avaimet:
   :ok?      Oliko TR-osoite validi (true / false)
@@ -150,9 +160,7 @@
 (defn hae-osien-tiedot
   [db params]
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
-  (map (fn [tieto]
-         (update tieto :pituudet konv/jsonb->clojuremap))
-       (tv/hae-trpisteiden-valinen-tieto db params)))
+  (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
 (defrecord TierekisteriHaku []
   component/Lifecycle
@@ -183,6 +191,9 @@
       :hae-tr-osan-ajoradat (fn [_ params]
                               (oikeudet/ei-oikeustarkistusta!)
                               (hae-tieosan-ajoradat db params))
+      :hae-tr-osan-ajoratojen-geometriat (fn [_ params]
+                              (oikeudet/ei-oikeustarkistusta!)
+                              (hae-tieosan-ajoratojen-geometriat db params))
       :hae-tr-gps-koordinaateilla (fn [_ params]
                                     (oikeudet/ei-oikeustarkistusta!)
                                     (hae-tr-osoite-gps-koordinaateilla db params)))
@@ -196,5 +207,6 @@
                      :hae-tr-pituudet
                      :hae-tr-tiedot
                      :hae-tr-osan-ajoradat
+                     :hae-tr-osan-ajoratojen-geometriat
                      :hae-tr-gps-koordinaateilla)
     this))

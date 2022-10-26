@@ -15,18 +15,28 @@
 (def lime (rgb 184 229 127))
 (def pinkki (rgb 199 41 131))
 (def musta (rgb 0 0 0))
-(def musta-raja (rgba 0 0 0 0.4))
+(def musta-raja (rgb 51 51 51))
 (def valkoinen (rgb 255 255 255))
 (def vaaleanharmaa (rgb 242 242 242))
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
+
+;; Näitä värejä käytetään hexoina vektori-ikoneiden värjäämiseen.
+;; Värit figmasta.
+(def fig-default "#00B0CC")
+(def lemon-default "#FFC300")
+(def eggplant-default "#A050A0")
+(def pitaya-default "#E50083")
+(def pea-default "#8DCB6D")
+(def black-light "#5C5C5C")
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
   [punainen oranssi keltainen magenta vihrea turkoosi syaani sininen
-   tummansininen violetti lime pinkki])
+   tummansininen violetti lime pinkki
+   fig-default lemon-default eggplant-default pitaya-default pea-default black-light])
 
 #?(:clj
    (defn- poista-testit [setti]

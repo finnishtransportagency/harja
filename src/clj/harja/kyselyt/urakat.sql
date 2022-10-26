@@ -537,9 +537,25 @@ WHERE tunnus::text IN (:turvalaiteryhma);
 -- alueurakka-tauluun.
 UPDATE urakka
 SET urakkanro = :urakkanro,
-  muokattu    = NOW(),
-  muokkaaja   = :kayttaja
-  WHERE id = :urakka;
+    muokattu  = NOW(),
+    muokkaaja = :kayttaja
+WHERE id = :urakka;
+
+--name: hae-velho-oid-lkm
+-- Palauttaa velho_oid NOT NULL rivien lukumäärän
+SELECT count(*) as lkm
+FROM urakka
+WHERE velho_oid IS NOT NULL;
+
+--name: hae-kaikki-urakat-pvm
+SELECT id, alkupvm, loppupvm
+FROM urakka
+WHERE velho_oid IS NOT NULL;
+
+--name: hae-kaikki-urakka-velho-oid
+SELECT velho_oid, id
+FROM urakka
+WHERE velho_oid IS NOT NULL;
 
 -- name: paivita-tyyppi-hankkeen-urakoille!
 -- Paivittaa annetun tyypin kaikille hankkeen urakoille
@@ -548,6 +564,20 @@ SET tyyppi = :urakkatyyppi :: urakkatyyppi
 WHERE hanke = (SELECT id
                FROM hanke
                WHERE sampoid = :hanke_sampoid);
+
+-- name: paivita-velho_oid-null-kaikille!
+-- Tyhjentää velho_oid tiedon kaikilta urakoilta
+UPDATE urakka
+SET velho_oid = NULL
+WHERE velho_oid IS NOT NULL
+  AND tyyppi IN ('hoito', 'teiden-hoito');
+
+-- name: paivita-velho_oid-urakalle!
+-- Päivittää velho_oid avaimen urakalle
+UPDATE urakka
+SET velho_oid = :velho_oid
+WHERE urakkanro = :urakkanro
+  AND tyyppi IN ('hoito', 'teiden-hoito');
 
 -- name: hae-id-sampoidlla
 -- Hakee urakan id:n sampo id:llä
@@ -722,6 +752,14 @@ WHERE (CASE
                  AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
 ORDER BY etaisyys ASC;
 
+-- name: hae-hoito-urakka-tr-pisteelle
+SELECT id
+FROM urakka
+WHERE st_contains(alue,
+    tierekisteriosoitteelle_piste(CAST(:tie AS INTEGER),CAST(:aosa AS INTEGER), CAST(:aet AS INTEGER)))
+  AND tyyppi IN ('hoito', 'teiden-hoito')
+  AND date(:paivamaara) BETWEEN alkupvm AND loppupvm
+ORDER BY tyyppi DESC;
 
 -- name: luo-alueurakka<!
 INSERT INTO alueurakka (alueurakkanro, alue, elynumero, "ely-nimi", nimi, luotu, luoja)
@@ -811,17 +849,25 @@ WHERE id = :urakka;
 DELETE
 FROM valaistusurakka;
 
+-- name: tarkista-valaistusurakkadata
+SELECT count(*) as lkm
+FROM valaistusurakka;
+
 -- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
 SELECT alueurakka
 FROM valaistusurakka
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka);
+INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro, paivitetty)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
 DELETE
+FROM paallystyspalvelusopimus;
+
+-- name: tarkista-paallystyspalvelusopimusdata
+SELECT count(*) as lkm
 FROM paallystyspalvelusopimus;
 
 -- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla
@@ -830,8 +876,8 @@ FROM paallystyspalvelusopimus
 WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-paallystyspalvelusopimus<!
-INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus);
+INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro, paivitetty)
+VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestamp);
 
 -- name: hae-lahin-hoidon-alueurakka
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
@@ -1059,3 +1105,6 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
   AND u.hallintayksikko = :hallintayksikko-id
   AND u.alkupvm < NOW() -- Urakan täytyy olla käynnissä
   AND u.loppupvm > NOW();
+
+-- name: hae-urakan-hoitokaudet
+SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);

@@ -1,5 +1,5 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [clojure.core.async :refer [<!! timeout]]
             [clj-time
              [core :as t]
@@ -11,6 +11,7 @@
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
+            [clojure.string :as str]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.tyokalut.xml :as xml]
@@ -193,3 +194,51 @@
           ilmoituksia (count ilmoitukset)]
       (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
       (is (< 0 ilmoituksia)))))
+
+
+(deftest hae-ilmoitukset-ytunnuksella-onnistuu
+  (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
+        huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+        y-tunnus "1565583-5"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" kuukausi-sitten "/"huomenna)]
+                  kayttaja portti)]
+    (is (= 200 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "Ilmoittaja"))
+    (is (str/includes? (:body vastaus) "Rovanieminen"))
+    (is (str/includes? (:body vastaus) "Sillalla on lunta. Liikaa."))))
+
+(deftest hae-ilmoitukset-ytunnuksella-onnistuu-ilman-loppuaikaa
+  (let [alkuaika "2022-01-01T00:00:00+03"
+        y-tunnus "1565583-5"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika)]
+                  kayttaja portti)]
+    (is (= 200 (:status vastaus)))))
+
+(deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
+  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        y-tunnus "1234567-8"
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                  kayttaja portti)
+        odotettu-vastaus-json "{\"virheet\":[{\"virhe\":{\"koodi\":\"kayttajalla-puutteelliset-oikeudet\",\"viesti\":\"Käyttäjällä: yit-rakennus ei ole oikeuksia organisaatioon: 1234567-8\"}}]}"]
+    (is (= odotettu-vastaus-json (:body vastaus)))))
+
+(deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-vaarat-hakuparametrit
+  (testing "Alkuaika on väärässä muodossa "
+    (let [alkuaika (.format (SimpleDateFormat. "YY-MM-d'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+          y-tunnus "1565583-5"
+          vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "puutteelliset-parametrit"))))
+  (testing "Loppuaika on väärässä muodossa "
+    (let [alkuaika (.format (SimpleDateFormat. "yyy-MM-d'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "-MM-dd'T'HH:mm:ssX") (Date.))
+          y-tunnus "1565583-5"
+          vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "Loppuaika väärässä muodossa")))))
+
+

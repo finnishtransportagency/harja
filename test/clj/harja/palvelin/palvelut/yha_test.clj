@@ -42,7 +42,7 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest sido-yha-urakka-harja-urakkaan
-  (let [urakka-id (hae-yha-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -57,7 +57,7 @@
       (is (integer? yhatiedot-testin-jalkeen) "Urakka sidottiin YHA-urakkaan oikein"))))
 
 (deftest ala-anna-vaihtaa-lukittua-sidontaa
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (integer? yhatiedot-ennen-testia) "Urakka on jo sidottu ennen testiä")
 
@@ -70,7 +70,7 @@
                                                                  :yhanimi "YHANIMI"}})))))
 
 (deftest ala-sido-vajailla-tiedoilla
-  (let [urakka-id (hae-yha-paallystysurakan-id)
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")
         yhatiedot-ennen-testia (ffirst (q "SELECT id FROM yhatiedot WHERE urakka = " urakka-id ";"))]
     (is (nil? yhatiedot-ennen-testia) "Urakan yhatiedot on tyhjä ennen testiä")
 
@@ -80,7 +80,7 @@
                                             :yha-tiedot {}})))))
 
 (deftest alla-anna-sitoa-ilman-oikeuksia
-  (let [urakka-id (hae-yha-paallystysurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "YHA-päällystysurakka")]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
                                            :sido-yha-urakka-harja-urakkaan +kayttaja-ulle+
@@ -90,7 +90,7 @@
                                                          :yhanimi "YHANIMI"}})))))
 
 (deftest hae-yha-urakat
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")]
 
     (with-fake-http [urakoiden-haku-test/urakkahaku-url +onnistunut-urakoiden-hakuvastaus+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -102,27 +102,6 @@
                  :yhatunnus "YHATUNNUS"
                  :sampotunnus "SAMPOTUNNUS"
                  :yhaid 3}]))))))
-
-(deftest hae-yha-urakan-kohteet
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)]
-    (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +onnistunut-urakan-kohdehakuvastaus+]
-      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :hae-yha-kohteet +kayttaja-jvh+
-                                    {:urakka-id urakka-id})]
-        (is (= (count vastaus) 1))
-        (is (every? :yha-id vastaus))))))
-
-(deftest yha-kohteiden-haku-ei-palauta-harjassa-jo-olevia-kohteita
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
-
-    (u "UPDATE yllapitokohde SET yhaid = 3 WHERE id = " leppajarven-ramppi-id ";")
-
-    (with-fake-http [urakan-kohdehaku-test/urakan-kohteet-url +onnistunut-urakan-kohdehakuvastaus+]
-      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :hae-yha-kohteet +kayttaja-jvh+
-                                    {:urakka-id urakka-id})]
-        (is (= (count vastaus) 0))))))
 
 (defn- luo-yha-kohteet [kohteen-osoite alikohteen-osoite]
   [{:alikohteet [{:yha-id 1
@@ -146,149 +125,6 @@
     :nimi "YHA-kohde"
     :yllapitokohdetyotyyppi :paallystys}])
 
-(deftest tallenna-uudet-yha-kohteet
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        yhatiedot-ennen-testia (first (q-map "SELECT id, sidonta_lukittu
-                                               FROM yhatiedot WHERE urakka = " urakka-id ";"))
-        kohteet-ennen-testia (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))]
-
-    (is (integer? (:id yhatiedot-ennen-testia)) "Urakka on jo sidottu ennen testiä")
-    (is (false? (:sidonta_lukittu yhatiedot-ennen-testia)) "Sidontaa ei ole lukittu ennen testiä")
-
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                  {:urakka-id urakka-id
-                                   :kohteet (luo-yha-kohteet {:tienumero 20
-                                                              :aosa 1
-                                                              :aet 1
-                                                              :losa 1
-                                                              :let 2}
-                                                             {:ajorata 1
-                                                              :kaista 1
-                                                              :tienumero 20
-                                                              :aosa 1
-                                                              :aet 1
-                                                              :losa 1
-                                                              :let 2})})
-          yhatiedot-testin-jalkeen (first (q-map "SELECT id, sidonta_lukittu
-                                               FROM yhatiedot WHERE urakka = " urakka-id ";"))
-          kohteet-testin-jalkeen (ffirst (q "SELECT COUNT(*) FROM yllapitokohde WHERE urakka = " urakka-id))
-          yha-tr-osoite (ffirst (q "SELECT yha_tr_osoite FROM yllapitokohde WHERE yha_kohdenumero = 1"))]
-      (is (some? (:yhatiedot vastaus)))
-      (is (and (vector? (:tallentamatta-jaaneet-kohteet vastaus)) (empty? (:tallentamatta-jaaneet-kohteet vastaus))))
-      (is (false? (:sidonta_lukittu yhatiedot-testin-jalkeen))
-          "Sidontaa ei lukittu vielä tässä vaiheessa (vaatii asioiden muokkausta)")
-      (is (= (+ kohteet-ennen-testia 1) kohteet-testin-jalkeen))
-      (is (= {:numero 20, :alkuosa 1, :alkuetaisyys 1, :loppuosa 1, :loppuetaisyys 2}
-             (konv/lue-tr-osoite yha-tr-osoite))))))
-
-(deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosa-liian-pitka
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:tienumero 9
-                                                            :aosa 328
-                                                            :aet 3060
-                                                            :losa 329
-                                                            :let 245}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 9
-                                                            :aosa 328
-                                                            :aet 3060
-                                                            :losa 329
-                                                            :let 245})})]
-
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Alkuosan 328 ajorataa 1 ei ole olemassa"))))
-
-(deftest tallenna-uudet-yha-kohteet-epaonnistuu-alkuosaa-ei-olemassa
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:tienumero 20
-                                                            :aosa 2
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 1}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 2
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 1})})]
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Alkuosaa 2 ei ole olemassa"))))
-
-(deftest tallenna-uudet-yha-kohteet-epaonnistuu-loppuosaa-ei-olemassa
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 2
-                                                            :let 1}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 2
-                                                            :let 1})})]
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Loppuosaa 2 ei ole olemassa"))))
-
-(deftest tallenna-uudet-yha-kohteet-epaonnistuu-kohdeosan-alkuosa-liian-pitka
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 1}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 1
-                                                            :aet 1
-                                                            :losa 3
-                                                            :let 9999999})})]
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 1))
-    (is (false? (:kohde-validi? (first (:tallentamatta-jaaneet-kohteet vastaus)))))
-    (is (= (:kohde-epavalidi-syy (first (:tallentamatta-jaaneet-kohteet vastaus)))
-           "Loppuosan pituus 9999999 ei kelpaa"))))
-
-(deftest tallenna-uudet-yha-kohteet-onnistuu
-  (let [urakka-id (hae-muhoksen-paallystysurakan-id)
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :tallenna-uudet-yha-kohteet +kayttaja-jvh+
-                                {:urakka-id urakka-id
-                                 :kohteet (luo-yha-kohteet {:tienumero 20
-                                                            :aosa 1
-                                                            :aet 100
-                                                            :losa 5
-                                                            :let 100}
-                                                           {:ajorata 1
-                                                            :kaista 1
-                                                            :tienumero 20
-                                                            :aosa 3
-                                                            :aet 200
-                                                            :losa 4
-                                                            :let 200})})]
-    (is (= (count (:tallentamatta-jaaneet-kohteet vastaus)) 0))))
 
 (deftest paattele-yhaan-lahetettava-sampoid-onnistuu
   "Palveluurakasta lähetetään palvelusopimuksen sampoid, kokonaisurakasta lähetetään urakan sampoid."

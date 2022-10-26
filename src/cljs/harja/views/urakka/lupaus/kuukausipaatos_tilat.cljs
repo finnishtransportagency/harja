@@ -10,7 +10,8 @@
             [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
             [harja.domain.roolit :as roolit]
             [harja.tiedot.istunto :as istunto]
-            [harja.domain.lupaus-domain :as lupaus-domain]))
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.ui.kartta.asioiden-ulkoasu :as asioiden-ulkoasu]))
 
 (defn paattele-kohdevuosi [kohdekuukausi vastaukset app]
   (let [kohdevuosi (:vuosi (first (filter (fn [v]
@@ -41,7 +42,7 @@
   [:div {:style {:color "#1C891C"}} [ikonit/harja-icon-status-selected]])
 
 (defn hylatty-vastaus []
-  [:div {:style {:color "#B40A14"}} [ikonit/harja-icon-status-denied]])
+  [:div {:style {:color (asioiden-ulkoasu/tilan-vari "hylatty")}} [ikonit/harja-icon-status-denied]])
 
 (defn kuukausi-wrapper [e!
                         {:keys [lupaus-id] :as lupaus}

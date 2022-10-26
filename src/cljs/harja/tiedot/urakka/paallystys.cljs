@@ -76,6 +76,7 @@
     :tr-loppuosa :tr-loppuetaisyys :kommentit :tekninen-osa
     :valmispvm-kohde :takuupvm :valmispvm-paallystys :versio
     :yha-tr-osoite :muokattu
+    :kokonaishinta-ilman-maaramuutoksia :maaramuutokset
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
@@ -137,6 +138,9 @@
               (when (and valittu-urakka-id valittu-sopimus-id nakymassa?)
                 (yllapitokohteet/hae-yllapitokohteet valittu-urakka-id valittu-sopimus-id vuosi))))
 
+(defn paivita-yllapitokohteet! []
+  (harja.atom/paivita! yllapitokohteet))
+
 (def yllapitokohteet-suodatettu
   (reaction (let [tienumero @yllapito-tiedot/tienumero
                   yllapitokohteet @yllapitokohteet
@@ -157,17 +161,17 @@
 
 (def tr-osien-tiedot (atom nil))
 
-(def harjan-paikkauskohteet
+(def muut-kuin-yha-kohteet
   (reaction-writable
     (let [kohteet @yllapitokohteet-suodatettu
-          harjan-paikkauskohteet (when kohteet
+          muut-kuin-yha-kohteet (when kohteet
                                    (yllapitokohteet/suodata-yllapitokohteet
                                      kohteet
-                                     {:yha-kohde? false :yllapitokohdetyotyyppi :paikkaus}))]
-      (tr-domain/jarjesta-kohteiden-kohdeosat harjan-paikkauskohteet))))
+                                     {:yha-kohde? false}))]
+      (tr-domain/jarjesta-kohteiden-kohdeosat muut-kuin-yha-kohteet))))
 
 (def kaikki-kohteet
-  (reaction (concat @yhan-paallystyskohteet @harjan-paikkauskohteet (when muut-kustannukset/kohteet
+  (reaction (concat @yhan-paallystyskohteet @muut-kuin-yha-kohteet (when muut-kustannukset/kohteet
                                                                       @muut-kustannukset/kohteet))))
 
 (defonce paallystyskohteet-kartalla
@@ -252,11 +256,15 @@
     (modal/nayta!
       {:otsikko otsikko
        :otsikko-tyyli :virhe}
-      (when virhe
+      (cond
+        (map? virhe)
         (concat
           ;; gensym on tässä vain poistamassa virheilmoituksen. Se ei estä remounttailua.
           (interpose '(^{:key (str (gensym))} [:p "------------"])
-                     (map virheviestit-komponentti virhe)))))))
+            (map virheviestit-komponentti virhe)))
+        :default
+        [:div
+         [:p (str virhe)]]))))
 
 (defn- osoitteet-mapiksi [rivit]
   (update-in rivit [:ilmoitustiedot :osoitteet]
@@ -303,30 +311,33 @@
 (defn rivita-virheet
   "Rivittää sisäkkäisessä rakenteessa olevat virheet ihmisen luettavaan muotoon, esim. modaliin"
   [virhe]
-  (cond
-    (str/includes? virhe "missing-required-key")
-    (transit/read (transit/reader :json) virhe)
+  (let [luettu-json (transit/read (transit/reader :json) virhe)]
+    (cond
+      (or
+        (not (coll? luettu-json))
+        (str/includes? virhe "missing-required-key"))
+      luettu-json
 
-    :else
-    [(reduce-kv (fn [m k v]
-                  (assoc m k (distinct
-                               (flatten
-                                 (cond
-                                   (map? v)
-                                   v
+      :else
+      [(reduce-kv (fn [m k v]
+                    (assoc m k (distinct
+                                 (flatten
+                                   (cond
+                                     (map? v)
+                                     v
 
-                                   (string? v)
-                                   (list v)
+                                     (string? v)
+                                     (list v)
 
-                                   :else
-                                   (map (fn [kohde]
-                                          (cond
-                                            (empty? kohde) nil
+                                     :else
+                                     (map (fn [kohde]
+                                            (cond
+                                              (empty? kohde) nil
 
-                                            :else
-                                            (vals kohde)))
-                                        v))))))
-                {} (transit/read (transit/reader :json) virhe))]))
+                                              :else
+                                              (vals kohde)))
+                                       v))))))
+         {} luettu-json)])))
 
 (defn paivita-paallystysilmoituksen-lahetys-tila [paallystysilmoitukset {:keys [kohde-id] :as uusi-tila}]
   (let [avaimet [:lahetys-onnistunut :lahetysaika :lahetetty :lahetysvirhe
@@ -346,6 +357,7 @@
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
+(defrecord SuljePaallystysilmoitus [])
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
@@ -562,6 +574,9 @@
                          parametrit
                          {:onnistui ->HaePaallystysilmoitusPaallystyskohteellaOnnnistui
                           :epaonnistui ->HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti})))
+  SuljePaallystysilmoitus
+  (process-event [_ app]
+    (assoc app :paallystysilmoitus-lomakedata nil))
   TallennaHistoria
   (process-event [{polku :polku} app]
     (let [vanha-arvo (get-in app polku)]
@@ -614,12 +629,11 @@
     (log "[PÄÄLLYSTYS] Lomake tallennettu onnistuneesti, vastaus: " (pr-str vastaus))
     (let [jarjestetyt-ilmoitukset (jarjesta-paallystysilmoitukset (:paallystysilmoitukset vastaus) jarjestys)]
       (urakka/lukitse-urakan-yha-sidonta! urakka-id)
-      ;; TODO Nämä pois, kun refaktorointi valmis
       (reset! paallystysilmoitukset jarjestetyt-ilmoitukset)
       (reset! yllapitokohteet (:yllapitokohteet vastaus))
       (assoc app :paallystysilmoitus-lomakedata nil
-             :kaikki-paallystysilmoitukset jarjestetyt-ilmoitukset
-             :paallystysilmoitukset jarjestetyt-ilmoitukset)))
+                 :kaikki-paallystysilmoitukset jarjestetyt-ilmoitukset
+                 :paallystysilmoitukset jarjestetyt-ilmoitukset)))
   TallennaPaallystysilmoitusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (let [vastaus-virhe (cond
@@ -634,7 +648,8 @@
       (virhe-modal {:virhe (if (vector? vastaus-virhe)
                              (last vastaus-virhe)
                              (rivita-virheet vastaus-virhe))} "Päällystysilmoituksen tallennus epäonnistui!"))
-    app)
+    (assoc-in app [:paallystysilmoitus-lomakedata :tallennus-kaynnissa?] false))
+
   TallennaPaallystysilmoitustenTakuuPaivamaarat
   (process-event [{paallystysilmoitus-rivit :paallystysilmoitus-rivit
                    takuupvm-tallennus-kaynnissa-kanava :takuupvm-tallennus-kaynnissa-kanava}

@@ -197,7 +197,7 @@
                                   (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                          :arvo arvo
                                                          :solu solu/*this*
-                                                         :ajettavat-jarejestykset #{:mapit}}
+                                                         :ajettavat-jarjestykset #{:mapit}}
                                                         false)))
                    :on-focus (fn [event]
                                (if nappi?
@@ -212,7 +212,7 @@
                               (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                      :arvo arvo
                                                      :solu solu/*this*
-                                                     :ajettavat-jarejestykset true
+                                                     :ajettavat-jarjestykset true
                                                      :triggeroi-seuranta? true}
                                                     true)
                               (toiminto-fn! paivitettava-asia blur-tallenna! solu/*this*))
@@ -238,7 +238,7 @@
                                    (t/paivita-solun-arvo {:paivitettava-asia paivitettava-asia
                                                           :arvo arvo
                                                           :solu maara-solu
-                                                          :ajettavat-jarejestykset true
+                                                          :ajettavat-jarjestykset true
                                                           :triggeroi-seuranta? true}
                                                          true)))
                                (toiminto-fn! paivitettava-asia nappia-painettu-tallenna! rivit-alla)))

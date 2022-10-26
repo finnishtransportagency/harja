@@ -51,3 +51,10 @@ WHERE id IN (:idt);
 
 -- name: hae-kaikki-kanavat
 SELECT kanava FROM tapahtumatyyppi;
+
+-- name: poista-viimeisimmat-tapahtumat
+WITH poistetut AS (
+    DELETE FROM tapahtuman_tiedot
+        WHERE luotu < NOW() - interval '60 minutes' RETURNING *
+)
+SELECT count(*) as maara FROM poistetut;

@@ -7,7 +7,9 @@
                            :2-hoitovuosi "2. hoitovuosi"
                            :3-hoitovuosi "3. hoitovuosi"
                            :4-hoitovuosi "4. hoitovuosi"
-                           :5-hoitovuosi "5. hoitovuosi"})
+                           :5-hoitovuosi "5. hoitovuosi"
+                           :6-hoitovuosi "6. hoitovuosi"
+                           :7-hoitovuosi "7. hoitovuosi"})
 
 (defn koontilaskun-kuukausi->kk-vuosi [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
   (let [hoitovuosi->vuosiluku (into {} (map-indexed (fn [indeksi vuosi]
@@ -27,6 +29,20 @@
                   (inc vuosi)
                   vuosi))]
     {:kk kk :vuosi vuosi}))
+
+(defn pvm->koontilaskun-kuukausi
+  [paivamaara urakka-alkupvm]
+  (let [alkuvuosi (pvm/vuosi urakka-alkupvm)
+        koontilaskun-vuosi (cond-> paivamaara 
+                             true pvm/vuosi
+                             true (- alkuvuosi)
+                             (> (pvm/kuukausi paivamaara) 9) inc)
+        koontilaskun-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi paivamaara))]
+    (str koontilaskun-kuukausi "/" koontilaskun-vuosi "-hoitovuosi")))
+
+(defn koontilaskun-kuukausi->pvm [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
+  (let [{kk :kk vuosi :vuosi} (koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)] 
+    (pvm/->pvm-date-timeksi (str "1." kk "." vuosi))))
 
 (defn koontilaskun-kuukauden-sisalla?-fn [koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm]
   (let [{kk :kk vuosi :vuosi} (koontilaskun-kuukausi->kk-vuosi koontilaskun-kuukausi urakka-alkupvm urakka-loppupvm)]

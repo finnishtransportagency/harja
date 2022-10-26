@@ -80,3 +80,9 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
  GROUP BY tl.id, tl.myontamispvm, tl."paatoksen-diaarinumero"
  ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC
  LIMIT 1000;
+
+-- name: tielupien-hakijat
+-- row-fn: muunna-hakija
+SELECT DISTINCT t."hakija-nimi"
+  FROM tielupa t
+ WHERE t."hakija-nimi" ilike :hakuteksti;

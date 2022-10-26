@@ -10,8 +10,6 @@
 
             [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.ui.debug :refer [debug]]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.kommentit :as kommentit]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko virheen-ohje] :as yleiset]
@@ -22,14 +20,15 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka.siirtymat :as siirtymat])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
 (defn tallenna
   [e! {:keys [tekninen-osa tila versio]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi?]}]
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond
@@ -47,22 +46,24 @@
        [:div {:style {:margin-bottom "24px"}}
         [yleiset/vihje huomautusteksti]])
 
-     [napit/palvelinkutsu-nappi
+     [napit/tallenna
       "Tallenna"
-      ;; Palvelinkutsunappi olettaa saavansa kanavan. Siksi go.
-      #(go
+      #(do
+         (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
          (if (= 2 versio)
            (e! (pot2-tiedot/->TallennaPot2Tiedot))
            (e! (paallystys/->TallennaPaallystysilmoitus))))
       {:luokka "nappi-ensisijainen"
-       :data-cy "pot-tallenna"
+       :data-attributes {:data-cy "pot-tallenna"}
        :id "tallenna-paallystysilmoitus"
-       :disabled (or (false? valmis-tallennettavaksi?)
-                     (not (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                            urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)
-       :virheviesti "Tallentaminen epäonnistui"}]]))
+       :disabled (or tallennus-kaynnissa?
+                   (false? valmis-tallennettavaksi?)
+                   (not (oikeudet/voi-kirjoittaa?
+                          oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                          urakka-id kayttaja)))
+       :ikoni (ikonit/tallenna)}]
+     (when tallennus-kaynnissa?
+       [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
 
 (defn paallystyskohteen-fmt
   [{:keys [kohdenumero tunnus kohdenimi]}]
@@ -282,6 +283,39 @@
         ::lomake/col-luokka "col-sm-12" :huomauta perustelu}]
       tekninen-osa]]))
 
+(def teksti-hintatiedot-puuttuvat-otsikko
+  "Hintatiedot puuttuvat")
+
+(def teksti-hintatiedot-puuttuvat-leipateksti
+  "Päällystysilmoitusta ei voida merkitä valmiiksi ennen kuin kohteen kokonaishinta on kirjattu Päällystyskohteet-välilehdelle. ")
+
+(def teksti-kirjaa-hintatiedot-linkki
+  "Kirjaa hintatiedot.")
+
+(defn- toteuman-kokonaishinta-hae-fn
+  [tiedot]
+  (-> tiedot laske-hinta :toteuman-kokonaishinta))
+
+(defn- hintatiedot-puuttuvat-komp
+  [e! toast?]
+  (let [komponentti  [:span {:class (when toast? "pot2-hintatiedon-toast")}
+                      [:span.otsikko {:class (if toast?
+                                               "bold inline-block"
+                                               "punainen-teksti")}
+                       (str teksti-hintatiedot-puuttuvat-otsikko
+                            (when-not toast? ". "))]
+                      [(if toast? :div :span) {:class "hintatiedot-info"}
+                       teksti-hintatiedot-puuttuvat-leipateksti
+                       [yleiset/linkki teksti-kirjaa-hintatiedot-linkki
+                        #(do
+                           ;; Usein käyttäjän flow menee siten, että päällystysilmoitukselta puuttuu kustannustieto. Hän klikkaa tässä handlerissä itsensä syöttämään hintatiedon. POT-lomake jäisi muuten auki vanhalla datalla (ilman kustannustietoa), joten se on suljettava tässä Tuck-eventillä. Kuitenkin siirtymä-funktio on kutsuttava tästä, eikä päällystys-tiedot ns:stä, koska muuten tulisi circular-dependency.
+                           (e! (paallystys/->SuljePaallystysilmoitus))
+                           (siirtymat/paallystysten-kohdeluetteloon))]]]]
+    [:div {:class (when toast? "hintatiedot-puuttuvat-container")}
+     (if toast?
+       [yleiset/toast-viesti komponentti "varoitus"]
+       komponentti)]))
+
 (defn paallystysilmoitus-perustiedot [e! paallystysilmoituksen-osa urakka lukittu?
                                       muokkaa! validoinnit huomautukset paikkauskohteet?]
   (let [false-fn (constantly false)
@@ -291,11 +325,10 @@
                                                      (merge vanha uusi)))
                      ;; päällystekerroksen (alikohteiden) validointi tehtävä uudestaan kun pääkohde muuttuu
                      (when ohjauskahva
-                       (grid/validoi-grid ohjauskahva)))
-        toteuman-kokonaishinta-hae-fn #(-> % laske-hinta :toteuman-kokonaishinta)]
+                       (grid/validoi-grid ohjauskahva)))]
     (fn [e! {{:keys [tila kohdenumero tunnus kohdenimi tr-numero tr-ajorata tr-kaista
                      tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                     takuupvm versio valmispvm-kohde] :as perustiedot-nyt}
+                     takuupvm versio valmispvm-kohde kokonaishinta-ilman-maaramuutoksia maaramuutokset] :as perustiedot-nyt}
              :perustiedot kirjoitusoikeus? :kirjoitusoikeus?
              ohjauskahvat :ohjauskahvat :as paallystysilmoituksen-osa} urakka
          lukittu? muokkaa! validoinnit huomautukset paikkauskohteet?]
@@ -341,12 +374,12 @@
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
             (when-not paikkauskohteet?
               {:otsikko "Työ aloitettu" :nimi :aloituspvm :tyyppi :pvm
-               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? false-fn})
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6" :muokattava? (constantly muokattava?)})
             (when-not paikkauskohteet?
-             (when valmispvm-kohde
-               {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
-                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
-                :tyyppi :pvm :muokattava? false-fn}))
+              {:otsikko "Päällystyskohde valmistunut" :nimi :valmispvm-kohde
+               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
+               :tyyppi :pvm :muokattava? (constantly muokattava?)
+               :pakollinen? true})
             (when-not paikkauskohteet?
               {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :valinta
               :valinnat (paallystys/takuupvm-valinnat takuupvm) :kaariva-luokka "takuupvm-valinta"
@@ -360,11 +393,23 @@
                             [:span.takuupvm-tarkenne (pvm/pvm (:pvm valinta))]))
               ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"
               :varoita [tarkista-takuu-pvm]})
-            (when-not pot2?
-              {:otsikko "Toteutunut hinta" :nimi :toteuman-kokonaishinta
-               :hae toteuman-kokonaishinta-hae-fn
-               :fmt fmt/euro-opt :tyyppi :numero
+            (when pot2?
+              {:otsikko "Hintatiedot kirjattu" :nimi :kokonaishinta
+               :hae #(toteuman-kokonaishinta-hae-fn {:kokonaishinta-ilman-maaramuutoksia kokonaishinta-ilman-maaramuutoksia
+                                                     :maaramuutokset maaramuutokset})
+               :fmt (fn [hinta]
+                      (if (and hinta (> hinta 0))
+                        "Kyllä"
+                        [hintatiedot-puuttuvat-komp e! false]))
+               :tyyppi :numero
                :muokattava? false-fn
+               ::lomake/col-luokka " col-xs-12 col-sm-6 col-md-6 col-lg-6 "})
+            (when-not pot2?
+              {:otsikko "Toteutunut hinta" :nimi :kokonaishinta
+               :hae #(toteuman-kokonaishinta-hae-fn {:kokonaishinta-ilman-maaramuutoksia kokonaishinta-ilman-maaramuutoksia
+                                                     :maaramuutokset maaramuutokset})
+               :fmt fmt/euro-opt
+               :tyyppi :numero :muokattava? false-fn
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
             (when paikkauskohteet?
               {:otsikko "Työ alkoi" :tyyppi :pvm :nimi :paallystys-alku :label-ja-kentta-samalle-riville? true
@@ -402,27 +447,33 @@
                ::lomake/col-luokka "col-xs-12"})]
            perustiedot-nyt]]]))))
 
+
 (defn kasittely [e! {:keys [perustiedot] :as app} urakka lukittu?
                  muokkaa! validoinnit huomautukset]
   (let [{:keys [tila asiatarkastus versio]} perustiedot
         nayta-kasittelyosiot? (#{:valmis :lukittu} tila)
         asiatarkastus-sis-tietoja? (some #(some? (val %))
                                          (lomake/ilman-lomaketietoja asiatarkastus))]
-
     (fn [e! {:keys [perustiedot] :as app} urakka lukittu?
          muokkaa! validoinnit huomautukset]
-      [:div.kasittelyosio
-       [:h5 "Käsittely"]
-       (if-not nayta-kasittelyosiot?
-         [kentat/tee-kentta {:tyyppi :checkbox
-                             :teksti "Merkitse valmiiksi tarkistusta varten"}
-          (r/wrap (get-in app [:perustiedot :valmis-kasiteltavaksi])
-                  (fn [uusi]
-                    (e! (paallystys/->AsetaKasiteltavaksi uusi))))]
-         [:span.asiatarkastus-checkbox
-          (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
-            [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
-          [:div.pot-kasittely
-           [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
-           [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]])])))
+      (let [kokonaishinta (toteuman-kokonaishinta-hae-fn perustiedot)
+            hinta-puuttuu? (not (and kokonaishinta (> kokonaishinta 0)))]
+        [:div.kasittelyosio
+         (when hinta-puuttuu?
+           [hintatiedot-puuttuvat-komp e! true])
+         (if-not nayta-kasittelyosiot?
+           [kentat/tee-kentta {:tyyppi :checkbox
+                               :teksti "Merkitse valmiiksi tarkistusta varten"
+                               :disabled? hinta-puuttuu?}
+            (r/wrap (get-in app [:perustiedot :valmis-kasiteltavaksi])
+                    (fn [uusi]
+                      (e! (paallystys/->AsetaKasiteltavaksi uusi))))]
+           [:span
+            [:h5 "Käsittely"]
+            [:span.asiatarkastus-checkbox
+             (when-not (or (= :lukittu tila) asiatarkastus-sis-tietoja?)
+               [kentat/tee-kentta {:tyyppi :checkbox
+                                   :teksti "Kaksi tarkastajaa (asiatarkastus erikseen)"} tee-asiatarkastus?])
+             [:div.pot-kasittely
+              [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
+              [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]]])]))))

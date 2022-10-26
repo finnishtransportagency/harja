@@ -1,3 +1,4 @@
+@import "../yleiset";
 /**********************************
  *            Yleiset
  **********************************/
@@ -17,16 +18,10 @@
         > tr {
             > th {
                 background-color: @raportin-tehostevari;
-                border-color: @valkoinen;
+                border-color: @white-default;
                 color: @black-default;
                 font-weight: 600;
                 font-size: 12px;
-                &:first-child {
-                    border-left: 1px solid @raportin-tehostevari;
-                }
-                &:last-child {
-                    border-right: 1px solid @raportin-tehostevari;
-                }
             }
         }
         > tr:first-child {
@@ -66,9 +61,24 @@
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
     }
+    
+    td, th {
+        &.hennosti-korostettu-solu {
+            background-color: @hento-korostusvari;
+        }
+       
+        &.solun-korostus-estetty {
+            background-color: @harmaa15;
+            font-weight: normal;
+        }
+
+        &.solu-varoitus {
+            background-color: @red-lighter;
+        }
+    }
 }
 .tyomaakokous {
-    border-bottom: 1px solid @primaari-sininen;
+    border-bottom: 1px solid @blue-default;
 }
 .raportin-asetukset {
      margin-top: 1em;
@@ -188,10 +198,38 @@
     }
 }
 
+.raporttitieto {
+    > .flex {
+        display: flex;
+        margin-top: @valistys-32;
+        flex-wrap: wrap;
+    }
+    .raporttitietojen-grid {
+        .livi-grid {
+            max-width: 450px;
+            margin-right: @valistys-32;
+        }
+    }
+}
 /**********************************
  *     Raporttien komponentit
  **********************************/
 
 .osuus {
     font-size: @fontin-koko-taulukko-pienempi;
+}
+
+.teksti-ja-info {
+  .tooltip-wrapper {
+    .harja-icon-status-info {
+      color: @blue-dark;
+    }
+
+    .tooltip-inner {
+      // Asetetaan ilmavampi padding toistaiseksi vain tähän näkymään tooltipille
+      // Alkuperäiseen .tooltip-inner luokkaan sitä ei kannata vielä vaihtaa, sillä monessa muussa paikassa
+      // oletetaan paddingin olevan pienempi.
+      padding: @valistys-16;
+    }
+  }
 }

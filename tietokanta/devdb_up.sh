@@ -3,9 +3,14 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-IMAGE=solita/harjadb:postgis-3.1
+if [ "$(uname -m)" == "arm64" ]; then
+  IMAGE=solita/harjadb:postgis-3.1-arm64
+else
+  IMAGE=solita/harjadb:postgis-3.1
+fi
 
-if ! docker image list --filter=reference=${IMAGE} | tail -n +2 >> /dev/null; then
+devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
+if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen numeroa, siksi *1 glob
     echo "Imagea" $IMAGE "ei löydetty. Yritetään pullata."
     if ! docker pull $IMAGE; then
         echo $IMAGE "ei ole docker hubissa. Buildataan."
@@ -29,7 +34,8 @@ docker images | grep "$(echo "$IMAGE" | sed "s/:.*//")" | grep "$(echo "$IMAGE" 
 
 echo ""
 echo "Odotetaan, että PostgreSQL on käynnissä ja vastaa yhteyksiin portissa ${HARJA_TIETOKANTA_PORTTI:-5432}"
-while ! nc -z localhost "${HARJA_TIETOKANTA_PORTTI:-5432}"; do
+
+until docker exec ${POSTGRESQL_NAME:-harjadb} pg_isready ; do
     echo "nukutaan..."
     sleep 0.5;
 done;

@@ -5,6 +5,7 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.kartta.infopaneelin-tila :as paneelin-tila]
             [harja.views.kartta.pohjavesialueet :as pohjavesialueet]
+            [harja.tiedot.urakka.varusteet-kartalla :as varusteet-kartalla]
             [harja.tiedot.sillat :as sillat]
             [harja.tiedot.urakka.laadunseuranta.tarkastukset-kartalla
              :as tarkastukset]
@@ -59,6 +60,7 @@
     :yks-hint-toteumat
     :kok-hint-toteumat
     :varusteet
+    :varusteet-ulkoiset
     :varustetoteumat
     :muut-tyot
     :paallystyskohteet
@@ -233,6 +235,7 @@
    :yks-hint-toteumat yksikkohintaiset-tyot/yksikkohintainen-toteuma-kartalla
    :kok-hint-toteumat kokonaishintaiset-tyot/kokonaishintainen-toteuma-kartalla
    :varusteet varusteet/varusteet-kartalla
+   :varusteet-ulkoiset varusteet-kartalla/varusteet-kartalla
    :muut-tyot muut-tyot/muut-tyot-kartalla
    :paallystyskohteet paallystys/paallystyskohteet-kartalla
    :tr-valitsin tierekisteri/tr-alkupiste-kartalla
@@ -308,6 +311,7 @@
        :yks-hint-toteumat (taso :yks-hint-toteumat)
        :kok-hint-toteumat (taso :kok-hint-toteumat)
        :varusteet (taso :varusteet)
+       :varusteet-ulkoiset (taso :varusteet-ulkoiset)
        :muut-tyot (taso :muut-tyot)
        :paallystyskohteet (taso :paallystyskohteet)
        :tr-valitsin (taso :tr-valitsin (inc oletus-zindex))
@@ -351,6 +355,7 @@
    :yks-hint-toteumat yksikkohintaiset-tyot/karttataso-yksikkohintainen-toteuma
    :kok-hint-toteumat kokonaishintaiset-tyot/karttataso-kokonaishintainen-toteuma
    :varusteet varusteet/karttataso-varustetoteuma
+   :varusteet-ulkoiset varusteet-kartalla/karttataso-nakyvissa?
    :muut-tyot muut-tyot/karttataso-muut-tyot
    :paallystyskohteet paallystys/karttataso-paallystyskohteet
    :tr-valitsin tierekisteri/karttataso-tr-alkuosoite

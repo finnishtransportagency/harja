@@ -63,13 +63,13 @@
   margin-top: 0.25rem;
 
   .varoitus {
-    .virhe-tai-varoitus-lomake(@valkoinen, @varoitus);
+    .virhe-tai-varoitus-lomake(@white-default, @varoitus);
   }
   .virhe {
-    .virhe-tai-varoitus-lomake(@valkoinen, @vaara);
+    .virhe-tai-varoitus-lomake(@white-default, @vaara);
   }
   .huomautus {
-    .virhe-tai-varoitus-lomake(@valkoinen, @huomautus);
+    .virhe-tai-varoitus-lomake(@white-default, @huomautus);
   }
   .viesti {
     display: inline-block;
@@ -351,7 +351,7 @@ fieldset.lomake-osa {
   margin-top: 0;
   top: 0;
   z-index: 1000;/* kartan päälle, joka 900*/
-  background-color: @valkoinen;
+  background-color: @white-default;
   box-shadow: 0px 3px 3px rgba(0, 0, 0, 0.15), 0px 4px 12px rgba(0, 0, 0, 0.25);
   overflow-y: scroll;
   &.overlay-leveampi {
@@ -365,13 +365,18 @@ fieldset.lomake-osa {
   font-weight: normal;
 }
 .fontti-12 {
-  font-size: 12px;
-  line-height: 20px;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
   .fontti-yhteiset();
 }
 .fontti-14 {
-  font-size: 14px;
-  line-height: 20px;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  .fontti-yhteiset();
+}
+.fontti-16 {
+  font-size: 1rem;
+  line-height: 1.25rem;
   .fontti-yhteiset();
 }
 .fontti-14-vaaleampi {
@@ -380,8 +385,8 @@ fieldset.lomake-osa {
 }
 .fontti-20 {
   .fontti-yhteiset();
-  font-size: 20px;
-  line-height: 24px;
+  font-size: 1.25rem;
+  line-height: 1.5rem;
   font-weight: 600;
 }
 .lomake-otsikko-pieni {

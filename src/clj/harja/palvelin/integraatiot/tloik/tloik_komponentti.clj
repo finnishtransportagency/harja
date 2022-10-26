@@ -8,6 +8,7 @@
   ja sijannin perusteella. Urakoitsijat lähettävät kuittauksia eli ns. ilmoitustoimenpiteitä
   esim. vastaamaan kysymyksiin sekä kertomaaan työn edistymisestä."
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]
             [harja.palvelin.integraatiot.jms :as jms-util]
@@ -55,22 +56,25 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db sonja-sahkoposti] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db api-sahkoposti sonja-sahkoposti] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         itmf (:toimenpideviestijono jonot))]
+                                         itmf (:toimenpideviestijono jonot))
+        email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                sonja-sahkoposti
+                api-sahkoposti)]
     (when-let [labyrintti labyrintti]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
       (sms/rekisteroi-kuuntelija! labyrintti
                                   (fn [numero viesti]
                                     (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))
-    (when-let [sonja-sahkoposti sonja-sahkoposti]
+    (when-let [email email]
       (log/debug "Yhdistetään kuuntelija Sonjan sähköpostijonoihin")
       (sahkoposti/rekisteroi-kuuntelija!
-        sonja-sahkoposti
+        email
         (fn [viesti]
           (try
             (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
-              (sahkoposti/laheta-viesti! sonja-sahkoposti (sahkoposti/vastausosoite sonja-sahkoposti)
+              (sahkoposti/laheta-viesti! email (sahkoposti/vastausosoite email)
                                          (:lahettaja viesti)
                                          (:otsikko vastaus)
                                          (:sisalto vastaus)))
@@ -88,19 +92,22 @@
       (ajastettu-tehtava/ajasta-minuutin-valein
         aikavali 12 ;; 12 sekunnin käynnistysviive, jonka jälkeen "aikavali" minuutin välein
         (fn [_]
-          (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this)))))
+          (ilmoitustoimenpiteet/laheta-lahettamattomat-ilmoitustoimenpiteet toimenpide-jms-lahettaja (:db this) aikavali))))
     (constantly nil)))
 
-(defrecord Tloik [asetukset kehitysmoodi?]
+(defrecord Tloik [asetukset kehitysmoodi? ]
   component/Lifecycle
-  (start [{:keys [labyrintti sonja-sahkoposti] :as this}]
-    (log/debug "Käynnistetään T-LOIK komponentti")
+  (start [{:keys [labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
     (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
+          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  sonja-sahkoposti
+                  api-sahkoposti)
+          _ (log/info "Tloik - Käynnistettiin käyttämään sähköpostipalvelua: " email)
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
-                                   {:sms labyrintti
-                                    :email sonja-sahkoposti})
+                              {:sms labyrintti
+                               :email email})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
         :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija

@@ -37,7 +37,6 @@
     [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
-    [harja.palvelin.integraatiot.digitraffic.ais-data :as ais-data]
 
     ;; Raportointi
     [harja.palvelin.raportointi :as raportointi]
@@ -69,6 +68,7 @@
     [harja.palvelin.palvelut.ping :as ping]
     [harja.palvelin.palvelut.pois-kytketyt-ominaisuudet :as pois-kytketyt-ominaisuudet]
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
+    [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -80,6 +80,7 @@
     [harja.palvelin.palvelut.muokkauslukko :as muokkauslukko]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
     [harja.palvelin.palvelut.laadunseuranta.tarkastukset :as tarkastukset]
+    [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
@@ -129,6 +130,9 @@
     [harja.palvelin.integraatiot.api.urakan-tyotunnit :as api-urakan-tyotunnit]
     [harja.palvelin.integraatiot.api.tieluvat :as api-tieluvat]
     [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
+    [harja.palvelin.integraatiot.api.analytiikka :as analytiikka]
+    [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as api-sahkoposti]
+    [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
 
     [harja.palvelin.palvelut.tieluvat :as tieluvat]
 
@@ -139,13 +143,14 @@
     [harja.palvelin.ajastetut-tehtavat.geometriapaivitykset :as geometriapaivitykset]
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
-    [harja.palvelin.ajastetut-tehtavat.sonja-jms-yhteysvarmistus :as sonja-jms-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
     [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
+    [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
     [harja.palvelin.ajastetut-tehtavat.urakan-tyotuntimuistutukset :as urakan-tyotuntimuistutukset]
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
+    [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
 
 
@@ -242,18 +247,21 @@
                                                     #{:paivitystiheys-ms})))
                [:db])
       :itmf (component/using
-               (itmf/luo-itmf (merge (:itmf asetukset)
-                                       (select-keys (get-in asetukset [:komponenttien-tila :itmf])
-                                                    #{:paivitystiheys-ms})))
-               [:db])
-      :sonja-sahkoposti
-      (component/using
-        (let [{:keys [vastausosoite jonot suora? palvelin]}
-              (:sonja-sahkoposti asetukset)]
-          (if suora?
-            (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
-            (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
-        [:sonja :integraatioloki :db])
+              (itmf/luo-itmf (merge (:itmf asetukset)
+                               (select-keys (get-in asetukset [:komponenttien-tila :itmf])
+                                 #{:paivitystiheys-ms})))
+              [:db])
+      :sonja-sahkoposti (component/using
+                          (let [{:keys [vastausosoite jonot suora? palvelin]}
+                                (:sonja-sahkoposti asetukset)]
+                            (if suora?
+                              (sahkoposti/luo-vain-lahetys palvelin vastausosoite)
+                              (sonja-sahkoposti/luo-sahkoposti vastausosoite jonot)))
+                          [:sonja :integraatioloki :db])
+
+      :api-sahkoposti (component/using
+                        (api-sahkoposti/->ApiSahkoposti asetukset)
+                        [:http-palvelin :db :integraatioloki :itmf])
 
       :solita-sahkoposti
       (component/using
@@ -276,6 +284,9 @@
                                                (:kuittausjono-ulos sampo)
                                                (:paivittainen-lahetysaika sampo)))
                               [:sonja :db :integraatioloki])
+      :api-sampo (component/using
+                        (api-sampo/->ApiSampo (:sampo-api asetukset))
+                        [:http-palvelin :db :integraatioloki])
 
       ;; T-LOIK
       :tloik (component/using
@@ -285,6 +296,7 @@
                         :sonja)
                 :db :db
                 :integraatioloki :integraatioloki
+                :api-sahkoposti :api-sahkoposti
                 :sonja-sahkoposti :sonja-sahkoposti
                 :labyrintti :labyrintti})
 
@@ -331,7 +343,7 @@
 
       :paivystystarkistukset (component/using
                                (paivystystarkistukset/->Paivystystarkistukset (:paivystystarkistus asetukset))
-                               [:http-palvelin :db :fim :sonja-sahkoposti])
+                               [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :reittitarkistukset (component/using
                             (reittitarkistukset/->Reittitarkistukset (:reittitarkistus asetukset))
                             [:http-palvelin :db])
@@ -402,7 +414,7 @@
                      [:http-palvelin :db])
       :vv-materiaalit (component/using
                         (vv-materiaalit/->Materiaalit)
-                        [:http-palvelin :db  :fim :sonja-sahkoposti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :vv-turvalaitteet (component/using
                           (vv-turvalaitteet/->Turvalaitteet)
                           [:http-palvelin :db])
@@ -417,32 +429,32 @@
                                 [:http-palvelin :db])
       :kan-hairio (component/using
                     (kan-hairio/->Hairiotilanteet)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :kan-toimenpiteet (component/using
                           (kan-toimenpiteet/->Kanavatoimenpiteet)
-                          [:http-palvelin :db  :fim :sonja-sahkoposti])
+                          [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :yllapitototeumat (component/using
                           (yllapito-toteumat/->YllapitoToteumat)
                           [:http-palvelin :db])
       :paallystys (component/using
                     (paallystys/->Paallystys)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+                    [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :excel-vienti])
       :pot2 (component/using
-                    (pot2/->POT2)
-                    [:http-palvelin :db  :fim :sonja-sahkoposti])
+              (pot2/->POT2)
+              [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :maaramuutokset (component/using
                         (maaramuutokset/->Maaramuutokset)
                         [:http-palvelin :db])
       :paikkaukset (component/using
                      (paikkaukset/->Paikkaukset)
-                     [:http-palvelin :db :fim :sonja-sahkoposti :yha-paikkauskomponentti])
+                     [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :yha-paikkauskomponentti])
       :paikkauskohteet (component/using
                          (paikkauskohteet/->Paikkauskohteet (:kehitysmoodi asetukset))
-                         [:http-palvelin :db :fim :sonja-sahkoposti :excel-vienti])
+                         [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :excel-vienti])
       :yllapitokohteet (component/using
                          (let [asetukset (:yllapitokohteet asetukset)]
                            (yllapitokohteet/->Yllapitokohteet asetukset))
-                         [:http-palvelin :db :yha-integraatio  :fim :sonja-sahkoposti :vkm])
+                         [:http-palvelin :db :yha-integraatio :fim :api-sahkoposti :sonja-sahkoposti :vkm])
       :muokkauslukko (component/using
                        (muokkauslukko/->Muokkauslukko)
                        [:http-palvelin :db])
@@ -455,6 +467,9 @@
       :pohjavesialueet (component/using
                          (pohjavesialueet/->Pohjavesialueet)
                          [:http-palvelin :db])
+      :suolarajoitukset (component/using
+                         (suolarajoitus-palvelu/->Suolarajoitus)
+                         [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -463,7 +478,7 @@
                      [:http-palvelin])
       :lupaukset (component/using
                    (lupaus-palvelu/->Lupaus (select-keys asetukset [:kehitysmoodi]))
-                   [:http-palvelin :db :fim :sonja-sahkoposti])
+                   [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti])
       :valitavoitteet (component/using
                         (valitavoitteet/->Valitavoitteet)
                         [:http-palvelin :db])
@@ -484,7 +499,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db  :fim :sonja-sahkoposti :labyrintti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :labyrintti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
@@ -496,7 +511,7 @@
 
       :tietyoilmoitukset (component/using
                            (tietyoilmoitukset/->Tietyoilmoitukset)
-                           [:tloik :http-palvelin :db  :pdf-vienti :fim :sonja-sahkoposti])
+                           [:tloik :http-palvelin :db :pdf-vienti :fim :api-sahkoposti :sonja-sahkoposti])
 
       :turvallisuuspoikkeamat (component/using
                                 (turvallisuuspoikkeamat/->Turvallisuuspoikkeamat)
@@ -515,11 +530,15 @@
 
       :yha (component/using
              (yha/->Yha)
-             [:http-palvelin :db  :yha-integraatio])
+             [:http-palvelin :db :yha-integraatio :vkm])
 
       :yha-velho (component/using
                    (yha-velho/->YhaVelho)
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
+
+      :varustetoteuma-ulkoiset (component/using
+                   (varuste-ulkoiset/->VarusteVelho)
+                   [:http-palvelin :db :velho-integraatio :excel-vienti])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
@@ -541,13 +560,6 @@
                                  kayttajatunnus
                                  salasana))
                              [:db  :integraatioloki])
-
-      ;; HUOM: Uudessa Artemisia käyttävässä Sonjassa ei ole enää sonjaping-jonoa.
-      ;;       Tätä käytetään ainoastaan integraatiolokeja varten.
-      #_#_:sonja-jms-yhteysvarmistus (component/using
-                                   (let [{:keys [ajovali-minuutteina jono]} (:sonja-jms-yhteysvarmistus asetukset)]
-                                     (sonja-jms-yhteysvarmistus/->SonjaJmsYhteysvarmistus ajovali-minuutteina jono))
-                                   [:db  :integraatioloki :sonja])
 
       :tilannekuva (component/using
                      (tilannekuva/->Tilannekuva)
@@ -590,24 +602,9 @@
                [:db :integraatioloki :sonja])
 
       :reimari (component/using
-                 (let [{:keys [url kayttajatunnus salasana
-                               toimenpidehakuvali
-                               komponenttityyppihakuvali
-                               turvalaitekomponenttihakuvali
-                               vikahakuvali
-                               turvalaiteryhmahakuaika]} (:reimari asetukset)]
-                   (reimari/->Reimari url kayttajatunnus salasana
-                                      toimenpidehakuvali
-                                      komponenttityyppihakuvali
-                                      turvalaitekomponenttihakuvali
-                                      vikahakuvali
-                                      turvalaiteryhmahakuaika))
+                 (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
+                   (reimari/->Reimari url kayttajatunnus salasana))
                  [:db  :integraatioloki])
-
-      :ais-data (component/using
-                  (let [{:keys [url sekunnin-valein]} (:ais-data asetukset)]
-                    (ais-data/->Ais-haku url sekunnin-valein))
-                  [:db  :integraatioloki])
 
       :vkm (component/using
              (let [{url :url} (:vkm asetukset)]
@@ -682,7 +679,7 @@
                           :tloik])
       :api-yllapitokohteet (component/using
                              (api-yllapitokohteet/->Yllapitokohteet)
-                             [:http-palvelin :db  :integraatioloki :liitteiden-hallinta :fim :sonja-sahkoposti :vkm])
+                             [:http-palvelin :db :integraatioloki :liitteiden-hallinta :fim :api-sahkoposti :sonja-sahkoposti :vkm])
       :api-ping (component/using
                   (api-ping/->Ping)
                   [:http-palvelin :db  :integraatioloki])
@@ -706,6 +703,10 @@
       :api-paikkaukset (component/using
                          (api-paikkaukset/->Paikkaukset)
                          [:http-palvelin :db  :integraatioloki :yha-paikkauskomponentti])
+
+      :api-analytiikka (component/using
+                  (analytiikka/->Analytiikka)
+                  [:http-palvelin :db-replica  :integraatioloki])
 
       :tieluvat (component/using
                   (tieluvat/->Tieluvat)
@@ -743,6 +744,10 @@
       (component/using (kustannusarvioiden-toteumat/->KustannusarvioidenToteumat)
         [:http-palvelin :db])
 
+      :analytiikan-toteumien-ajastus
+      (component/using (analytiikan-toteumat/->AnalytiikanToteumat)
+        [:http-palvelin :db])
+
       :mobiili-laadunseuranta
       (component/using
         (harja-laadunseuranta/->Laadunseuranta)
@@ -752,12 +757,18 @@
       (component/using
         (urakan-tyotuntimuistutukset/->UrakanTyotuntiMuistutukset
           (get-in asetukset [:tyotunti-muistutukset :paivittainen-aika]))
-        [:db  :sonja-sahkoposti :fim])
+        [:db :api-sahkoposti :sonja-sahkoposti :fim])
 
       :urakan-lupausmuistutukset
       (component/using
         (urakan-lupausmuistutukset/->UrakanLupausMuistutukset)
-        [:db  :sonja-sahkoposti :fim]))))
+        [:db :api-sahkoposti :sonja-sahkoposti :fim])
+
+      :yleiset-ajastukset
+      (component/using
+        (yleiset-ajastukset/->YleisetAjastuket)
+        [:db])
+      )))
 
 (defonce harja-jarjestelma nil)
 

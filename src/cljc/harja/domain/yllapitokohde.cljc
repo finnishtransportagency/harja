@@ -549,10 +549,12 @@ yllapitoluokkanimi->numero
           sort))))
 
 (defn sailyta-idt-jos-sama-tr-osoite
-  "Funktiota käytetään kun kopioidaan rivejä eri kaistoille. Jos tunnistetaan että ko. rivi on jo taulukossa (tasan sama TR-osoite), säilytetään keskeiset tiedot eli avaimet ja alikohteen nimi."
+  "Funktiota käytetään kun kopioidaan rivejä eri kaistoille. Jos tunnistetaan että ko. rivi on jo taulukossa
+  (tasan sama TR-osoite), säilytetään keskeiset tiedot eli avaimet ja alikohteen nimi."
   [rivi-ja-kopiot rivit-atomista]
   (let [rivit (map (fn [rivi]
-                     (let [vastaava-rivi (some #(when (tr-domain/sama-tr-osoite? rivi %)
+                     (let [vastaava-rivi (some #(when (and (tr-domain/sama-tr-osoite? rivi %)
+                                                           (= (:toimenpide rivi) (:toimenpide %)))
                                                   %)
                                                rivit-atomista)]
                        ;; funktio on siksi geneerinen, että se toimii sekä päällyste- että alustariveille
@@ -791,7 +793,7 @@ yllapitoluokkanimi->numero
                 (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto))
               (if paakohde?
                 ((-> paikka-virhetekstit :tr-numero :tr-osa :tr-osan-paaluvali)
-                  (:tr-numero kohteen-tieto) (:tr-alkuosa kohteen-tieto) (str "(" (:tr-alkuosa kohteen-tieto) ", "
+                  (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) (str "(" (:tr-osa kohteen-tieto) ", "
                                                                               (-> kohteen-tieto :pituudet :tr-alkuetaisyys) ", "
                                                                               (:tr-osa kohteen-tieto) ", "
                                                                               (+ (-> kohteen-tieto :pituudet :tr-alkuetaisyys)
@@ -1042,6 +1044,21 @@ yllapitoluokkanimi->numero
           (lisaa-paallekkaisyysteksti :tr-loppuetaisyys))
       kohdetekstit)))
 
+(defn validoi-muut-kohteet
+  "Validoi muut kohteet"
+  [tr-osoite vuosi muutkohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat]
+  (keep identity
+
+        (for [muukohde muutkohteet
+              :let [toiset-muutkohteet (remove #(= (tr-domain/sama-tr-osoite? muukohde %))
+                                               (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
+                                                              muiden-kohteiden-verrattavat-kohteet)))
+                    kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
+                                                     (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
+                                            %)
+                                         muiden-kohteiden-tiedot)]]
+          (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat))))
+
 (defn validoi-kaikki
   "Parametri kohteen-tiedot sisältää pääkohdetta vastaavat tiedot validoinnissa käytetystä csv-tiedostosta.
   Parametri muiden-kohteiden-tiedot sisältää muita kohteita vastaava tiedot validoinnissa käytetystä csv-tiedostosta."
@@ -1056,16 +1073,7 @@ yllapitoluokkanimi->numero
                                      (when validoitu-alikohde
                                        (with-meta validoitu-alikohde
                                                   {:alikohde (select-keys alikohde tr-domain/vali-avaimet)}))))
-        muutkohteet-validoitu (keep identity
-                                    (for [muukohde muutkohteet
-                                          :let [toiset-muutkohteet (remove #(= muukohde %)
-                                                                           (first (filter #(-> % first :tr-numero (= (:tr-numero muukohde)))
-                                                                                          muiden-kohteiden-verrattavat-kohteet)))
-                                                kohteen-tiedot (some #(when (and (= (:tr-numero (first %)) (:tr-numero muukohde))
-                                                                                 (= (:tr-osa (first %)) (:tr-alkuosa muukohde)))
-                                                                        %)
-                                                                     muiden-kohteiden-tiedot)]]
-                                      (validoi-muukohde tr-osoite muukohde toiset-muutkohteet kohteen-tiedot vuosi urakan-toiset-kohdeosat)))
+        muutkohteet-validoitu (validoi-muut-kohteet tr-osoite vuosi muutkohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat)
         alustatoimet-validoitu (keep identity
                                      (for [alustatoimi alustatoimet
                                            :let [toiset-alustatoimenpiteet (remove #(= alustatoimi %) alustatoimet)]]
@@ -1117,9 +1125,7 @@ yllapitoluokkanimi->numero
                                                                 (select-keys % #{:urakka :urakka-id}))
                                                              kohteet)))
                                               (q-yllapitokohteet/hae-urakan-yllapitokohteiden-yllapitokohdeosat db {:idt (map :id kohteet)}))))
-            kohteen-tiedot (map #(update % :pituudet konversio/jsonb->clojuremap)
-                                (q-tieverkko/hae-trpisteiden-valinen-tieto db
-                                                                           (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa})))
+            kohteen-tiedot (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa}))
             alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
                                ali-ja-muut-kohteet)
             muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
@@ -1127,11 +1133,9 @@ yllapitoluokkanimi->numero
             yhden-vuoden-muut-kohteet (map #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})
                                            muutkohteet)
             muiden-kohteiden-tiedot (for [muukohde muutkohteet]
-                                      (map #(update % :pituudet konversio/jsonb->clojuremap)
-                                           (q-tieverkko/hae-trpisteiden-valinen-tieto db
-                                                                                      (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa}))))
+                                      (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys muukohde #{:tr-numero :tr-alkuosa :tr-loppuosa})))
             muiden-kohteiden-verrattavat-kohteet (map (fn [muukohde toiset-kohteet]
-                                                        (verrattavat-kohteet toiset-kohteet (:id muukohde) urakka-id))
+                                                        (verrattavat-kohteet toiset-kohteet (:kohdeosa-id muukohde) urakka-id))
                                                       muutkohteet yhden-vuoden-muut-kohteet)]
         (validoi-kaikki tr-osoite kohteen-tiedot
                         muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
@@ -1232,12 +1236,22 @@ yllapitoluokkanimi->numero
                     (:kohdeosat kohde))))
     (keep #(and (:sijainti %) %))))
 
+(def vuosi-jonka-jalkeen-piilotetaan-arvonmuutos-ja-sanktio 2021)
+
+(defn piilota-arvonmuutos-ja-sanktio?
+  [vuosi]
+  (if (nil? vuosi)
+    ;; oletuksena piilotetaan, koska oletuksena kaikki tuleva aktiviteetti on vuonna 2022
+    ;; tai sen jälkeen tapahtuvaa, jolloin ei haluta huomioida arvonmuutosta ja sanktioita
+    true
+    (> vuosi vuosi-jonka-jalkeen-piilotetaan-arvonmuutos-ja-sanktio)))
+
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
-                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]}]
+                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]} vuosi]
   (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
                             maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
-                            arvonvahennykset                ;; Sama kuin arvonmuutokset
-                            sakot-ja-bonukset               ;; Sakot ja bonukset summattuna valmiiksi yhteen.
+                            (when-not (piilota-arvonmuutos-ja-sanktio? vuosi) arvonvahennykset) ;; Sama kuin arvonmuutokset
+                            (when-not (piilota-arvonmuutos-ja-sanktio? vuosi) sakot-ja-bonukset) ;; Sakot ja bonukset summattuna valmiiksi yhteen.
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
@@ -1261,13 +1275,14 @@ yllapitoluokkanimi->numero
                       (str " (" tr-osoite ")"))))]
      (str kohdenumero " " nimi osoite))))
 
-(defn lihavoi-vasta-muokatut [rivit]
-  (let [viikko-sitten (pvm/paivaa-sitten 7)]
-    (map (fn [{:keys [muokattu aikataulu-muokattu] :as rivi}]
-           (assoc rivi :lihavoi
-                       (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
-                           (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu)))))
-         rivit)))
+(defn muokattu-viikon-aikana?
+  "Palauttaa totuusarvon, onko riviä muokattu viikon aikana. Katsoo kenttiä :muokattu ja :aikataulu-muokattu"
+  [rivi]
+  (let [viikko-sitten (pvm/paivaa-sitten 7)
+        {:keys [muokattu aikataulu-muokattu]} rivi]
+    (boolean
+      (or (and muokattu (pvm/ennen? viikko-sitten muokattu))
+          (and aikataulu-muokattu (pvm/ennen? viikko-sitten aikataulu-muokattu))))))
 
 (def tarkan-aikataulun-toimenpiteet [:murskeenlisays :ojankaivuu :rp_tyot :rumpujen_vaihto :sekoitusjyrsinta :muu])
 (def tarkan-aikataulun-toimenpide-fmt
@@ -1292,3 +1307,20 @@ yllapitoluokkanimi->numero
                 (= (select-keys kohdeosa tr-domain/vali-avaimet)
                    (select-keys rivi tr-domain/vali-avaimet)))
               kohdeosat))))
+
+(defn laske-sarakkeen-summa [sarake kohderivit]
+  (reduce + 0 (keep
+                (fn [rivi] (sarake rivi))
+                kohderivit)))
+
+(defn kohteiden-summarivi
+  "Laskee ylläpitokohteen kustannusriveistä summarivin."
+  [kohteet]
+  {:id 0 :nimi "Yhteensä" :yhteenveto true
+   :sopimuksen-mukaiset-tyot (laske-sarakkeen-summa :sopimuksen-mukaiset-tyot kohteet)
+   :maaramuutokset (laske-sarakkeen-summa :maaramuutokset kohteet)
+   :arvonvahennykset (laske-sarakkeen-summa :arvonvahennykset kohteet)
+   :sakot-ja-bonukset (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
+   :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
+   :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
+   :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})

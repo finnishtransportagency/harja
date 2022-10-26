@@ -9,13 +9,11 @@
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.tyokalut.functor :refer [fmap]]
-            [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]
-            [clj-time.local :as l]
-            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [clojure.string :as str]
-            [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
+            [harja.tyokalut.big :as big]
+            [harja.fmt :as fmt])
+  (:import java.math.BigDecimal))
 
 (defn- laskettavat-kentat [rivi konteksti]
   (let [kustannusten-kentat (into []
@@ -24,17 +22,15 @@
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "sakot")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "johto_ja_hallinto")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_erillishankinnat")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_tavoitepalkkio")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys")
+                                                 (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_hoitovuoden_paattaminen_kattohinnan_ylitys")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "bonukset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "hj_palkkio")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "tavoitehintaiset")
                                                  (lyv-yhteiset/kustannuslajin-kaikki-kentat "kaikki")
                                                  (when (= :urakka konteksti) [:tpi :maksuera_numero])]))]
-    (if (and (some? (:suolasakot_laskutettu rivi))
-             (some? (:suolasakot_laskutetaan rivi)))
-      (into []
-            (concat kustannusten-kentat
-                    (lyv-yhteiset/kustannuslajin-kaikki-kentat "suolasakot")))
-      kustannusten-kentat)))
+    kustannusten-kentat))
 
 (def summa-fmt fmt/euro-opt)
 
@@ -58,8 +54,8 @@
                                                             (:tavoitehintaiset_laskutettu %)
                                                             0) tiedot))]
     (if urakka-tavoite
-      {:tavoite-hinta (:tavoitehinta-oikaistu urakka-tavoite)
-       :jaljella (- (:tavoitehinta-oikaistu urakka-tavoite) kaikki-tavoitehintaiset-laskutettu)
+      {:tavoite-hinta (or (:tavoitehinta-oikaistu urakka-tavoite) 0M)
+       :jaljella (- (or (:tavoitehinta-oikaistu urakka-tavoite) 0M) kaikki-tavoitehintaiset-laskutettu)
        :nimi "Tavoite"}
       {:tavoite-hinta 0
        :jaljella 0
@@ -99,18 +95,6 @@
                                    (summa-fmt nil))
                            :fmt :raha}])))
 
-(defn- suolasanktiot
-  [tp-rivi kyseessa-kk-vali?]
-  (rivi
-    (str "Suolasanktiot")
-    [:varillinen-teksti {:arvo (if (:suolasakot_laskutettu tp-rivi)
-                                 (fmt/formatoi-arvo-raportille (:suolasakot_laskutettu tp-rivi))
-                                 (summa-fmt nil))
-                         :fmt :raha}]
-    (when kyseessa-kk-vali?
-      [:varillinen-teksti {:arvo (or (:suolasakot_laskutetaan tp-rivi) (summa-fmt nil))
-                           :fmt :raha}])))
-
 (defn- johto-hallintakorvaukset
   [tp-rivi kyseessa-kk-vali?]
   (rivi
@@ -130,6 +114,51 @@
     (when kyseessa-kk-vali?
       [:varillinen-teksti {:arvo (or (:hj_erillishankinnat_laskutetaan tp-rivi) (summa-fmt nil))
                            :fmt :raha}])))
+
+(defn- hj-hoitovuoden-paattaminen-tavoitepalkkio
+  [tp-rivi kyseessa-kk-vali?]
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Tavoitepalkkio")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
+
+(defn- hj-hoitovuoden-paattaminen-tavoitehinnan-ylitys
+  [tp-rivi kyseessa-kk-vali?]
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
+
+(defn- hj-hoitovuoden-paattaminen-kattohinnan-ylitys
+       [tp-rivi kyseessa-kk-vali?]
+  (let [laskutettu (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu tp-rivi)
+        laskutetaan (:hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan tp-rivi)]
+    (when (or
+            (not (zero? laskutettu))
+            (not (zero? laskutetaan)))
+      (rivi
+        (str "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä")
+        [:varillinen-teksti {:arvo (or laskutettu (summa-fmt nil))
+                             :fmt :raha}]
+        (when kyseessa-kk-vali?
+          [:varillinen-teksti {:arvo (or laskutetaan (summa-fmt nil))
+                               :fmt :raha}])))))
 
 (defn- hj-palkkio
   [tp-rivi kyseessa-kk-vali?]
@@ -219,6 +248,9 @@
                                (hj-palkkio tp-rivi kyseessa-kk-vali?)
                                (bonukset tp-rivi kyseessa-kk-vali?)
                                (sanktiot tp-rivi kyseessa-kk-vali?)
+                               (hj-hoitovuoden-paattaminen-tavoitepalkkio tp-rivi kyseessa-kk-vali?)
+                               (hj-hoitovuoden-paattaminen-tavoitehinnan-ylitys tp-rivi kyseessa-kk-vali?)
+                               (hj-hoitovuoden-paattaminen-kattohinnan-ylitys tp-rivi kyseessa-kk-vali?)
                                (yhteensa tp-rivi kyseessa-kk-vali?)]
                               (= "Kaikki toteutuneet kustannukset" (:nimi tp-rivi))
                               [(toteutuneet-yhteensa tp-rivi kyseessa-kk-vali?)
@@ -229,8 +261,6 @@
                               [(hankinnat tp-rivi kyseessa-kk-vali?)
                                (lisatyot tp-rivi kyseessa-kk-vali?)
                                (sanktiot tp-rivi kyseessa-kk-vali?)
-                               (when (= "Talvihoito" (:nimi tp-rivi))
-                                 (suolasanktiot tp-rivi kyseessa-kk-vali?))
                                (yhteensa tp-rivi kyseessa-kk-vali?)])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
@@ -247,6 +277,23 @@
 
      ;; arvot
      rivit]))
+
+(defn- laske-indeksikerroin
+  "Indeksikertoimen kaava: indeksiarvo / perusluku = indeksikerroin. Indeksiarvo ja perusluku pyöristetään yhteen desimaaliin
+  ennen käyttämistä. Indeksikerroin pyöristetään kolmeen desimaaliin."
+  [indeksiarvo perusluku]
+  (let [b-indeksiarvo (big/parse (clojure.string/replace (big/fmt (big/->big indeksiarvo) 1) "," ".")) ;; Varmista 1 desimaali
+        b-perusluku (big/parse (clojure.string/replace (big/fmt (big/->big perusluku) 1) "," ".")) ;; Varmista 1 desimaali
+        indeksikerroin (big/fmt (big/div-decimal b-indeksiarvo b-perusluku 3) 3)]
+    indeksikerroin))
+
+(defn etsi-syvalta-arvoa
+  "Haetaan syvältä datarakenteesta, kun annettu ehto täyttyy."
+  [ehto data kun-ei-loydy]
+  (->> data
+    (tree-seq coll? seq)
+    (some #(when (ehto %) [%]))
+    ((fnil first [kun-ei-loydy]))))
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
   (log/debug "LASKUTUSYHTEENVETO PARAMETRIT: " (pr-str parametrit))
@@ -293,7 +340,9 @@
         perusluku (when (= 1 (count urakat)) (:perusluku (val (first urakoiden-lahtotiedot))))
         ;; Indeksiä käytetään vain sanktioissa ja bonuksissa
         ;; Indeksinä käytetään hoitokautta edeltävän syyskuun arvoa, mikäli se on olemassa.
-        indeksi-puuttuu (:indeksi_puuttuu (first (val (first (first tiedot-tuotteittain)))))
+        ;; tiedot-tuotteittain on hieman monimutkainen rakenteeltaan, joten käytetään erillistä fn:ää datan löytämiseksi
+        indeksi-puuttuu (etsi-syvalta-arvoa #(not (nil? (:indeksi_puuttuu %))) tiedot-tuotteittain false)
+        indeksi-puuttuu (if indeksi-puuttuu (:indeksi_puuttuu indeksi-puuttuu) true)
         raportin-indeksiarvo (when-not indeksi-puuttuu
                                (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id
                                  (if (> (pvm/kuukausi alkupvm) 9)
@@ -301,7 +350,7 @@
                                    (dec (pvm/vuosi alkupvm)))
                                  9))
 
-        ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, lämpötila, suolasakko, jne) voivat aiheuttaa nillejä,
+        ;; Urakoiden datan yhdistäminen yhteenlaskulla. Datapuutteet (indeksi, jne) voivat aiheuttaa nillejä,
         ;; joiden yli ratsastetaan (fnil + 0 0):lla. Tämä vuoksi pidetään käsin kirjaa mm. indeksipuuteiden sotkemista kentistä
         kaikki-tuotteittain-summattuna (when kaikki-tuotteittain
                                          (fmap #(apply merge-with (fnil + 0 0)
@@ -313,7 +362,10 @@
                  (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
-        koostettu-yhteenveto (conj [] yhteenveto tavoite)]
+        koostettu-yhteenveto (conj [] yhteenveto tavoite)
+        ;; Laske indeksikerroin vain, jos arvot ovat saatavilla
+        indeksikerroin (when (and raportin-indeksiarvo perusluku)
+                         (laske-indeksikerroin (:arvo raportin-indeksiarvo) perusluku))]
 
     [:raportti {:nimi "Laskutusyhteenveto MHU"}
      [:otsikko (str (or (str alueen-nimi ", ") "") (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))]
@@ -324,6 +376,13 @@
      (if indeksi-puuttuu
        [:varoitusteksti "Hoitokautta edeltävän syyskuun indeksiä ei ole asetettu."]
        [:teksti (str "Käytetään hoitokautta edeltävän syyskuun indeksiarvoa: " (fmt/desimaaliluku-opt (:arvo raportin-indeksiarvo) 1))])
+
+     (when-not indeksi-puuttuu
+       [:teksti (str "Indeksikerroin: " indeksikerroin)
+        {:infopallura {:infoteksti [:span [:strong "Indeksikertoimenlaskukaava"] [:br]
+                                    [:p "Indeksikertoimen laskemiseen käytetään yhden desimaalin tarkkuutta indeksistä ja perusluvusta.
+                          Itse indeksikerroin pyöristetään kolmen desimaalin tarkkuuteen."]
+                                    [:p "Laskukaava: indeksi / perusluku = indeksikerroin."]]}}])
 
      (lyv-yhteiset/aseta-sheet-nimi
        (concat

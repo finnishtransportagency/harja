@@ -15,6 +15,7 @@
              [organisaatiot :as organisaatiot-q]
              [materiaalit :as materiaalit]
              [raportit :as raportit-q]]
+            [harja.kyselyt.pohjavesialueet :as pohjavesialueet-q]
             [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
@@ -232,7 +233,7 @@
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteutuneet_materiaalit"
                                            #(do
-                                              (log/info "paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
+                                              (log/info "ajasta-paivittain :: paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
                                               (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
                                               (raportit-q/paivita_raportti_toteutuneet_materiaalit db)
                                               (log/info "paivita_raportti_toteutuneet_materiaalit :: Loppuu " (pvm/nyt)))
@@ -245,7 +246,10 @@
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
                                            #(do
-                                              (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
+                                              (log/info "ajasta-paivittain :: paivita_pohjavesialue_kooste  :: Alkaa " (pvm/nyt))
+                                              (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
+                                              (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
+                                              (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
                                               (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db)
                                               (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Loppuu " (pvm/nyt)))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
@@ -257,7 +261,7 @@
                                          (lukot/yrita-ajaa-lukon-kanssa
                                            db "paivita_raportti_toteuma_maarat"
                                            #(do
-                                              (log/info "paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
+                                              (log/info "ajasta-paivittain :: paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
                                               (raportit-q/paivita_raportti_toteuma_maarat db)
                                               (log/info "paivita_raportti_toteuma_maarat :: Loppuu " (pvm/nyt)))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
@@ -310,7 +314,7 @@
   (hae-raportti [this nimi] (get (hae-raportit this) nimi))
   (suorita-raportti [{db :db
                       db-replica :db-replica
-                      :as this} kayttaja {:keys [nimi konteksti parametrit]
+                      :as this} kayttaja {:keys [nimi konteksti kasittelija parametrit]
                                           :as suorituksen-tiedot}]
     (max-n-samaan-aikaan
      5 ajossa-olevien-raporttien-lkm :raportoinnissa-ruuhkaa
@@ -323,12 +327,13 @@
              (throw+ (roolit/->EiOikeutta (str "Käyttäjällä " (:kayttajanimi kayttaja) " ei ole oikeutta laajennetun kontekstin urakoihin")))))
          (oikeudet/vaadi-lukuoikeus (oikeudet/raporttioikeudet (:kuvaus suoritettava-raportti))
                                      kayttaja (when (= "urakka" konteksti)
-                                                (:urakka-id suorituksen-tiedot)))
-          (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                     " parametreilla " parametrit)
+                                                (:urakka-id suorituksen-tiedot)))          
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
-            (let [suoritus-id (luo-suoritustieto-raportille
+            (let [parametrit (assoc parametrit :kasittelija kasittelija)
+                  _ (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
+                     " parametreilla " parametrit)
+                  suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 
                                (assoc suorituksen-tiedot :parametrit parametrit :suoritettava suoritettava-raportti))
@@ -340,12 +345,12 @@
                             kayttaja
                             (condp = konteksti
                               "urakka" (assoc parametrit
-                                              :urakka-id (:urakka-id suorituksen-tiedot))
+                                         :urakka-id (:urakka-id suorituksen-tiedot))
                               "monta-urakkaa" (assoc parametrit
-                                                     :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
+                                                :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
                               "hallintayksikko" (assoc parametrit
-                                                       :hallintayksikko-id
-                                                       (:hallintayksikko-id suorituksen-tiedot))
+                                                  :hallintayksikko-id
+                                                  (:hallintayksikko-id suorituksen-tiedot))
                               "koko maa" parametrit))]
               ;; tallennetaan suorituksen lopetusaika
               (paivita-suorituksen-valmistumisaika db suoritus-id)

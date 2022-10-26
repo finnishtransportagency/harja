@@ -175,6 +175,7 @@ rooleista."
   (case (name (or (get-in kayttaja [:organisaatio :tyyppi]) "tilaaja"))
     "liikennevirasto" :tilaaja
     "hallintayksikko" :tilaaja
+    "tilaajan-konsultti" :konsultti
     "urakoitsija" :urakoitsija
 
     :urakoitsija))
@@ -192,6 +193,33 @@ rooleista."
 (defn urakoitsija?
   [kayttaja]
   (= :urakoitsija (osapuoli kayttaja)))
+
+(defn kayttaja-on-laajasti-ottaen-tilaaja?
+  "Poikkeuksellisen laajasti katsottuna joissakin tilanteissa ELY_Urakanvalvoja katsotaan tilaajaksi. Näin
+  ainakin paikkauksissa ja lupauksissa. Tämän funktion olemassaolo on ristiriidassa roolit excelin kanssa ja
+  tämä tulisi poistaa ja asia korjata jotenkin muuten. Mutta koska kiire, niin mennään nyt tällä."
+  [roolit kayttaja]
+  (let [roolit (if (set? roolit)
+                 roolit
+                 #{roolit})
+        tilaajaroolit #{"Jarjestelmavastaava"
+                        "Tilaajan_Asiantuntija"
+                        "Tilaajan_Kayttaja"
+                        "Tilaajan_Urakanvalvoja"
+                        "Tilaajan_laadunvalvoja"
+                        "Tilaajan_turvallisuusvastaava"
+                        "Tilaajan_Rakennuttajakonsultti"
+                        "ELY_Urakanvalvoja"}]
+    ;; Järjestelmävastaava on aina tilaaja ja elyn urakanvavoja jolla on päällystysurakka tyyppinä on
+    ;; myös aina tilaaja
+    (if (or
+          (jvh? kayttaja)
+          (= :tilaaja (osapuoli kayttaja)))
+      true
+      (some (fn [rooli]
+              (true?
+                (some #(= rooli %) tilaajaroolit)))
+        roolit))))
 
 (defn voi-nahda-raportit?
   "Käyttäjä voi nähdä raportit, jos hän on tilaajaorganisaation edustaja (ELY tai LIVI)"

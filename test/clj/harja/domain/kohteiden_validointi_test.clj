@@ -526,11 +526,32 @@
   (first (filter #(= (:tr-kaista %) kaista) rivit)))
 
 (deftest pot2-paallysterivin-idn-sailytys-jos-tr-matsaa
-  (testing "Jos POT2 päällysterivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite on full match"
-    (let [rivi-ja-kopiot [{:kohdeosa-id 12, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
-          kaikki-rivit [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 1, :tr-alkuetaisyys 1066, :piennar true, :tr-numero 20, :toimenpide 22, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2p_id 2}]
+  (testing "Jos POT2 päällysterivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite ja toimenpide on full match"
+    (let [rivi-ja-kopiot [{:kohdeosa-id 12, :tr-kaista 11, :tr-ajorata 1,
+                           :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                           :nimi "Tärkeä kohdeosa kaista 12", :tr-alkuetaisyys 1066, :tr-numero 20,
+                           :toimenpide 23, :pot2p_id 2}
+                          {:kohdeosa-id 12, :tr-kaista 12, :tr-ajorata 1,
+                           :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                           :nimi "Tärkeä kohdeosa kaista 12", :tr-alkuetaisyys 1066, :tr-numero 20,
+                           :toimenpide 23, :pot2p_id 2}]
+          kaikki-rivit [{:kohdeosa-id 11, :tr-kaista 11, :tr-ajorata 1,
+                         :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                         :nimi "Tärkeä kohdeosa kaista 11", :tr-alkuetaisyys 1066, :tr-numero 20,
+                         :toimenpide 23, :pot2p_id 1}
+                        {:kohdeosa-id 12, :tr-kaista 12, :tr-ajorata 1,
+                         :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                         :nimi "Tärkeä kohdeosa kaista 12", :tr-alkuetaisyys 1066, :tr-numero 20,
+                         :toimenpide 23, :pot2p_id 2}]
           laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
-          odotettu-tulos [{:kohdeosa-id 11, :tr-kaista 11, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 11", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2a_id nil, :pot2p_id 1} {:kohdeosa-id 12, :tr-kaista 12, :leveys 3, :kokonaismassamaara 5000, :tr-ajorata 1, :pinta_ala 8283, :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :massamenekki 333, :tr-loppuetaisyys 3827, :nimi "Tärkeä kohdeosa kaista 12", :materiaali 2, :tr-alkuetaisyys 1066, :piennar false, :tr-numero 20, :toimenpide 23, :pot2a_id nil, :pot2p_id 2}]]
+          odotettu-tulos [{:kohdeosa-id 11, :tr-kaista 11, :tr-ajorata 1,
+                           :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                           :nimi "Tärkeä kohdeosa kaista 11", :tr-alkuetaisyys 1066, :tr-numero 20,
+                           :toimenpide 23, :pot2a_id nil, :pot2p_id 1}
+                          {:kohdeosa-id 12, :tr-kaista 12, :tr-ajorata 1,
+                           :tr-loppuosa 1, :jarjestysnro 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827,
+                           :nimi "Tärkeä kohdeosa kaista 12", :tr-alkuetaisyys 1066, :tr-numero 20,
+                           :toimenpide 23, :pot2a_id nil, :pot2p_id 2}]]
       (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11  kopioitu oikein")
       (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 päällyste kopioitu oikein"))))
 
@@ -563,7 +584,7 @@
       (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 päällyste kopioitu oikein"))))
 
 (deftest pot2-alustarivin-id-sailyy-jos-tr-matsaa
-  (testing "Jos POT2 alustarivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite on full match"
+  (testing "Jos POT2 alustarivi kopioidaan, säilytä id:t jos on olemassa rivi jonka tierekisteriosoite ja toimenpide on full match"
     (let [rivi-ja-kopiot [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
           kaikki-rivit [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 7} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
           laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
@@ -577,6 +598,32 @@
           kaikki-rivit [{:tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske 1, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus nil, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 3827, :lisatty-paksuus 10, :verkon-tyyppi nil, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 23, :verkon-sijainti nil, :pot2a_id 1} {:tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2}]
           laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
           odotettu-tulos [{:kohdeosa-id nil, :tr-kaista 11, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id nil, :pot2p_id nil} {:kohdeosa-id nil, :tr-kaista 12, :leveys nil, :kokonaismassamaara nil, :murske nil, :massa nil, :tr-ajorata 1, :massamaara nil, :verkon-tarkoitus 1, :tr-loppuosa 1, :tr-alkuosa 1, :pinta-ala nil, :kasittelysyvyys nil, :tr-loppuetaisyys 2000, :nimi nil, :lisatty-paksuus nil, :verkon-tyyppi 1, :sideaine2 nil, :sideainepitoisuus nil, :tr-alkuetaisyys 1066, :tr-numero 20, :sideaine nil, :toimenpide 3, :verkon-sijainti 1, :pot2a_id 2, :pot2p_id nil}]]
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11 alusta kopioitu oikein")
+      (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
+
+(deftest pot2-alustarivin-ei-poista-jos-eri-toimenpide
+  (testing "Jos POT2 alustarivi kopioidaan, ei säilytä id:itä jos on eri toimenpide"
+    (let [rivi-ja-kopiot [{:tr-kaista 11, :tr-ajorata 1, :nimi nil,
+                           :tr-loppuosa 1, :tr-alkuosa 1,
+                           :tr-loppuetaisyys 2000, :tr-alkuetaisyys 1066,
+                           :tr-numero 20, :toimenpide 3, :pot2a_id 2}
+                          {:tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :nimi nil,
+                           :tr-loppuetaisyys 2000, :tr-alkuetaisyys 1066,
+                           :tr-numero 20, :toimenpide 3, :pot2a_id 2}]
+          kaikki-rivit [{:tr-kaista 11, :tr-ajorata 1, :nimi nil,
+                         :tr-loppuosa 1, :tr-alkuosa 1, :tr-loppuetaisyys 3827, :tr-alkuetaisyys 1066,
+                         :tr-numero 20, :toimenpide 23, :pot2a_id 1}
+                        {:tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1, :nimi nil,
+                         :tr-loppuetaisyys 2000, :tr-alkuetaisyys 1066,
+                         :tr-numero 20, :toimenpide 23, :pot2a_id 2}]
+          laskettu-tulos (yllapitokohteet/sailyta-idt-jos-sama-tr-osoite rivi-ja-kopiot kaikki-rivit)
+          odotettu-tulos [{:kohdeosa-id nil, :tr-kaista 11, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1,
+                           :tr-loppuetaisyys 2000, :tr-alkuetaisyys 1066, :nimi nil,
+                           :tr-numero 20, :toimenpide 3, :pot2a_id nil, :pot2p_id nil}
+                          {:kohdeosa-id nil, :tr-kaista 12, :tr-ajorata 1, :tr-loppuosa 1, :tr-alkuosa 1,
+                           :tr-loppuetaisyys 2000, :tr-alkuetaisyys 1066, :nimi nil,
+                           :tr-numero 20, :toimenpide 3, :pot2a_id nil, :pot2p_id nil}]]
+      #_(is (= odotettu-tulos laskettu-tulos) "Toimenpide 3 kopioitu, Toimenpide 23 jäännyt")
       (is (= (tietyn-kaistan-rivi laskettu-tulos 11) (tietyn-kaistan-rivi odotettu-tulos 11)) "POT2 kaistan 11 alusta kopioitu oikein")
       (is (= (tietyn-kaistan-rivi laskettu-tulos 12) (tietyn-kaistan-rivi odotettu-tulos 12)) "POT2 kaistan 12 alusta kopioitu oikein"))))
 
@@ -643,42 +690,46 @@
     (testing "validoi-kaikki toimii"
       (is (empty? (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
                                                   vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet))))
-
-    (testing "Muut verrattavat kohteet päällekkäin"
-      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot
-                                                         (assoc-in muiden-kohteiden-verrattavat-kohteet [0 0 :tr-alkuetaisyys] 100)
-                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet
+    (testing "validoi-kaikki ottaa järjestysnro huomioon kun laske onko päällekkäin tai ei"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi
+                                                         [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 900
+                                                                           :jarjestysnro 5)
+                                                          (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 800
+                                                                           :jarjestysnro 6)]
+                                                         muutkohteet
+                                                         [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 0
+                                                                           :tr-loppuosa 3 :tr-loppuetaisyys 900)]
                                                          urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-        (is (= #{:muukohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-        (is (= ["Kohteenosa on päällekkäin toisen osan kanssa"] (->> virheviestit vals flatten (mapcat vals) flatten distinct))))
-      (testing "validoi-kaikki ottaa järjestysnro huomioon kun laske onko päällekkäin tai ei"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi
-                                                           [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 900
-                                                                             :jarjestysnro 5)
-                                                            (assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-loppuosa 3 :tr-loppuetaisyys 800
-                                                                             :jarjestysnro 6)]
-                                                           muutkohteet
-                                                           [(assoc tr-osoite :tr-ajorata 0 :tr-kaista 1 :tr-alkuosa 3 :tr-alkuetaisyys 0
-                                                                             :tr-loppuosa 3 :tr-loppuetaisyys 900)]
-                                                           urakan-muiden-kohteiden-alikohteet muiden-urakoiden-alikohteet)]
-          (is (= {} virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
+        (is (= {} virheviestit) "Ei saa olla virheviestiä koska kohteenosa on eri järjestelmänro:lla")))
 
-      (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi kohteen-alikohteet muutkohteet alustatoimet
-                                                           (conj urakan-muiden-kohteiden-alikohteet
-                                                                 (assoc (second kohteen-alikohteet)
-                                                                   :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
-      (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
-        (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
-                                                           vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet
-                                                           (conj muiden-urakoiden-alikohteet
-                                                                 (assoc (second kohteen-alikohteet)
-                                                                   :urakka "Foo-urakka")))]
-          (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
-          (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
-                 (->> virheviestit vals flatten (mapcat vals) flatten distinct))))))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja saman urakan toisen kohteen kohdeosien päällekkyydestä"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet
+                                                         (conj urakan-muiden-kohteiden-alikohteet
+                                                               (assoc (second kohteen-alikohteet)
+                                                                 :paakohteen-nimi "Foo-kohde")) muiden-urakoiden-alikohteet)]
+        (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
+        (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin kohteen \"Foo-kohde\" kohdeosan kanssa"]
+               (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))
+    (testing "validoi-kaikki huomauttaa kohteen kohdeosien ja toisen urakan kohteen kohdeosien päällekkyydestä"
+      (let [virheviestit (yllapitokohteet/validoi-kaikki tr-osoite kohteiden-tiedot muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet
+                                                         vuosi kohteen-alikohteet muutkohteet alustatoimet urakan-muiden-kohteiden-alikohteet
+                                                         (conj muiden-urakoiden-alikohteet
+                                                               (assoc (second kohteen-alikohteet)
+                                                                 :urakka "Foo-urakka")))]
+        (is (= #{:alikohde} (into #{} (keys virheviestit))) "Virheviesti ei näy kaikilla osa-alueilla")
+        (is (= ["Kohteenosa (22, 0, 1, 3, 1000, 3, 2000) on päällekkäin toisen urakan kohdeosan kanssa"]
+               (->> virheviestit vals flatten (mapcat vals) flatten distinct)))))))
+
+
+(deftest validoi-muut-kohteet-ei-herjaa-itsensa-kanssa-paallekkaisyydesta
+  (let [tr-osoite {:tr-kaista nil, :tr-ajorata nil, :tr-loppuosa 404, :tr-alkuosa 363, :tr-loppuetaisyys 2500, :tr-alkuetaisyys 3100, :tr-numero 4}
+        muut-kohteet (list
+                       {:kohdeosa-id 11067, :tr-kaista 11, :leveys 4, :kokonaismassamaara 1, :velho-lahetyksen-aika nil, :tr-ajorata 0, :pinta_ala 1300, :tr-loppuosa 23, :jarjestysnro 1, :velho-lahetyksen-vastaus nil, :tr-alkuosa 23, :tr-loppuetaisyys 850, :tr-alkuetaisyys 525, :piennar false, :tr-numero 28410, :toimenpide 12})
+        vuosi 2021
+        muiden-kohteiden-tiedot [] ;; tässäkin oli tavaraa, mutta ei vaikuta vian toistamiseen
+        muiden-kohteiden-verrattavat-kohteet  (list (list ) (list {:tr-kaista 11, :kohdenumero 22, :tr-ajorata 0, :urakka-id 450, :kohde-id 4243,  :tr-loppuosa 56, :tr-alkuosa 56, :tr-loppuetaisyys 360, :nimi nil, :id 11057, :tr-alkuetaisyys 53, :tr-numero 28406}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 850, :nimi nil, :id 11067, :tr-alkuetaisyys 525, :tr-numero 28410}) (list {:tr-kaista 11, :kohdenumero 21, :tr-ajorata 0, :urakka-id 450, :kohde-id 4244,  :tr-loppuosa 23, :tr-alkuosa 23, :tr-loppuetaisyys 525, :nimi nil, :id 11059, :tr-alkuetaisyys 35, :tr-numero 28410}))
+        urakan-toiset-kohdeosat [] ;; tässä oli oikeasti valtava lista, mutta haettu virhe syntyy ilman tätäkin...
+        validointivirheet (yllapitokohteet/validoi-muut-kohteet tr-osoite vuosi muut-kohteet muiden-kohteiden-tiedot muiden-kohteiden-verrattavat-kohteet urakan-toiset-kohdeosat)]
+(is (empty? validointivirheet) "Ei validointivirheitä muissa kohteissa koska eivät ole päällekkäin")))

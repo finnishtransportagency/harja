@@ -1,7 +1,7 @@
 @import "colors.less";
 .yhteiset-arvot() {
   color: @white;
-  height: 40px;
+  height: 36px;
   outline-style: solid;
   border-style: solid;
 
@@ -9,6 +9,8 @@
   font-style: normal;
   font-weight: normal;
   font-size: 0.75rem;
+
+  padding: 8px 12px;
 
   &.medium {
     height: 36px;
@@ -64,8 +66,8 @@
   &primary- {
     &default {
       .yhteiset-arvot();
-      background-color: @blue;
-      .outlinet-ja-borderit(@blue, 1px, -1px);
+      background-color: @blue-default;
+      .outlinet-ja-borderit(@blue-default, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
@@ -91,7 +93,7 @@
     }
     &text {
       .yhteiset-teksti-arvot();
-      color: @blue;
+      color: @blue-default;
 
       &:hover {
         .yhteiset-teksti-arvot();
@@ -115,8 +117,8 @@
   &positive- {
     &default {
       .yhteiset-arvot();
-      background-color: @green;
-      .outlinet-ja-borderit(@green, 1px, -1px);
+      background-color: @green-default;
+      .outlinet-ja-borderit(@green-default, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
@@ -143,7 +145,7 @@
 
     &text {
       .yhteiset-teksti-arvot();
-      color: @green;
+      color: @green-default;
 
       &:hover {
         .yhteiset-teksti-arvot();
@@ -167,8 +169,8 @@
   &negative- {
     &default {
       .yhteiset-arvot();
-      background-color: @red;
-      .outlinet-ja-borderit(@red, 1px, -1px);
+      background-color: @red-default;
+      .outlinet-ja-borderit(@red-default, 1px, -1px);
       &:hover {
         .yhteiset-arvot();
         background-color: @red-dark;
@@ -194,7 +196,7 @@
 
     &text {
       .yhteiset-teksti-arvot();
-      color: @red;
+      color: @red-default;
 
       &:hover {
         .yhteiset-teksti-arvot();
@@ -225,9 +227,9 @@
   &secondary- {
     &default {
       .yhteiset-arvot();
-      color: @blue;
+      color: @blue-default;
       background-color: @white-hack;
-      .outlinet-ja-borderit(@blue, 1px, -1px);
+      .outlinet-ja-borderit(@blue-default, 1px, -1px);
 
       &:hover {
         .yhteiset-arvot();
@@ -257,7 +259,7 @@
     }
     &text {
       .yhteiset-teksti-arvot();
-      color: @blue;
+      color: @blue-default;
 
       &:hover {
         .yhteiset-teksti-arvot();
@@ -281,7 +283,7 @@
   &invisible- {
     &default {
       .yhteiset-arvot();
-      color: @blue;
+      color: @blue-default;
       background-color: transparent;
       .outlinet-ja-borderit(transparent, 1px, -1px);
 
@@ -323,12 +325,12 @@
     &default {
       .yhteiset-navigaatio-arvot();
       background-color: @gray25;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &hover {
       .yhteiset-navigaatio-arvot();
       background-color: @gray50;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &focus {
       .yhteiset-navigaatio-arvot();
@@ -341,13 +343,13 @@
     &active {
       .yhteiset-navigaatio-arvot();
       background-color: @gray75;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
     &disabled {
       .yhteiset-navigaatio-arvot();
       color: @gray75;
       background-color: @gray25;
-      border-right: 1px solid @black;
+      border-right: 1px solid @black-default;
     }
   }
 

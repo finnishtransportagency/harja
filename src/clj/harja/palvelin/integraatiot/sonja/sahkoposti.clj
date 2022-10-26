@@ -82,7 +82,9 @@
     #(swap! kuuntelijat disj kuuntelija-fn))
 
   (laheta-viesti! [{jms-lahettaja :jms-lahettaja} lahettaja vastaanottaja otsikko sisalto]
-    (let [viesti-id (str (UUID/randomUUID))
+    (let [_ (log/info "SonjaSahkoposti :: laheta-viesti! - Lähetettiin sähköposti. Tarkista tietokannasta yksityiskohdat.")
+          _ (log/debug "SonjaSahkoposti :: laheta-viesti! Lähettäjä:" (pr-str lahettaja) "Vastaanottaja:" (pr-str vastaanottaja))
+          viesti-id (str (UUID/randomUUID))
           sahkoposti (sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)
           ;; Valitoidaan viesti

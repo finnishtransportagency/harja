@@ -32,6 +32,7 @@
       (fn [e! {:keys [pot2-murske-lomake materiaalikoodistot] :as app}]
         (let [{:keys [mursketyypit]} materiaalikoodistot
               murske-id (::pot2-domain/murske-id pot2-murske-lomake)
+              murskeen-nimi (::pot2-domain/murskeen-nimi pot2-murske-lomake)
               sivulle? (:sivulle? pot2-murske-lomake)
               materiaali-kaytossa (::pot2-domain/kaytossa pot2-murske-lomake)
               materiaali-lukittu? (some #(str/includes? (:tila %) "lukittu") materiaali-kaytossa)
@@ -67,7 +68,8 @@
                                                                      :tyyppi :murske
                                                                      :id murske-id
                                                                      :materiaali-kaytossa materiaali-kaytossa
-                                                                     :voi-muokata? voi-muokata?}])
+                                                                     :voi-muokata? voi-muokata?
+                                                                     :materiaalin-nimi murskeen-nimi}])
              :vayla-tyyli? true}
             [{:otsikko "" :piilota-label? true :muokattava? (constantly false) :nimi ::pot2-domain/murskeen-nimi :tyyppi :string :palstoja 3
               :luokka "bold" :vayla-tyyli? true :kentan-arvon-luokka "fontti-20"}

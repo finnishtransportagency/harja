@@ -56,11 +56,13 @@
 (defn- ajasta [db]
   (log/info "Ajastetaan kustannusarvoidun_tyon siirto toteutuneet_kustannukset tauluun joka päivä.")
   (ajastettu-tehtava/ajasta-paivittain [1 40 0]
-                                       (fn [_]
-                                         (lukot/yrita-ajaa-lukon-kanssa
-                                           db
-                                           "kustannusarvoidun_tyon_siirto"
-                                           #(siirra-kustannukset db)))))
+    (do
+      (log/info "ajasta-paivittain :: siirra-kustannukset :: Alkaa " (pvm/nyt))
+      (fn [_]
+          (lukot/yrita-ajaa-lukon-kanssa
+            db
+            "kustannusarvoidun_tyon_siirto"
+            #(siirra-kustannukset db))))))
 
 (defrecord KustannusarvioidenToteumat []
   component/Lifecycle

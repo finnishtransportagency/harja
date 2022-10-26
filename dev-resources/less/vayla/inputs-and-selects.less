@@ -1,7 +1,7 @@
 @import "colors.less";
 
 .input-yhteiset-arvot() {
-  font-size: 0.875rem;
+  font-size: 0.75rem;
   background-color: @white;
   height: 36px;
   width: 100%;
@@ -68,13 +68,13 @@ label {
       color: @gray100;
     }
     &-error {
-      color: @red;
+      color: @red-default;
     }
   }
 }
 .error-message {
   .font-yhteiset-arvot();
-  color: @red;
+  color: @red-default;
 }
 
 .input- {
@@ -114,7 +114,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px, 0, -1px);
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
 
       &:hover {
         outline-width: 2px;
@@ -226,8 +226,9 @@ label {
       .outlinet-ja-borderit(@focus-color, 1.5px, .5px, -2px);
     }
 
-    &:disabled {
-      background-color: @gray225;
+    &:disabled, & > .disabled {
+        color: @gray200;
+      background-color: @gray245;
       outline-color: @gray200;
       border-color: @gray200;
     }
@@ -298,7 +299,7 @@ label {
         }
       }
       position: relative;
-      .outlinet-ja-borderit(@red, 1px, 0, -1px);
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
@@ -338,7 +339,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px, 0, -1px);
+      .outlinet-ja-borderit(@red-default, 1px, 0, -1px);
       &:hover {
         outline-width: 2px;
         outline-offset: -2px;
@@ -377,7 +378,7 @@ label {
     &default {
       .font-yhteiset-arvot();
       .input-yhteiset-arvot();
-      .outlinet-ja-borderit(@red, 1px,0, -1px);
+      .outlinet-ja-borderit(@red-default, 1px,0, -1px);
 
       &:hover {
         outline-width: 2px;

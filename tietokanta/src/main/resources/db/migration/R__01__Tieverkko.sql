@@ -76,8 +76,8 @@ DECLARE
 BEGIN
   tulos := ARRAY[]::GEOMETRY[];
   -- Päätellään kumpaa ajorataa ollaan menossa
-  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1)
-  -- muuten mennään vasenta (2).
+  -- Jos TR-osoite on kasvava, mennään oikeaa ajorataa (1) muuten mennään vasenta (2).
+  -- Yksiajorataisten teiden kohdalla päätellään samaan tapaan ajosuunta.
   ajorata_ := 1;
   IF (aosa_ > losa_ OR (aosa_ = losa_ AND aet_ > let_)) THEN
     ajorata_ := 2;
@@ -208,19 +208,44 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY)
-  RETURNS tr_osan_kohta AS $$
+DROP FUNCTION IF EXISTS laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY);
+CREATE OR REPLACE FUNCTION laske_tr_osan_kohta(osan_geometria GEOMETRY, piste GEOMETRY, tie INTEGER, osa INTEGER)
+    RETURNS tr_osan_kohta AS $$
 DECLARE
-  aet INTEGER;
-  lahin_piste GEOMETRY;
+    lahin_piste              GEOMETRY;
+    aet                      INTEGER;
+    tieosan_pituus           INTEGER;
+    tieosan_alku             GEOMETRY;
+    tieosan_loppu            GEOMETRY;
+    alun_etaisyys_pisteesta  NUMERIC;
+    lopun_etaisyys_pisteesta NUMERIC;
 BEGIN
-  SELECT ST_ClosestPoint(osan_geometria, piste)
-  INTO lahin_piste;
 
-  SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
-  INTO aet;
+    SELECT ST_ClosestPoint(osan_geometria, piste)
+    INTO lahin_piste;
 
-  RETURN ROW(aet, lahin_piste);
+    SELECT ST_Length(ST_GeometryN(ST_Split(ST_Snap(osan_geometria, lahin_piste, 0.1), lahin_piste), 1))
+    INTO aet;
+
+    tieosan_pituus := St_Length(osan_geometria);
+
+    -- Jos tarkasteltava piste on aivan tienosan päässä, etäisyydeksi palautuu koko osan pituus
+    -- riippumatta siitä onko piste tienosan alku- vai loppupäässä. Alkupässä aet pitäisi olla 0, eikä sama kuin osan pituus.
+    -- Tarkistetaan siksi pisteen suhde myös tienosan alkuun ja loppuun, jos edellä saatiin aet-arvoksi tienosan pituus.
+    IF aet = tieosan_pituus THEN
+
+        tieosan_alku := tierekisteriosoitteelle_piste(tie, osa, 0);
+        tieosan_loppu := tierekisteriosoitteelle_piste(tie, osa, aet);
+        alun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_alku);
+        lopun_etaisyys_pisteesta := ST_Distance84(lahin_piste, tieosan_loppu);
+
+        IF  alun_etaisyys_pisteesta < lopun_etaisyys_pisteesta THEN
+            aet = 0;
+        END IF;
+
+    END IF;
+
+    RETURN ROW(aet, lahin_piste);
 END;
 $$ LANGUAGE plpgsql;
 
@@ -242,7 +267,7 @@ BEGIN
   IF osa_ IS NULL THEN
     RETURN NULL;
   ELSE
-    kohta := laske_tr_osan_kohta(osa_.geom, piste);
+    kohta := laske_tr_osan_kohta(osa_.geom, piste, osa_.tie, osa_.osa);
     RETURN ROW(osa_.tie, osa_.osa, kohta.etaisyys, null::INTEGER, null::INTEGER, kohta.piste::GEOMETRY);
   END IF;
 END;
@@ -264,7 +289,7 @@ BEGIN
            ORDER BY d ASC
   LOOP
     IF r.d <= tarkkuus THEN
-      kohta := laske_tr_osan_kohta(r.geom, piste);
+      kohta := laske_tr_osan_kohta(r.geom, piste, r.tie,r.osa);
       lr := (r.tie, r.osa, kohta.etaisyys, r.ajorata, r.d, r.geom);
       rivit := rivit || lr;
     END IF;
@@ -290,53 +315,53 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille2(apiste geometry, bpiste geometry, threshold INTEGER) RETURNS tr_osoite AS $$
+CREATE OR REPLACE FUNCTION yrita_tierekisteriosoite_pisteille2(apiste geometry, bpiste geometry, threshold INTEGER) RETURNS tr_osoite AS
+$$
 DECLARE
-  r RECORD;
-  aosa INTEGER;
-  aet INTEGER;
-  alkukohta tr_osan_kohta;
-  losa INTEGER;
-  let INTEGER;
-  loppukohta tr_osan_kohta;
-  geom GEOMETRY;
-  tmp_osa INTEGER;
-  tmp_et INTEGER;
+    r            RECORD;
+    aosa         INTEGER;
+    aet          INTEGER;
+    alkukohta    tr_osan_kohta;
+    losa         INTEGER;
+    let          INTEGER;
+    loppukohta   tr_osan_kohta;
+    geomertria   GEOMETRY;
 BEGIN
-  SELECT a.tie,a.osa as alkuosa, a.ajorata, b.osa as loppuosa,
-               a.geom as alkuosa_geom, b.geom as loppuosa_geom,
-               (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
-  FROM tr_osan_ajorata a JOIN tr_osan_ajorata b
-      ON b.tie=a.tie AND b.ajorata=a.ajorata
-  WHERE a.geom IS NOT NULL AND
-        b.geom IS NOT NULL AND
-        ST_Intersects(apiste, a.envelope) AND
-        ST_Intersects(bpiste, b.envelope)
-  ORDER BY d ASC LIMIT 1
-  INTO r;
-  IF r IS NULL THEN
-    RETURN NULL;
-  ELSE
-    aosa := r.alkuosa;
-    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
-    aet := alkukohta.etaisyys;
-    losa := r.loppuosa;
-    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
-    let := loppukohta.etaisyys;
-    -- Varmista TR-osoitteen suunta ajoradan mukaan
-    RAISE NOTICE 'ajorata %', r.ajorata;
-    IF (r.ajorata = 1 AND (aosa > losa OR (aosa=losa AND aet > let))) OR
-       (r.ajorata = 2 AND (aosa < losa OR (aosa=losa AND aet < let))) THEN
-      tmp_osa := aosa;
-      aosa := losa;
-      losa := tmp_osa;
-      tmp_et := aet;
-      aet := let;
-      let := tmp_et;
+    SELECT a.tie,
+           a.osa                                                       as alkuosa,
+           a.ajorata,
+           b.osa                                                       as loppuosa,
+           a.geom                                                      as alkuosa_geom,
+           b.geom                                                      as loppuosa_geom,
+           ST_Length(a.geom):: INTEGER                                 as alkuosa_geom_pituus,
+           ST_Length(b.geom):: INTEGER                                 as loppuosa_geom_pituus,
+           (ST_Distance84(apiste, a.geom) + ST_Distance84(bpiste, b.geom)) as d
+    FROM tr_osan_ajorata a
+             JOIN tr_osan_ajorata b
+                  ON b.tie = a.tie AND b.ajorata = a.ajorata
+    WHERE a.geom IS NOT NULL
+      AND b.geom IS NOT NULL
+      AND ST_Intersects(apiste, a.envelope)
+      AND ST_Intersects(bpiste, b.envelope)
+    ORDER BY d ASC
+    LIMIT 1
+    INTO r;
+    IF r IS NULL THEN
+        RETURN NULL;
+    ELSE
+
+        aosa := r.alkuosa;
+        alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste, r.tie, r.alkuosa);
+        aet := alkukohta.etaisyys;
+        losa := r.loppuosa;
+        loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
+        let := loppukohta.etaisyys;
+
+        geomertria := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
+        RAISE NOTICE 'Lopputulos % / % / % / % / % . Geometria: %', r.tie, aosa, aet, losa, let, geomertria;
+        RETURN ROW (r.tie, aosa, aet, losa, let, geomertria);
+
     END IF;
-    geom := tr_osoitteelle_viiva3(r.tie, aosa, aet, losa, let);
-    RETURN ROW(r.tie, aosa, aet, losa, let, geom);
-  END IF;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -372,10 +397,10 @@ BEGIN
            ORDER BY d ASC
   LOOP
     aosa := r.alkuosa;
-    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste);
+    alkukohta := laske_tr_osan_kohta(r.alkuosa_geom, apiste, r.tie, r.alkuosa);
     aet := alkukohta.etaisyys;
     losa := r.loppuosa;
-    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste);
+    loppukohta := laske_tr_osan_kohta(r.loppuosa_geom, bpiste, r.tie, r.loppuosa);
     let := loppukohta.etaisyys;
     -- Varmista TR-osoitteen suunta ajoradan mukaan
     RAISE NOTICE 'ajorata %', r.ajorata;

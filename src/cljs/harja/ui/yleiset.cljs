@@ -170,21 +170,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
        :download ""}
    [ikonit/ikoni-ja-teksti (ikonit/livicon-download) otsikko]])
 
-(defn raksiboksi
-  [{:keys [teksti toiminto info-teksti nayta-infoteksti? komponentti disabled?]} checked]
-  [:span.raksiboksi
-   [:div.input-group
-    [harja.ui.kentat/tee-kentta
-     {:tyyppi :checkbox
-      :teksti teksti
-      :disabled? disabled?
-      :valitse! toiminto}
-     checked]
-    (when komponentti
-      komponentti)]
-   (when nayta-infoteksti?
-     info-teksti)])
-
 (defn alasveto-ei-loydoksia [teksti]
   [:div.alasveto-ei-loydoksia teksti])
 
@@ -247,6 +232,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   [:ul (if vayla-tyyli?
          {:style (merge {:padding-top "4px"
                          :z-index "1000"
+                         :position :absolute
                          :display (if @auki?
                                     "block"
                                     "none")}
@@ -338,7 +324,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu?] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -346,7 +332,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
               ryhmissa? (not (nil? ryhmitellyt-itemit))]
           [:div (merge
                   {:class (str (if vayla-tyyli?
-                                 (str "select-" (if virhe? "error-" "") "default")
+                                 (str "select-" (if (and muokattu? virhe?) "error-" "") "default")
                                  "dropdown livi-alasveto")
                                (when class (str " " class))
                                (when @auki? " open"))}
@@ -365,7 +351,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                     :valinta valinta
                                     :valitse-fn valitse-fn
                                     :format-fn format-fn})}
-            [:div.valittu (or naytettava-arvo (format-fn valinta))]
+            [:div.valittu.overflow-ellipsis (or naytettava-arvo (format-fn valinta))]
             (if @auki?
               ^{:key :auki}
               [:span.livicon-chevron-up {:id (str "chevron-up-btn-" (or elementin-id "") "-" (hash vaihtoehdot))
@@ -385,7 +371,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                   :auki? auki?})]])))))
 
 (defn pudotusvalikko [otsikko optiot valinnat]
-  [:div.label-ja-alasveto
+  [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
      [:label.alasvedon-otsikko-vayla otsikko]
      [:label.alasvedon-otsikko otsikko])
@@ -654,27 +640,45 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (def +vari-lemon-dark+ "#654D00")
 (def +vari-black-light+ "#5C5C5C")
+(def +vari-blue-dark+ "#004D99FF")
 
 (defn vihje
-  ([teksti] (vihje teksti nil))
-  ([teksti luokka]
+  ([teksti] (vihje teksti nil 24))
+  ([teksti luokka] (vihje teksti luokka 24))
+  ([teksti luokka ikonin-koko]
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/nelio-info) teksti)]]))
+     (ikonit/ikoni-ja-teksti (ikonit/nelio-info ikonin-koko) teksti)]]))
 
 (defn toast-viesti
+  "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
   ([teksti] (toast-viesti teksti nil))
   ([teksti luokka]
-   [:div {:class
-          (luokat
-            "yleinen-pikkuvihje"
-            "inline-block"
-            (viesti/+toast-viesti-luokat+ :neutraali)
-            (or luokka ""))}
-    [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/status-info-inline-svg +vari-lemon-dark+)
-                             teksti)]]))
+   (let [ikoni-fn (if (vector? teksti)
+                    ikonit/ikoni-ja-elementti
+                    ikonit/ikoni-ja-teksti)
+         ikoni (if (= "varoitus" luokka)
+                 (ikonit/livicon-warning-sign)
+                 (ikonit/status-info-inline-svg +vari-lemon-dark+))]
+     [:div {:class
+            (luokat
+              "yleinen-pikkuvihje"
+              "inline-block"
+              (viesti/+toast-viesti-luokat+ :neutraali)
+              (or luokka ""))}
+      [:div.vihjeen-sisalto
+       (ikoni-fn ikoni teksti)]])))
+
+(def tietyoilmoitus-siirtynyt-txt
+  [:div.inline-block.tietyo-info
+   "Tietyöilmoituksen tekeminen on siirtynyt Harjasta Fintrafficin puolelle. Voit tehdä sen "
+   [staattinen-linkki-uuteen-ikkunaan "tämän linkin kautta."
+    "https://tietyoilmoitus.tieliikennekeskus.fi/#/"]])
+
+(defn tietyoilmoitus-siirtynyt-toast []
+  [:div.tietyoilmoitus-toast
+   [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
   ([elementti] (vihje-elementti elementti nil))
@@ -684,30 +688,51 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
     [:div.vihjeen-sisalto
      (ikonit/ikoni-ja-elementti (ikonit/nelio-info) elementti)]]))
 
+(defn keltainen-vihjelaatikko
+  ([e]
+   (keltainen-vihjelaatikko e nil nil))
+  ([e t]
+   (if (keyword? t)
+     (keltainen-vihjelaatikko e nil t)
+     (keltainen-vihjelaatikko e t nil)))
+  ([ensisijainen-viesti toissijainen-viesti tyyppi]
+   [:div
+   [:div.toast-viesti.neutraali
+    [:div {:style {:font-size "24px"}} (case tyyppi 
+                                         :info (ikonit/nelio-info)
+                                         (harja.ui.ikonit/livicon-warning-sign))]
+    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
+    (when toissijainen-viesti 
+      [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti])]]))
+
 ;; Jos haluat tehdä Toastin näköisen ilmoitustyyppisen varoitusviestin käyttäjälle.
 ;; Käytä tätä. Tämä on hyvin samantyyppinen kuin "vihje" funktio, mutta sisältää eri ikonin ja mahdollistaa sekundäärisen viestin.
 ;; Tämä tekee ikonillisen tekstikentän, jolle voi antaa sekundäärisen viestin samalle riville.
 (defn varoitus-vihje [ensisijainen-viesti toissijainen-viesti]
-  [:div
-   [:div.toast-viesti.neutraali
-    [:div {:style {:font-size "24px"}} (harja.ui.ikonit/livicon-warning-sign)]
-    [:div {:style {:padding-left "10px"}} ensisijainen-viesti]
-    [:div {:style {:padding-left "20px" :font-weight 400}} toissijainen-viesti]]])
+  (keltainen-vihjelaatikko ensisijainen-viesti toissijainen-viesti))
 
-(defn info-laatikko [tyyppi ensisijainen-viesti toissijainen-viesti leveys]
-  (assert (#{:varoitus :onnistunut :neutraali} tyyppi) "Laatikon tyypin oltava varoitus, onnistunut tai neutraali")
-  [:div {:class ["info-laatikko" (name tyyppi)]
-         :style {:width leveys}}
-   [:div.infolaatikon-ikoni
-    (case tyyppi
-      :varoitus (ikonit/livicon-warning-sign)
-      :onnistunut (ikonit/livicon-check)
-      :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
-   [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
-    [:div {:style {:padding-left "8px"}}
-     ensisijainen-viesti]
-    [:div {:style {:padding-left "8px" :font-weight 400}}
-     toissijainen-viesti]]])
+(defn info-laatikko
+  ([tyyppi ensisijainen-viesti]
+   (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
+  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys]
+   (info-laatikko tyyppi ensisijainen-viesti toissijainen-viesti leveys {}))
+  ([tyyppi ensisijainen-viesti toissijainen-viesti leveys {:keys [luokka]}]
+   (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
+     "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
+   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
+          :style {:width leveys}}
+    [:div.infolaatikon-ikoni
+     (case tyyppi
+       :varoitus (ikonit/livicon-warning-sign)
+       :onnistunut (ikonit/livicon-check)
+       :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
+       :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
+    [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
+     [:div {:style {:padding-left "8px"}}
+      ensisijainen-viesti]
+     (when toissijainen-viesti
+       [:div {:style {:padding-left "8px" :font-weight 400}}
+        toissijainen-viesti])]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -744,38 +769,93 @@ jatkon."
       :oikea "tasaa-oikealle"
       :keskita "tasaa-keskita")))
 
-(defn- tooltip-sisalto [auki? sisalto]
-  (let [x (atom nil)]
+(defn- tooltip-sisalto [opts auki? sisalto]
+  (let [x (atom nil)
+        y (atom nil)
+        suunta (:suunta opts)
+        ;; Custom offset. Sopii tilanteisiin, joissa clientRectiä ei voi laskea tooltip-wrapperille (elementti on piirtohetkellä esim. display: none)
+        wrapperin-koko (:wrapperin-koko opts)]
     (komp/luo
       (komp/piirretty
         #(let [n (r/dom-node %)
-               rect (aget (.getClientRects n) 0)
-               parent-rect (aget (.getClientRects (.-parentNode n)) 0)]
-           (reset! x
-                   (+ (/ (.-width rect) -2)
-                      (/ (.-width parent-rect) 2)))))
-      (fn [auki? sisalto]
-        [:div.tooltip.bottom {:class (when auki? "in")
-                              :style {:position "absolute"
-                                      :min-width 150
-                                      :left (when-let [x @x]
-                                              x)}}
-         [:div.tooltip-arrow]
-         [:div.tooltip-inner
-          sisalto]]))))
+               parent-rect (aget (.getClientRects (.-parentNode n)) 0)
+               width (if (map? wrapperin-koko)
+                       (:leveys wrapperin-koko)
+                       (some-> parent-rect (.-width)))
+               height (if (map? wrapperin-koko)
+                        (:korkeus wrapperin-koko)
+                        (some-> parent-rect (.-height)))
+               ;; Asettaa hiukan ilmaa tooltipin nuolen ja tooltipin kohteen välille.
+               lisaa-valia-px 3]
 
-(defn tooltip [opts komponentti tooltipin-sisalto]
-  (let [tooltip-nakyy? (atom false)
-        leveys (atom 0)]
-    (komp/luo
-      (fn [opts komponentti tooltipin-sisalto]
-        [:div.inline-block
-         {:style {:position "relative"}                     ;:div.inline-block
-          :on-mouse-enter #(reset! tooltip-nakyy? true)
-          :on-mouse-leave #(reset! tooltip-nakyy? false)}
-         komponentti
+           ;; Hienosäädä tooltipin lopullinen offset riippuen siitä kuinka iso komponentti tooltip wrapperin sisälle on laitettu.
+           (when (and width height)
+             (reset! x
+               (case suunta
+                 :vasen (- lisaa-valia-px)
+                 :oikea (+ width lisaa-valia-px)
+                 :ylos (/ width 2)
+                 (/ width 2)))
+             (reset! y
+               (case suunta
+                 :vasen (- (/ height 2))
+                 :oikea (- (/ height 2))
+                 :ylos (- (+ height lisaa-valia-px))
+                 lisaa-valia-px)))))
 
-         [tooltip-sisalto @tooltip-nakyy? tooltipin-sisalto]]))))
+      (fn [opts auki? sisalto]
+        (let [s-pituus (count (str sisalto))
+              suunta (case (:suunta opts)
+                       :vasen "left"
+                       :oikea "right"
+                       :ylos "top"
+                       "bottom")]
+          [:div.tooltip {:class [suunta (when auki? "in")
+                                 (or (:leveys opts)
+                                   (if (< 150 s-pituus)
+                                     "levea"
+                                     "ohut"))]
+                         :style {:visibility (when-not auki? "hidden")
+                                 :margin-left (when @x (str @x "px"))
+                                 :margin-top (when @y (str @y "px"))}}
+           [:div.tooltip-arrow]
+           [:div.tooltip-inner
+            sisalto]])))))
+
+(defn tooltip
+  "Asettaa annetulle komponentille tooltipin, joka aukeaa joko alas/ylös/vasemmalle/oikealle.
+  Tooltip asetetaan automaattisesti oikeaan kohtaan sisällä olevan komponentin mukaan.
+
+  Joskus tulee kuitenkin tilanteita, että komponentin koko ei pysty laskemaan automaattisesti piirtohetkellä.
+  Tällaisia tilanteita on esim. Harjan taulukoissa, joissa piilotetut rivit ovat aina 'display:none;', jolloin
+  mittojen laskenta epäonnistuu.
+  Tällöin käyttäjän täytyy itse kertoa tooltip-komponentille sisällä olevan komponentin (esim. ikonin/napin) mitat,
+  jotta tooltip voidaan asettaa oikeaan kohtaan.
+  Tämä hoituu asetuksella ':wrapperin-koko {:leveys 20 :korkeus 20}'
+
+  -- Parametrit --
+
+  opts:
+    suunta: :vasen / :oikea / :ylos / :alas
+    leveys: :levea / :ohut
+    wrapper-luokka: Custom luokan nimi tai vektori luokan nimiä, joilla voidaan tyylitellä tooltip wrapperia ja sen lapsia.
+    wrapperin-koko: Käyttäjän määrittelemä koko tooltip-wrapprille. Vaikuttaa siihen, miten tooltip asetellaan annetun komponentin viereen.
+                    Käytä ainoastaan silloin, kun tooltipin wrapperin kokoa ei voida laskea automaattisesti (esim. display: none;)
+
+  komponentti: Komponentti, jolle tooltip asetetaan.
+  sisalto: Tooltipin teksti tai hiccup-html.
+  "
+
+  [{:keys [suunta leveys wrapper-luokka wrapperin-koko] :as opts} komponentti sisalto]
+  (r/with-let [tooltip-visible?-atom (atom false)]
+    [:div.inline-block
+     {:style {:position "relative"}
+      :class wrapper-luokka
+      :on-mouse-enter #(reset! tooltip-visible?-atom true)
+      :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+     komponentti
+
+     [tooltip-sisalto opts @tooltip-visible?-atom sisalto]]))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
@@ -866,8 +946,8 @@ jatkon."
   luokka määrittäää tekstiosan tyylin"
   ([tila]
    (tila-indikaattori tila {}))
-  ([tila {:keys [fmt-fn class-skeema luokka]}]
-   [:div
+  ([tila {:keys [fmt-fn class-skeema luokka wrapper-luokka]}]
+   [:div {:class wrapper-luokka}
     [:div {:class (str "circle "
                     (if class-skeema
                       (or (get class-skeema tila)
@@ -885,3 +965,29 @@ jatkon."
 
 (def rajapinnan-kautta-lisattyja-ei-voi-muokata
   "Rajapinnan kautta raportoituja toteumia ei voi käsin muokata, vaan muokkaukset on tehtävä lähdejärjestelmässä.")
+
+(defn tr-kentan-elementti
+  [{:keys [otsikko valitse-fn luokka arvo] :as optiot}]
+  [:div
+   [:input {:on-change valitse-fn
+            :class (str luokka " form-control ")
+            :placeholder otsikko
+            :value arvo
+            :size 5 :max-length 10}]
+   [:label.ala-otsikko otsikko]])
+
+(defn tr-kentat-flex
+  "Tuck yhteensopiva TR-tierekisterikenttä.
+  (Tämä voisi olla myös valinnat tai tierekisteri namespacessa)"
+  [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+  (let [osio (fn [komponentti otsikko] komponentti)]
+    (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
+      [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
+       [:label.alasvedon-otsikko-vayla "Tierekisteriosoite"]
+      [:div
+       [:div.varusteet.tr-osoite-flex
+        [osio tie "Tie"]
+        [osio aosa "aosa"]
+        [osio aeta "aet"]
+        [osio losa "losa"]
+        [osio leta "let"]]]])))

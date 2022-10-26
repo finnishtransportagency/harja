@@ -247,6 +247,7 @@
 
 (defn nimi-numero-ja-tp-kentat [lomake tyomenetelmat]
   [{:otsikko "Nimi"
+    :elementin-id "form-paikkauskohde-nimi"
     :tyyppi :string
     :nimi :nimi
     :pakollinen? true
@@ -280,7 +281,9 @@
 
 (defn- raportoinnin-kentat [e! lomake toteumalomake voi-muokata? tyomenetelmat]
   (let [urakoitsija? (t-paikkauskohteet/kayttaja-on-urakoitsija? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                   (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                   @istunto/kayttaja)
         valmis? (= "valmis" (:paikkauskohteen-tila lomake))
         urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma lomake) tyomenetelmat))
         pot-raportoitava? (= :pot (:toteumatyyppi lomake))
@@ -638,7 +641,9 @@
   Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
   [lomake tyomenetelmat]
   (let [
-        nayta? (and (t-paikkauskohteet/kayttaja-on-tilaaja? (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id)))
+        nayta? (and (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
+                      (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
+                      @istunto/kayttaja)
                     (= "ehdotettu" (:paikkauskohteen-tila lomake))
                     (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
     nayta?))
@@ -946,7 +951,7 @@
         pmr-lomake-auki? (= :paikkauskohteen-muokkaus (:tyyppi pmr-lomake))
         toteumatyyppi-arvo (atom (:toteumatyyppi lomake))
         kayttajaroolit (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-        tilaaja? (t-paikkauskohteet/kayttaja-on-tilaaja? kayttajaroolit)
+        tilaaja? (roolit/kayttaja-on-laajasti-ottaen-tilaaja? kayttajaroolit @istunto/kayttaja)
         ;; Paikkauskohde on tilattivissa, kun sen tila on "ehdotettu" ja käyttäjä on tilaaja
         voi-tilata? (or (and
                           (= "ehdotettu" (:paikkauskohteen-tila lomake))
@@ -1054,7 +1059,7 @@
                        [:div.col-xs-9 {:style {:padding "8px 0 8px 0"}} "Urakoitsija saa sähköpostiin ilmoituksen, kuin tilaat tai hylkäät paikkauskohde-ehdotuksen."])
 
                      ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                     ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                     ;; Tarkistetaan ensin, että mitkä napit tulevat vasemmalle
                      [:div.row
                       [:div.col-xs-8 {:style {:padding-left "0"}}
                        [footer-vasemmat-napit e! lomake muokkaustila? raportointitila? voi-tilata? voi-perua?]]

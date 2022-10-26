@@ -4,13 +4,15 @@
     [clojure.test :refer :all]
     [clojure.core.async :as async :refer [alts! >! <! go timeout chan <!!]]
     [taoensso.timbre :as log]
-    [harja.kyselyt.urakat :as urk-q]
+    [harja.palvelin.asetukset :as a]
     [harja.palvelin.komponentit.todennus :as todennus]
     [harja.palvelin.komponentit.http-palvelin :as http]
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.komponentit.tietokanta :as tietokanta]
     [harja.palvelin.integraatiot.jms :as jms]
     [harja.palvelin.komponentit.liitteet :as liitteet]
+    [harja.palvelin.komponentit.vienti :as vienti]
+    [harja.palvelin.raportointi.excel :as excel]
     [tarkkailija.palvelin.komponentit
      [event-tietokanta :as event-tietokanta]
      [tapahtumat :as tapahtumat]
@@ -20,7 +22,6 @@
     [com.stuartsierra.component :as component]
     [clj-time.core :as t]
     [clj-time.coerce :as tc]
-    [clojure.core.async :as async]
     [clojure.spec.alpha :as s]
     [clojure.string :as str]
     [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
@@ -33,7 +34,10 @@
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
-           (java.util.concurrent TimeoutException)))
+           (java.util.concurrent TimeoutException)
+           (java.sql Statement)
+           (java.text SimpleDateFormat)
+           (java.util Date)))
 
 (def jarjestelma nil)
 
@@ -208,6 +212,17 @@
   (with-open [c (.getConnection db)
               ps (.prepareStatement c (reduce str sql))]
     (.executeUpdate ps)))
+
+(defn i
+  "Tee SQL insert Harjan kantaan yksikkötestauksen yhteydessä, ja palauta generoitu id"
+  [& sql]
+  (with-open [c (.getConnection db)
+              ps (.prepareStatement c (reduce str sql) Statement/RETURN_GENERATED_KEYS)]
+    (.executeUpdate ps)
+    (let [generated-keys (.getGeneratedKeys ps)
+          next? (.next generated-keys)]
+      (when next?
+        (.getLong generated-keys 1)))))
 
 (defn- tapa-backend-kannasta [ps kanta]
   (with-open [rs (.executeQuery ps (str "SELECT pg_terminate_backend(pg_stat_activity.pid) FROM pg_stat_activity WHERE pg_stat_activity.datname = '" kanta "' AND pid <> pg_backend_pid()"))]
@@ -406,7 +421,12 @@
 
   (kutsu-karttakuvapalvelua
     ;; POST
-    [this nimi kayttaja payload koordinaatti extent]))
+    [this nimi kayttaja payload koordinaatti extent])
+  
+  (kutsu-excel-palvelua
+    ;; Palauttaa halutun excelin testiin ennen kuin siitä generoidaan
+    ;; oikea excel-tiedosto, eli raporttielementteinä.
+    [this nimi kayttaja payload]))
 
 (defn- palvelua-ei-loydy [nimi]
   (is false (str "Palvelua " nimi " ei löydy!"))
@@ -481,7 +501,19 @@
          {:parametrit (assoc payload "_" nimi)
           :koordinaatti koordinaatti
           :extent (or extent
-                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])})))))
+                      [-550093.049087613 6372322.595126259 1527526.529326106 7870243.751025201])}))
+
+      (kutsu-excel-palvelua [_ nimi kayttaja payload]
+        (with-redefs
+          [;; Sen sijaan, että muodostetaan excel, palautetaan raporttielementit
+           ;; mapissa, jolloin siitä ei yritetä tehdä tiedostoa
+           excel/muodosta-excel (fn [raportti _] {:raportti raportti})
+           ;; parametrien luku onnistuu testeissä ilman kikkailuja, toisin kuin ringin kautta.
+           vienti/lue-body-parametrit identity]
+          ((get @palvelut :excel)
+           {:kayttaja kayttaja
+            :body payload
+            :params {"_" nimi}}))))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]
@@ -517,6 +549,11 @@
             {:muutokset muutokset :nimi nimi}))
         haku))
 
+
+(defn hae-urakan-id-nimella [nimi]
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = '" nimi "';"))))
 
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
@@ -554,27 +591,6 @@
 (defn hae-testikayttajat []
   (ffirst (q (str "SELECT count(*) FROM kayttaja;"))))
 
-(defn hae-oulun-alueurakan-2005-2012-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Oulun alueurakka 2005-2012'"))))
-
-
-(defn hae-tampereen-alueurakan-2017-2022-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
-
-(defn hae-helsingin-vesivaylaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL';"))))
-
-(defn hae-pyhaselan-vesivaylaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Pyhäselän urakka';"))))
-
 (defn hae-merivaylien-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
@@ -584,16 +600,6 @@
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
                    WHERE  nimi = 'Sisävesiväylät';"))))
-
-(defn hae-saimaan-kanavaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Saimaan kanava';"))))
-
-(defn hae-joensuun-kanavaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Joensuun kanava';"))))
 
 (defn hae-saimaan-kanavaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
@@ -668,7 +674,7 @@
    (let [haku-fn (if q-map? q-map q)]
      (haku-fn (str "SELECT id, toimenpidekoodi, tyyppi
            FROM kan_toimenpide
-           WHERE urakka=" (hae-saimaan-kanavaurakan-id))))))
+           WHERE urakka=" (hae-urakan-id-nimella "Saimaan kanava"))))))
 
 (defn hae-helsingin-reimari-toimenpide-ilman-hinnoittelua []
   (ffirst (q (str "SELECT id FROM reimari_toimenpide
@@ -781,41 +787,35 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
-(defn hae-kemin-alueurakan-2019-2023-id []
+(defn hae-kemin-paallystysurakan-2019-2023-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Kemin päällystysurakka'"))))
+
+(defn hae-aktiivinen-oulu-testi-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Aktiivinen Oulu Testi'"))))
 
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
+
 (defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Iin MHU 2021-2026'"))))
+
 (defn hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id []
   (ffirst (q (str "SELECT id
                    FROM   lupaus_sitoutuminen
                    WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
+
 (defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024')"))))
-
-(defn hae-rovaniemen-maanteiden-hoitourakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))))
-(defn hae-ivalon-maanteiden-hoitourakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Ivalon MHU testiurakka (uusi)'"))))
-
-(defn hae-pellon-maanteiden-hoitourakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Pellon MHU testiurakka (3. hoitovuosi)'"))))
 
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
@@ -904,19 +904,23 @@
                   FROM   toimenpideinstanssi
                   WHERE  nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019';"))))
 
+(defn hae-toimenpideinstanssi-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   toimenpideinstanssi
+                      WHERE  nimi = '%s'"
+                     nimi))))
+
+(defn hae-kittila-mhu-talvihoito-tpi-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Talvihoito TP"))
+
+(defn hae-kittila-mhu-hallinnolliset-toimenpiteet-tp-id []
+  (hae-toimenpideinstanssi-id-nimella "Kittilä MHU Hallinnolliset toimenpiteet TP"))
+
 (defn hae-liikenneympariston-hoidon-toimenpidekoodin-id []
   (ffirst (q (str "SELECT id
   FROM toimenpidekoodi
   WHERE nimi = 'Liikenneympäristön hoito laaja TPI' AND taso = 3\nAND
   emo = (select id FROM toimenpidekoodi WHERE taso = 2 AND nimi = 'Liikenneympäristön hoito');"))))
-
-(defn hae-yha-paallystysurakan-id []
-  (ffirst (q "SELECT id FROM urakka WHERE nimi = 'YHA-päällystysurakka'")))
-
-(defn hae-muhoksen-paallystysurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Muhoksen päällystysurakka'"))))
 
 (defn hae-muhoksen-paallystysurakan-tpi-id []
   (ffirst (q (str "SELECT id
@@ -929,35 +933,11 @@
 (defn hae-muhoksen-paallystysurakan-testipaikkauskohteen-id []
   (ffirst (q (str "SELECT id FROM paikkauskohde WHERE nimi = 'Testikohde Muhoksen paallystysurakassa'"))))
 
-(defn hae-utajarven-paallystysurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Utajärven päällystysurakka'"))))
-
-(defn hae-oulun-tiemerkintaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'"))))
-
-(defn hae-lapin-tiemerkintaurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Lapin tiemerkinnän palvelusopimus 2013-2018'"))))
-
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
                    WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
 
-(defn hae-muhoksen-paikkausurakan-id []
-  (ffirst (q (str "SELECT id
-                   FROM   urakka
-                   WHERE  nimi = 'Muhoksen paikkausurakka'"))))
-
-(defn hae-pudasjarven-alueurakan-id []
-  (ffirst (q (str "SELECT id        x
-                   FROM   urakka
-                   WHERE  nimi = 'Pudasjärven alueurakka 2007-2012'"))))
 (defn hae-pudasjarven-alueurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
                            (SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012') AND paasopimus IS null)"))))
@@ -991,12 +971,6 @@
                    urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
 
-(defn hae-muhoksen-yllapitokohde-jolla-paallystysilmoitusta []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka')
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id)"))))
-
 (defn hae-utajarven-yllapitokohde-jolla-paallystysilmoitusta []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE nimi = 'Ouluntie' AND
@@ -1022,42 +996,11 @@
                    nimi = 'Leppäjärven ramppi'
                    AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
-(defn hae-yllapitokohde-nakkilan-ramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Nakkilan ramppi';"))))
-
-(defn hae-yllapitokohde-kirkkotie []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Kirkkotie';"))))
-
-(defn hae-yllapitokohde-aloittamaton []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Aloittamaton kohde mt20';"))))
-
-(defn hae-yllapitokohde-oulaisten-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulaisten ohitusramppi';"))))
-
-(defn hae-yllapitokohde-oulun-ohitusramppi []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   nimi = 'Oulun ohitusramppi';"))))
-
 (defn hae-yllapitokohde-kuusamontien-testi-jolta-puuttuu-paallystysilmoitus []
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE
                    nimi = 'Kuusamontien testi'
                    AND NOT EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
-
-(defn hae-yllapitokohde-tielta-20-jolla-paallystysilmoitus []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE
-                   tr_numero = 20
-                   AND EXISTS(SELECT id FROM paallystysilmoitus WHERE paallystyskohde = ypk.id);"))))
 
 (defn hae-yllapitokohde-joka-ei-kuulu-urakkaan [urakka-id]
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
@@ -1067,9 +1010,11 @@
   (ffirst (q (str "SELECT id FROM yllapitokohde ypk
                    WHERE suorittava_tiemerkintaurakka = " tiemerkintaurakka-id ";"))))
 
-(defn hae-yllapitokohde-tarkea-kohde-pot2 []
-  (ffirst (q (str "SELECT id FROM yllapitokohde ypk
-                   WHERE nimi = 'Tärkeä kohde mt20';"))))
+(defn hae-yllapitokohteen-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
 
 (defn hae-lupaus-vaihtoehdot [lupaus-id]
   (q (str "SELECT id FROM lupaus_vaihtoehto WHERE \"lupaus-id\"=" lupaus-id ";")))
@@ -1081,7 +1026,7 @@
                                                          FROM yllapitokohde k
                                                          JOIN paallystysilmoitus p ON p.paallystyskohde = k.id
                                                         WHERE nimi = 'Tärkeä kohde mt20'")))
-        urakka-id (hae-utajarven-paallystysurakan-id)]
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")]
     [kohde-id pot2-id urakka-id]))
 
 (defn asenna-pot-lahetyksen-tila [kohde-id pot2-id]
@@ -1188,6 +1133,9 @@
 (def +kayttaja-ulle+ (hae-testi-kayttajan-tiedot {:etunimi "Ulle" :sukunimi "Urakoitsija"}))
 
 (def +kayttaja-vastuuhlo-muhos+ (hae-testi-kayttajan-tiedot {:etunimi "Antero" :sukunimi "Asfalttimies"}))
+(def +kayttaja-vastuuhlo-porvoo+ (hae-testi-kayttajan-tiedot {:etunimi "Veeti" :sukunimi "Velmu"}))
+
+(def +kayttaja-paakayttaja-skanska+ (hae-testi-kayttajan-tiedot {:etunimi "Pekka" :sukunimi "Pääjehu"}))
 
 (def +kayttaja-laadunvalvoja-kemi+ (hae-testi-kayttajan-tiedot {:etunimi "Keppi" :sukunimi "Laatujärvi" :roolit #{"laadunvalvoja"}}))
 
@@ -1222,23 +1170,23 @@
 
 (defn urakkatieto-alustus! []
   (reset! testikayttajien-lkm (hae-testikayttajat))
-  (reset! oulun-alueurakan-2005-2010-id (hae-oulun-alueurakan-2005-2012-id))
+  (reset! oulun-alueurakan-2005-2010-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012"))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
-  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-alueurakan-2019-2023-id))
+  (reset! kemin-alueurakan-2019-2023-id (hae-kemin-paallystysurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
   (reset! kajaanin-alueurakan-2014-2019-id (hae-kajaanin-alueurakan-2014-2019-id))
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
-  (reset! muhoksen-paallystysurakan-id (hae-muhoksen-paallystysurakan-id))
+  (reset! muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
-  (reset! muhoksen-paikkausurakan-id (hae-muhoksen-paikkausurakan-id))
+  (reset! muhoksen-paikkausurakan-id (hae-urakan-id-nimella "Muhoksen paikkausurakka"))
   (reset! muhoksen-paikkausurakan-paasopimuksen-id (hae-muhoksen-paikkausurakan-paasopimuksen-id))
   (reset! oulun-alueurakan-2005-2010-paasopimuksen-id (hae-oulun-alueurakan-2005-2010-paasopimuksen-id))
   (reset! oulun-alueurakan-2014-2019-paasopimuksen-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id))
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
-  (reset! pudasjarven-alueurakan-id (hae-pudasjarven-alueurakan-id))
+  (reset! pudasjarven-alueurakan-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012"))
   (reset! yit-rakennus-id (hae-yit-rakennus-id))
   (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
   (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat))
@@ -1487,6 +1435,7 @@
      (pudota-ja-luo-testitietokanta-templatesta)
      (alter-var-root #'portti (fn [_#] (arvo-vapaa-portti)))
      (pystyta-harja-tarkkailija!)
+     (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti :toteumatyokalu) ;; Pakota sonja-sahkoposti pois käytöstä
      (alter-var-root #'jarjestelma
                      (fn [_#]
                        (component/start
@@ -1670,3 +1619,37 @@
                         (rest loput_)
                         loput_)
                       (conj iss# is-lause#))))))))
+
+(defn onnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>true</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn epaonnistunut-sahkopostikuittaus [viesti-id]
+  (str "<sahkoposti:kuittaus xmlns:sahkoposti=\"http://www.liikennevirasto.fi/xsd/harja/sahkoposti\">\n
+  <viestiId>"viesti-id"</viestiId>\n
+  <aika>2008-09-29T04:49:45</aika>\n
+  <onnistunut>false</onnistunut>\n</sahkoposti:kuittaus>"))
+
+(defn hae-ulos-lahtevat-integraatiotapahtumat []
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
+                 FROM integraatioviesti
+                WHERE suunta = 'ulos'
+                  AND sisalto is not null and sisalto != ''
+                ORDER BY integraatiotapahtuma ASC;")))
+
+(defn hae-kaikki-integraatioviestit []
+  (q-map (str "SELECT id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite
+                 FROM integraatioviesti ORDER BY integraatiotapahtuma ASC, id asc ;")))
+
+(defn nykyhetki-iso8061-formaatissa-menneisyyteen
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 86400 1000)))))
+
+(defn nykyhetki-iso8061-formaatissa-tulevaisuuteen
+  "Anna määrä parametriin, että montako päivää siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
+

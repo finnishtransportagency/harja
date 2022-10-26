@@ -1,3 +1,5 @@
+
+
 # Väylän Harja-järjestelmä #
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
@@ -6,6 +8,10 @@ client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bo
 Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
 
 Autentikointiin käytetään KOKAa.
+
+@startuml
+A->B
+@enduml
 
 ## Hakemistorakenne ##
 
@@ -63,7 +69,7 @@ Harja repon hakemistorakenne:
     `sh devdb_up.sh`
 
 4. Asenna tarvittavat työkalut `npm install`
-5. Hae harja-testidata repositoriosta (Deus) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
     `lein do clean, compile, repl`
@@ -180,6 +186,11 @@ Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC k
 
 ## Dokumentaatio
 
+### Uuden kehittäjän ohjeet
+
+ - Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
+ - Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
+
 ### Tietokanta
 
 Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
@@ -258,7 +269,7 @@ Fronttitestit ajetaan komennolla: `lein doo phantom test`
 Taikka näin:  `lein with-profile +test doo phantom test once`
 
 Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
-phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew cask install phantomjs` 
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
 
 Laadunseurantatyökalun testit ajetaan komennolla: `lein doo phantom laadunseuranta-test`
 Tai eri profiililla: `lein with-profile +test doo phantom laadunseuranta-test`
@@ -297,6 +308,30 @@ oikein eikä harja räsähdä.
 
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
+
+### Tievelho
+
+Tievelhon varustetapahtumien tuonnin sekvenssikaavio löytyy sekalaista/Tievelho-varustet-tuonti.puml dokumentista.
+
+Testiajoja voi suorittaa kutsumalla REPL:ssa:
+```
+(in-ns 'harja.palvelin.integraatiot.velho.velho-komponentti)
+(def j harja.palvelin.main/harja-jarjestelma)
+(def asetukset (get-in j [:velho-integraatio :asetukset]))
+(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
+(varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset)
+```
+
+Kannattaa huomata, että localhostilla ei löydy kovin montaa MHU:ta, joten iso osa kohteiste ei
+kohdistu urakoihin oikein ja siitä aiheutuu virheitä.
+
+Pitää myös katsoa `varustetoteuma_ulkoiset_viimeisin_hakuaika_kohdeluokalle` aikaleimoja, jos haluaa
+hakujen kohdistuvan tietyn päivämäärän jälkeisiin Velhon muutoksiin.
+
+## Debug lokituksen näyttäminen
+
+Muokkaa asetukset.edn:aa ja muuta rivillä: 
+
 
 ## Tietokanta
 
@@ -461,10 +496,11 @@ kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
 salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
-* Tee muuttoksia `.harja` hakemistoon, `harja-testidata` repossa DEUS:ssa
-* Päivittää `harja-app` hakemisto, `harja-docker` repossa DEUS:ssa. Siellä löytyvät ohjeet. Muista buildata
+* Tee muutoksia `.harja` hakemistoon, `harja-testidata` Internal [*1](#*1) repossa
+* Päivitä `harja-app` hakemisto, `harja-docker` OnPrem [*1](#*1) repossa. Sieltä löytyvät ohjeet. Muista buildata
   "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
 * Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
   mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
   ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
-  
+
+<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)

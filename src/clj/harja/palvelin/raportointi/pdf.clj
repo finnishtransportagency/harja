@@ -18,6 +18,7 @@
             [harja.ui.skeema :as skeema]
             [harja.fmt :as fmt]
             [harja.domain.raportointi :as raportti-domain]
+            [harja.palvelin.raportointi.raportit.yleinen :as raportit-yleinen]
             [harja.ui.aikajana :as aikajana]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]))
@@ -57,6 +58,15 @@
 
 (defmethod muodosta-pdf :vain-arvo [arvo] arvo)
 
+(defmethod muodosta-pdf :arvo [[_ {:keys [arvo desimaalien-maara fmt ryhmitelty? jos-tyhja] :as elementti}]]
+  [:fo:inline
+   [:fo:inline (if-not (nil? arvo)
+                 (cond
+                   desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                   fmt (fmt arvo)
+                   :else arvo)
+                 jos-tyhja)]])
+
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
@@ -66,24 +76,53 @@
    [:fo:inline " "]
    [:fo:inline {:font-size (str (- taulukon-fonttikoko 2) taulukon-fonttikoko-yksikko)} (str "( " osuus "%)")]])
 
-(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara]}]]
+;; Toimii tismalleen samoin, kuin :arvo-ja-yksikko, mutta tämän avulla
+;; PDF:lle saadaan yksittäisille soluille korostuksia
+(defmethod muodosta-pdf :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
   [:fo:inline
    [:fo:inline (cond
-                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara)
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
                  fmt (fmt arvo)
                  :else arvo)]
    [:fo:inline (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-pdf :arvo-ja-yksikko [[_ {:keys [arvo yksikko fmt desimaalien-maara ryhmitelty?]}]]
+  [:fo:inline
+   [:fo:inline (cond
+                 desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara ryhmitelty?)
+                 fmt (fmt arvo)
+                 :else arvo)]
+   [:fo:inline (str "\u00A0" yksikko)]])
+
+(defmethod muodosta-pdf :arvo-ja-selite [[_ {:keys [arvo selite]}]]
+  [:fo:inline
+   [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
 (defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
   [:fo:inline
    [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
                            (raportti-domain/virhetyylit tyyli)
                            "black")}
-    ;; Try to fix VHAR-2391 replacing - with its unicode representation
-    (str/replace
-      (if fmt (fmt arvo) arvo)
-      "-" "\u002D")]])
+    (if fmt (fmt arvo) arvo)]])
 
+(defmethod muodosta-pdf :teksti-ja-info [[_ {:keys [arvo]}]] arvo)
+
+(defmethod muodosta-pdf :infopallura [_]
+  nil)
+
+(defmethod muodosta-pdf :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara  ryhmitelty?]}]]
+  (let [etuliite (cond
+                   (neg? arvo) "-\u00A0"  
+                   (zero? arvo) ""
+                   :else "+\u00A0")
+        arvo (Math/abs (float arvo))
+        prosentti (Math/abs (float prosentti))]
+    [:fo:inline
+     [:fo:inline (str etuliite
+                   (cond
+                     desimaalien-maara (fmt/desimaaliluku-opt arvo desimaalien-maara  ryhmitelty?)
+                     :else arvo))]
+     [:fo:inline (str "\n" "(" etuliite (fmt/prosentti-opt prosentti) ")")]]))
 
 (def alareuna
   {:border-bottom reunan-tyyli})
@@ -134,6 +173,27 @@
     :raha #(raportti-domain/yrita fmt/euro-opt %)
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
+
+(defn- korostetaanko-hennosti
+  "Yleisesti PDF:n solun formatointi asetetaan rivitasolla. Tällä funktiolla voidaan määrittää
+  solutasoisia hentoja korostuksia, eli vaalean sinistä taustaa.
+  Käytetään soluelementille annettua hento-korostus-arvoa ensisijaisesti. Toissijaisesti käytetään riville annetta.
+
+  'korosta-hennosti?' ensimmäinen parametri tulee rivitasolta.
+  'arvo-datassa' on koko soluelementin sisältö ja jos sille on määritelty hento korostus, niin asettaan taustaväri."
+  [korosta-hennosti? arvo-datassa]
+  (cond
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (false? (:korosta-hennosti? (second arvo-datassa))))
+    {}
+    korosta-hennosti? korosta-hennosti?
+    (and
+      (raportti-domain/raporttielementti? arvo-datassa)
+      (:korosta-hennosti? (second arvo-datassa)))
+    {:background-color hennosti-korostettu-vari
+     :color "black"}
+    :else {}))
 
 (defn- taulukko-rivit [sarakkeet data viimeinen-rivi
                        {:keys [viimeinen-rivi-yhteenveto? korosta-rivit
@@ -193,7 +253,7 @@
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
-                               korosta-hennosti?
+                               (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
                                lihavoi?)
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
@@ -284,8 +344,17 @@
   [:fo:block {:color (when vari vari)
               :font-size otsikon-fonttikoko} teksti])
 
+(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
+  [:fo:block {:color (when vari vari)
+              :font-size otsikon-fonttikoko
+              :font-weight "bold"} teksti])
+
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari "#dd0000"}]))
+
+(defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
+  ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
+  nil)
 
 (defmethod muodosta-pdf :pylvaat [[_ {:keys [otsikko vari fmt piilota-arvo? legend]} pylvaat]]
   ;;[:pylvaat "Otsikko" [[pylvas1 korkeus1] ... [pylvasN korkeusN]]] -> bar chart svg
@@ -343,20 +412,23 @@
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
-  (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
-    (apply fo/dokumentti {:orientation *orientaatio*
-                          :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
-           (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
-                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
-                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
-                       (muodosta-pdf [:yhteenveto tiedot])])]
-                   (keep identity
-                         (mapcat #(when %
-                                    (if (seq? %)
-                                      (map muodosta-pdf %)
-                                      [(muodosta-pdf %)]))
-                                 sisalto))
-                   #_[[:fo:block {:id "raportti-loppu"}]]))))
+  (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
+    (with-meta
+      (binding [*orientaatio* (or (:orientaatio raportin-tunnistetiedot) :portrait)]
+        (apply fo/dokumentti {:orientation *orientaatio*
+                              :header {:sisalto (luo-header (:nimi raportin-tunnistetiedot))}}
+          (concat [;; Jos raportin tunnistetiedoissa on annettu :tietoja avaimella, näytetään ne alussa
+                   (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
+                     [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
+                      (muodosta-pdf [:yhteenveto tiedot])])]
+            (keep identity
+              (mapcat #(when %
+                         (if (seq? %)
+                           (map muodosta-pdf %)
+                           [(muodosta-pdf %)]))
+                sisalto))
+            #_[[:fo:block {:id "raportti-loppu"}]])))
+      {:tiedostonimi (str tiedoston-nimi ".pdf")})))
 
 (def aikajana-rivimaara 25)
 

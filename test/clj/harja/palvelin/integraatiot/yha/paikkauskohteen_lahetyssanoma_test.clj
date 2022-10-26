@@ -21,6 +21,8 @@
                          first
                          :paikkaus)]
     (is (= "Oulun alueurakka 2014-2019" (get-in sanoma [:urakka :nimi])) "Urakan tiedot palautuvat.")
+    (is (= "UREM" (get eka-paikkaus :tyomenetelma)) "Työmenetelmä string")
+    (is (nil? (get eka-paikkaus :lahde)) "Lähde ei ole YHA-skeemassa")
     (is (= 1
            (get-in eka-paikkaus [:sijainti :ajorata])) "Ajorata läsnä")
     (is (= {:ajourat [{:ajoura 1}]
@@ -35,6 +37,6 @@
 
 (deftest ei-voi-lahettaa-vaaran-urakan-kohteita
   (let [db (:db jarjestelma)]     ;; kohde 1 on oulun urakan kohde]
-    (is (thrown? Exception (paikkauskohteen-lahetyssanoma/muodosta db (hae-rovaniemen-maanteiden-hoitourakan-id) 1))
+    (is (thrown? Exception (paikkauskohteen-lahetyssanoma/muodosta db (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)") 1))
         "Sanoman muodostaminen epäonnistuu, kun paikkauskohde ei kuulu urakkaan.")))
 

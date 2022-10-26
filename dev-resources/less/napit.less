@@ -4,6 +4,10 @@
        @vari-disabled: @harmaa7, @tausta-disabled: @harmaa10, @reunus-disabled: @harmaa7) {
     .btn();
 
+    &.keskitettava {
+        display: block;
+        margin: 0 auto;
+    }
     &.pull-right {
         margin-right: 0;
     }
@@ -46,8 +50,8 @@
 
 /* Ensisijaista toimintoa indikoiva nappi. */
 .nappi-ensisijainen {
-    .nappi(@vari:          @valkoinen;
-    @tausta:               @primaari-sininen;
+    .nappi(@vari:          @white-default;
+    @tausta:               @blue-default;
     @tausta-osoitettaessa: @primaari-sininen-valittuna;
     @fontin-paino:         600;);
 }
@@ -55,11 +59,11 @@
 /* Toissijaista toiminnallisuutta esittävä väritys. */
 .nappi-toissijainen {
     .nappi(
-    @vari:                 @primaari-sininen;
-    @vari-osoitettaessa:   @valkoinen;
-    @tausta:               @valkoinen;
+    @vari:                 @blue-default;
+    @vari-osoitettaessa:   @white-default;
+    @tausta:               @white-default;
     @tausta-osoitettaessa: @primaari-sininen-valittuna;
-    @reunus:               @primaari-sininen;
+    @reunus:               @blue-default;
     @fontin-paino:         600;
     );
 }
@@ -82,10 +86,10 @@
 /* Myönteinen toiminto */
 .nappi-myonteinen {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @onnistuminen;
     @tausta:               @onnistuminen;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @onnistuminen;
     );
 }
@@ -93,10 +97,10 @@
 /* Kielteinen toiminto */
 .nappi-kielteinen {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @vaara;
     @tausta:               @vaara;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @vaara;
     );
 }
@@ -104,10 +108,10 @@
 /* Varoitus-toiminto */
 .nappi-varoitus {
     .nappi(
-    @vari:                 @valkoinen;
+    @vari:                 @white-default;
     @vari-osoitettaessa:   @brand-warning;
     @tausta:               @brand-warning;
-    @tausta-osoitettaessa: @valkoinen;
+    @tausta-osoitettaessa: @white-default;
     @reunus:               @brand-warning;
     );
 }
@@ -115,14 +119,14 @@
 // Harja spesifinen
 .nappi-alasveto {
     color:                 @harmaa1;
-    background-color:      @valkoinen;
+    background-color:      @white-default;
     border:                1px solid @harmaa7;
     font-weight:           normal;
     padding-bottom:        2px;
     width:                 100%;
     &:active,
     &:focus {
-        border: 1px solid @primaari-sininen;
+        border: 1px solid @blue-default;
         outline: none;
     }
     &[disabled] {
@@ -136,7 +140,7 @@
     vertical-align: top;
     width: 32px;
     .livicon-chevron-down {
-        color: @primaari-sininen;
+        color: @blue-default;
         position: relative;
         top: 2px;
     }

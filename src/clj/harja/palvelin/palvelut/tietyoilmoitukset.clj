@@ -22,6 +22,7 @@
     [harja.kyselyt.tietyoilmoitukset :as q-tietyoilmoitukset]
     [harja.kyselyt.yhteyshenkilot :as q-yhteyshenkilot]
     [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
+    [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
     [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
@@ -313,9 +314,10 @@
            db :db
            http :http-palvelin
            pdf :pdf-vienti
-           fim :fim
-           email :sonja-sahkoposti
-           :as this}]
+           fim :fim :as this}]
+    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
+                  (:sonja-sahkoposti this)
+                  (:api-sahkoposti this))]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))
@@ -342,7 +344,7 @@
     (when pdf
       (pdf-vienti/rekisteroi-pdf-kasittelija!
         pdf :tietyoilmoitus (partial #'tietyoilmoitus-pdf db)))
-    (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
+    #_ (when (asetukset/ominaisuus-kaytossa? :tietyoilmoitusten-lahetys)
       (tapahtumat/kuuntele! email
                             (-> email :jonot :sahkoposti-ja-liite-ulos-kuittausjono)
                             (fn [{:keys [viesti-id aika onnistunut]} _ _]
@@ -351,7 +353,7 @@
                                                                                               (when-not onnistunut
                                                                                                 {::tietyoilmoituksen-e/lahetysvirhe aika}))
                                                                                        {::tietyoilmoituksen-e/lahetysid viesti-id}))))
-    this)
+    this))
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)

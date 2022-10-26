@@ -26,10 +26,9 @@
 
 (deftest yhteydenpito-vastaanottajat-toimii
   (let [tulos (kutsu-palvelua (:http-palvelin jarjestelma)
-                              :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)]
-    (println "vastaanottajat:" tulos)
-
-    (is (= (count tulos) 13))
+                              :yhteydenpito-vastaanottajat +kayttaja-jvh+ nil)
+        odotettu-maara (ffirst (q "SELECT count(*) FROM kayttaja where sahkoposti IS NOT NULL;"))]
+    (is (= (count tulos) odotettu-maara))
     (is (= (vec (distinct (mapcat keys tulos))) [:etunimi :sukunimi :sahkoposti]))))
 
 (deftest yhdista-kayttajan-urakat-alueittain

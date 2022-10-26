@@ -270,13 +270,27 @@
         kulu (if (nil? id)
                 (q/luo-kulu<! db yhteiset-tiedot)
                 (q/paivita-kulu<! db (assoc yhteiset-tiedot
-                                        :id id)))]
+                                        :id id)))
+        vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)})
+        sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
+        puuttuvat-kohdistukset (remove
+                                 #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
+                                 vanhat-kohdistukset)]
     (when-not (or (nil? liitteet)
                   (empty? liitteet))
       (doseq [liite liitteet]
         (q/linkita-kulu-ja-liite<! db {:kulu-id (:id kulu)
                                         :liite-id (:liite-id liite)
                                         :kayttaja (:id user)})))
+
+    ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
+    (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
+        (poista-kulun-kohdistus db user
+          {:id id
+           :urakka-id urakka-id
+           :kohdistuksen-id (:kohdistus-id puuttuva-kohdistus)
+           :kohdistus puuttuva-kohdistus}))
+
     (doseq [kohdistusrivi kohdistukset]
       (as-> kohdistusrivi r
             (update r :summa big/unwrap)
@@ -328,11 +342,8 @@
 (defn- kulu-pdf
   [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [alkupvm (or alkupvm
-                    (pvm/->pvm "01.01.1990"))
-        loppupvm (or loppupvm
-                     (pvm/nyt))
-        kulut (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
+  (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
+  (let [kulut (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
                                                             :alkupvm  (konversio/sql-timestamp alkupvm)
                                                             :loppupvm (konversio/sql-timestamp loppupvm)})
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
@@ -346,46 +357,52 @@
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
-  (let [alkupvm (or alkupvm
-                    (pvm/->pvm "01.01.1990"))
-        loppupvm (or loppupvm
-                     (pvm/nyt))
-        kulut (sort-by :erapaiva
+  (assert (and alkupvm loppupvm) "alkupvm ja loppupvm oltava annettu")
+  (let [kulut (sort-by :erapaiva
                        (q/hae-kulut-kohdistuksineen-tietoineen-vientiin db {:urakka   urakka-id
                                                                             :alkupvm  (konversio/sql-timestamp alkupvm)
                                                                             :loppupvm (konversio/sql-timestamp loppupvm)}))
         kulut-kuukausien-mukaan (group-by #(pvm/kokovuosi-ja-kuukausi (:erapaiva %))
                                           (sort-by :erapaiva
                                                    kulut))
-        luo-sarakkeet (fn [& otsikot]
-                        (mapv #(hash-map :otsikko %) otsikot))
-        optiot {:nimi  urakka-nimi
-                :tyhja (if (empty? kulut) "Ei kuluja valitulla aikavälillä.")}
-        sarakkeet (luo-sarakkeet "Eräpäivä" "Toimenpide" "Tehtäväryhmä" "Maksuerä" "Summa")
-        luo-rivi (fn [rivi] [(-> rivi
-                                 :erapaiva
-                                 pvm/pvm
-                                 str)
-                             (:toimenpide rivi)
-                             (or (:tehtavaryhma rivi)
-                                 "Lisätyö")
-                             (str "HA" (:maksuera rivi))
-                             [:arvo-ja-yksikko {:arvo (:summa rivi) :yksikko "€" :fmt? false}]])
+        sarakkeet [{:otsikko "Eräpäivä"}
+                   {:otsikko
+                    "Maksuerä"}
+                   {:otsikko
+                    "Toimenpide"}
+                   {:otsikko "Tehtäväryhmä"}
+                   {:otsikko "Summa" :fmt :raha}]
+        luo-rivi (fn [rivi]
+                   [(-> rivi :erapaiva pvm/pvm str)
+                    (str "HA" (:maksuera rivi))
+                    (:toimenpide rivi)
+                    (or (:tehtavaryhma rivi) "Lisätyö")
+                    [:arvo-ja-yksikko {:arvo (:summa rivi)}]])
+        eka-rivi-jossa-kustannuksia 4
         luo-data (fn [kaikki [vuosi-kuukausi rivit]]
-                   (conj kaikki
-                         [:teksti (str vuosi-kuukausi)]
-                         [:otsikko (str vuosi-kuukausi)]
-                         [:taulukko optiot sarakkeet (mapv luo-rivi rivit)]))
+                   (let [yhteenvetorivi [[nil nil nil "Yhteensä:" [:kaava {:kaava :summaa-yllaolevat
+                                                                           :alkurivi eka-rivi-jossa-kustannuksia
+                                                                           :loppurivi (+ (count rivit)
+                                                                                         (- eka-rivi-jossa-kustannuksia 1))}]]]]
+                     (conj kaikki
+                           [:taulukko {:nimi urakka-nimi
+                                       :sheet-nimi vuosi-kuukausi
+                                       :viimeinen-rivi-yhteenveto? true}
+                            sarakkeet (into []
+                                            (concat
+                                              (mapv luo-rivi rivit)
+                                              yhteenvetorivi))])))
         taulukot (reduce luo-data [] kulut-kuukausien-mukaan)
         taulukko (concat
-                   [:raportti {:nimi        (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
-                               :raportin-yleiset-tiedot {:urakka urakka-nimi
+                   [:raportti {:raportin-yleiset-tiedot {:urakka urakka-nimi
                                                          :alkupvm (pvm/pvm alkupvm)
-                                                         :loppupvm (pvm/pvm alkupvm)
+                                                         :loppupvm (pvm/pvm loppupvm)
                                                          :raportin-nimi "Kulujen kohdistus"}
                                :orientaatio :landscape}]
                    (if (empty? taulukot)
-                       [[:taulukko optiot (luo-sarakkeet (str urakka-nimi "_" (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))) [["Ei kuluja valitulla aikavälillä"]]]]
+                     [[:taulukko {:nimi urakka-nimi}
+                       [{:otsikko (str urakka-nimi " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}]
+                       [["Ei kuluja valitulla aikavälillä"]]]]
                        taulukot))]
     (excel/muodosta-excel (vec taulukko)
                           workbook)))

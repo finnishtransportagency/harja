@@ -65,13 +65,13 @@ div.valilehti {
 }
 
 .haku-lista {
-  border: 1px solid @black;
+  border: 1px solid @black-default;
   overflow-y: auto;
   padding: 0;
 }
 
 .haku-lista-item-nimi {
-  background-color: @valkoinen;
+  background-color: @white-default;
   border-color: @harmaa7;
   color: @harmaa1;
   padding: 3px 6px;
@@ -85,7 +85,7 @@ div.valilehti {
 }
 
 .haku-lista-ryhma {
-  border: 1px solid @black;
+  border: 1px solid @black-default;
   .haku-lista {
     border: none;
     margin-bottom: 0;
@@ -93,15 +93,15 @@ div.valilehti {
 }
 
 .haku-vinkki {
-  background-color: @valkoinen;
-  border: 1px solid @black;
+  background-color: @white-default;
+  border: 1px solid @black-default;
   color: @harmaa1;
   padding: 3px 6px;
 }
 
 .haku-lista-ryhman-otsikko {
-  background-color: @valkoinen;
-  color: @black;
+  background-color: @white-default;
+  color: @black-default;
   font-weight: bold;
   padding: 3px 6px;
 }
@@ -166,14 +166,40 @@ tr.uusitehtavakoodi td {
   padding-top: 10px;
 }
 
-.label-ja-alasveto {
+.label-ja-alasveto-grid {
   display: inline-block;
   margin: 5px;
+  & > div {
+    height: 31px;
+    & > div {
+      height: 31px;
+    }
+  }
   .alasvedon-otsikko {
     display: inline-block;
     font-weight: bold;
   }
+
+  &.col-md-1, &.col-md-2, &.col-md-3 {
+    padding: 0;
+
+    > label {
+      margin-top: 0;
+    }
+  }
+}
+
+.label-ja-alasveto {
+  display: inline-block;
+  margin: 5px;
+
+  .alasvedon-otsikko {
+    display: inline-block;
+    font-weight: bold;
+  }
+
   .livi-alasveto(@valintakontrollin-leveys);
+
   &.sopimusnumero {
     .livi-alasveto(@alasvedon-leveys-sop);
   }
@@ -234,7 +260,7 @@ tr.uusitehtavakoodi td {
   z-index: 10000;
   animation: toast-liuku-vasemmalta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
   cursor: pointer;
-  height: 40px;
+  min-height: 40px;
 
   .livicon-delete {
     position: absolute;
@@ -249,8 +275,10 @@ tr.uusitehtavakoodi td {
 .toast-viesti {
   padding-left: 12px;
   padding-right: 12px;
+  padding-top: 14px;
+  padding-bottom: 14px;
   font-weight: 600;
-  height: 40px;
+  min-height: 40px;
   display: flex;
   align-items: center;
 
@@ -289,6 +317,7 @@ tr.uusitehtavakoodi td {
 .info-laatikko {
   max-width: 900px;
   &.varoitus {
+    color: @gray25;
     background: @red-lighter;
     border: 1px solid @red-light;
     span.livicon-exclamation-triangle {
@@ -296,6 +325,7 @@ tr.uusitehtavakoodi td {
     }
   }
   &.onnistunut {
+    color: @gray25;
     background: @green-lighter;
     border: 1px solid @green-dark;
     span.livicon-check {
@@ -303,6 +333,15 @@ tr.uusitehtavakoodi td {
     }
   }
   &.neutraali {
+    color: @gray25;
+    background: @blue-lighter;
+    border: 1px solid @blue-default;
+    svg {
+      height: 18px;
+      width: 18px;
+    }
+  }
+  &.vahva-ilmoitus {
     background: @lemon-light;
     border: 1px solid @lemon-default;
     svg {
@@ -312,7 +351,9 @@ tr.uusitehtavakoodi td {
   }
   > .infolaatikon-ikoni {
     font-size: 18px;
-    padding-top: 14px;
+    margin-bottom: auto;
+    margin-top: auto;
+    padding-right: 8px;
   }
   padding-left: 16px;
   padding-right: 16px;
@@ -410,17 +451,21 @@ tr.uusitehtavakoodi td {
 }
 .virheviesti-sailio {
   background-color: @vaara;
-  color: @valkoinen;
+  color: @white-default;
   padding: 5px;
 }
 .onnistunut-sailio {
   background-color: @vihrea4;
-  color: @valkoinen;
+  color: @white-default;
   padding: 5px;
 }
 .raksiboksi {
   background-color: @harjan-taustavari;
   width: 315px;
+  &.tiivis {
+      width: fit-content;
+      margin-right: 15px;
+  }
   > div {
     margin: 8px 0;
   }
@@ -456,4 +501,8 @@ tr.uusitehtavakoodi td {
 
 .col-xs-offset-1-right {
     margin-right: 8.33333333%;
+}
+
+.ala-margin-16 {
+    margin-bottom:@valistys-16;
 }

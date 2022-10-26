@@ -14,20 +14,20 @@
                    :lisatyo 1545.000000000000000000000000M
                    :muu 9000M
                    :sakko 5000M
-                   :tpi_id 42}
+                   :tpi_id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP' and urakka = '" urakka-id "';"))}
                   {:kokonaishintainen 2000M
                    :lisatyo 0M
                    :muu 1000M
                    :sakko 0M
-                   :tpi_id 43}]]
+                   :tpi_id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Testitoimenpideinstanssi' and urakka = '" urakka-id "';"))}]]
     (is (= odotettu (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))))))
 
 (deftest hae-urakan-maksueran-summat-yksikkohintaiset-summat--teiden-hoidon-urakalle
   (let [db (:db jarjestelma)
-        urakka-id (ffirst (q "select id from urakka where nimi = 'Oulun alueurakka 2014-2019';"))
+        urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         odotettu [{:akillinen-hoitotyo 0.0M
                    :bonus 21000.0M
-                   :indeksi 8345.2044093231159362450000000M
+                   :indeksi 8011.5519246487865237290000000M
                    :kokonaishintainen 42010.0M
                    :lisatyo 2000.0M
                    :muu 11000.0M
@@ -37,7 +37,7 @@
                    :yksikkohintainen 2000.0M}
                   {:akillinen-hoitotyo 3000.0M
                    :bonus 0.0M
-                   :indeksi 2410.41666666666671345000M
+                   :indeksi 2363.57183908045982945000M
                    :kokonaishintainen 0.0M
                    :lisatyo 10000.0M
                    :muu 1000.0M
@@ -69,12 +69,26 @@
                ; MHU Korvausinvestointi	14300	51
                ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
                ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
-               odotettu [{:tpi_id 45, :urakka_id 35, :kokonaishintainen 4192.4234300M}
-                         {:tpi_id 46, :urakka_id 35, :kokonaishintainen 6251.48763M}
-                         {:tpi_id 47, :urakka_id 35, :kokonaishintainen 8801.94M}
-                         {:tpi_id 48, :urakka_id 35, :kokonaishintainen 2750.546M}
-                         {:tpi_id 49, :urakka_id 35, :kokonaishintainen 11001.94M}
-                         {:tpi_id 50, :urakka_id 35, :kokonaishintainen 15401.94M}
-                         {:tpi_id 51, :urakka_id 35, :kokonaishintainen 13201.94M}]
+               odotettu [{:kokonaishintainen 4150.791430M
+                          :tpi_id 48
+                          :urakka_id 35}
+                         {:kokonaishintainen 6251.487630M
+                          :tpi_id 49
+                          :urakka_id 35}
+                         {:kokonaishintainen 8801.94M
+                          :tpi_id 50
+                          :urakka_id 35}
+                         {:kokonaishintainen 3697.454000M
+                          :tpi_id 51
+                          :urakka_id 35}
+                         {:kokonaishintainen 11001.94M
+                          :tpi_id 52
+                          :urakka_id 35}
+                         {:kokonaishintainen 15401.94M
+                          :tpi_id 53
+                          :urakka_id 35}
+                         {:kokonaishintainen 13201.94M
+                          :tpi_id 54
+                          :urakka_id 35}]
                vastaus (vec (maksuerat-q/hae-urakan-maksueran-summat db urakka-id))]
-              (is (= odotettu vastaus))))
+              (is (= vastaus odotettu))))

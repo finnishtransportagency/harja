@@ -14,8 +14,8 @@
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
-            [harja.ui.yleiset :refer [ajax-loader raksiboksi] :as yleiset]
-            [harja.ui.kentat :refer [tee-kentta]]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.kentat :refer [tee-kentta] :as kentat]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
@@ -33,7 +33,6 @@
             [harja.ui.notifikaatiot :as notifikaatiot]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.ilmoitukset.viestit :as v]
-            [harja.ui.kentat :as kentat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.debug :as debug]
@@ -258,11 +257,11 @@
                                                                            (:urakka rivi))]
                             [:span (when liidosta-tullut?
                                      {:title tiedot/vihje-liito})
-                             [raksiboksi {:disabled (or liidosta-tullut?
-                                                        (not kirjoitusoikeus?))
-                                          :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
-                                                               (nil? pikakuittaus))
-                                                      #(valitse-ilmoitus! rivi))}
+                             [kentat/raksiboksi {:disabled (or liidosta-tullut?
+                                                               (not kirjoitusoikeus?))
+                                                 :toiminto (when (and (not ilmoituksen-haku-kaynnissa?)
+                                                                      (nil? pikakuittaus))
+                                                             #(valitse-ilmoitus! rivi))}
                               (boolean (valitut-ilmoitukset rivi))]]))
            :leveys 2})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
