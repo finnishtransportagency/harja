@@ -849,6 +849,10 @@ WHERE id = :urakka;
 DELETE
 FROM valaistusurakka;
 
+-- name: tarkista-valaistusurakkadata
+SELECT count(*) as lkm
+FROM valaistusurakka;
+
 -- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
 SELECT alueurakka
 FROM valaistusurakka
@@ -860,6 +864,10 @@ VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, cu
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
 DELETE
+FROM paallystyspalvelusopimus;
+
+-- name: tarkista-paallystyspalvelusopimusdata
+SELECT count(*) as lkm
 FROM paallystyspalvelusopimus;
 
 -- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla

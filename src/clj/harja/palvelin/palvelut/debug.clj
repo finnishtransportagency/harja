@@ -10,6 +10,7 @@
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
+            [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.geo :as geo]))
@@ -44,13 +45,24 @@
                         (let [alkusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["alkusijainti"]))
                               loppusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["loppusijainti"]))
                               tr-osoite (sijainnit/hae-tierekisteriosoite db alkusijainti loppusijainti)
+                              pisteet-alku (tierekisteri-haku/hae-tr-pisteella db alkusijainti)
+                              pisteet-loppu (tierekisteri-haku/hae-tr-pisteella db loppusijainti)
                               geometria (if tr-osoite
                                           (:geometria tr-osoite)
                                           (sijainnit/tee-geometria alkusijainti loppusijainti))]
-                          (geo/pg->clj geometria)))
-                      tarkastukset)
-        yhtena-geometriana (reittitoteuma/yhdista-viivat geometriat)]
-    yhtena-geometriana))
+                          {:reitit (geo/pg->clj geometria)
+                           :alkupisteet pisteet-alku
+                           :loppupisteet pisteet-loppu}))
+                         tarkastukset)
+        reitit (mapv :reitit geometriat)
+        alkupisteet (mapv :alkupisteet geometriat)
+        loppupisteet (mapv :loppupisteet geometriat)
+
+        yhtena-geometriana (reittitoteuma/yhdista-viivat reitit)]
+    yhtena-geometriana
+    {:reitti yhtena-geometriana
+     :alkupisteet alkupisteet
+     :loppupisteet loppupisteet}))
 
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
