@@ -75,10 +75,6 @@
     (komp/luo      
       (fn [{:keys [yllapito? vesivayla? auki?] :as optiot}]      
         (let [muokattu (atom @tiedot/valittu-sanktio)
-                                        ; Jos urakkana on teiden-hoito (MHU) käyttäjä ei saa vapaasti valita indeksiä sanktiolle.
-                                        ; Sanktioon kuuluva indeksi on pakollinen ja se on jo määritelty urakalle, joten se pakotetaan käyttöön.
-              _ (when (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                  (swap! muokattu assoc :indeksi (:indeksi @nav/valittu-urakka)))
               _ (when (and
                         (true? (:bonus @muokattu))
                         (not= :bonukset (:lomake @tila)))
@@ -176,24 +172,62 @@
                                   #(do
                                      (reset! auki? false)
                                      (reset! tiedot/valittu-sanktio nil))]])}
-                  [(when-not (or yllapito? vesivayla?)
-                     {:otsikko "Tyyppi" :tyyppi :valinta
-                      :pakollinen? true
+                  [(when-not vesivayla? ;; Vesiväylässä lajeina on vain sakko
+                     {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
                       ::lomake/col-luokka "col-xs-12"
-                      :nimi :tyyppi
-                      :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                               (assoc sanktio
-                                 :tyyppi tyyppi
-                                 :toimenpideinstanssi
-                                 (when tpk
-                                   (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
-                      :valinta-arvo identity
-                      :aseta-vaikka-sama? true
-                      :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                                       (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
-                      :valinta-nayta (fn [arvo]
-                                       (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
-                      :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]})
+                      :uusi-rivi? true :nimi :laji
+                      :hae (comp keyword :laji)
+                      :aseta (fn [rivi arvo]
+                               (let [rivi (-> rivi
+                                            (assoc :laji arvo)
+                                            (dissoc :tyyppi)
+                                            (assoc :tyyppi nil))
+                                     s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
+                                                arvo kaikki-sanktiotyypit urakan-alkupvm)
+                                     rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
+                                                   (and
+                                                     (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                                     ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                                     ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                                     (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                            (assoc rivi
+                                              :tyyppi tyyppi
+                                              :toimenpideinstanssi
+                                              (when tpk
+                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                            rivi)]
+                                 (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
+                                   (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                                   rivi)))
+                      :valinnat (vec mahdolliset-sanktiolajit)
+                      :valinta-nayta laji->teksti
+                      :validoi [[:ei-tyhja "Valitse laji"]]})
+                   (when-not (or yllapito? vesivayla?)
+                     (if (not lukutila?)
+                       {:otsikko "Tyyppi" :tyyppi :valinta
+                        :pakollinen? true
+                        ::lomake/col-luokka "col-xs-12"
+                        :nimi :tyyppi
+                        :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                                 (assoc sanktio
+                                   :tyyppi tyyppi
+                                   :toimenpideinstanssi
+                                   (when tpk
+                                     (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
+                        :valinta-arvo identity
+                        :aseta-vaikka-sama? true
+                        :valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
+                                         (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
+                        :valinta-nayta (fn [arvo]
+                                         (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
+                        :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+
+                       ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+                       ;; Vanhat poistetut sanktiotyypit eivät tule valintakomponenttiin vaihtoehdoiksi vanhoissa kirjauksissa,
+                       ;; joten näytetään tyyppi pelkkänä tekstinä.
+                       {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
+                        ::lomake/col-luokka "col-xs-12"
+                        :hae (comp :nimi :tyyppi)}))
 
                    (when yllapitokohdeurakka?
                      {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
@@ -254,6 +288,7 @@
                         :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                         :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
                         :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+
                        ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
                        {:otsikko "Kulun kohdistus" :tyyppi :teksti :nimi :toimenpideinstanssi
                         ::lomake/col-luokka "col-xs-12"

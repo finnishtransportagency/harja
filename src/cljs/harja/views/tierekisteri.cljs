@@ -14,7 +14,8 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.yleiset :as yleiset]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.walk :as walk])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
@@ -54,11 +55,24 @@
                   :loppuetaisyys alkuetaisyys)))
   (hae!))
 
+(defn ajoratojen-geometriat! []
+  (tasot/poista-geometria! :ajoratojen-geometriat)
+  (go
+    (let [tulos (<! (vkm/tieosan-ajoratojen-geometriat @tr))]
+      (reset! sijainti tulos)
+      (tasot/nayta-geometria! :ajoratojen-geometriat
+                              {:alue (maarittele-feature
+                                       (first tulos)
+                                       false
+                                       asioiden-ulkoasu/tr-ikoni
+                                       asioiden-ulkoasu/tr-viiva)}))))
+
 (def tr-kentat [["Tie" :numero]
                 ["Aosa" :alkuosa]
                 ["Aet" :alkuetaisyys]
                 ["Losa" :loppuosa]
-                ["Let" :loppuetaisyys]])
+                ["Let" :loppuetaisyys]
+                ["Ajorata" :ajorata]])
 
 (defn hae-tr-osoite! []
   ;; Hae TR osoite koordinaatille
@@ -156,6 +170,8 @@
    [:div
     [:button {:on-click hae!} "Hae"]
     [:button {:on-click kaanna!} "Käännä alku/loppu"]
+    [:button {:on-click ajoratojen-geometriat!} "Piirrä ajoradat"]
+    [yleiset/vihje "Ajorata vaikuttaa vain ajoradan geometrian piirtämiseen. Ajoradan piirrossa huomioidaan tie, aosa ja ajorata (jos jätät ajoradan tyhjäksi, piirretään kaikkien ajoratojen geometriat ko. tiellä ja osalla."]
     ;; Toistaiseksi piilotettu, koska ei toimi nykyisellään.
     #_[:button {:on-click hae-vkm!} "Hae VKM polut"]]])
 
@@ -264,9 +280,23 @@
                               (geometrisoi-ja-nayta-reittitoteuma @payload))}
         "Piirrä"]])))
 
+(def tayttovareja
+  ;; luodaan värejä järjestyksessä, jotta eri tarkastuksten alku- ja loppupisteet erottuvat toisistaan
+  (vec (apply concat (repeat 10 ["red" "orange" "blue" "yellow" "black"]))))
+
+(def tarkastuksia-piirretty (atom nil))
+
 (defn- geometrisoi-ja-nayta-tarkastus [json]
   (go
-    (let [reitti (<! (k/post! :debug-geometrisoi-tarkastus json))]
+    (let [{reitti :reitti
+           alkupisteet :alkupisteet
+           loppupisteet :loppupisteet} (<! (k/post! :debug-geometrisoi-tarkastus json))]
+      ;; poistetaan vanhat pisteet
+      (doseq [idx @tarkastuksia-piirretty]
+        (tasot/poista-geometria! (keyword (str "tarkastuksen-pisteet-alku-" idx)))
+        (tasot/poista-geometria! (keyword (str "tarkastuksen-pisteet-loppu-" idx))))
+
+      (tasot/poista-geometria! :tierekisteri-haettu-osoite)
       (tasot/nayta-geometria! :geometrisoitu-tarkastus
                               {:type :geometrisoitu-tarkastus
                                :nimi "Geometrisoitu tarkastus"
@@ -274,7 +304,26 @@
                                        :fill "orange"
                                        :radius 4
                                        :stroke {:color "orange"
-                                                :width 3})}))))
+                                                :width 3})})
+      (doseq [[idx ap] (map-indexed vector alkupisteet)]
+        (reset! tarkastuksia-piirretty (count alkupisteet))
+        (when-let [g (:geometria ap)]
+          (tasot/nayta-geometria! (keyword (str "tarkastuksen-pisteet-alku-" idx))
+                                  {:alue (assoc g
+                                           :type :circle
+                                           :fill (nth tayttovareja idx)
+                                           :radius 10
+                                           :stroke {:color "blue"
+                                                    :width 3})})))
+      (doseq [[idx lp] (map-indexed vector loppupisteet)]
+        (when-let [g (:geometria lp)]
+          (tasot/nayta-geometria! (keyword (str "tarkastuksen-pisteet-loppu-" idx))
+                                  {:alue (assoc g
+                                           :type :circle
+                                           :fill (nth tayttovareja idx)
+                                           :radius 10
+                                           :stroke {:color "orange"
+                                                    :width 3})}))))))
 
 (defn- tarkastus-payload []
   (let [payload (atom "")]
@@ -291,7 +340,8 @@
                                                  js/JSON.parse
                                                  js->clj)]
                               (geometrisoi-ja-nayta-tarkastus @payload))}
-        "Piirrä"]])))
+        "Piirrä tarkastus"]
+       [yleiset/vihje "Tarkastuksen alkupiste (sininen kehä) ja loppupiste (oranssi kehä) piirrettään ympyränä. Voit katsoa niiden avulla, piirtyykö oranssina näkyvä reittiviiva oikein. Joskus uuden tarkastuksen alkupiste on sama kuin edellisen loppupiste - tällöin piirtyy vain loppupiste. Asian voit tarkistaa laittamalla vain ko. tarkastuksen JSON:in payload kenttään."]])))
 
 (defn tierekisteri []
   (komp/luo
@@ -322,11 +372,11 @@
          "Valitse kartalla"])
       (when-let [valittu @valittu-osoite]
         [:div (pr-str valittu)])
+      [tarkastus-payload]
       [:hr]
       [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
-      [reittitoteuma-payload]
-      [tarkastus-payload]])))
+      [reittitoteuma-payload]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120

@@ -95,7 +95,11 @@
 
 (defn- map->id-map-maaralla
   [hoitokausi rivi]
-  (let [{:keys [samat-maarat-vuosittain? aluetieto?]} rivi]
+  (let [{:keys [samat-maarat-vuosittain? aluetieto?]} rivi
+        sopimuksen-aluetietomaara (first (vals (:sopimuksen-aluetieto-maara rivi)))
+        muuttunut-tarjouksesta? (if aluetieto?
+                                  (not= (get-in rivi [:suunnitellut-maarat hoitokausi]) sopimuksen-aluetietomaara)
+                                  true)]
     [(:id rivi)
      (cond-> rivi
        true (assoc  
@@ -103,8 +107,8 @@
               :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
                                       (not samat-maarat-vuosittain?)
                                       false))
-       (get-in rivi [:muuttuneet-tarjouksesta hoitokausi]) (assoc :maara-muuttunut-tarjouksesta (get-in rivi [:suunnitellut-maarat hoitokausi])) ;; Hoitovuoden suunniteltu määrä (input kenttä)
-       aluetieto? (assoc :sopimus-maara (get-in rivi [:sopimuksen-aluetieto-maara hoitokausi]))
+       muuttunut-tarjouksesta? (assoc :maara-muuttunut-tarjouksesta (get-in rivi [:suunnitellut-maarat hoitokausi])) ;; Hoitovuoden suunniteltu määrä (input kenttä)
+       aluetieto? (assoc :sopimus-maara sopimuksen-aluetietomaara)
        (not aluetieto?) (assoc :sopimus-maara (get-in rivi [:sopimuksen-tehtavamaarat hoitokausi]))
        (not aluetieto?) laske-sopimusmaarat)]))
 
