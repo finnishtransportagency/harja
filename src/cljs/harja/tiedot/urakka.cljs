@@ -19,8 +19,7 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as urakka-domain])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn urakan-oletussopimus [urakka]
   (let [{:keys [sopimukset paasopimus]} urakka]
@@ -237,15 +236,20 @@
 (defn valitse-urakan-oletusvuosi! [urakka]
   (reset! valittu-urakan-vuosi (urakan-oletusvuosi urakka)))
 
+(def default-hoitokausi (atom {:ylikirjoita? false}))
+
 (defonce valittu-hoitokauden-kuukausi
   (reaction-writable
     (let [hk @valittu-hoitokausi
           ur @nav/valittu-urakka
           kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
           nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))
+          default-hoitokausi @default-hoitokausi]
       (when (and hk ur)
         (cond
+          (:ylikirjoita? default-hoitokausi)
+          (:default default-hoitokausi)
           ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
           ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
           (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))

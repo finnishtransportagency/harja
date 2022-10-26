@@ -10,8 +10,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
@@ -43,12 +42,13 @@
 (defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
+               [kk-alku kk-loppu] @urakka/valittu-hoitokauden-kuukausi
                _ @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
                 (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (first hoitokausi)
-                                                  :loppu (second hoitokausi)}))))
+                                                  :alku (or kk-alku (first hoitokausi))
+                                                  :loppu (or kk-loppu (second hoitokausi))}))))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n

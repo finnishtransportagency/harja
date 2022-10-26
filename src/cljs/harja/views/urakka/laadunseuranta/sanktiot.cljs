@@ -403,7 +403,7 @@
 (defn- suodattimet-ja-toiminnot [valittu-urakka auki?]
   [valinnat/urakkavalinnat {:urakka valittu-urakka}
    ^{:key "urakkavalinnat"}
-   [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:urakka valittu-urakka}
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -455,12 +455,7 @@
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot-ja-bonukset))
-        {:keys [yllapito? vesivayla? auki?]} optiot
-        yhteensa (reduce + (map :summa sanktiot))
-        yhteensa (when yhteensa
-                   (if yllapito?
-                     (- yhteensa) ; ylläpidossa sakot miinusmerkkisiä
-                     yhteensa))
+        {:keys [yllapito? auki?]} optiot
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [suodattimet-ja-toiminnot valittu-urakka auki?]
@@ -514,8 +509,11 @@
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(do
                            (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                           (nav/vaihda-kartan-koko! :S))
-        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+                           (nav/vaihda-kartan-koko! :S)
+                           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
+                                                                     :default nil}))
+        #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false})))
       (fn []
         [:span
          [kartta/kartan-paikka]
