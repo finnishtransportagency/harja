@@ -33,14 +33,6 @@
   (testing "Aikaväli OK"
     (is (nil? (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2020-12-31") [1 :vuosi]))))
 
-  (testing "Alkupvm ja loppupvm ovat samat"
-    (is (thrown+? #(tasmaa-poikkeus
-                     %
-                     virheet/+viallinen-kutsu+
-                     virheet/+virheelinen-aikavali+
-                     "'alkupvm' on sama kuin 'loppupvm'")
-          (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2020-01-01") [1 :vuosi]))))
-
   (testing "Loppupvm on ennen alkupvm"
     (is (thrown+? #(tasmaa-poikkeus
                      %
