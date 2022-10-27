@@ -57,6 +57,18 @@
                        :viesti "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on 1 vuosi."}}]
             (:virheet dekoodattu-body)))))
 
+  (testing "Parametrit 'alkupvm' ja 'loppupvm' ovat väärinpäin"
+    (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+          alkupvm "2019-12-31"
+          loppupvm "2014-01-01"
+          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id "/raportit/materiaali/" alkupvm "/" loppupvm)]
+                    kayttaja portti)
+          dekoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 400 (:status vastaus)))
+      (is (= [{:virhe {:koodi "virheellinen-aikavali"
+                       :viesti "'loppupvm' on ennen 'alkupvm'"}}]
+            (:virheet dekoodattu-body)))))
+
   (testing "Tuntematon urakka"
     (let [urakka-id 3184391
           alkupvm "2014-01-10"

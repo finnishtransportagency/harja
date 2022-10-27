@@ -199,11 +199,6 @@
 
 (defn tarkista-aikavali [alkupvm loppupvm [n yksikko :as maksimi]]
   (cond
-    (pvm/sama-pvm? alkupvm loppupvm)
-    (virheet/heita-viallinen-apikutsu-poikkeus
-      {:koodi virheet/+virheelinen-aikavali+
-       :viesti "'alkupvm' on sama kuin 'loppupvm'"})
-
     (pvm/jalkeen? alkupvm loppupvm)
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+virheelinen-aikavali+
