@@ -65,6 +65,7 @@
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
      {:otsikko "BONUKSEN TIEDOT"
+      :otsikko-elementti :h4
       :ei-borderia? true
       :vayla-tyyli? true
       :tarkkaile-ulkopuolisia-muutoksia? true
