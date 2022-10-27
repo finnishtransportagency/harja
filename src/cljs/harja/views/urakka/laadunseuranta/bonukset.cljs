@@ -96,12 +96,14 @@
          :pakollinen? true
          :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
          :valinta-nayta sanktio-domain/bonustyypin-teksti
-         ::lomake/col-luokka "col-xs-12"})
+         ::lomake/col-luokka "col-xs-12"
+         :validoi [[:ei-tyhja "Valitse laji"]]})
       {:otsikko "Perustelu"
        :nimi :lisatieto
        :tyyppi :text
        :pakollinen? true
-       ::lomake/col-luokka "col-xs-12"}
+       ::lomake/col-luokka "col-xs-12"
+       :validoi [[:ei-tyhja "Anna perustelu"]]}
       {:otsikko "Kulun kohdistus"
        :nimi :toimenpideinstanssi
        :tyyppi :valinta
@@ -119,7 +121,8 @@
          :tyyppi :positiivinen-numero
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
-         :yksikko "€"}
+         :yksikko "€"
+         :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}
         (let [valinnat (when (and
                                (<= urakan-alkuvuosi 2020)
                                (= :asiakastyytyvaisyysbonus (:tyyppi lomakkeen-tiedot)))
@@ -137,6 +140,7 @@
          :tyyppi :pvm
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
+         :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
                   (let [lk (some #(when (and
                                           (some? (:kuukausi %))
