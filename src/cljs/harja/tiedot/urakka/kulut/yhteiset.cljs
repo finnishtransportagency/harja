@@ -25,13 +25,20 @@
 (defn oikaistu-tavoitehinta-valitulle-hoitokaudelle [app]
   (-> app budjettitavoite-valitulle-hoitokaudelle :tavoitehinta-oikaistu))
 
-(defn hoitokauden-tavoitehinta [hoitokauden-nro app]
-  (let [tavoitehinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                              (if (pos? (:tavoitehinta-indeksikorjattu %))
-                                (:tavoitehinta-indeksikorjattu %)
-                                (:tavoitehinta %)))
-                       (:budjettitavoite app))]
-    tavoitehinta))
+(defn hoitokauden-tavoitehinta 
+  ([hoitokauden-nro app oletusarvo]
+   (let [tavoitehinta 
+         (some #(when (= hoitokauden-nro (:hoitokausi %))
+                  (let [indeksikorjattu? (pos? (:tavoitehinta-indeksikorjattu %))] 
+                    {:tavoitehinta (or (if indeksikorjattu?
+                                         (:tavoitehinta-indeksikorjattu %)
+                                         (:tavoitehinta %))
+                                       oletusarvo)
+                     :indeksikorjattu? indeksikorjattu?}))
+               (:budjettitavoite app))]
+     tavoitehinta))
+  ([hoitokauden-nro app]
+   (hoitokauden-tavoitehinta hoitokauden-nro app nil)))
 
 (defn hoitokauden-tavoitehinta-vuodelle [hoitokauden-alkuvuosi app]
   (let [tavoitehinta (some #(when (= hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi %))
@@ -45,13 +52,19 @@
                        (:budjettitavoite app))]
     tavoitehinta))
 
-(defn hoitokauden-kattohinta [hoitokauden-nro app]
-  (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
-                            (if (pos? (:kattohinta-indeksikorjattu %))
-                              (:kattohinta-indeksikorjattu %)
-                              (:kattohinta %)))
-                     (:budjettitavoite app))]
-    kattohinta))
+(defn hoitokauden-kattohinta 
+  ([hoitokauden-nro app oletusarvo]
+   (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
+                             (let [indeksikorjattu? (pos? (:kattohinta-indeksikorjattu %))]
+                               {:kattohinta (or (if indeksikorjattu?
+                                                  (:kattohinta-indeksikorjattu %)
+                                                  (:kattohinta %))
+                                                oletusarvo)
+                                :indeksikorjattu? indeksikorjattu?}))
+                          (:budjettitavoite app))]
+     kattohinta))
+  ([hoitokauden-nro app]
+   (hoitokauden-kattohinta hoitokauden-nro app nil)))
 
 (defn hoitokauden-oikaistu-kattohinta [hoitokauden-nro app]
   (let [kattohinta (some #(when (= hoitokauden-nro (:hoitokausi %))
@@ -62,7 +75,7 @@
 (defn valikatselmus-tekematta? [app]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
+        {:keys [tavoitehinta]} (hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
         kattohinta (or (hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)

@@ -10,21 +10,48 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain])
-  (:require-macros [harja.atom :refer [reaction<!]]
-                   [reagent.ratom :refer [reaction]]
+  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
 (defn uusi-sanktio [urakkatyyppi]
-  {:suorasanktio true
-   :laji (cond
-           (#{:hoito :teiden-hoito} urakkatyyppi) :A
-           (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-           :else :yllapidon_sakko)
-   :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
-                          (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
-   :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                    :paatos {:paatos "sanktio"}}})
+  (let [nyt (pvm/nyt)]
+    {:suorasanktio true
+     :laji (cond
+             (#{:hoito :teiden-hoito} urakkatyyppi) :A
+             (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
+             :else :yllapidon_sakko)
+     :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                            (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+     :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                      :paatos {:paatos "sanktio"
+                               :kasittelyaika nyt}}}))
+
+(defn pyorayta-laskutuskuukausi-valinnat
+  []
+  (let [{:keys [alkupvm loppupvm]} @nav/valittu-urakka
+        vuodet (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm))]
+    (into []
+      (sort-by (juxt :vuosi :kuukausi)
+        (mapcat (fn [vuosi]
+                  (let [kuukaudet (range 1 13)
+                        inc-jos-tarvii (fn [kuukausi vuosi]
+                                         (if (< kuukausi 10)
+                                           (inc vuosi)
+                                           vuosi))]
+                    (into [] (map
+                               (fn [kuukausi]
+                                 {:pvm (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi)))
+                                  :vuosi (inc-jos-tarvii kuukausi vuosi)
+                                  :kuukausi kuukausi
+                                  :teksti (str (pvm/kuukauden-nimi kuukausi true)
+                                            " " (inc-jos-tarvii kuukausi vuosi)
+                                            " (" (pvm/paivamaara->mhu-hoitovuosi-nro
+                                                   alkupvm
+                                                   (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi))))
+                                            ". hoitovuosi)")}))
+                      kuukaudet)))
+          vuodet)))))
 
 (defonce valittu-sanktio (atom nil))
 
@@ -43,12 +70,13 @@
 (defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
+               [kk-alku kk-loppu] @urakka/valittu-hoitokauden-kuukausi
                _ @nakymassa?]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
                 (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (first hoitokausi)
-                                                  :loppu (second hoitokausi)}))))
+                                                  :alku (or kk-alku (first hoitokausi))
+                                                  :loppu (or kk-loppu (second hoitokausi))}))))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
