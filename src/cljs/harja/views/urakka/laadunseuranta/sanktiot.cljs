@@ -489,10 +489,10 @@
         {:keys [yllapito? auki?]} optiot
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
+     [:h1 (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
      [suodattimet-ja-toiminnot valittu-urakka auki?]
      [grid/grid
-      {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
-       :tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+      {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do
                          (reset! auki? true)
                          (valitse-sanktio! % tiedot/valittu-sanktio))
