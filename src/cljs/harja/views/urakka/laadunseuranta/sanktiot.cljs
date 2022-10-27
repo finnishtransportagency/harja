@@ -62,12 +62,14 @@
 
 (defn bonus-sanktio-valikko
   [tila]
-  [kentat/tee-kentta {:tyyppi :radio-group
-                      :vaihtoehdot [:sanktiot :bonukset]
-                      :vayla-tyyli? true
-                      :nayta-rivina? true
-                      :vaihtoehto-nayta {:sanktiot "Sanktio"
-                                         :bonukset "Bonus"}} tila])
+  [:<>
+   [kentat/tee-kentta {:tyyppi :radio-group
+                       :vaihtoehdot [:sanktiot :bonukset]
+                       :vayla-tyyli? true
+                       :nayta-rivina? true
+                       :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                          :bonukset "Bonus"}} tila]
+   [:hr]])
 
 (defn sanktion-tiedot
   [_]
@@ -334,30 +336,38 @@
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-                     {:otsikko "Laskutuskuukausi" :nimi :perintapvm
-                      :pakollinen? true
-                      :tyyppi :komponentti
-                      ::lomake/col-luokka "col-xs-6"
-                      :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                                     (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
-                                       [yleiset/livi-pudotusvalikko
-                                        {:data-cy "koontilaskun-kk-dropdown"
-                                         :vayla-tyyli? true
-                                         :skrollattava? true
-                                         :pakollinen? true
-                                         :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
-                                                    (some #(when (and
-                                                                   (= (pvm/vuosi kasittelyaika)
-                                                                     (:vuosi %))
-                                                                   (= (pvm/kuukausi kasittelyaika)
-                                                                     (:kuukausi %))) %)
-                                                      laskutuskuukaudet))
-                                         :valitse-fn #(muokkaa-lomaketta
-                                                        (assoc data
-                                                          :laskutuskuukausi-komp-tiedot %
-                                                          :perintapvm (:pvm %)))
-                                         :format-fn :teksti}
-                                        laskutuskuukaudet]))})
+                     (if lukutila?
+                       {:otsikko "Laskutuskuukausi"
+                        :nimi :perintapvm
+                        :pakollinen? true
+                        :tyyppi :pvm
+                        ::lomake/col-luokka "col-xs-6"}
+                       {:otsikko "Laskutuskuukausi" :nimi :perintapvm
+                        :pakollinen? true
+                        :tyyppi :komponentti
+                        ::lomake/col-luokka "col-xs-6"
+                        :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                                       (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
+                                         [:<>
+                                          [yleiset/livi-pudotusvalikko
+                                           {:data-cy "koontilaskun-kk-dropdown"
+                                            :vayla-tyyli? true
+                                            :skrollattava? true
+                                            :pakollinen? true
+                                            :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                                       (some #(when (and
+                                                                      (= (pvm/vuosi kasittelyaika)
+                                                                        (:vuosi %))
+                                                                      (= (pvm/kuukausi kasittelyaika)
+                                                                        (:kuukausi %))) %)
+                                                         laskutuskuukaudet))
+                                            :valitse-fn #(muokkaa-lomaketta
+                                                           (assoc data
+                                                             :laskutuskuukausi-komp-tiedot %
+                                                             :perintapvm (:pvm %)))
+                                            :format-fn :teksti}
+                                           laskutuskuukaudet]
+                                          [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}))
 
                    {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                     :pakollinen? true
