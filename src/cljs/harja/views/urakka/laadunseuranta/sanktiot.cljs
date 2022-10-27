@@ -100,28 +100,29 @@
               bonusten-syotto? (= :bonukset (:lomake @tila))
               laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)]
           [:div.padding-16.ei-sulje-sivupaneelia
+           [:h2 (cond
+                  (and lukutila? muokataan-vanhaa?)
+                  (str (laji->teksti (:laji @muokattu)))
+
+                  (and muokataan-vanhaa? (not bonusten-syotto?))
+                  "Muokkaa sanktiota"
+
+                  (and muokataan-vanhaa? bonusten-syotto?)
+                  "Muokkaa bonusta"
+
+                  :else
+                  "Lisää uusi")]
            (when-not muokataan-vanhaa?
              [bonus-sanktio-valikko (r/cursor tila [:lomake])])
+           (when (and lukutila? muokataan-vanhaa?)
+             [:div.flex-row.alkuun.valistys16
+              [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not)
+               {:disabled (not suorasanktio?)}]
+              (when (not suorasanktio?)
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset]
+             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset lukutila? voi-muokata?]
              [:<>
-              [:h2 (cond
-                     (and lukutila? muokataan-vanhaa?)
-                     (str (laji->teksti (:laji @muokattu)))
-
-                     muokataan-vanhaa?
-                     "Muokkaa sanktiota"
-
-                     :else
-                     "Lisää uusi")]
-
-              (when (and lukutila? muokataan-vanhaa?)
-                [:div.flex-row.alkuun.valistys16
-                 [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not)
-                  {:disabled (not suorasanktio?)}]
-                 (when (not suorasanktio?)
-                   [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
-
               ;; Vaadi tarvittavat tiedot ennen rendausta
               (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
                     (or (not yllapitokohdeurakka?)
@@ -336,12 +337,7 @@
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-                     (if lukutila?
-                       {:otsikko "Laskutuskuukausi"
-                        :nimi :perintapvm
-                        :pakollinen? true
-                        :tyyppi :pvm
-                        ::lomake/col-luokka "col-xs-6"}
+                     (if (and voi-muokata? (not lukutila?))
                        {:otsikko "Laskutuskuukausi" :nimi :perintapvm
                         :pakollinen? true
                         :tyyppi :komponentti
@@ -367,7 +363,12 @@
                                                              :perintapvm (:pvm %)))
                                             :format-fn :teksti}
                                            laskutuskuukaudet]
-                                          [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}))
+                                          [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}
+                       {:otsikko "Laskutuskuukausi"
+                        :nimi :perintapvm
+                        :pakollinen? true
+                        :tyyppi :pvm
+                        ::lomake/col-luokka "col-xs-6"}))
 
                    {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                     :pakollinen? true
