@@ -631,35 +631,38 @@ documentation:
                application/json:
                  example: !include examples/virhe-response.json
                  schema: virhe-response
-     /raportit/materiaali:
-          get:
-            is: [secured]
-            description: Materiaaliraportin haku. Rajaus päivämäärävälillä. Haku palauttaa maksimissaan vuoden tiedot kerrallaan.
-            queryParameters:
-              alkupvm:
-                  description: Raportin alkupäivämäärä
-                  type: date
-                  example: 2022-01-01
-              loppupvm:
-                  description: Raportin loppupäivämäärä
-                  type: date
-                  example: 2022-01-31
-            responses:
-                200:
-                  body:
-                    application/json:
-                      example: !include examples/raportti-materiaaliraportti-response.json
-                      schema: raportti-materiaaliraportti-response
-                400:
-                  body:
-                    application/json:
-                      example: !include examples/virhe-response.json
-                      schema: virhe-response
-                500:
-                  body:
-                    application/json:
-                      example: !include examples/virhe-response.json
-                      schema: virhe-response
+    /raportit/materiaali:
+      get:
+        is: [ secured ]
+        description: |
+          Materiaaliraportin haku. Haun rajaus päivämäärävälillä, jonka suurin sallittu aikaväli on yksi vuosi.
+          Rajapinta hakee Harjan välimuistissa olevat tiedot, joten ne eivät välttämättä ole täysin ajantasaisia.
+          Raportin tiedot päivitetään Harjan välimuistiin joka yö eräajossa.
+        queryParameters:
+          alkupvm:
+            description: Raportin alkupäivämäärä
+            type: date
+            example: 2022-01-01
+          loppupvm:
+            description: Raportin loppupäivämäärä
+            type: date
+            example: 2022-01-31
+        responses:
+          200:
+            body:
+              application/json:
+                example: !include examples/raportti-materiaaliraportti-response.json
+                schema: raportti-materiaaliraportti-response
+          400:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
+          500:
+            body:
+              application/json:
+                example: !include examples/virhe-response.json
+                schema: virhe-response
     /tietyoilmoitus:
         description: Tietyöilmoituksen kirjaus
         post:
