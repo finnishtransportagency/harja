@@ -1,17 +1,20 @@
 (ns harja.palvelin.integraatiot.api.tyokalut.validointi_test
-  (:require [clojure.test :refer :all]
-            [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest is testing]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.pvm :as pvm]))
 
 (defn tasmaa-poikkeus [{:keys [type virheet]} tyyppi koodi viesti]
   (and
     (= tyyppi type)
-    (some (fn [virhe] (and (= koodi (:koodi virhe)) (.contains (:viesti virhe) viesti)))
-          virheet)))
+    (some (fn [virhe] (and (= koodi (:koodi virhe))
+                        (if viesti
+                          (.contains (:viesti virhe) viesti)
+                          true)))
+      virheet)))
 
 (deftest onko-liikenneviraston-jarjestelma
   (let [db (luo-testitietokanta)]
@@ -26,5 +29,22 @@
 
 
 
+(deftest tarkista-aikavali
+  (testing "Aikaväli OK"
+    (is (nil? (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2020-12-31") [1 :vuosi]))))
 
+  (testing "Loppupvm on ennen alkupvm"
+    (is (thrown+? #(tasmaa-poikkeus
+                     %
+                     virheet/+viallinen-kutsu+
+                     virheet/+virheelinen-aikavali+
+                     "'loppupvm' on ennen 'alkupvm'")
+          (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2022-02-02") (pvm/iso-8601->pvm "2020-01-01") [1 :vuosi]))))
 
+  (testing "Aikaväli on liian iso"
+    (is (thrown+? #(tasmaa-poikkeus
+                     %
+                     virheet/+viallinen-kutsu+
+                     virheet/+virheelinen-aikavali+
+                     "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on 1 vuosi.")
+          (validointi/tarkista-aikavali (pvm/iso-8601->pvm "2020-01-01") (pvm/iso-8601->pvm "2022-02-02") [1 :vuosi])))))
