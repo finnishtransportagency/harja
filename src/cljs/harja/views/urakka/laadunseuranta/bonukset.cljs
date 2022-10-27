@@ -11,6 +11,7 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
+            [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
 
             [harja.ui.yleiset :as yleiset]
             [harja.ui.lomake :as lomake]
@@ -47,32 +48,6 @@
                acc))
      acc bonus)))
 
-(defn pyorayta-laskutuskuukausi-valinnat
-  []
-  (let [{:keys [alkupvm loppupvm]} @nav/valittu-urakka
-        vuodet (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm))]
-    (into []
-      (sort-by (juxt :vuosi :kuukausi)
-        (mapcat (fn [vuosi]
-                  (let [kuukaudet (range 1 13)
-                        inc-jos-tarvii (fn [kuukausi vuosi]
-                                         (if (< kuukausi 10)
-                                               (inc vuosi)
-                                               vuosi))]
-                    (into [] (map
-                               (fn [kuukausi]
-                                 {:pvm (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi)))
-                                  :vuosi (inc-jos-tarvii kuukausi vuosi)
-                                  :kuukausi kuukausi
-                                  :teksti (str (pvm/kuukauden-nimi kuukausi true)
-                                            " " (inc-jos-tarvii kuukausi vuosi)
-                                            " (" (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                   alkupvm
-                                                   (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi))))
-                                            ". hoitovuosi)")}))
-                      kuukaudet)))
-          vuodet)))))
-
 (defn- hae-tpi-idlla
   [tpi-id]
   (some
@@ -85,7 +60,7 @@
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
-        laskutuskuukaudet (pyorayta-laskutuskuukausi-valinnat)]
+        laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [:<>

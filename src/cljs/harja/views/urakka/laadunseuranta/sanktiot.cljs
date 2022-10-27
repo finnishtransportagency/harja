@@ -95,8 +95,9 @@
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
-              bonusten-syotto? (= :bonukset (:lomake @tila))]                      
-          [:div.padding-16.ei-sulje-sivupaneelia           
+              bonusten-syotto? (= :bonukset (:lomake @tila))
+              laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)]
+          [:div.padding-16.ei-sulje-sivupaneelia
            (when-not muokataan-vanhaa?
              [bonus-sanktio-valikko (r/cursor tila [:lomake])])
            (if bonusten-syotto?
@@ -108,17 +109,17 @@
 
                      muokataan-vanhaa?
                      "Muokkaa sanktiota"
-                     
+
                      :else
-                     "Lisää uusi")]           
+                     "Lisää uusi")]
 
               (when (and lukutila? muokataan-vanhaa?)
                 [:div.flex-row.alkuun.valistys16
-                 [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not) 
+                 [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not)
                   {:disabled (not suorasanktio?)}]
                  (when (not suorasanktio?)
                    [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
-              
+
               ;; Vaadi tarvittavat tiedot ennen rendausta
               (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
                     (or (not yllapitokohdeurakka?)
@@ -247,7 +248,7 @@
                                            "- Valitse kohde -"
                                            (if (and voi-muokata? (nil? (:id arvo)))
                                              "Ei liity kohteeseen"
-                                             ""))))}) 
+                                             ""))))})
 
                    (when (and (not yllapitokohdeurakka?) (not vesivayla?))
                      {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
@@ -256,7 +257,7 @@
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
                       :pakollinen? true
                       :muokattava? (constantly voi-muokata?)
-                      :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})         
+                      :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
 
 
                    (when yllapito?
@@ -266,7 +267,7 @@
                       ::lomake/col-luokka "col-xs-12"
                       :valinta-arvo first
                       :valinta-nayta second
-                      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})         
+                      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})
 
                    {:otsikko "Perustelu"
                     :nimi :perustelu
@@ -309,7 +310,7 @@
                                        {:otsikko (str "Indeksi") :nimi :indeksi
                                         :tyyppi :valinta
                                         ::lomake/col-luokka "col-xs-4"
-                                        :muokattava? (constantly (not lukutila?)) 
+                                        :muokattava? (constantly (not lukutila?))
                                         :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                         :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
                                         :valinnat (if (tiedot-urakka/indeksi-kaytossa-sakoissa?)
@@ -320,7 +321,7 @@
                    (lomake/ryhma {:rivi? true}
                      {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
                       :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
+                      ::lomake/col-luokka "col-xs-3"
                       :hae (comp :aika :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
@@ -328,16 +329,35 @@
                       :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
                      {:otsikko "Käsitelty" :nimi :kasittelyaika
                       :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
+                      ::lomake/col-luokka "col-xs-3"
                       :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-                     {:otsikko "Perintä" :nimi :perintapvm
+                     {:otsikko "Laskutuskuukausi" :nimi :perintapvm
                       :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
-                      :fmt pvm/pvm :tyyppi :pvm
-                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+                      :tyyppi :komponentti
+                      ::lomake/col-luokka "col-xs-6"
+                      :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                                     (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
+                                       [yleiset/livi-pudotusvalikko
+                                        {:data-cy "koontilaskun-kk-dropdown"
+                                         :vayla-tyyli? true
+                                         :skrollattava? true
+                                         :pakollinen? true
+                                         :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                                    (some #(when (and
+                                                                   (= (pvm/vuosi kasittelyaika)
+                                                                     (:vuosi %))
+                                                                   (= (pvm/kuukausi kasittelyaika)
+                                                                     (:kuukausi %))) %)
+                                                      laskutuskuukaudet))
+                                         :valitse-fn #(muokkaa-lomaketta
+                                                        (assoc data
+                                                          :laskutuskuukausi-komp-tiedot %
+                                                          :perintapvm (:pvm %)))
+                                         :format-fn :teksti}
+                                        laskutuskuukaudet]))})
 
                    {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                     :pakollinen? true
