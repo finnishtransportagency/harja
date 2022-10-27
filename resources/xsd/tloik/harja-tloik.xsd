@@ -7,6 +7,7 @@
                 <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1" />
                 <xs:element name="lahetysaika" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
+                <xs:element name="emonIlmoitusId" type="xs:int" minOccurs="0" maxOccurs="1" />
                 <xs:element name="tunniste" minOccurs="1" maxOccurs="1">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -26,6 +27,7 @@
                     </xs:simpleType>
                 </xs:element>
                 <xs:element name="paikanKuvaus" type="xs:string" minOccurs="0" />
+                <xs:element name="kuvat" type="kuvaLinkit" minOccurs="0" maxOccurs="1"/>
                 <xs:element name="lisatieto" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
@@ -38,6 +40,19 @@
                 <xs:element name="ilmoittaja" type="ilmoittaja" minOccurs="0" />
                 <xs:element name="lahettaja" type="henkilo" minOccurs="0" />
                 <xs:element name="seliteet" type="selitteet" minOccurs="0" />
+                <xs:element name="luokittelu" type="luokittelu" minOccurs="0" /> <!-- TODO: muuta pakolliseksi kun Selite-kentän käyttö on lopetettu -->
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ilmoitus-peruutus">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="viestiId" type="uuid" minOccurs="1" maxOccurs="1" />
+                <xs:element name="lahetysaika" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
+                <xs:element name="peruutettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
+                <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
+                <xs:element name="emonIlmoitusId" type="xs:int" minOccurs="0" maxOccurs="1" /> <!-- TODO: mitä jos lapsi perutaan? mitä jos emo perutaan, tätä tietoa ei välttämättä tarvita mutta mitä tehdään? -->
+                <xs:element name="peruuttaja" type="henkilo" minOccurs="0" maxOccurs="1"/> <!-- TODO: tarvitaanok -->
             </xs:sequence>
         </xs:complexType>
     </xs:element>
@@ -398,6 +413,12 @@
             <xs:element name="selite" type="selite" minOccurs="1" maxOccurs="unbounded" nillable="true" />
         </xs:sequence>
     </xs:complexType>
+    <xs:complexType name="luokittelu">
+        <xs:sequence>
+            <xs:element name="aihe" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="lisatieto" type="xs:string" minOccurs="1" maxOccurs="1"/>
+        </xs:sequence>
+    </xs:complexType>
     <xs:complexType name="sijainti">
         <xs:sequence>
             <xs:element name="tienumero" type="xs:integer" minOccurs="0" />
@@ -405,6 +426,11 @@
             <xs:element name="y" type="xs:decimal" minOccurs="1" />
             <xs:element name="tieosa" type="xs:integer" minOccurs="0" />
             <xs:element name="etaisyys" type="xs:integer" minOccurs="0" />
+        </xs:sequence>
+    </xs:complexType>
+    <xs:complexType name="kuvaLinkit">
+        <xs:sequence>
+            <xs:element name="url" type="xs:string" minOccurs="0" maxOccurs="5"/>
         </xs:sequence>
     </xs:complexType>
     <xs:simpleType name="ilmoittajatyyppi">
