@@ -121,7 +121,7 @@
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
-    :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
+    :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
     :vaylien-geometriahaku
     :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta
@@ -187,7 +187,7 @@
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
-    :api-yhteystiedot :api-tiemerkintatoteuma :laskutusyhteenvetojen-muodostus :status
+    :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
     :vaylien-geometriahaku
     :kanavasiltojen-geometriahaku
     :mobiili-laadunseuranta

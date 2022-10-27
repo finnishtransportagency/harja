@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.56</b>
-<b>Julkaistu: 14.4.2022</b>
+<b>Nykyinen versio: 1.0.57</b>
+<b>Julkaistu: 27.10.2022</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.57 Julkaistu 27.10.2022
+   - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
 - Versionumero 1.0.56 Julkaistu 14.4.2022
       - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
       - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
