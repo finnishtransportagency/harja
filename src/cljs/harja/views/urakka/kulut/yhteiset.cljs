@@ -34,8 +34,8 @@
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
-        kattohinta (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
+        {:keys [tavoitehinta] indeksikorjattu-tavoitehinta? :indeksikorjattu?} (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
+        {:keys [kattohinta] indeksikorjattu-kattohinta? :indeksikorjattu?} (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         oikaistu-kattohinta (or (t/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (t/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
@@ -70,18 +70,24 @@
         [napit/yleinen-ensisijainen
          "Tee välikatselmus"
          #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-     [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta (indeksikorjattu)"
-                                      "Tavoitehinta (indeksikorjattu)")] [:span (fmt/euro-opt tavoitehinta)]]
+     [:div.rivi 
+      [:span (if oikaisuja? 
+               (str "Alkuperäinen tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))
+               (str "Tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)")))] 
+      [:span (fmt/euro-opt tavoitehinta)]]
      (when oikaisuja?
        [:<>
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
         [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
      (if (or oikaisuja? kattohintaa-oikaistu?)
        [:<>
-        [:div.rivi [:span "Alkuperäinen kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]]
+        [:div.rivi [:span (str "Alkuperäinen kattohinta " (if indeksikorjattu-kattohinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))] 
+         [:span (fmt/euro-opt kattohinta)]]
         [:div.rivi [:span "Oikaistu kattohinta"] [:span (fmt/euro-opt oikaistu-kattohinta)]]]
 
-       [:div.rivi [:span "Kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]])
+       [:div.rivi 
+        [:span (str "Kattohinta " (if indeksikorjattu-kattohinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))] 
+        [:span (fmt/euro-opt kattohinta)]])
 
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]
      [:hr]
