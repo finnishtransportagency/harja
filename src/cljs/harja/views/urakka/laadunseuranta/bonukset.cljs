@@ -64,7 +64,7 @@
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
-     {:otsikko "Bonuksen tiedot"
+     {:otsikko "BONUKSEN TIEDOT"
       :ei-borderia? true
       :vayla-tyyli? true
       :tarkkaile-ulkopuolisia-muutoksia? true

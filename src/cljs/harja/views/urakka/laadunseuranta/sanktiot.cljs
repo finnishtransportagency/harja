@@ -130,7 +130,7 @@
 
                 [:div
                  [lomake/lomake
-                  {:otsikko "Sanktion tiedot"
+                  {:otsikko "SANKTION TIEDOT"
                    :ei-borderia? true
                    :vayla-tyyli? true
                    :luokka "padding-16 taustavari-taso3"
