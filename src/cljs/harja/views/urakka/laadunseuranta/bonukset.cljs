@@ -132,7 +132,8 @@
            :tyyppi :valinta
            :disabled? (nil? valinnat)
            ::lomake/col-luokka "col-xs-4"
-           :valinnat (or valinnat [nil])}))
+           :valinnat (or valinnat [nil])
+           :valinta-nayta #(or % "Ei indeksiä")}))
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Käsitelty"
