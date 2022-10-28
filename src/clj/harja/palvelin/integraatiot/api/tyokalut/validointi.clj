@@ -18,7 +18,8 @@
     [harja.geo :as geo]
     [cheshire.core :as cheshire]
     [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-    [clojure.string :as clj-str])
+    [clojure.string :as clj-str]
+    [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (declare tarkista-muut-alikohteet)
@@ -194,3 +195,16 @@
         (virheet/heita-viallinen-apikutsu-poikkeus
           {:koodi virheet/+puutteelliset-parametrit+
            :viesti (format "Tuntematon urakkatyyppi: %s" urakkatyyppi)})))))
+
+
+(defn tarkista-aikavali [alkupvm loppupvm [n yksikko :as maksimi]]
+  (cond
+    (pvm/jalkeen? alkupvm loppupvm)
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti "'loppupvm' on ennen 'alkupvm'"})
+
+    (pvm/liian-suuri-aikavali? alkupvm loppupvm [n yksikko])
+    (virheet/heita-viallinen-apikutsu-poikkeus
+      {:koodi virheet/+virheelinen-aikavali+
+       :viesti (str "Annettu aikaväli on liian suuri. Suurin sallittu aikaväli on " n " " (name yksikko) ".")})))

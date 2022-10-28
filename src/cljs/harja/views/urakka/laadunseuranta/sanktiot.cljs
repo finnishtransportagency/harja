@@ -329,8 +329,7 @@
                       :hae (comp :aika :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
-                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-                      :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                      {:otsikko "Käsitelty" :nimi :kasittelyaika
                       :pakollinen? true
                       ::lomake/col-luokka "col-xs-3"
@@ -343,6 +342,7 @@
                         :pakollinen? true
                         :tyyppi :komponentti
                         ::lomake/col-luokka "col-xs-6"
+                        :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                                        (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
                                          [:<>
@@ -367,6 +367,7 @@
                                           [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}
                        {:otsikko "Laskutuskuukausi"
                         :nimi :perintapvm
+                        :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
                         :pakollinen? true
                         :tyyppi :pvm
                         ::lomake/col-luokka "col-xs-6"}))
@@ -534,16 +535,11 @@
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
-      (komp/sisaan-ulos #(do
-                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                           (nav/vaihda-kartan-koko! :S)
-                           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
-                                                                     :default nil}))
-        #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false})))
+      (komp/sisaan-ulos #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
+                                                                   :default nil})
+        #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn []
         [:span
-         [kartta/kartan-paikka]
          (let [optiot (merge optiot
                         {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
                          :yllapito? @tiedot-urakka/yllapidon-urakka?

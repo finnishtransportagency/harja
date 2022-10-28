@@ -132,7 +132,8 @@
            :tyyppi :valinta
            :disabled? (nil? valinnat)
            ::lomake/col-luokka "col-xs-4"
-           :valinnat (or valinnat [nil])}))
+           :valinnat (or valinnat [nil])
+           :valinta-nayta #(or % "Ei indeksiä")}))
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Käsitelty"
@@ -160,23 +161,27 @@
           {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
            :pakollinen? true
            :tyyppi :komponentti
-           ::lomake/col-luokka "col-xs-4"
+           ::lomake/col-luokka "col-xs-6"
+           :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          [yleiset/livi-pudotusvalikko
-                           {:data-cy "koontilaskun-kk-dropdown"
-                            :vayla-tyyli? true
-                            :skrollattava? true
-                            :pakollinen? true
-                            :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
-                                       (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet))
-                            :valitse-fn #(muokkaa-lomaketta
-                                           (assoc data
-                                             :laskutuskuukausi-komp-tiedot %
-                                             :laskutuskuukausi (:pvm %)))
-                            :format-fn :teksti}
-                           laskutuskuukaudet])}
+                          [:<>
+                           [yleiset/livi-pudotusvalikko
+                            {:data-cy "koontilaskun-kk-dropdown"
+                             :vayla-tyyli? true
+                             :skrollattava? true
+                             :pakollinen? true
+                             :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                        (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet))
+                             :valitse-fn #(muokkaa-lomaketta
+                                            (assoc data
+                                              :laskutuskuukausi-komp-tiedot %
+                                              :laskutuskuukausi (:pvm %)))
+                             :format-fn :teksti}
+                            laskutuskuukaudet]
+                           [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"]])}
           {:otsikko "Laskutuskuukausi"
-           :nimi :perintapvm
+           :nimi :laskutuskuukausi
+           :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
            :pakollinen? true
            :tyyppi :pvm
            ::lomake/col-luokka "col-xs-6"}))
