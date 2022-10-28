@@ -180,7 +180,8 @@
                             laskutuskuukaudet]
                            [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"]])}
           {:otsikko "Laskutuskuukausi"
-           :nimi :perintapvm
+           :nimi :laskutuskuukausi
+           :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
            :pakollinen? true
            :tyyppi :pvm
            ::lomake/col-luokka "col-xs-6"}))
