@@ -41,6 +41,7 @@
 (def +puutteelliset-parametrit+ "puutteelliset-parametrit")
 (def +virheellinen-sijainti+ "virheellinen-sijainti")
 (def +virheellinen-paivamaara+ "virheellinen-paivamaara")
+(def +virheelinen-aikavali+ "virheellinen-aikavali")
 (def +sopimusta-ei-loydy+ "sopimusta ei löydy")
 (def +paallystysilmoitus-lukittu+ "paallystysilmoitus-lukittu")
 (def +ominaisuus-ei-kaytossa+ "ominaisuus-ei-kaytossa")
