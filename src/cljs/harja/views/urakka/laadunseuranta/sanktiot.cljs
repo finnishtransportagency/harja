@@ -329,8 +329,7 @@
                       :hae (comp :aika :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
-                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-                      :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                      {:otsikko "Käsitelty" :nimi :kasittelyaika
                       :pakollinen? true
                       ::lomake/col-luokka "col-xs-3"
@@ -343,6 +342,7 @@
                         :pakollinen? true
                         :tyyppi :komponentti
                         ::lomake/col-luokka "col-xs-6"
+                        :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                                        (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
                                          [:<>
