@@ -15,12 +15,15 @@
 
 (def nakymassa? (atom false))
 (defn uusi-sanktio [urakkatyyppi]
-  (let [nyt (pvm/nyt)]
+  (let [nyt (pvm/nyt)
+        default-kasittelyaika (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:suorasanktio true
      :laji (cond
              (#{:hoito :teiden-hoito} urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
+     :kasittelyaika default-kasittelyaika
+     :perintapvm default-kasittelyaika
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
