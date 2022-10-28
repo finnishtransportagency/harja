@@ -539,16 +539,11 @@
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
-      (komp/sisaan-ulos #(do
-                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                           (nav/vaihda-kartan-koko! :S)
-                           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
-                                                                     :default nil}))
-        #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-           (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false})))
+      (komp/sisaan-ulos #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
+                                                                   :default nil})
+        #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn []
         [:span
-         [kartta/kartan-paikka]
          (let [optiot (merge optiot
                         {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
                          :yllapito? @tiedot-urakka/yllapidon-urakka?
