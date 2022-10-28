@@ -140,7 +140,7 @@
       .list-group-item:hover {
         background-color: #f5f5f5;
       }
-    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>Harja API API documentation <small>version 1.0.56</small></h1><p>https://testiapi.vayla.fi/harja/api (testi) & https://api.vayla.fi/harja/api (tuotanto)</p><h3 id="Kuvaus"><a href="#Kuvaus">Kuvaus</a></h3><p>Harja -järjestelmän julkinen API</p><p>API on jaettu kuuteen pääosioon:</p><ol><li>urakat:<ul><li>Urakoiden perustietojen haku joko urakoitsijan id:llä tai yksittäisen urakan id:llä</li><li>Urakan seurantatietojen kirjaus: toteumat, tarkastukset, turvallisuuspoikkeamat, päivystäjätiedot, laatupoikkeamat sekä tietyöilmoitukset</li><li>Urakan Tieliikennekeskuksen tekemien ilmoitusten haku</li></ul></li><li>varusteet:<ul><li>Varustetietojen tietolajikuvausten haku Tierekisteristä</li><li>Varustetietojen haku Tierekisteristä</li><li>Varustetietojen lisäys, poisto ja päivitys Tierekisteriin.</li></ul></li><li>seuranta:<ul><li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li></ul></li><li>ilmoitukset:<ul><li>Tieliikennekeskuksen urakalle tekemien ilmoitusten haku</li><li>Kuittausten eli toimenpiteiden tekeminen ilmoituksille</li></ul><br></li><li>tieluvat:<ul><li>Tielupien haku</li></ul></li><li>päivystäjätiedot:<ul><li>Päivystäjätietojen haku</li></ul></li></ol><h3 id="Tekninen-kuvaus"><a href="#Tekninen-kuvaus">Tekninen kuvaus</a></h3><p>Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.</p><p>Tietoliikenne Harjan palvelimille kulkee Väylän keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.</p><p>Kutsut voi lähettää gzipillä pakattuina merkitsemällä content encodingin gzipiksi.</p><p>Huomioitavaa:</p><ul><li>Kaikki ajat raportoidaan Suomen aikavyöhykkeessä GMT+2/3. Aikaleimat täytyy siis raportoida formaatissa: "2016-11-03T03:43:14+02:00"</li><li>Kaikki toteumien tehtävien ja materiaalien määrät raportoidaan Harjan urakkahaun palauttamassa yksikössä. Harja ei tee muunnoksia raportoiduille yksiköille.</li></ul><h3 id="Sijaintitiedot"><a href="#Sijaintitiedot">Sijaintitiedot</a></h3><p>Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.</p><h3 id="Tierekisteriurakkakoodit-selitteineen"><a href="#Tierekisteriurakkakoodit-selitteineen">Tierekisteriurakkakoodit selitteineen</a></h3><p>Tierekisteriurakkakoodit:</p><ul><li>urakka 100 yrittäjä Paikallinen yrittäjä hoitaa</li><li>urakka 400 Kunta Paikallinen kunta hoitaa</li><li>urakka 2062 Ke-Suomi Keski-Suomen valaistus- urakka</li><li>urakka 3001 betonitie Betonitie</li><li>urakka 3002 HTU PPS HTU-piirien pääteiden päällysteiden palvelusopimus</li><li>urakka 3003 Opäälpa1 Oulun päälllystepalvelu 1</li><li>urakka 3004 Opäälpa2 Oulun päälllystepalvelu 2</li><li>urakka 3005 KaS PS Kaakkois-Suomen päällystepalvelusopimus</li><li>urakka 3006 P_Kimppa Pirkanmaan Kimppa 2013-17</li><li>urakka 4001 U-tm Uudenmaan tiemerkinnät</li><li>urakka 4002 T-tm Turun tiemerkinnät</li><li>urakka 4003 KaS-tm Kaakkois-Suomen tiemerkinnät</li><li>urakka 4004 H-tm Hämeen tiemerkinnät</li><li>urakka 4005 SK-tm Savo-Karjalan tiemerkinnät</li><li>urakka 4006 KeS-tm Keski-Suomen tiemerkinnät</li><li>urakka 4007 V-tm Vaasan tiemerkinnät</li><li>urakka 4008 O-tm Oulun tiemerkinnät</li><li>urakka 4009 L-tm Lapin tiemerkinnät</li><li>urakka 5001 OSiltopa1 Oulun siltojen palvelusopimus 1</li><li>urakka 5002 OSiltopa2 Oulun siltojen palvelusopimus 2</li><li>urakka 5003 KaSSiltopa Kaakkois-Suomen siltojen palvelusopimus</li><li>urakka 6001 U-telemat Uudenmaan tiepiirin telematiikan hoito 2009-2012</li><li>urakka 6002 Nevia Valtakunnallinen matka-ajan seurantasopimus</li><li>urakka 9001 JCDeaux JCDeauxin mainossoppari</li></ul><h3 id="Versiohistoria"><a href="#Versiohistoria">Versiohistoria</a></h3><p><b>Nykyinen versio: 1.0.56</b> <b>Julkaistu: 14.4.2022</b></p><p><b>Versiohistoria:</b></p><ul><li>Versionumero 1.0.56 Julkaistu 14.4.2022<pre><code>- Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
+    </style></head><body data-spy="scroll" data-target="#sidebar"><div class="container"><div class="row"><div class="col-md-9" role="main"><div class="page-header"><h1>Harja API API documentation <small>version 1.0.57</small></h1><p>https://testiapi.vayla.fi/harja/api (testi) & https://api.vayla.fi/harja/api (tuotanto)</p><h3 id="Kuvaus"><a href="#Kuvaus">Kuvaus</a></h3><p>Harja -järjestelmän julkinen API</p><p>API on jaettu kuuteen pääosioon:</p><ol><li>urakat:<ul><li>Urakoiden perustietojen haku joko urakoitsijan id:llä tai yksittäisen urakan id:llä</li><li>Urakan seurantatietojen kirjaus: toteumat, tarkastukset, turvallisuuspoikkeamat, päivystäjätiedot, laatupoikkeamat sekä tietyöilmoitukset</li><li>Urakan Tieliikennekeskuksen tekemien ilmoitusten haku</li></ul></li><li>varusteet:<ul><li>Varustetietojen tietolajikuvausten haku Tierekisteristä</li><li>Varustetietojen haku Tierekisteristä</li><li>Varustetietojen lisäys, poisto ja päivitys Tierekisteriin.</li></ul></li><li>seuranta:<ul><li>Reaaliaikaisten seurantatietojen, kuten esim. aura-auton liikkeiden kirjaus</li></ul></li><li>ilmoitukset:<ul><li>Tieliikennekeskuksen urakalle tekemien ilmoitusten haku</li><li>Kuittausten eli toimenpiteiden tekeminen ilmoituksille</li></ul><br></li><li>tieluvat:<ul><li>Tielupien haku</li></ul></li><li>päivystäjätiedot:<ul><li>Päivystäjätietojen haku</li></ul></li></ol><h3 id="Tekninen-kuvaus"><a href="#Tekninen-kuvaus">Tekninen kuvaus</a></h3><p>Harja -järjestelmän rajapinta on toteutettu REST-API:na, jossa tieto liikkuu JSON-formaatissa.</p><p>Tietoliikenne Harjan palvelimille kulkee Väylän keskitetyn gatewayn kautta (Oracle Enterprice Gateway). Siirtoprotokollana käytetään HTTPS. Käyttäjän tunnistaminen tehdään käyttäen HTTP Basic autentikaatiota tunnus-salasana -parina. Väylä hallinnoi järjestelmä-/urakoitsijakohtaisia tunnuksia.</p><p>Kutsut voi lähettää gzipillä pakattuina merkitsemällä content encodingin gzipiksi.</p><p>Huomioitavaa:</p><ul><li>Kaikki ajat raportoidaan Suomen aikavyöhykkeessä GMT+2/3. Aikaleimat täytyy siis raportoida formaatissa: "2016-11-03T03:43:14+02:00"</li><li>Kaikki toteumien tehtävien ja materiaalien määrät raportoidaan Harjan urakkahaun palauttamassa yksikössä. Harja ei tee muunnoksia raportoiduille yksiköille.</li></ul><h3 id="Sijaintitiedot"><a href="#Sijaintitiedot">Sijaintitiedot</a></h3><p>Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.</p><h3 id="Tierekisteriurakkakoodit-selitteineen"><a href="#Tierekisteriurakkakoodit-selitteineen">Tierekisteriurakkakoodit selitteineen</a></h3><p>Tierekisteriurakkakoodit:</p><ul><li>urakka 100 yrittäjä Paikallinen yrittäjä hoitaa</li><li>urakka 400 Kunta Paikallinen kunta hoitaa</li><li>urakka 2062 Ke-Suomi Keski-Suomen valaistus- urakka</li><li>urakka 3001 betonitie Betonitie</li><li>urakka 3002 HTU PPS HTU-piirien pääteiden päällysteiden palvelusopimus</li><li>urakka 3003 Opäälpa1 Oulun päälllystepalvelu 1</li><li>urakka 3004 Opäälpa2 Oulun päälllystepalvelu 2</li><li>urakka 3005 KaS PS Kaakkois-Suomen päällystepalvelusopimus</li><li>urakka 3006 P_Kimppa Pirkanmaan Kimppa 2013-17</li><li>urakka 4001 U-tm Uudenmaan tiemerkinnät</li><li>urakka 4002 T-tm Turun tiemerkinnät</li><li>urakka 4003 KaS-tm Kaakkois-Suomen tiemerkinnät</li><li>urakka 4004 H-tm Hämeen tiemerkinnät</li><li>urakka 4005 SK-tm Savo-Karjalan tiemerkinnät</li><li>urakka 4006 KeS-tm Keski-Suomen tiemerkinnät</li><li>urakka 4007 V-tm Vaasan tiemerkinnät</li><li>urakka 4008 O-tm Oulun tiemerkinnät</li><li>urakka 4009 L-tm Lapin tiemerkinnät</li><li>urakka 5001 OSiltopa1 Oulun siltojen palvelusopimus 1</li><li>urakka 5002 OSiltopa2 Oulun siltojen palvelusopimus 2</li><li>urakka 5003 KaSSiltopa Kaakkois-Suomen siltojen palvelusopimus</li><li>urakka 6001 U-telemat Uudenmaan tiepiirin telematiikan hoito 2009-2012</li><li>urakka 6002 Nevia Valtakunnallinen matka-ajan seurantasopimus</li><li>urakka 9001 JCDeaux JCDeauxin mainossoppari</li></ul><h3 id="Versiohistoria"><a href="#Versiohistoria">Versiohistoria</a></h3><p><b>Nykyinen versio: 1.0.57</b> <b>Julkaistu: 27.10.2022</b></p><p><b>Versiohistoria:</b></p><ul><li>Versionumero 1.0.57 Julkaistu 27.10.2022<ul><li>Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm</li></ul></li><li>Versionumero 1.0.56 Julkaistu 14.4.2022<pre><code>- Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
 - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
 - Poistettu varusterajapinta käytöstä.
 </code></pre></li><li>Versionumero 1.0.55 Julkaistu 24.2.2022<pre><code>- Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
@@ -155,7 +155,7 @@
     "urakat": {
       "id": "urn:harja/urakat",
       "type": "array",
-      "maxItems" : 500,
+      "maxItems" : 700,
       "items": {
         "id": "http://example.com/item-schema",
         "type": "object",
@@ -310,7 +310,7 @@
     "urakat": {
       "id": "urn:harja/urakat",
       "type": "array",
-      "maxItems" : 500,
+      "maxItems" : 700,
       "items": {
         "id": "http://example.com/item-schema",
         "type": "object",
@@ -7061,6 +7061,351 @@
   ]
 }
 </code></pre><h2>HTTP status code <a href="http://httpstatus.es/400" target="_blank">400</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "virheet": {
+      "id": "urn:harja/virheet",
+      "type": "array",
+      "maxItems" : 100,
+      "items": {
+        "id": "urn:harja/virheet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "virhe": {
+            "id": "urn:harja/virheet/0/virhe",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "koodi": {
+                "id": "urn:harja/virheet/0/virhe/koodi",
+                "type": "string"
+              },
+              "viesti": {
+                "id": "urn:harja/virheet/0/virhe/viesti",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}</code></pre><p><strong>Example</strong>:</p><pre><code>{
+  "virheet": [
+    {
+      "virhe": {
+        "koodi": "Tuntematon urakka",
+        "viesti": "Annetulle id:lle ei löydy urakkaa."
+      }
+    }
+  ]
+}
+</code></pre></div></div></div></div></div></div></div><div class="panel panel-white"><div class="panel-heading"><h4 class="panel-title"><a class="collapsed" data-toggle="collapse" href="#panel_urakat__id__raportit_materiaali"><span class="parent">/urakat/{id}</span>/raportit/materiaali</a> <span class="methods"><a href="#urakat__id__raportit_materiaali_get"><span class="badge badge_get">get</span></a></span></h4></div><div id="panel_urakat__id__raportit_materiaali" class="panel-collapse collapse"><div class="panel-body"><div class="list-group"><div onclick="window.location.href = '#urakat__id__raportit_materiaali_get'" class="list-group-item"><span class="badge badge_get">get</span><div class="method_description"><p>Materiaaliraportin haku. Haun rajaus päivämäärävälillä, jonka suurin sallittu aikaväli on yksi vuosi. Rajapinta hakee Harjan välimuistissa olevat tiedot, joten ne eivät välttämättä ole täysin ajantasaisia. Raportin tiedot päivitetään Harjan välimuistiin joka yö eräajossa.</p></div><div class="clearfix"></div></div></div></div></div><div class="modal fade" tabindex="0" id="urakat__id__raportit_materiaali_get"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button><h4 class="modal-title" id="myModalLabel"><span class="badge badge_get">get</span> <span class="parent">/urakat/{id}</span>/raportit/materiaali</h4></div><div class="modal-body"><div class="alert alert-info"><p>Materiaaliraportin haku. Haun rajaus päivämäärävälillä, jonka suurin sallittu aikaväli on yksi vuosi. Rajapinta hakee Harjan välimuistissa olevat tiedot, joten ne eivät välttämättä ole täysin ajantasaisia. Raportin tiedot päivitetään Harjan välimuistiin joka yö eräajossa.</p></div><ul class="nav nav-tabs"><li class="active"><a href="#urakat__id__raportit_materiaali_get_request" data-toggle="tab">Request</a></li><li><a href="#urakat__id__raportit_materiaali_get_response" data-toggle="tab">Response</a></li></ul><div class="tab-content"><div class="tab-pane active" id="urakat__id__raportit_materiaali_get_request"><h3>URI Parameters</h3><ul><li><strong>id</strong>: <em>required (string)</em></li></ul><h3>Query Parameters</h3><ul><li><strong>alkupvm</strong>: <em>(date)</em><p>Raportin alkupäivämäärä</p><p><strong>Example</strong>:</p><pre><code>Sat Jan 01 2022 02:00:00 GMT+0200 (Eastern European Standard Time)</code></pre></li><li><strong>loppupvm</strong>: <em>(date)</em><p>Raportin loppupäivämäärä</p><p><strong>Example</strong>:</p><pre><code>Mon Jan 31 2022 02:00:00 GMT+0200 (Eastern European Standard Time)</code></pre></li></ul></div><div class="tab-pane" id="urakat__id__raportit_materiaali_get_response"><h2>HTTP status code <a href="http://httpstatus.es/200" target="_blank">200</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "raportti": {
+      "id": "urn:harja/raportti",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "nimi": {
+          "id": "urn:harja/raportti/raportinnimi",
+          "type": "string",
+          "required": true
+        },
+        "aikavali": {
+          "id": "urn:harja/paivamaaravali",
+          "$ref": "file:resources/api/schemas/entities/paivamaaravali.schema.json",
+          "required": true
+        },
+        "alueurakkanumero": {
+          "id": "urn:harja/raportti/alueurakkanumero",
+          "type": "integer",
+          "required": true
+        },
+        "materiaaliraportti": {
+          "id": "urn:harja/raportti/materiaaliraportti",
+          "$ref": "file:resources/api/schemas/entities/materiaalit.schema.json",
+          "required": false
+        }
+      }
+    }
+  }
+}
+
+</code></pre><p><strong>Example</strong>:</p><pre><code>{
+  "raportti": {
+    "nimi": "Materiaaliraportti",
+    "aikavali": {
+      "alkupvm": "2022-01-01",
+      "loppupvm": "2022-01-31"
+    },
+    "alueurakkanumero": 146,
+    "materiaaliraportti": [
+      {
+        "materiaali": "Talvisuolaliuos CaCl2",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Talvisuolaliuos NaCl",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2.2
+        }
+      },
+      {
+        "materiaali": "Talvisuola, rakeinen NaCl",
+        "maara": {
+          "yksikko": "t",
+          "maara": 3.33
+        }
+      },
+      {
+        "materiaali": "Hiekoitushiekan suola",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Kaliumformiaattiliuos",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Natriumformiaatti",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2.2
+        }
+      },
+      {
+        "materiaali": "Natriumformiaattiliuos",
+        "maara": {
+          "yksikko": "t",
+          "maara": 3.33
+        }
+      },
+      {
+        "materiaali": "Kesäsuola sorateiden kevätkunnostus",
+        "maara": {
+          "yksikko": "t",
+          "maara": 1
+        }
+      },
+      {
+        "materiaali": "Kesäsuola sorateiden pölynsidonta",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kesäsuola päällystettyjen teiden pölynsidonta",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Hiekoitushiekka",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Jätteet kaatopaikalle",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Rikkaruohojen torjunta-aineet",
+        "maara": {
+          "yksikko": "t",
+          "maara": 4
+        }
+      },
+      {
+        "materiaali": "Sorastusmurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunantäyttömurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kelirikkomurske",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Käsin tehtävät paikkaukset pikapaikkausmassalla",
+        "maara": {
+          "yksikko": "kg",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "AB-paikkaus levittäjällä",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "PAB-paikkaus levittäjällä",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "PAB-paikkaus käsin",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttipaikkaus T",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-reikävaluasfalttipaikkaus",
+        "maara": {
+          "yksikko": "kpl",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttisaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "KT-valuasfalttipaikkaus K",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sirotepuhalluspaikkaus (SIPU)",
+        "maara": {
+          "yksikko": "t",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Kannukaatosaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sillan päällysteen halkeaman avarrussaumaus",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Sillan kannen päällysteen päätysauman korjaukset",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunapalkin ja päällysteen väl. sauman tiivistäminen",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      },
+      {
+        "materiaali": "Reunapalkin liikuntasauman tiivistäminen",
+        "maara": {
+          "yksikko": "jm",
+          "maara": 2
+        }
+      }
+    ]
+  }
+}
+
+</code></pre><h2>HTTP status code <a href="http://httpstatus.es/400" target="_blank">400</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "properties": {
+    "virheet": {
+      "id": "urn:harja/virheet",
+      "type": "array",
+      "maxItems" : 100,
+      "items": {
+        "id": "urn:harja/virheet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "virhe": {
+            "id": "urn:harja/virheet/0/virhe",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "koodi": {
+                "id": "urn:harja/virheet/0/virhe/koodi",
+                "type": "string"
+              },
+              "viesti": {
+                "id": "urn:harja/virheet/0/virhe/viesti",
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}</code></pre><p><strong>Example</strong>:</p><pre><code>{
+  "virheet": [
+    {
+      "virhe": {
+        "koodi": "Tuntematon urakka",
+        "viesti": "Annetulle id:lle ei löydy urakkaa."
+      }
+    }
+  ]
+}
+</code></pre><h2>HTTP status code <a href="http://httpstatus.es/500" target="_blank">500</a></h2><h3>Body</h3><p><strong>Type: application/json</strong></p><p><strong>Schema</strong>:</p><pre><code>{
   "$schema": "http://json-schema.org/draft-03/schema#",
   "id": "urn:harja",
   "type": "object",
