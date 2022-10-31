@@ -559,11 +559,12 @@
     (do
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
-          (assoc :ajax-loader true)
-          (assoc :toimenpiteet-lataa true)
-          (assoc-in [:hoitokauden-alkuvuosi] vuosi)
-          (assoc-in [:toteuma :aikavali-alkupvm] nil)
-          (assoc-in [:toteuma :aikavali-loppupvm] nil))))
+        (assoc :ajax-loader true)
+        (assoc :toimenpiteet-lataa true)
+        (assoc :avattu-tehtava nil)
+        (assoc-in [:hoitokauden-alkuvuosi] vuosi)
+        (assoc-in [:toteuma :aikavali-alkupvm] nil)
+        (assoc-in [:toteuma :aikavali-loppupvm] nil))))
 
   ValitseAikavali
   (process-event
