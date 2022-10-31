@@ -221,9 +221,20 @@
 
 (defn- uusi-pvm-lomakkeelle [app]
   (let [vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+                ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
                 (:hoitokauden-alkuvuosi app)
+                ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
-        kuukausi (- (pvm/kuukausi (pvm/nyt)) 1)
+        kuukausi (cond
+                   ; Valitun hoitokauden alkuvuosi täsmää tähän hetkeen
+                   (= (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                   (- (pvm/kuukausi (pvm/nyt)) 1)
+                   ; Valitun hoitokauden alkuvuosi on aiemmin, kuin tämä hetki
+                   (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                   8  ; Otetaan hoitokauden viimeinen kuukausi
+                   :else
+                   (- (pvm/kuukausi (pvm/nyt)) 1)
+                   )
         paiva 1
         uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
     uusi-pvm))
