@@ -10,7 +10,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
-            [namespacefy.core :as namespacefy]))
+            [namespacefy.core :as namespacefy]
+            [clojure.string :as str]))
 
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
@@ -199,12 +200,12 @@
   (cond
     (= tyyppi :akillinen-hoitotyo) ;; Äkillinen hoitotyö tässä tarkoittaa, että on valittu käyttöliittymässä "Äkillinen hoitotyö, vahingon korjaus, rahavaraus".
     (some (fn [toimenpide]
-            (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+            (when (str/includes? (:otsikko toimenpide) "LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA")
               toimenpide))
           (get-in app [:toimenpiteet]))
     (= tyyppi :lisatyo)
     (some (fn [toimenpide]
-            (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
+            (when (str/includes? (:otsikko toimenpide) "LISÄTYÖT")
               toimenpide))
           (get-in app [:toimenpiteet]))
     :else {:otsikko "Kaikki" :id 0}))
