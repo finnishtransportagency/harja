@@ -467,10 +467,7 @@
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
-      (hae-toteutuneet-maarat urakka toimenpide
-                              (:hoitokauden-alkuvuosi app)
-                              (:aikavali-alkupvm app)
-                              (:aikavali-loppupvm app))
+      (hae-toteutuneet-maarat urakka toimenpide (:hoitokauden-alkuvuosi app))
       (hae-tehtavat toimenpide)
       (-> app
           (assoc :toimenpiteet-lataa true)
@@ -548,7 +545,7 @@
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
-      (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
+      (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
           (assoc :ajax-loader true)
           (assoc :toimenpiteet-lataa true)
@@ -627,13 +624,10 @@
     (viesti/nayta! "Toteuma poistettu!")
 
     ;; Päivitä määrät välittömästi poiston jälkeen
-    (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (:valittu-toimenpide app)
-                            (get-in app [:hoitokauden-alkuvuosi])
-                            (get-in app [:aikavali-alkupvm])
-                            (get-in app [:aikavali-loppupvm]))
+    (hae-toteutuneet-maarat (:id @nav/valittu-urakka) (:valittu-toimenpide app) (get-in app [:hoitokauden-alkuvuosi]))
 
     (-> app
+        (assoc :avattu-tehtava nil) ;; Pikafiksi: Sulje avatut, jotta se päivitetään uudestaan
         (assoc :ajax-loader true)
         (assoc :syottomoodi false)))
 
@@ -646,11 +640,7 @@
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Toteuma tallennettu!")
     ;; Päivitä määrät välittömästi lisäyksen jälkeen
-    (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (:valittu-toimenpide app)
-                            (get-in app [:hoitokauden-alkuvuosi])
-                            (get-in app [:aikavali-alkupvm])
-                            (get-in app [:aikavali-loppupvm]))
+    (hae-toteutuneet-maarat (:id @nav/valittu-urakka) (:valittu-toimenpide app) (get-in app [:hoitokauden-alkuvuosi]))
     (-> app
         (assoc :syottomoodi false
                :tehtavat [])
