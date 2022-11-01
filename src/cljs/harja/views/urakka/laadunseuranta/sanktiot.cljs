@@ -58,6 +58,7 @@
     :lupausbonus "Lupausbonus"
     :alihankintabonus "Alihankintabonus"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     "- valitse laji -"))
 
 (defn bonus-sanktio-valikko

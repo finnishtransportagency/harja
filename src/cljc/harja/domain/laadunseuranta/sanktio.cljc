@@ -200,7 +200,7 @@
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   (case avainsana
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
-    :muu "Muu"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     :alihankintabonus "Alihankintabonus"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"    
@@ -211,14 +211,14 @@
   ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
   ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
   (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
-             (= :muu %)
+             (= :muu-bonus %)
              true)
           (cond
             (= :hoito urakkatyyppi)
-            [:asiakastyytyvaisyysbonus :muu]
+            [:asiakastyytyvaisyysbonus :muu-bonus]
             (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus :muu] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
+            [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
             (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:muu]
+            [:muu-bonus]
             :default
-            [:asiakastyytyvaisyysbonus :muu])))
+            [:asiakastyytyvaisyysbonus :muu-bonus])))
