@@ -292,7 +292,7 @@
            alkupisteet :alkupisteet
            loppupisteet :loppupisteet} (<! (k/post! :debug-geometrisoi-tarkastus json))]
       ;; poistetaan vanhat pisteet
-      (doseq [idx @tarkastuksia-piirretty]
+      (doseq [idx (range @tarkastuksia-piirretty)]
         (tasot/poista-geometria! (keyword (str "tarkastuksen-pisteet-alku-" idx)))
         (tasot/poista-geometria! (keyword (str "tarkastuksen-pisteet-loppu-" idx))))
 
