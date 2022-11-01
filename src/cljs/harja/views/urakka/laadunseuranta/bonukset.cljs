@@ -111,7 +111,9 @@
        :valitse-oletus? true
        :valinta-arvo :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-       :valinnat (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
+       :valinnat (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                   (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
+                   @tiedot-urakka/urakan-toimenpideinstanssit)
        ::lomake/col-luokka "col-xs-12"
        :disabled? true}
       (lomake/ryhma
