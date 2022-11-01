@@ -58,16 +58,19 @@
     :lupausbonus "Lupausbonus"
     :alihankintabonus "Alihankintabonus"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     "- valitse laji -"))
 
 (defn bonus-sanktio-valikko
   [tila]
-  [kentat/tee-kentta {:tyyppi :radio-group
-                      :vaihtoehdot [:sanktiot :bonukset]
-                      :vayla-tyyli? true
-                      :nayta-rivina? true
-                      :vaihtoehto-nayta {:sanktiot "Sanktio"
-                                         :bonukset "Bonus"}} tila])
+  [:<>
+   [kentat/tee-kentta {:tyyppi :radio-group
+                       :vaihtoehdot [:sanktiot :bonukset]
+                       :vayla-tyyli? true
+                       :nayta-rivina? true
+                       :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                          :bonukset "Bonus"}} tila]
+   [:hr]])
 
 (defn sanktion-tiedot
   [_]
@@ -95,30 +98,32 @@
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
-              bonusten-syotto? (= :bonukset (:lomake @tila))]                      
-          [:div.padding-16.ei-sulje-sivupaneelia           
+              bonusten-syotto? (= :bonukset (:lomake @tila))
+              laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)]
+          [:div.padding-16.ei-sulje-sivupaneelia
+           [:h2 (cond
+                  (and lukutila? muokataan-vanhaa?)
+                  (str (laji->teksti (:laji @muokattu)))
+
+                  (and muokataan-vanhaa? (not bonusten-syotto?))
+                  "Muokkaa sanktiota"
+
+                  (and muokataan-vanhaa? bonusten-syotto?)
+                  "Muokkaa bonusta"
+
+                  :else
+                  "Lisää uusi")]
            (when-not muokataan-vanhaa?
              [bonus-sanktio-valikko (r/cursor tila [:lomake])])
+           (when (and lukutila? muokataan-vanhaa?)
+             [:div.flex-row.alkuun.valistys16
+              [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not)
+               {:disabled (not suorasanktio?)}]
+              (when (not suorasanktio?)
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset]
+             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset lukutila? voi-muokata?]
              [:<>
-              [:h2 (cond
-                     (and lukutila? muokataan-vanhaa?)
-                     (str (laji->teksti (:laji @muokattu)))
-
-                     muokataan-vanhaa?
-                     "Muokkaa sanktiota"
-                     
-                     :else
-                     "Lisää uusi")]           
-
-              (when (and lukutila? muokataan-vanhaa?)
-                [:div.flex-row.alkuun.valistys16
-                 [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not) 
-                  {:disabled (not suorasanktio?)}]
-                 (when (not suorasanktio?)
-                   [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
-              
               ;; Vaadi tarvittavat tiedot ennen rendausta
               (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
                     (or (not yllapitokohdeurakka?)
@@ -126,7 +131,8 @@
 
                 [:div
                  [lomake/lomake
-                  {:otsikko "Sanktion tiedot"
+                  {:otsikko "SANKTION TIEDOT"
+                   :otsikko-elementti :h4
                    :ei-borderia? true
                    :vayla-tyyli? true
                    :luokka "padding-16 taustavari-taso3"
@@ -247,7 +253,7 @@
                                            "- Valitse kohde -"
                                            (if (and voi-muokata? (nil? (:id arvo)))
                                              "Ei liity kohteeseen"
-                                             ""))))}) 
+                                             ""))))})
 
                    (when (and (not yllapitokohdeurakka?) (not vesivayla?))
                      {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
@@ -256,7 +262,7 @@
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
                       :pakollinen? true
                       :muokattava? (constantly voi-muokata?)
-                      :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})         
+                      :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
 
 
                    (when yllapito?
@@ -266,7 +272,7 @@
                       ::lomake/col-luokka "col-xs-12"
                       :valinta-arvo first
                       :valinta-nayta second
-                      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})         
+                      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})
 
                    {:otsikko "Perustelu"
                     :nimi :perustelu
@@ -309,7 +315,7 @@
                                        {:otsikko (str "Indeksi") :nimi :indeksi
                                         :tyyppi :valinta
                                         ::lomake/col-luokka "col-xs-4"
-                                        :muokattava? (constantly (not lukutila?)) 
+                                        :muokattava? (constantly (not lukutila?))
                                         :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                                         :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
                                         :valinnat (if (tiedot-urakka/indeksi-kaytossa-sakoissa?)
@@ -320,24 +326,52 @@
                    (lomake/ryhma {:rivi? true}
                      {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
                       :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
+                      ::lomake/col-luokka "col-xs-3"
                       :hae (comp :aika :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
-                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]
-                      :huomauta [[:urakan-aikana-ja-hoitokaudella]]}
+                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                      {:otsikko "Käsitelty" :nimi :kasittelyaika
                       :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
+                      ::lomake/col-luokka "col-xs-3"
                       :hae (comp :kasittelyaika :paatos :laatupoikkeama)
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-                     {:otsikko "Perintä" :nimi :perintapvm
-                      :pakollinen? true
-                      ::lomake/col-luokka "col-xs-4"
-                      :fmt pvm/pvm :tyyppi :pvm
-                      :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+                     (if (and voi-muokata? (not lukutila?))
+                       {:otsikko "Laskutuskuukausi" :nimi :perintapvm
+                        :pakollinen? true
+                        :tyyppi :komponentti
+                        ::lomake/col-luokka "col-xs-6"
+                        :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+                        :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                                       (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
+                                         [:<>
+                                          [yleiset/livi-pudotusvalikko
+                                           {:data-cy "koontilaskun-kk-dropdown"
+                                            :vayla-tyyli? true
+                                            :skrollattava? true
+                                            :pakollinen? true
+                                            :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                                       (some #(when (and
+                                                                      (= (pvm/vuosi kasittelyaika)
+                                                                        (:vuosi %))
+                                                                      (= (pvm/kuukausi kasittelyaika)
+                                                                        (:kuukausi %))) %)
+                                                         laskutuskuukaudet))
+                                            :valitse-fn #(muokkaa-lomaketta
+                                                           (assoc data
+                                                             :laskutuskuukausi-komp-tiedot %
+                                                             :perintapvm (:pvm %)))
+                                            :format-fn :teksti}
+                                           laskutuskuukaudet]
+                                          [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}
+                       {:otsikko "Laskutuskuukausi"
+                        :nimi :perintapvm
+                        :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
+                        :pakollinen? true
+                        :tyyppi :pvm
+                        ::lomake/col-luokka "col-xs-6"}))
 
                    {:otsikko "Käsittelytapa" :nimi :kasittelytapa
                     :pakollinen? true
@@ -403,7 +437,7 @@
 (defn- suodattimet-ja-toiminnot [valittu-urakka auki?]
   [valinnat/urakkavalinnat {:urakka valittu-urakka}
    ^{:key "urakkavalinnat"}
-   [urakka-valinnat/urakan-hoitokausi valittu-urakka]
+   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]
    ^{:key "urakkatoiminnot"}
    [valinnat/urakkatoiminnot {:urakka valittu-urakka}
     (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -455,13 +489,13 @@
 (defn sanktiolistaus
   [optiot valittu-urakka]
   (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot-ja-bonukset))
-        {:keys [yllapito? vesivayla? auki?]} optiot
+        {:keys [yllapito? auki?]} optiot
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
+     [:h1 (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
      [suodattimet-ja-toiminnot valittu-urakka auki?]
      [grid/grid
-      {:otsikko (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")
-       :tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
+      {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do
                          (reset! auki? true)
                          (valitse-sanktio! % tiedot/valittu-sanktio))
@@ -502,13 +536,11 @@
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
-      (komp/sisaan-ulos #(do
-                           (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                           (nav/vaihda-kartan-koko! :S))
-        #(nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko))
+      (komp/sisaan-ulos #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
+                                                                   :default nil})
+        #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn []
         [:span
-         [kartta/kartan-paikka]
          (let [optiot (merge optiot
                         {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
                          :yllapito? @tiedot-urakka/yllapidon-urakka?

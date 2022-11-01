@@ -4,10 +4,12 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
-            
+
             [harja.tiedot.navigaatio :as nav]
-            
-            [harja.tyokalut.tuck :as tuck-apurit]))
+            [harja.tiedot.urakka :as urakka]
+
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.pvm :as pvm]))
 
 (def konversioavaimet
   {:perintapvm :pvm
@@ -140,7 +142,11 @@
   (process-event    
     [{vastaus :vastaus optiot :optiot} app]
     (viesti/nayta-toast! "Tallennus onnistui")
-    (assoc app :tallennus-kaynnissa? false :voi-sulkea? true :tallennettu-lomake (merge vastaus optiot)))
+    (let [tallennettu-bonus (merge vastaus optiot)
+          [hoitokausi-alku hoitokausi-loppu] @urakka/valittu-hoitokausi
+          bonus-hoitokaudella? (pvm/valissa? (:pvm tallennettu-bonus) hoitokausi-alku hoitokausi-loppu)]
+      (assoc app :tallennus-kaynnissa? false :voi-sulkea? true
+        :tallennettu-lomake (when bonus-hoitokaudella? (merge vastaus optiot)))))
   TallennusEpaonnistui
   (process-event
     [{vastaus :vastaus} app]
