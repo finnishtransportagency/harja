@@ -500,8 +500,6 @@
                          (reset! auki? true)
                          (valitse-sanktio! % tiedot/valittu-sanktio))
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
-                               ;; Ylläpidossa sekä bonuksia että sanktioita, käsiteltävä sakot miinusmerkkisinä
-                               yhteensa-summat (if yllapito? (- yhteensa-summat) yhteensa-summat)
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
@@ -527,10 +525,7 @@
        {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3.5
         :tyyppi :komponentti :komponentti sanktion-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
-        :hae #(or (let [summa (:summa %)]
-                    (fmt/euro-opt false
-                                  (when summa
-                                    (if yllapito? (- summa) summa)))) ;ylläpidossa on sakkoja ja -bonuksia, sakot miinusmerkillä
+        :hae #(or (fmt/euro-opt false (:summa %))
                 "Muistutus")}
        {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1.5}]
       sanktiot]
