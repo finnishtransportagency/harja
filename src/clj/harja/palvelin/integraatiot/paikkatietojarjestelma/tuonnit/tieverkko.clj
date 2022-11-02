@@ -247,7 +247,7 @@
                                        {:tie tie
                                         :osa osa
                                         :ajorata ajorata
-                                        :pituus (:tr_pituus (ajoradat ajorata))})))]
+                                        :pituus (:ajr_pituus (ajoradat ajorata))})))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})

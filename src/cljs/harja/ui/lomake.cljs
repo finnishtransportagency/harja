@@ -601,7 +601,7 @@ ja kaikki pakolliset kentät on täytetty"
                            (atom (validoi-avaimet skeema)))]
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
-    (fn [{:keys [otsikko otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
+    (fn [{:keys [otsikko otsikko-elementti otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
                  voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? footer-luokka
                  tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
          {muokatut ::muokatut
@@ -649,7 +649,7 @@ ja kaikki pakolliset kentät on täytetty"
                [:div.row header])
              (when sulje-fn [napit/sulje-ruksi sulje-fn])
              (when otsikko
-               [:h3.lomake-otsikko otsikko])
+               [(or otsikko-elementti :h3) {:class "lomake-otsikko"} otsikko])
              (when otsikko-komp
                [otsikko-komp (assoc validoitu-data ::skeema skeema)])
              (doall
