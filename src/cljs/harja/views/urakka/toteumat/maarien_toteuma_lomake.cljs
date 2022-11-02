@@ -31,10 +31,7 @@
                        (= tyyppi :maaramitattava))
                      (:yksikko tehtava)
 
-                     (or (= tyyppi :lisatyo)
-                         (= tyyppi :akillinen-hoitotyo)
-                         (= tyyppi :vahinkojen-korjaukset)
-                         (= tyyppi :muut-rahavaraukset))
+                     (= tyyppi :lisatyo)
                      "kpl"
 
                      :else
@@ -355,13 +352,12 @@
        {:tyyppi           :radio-group
         :nimi             ::t/tyyppi
         :otsikko          ""
-        :vaihtoehdot      [:maaramitattava :akillinen-hoitotyo :lisatyo]
+        :vaihtoehdot      [:maaramitattava :lisatyo]
         :nayta-rivina?    true
         :palstoja         2
         :vayla-tyyli?     true
         :disabloitu?      (not (nil? (get-in lomake [::t/toteumat 0 ::t/toteuma-id])))
         :vaihtoehto-nayta {:maaramitattava     "Määrämitattava tehtävä"
-                           :akillinen-hoitotyo "Äkillinen hoitotyö, vahingon korjaus, rahavaraus"
                            :lisatyo            "Lisätyö"}}
        (when (and
                (= :maaramitattava tyyppi)
@@ -376,7 +372,6 @@
          (case tyyppi
            :maaramitattava maaramitattava-skeema
            :lisatyo lisatyo-skeema
-           (:vahinkojen-korjaukset :tilaajan-varaukset :akillinen-hoitotyo) akilliset-ja-korjaukset-skeema
            maaramitattava-skeema) ;; Default arvona oletetaan sen olevan määrämitattava
          (when (= (count toteumat) 1)
            {:otsikko "Sijainti *"})

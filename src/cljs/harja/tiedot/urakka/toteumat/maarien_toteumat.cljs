@@ -109,10 +109,7 @@
   ([toimenpide tyyppi]
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
-         rajapinta (case tyyppi
-                     :akillinen-hoitotyo :maarien-toteutumien-toimenpiteiden-tehtavat
-                     :lisatyo :maarien-toteutumien-toimenpiteiden-tehtavat
-                     :maarien-toteutumien-toimenpiteiden-tehtavat)
+         rajapinta :maarien-toteutumien-toimenpiteiden-tehtavat
          toimenpide-re-string (when toimenpide
                                 (cond
                                   (re-find #"TALVIHOITO" tehtavaryhma) "alvihoito"
@@ -123,9 +120,6 @@
                      :filtteri (case tyyppi
                                  ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
                                  ;; :maaramitattava
-
-                                 :akillinen-hoitotyo
-                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
 
                                  :lisatyo
                                  #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
@@ -186,29 +180,13 @@
                                               (group-by :tehtava tehtavat))])
                      ryhmitelty-tr)))))
 
-(defn- aseta-akillisen-tyyppi
-  [toteumat t]
-  (if (= t :akillinen-hoitotyo)
-    (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
-      (cond
-        (re-find #"ahavarau" tehtava) :tilaajan-varaukset
-        (re-find #"vahinkojen korjaaminen" tehtava) :vahinkojen-korjaukset
-        :else t))
-    t))
-
 (defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
-  (cond
-    (= tyyppi :akillinen-hoitotyo) ;; Äkillinen hoitotyö tässä tarkoittaa, että on valittu käyttöliittymässä "Äkillinen hoitotyö, vahingon korjaus, rahavaraus".
-    (some (fn [toimenpide]
-            (when (str/includes? (:otsikko toimenpide) "LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA")
-              toimenpide))
-          (get-in app [:toimenpiteet]))
-    (= tyyppi :lisatyo)
+  (if (= tyyppi :lisatyo)
     (some (fn [toimenpide]
             (when (and (:otsikko toimenpide) (str/includes? (:otsikko toimenpide) "LISÄTYÖT"))
               toimenpide))
-          (get-in app [:toimenpiteet]))
-    :else {:otsikko "Kaikki" :id 0}))
+      (get-in app [:toimenpiteet]))
+    {:otsikko "Kaikki" :id 0}))
 
 (defn- paivita-sijainti-toteumiin [toteumat app]
   (map-indexed (fn [indeksi toteuma]
@@ -222,7 +200,9 @@
 (defn- uusi-pvm-lomakkeelle [app]
   (let [vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
                 ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
-                (:hoitokauden-alkuvuosi app)
+                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                  (inc (:hoitokauden-alkuvuosi app))        ;; Yritetään määritellä aina loppu hoitokausi
+                  (:hoitokauden-alkuvuosi app))
                 ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
         kuukausi (cond
@@ -313,8 +293,6 @@
            toteumat ::t/toteumat} lomake
           toteumat (paivita-sijainti-toteumiin toteumat app)
           urakka-id (-> @tila/yleiset :urakka :id)
-          aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
-                                            toteumat)
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
           toteumat (mapv namespacefy/unnamespacefy
@@ -323,7 +301,7 @@
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id urakka-id
                             :toimenpide toimenpide
-                            :tyyppi (aseta-akillisen-tyyppi tyyppi)
+                            :tyyppi tyyppi
                             :loppupvm loppupvm
                             :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
@@ -445,9 +423,8 @@
                                                               (assoc ::t/useampi-toteuma false))]
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
-                                             (case tyyppi
-                                               :akillinen-hoitotyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
-                                               :lisatyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
+                                             (if (= :lisatyo tyyppi)
+                                               (update lomake ::t/toteumat (comp vain-eka maara-pois))
                                                lomake)
                                              lomake))))
           ;; Toimenpiteen vaihtuessa tyhjennetään valittu tehtävä
