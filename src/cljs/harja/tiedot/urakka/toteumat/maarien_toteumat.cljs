@@ -205,7 +205,7 @@
           (get-in app [:toimenpiteet]))
     (= tyyppi :lisatyo)
     (some (fn [toimenpide]
-            (when (str/includes? (:otsikko toimenpide) "LISÄTYÖT")
+            (when (and (:otsikko toimenpide) (str/includes? (:otsikko toimenpide) "LISÄTYÖT"))
               toimenpide))
           (get-in app [:toimenpiteet]))
     :else {:otsikko "Kaikki" :id 0}))
