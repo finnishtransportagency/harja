@@ -72,7 +72,7 @@
 
 (defonce tallennetaan (atom false))
 
-(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet kaytetty-yhteensa]
+(defn suolatoteumat-taulukko [muokattava? urakka sopimus-id listaus materiaali-nimet]
   [:div.suolatoteumat
    [kartta/kartan-paikka]
    [:span.valinnat
@@ -173,8 +173,6 @@
                               "Piilota kartalta"
                               "Näytä kartalla"))]])))}]
     listaus]
-   (when-not (empty? @tiedot/toteumat)
-     [:div.bold kaytetty-yhteensa])
    [yleiset/vihje yleiset/rajapinnan-kautta-lisattyja-ei-voi-muokata]])
 
 (defn talvisuolatoteumat []
@@ -197,11 +195,9 @@
                             @tiedot/toteumat)
             materiaali-nimet (distinct (map #(let [{{nimi :nimi} :materiaali} %]
                                                nimi)
-                                            @tiedot/toteumat))
-            kaytetty-yhteensa (str "Käytetty yhteensä: " (fmt/desimaaliluku-opt (reduce + (keep :maara listaus))) "t")]
+                                            @tiedot/toteumat))]
         (suolatoteumat-taulukko muokattava?
                                 urakka
                                 sopimus-id
                                 listaus
-                                materiaali-nimet
-                                kaytetty-yhteensa)))))
+                                materiaali-nimet)))))

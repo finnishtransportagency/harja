@@ -129,7 +129,9 @@
                           (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
-                          [])
+                          []) ;;Hox! Sisältää myös ylläpidon bonukset!
+        ;; Muutetaan sanktiot miinusmerkkisiksi ja ylläpidon bonukset plusmerkkisiksi
+        urakan-sanktiot (map #(konv/muunna % [:summa :indeksikorjaus] -) urakan-sanktiot)
         urakan-bonukset (if hae-bonukset?
                           (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
