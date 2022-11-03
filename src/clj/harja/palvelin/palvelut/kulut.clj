@@ -256,11 +256,7 @@
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
-  (let [tarkistettu-erapaiva (tarkista-laskun-numeron-paivamaara db user {:urakka urakka :laskun-numero laskun-numero})
-        erapaiva (if (false? tarkistettu-erapaiva)
-                   erapaiva
-                   (:erapaiva tarkistettu-erapaiva))
-        yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
+  (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
                          :urakka                urakka
                          :tyyppi                tyyppi
