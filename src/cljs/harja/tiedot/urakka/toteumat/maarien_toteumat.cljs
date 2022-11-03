@@ -10,7 +10,8 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.toteumat.maarien-toteumat-kartalla :as maarien-toteumat-kartalla]
-            [namespacefy.core :as namespacefy]))
+            [namespacefy.core :as namespacefy]
+            [clojure.string :as str]))
 
 (declare hae-toteutuneet-maarat)
 (declare hae-tehtavat)
@@ -108,10 +109,7 @@
   ([toimenpide tyyppi]
    (let [tehtavaryhma (when toimenpide
                         (:otsikko toimenpide))
-         rajapinta (case tyyppi
-                     :akillinen-hoitotyo :maarien-toteutumien-toimenpiteiden-tehtavat
-                     :lisatyo :maarien-toteutumien-toimenpiteiden-tehtavat
-                     :maarien-toteutumien-toimenpiteiden-tehtavat)
+         rajapinta :maarien-toteutumien-toimenpiteiden-tehtavat
          toimenpide-re-string (when toimenpide
                                 (cond
                                   (re-find #"TALVIHOITO" tehtavaryhma) "alvihoito"
@@ -122,9 +120,6 @@
                      :filtteri (case tyyppi
                                  ;; TODO: saako tähän jonkin filtterin sitä varten, ettei pystyis kirjaamaan määrämitattavia äkillisille ja korjauksille
                                  ;; :maaramitattava
-
-                                 :akillinen-hoitotyo
-                                 #(re-find (re-pattern (str "(" toimenpide-re-string "|rahavaraus)")) (:tehtava %))
 
                                  :lisatyo
                                  #(re-find (re-pattern (str "(" toimenpide-re-string ")")) (:tehtava %))
@@ -185,29 +180,13 @@
                                               (group-by :tehtava tehtavat))])
                      ryhmitelty-tr)))))
 
-(defn- aseta-akillisen-tyyppi
-  [toteumat t]
-  (if (= t :akillinen-hoitotyo)
-    (let [{{:keys [tehtava]} ::t/tehtava} (first toteumat)]
-      (cond
-        (re-find #"ahavarau" tehtava) :tilaajan-varaukset
-        (re-find #"vahinkojen korjaaminen" tehtava) :vahinkojen-korjaukset
-        :else t))
-    t))
-
 (defn- vaihda-toimenpide-tyypin-mukaan [app tyyppi]
-  (cond
-    (= tyyppi :akillinen-hoitotyo) ;; Äkillinen hoitotyö tässä tarkoittaa, että on valittu käyttöliittymässä "Äkillinen hoitotyö, vahingon korjaus, rahavaraus".
+  (if (= tyyppi :lisatyo)
     (some (fn [toimenpide]
-            (when (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+            (when (and (:otsikko toimenpide) (str/includes? (:otsikko toimenpide) "LISÄTYÖT"))
               toimenpide))
-          (get-in app [:toimenpiteet]))
-    (= tyyppi :lisatyo)
-    (some (fn [toimenpide]
-            (when (= "7.0 LISÄTYÖT" (:otsikko toimenpide))
-              toimenpide))
-          (get-in app [:toimenpiteet]))
-    :else {:otsikko "Kaikki" :id 0}))
+      (get-in app [:toimenpiteet]))
+    {:otsikko "Kaikki" :id 0}))
 
 (defn- paivita-sijainti-toteumiin [toteumat app]
   (map-indexed (fn [indeksi toteuma]
@@ -220,9 +199,22 @@
 
 (defn- uusi-pvm-lomakkeelle [app]
   (let [vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
-                (:hoitokauden-alkuvuosi app)
+                ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
+                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                  (inc (:hoitokauden-alkuvuosi app))        ;; Yritetään määritellä aina loppu hoitokausi
+                  (:hoitokauden-alkuvuosi app))
+                ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
-        kuukausi (- (pvm/kuukausi (pvm/nyt)) 1)
+        kuukausi (cond
+                   ; Valitun hoitokauden alkuvuosi täsmää tähän hetkeen
+                   (= (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                   (- (pvm/kuukausi (pvm/nyt)) 1)
+                   ; Valitun hoitokauden alkuvuosi on aiemmin, kuin tämä hetki
+                   (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                   8  ; Otetaan hoitokauden viimeinen kuukausi
+                   :else
+                   (- (pvm/kuukausi (pvm/nyt)) 1)
+                   )
         paiva 1
         uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
     uusi-pvm))
@@ -301,8 +293,6 @@
            toteumat ::t/toteumat} lomake
           toteumat (paivita-sijainti-toteumiin toteumat app)
           urakka-id (-> @tila/yleiset :urakka :id)
-          aseta-akillisen-tyyppi (r/partial aseta-akillisen-tyyppi
-                                            toteumat)
           {:keys [validoi] :as validoinnit} (toteuma-lomakkeen-validoinnit lomake)
           {:keys [validi? validius]} (validoi validoinnit lomake)
           toteumat (mapv namespacefy/unnamespacefy
@@ -311,7 +301,7 @@
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id urakka-id
                             :toimenpide toimenpide
-                            :tyyppi (aseta-akillisen-tyyppi tyyppi)
+                            :tyyppi tyyppi
                             :loppupvm loppupvm
                             :toteumat toteumat}
                            {:onnistui ->TallennaToteumaOnnistui
@@ -433,9 +423,8 @@
                                                               (assoc ::t/useampi-toteuma false))]
                                            ; siivotaan tyyppiä vaihdettaessa turhat kentät
                                            (if (not= tyyppi tyyppi-aiempi)
-                                             (case tyyppi
-                                               :akillinen-hoitotyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
-                                               :lisatyo (update lomake ::t/toteumat (comp vain-eka maara-pois))
+                                             (if (= :lisatyo tyyppi)
+                                               (update lomake ::t/toteumat (comp vain-eka maara-pois))
                                                lomake)
                                              lomake))))
           ;; Toimenpiteen vaihtuessa tyhjennetään valittu tehtävä
@@ -467,10 +456,7 @@
   ValitseToimenpide
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
-      (hae-toteutuneet-maarat urakka toimenpide
-                              (:hoitokauden-alkuvuosi app)
-                              (:aikavali-alkupvm app)
-                              (:aikavali-loppupvm app))
+      (hae-toteutuneet-maarat urakka toimenpide (:hoitokauden-alkuvuosi app))
       (hae-tehtavat toimenpide)
       (-> app
           (assoc :toimenpiteet-lataa true)
@@ -548,13 +534,14 @@
   ValitseHoitokausi
   (process-event [{urakka :urakka vuosi :vuosi} app]
     (do
-      (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi nil nil)
+      (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
-          (assoc :ajax-loader true)
-          (assoc :toimenpiteet-lataa true)
-          (assoc-in [:hoitokauden-alkuvuosi] vuosi)
-          (assoc-in [:toteuma :aikavali-alkupvm] nil)
-          (assoc-in [:toteuma :aikavali-loppupvm] nil))))
+        (assoc :ajax-loader true)
+        (assoc :toimenpiteet-lataa true)
+        (assoc :avattu-tehtava nil)
+        (assoc-in [:hoitokauden-alkuvuosi] vuosi)
+        (assoc-in [:toteuma :aikavali-alkupvm] nil)
+        (assoc-in [:toteuma :aikavali-loppupvm] nil))))
 
   ValitseAikavali
   (process-event
@@ -627,13 +614,10 @@
     (viesti/nayta! "Toteuma poistettu!")
 
     ;; Päivitä määrät välittömästi poiston jälkeen
-    (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (:valittu-toimenpide app)
-                            (get-in app [:hoitokauden-alkuvuosi])
-                            (get-in app [:aikavali-alkupvm])
-                            (get-in app [:aikavali-loppupvm]))
+    (hae-toteutuneet-maarat (:id @nav/valittu-urakka) (:valittu-toimenpide app) (get-in app [:hoitokauden-alkuvuosi]))
 
     (-> app
+        (assoc :avattu-tehtava nil) ;; Pikafiksi: Sulje avatut, jotta se päivitetään uudestaan
         (assoc :ajax-loader true)
         (assoc :syottomoodi false)))
 
@@ -646,11 +630,7 @@
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Toteuma tallennettu!")
     ;; Päivitä määrät välittömästi lisäyksen jälkeen
-    (hae-toteutuneet-maarat (:id @nav/valittu-urakka)
-                            (:valittu-toimenpide app)
-                            (get-in app [:hoitokauden-alkuvuosi])
-                            (get-in app [:aikavali-alkupvm])
-                            (get-in app [:aikavali-loppupvm]))
+    (hae-toteutuneet-maarat (:id @nav/valittu-urakka) (:valittu-toimenpide app) (get-in app [:hoitokauden-alkuvuosi]))
     (-> app
         (assoc :syottomoodi false
                :tehtavat [])
