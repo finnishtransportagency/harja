@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clj-time.coerce :as c]
             [clojure.string :as str]
+            [taoensso.timbre :as log]
             [harja.kyselyt
              [kulut :as q]
              [kustannusarvioidut-tyot :as kust-q]]
@@ -328,7 +329,8 @@
 
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
-  [db user {:keys [urakka-id kulu-kohdistuksineen]}]
+  [db user {:keys [urakka-id kulu-kohdistuksineen] :as tiedot}]
+  (log/debug "tallenna-kulu :: tiedot" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (luo-tai-paivita-kulukohdistukset db user urakka-id kulu-kohdistuksineen))
 
