@@ -19,7 +19,7 @@
                 <xs:element name="ilmoitustyyppi" type="ilmoitustyyppi" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
                 <xs:element name="urakkatyyppi" type="urakkatyyppi" minOccurs="1" maxOccurs="1" />
-                <xs:element name="otsikko" minOccurs="0">
+                <xs:element name="otsikko" minOccurs="0"> <!-- TODO: Poistetaan käytöstä, kun järjestelmät ovat poistaneet elementin käsittelyn -->
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
                             <xs:maxLength value="64" />
@@ -31,7 +31,7 @@
                 <xs:element name="lisatieto" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
-                            <xs:maxLength value="2000" />
+                            <xs:maxLength value="4000" />
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
@@ -39,7 +39,7 @@
                 <xs:element name="sijainti" type="sijainti" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoittaja" type="ilmoittaja" minOccurs="0" />
                 <xs:element name="lahettaja" type="henkilo" minOccurs="0" />
-                <xs:element name="seliteet" type="selitteet" minOccurs="0" />
+                <xs:element name="seliteet" type="selitteet" minOccurs="0" /> <!-- TODO: kenttä poistuu, mutta vasta sitten kun kaikki osapuolet (Väylävirasto, Fintraffic ja ilmoituksia käsittelevät sovellukset) näyttävät sille vihreää valoa. -->
                 <xs:element name="luokittelu" type="luokittelu" minOccurs="0" /> <!-- TODO: muuta pakolliseksi kun Selite-kentän käyttö on lopetettu -->
             </xs:sequence>
         </xs:complexType>
@@ -189,8 +189,8 @@
     </xs:complexType>
     <xs:complexType name="luokittelu">
         <xs:sequence>
-            <xs:element name="aihe" type="xs:string" minOccurs="1" maxOccurs="1"/>
-            <xs:element name="lisatieto" type="xs:string" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="aihe" type="xs:integer" minOccurs="1" maxOccurs="1"/>
+            <xs:element name="tarkenne" type="xs:string" minOccurs="1" maxOccurs="1"/>
         </xs:sequence>
     </xs:complexType>
     <xs:complexType name="sijainti">

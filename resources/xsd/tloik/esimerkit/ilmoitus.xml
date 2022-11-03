@@ -2,13 +2,20 @@
     <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f254af</viestiId>
     <lahetysaika>2016-05-05T12:59:45</lahetysaika>
     <ilmoitusId>987246</ilmoitusId>
+    <emonIlmoitusId>987240</emonIlmoitusId>
     <tunniste>UV-1509-1a</tunniste>
     <versionumero>1</versionumero>
     <ilmoitustyyppi>toimenpidepyynto</ilmoitustyyppi>
     <ilmoitettu>2016-05-05T12:49:45</ilmoitettu>
     <urakkatyyppi>hoito</urakkatyyppi>
-    <otsikko>Korkeat vallit</otsikko>
     <paikanKuvaus>Kuusamontien risteyksessä</paikanKuvaus>
+    <kuvat>
+        <url>http://kuvapalvelu.fi/1.jpg</url>
+        <url>http://kuvapalvelu.fi/2.jpg</url>
+        <url>http://kuvapalvelu.fi/3.jpg</url>
+        <url>http://kuvapalvelu.fi/4.jpg</url>
+        <url>http://kuvapalvelu.fi/5.jpg</url>
+    </kuvat>
     <lisatieto>Kuusamontien risteyksessä vanhat vallit ovat liian korkeat ja uutta lunta on satanut reippaasti.</lisatieto>
     <yhteydenottopyynto>false</yhteydenottopyynto>
     <sijainti>
@@ -29,9 +36,8 @@
         <matkapuhelin>929304449282</matkapuhelin>
         <sahkoposti>pekka.paivystaja@livi.fi</sahkoposti>
     </lahettaja>
-    <seliteet>
-        <selite>auraustarve</selite>
-        <selite>aurausvallitNakemaesteena</selite>
-        <selite>virkaApupyynto</selite>
-    </seliteet>
+    <luokittelu>
+        <aihe>11</aihe>
+        <tarkenne>Tarkennus</tarkenne>
+    </luokittelu>
 </harja:ilmoitus>
