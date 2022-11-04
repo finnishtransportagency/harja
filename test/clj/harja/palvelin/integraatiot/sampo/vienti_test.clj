@@ -16,7 +16,6 @@
             [harja.kyselyt.kustannussuunnitelmat :as qk]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.sampo.kasittely.maksuerat :as maksuerat]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [taoensso.timbre :as log]))
 
 (def +lahetysjono-sisaan+ "lahetysjono-sisaan")
