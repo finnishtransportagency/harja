@@ -259,8 +259,5 @@
              kayttajan-urakat :kayttajan-urakat
              :as app}]
       [:span.tietyoilmoitukset
-       [napit/uusi "Lisää tietyöilmoitus" #(e! (tiedot/->AloitaUusiTietyoilmoitus @nav/valittu-urakka-id))
-        {:disabled (:aloitetaan-uusi-tietyoilmoitus? app)
-         :tallennus-kaynnissa? (:aloitetaan-uusi-tietyoilmoitus? app)}]
        [ilmoitusten-hakuehdot e! valinnat-nyt kayttajan-urakat]
        [ilmoitukset e! app haetut-ilmoitukset ilmoituksen-haku-kaynnissa?]])))
