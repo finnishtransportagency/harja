@@ -358,14 +358,11 @@
                                   :polku [:kohdistukset indeksi :summa]
                                   :arvon-formatteri-fn tiedot/parsi-summa}))
       :kentta-params {:disabled? (or poistettu disabled)
-                      :tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
-                      :fmt (partial fmt/euro-opt false)
+                      :tyyppi :euro
+                      :vaadi-negatiivinen? urakoitsija-maksaa?
+                      :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
                       :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                      :veda-oikealle? true
                       :input-luokka "maara-input"
-                      :yksikko "€"
-                      :salli-whitespace? true
-                      :desimaalien-maara 2
                       :vayla-tyyli? true}}]
     (when urakoitsija-maksaa? [:div.caption.margin-top-4 "Kulu kirjataan miinusmerkkisenä"])]
    [:div.palsta
@@ -450,14 +447,11 @@
         {:otsikko "Määrä € *"
          :otsikon-tag :h5
          :luokka #{}
-         :kentta-params {:tyyppi (if urakoitsija-maksaa? :negatiivinen-numero :numero)
-                         :fmt (partial fmt/euro-opt false)
+         :kentta-params {:tyyppi :euro
                          :disabled (not= 0 haetaan)
+                         :vaadi-negatiivinen? urakoitsija-maksaa?
+                         :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
                          :input-luokka "maara-input"
-                         :veda-oikealle? true
-                         :yksikko "€"
-                         :salli-whitespace? true
-                         :desimaalien-maara 2
                          :virhe? (when-not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta) true)
                          :vayla-tyyli? true}
          :arvo-atom (r/wrap (get-in lomake [:kohdistukset 0 :summa])
