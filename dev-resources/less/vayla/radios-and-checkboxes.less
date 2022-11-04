@@ -28,6 +28,7 @@ label.radio- {
     font-weight: normal;
     color: @black-default;
     margin-top: @valistys-4;
+    white-space: nowrap;
 
     // ns. välitila checkboksille (osa valittu)
     &.indeterminate {
@@ -39,8 +40,12 @@ label.radio- {
     }
 
     &:before {
-      content: "\2713";
+      font-family: "harja-icons";
+      content: "\e964";
       margin-right: 0.75rem;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
       border: 2px solid @blue-default;
       color: @white-default;
       background: @white-default;
