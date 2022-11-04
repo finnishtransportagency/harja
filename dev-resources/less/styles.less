@@ -191,11 +191,11 @@ tr.uusitehtavakoodi td {
 
 .label-ja-alasveto {
   display: inline-block;
-  margin: 5px;
+  margin: @valistys-4;
 
   .alasvedon-otsikko {
     display: inline-block;
-    font-weight: bold;
+    .caption-strong();
   }
 
   .livi-alasveto(@valintakontrollin-leveys);
