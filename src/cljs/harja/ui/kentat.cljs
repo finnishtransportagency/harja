@@ -400,8 +400,7 @@
                 :salli-whitespace? true
                 :yksikko "€"
                 :desimaalien-maara 2
-                :veda-oikealle? true
-                :oletusarvo (or oletusarvo 0))
+                :veda-oikealle? true)
    data])
 
 (defmethod nayta-arvo :euro [kentta data]
