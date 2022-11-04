@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
+            [reagent.ratom :refer [reaction]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
@@ -91,6 +92,20 @@
         (if (k/virhe? vastaus)
           :virhe
           (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
+
+(def sanktio-bonus-suodattimet-oletusarvo
+  #{:muistutukset :bonukset :sanktiot :arvonvahennykset})
+
+(def sanktio-bonus-suodattimet
+  (atom sanktio-bonus-suodattimet-oletusarvo))
+
+(def urakan-lajisuodattimet
+  (reaction
+    ;; Urakan vaihtuessa nollataan suodattimet
+    (reset! sanktio-bonus-suodattimet sanktio-bonus-suodattimet-oletusarvo)
+    (case (:tyyppi @nav/valittu-urakka)
+      ;; TODO: Tarkista, tarviiko jotain urakkakohtaista filteröintiä oikeasti?
+      #{:muistutukset :bonukset :sanktiot :arvonvahennykset})))
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]

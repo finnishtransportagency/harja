@@ -1,4 +1,3 @@
-
 (ns harja.views.urakka.laadunseuranta.sanktiot
   "Sanktioiden listaus"
   (:require [reagent.core :refer [atom] :as r]
@@ -32,7 +31,8 @@
             
             [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.laadunseuranta.bonukset :as bonukset]))
+            [harja.views.urakka.laadunseuranta.bonukset :as bonukset])
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn laji->teksti
   [laji]
@@ -434,25 +434,38 @@
                   @muokattu]]
                 [ajax-loader "Ladataan..."])])])))))
 
+(defn- lajisuodattimet []
+  [:div.lajisuodattimet
+   [kentat/tee-otsikollinen-kentta
+    {:otsikko "Näytä lajit"
+     :otsikon-tag :div
+     :kentta-params {:tyyppi :checkbox-group
+                     :vaihtoehdot @tiedot/urakan-lajisuodattimet
+                     :label-luokka "margin-right-16"
+                     :nayta-rivina? true}
+     :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
+
 (defn- suodattimet-ja-toiminnot [valittu-urakka auki?]
-  [valinnat/urakkavalinnat {:urakka valittu-urakka}
-   ^{:key "urakkavalinnat"}
-   [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]
-   ^{:key "urakkatoiminnot"}
-   [valinnat/urakkatoiminnot {:urakka valittu-urakka}
-    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                                            (:id valittu-urakka))]
-      (yleiset/wrap-if
-        (not oikeus?)
-        [yleiset/tooltip {} :%
-         (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                         oikeudet/urakat-laadunseuranta-sanktiot)]
-        ^{:key "Lisää uusi"}
+  [:div.flex-row.tasaa-alkuun
+   [valinnat/urakkavalinnat {:urakka valittu-urakka}
+    ^{:key "urakkavalinnat"}
+    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]]
+
+   [lajisuodattimet]
+   (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                   (:id valittu-urakka))]
+     (yleiset/wrap-if
+       (not oikeus?)
+       [yleiset/tooltip {} :%
+        (oikeudet/oikeuden-puute-kuvaus :kirjoitus
+          oikeudet/urakat-laadunseuranta-sanktiot)]
+       ^{:key "Lisää uusi"}
+       [:div.lisaa-nappi
         [napit/uusi "Lisää uusi"
          #(do
             (reset! auki? true)
             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
-         {:disabled (not oikeus?)}]))]])
+         {:disabled (not oikeus?)}]]))])
 
 
 (defn valitse-sanktio! [rivi sanktio-atom]
@@ -540,16 +553,15 @@
                                                                    :default nil})
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn []
-        [:span
-         (let [optiot (merge optiot
-                        {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                         :yllapito? @tiedot-urakka/yllapidon-urakka?
-                         :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
-           [:div
-            (when @auki?           
-              [sivupalkki/oikea
-               {:leveys "600px" :sulku-fn #(do
-                                             (reset! auki? false)
-                                             (reset! tiedot/valittu-sanktio nil))}
-               [sanktion-tiedot (assoc optiot :auki? auki?)]])
-            [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])]))))
+        (let [optiot (merge optiot
+                       {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
+                        :yllapito? @tiedot-urakka/yllapidon-urakka?
+                        :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
+          [:div.laadunseuranta
+           (when @auki?
+             [sivupalkki/oikea
+              {:leveys "600px" :sulku-fn #(do
+                                            (reset! auki? false)
+                                            (reset! tiedot/valittu-sanktio nil))}
+              [sanktion-tiedot (assoc optiot :auki? auki?)]])
+           [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])))))
