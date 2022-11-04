@@ -393,6 +393,22 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
+(defmethod tee-kentta :euro [{:keys [fmt oletusarvo] :as kentta} data]
+  [tee-kentta (assoc kentta
+                :tyyppi :numero
+                :fmt (or fmt (partial fmt/euro-opt false))
+                :salli-whitespace? true
+                :yksikko "€"
+                :desimaalien-maara 2
+                :veda-oikealle? true
+                :oletusarvo (or oletusarvo 0))
+   data])
+
+(defmethod nayta-arvo :euro [kentta data]
+  [nayta-arvo (assoc kentta
+                :tyyppi :numero
+                :salli-whitespace? true) data])
+
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
         teksti (atom (some-> @data fmt))
