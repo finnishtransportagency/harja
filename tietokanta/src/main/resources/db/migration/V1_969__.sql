@@ -1,0 +1,2 @@
+-- -- Lisätään kaikkiin tarkastuspartitioihin (tapahtuu automaattisesti) sarake johon tallennetaan raakadatan alku- ja loppupiste geometriana
+ALTER TABLE tarkastus ADD COLUMN pisteet GEOMETRY DEFAULT NULL;
