@@ -104,9 +104,11 @@
   (reaction
     ;; Urakan vaihtuessa nollataan suodattimet
     (reset! sanktio-bonus-suodattimet sanktio-bonus-suodattimet-oletusarvo)
-    (case (:tyyppi @nav/valittu-urakka)
-      ;; TODO: Tarkista, tarviiko jotain urakkakohtaista filteröintiä oikeasti?
-      sanktio-bonus-suodattimet-oletusarvo)))
+    (cond
+      (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
+      (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
+
+      :else sanktio-bonus-suodattimet-oletusarvo)))
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
