@@ -442,7 +442,8 @@
     {:otsikko "Näytä lajit"
      :otsikon-tag :div
      :kentta-params {:tyyppi :checkbox-group
-                     :vaihtoehdot @tiedot/urakan-lajisuodattimet
+                     :vaihtoehdot lajisuodattimet
+                     :vaihtoehto-nayta tiedot/lajisuodatin-tekstit
                      :label-luokka "margin-right-16"
                      :nayta-rivina? true}
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])

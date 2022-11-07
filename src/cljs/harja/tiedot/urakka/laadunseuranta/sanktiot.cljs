@@ -100,6 +100,12 @@
 (def sanktio-bonus-suodattimet
   (atom sanktio-bonus-suodattimet-oletusarvo))
 
+(def lajisuodatin-tekstit
+  {:muistutukset "Muistutukset"
+   :bonukset "Bonukset"
+   :sanktiot "Sanktiot"
+   :arvonvahennykset "Arvonvähennykset"})
+
 (def urakan-lajisuodattimet
   (reaction
     ;; Urakan vaihtuessa nollataan suodattimet
