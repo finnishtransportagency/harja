@@ -1,22 +1,8 @@
 (ns harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot
-  (:require [taoensso.timbre :as log]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [clojure.xml :refer [parse]]
-            [clojure.zip :refer [xml-zip]]
-            [clj-time
+  (:require [clj-time
              [core :as t]
              [format :as df]]
-            [hiccup.core :refer [html]]
-            [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
-            [harja.jms-test :refer [feikki-jms]]
-            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus]
-            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
-            [clojure.string :as clj-str]
-            [harja.kyselyt.konversio :as konv]
-            [clojure.set :as set]
-            [harja.palvelin.palvelut.urakat :as urakkapalvelu]))
+            [harja.testi :refer :all]))
 
 ;; Kellonajat käsitellään ilmoituksissa utf ajassa, joten Helsingin aika voi olla kolme tuntia tai kaksi tuntia
 ;; sitä aikaa myöhemmin. Niinpä siirretään varalta tässä annetut ajat vähintään kolmen tunnin päähän, että timezoneton
@@ -72,4 +58,44 @@
     </seliteet>
   </harja:ilmoitus>
   "))
+
+(defn toimenpidepyynto-ilmoittaja-sanoma [{:keys [viesti-id ilmoitus-id sijainti-xml
+                                                  ilmoittaja-etunimi ilmoittaja-sukunimi ilmoittaja-email ilmoittaja-tyyppi]}]
+  (str
+    "<ns0:ilmoitus xmlns:ns0=\"http://www.liikennevirasto.fi/xsd/harja\">
+      <viestiId>"viesti-id"</viestiId>
+      <lahetysaika>2022-11-04T07:24:43.000Z</lahetysaika>
+      <ilmoitusId>"ilmoitus-id"</ilmoitusId>
+      <tunniste>UV-2244-li85</tunniste>
+      <versionumero>0</versionumero>
+      <ilmoitustyyppi>tiedoitus</ilmoitustyyppi>
+      <ilmoitettu>2022-11-04T07:24:43.000Z</ilmoitettu>
+      <urakkatyyppi>hoito</urakkatyyppi>
+      <otsikko>Urakoitsijaviesti</otsikko>
+      <paikanKuvaus>Pohjalantien tasoristeys</paikanKuvaus>
+      <lisatieto>Aihe: Soratien kunto
+        Lisätieto: Soratie on kuoppainen tai epätasainen
+        Otsikko: Pohjalantie.
+        Kuvaus: Sastamala, Pohjalantie, pahasti kuopilla loppupäästä, ei voi kiertää. Auton renkaat ei kestä, joka päivä
+        ajaa.
+      </lisatieto>
+      <yhteydenottopyynto>false</yhteydenottopyynto>
+      "sijainti-xml"
+      <ilmoittaja>
+        <etunimi>"ilmoittaja-etunimi"</etunimi>
+        <sukunimi>"ilmoittaja-sukunimi"</sukunimi>
+        <matkapuhelin></matkapuhelin>
+        <sahkoposti>"ilmoittaja-email"</sahkoposti>
+        <tyyppi>"ilmoittaja-tyyppi"</tyyppi>
+      </ilmoittaja>
+      <lahettaja>
+        <etunimi>Tiina</etunimi>
+        <sukunimi>Korteniitty</sukunimi>
+        <matkapuhelin>0295020600</matkapuhelin>
+        <sahkoposti>tiina.korteniitty@ely-keskus.fi</sahkoposti>
+      </lahettaja>
+      <seliteet>
+        <selite>soratienKuntoHuono</selite>
+      </seliteet>
+      </ns0:ilmoitus>"))
 

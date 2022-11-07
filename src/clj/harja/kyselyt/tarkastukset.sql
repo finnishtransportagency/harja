@@ -290,10 +290,10 @@ ORDER BY l.luotu ASC;
 INSERT
 INTO tarkastus
 (lahde, urakka, aika, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle)
+ sijainti, tarkastaja, tyyppi, luoja, ulkoinen_id, havainnot, laadunalitus, yllapitokohde, nayta_urakoitsijalle, pisteet)
 VALUES (:lahde :: lahde, :urakka, :aika, :tr_numero, :tr_alkuosa, :tr_alkuetaisyys, :tr_loppuosa, :tr_loppuetaisyys,
                          :sijainti, :tarkastaja, :tyyppi :: tarkastustyyppi, :luoja, :ulkoinen_id,
-        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle);
+        :havainnot, :laadunalitus, :yllapitokohde, :nayta_urakoitsijalle, :pisteet);
 
 -- name: luodun-tarkastuksen-id
 -- single?: true
@@ -319,6 +319,7 @@ SET aika               = :aika,
   laadunalitus         = :laadunalitus,
   yllapitokohde        = :yllapitokohde,
   nayta_urakoitsijalle = :nayta_urakoitsijalle,
+  pisteet              = :pisteet,
   poistettu            = FALSE
 WHERE urakka = :urakka AND id = :id;
 
