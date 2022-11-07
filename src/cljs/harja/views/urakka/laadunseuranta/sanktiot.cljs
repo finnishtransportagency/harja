@@ -434,7 +434,7 @@
                   @muokattu]]
                 [ajax-loader "Ladataan..."])])])))))
 
-(defn- lajisuodattimet []
+(defn- lajisuodatin-valinnat [lajisuodattimet]
   [:div.lajisuodattimet
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Näytä lajit"
@@ -445,13 +445,13 @@
                      :nayta-rivina? true}
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
-(defn- suodattimet-ja-toiminnot [valittu-urakka auki?]
+(defn- suodattimet-ja-toiminnot [valittu-urakka auki? lajisuodattimet]
   [:div.flex-row.tasaa-alkuun
    [valinnat/urakkavalinnat {:urakka valittu-urakka}
     ^{:key "urakkavalinnat"}
     [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]]
 
-   [lajisuodattimet]
+   [lajisuodatin-valinnat lajisuodattimet]
    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                    (:id valittu-urakka))]
      (yleiset/wrap-if
@@ -501,12 +501,15 @@
 
 (defn sanktiolistaus
   [optiot valittu-urakka]
-  (let [sanktiot (reverse (sort-by :perintapvm @tiedot/haetut-sanktiot-ja-bonukset))
+  (let [sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
+                   tiedot/suodata-sanktiot-ja-bonukset
+                   (sort-by :perintapvm)
+                   reverse)
         {:keys [yllapito? auki?]} optiot
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [:h1 (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
-     [suodattimet-ja-toiminnot valittu-urakka auki?]
+     [suodattimet-ja-toiminnot valittu-urakka auki? @tiedot/sanktio-bonus-suodattimet]
      [grid/grid
       {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do

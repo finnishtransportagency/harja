@@ -1,6 +1,7 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
             [reagent.ratom :refer [reaction]]
+            [clojure.set :as set]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
@@ -105,7 +106,7 @@
     (reset! sanktio-bonus-suodattimet sanktio-bonus-suodattimet-oletusarvo)
     (case (:tyyppi @nav/valittu-urakka)
       ;; TODO: Tarkista, tarviiko jotain urakkakohtaista filteröintiä oikeasti?
-      #{:muistutukset :bonukset :sanktiot :arvonvahennykset})))
+      sanktio-bonus-suodattimet-oletusarvo)))
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
@@ -142,3 +143,34 @@
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
+
+(defn- muistutus? [rivi]
+  (= :muistutus (:laji rivi)))
+
+(defn- bonus? [rivi]
+  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus}
+   (:laji rivi)))
+
+(defn- sanktio? [rivi]
+  ((disj (set @urakka/valitun-urakan-sanktiolajit) :arvonvahennyssanktio :muistutus)
+   (:laji rivi)))
+
+(defn- arvonvahennys? [rivi]
+  (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- rivin-tyyppi [rivi]
+  (cond
+    (muistutus? rivi) :muistutukset
+    (bonus? rivi) :bonukset
+    (sanktio? rivi) :sanktiot
+    (arvonvahennys? rivi) :arvonvahennykset))
+
+(defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
+  (let [kaikki @urakan-lajisuodattimet
+        valitut @sanktio-bonus-suodattimet]
+    (if (= kaikki valitut)
+      ;; Kaikki suodattimet valittu, ei suodateta mitään pois.
+      sanktiot-ja-bonukset
+      (filter
+        #(valitut (rivin-tyyppi %))
+        sanktiot-ja-bonukset))))
