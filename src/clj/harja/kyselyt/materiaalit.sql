@@ -113,8 +113,43 @@ FROM raportti_toteutuneet_materiaalit rtm
   LEFT JOIN materiaalikoodi mk ON mk.id = rtm."materiaali-id"
   JOIN urakka u ON u.id = rtm."urakka-id"
 WHERE u.id = :urakka
-      AND rtm.paiva BETWEEN :alku ::TIMESTAMP AND :loppu ::TIMESTAMP
-GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi;
+      AND rtm.paiva BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP
+GROUP BY "materiaali-nimi", "urakka-nimi", mk.yksikko, mk.materiaalityyppi
+
+UNION ALL
+
+-- Ota mukaan valittu joukko toteumia, joilla ei ole materiaalikoodia.
+SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
+       u.nimi AS "urakka-nimi",
+       tk.nimi AS "materiaali-nimi",
+       CASE
+           WHEN tk.yksikko = 'tonni'
+               THEN 't'
+           END AS "materiaali-yksikko",
+       'muu'::MATERIAALITYYPPI AS materiaalityyppi
+  FROM raportti_toteuma_maarat rtmaarat
+    JOIN urakka u ON u.id = rtmaarat.urakka_id
+    LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+ WHERE u.id = :urakka
+   AND (rtmaarat.alkanut BETWEEN :alku::TIMESTAMP AND :loppu::TIMESTAMP)
+   AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
+                                      FROM toimenpidekoodi tpk4
+                                               JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                    -- Päällysteiden paikkaus tehtävät
+                                     WHERE tpk3.koodi = '20107'
+                                       AND tpk4.poistettu IS NOT TRUE
+                                       AND tpk4.yksikko = 'tonni')
+ GROUP BY "materiaali-nimi", "urakka-nimi", "materiaali-yksikko", materiaalityyppi;
+
+-- TODO poista
+--SELECT paivita_raportti_toteuma_maarat();
+
+
+
+-- TODO hae hallintayksikön/koko maan toteuma_maarat
+
+
+
 
 -- name: hae-hallintayksikon-toteutuneet-materiaalit-raportille
 -- Palauttaa hallintayksikköön kuuluvien urakoiden materiaalit ja määrät jokaisen omana rivinä.
