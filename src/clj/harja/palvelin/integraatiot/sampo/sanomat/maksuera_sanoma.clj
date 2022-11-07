@@ -40,7 +40,8 @@
     99))
 
 (defn maksuera-hiccup [maksuera]
-  (let [{:keys [alkupvm loppupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
+  (let [{:keys [alkupvm vastuuhenkilo talousosasto talousosastopolku tuotepolku sampoid]} (:toimenpideinstanssi maksuera)
+        loppupvm (get-in maksuera [:urakka :loppupvm])
         maksueranumero (maksueranumero (:numero maksuera))
         kulu-id (muodosta-kulu-id)
         instance-code (instance-code (:numero maksuera))]
