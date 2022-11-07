@@ -534,7 +534,7 @@
              [:http-palvelin :db :yha-integraatio :vkm])
 
       :yha-velho (component/using
-                   (yha-velho/->YhaVelho)
+                   (yha-velho/->YhaVelho (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :varustetoteuma-ulkoiset (component/using
