@@ -443,7 +443,7 @@
      :otsikon-tag :div
      :kentta-params {:tyyppi :checkbox-group
                      :vaihtoehdot lajisuodattimet
-                     :vaihtoehto-nayta tiedot/lajisuodatin-tekstit
+                     :vaihtoehto-nayta #(:teksti (tiedot/lajisuodatin-tiedot %))
                      :label-luokka "margin-right-16"
                      :nayta-rivina? true}
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
@@ -512,7 +512,7 @@
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
     [:div.sanktiot
      [:h1 (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
-     [suodattimet-ja-toiminnot valittu-urakka auki? @tiedot/sanktio-bonus-suodattimet]
+     [suodattimet-ja-toiminnot valittu-urakka auki? @tiedot/urakan-lajisuodattimet]
      [grid/grid
       {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do

@@ -94,27 +94,35 @@
           :virhe
           (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
 
+(def lajisuodatin-tiedot
+  {:muistutukset {:teksti "Muistutukset" :jarjestys 1}
+   :sanktiot {:teksti "Sanktiot" :jarjestys 2}
+   :bonukset {:teksti "Bonukset" :jarjestys 3}
+   :arvonvahennykset {:teksti "Arvonvähennykset" :jarjestys 4}})
+
+(defn- jarjesta-suodattimet [s1 s2]
+  (let [s1-idx (:jarjestys (lajisuodatin-tiedot s1))
+        s2-idx (:jarjestys (lajisuodatin-tiedot s2))]
+    (< s1-idx s2-idx)))
+
 (def sanktio-bonus-suodattimet-oletusarvo
-  #{:muistutukset :bonukset :sanktiot :arvonvahennykset})
+  (set (keys lajisuodatin-tiedot)))
 
 (def sanktio-bonus-suodattimet
   (atom sanktio-bonus-suodattimet-oletusarvo))
-
-(def lajisuodatin-tekstit
-  {:muistutukset "Muistutukset"
-   :bonukset "Bonukset"
-   :sanktiot "Sanktiot"
-   :arvonvahennykset "Arvonvähennykset"})
 
 (def urakan-lajisuodattimet
   (reaction
     ;; Urakan vaihtuessa nollataan suodattimet
     (reset! sanktio-bonus-suodattimet sanktio-bonus-suodattimet-oletusarvo)
-    (cond
-      (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
-      (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
+    ;; Järjestetään setti
+    (apply sorted-set-by
+      jarjesta-suodattimet
+      (cond
+        (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
+        (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
 
-      :else sanktio-bonus-suodattimet-oletusarvo)))
+        :else sanktio-bonus-suodattimet-oletusarvo))))
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
