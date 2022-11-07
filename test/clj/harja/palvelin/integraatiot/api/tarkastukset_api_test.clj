@@ -12,7 +12,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.geo :as geo])
   (:import (java.util Date)))
 
 (def kayttaja "destia")
@@ -73,7 +74,7 @@
 (deftest tallenna-ja-poista-talvihoitotarkastus
   (let [pvm (Date.)
         id (hae-vapaa-tarkastus-ulkoinen-id)
-        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi "
+        tarkista-kannasta #(first (q (str "SELECT t.tyyppi, t.havainnot, thm.lumimaara, l.nimi, t.pisteet "
                                           "  FROM tarkastus t "
                                           "       JOIN talvihoitomittaus thm ON thm.tarkastus=t.id "
                                           "       JOIN tarkastus_liite hl ON t.id = hl.tarkastus "
@@ -85,8 +86,16 @@
                                                   (json-sapluunasta "test/resurssit/api/talvihoitotarkastus.json" pvm id))]
 
     (is (= 200 (:status tallenna-vastaus)))
-    (let [tark (tarkista-kannasta)]
-      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"]) (str "Tarkastuksen data tallentunut ok " id)))
+
+    (let [tark (tarkista-kannasta)
+          odotetut-pisteet (->
+                             {:type :multipoint,
+                              :coordinates [{:type :point :coordinates [441895 7199136]}
+                                            {:type :point, :coordinates [442131 7198982]}]}
+                             geo/clj->pg
+                             geo/geometry)]
+      (is (= tark ["talvihoito" "jotain talvisen outoa" 15.00M "talvihoitotarkastus.jpg"
+                   odotetut-pisteet]) (str "Tarkastuksen data tallentunut ok " id)))
 
     (let [poista-vastaus (api-tyokalut/delete-kutsu
                            ["/api/urakat/" urakka "/tarkastus/talvihoitotarkastus"]
