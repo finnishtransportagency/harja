@@ -51,7 +51,7 @@
       this))
 
   Maksueralahetys
-  (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]
+  (laheta-maksuera-sampoon [{:keys [db integraatioloki]} numero]
     (let [urakkaid (q-maksuerat/hae-maksueran-urakka db numero)
           summat (q-maksuerat/hae-urakan-maksueran-summat db urakkaid)
           kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki numero)
