@@ -60,8 +60,8 @@
         taulukko (apurit/taulukko-otsikolla vastaus "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
         rivit (last taulukko)
         vinkki (take-last 2 vastaus)]
-    (is (= (list ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M 0]
-                 (list "Yhteensä" 2000M 200M 1800M 2000M 0))
+    (is (= (list ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M 0 1000M 1000M]
+                 (list "Yhteensä" 2000M 200M 1800M 2000M 0  1000M 1000M))
            rivit))
     (is (=  [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. \n")] (first vinkki)))
     (is (=  [:teksti yleinen/materiaalitoteumien-paivitysinfo] (last vinkki)))
