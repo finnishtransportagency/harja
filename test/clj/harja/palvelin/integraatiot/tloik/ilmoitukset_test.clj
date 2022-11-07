@@ -379,6 +379,49 @@
           (is (nil? ilmoitustoimenpide) "Ilmoitustoimenpidettä ei voida tehdä, koska päivystäjältä puuttuu sekä puhelinumerot, että email."))
         (poista-ilmoitus ilmoitus-id)))))
 
+(deftest testaa-toimenpidepyynto-ilmoittajan-tyyppi
+  "Testataan, että toimenpidepyyntö on kunnossa. Ilmoittajan tyyppi pitäisi kirjautua tietokantaan."
+  (let [viestit (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
+                  (fn [db urakka-id] (list {:id 1
+                                            :etunimi "Pekka"
+                                            :sukunimi "Päivystäjä"
+                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
+                                            :matkapuhelin nil
+                                            :tyopuhelin nil
+                                            :sahkoposti "email.email@example.com"
+                                            :alku (t/now)
+                                            :loppu (t/now)
+                                            :vastuuhenkilo true
+                                            :varahenkilo true}))]
+      (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
+                                   kayttaja portti))
+            ilmoitus-id (rand-int 99999999)
+            ilmoitus-data {:viesti-id (str (UUID/randomUUID))
+                           :ilmoitus-id ilmoitus-id
+                           :ilmoittaja-etunimi "Anonyymi"
+                           :ilmoittaja-sukunimi "kontakti"
+                           :ilmoittaja-email "anonyymi.kontakti@example.com"
+                           :ilmoittaja-tyyppi "urakoitsija" ;; Tämän toimivuus testataan tässä
+                           :sijainti-xml aineisto-toimenpidepyynnot/sijainti-oulun-alueella}]
+        (async/<!! (async/timeout timeout))
+        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-ilmoittaja-sanoma ilmoitus-data))
+        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+        (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+
+        (let [_ (odota-arvo viestit kuittaus-timeout)
+              xml (first @viestit)
+              _ (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
+              ilmoitus (hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
+          (is (= ilmoitus-id (:ilmoitus-id ilmoitus)))
+          (is (= "urakoitsija" (:ilmoittaja_tyyppi ilmoitus)) "Ilmoittaja tyyppi toimii"))
+        (poista-ilmoitus ilmoitus-id)))))
+
+
 (deftest tarkista-viestin-kasittely-kun-urakkaa-ei-loydy
   (let [sanoma +ilmoitus-ruotsissa+
         viestit (atom [])]
