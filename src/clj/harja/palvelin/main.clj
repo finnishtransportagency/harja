@@ -492,7 +492,7 @@
                     [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :sampo :db])
+                   [:http-palvelin :sampo :api-sampo :db])
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
