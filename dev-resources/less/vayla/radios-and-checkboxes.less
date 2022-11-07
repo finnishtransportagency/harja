@@ -41,30 +41,32 @@ label.radio- {
 
     &:before {
       font-family: "harja-icons";
+      height: 20px;
+      width: 20px;
+      font-size: 0.75rem;
       content: "\e964";
       margin-right: 0.75rem;
       display: inline-flex;
       justify-content: center;
       align-items: center;
-      border: 2px solid @blue-default;
+      border: 1px solid @blue-default;
       color: @white-default;
       background: @white-default;
       border-radius: 4px;
       z-index: 1;
-      padding: 0px 4px 0px 4px;
     }
   }
 
   &:hover:not([disabled]) + label,
   &:focus-visible:not([disabled]) + label {
     &:before {
-      background: @blue-light;
+      background: @blue-lighter;
     }
   }
 
   &:focus-visible:not([disabled]) + label {
     &:before {
-      border: 2px dashed @blue-default;
+      border: 1px dashed @blue-default;
     }
   }
 
@@ -81,7 +83,7 @@ label.radio- {
     &:hover:not([disabled]) + label,
     &:focus-visible:not([disabled]) + label {
       &:before {
-        color: @blue-light;
+        color: @blue-lighter;
       }
     }
 
