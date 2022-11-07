@@ -134,11 +134,7 @@
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
  ;; Huom. Kutsut julkinen.vayla.fi-palveluun epäonnistuvat, jos käyttäjätunnus ja salasana on asetettu. Kutsut ava.vaylapilvi.fi-osoitteeseen epäonnistuvat, jos käyttäjätiedot puuttuvat.
- :geometriapaivitykset {:tarkistusvali 60
-                        :kayttajatunnus nil
-                        :salasana nil
-
-                        :tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
+ :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
                         :tieosoiteverkon-osoite "https://ava.vaylapilvi.fi/ava/Tie/Tieosoiteverkko/[AINEISTO].zip"
                         :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
 
@@ -236,7 +232,8 @@
                                :itmf-uudelleen-kaynnistys
                                :sonja-sahkoposti
                                :reittitarkistukset
-                               :tiedostopesula}
+                               :tiedostopesula
+                               :sampo}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 

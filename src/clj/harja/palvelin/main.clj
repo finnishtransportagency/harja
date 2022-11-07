@@ -493,7 +493,7 @@
                     [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :sampo :db])
+                   [:http-palvelin :sampo :api-sampo :db])
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
@@ -535,7 +535,7 @@
              [:http-palvelin :db :yha-integraatio :vkm])
 
       :yha-velho (component/using
-                   (yha-velho/->YhaVelho)
+                   (yha-velho/->YhaVelho (select-keys asetukset [:kehitysmoodi]))
                    [:http-palvelin :db  :yha-integraatio :velho-integraatio])
 
       :varustetoteuma-ulkoiset (component/using

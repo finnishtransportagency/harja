@@ -33,7 +33,7 @@
     (when (ominaisuus-kaytossa? :api-sampo)
       (julkaise-reitti
         http :sampo-vastaanotto
-        (POST "/harja/api/sampo" request
+        (POST "/api/sampo" request
           (kutsukasittely/kasittele-sampo-kutsu db integraatioloki :sisaanluku
             request xml-skeemat/+sampo-kutsu+
             (fn [db kutsun-data tapahtuma-id]
@@ -51,7 +51,7 @@
       this))
 
   Maksueralahetys
-  (laheta-maksuera-sampoon [{:keys [sonja db integraatioloki]} numero]
+  (laheta-maksuera-sampoon [{:keys [db integraatioloki]} numero]
     (let [urakkaid (q-maksuerat/hae-maksueran-urakka db numero)
           summat (q-maksuerat/hae-urakan-maksueran-summat db urakkaid)
           kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki numero)

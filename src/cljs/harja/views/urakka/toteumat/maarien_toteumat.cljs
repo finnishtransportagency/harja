@@ -256,7 +256,7 @@
                           :vayla-tyyli? true
                           :rivi-solun-tyyli {:padding-right "3rem"}
                           :vaihtoehto-nayta filtterit-keyword->string
-                          :vaihtoehdot [:maaramitattavat :rahavaraukset :lisatyot]
+                          :vaihtoehdot [:maaramitattavat :lisatyot]
                           :valitse-fn (fn [tila polku arvo]
                                         (e! (maarien-toteumat/->AsetaFiltteri polku arvo)))
                           :valittu-fn (fn [tila polku]
