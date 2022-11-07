@@ -33,7 +33,7 @@
 (defn- luo-tarkastus*
   [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
                              ulkoinen-id havainnot laadunalitus yllapitokohde
-                             nayta-urakoitsijalle] :as tarkastus} urakoitsija?]
+                             nayta-urakoitsijalle pisteet] :as tarkastus} urakoitsija?]
   (let [params {:lahde lahde
                 :urakka urakka-id
                 :aika (konv/sql-timestamp aika)
@@ -50,7 +50,8 @@
                 :havainnot havainnot
                 :laadunalitus laadunalitus
                 :yllapitokohde yllapitokohde
-                :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))}]
+                :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
+                :pisteet pisteet}]
 
     (do
       (log/debug "Luodaan uusi tarkastus" tarkastus " jonka params: " params)
@@ -58,17 +59,28 @@
       (luodun-tarkastuksen-id db))))
 
 (defn- paivita-tarkastus*
-  [db user urakka-id {:keys [id lahde aika tr tyyppi tarkastaja sijainti
-                             ulkoinen-id havainnot laadunalitus yllapitokohde
-                             nayta-urakoitsijalle] :as tarkastus} urakoitsija?]
+  [db user urakka-id {:keys [id aika tr tyyppi tarkastaja sijainti
+                             havainnot laadunalitus yllapitokohde
+                             nayta-urakoitsijalle pisteet] :as tarkastus} urakoitsija?]
   (do (log/debug (format "Päivitetään tarkastus id: %s " id))
       (paivita-tarkastus! db
-                          (konv/sql-timestamp aika)
-                          (:numero tr) (:alkuosa tr) (:alkuetaisyys tr) (:loppuosa tr) (:loppuetaisyys tr)
-                          sijainti tarkastaja (name tyyppi) (:id user)
-                          havainnot laadunalitus yllapitokohde
-                          (if urakoitsija? true (boolean nayta-urakoitsijalle))
-                          urakka-id id)
+                          {:id id
+                           :urakka urakka-id
+                           :aika (konv/sql-timestamp aika)
+                           :tr_numero (:numero tr)
+                           :tr_alkuosa (:alkuosa tr)
+                           :tr_alkuetaisyys (:alkuetaisyys tr)
+                           :tr_loppuosa (:loppuosa tr)
+                           :tr_loppuetaisyys (:loppuetaisyys tr)
+                           :sijainti sijainti
+                           :tarkastaja tarkastaja
+                           :tyyppi (name tyyppi)
+                           :muokkaaja (:id user)
+                           :havainnot havainnot
+                           :laadunalitus laadunalitus
+                           :yllapitokohde yllapitokohde
+                           :nayta_urakoitsijalle (if urakoitsija? true (boolean nayta-urakoitsijalle))
+                           :pisteet pisteet})
       id))
 
 (defn luo-tai-paivita-tarkastus
