@@ -120,10 +120,10 @@
         {:rivi? true}
         {:otsikko "Summa"
          :nimi :rahasumma
-         :tyyppi :positiivinen-numero
+         :tyyppi :euro
+         :vaadi-positiivinen-numero? true
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
-         :yksikko "€"
          :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}
         (let [valinnat (when (and
                                (<= urakan-alkuvuosi 2020)
