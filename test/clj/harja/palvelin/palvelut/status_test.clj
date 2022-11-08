@@ -8,8 +8,10 @@
             [harja.palvelin.komponentit.sonja :as sonja]
             [harja.integraatio :as integraatio]
             [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
+            [harja.palvelin.ajastetut-tehtavat.harja-status :as harja-status]
             [harja.palvelin.palvelut.status :as status]
             [harja.palvelin.integraatiot.api.tyokalut :as tyokalut]
+            [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tyokalut]
             [clojure.core.async :as async]
             [harja.palvelin.komponentit.itmf :as itmf]))
 
@@ -23,7 +25,7 @@
                                                                                                                   :replikoinnin-max-viive-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :kyselyn-timeout-ms])}})
                                            :status (component/using
                                                      (status/luo-status true)
-                                                     [:http-palvelin :komponenttien-tila])
+                                                     [:http-palvelin :db :komponenttien-tila])
                                            :sonja (component/using
                                                     (sonja/luo-oikea-sonja integraatio/sonja-asetukset)
                                                     [:db])
@@ -157,3 +159,34 @@
                assoc-in
                [tapahtuma-apurit/host-nimi :harja :kaikki-ok?]
                true))))
+
+(def tloik-asetukset (assoc {} :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
+                                       :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
+                                       :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
+                                       :toimenpidekuittausjono tloik-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
+                                       :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))
+(deftest uusi-status-toimii
+  (testing "Uusi statuskysely toimii"
+    (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+            {:harja-ok? true
+             :itmf-yhteys-ok? true
+             :replikoinnin-tila-ok? true
+             :sonja-yhteys-ok? true
+             :viesti "Harja ok, TLOIK ei ole käytössä, REPLICA ei ole käytössä, "
+             :yhteys-master-kantaan-ok? true}))
+      (is (= (get vastaus :status) 200)))))
+
+(deftest uusi-status-vastaa-virhetta
+  (testing "Uusi statuskysely toimii"
+    (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
+      (is (= (-> vastaus :body (cheshire/decode true))
+            {:harja-ok? false
+             :itmf-yhteys-ok? true
+             :replikoinnin-tila-ok? false
+             :sonja-yhteys-ok? true
+             :viesti "TLOIK ei ole käytössä, REPLICA rikki, "
+             :yhteys-master-kantaan-ok? true}))
+      (is (= (get vastaus :status) 503)))))

@@ -30,6 +30,7 @@
            (mapv
              (fn [rivi]
                (let [tarkastus (:tarkastus rivi)
+                     {alkusijainti :alkusijainti loppusijainti :loppusijainti} tarkastus
                      ulkoinen-id (-> tarkastus :tunniste :id)
                      tyyppi (if (nil? tyyppi)
                               (:tarkastustyyppi rivi)
@@ -66,14 +67,15 @@
                                                (not (str/blank? (:havainnot tarkastus))))
                                              alitus))
                            :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))
-                           :pisteet (->
-                                      {:type :multipoint,
-                                       :coordinates [{:type :point :coordinates [(get-in tarkastus [:alkusijainti :x])
-                                                                                 (get-in tarkastus [:alkusijainti :y])]}
-                                                     {:type :point, :coordinates [(get-in tarkastus [:loppusijainti :x])
-                                                                                  (get-in tarkastus [:loppusijainti :y])]}]}
-                                      geo/clj->pg
-                                      geo/geometry)})
+                           :pisteet
+                           (->
+                             (if-not loppusijainti
+                               {:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
+                               {:type :multipoint,
+                                :coordinates [{:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
+                                              {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
+                             geo/clj->pg
+                             geo/geometry)})
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))

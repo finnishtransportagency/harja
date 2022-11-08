@@ -227,6 +227,7 @@
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
       [:div
+       [yleiset/toast-viesti "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s). Itse tiedot useassa tapauksessa ovat silti menneet onnistuneesti YHA:an perille, vaikka Harjan virheilmoitus sanoisi 'request timed out'. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta."]
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}

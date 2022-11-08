@@ -153,6 +153,7 @@
     [harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset :as urakan-lupausmuistutukset]
     [harja.palvelin.ajastetut-tehtavat.yleiset-ajastukset :as yleiset-ajastukset]
     [harja.palvelin.tyokalut.koordinaatit :as koordinaatit]
+    [harja.palvelin.ajastetut-tehtavat.harja-status :as harja-status]
 
 
     ;; Harja mobiili Laadunseuranta
@@ -492,7 +493,7 @@
                     [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :sampo :db])
+                   [:http-palvelin :sampo :api-sampo :db])
 
       :liitteet (component/using
                   (liitteet/->Liitteet)
@@ -725,7 +726,18 @@
 
       :status (component/using
                 (status/luo-status (:kehitysmoodi asetukset))
-                [:http-palvelin :komponenttien-tila])
+                [:http-palvelin :komponenttien-tila :db])
+
+      :harja-status (component/using
+                      (harja-status/->HarjaStatus (:tloik asetukset) (:kehitysmoodi asetukset))
+                      {:itmf (if (ominaisuus-kaytossa? :itmf)
+                               :itmf
+                               :sonja)
+                       :db :db
+                       :integraatioloki :integraatioloki
+                       :api-sahkoposti :api-sahkoposti
+                       :sonja-sahkoposti :sonja-sahkoposti
+                       :labyrintti :labyrintti})
 
       :vaylien-geometriahaku
       (component/using

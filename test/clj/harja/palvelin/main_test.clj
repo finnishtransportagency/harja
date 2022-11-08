@@ -165,7 +165,8 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
-    :api-sampo})
+    :api-sampo
+    :harja-status})
 
 (def ei-statusta
   #{:metriikka
@@ -230,7 +231,8 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
-    :api-sampo})
+    :api-sampo
+    :harja-status})
 
 (def hidas-ok-status #{:sonja :itmf})
 
