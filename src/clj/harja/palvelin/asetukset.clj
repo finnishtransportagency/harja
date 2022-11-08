@@ -106,13 +106,11 @@
                            :salasana s/Str
                            :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :tierekisteri) {:url s/Str
-                                   (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Num}
+                                   (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Any}
 
    :ilmatieteenlaitos {:lampotilat-url s/Str}
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali) s/Int
-                                           (s/optional-key :kayttajatunnus) s/Str
-                                           (s/optional-key :salasana) s/Str
                                            (s/optional-key :tieosoiteverkon-shapefile) s/Str
                                            (s/optional-key :tieosoiteverkon-osoite) s/Str
                                            (s/optional-key :tieosoiteverkon-tuontikohde) s/Str
