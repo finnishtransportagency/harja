@@ -94,9 +94,9 @@
                taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
                rivit (sort-by ffirst (last taulukko))
                vinkki (take-last 2 vastaus)]
-              (is (= (list ["Kajaanin alueurakka 2014-2019" 2000M 0 2000M 0]
-                           ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M]
-                           (list "Yhteensä" 4000M 200M 3800M 2000M))
+              (is (= (list ["Kajaanin alueurakka 2014-2019" 2000M 0 2000M 0 0 0]
+                           ["Oulun alueurakka 2014-2019" 2000M 200M 1800M 2000M 1000M 1000M]
+                           (list "Yhteensä" 4000M 200M 3800M 2000M 1000M 1000M))
                      rivit))
               (is (= [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. \n")] (first vinkki)))
               (is (= [:teksti yleinen/materiaalitoteumien-paivitysinfo] (last vinkki)))
@@ -124,9 +124,9 @@
         taulukko (apurit/taulukko-otsikolla vastaus "KOKO MAA, Materiaaliraportti ajalta 01.10.2014 - 01.10.2015")
         rivit (last taulukko)
         vinkki (take-last 2 vastaus)]
-    (is (= (list ["Uusimaa" 4000M 0 4000M 0]
-             ["Pohjois-Pohjanmaa" 4000M 200M 3800M 2000M]
-             (list "Yhteensä" 8000M 200M 7800M 2000M))
+    (is (= (list ["Uusimaa" 4000M 0 4000M 0 0 0]
+             ["Pohjois-Pohjanmaa" 4000M 200M 3800M 2000M 1000M 1000M]
+             (list "Yhteensä" 8000M 200M 7800M 2000M 1000M 1000M))
            rivit))
        (is (=  [:teksti (str "Formiaatteja ei lasketa talvisuolan kokonaiskäyttöön. \n")] (first vinkki)))
        (is (=  [:teksti yleinen/materiaalitoteumien-paivitysinfo] (last vinkki)))
