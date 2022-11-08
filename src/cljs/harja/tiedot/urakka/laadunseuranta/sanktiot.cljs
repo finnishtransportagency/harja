@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
+            [reagent.ratom :refer [reaction]]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
@@ -10,7 +11,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
+  (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
@@ -92,6 +93,36 @@
           :virhe
           (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
 
+(def lajisuodatin-tiedot
+  {:muistutukset {:teksti "Muistutukset" :jarjestys 1}
+   :sanktiot {:teksti "Sanktiot" :jarjestys 2}
+   :bonukset {:teksti "Bonukset" :jarjestys 3}
+   :arvonvahennykset {:teksti "Arvonvähennykset" :jarjestys 4}})
+
+(defn- jarjesta-suodattimet [s1 s2]
+  (let [s1-idx (:jarjestys (lajisuodatin-tiedot s1))
+        s2-idx (:jarjestys (lajisuodatin-tiedot s2))]
+    (< s1-idx s2-idx)))
+
+(def sanktio-bonus-suodattimet-oletusarvo
+  (set (keys lajisuodatin-tiedot)))
+
+(def sanktio-bonus-suodattimet
+  (atom sanktio-bonus-suodattimet-oletusarvo))
+
+(def urakan-lajisuodattimet
+  (reaction
+    ;; Urakan vaihtuessa nollataan suodattimet
+    (reset! sanktio-bonus-suodattimet sanktio-bonus-suodattimet-oletusarvo)
+    ;; Järjestetään setti
+    (apply sorted-set-by
+      jarjesta-suodattimet
+      (cond
+        (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
+        (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
+
+        :else sanktio-bonus-suodattimet-oletusarvo))))
+
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
   {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
@@ -127,3 +158,34 @@
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
+
+(defn- muistutus? [rivi]
+  (= :muistutus (:laji rivi)))
+
+(defn- bonus? [rivi]
+  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus}
+   (:laji rivi)))
+
+(defn- sanktio? [rivi]
+  ((disj (set @urakka/valitun-urakan-sanktiolajit) :arvonvahennyssanktio :muistutus)
+   (:laji rivi)))
+
+(defn- arvonvahennys? [rivi]
+  (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- rivin-tyyppi [rivi]
+  (cond
+    (muistutus? rivi) :muistutukset
+    (bonus? rivi) :bonukset
+    (sanktio? rivi) :sanktiot
+    (arvonvahennys? rivi) :arvonvahennykset))
+
+(defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
+  (let [kaikki @urakan-lajisuodattimet
+        valitut @sanktio-bonus-suodattimet]
+    (if (= kaikki valitut)
+      ;; Kaikki suodattimet valittu, ei suodateta mitään pois.
+      sanktiot-ja-bonukset
+      (filter
+        #(valitut (rivin-tyyppi %))
+        sanktiot-ja-bonukset))))
