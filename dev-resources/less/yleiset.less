@@ -154,9 +154,10 @@ button > .ajax-loader {
 .label-ja-kentta {
   display: inline-block;
   vertical-align: top;
-  margin: 5px;
+  margin: @valistys-4;
   .kentan-otsikko {
-    font-weight: bold;
+    .caption-small-strong();
+    margin-bottom: @valistys-4;
   }
   .livi-alasveto(@valintakontrollin-leveys);
   input:not([type="checkbox"]) {
