@@ -4,6 +4,8 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.maksuerat :as q]
             [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
+            [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.oikeudet :as oikeudet]))
@@ -29,10 +31,13 @@
     (assoc (first muunnetut-tilat) :numero maksueranumero)))
 
 (defn laheta-maksuera-sampoon
-  [sampo db _ maksueranumero]
+  [sampo api-sampo db _ maksueranumero]
   (assert (number? maksueranumero) " maksueranumeron oltava numero.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
-  (sampo/laheta-maksuera-sampoon sampo maksueranumero)
+  ;; Käytetään rest-api toteutusta, jos se on käytössä
+  (if (ominaisuus-kaytossa? :api-sampo)
+    (api-sampo/laheta-maksuera-sampoon api-sampo maksueranumero)
+    (sampo/laheta-maksuera-sampoon sampo maksueranumero))
   (let [tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
     (log/debug "Maksuerän tilat" tilat)
     tilat))
@@ -58,10 +63,10 @@
 
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon."
-  [db user {:keys [sampo maksueranumerot urakka-id]}]
+  [db user {:keys [sampo api-sampo maksueranumerot urakka-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (mapv (fn [maksueranumero]
-          (laheta-maksuera-sampoon sampo db user maksueranumero))
+          (laheta-maksuera-sampoon sampo api-sampo db user maksueranumero))
         maksueranumerot))
 
 
@@ -74,11 +79,13 @@
 
     (julkaise-palvelu (:http-palvelin this)
                       :laheta-maksuerat-sampoon (fn [user {:keys [maksueranumerot urakka-id]}]
-                                                  (laheta-maksuerat-sampoon (:db this)
-                                                                            user
-                                                                            {:sampo (:sampo this)
-                                                                             :maksueranumerot maksueranumerot
-                                                                             :urakka-id urakka-id})))
+                                                  (laheta-maksuerat-sampoon
+                                                    (:db this)
+                                                    user
+                                                    {:sampo (when-not (ominaisuus-kaytossa? :api-sampo) (:sampo this))
+                                                     :api-sampo (when (ominaisuus-kaytossa? :api-sampo) (:api-sampo this))
+                                                     :maksueranumerot maksueranumerot
+                                                     :urakka-id urakka-id})))
     this)
 
   (stop [this]

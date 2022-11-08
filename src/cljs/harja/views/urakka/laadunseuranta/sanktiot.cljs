@@ -117,7 +117,7 @@
              [bonus-sanktio-valikko (r/cursor tila [:lomake])])
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
-              [napit/yleinen-reunaton "Muokkaa"  #(swap! tila update :lukutila not)
+              [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
                {:disabled (not suorasanktio?)}]
               (when (not suorasanktio?)
                 [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
@@ -305,11 +305,13 @@
 
                    (apply lomake/ryhma {:rivi? true}
                      (keep identity [(when (sanktio-domain/muu-kuin-muistutus? @muokattu)
-                                       {:otsikko "Summa" :nimi :summa :tyyppi :positiivinen-numero
+                                       {:otsikko "Summa" :nimi :summa :tyyppi :euro
+                                        :vaadi-positiivinen-numero? true
                                         ::lomake/col-luokka "col-xs-4"
                                         :hae #(when (:summa %) (Math/abs (:summa %)))
-                                        :pakollinen? true :uusi-rivi? true :yksikko "€"
-                                        :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+                                        :pakollinen? true :uusi-rivi? true
+                                        :validoi [[:ei-tyhja "Anna summa"]
+                                                  [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
                                      (when (sanktio-domain/muu-kuin-muistutus? @muokattu)
                                        {:otsikko (str "Indeksi") :nimi :indeksi
