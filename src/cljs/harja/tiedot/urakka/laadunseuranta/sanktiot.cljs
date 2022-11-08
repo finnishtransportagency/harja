@@ -1,7 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
   (:require [reagent.core :refer [atom]]
             [reagent.ratom :refer [reaction]]
-            [clojure.set :as set]
             [cljs.core.async :refer [<!]]
             [harja.asiakas.kommunikaatio :as k]
             [harja.loki :refer [log]]
@@ -12,7 +11,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain])
-  (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
+  (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))

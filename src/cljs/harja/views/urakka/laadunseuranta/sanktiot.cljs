@@ -29,10 +29,8 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tierekisteri]
             
-            [harja.views.kartta :as kartta]
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.laadunseuranta.bonukset :as bonukset])
-  (:require-macros [harja.tyokalut.ui :refer [for*]]))
+            [harja.views.urakka.laadunseuranta.bonukset :as bonukset]))
 
 (defn laji->teksti
   [laji]
