@@ -1,11 +1,11 @@
-(ns harja.views.urakka.kulut
+(ns harja.views.urakka.kulut.kulut
   (:require [tuck.core :as tuck]
             [reagent.core :as r]
             [goog.string :as gstring]
             [goog.string.format]
             [harja.domain.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.mhu-kulut :as tiedot]
+            [harja.tiedot.urakka.kulut.mhu-kulut :as tiedot]
             [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :as yleiset]
@@ -162,11 +162,16 @@
         (get kulut/hoitovuodet-strs (keyword hv))))))
 
 (defn koontilaskun-kk-droppari
-  [_]
+  [_ vuosittaiset-valikatselmukset]
   (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)
-        vuosi (pvm/vuosi alkupvm)
+        alkuvuosi (pvm/vuosi alkupvm)
         loppuvuosi (pvm/vuosi loppupvm)
-        hoitokaudet (into [] (range 1 (- (inc loppuvuosi) vuosi)))]
+        hoitokauden-nro-vuodesta (fn [vuosi urakan-alkuvuosi urakan-loppuvuosi]
+                                   (when (and (<= urakan-alkuvuosi vuosi) (>= urakan-loppuvuosi vuosi))
+                                     (inc (- vuosi urakan-alkuvuosi))))
+        hoitokaudet-ilman-valikatselmusta (keep #(when (not= true (:paatos-tehty? %))
+                                                   (hoitokauden-nro-vuodesta (:vuosi %) alkuvuosi loppuvuosi))
+                                            vuosittaiset-valikatselmukset)]
     (fn [{:keys [koontilaskun-kuukausi paivitys-fn koontilaskun-kuukausi-meta disabled]}]
       [yleiset/livi-pudotusvalikko
        {:virhe?        (and 
@@ -181,7 +186,7 @@
                                                          :polku :koontilaskun-kuukausi
                                                          :optiot {:validoitava? true}})
         :format-fn    koontilaskun-kk-formatter}
-       (for [hv hoitokaudet
+       (for [hv hoitokaudet-ilman-valikatselmusta
              kk kuukaudet]
          (str (name kk) "/" hv "-hoitovuosi"))])))
 
@@ -791,7 +796,8 @@
 
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
-   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake} :lomake}]
+   {{:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset] :as lomake} :lomake}
+   vuosittaiset-valikatselmukset]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
@@ -814,7 +820,8 @@
                                                               laskun-nro-lukittu?)
                                 :koontilaskun-kuukausi      koontilaskun-kuukausi
                                 :koontilaskun-kuukausi-meta koontilaskun-kuukausi-meta
-                                :paivitys-fn                paivitys-fn}]
+                                :paivitys-fn                paivitys-fn}
+      vuosittaiset-valikatselmukset]
      [:label "Laskun pvm *"]
      [paivamaaran-valinta {:disabled              (or 
                                                     (not= 0 haetaan)
@@ -915,7 +922,7 @@
           [kulun-tiedot {:paivitys-fn paivitys-fn
                           :haetaan     haetaan
                           :e!          e!}
-           {:lomake lomake}]
+           {:lomake lomake} (:vuosittaiset-valikatselmukset app)]
           [lisatiedot
            {:paivitys-fn paivitys-fn
             :haetaan     haetaan}
@@ -1090,7 +1097,8 @@
                      (e! (tiedot/->HaeUrakanToimenpiteetJaMaksuerat (select-keys (-> @tila/yleiset :urakka) [:id :alkupvm :loppupvm])))
                      (e! (tiedot/->HaeUrakanKulut {:id (-> @tila/yleiset :urakka :id)
                                                    :alkupvm (first (pvm/kuukauden-aikavali (pvm/nyt)))
-                                                   :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))))
+                                                   :loppupvm (second (pvm/kuukauden-aikavali (pvm/nyt)))}))
+                     (e! (tiedot/->HaeUrakanValikatselmukset))))
    (komp/ulos #(e! (tiedot/->NakymastaPoistuttiin)))
    (fn [e! {kulut :kulut syottomoodi :syottomoodi 
             {:keys [haetaan haun-kuukausi haun-alkupvm haun-loppupvm]}

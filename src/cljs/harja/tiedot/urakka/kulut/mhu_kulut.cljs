@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.mhu-kulut
+(ns harja.tiedot.urakka.kulut.mhu-kulut
   (:require
     [clojure.string :as string]
     [tuck.core :as tuck]
@@ -42,6 +42,11 @@
 
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
+
+;; Haetaan välikatselmukset, eli päätökset, koska kulua ei voi syöttää/päivittää niille hoitokausille, joille välikatselmus on jo tehty
+(defrecord HaeUrakanValikatselmukset [])
+(defrecord HaeUrakanValikatselmuksetOnnistui [vastaus])
+(defrecord HaeUrakanValikatselmuksetEpaonnistui [vastaus])
 
 (defn parsi-summa [summa]
   (cond
@@ -430,6 +435,25 @@
         (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
         (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
 
+  HaeUrakanValikatselmukset
+  (process-event [_ app]
+    (let [urakka-id (-> @tila/yleiset :urakka :id)
+          _ (js/console.log "HaeUrakanValikatselmukset :: ")]
+      (tuck-apurit/post! :hae-urakan-valikatselmukset
+        {:urakka-id (-> @tila/yleiset :urakka :id)}
+        {:onnistui    ->HaeUrakanValikatselmuksetOnnistui
+         :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
+      app))
+
+  HaeUrakanValikatselmuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanValikatselmuksetOnnistui :: vastaus" (pr-str vastaus))
+    (assoc app :vuosittaiset-valikatselmukset vastaus))
+
+  HaeUrakanValikatselmuksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanValikatselmuksetEpaonnistui :: vastaus" (pr-str vastaus))
+    (assoc app :vuosittaiset-valikatselmukset nil))
   ;; FORMITOIMINNOT
 
   KulujenSyotto
