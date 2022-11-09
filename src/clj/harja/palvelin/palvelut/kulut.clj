@@ -1,12 +1,13 @@
 (ns harja.palvelin.palvelut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
   (:require [com.stuartsierra.component :as component]
-            [clj-time.coerce :as c]
             [clojure.string :as str]
             [taoensso.timbre :as log]
             [harja.kyselyt
              [kulut :as q]
-             [kustannusarvioidut-tyot :as kust-q]]
+             [kustannusarvioidut-tyot :as kust-q]
+             [valikatselmus :as valikatselmus-kyselyt]
+             [urakat :as urakka-kyselyt]]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.kulut :as kulut]
@@ -248,6 +249,17 @@
                                              (:toimenpideinstanssi kohdistus)})
   (hae-kulu-kohdistuksineen db user {:id id}))
 
+(defn tarkista-saako-kulua-tallentaa
+  "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
+  hoitokauden päätökset (välikatselmointi tehty) ja mikäli niitä löytyy, niin estetään tallennus."
+  [db urakka-id erapaiva]
+  (let [joda-local-time (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
+        hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi joda-local-time)
+        valikatselmus-pidetty? (valikatselmus-kyselyt/onko-valikatselmus-pidetty? db {:urakka-id urakka-id
+                                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+    ;; Muutetaan negaatioksi, koska kysymyksen asettelu
+    (not valikatselmus-pidetty?)))
+
 (defn luo-tai-paivita-kulukohdistukset
   "Tallentaa uuden kulun ja siihen liittyvät kohdistustiedot.
   Päivittää kulun tai kohdistuksen tiedot, jos rivi on jo kannassa.
@@ -256,7 +268,11 @@
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
-  (let [yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
+  (let [saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva)
+        _ (when (not saako-tallentaa)
+            (throw (IllegalArgumentException.
+                     (str "Kulu kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
+        yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
                          :urakka                urakka
                          :tyyppi                tyyppi
@@ -352,6 +368,24 @@
                    (pvm/pvm loppupvm)
                    kulut-kuukausien-mukaan)))
 
+(defn hae-urakan-valikatselmukset
+  "Haetaan urakalle vuodet, joille on olemassa välikatselmus/päätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
+  joille kuluja voidaan lisäillä"
+  [db user {:keys [urakka-id] :as hakuehdot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
+  (let [urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        _ (when (nil? urakan-tiedot)
+            (throw (IllegalArgumentException.
+                     (str "Virheellinen urakka-id " urakka-id))))
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (:loppupvm urakan-tiedot)
+        valikatselmukset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-valikatselmukset-vuosittain db {:urakka-id urakka-id}))
+        vuosittaiset-valikatselmukset (reduce (fn [listaus vuosi]
+                                                (conj listaus {:vuosi vuosi
+                                                               :paatos-tehty? (some #(= vuosi %) valikatselmukset)}))
+                                        [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
+    vuosittaiset-valikatselmukset))
+
 (defn- kulu-excel
   [db workbook user {:keys [urakka-id urakka-nimi alkupvm loppupvm] :as loput}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
@@ -442,6 +476,9 @@
       (julkaise-palvelu http :tarkista-laskun-numeron-paivamaara
                         (fn [user hakuehdot]
                           (tarkista-laskun-numeron-paivamaara db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-valikatselmukset
+        (fn [user hakuehdot]
+          (hae-urakan-valikatselmukset db user hakuehdot)))
       (when pdf
         (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :kulut (partial #'kulu-pdf db)))
       (when excel

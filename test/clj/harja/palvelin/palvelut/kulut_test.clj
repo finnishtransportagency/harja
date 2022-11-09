@@ -367,18 +367,51 @@
     (feila-tallenna-kulu-validointi uusi-kulu-vaara-koontilaskun-kuukausi
                                      "Palvelun :tallenna-kulu kysely ei ole validi")))
 
-(deftest tallenna-samalla-laskun-numerolla-eri-erapaivalla 
-  (let [uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "123")
-        uusi-kulu-laskun-numerolla-eri-paiva (assoc uusi-kulu-laskun-numerolla :erapaiva #inst "2021-12-11T21:00:00.000-00:00")
-        eka (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-              {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-               :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
-        toka (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-               {:urakka-id     (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                :kulu-kohdistuksineen uusi-kulu-laskun-numerolla-eri-paiva})]
-    (is (= "tammikuu/2-hoitovuosi" (tyokalut/pvm->koontilaskun-kuukausi (pvm/->pvm "1.1.2021") (pvm/->pvm "1.10.2019"))))
-    (is (some? (:id eka)) "Eka tallennus onnistuu")
-    (is (= (dissoc eka :id :kohdistukset) (dissoc toka :id :kohdistukset)) "Samalla numerolla tallennus eri päivällä ei onnistu, erapäivä muutetaan")))
+(deftest tallenna-kulu-toimii-testi
+  (let [_kulu-ensimmainen-paiva
+        (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+          {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+           :kulu-kohdistuksineen (assoc uusi-kulu :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
+
+(deftest paivita-kulua-eri-erapaivalla-ennen-valikatselmusta
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
+        ;; Tallenna alkuperäinen kulu
+        alkuperainen (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
+        uusi-kulu-laskun-numerolla-eri-paiva (assoc uusi-kulu-laskun-numerolla
+                                               :erapaiva #inst "2021-09-30T21:00:00.000-00:00"
+                                               :koontilaskun-kuukausi "lokakuu/3-hoitovuosi")
+        paivitetty (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                     {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                      :kulu-kohdistuksineen uusi-kulu-laskun-numerolla-eri-paiva})]
+    (is (= (dissoc alkuperainen :id :kohdistukset :erapaiva :koontilaskun-kuukausi)
+          (dissoc paivitetty :id :kohdistukset :erapaiva :koontilaskun-kuukausi))
+      "Erapäivä muutetaan")
+    (is (not= (:erapaiva alkuperainen) (:erapaiva paivitetty)) "Erapäivä muutetaan")
+    (is (not= (:koontilaskun-kuukausi alkuperainen) (:koontilaskun-kuukausi paivitetty)) "Erapäivä muutetaan")))
+
+(deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
+        ;; Tallenna alkuperäinen kulu
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
+        ;; Lisätään hoitokauden-alkuvuodelle 2020 uusi välikatselmus, jotta päivitys ei varmasti on
+        _ (u (str "INSERT INTO urakka_paatos
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
+                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
+        100000, 0, 0, 2020 );"))
+        muokattu-kulu-eri-hoitokausi (assoc uusi-kulu-laskun-numerolla
+                                       :erapaiva #inst "2021-09-29T21:00:00.000-00:00"
+                                       :koontilaskun-kuukausi "syyskuu/2-hoitovuosi")]
+
+    (is (thrown? Exception (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :kulu-kohdistuksineen muokattu-kulu-eri-hoitokausi})))))
 
 (deftest paivita-maksuera-testi
   (let [vastaus-kulu-kokonaishintainen-tyo
@@ -397,12 +430,6 @@
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-kokonaishintainen-tyo))) "kokonaishintainen"))
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-akillinen-hoitotyo))) "akillinen-hoitotyo"))
     (is (= (:maksueratyyppi (first (:kohdistukset vastaus-kulu-muu))) "muu"))))
-
-(deftest paivita-kulu-pvm-testi
-  (let [_kulu-ensimmainen-paiva
-        (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-                              :kulu-kohdistuksineen (assoc uusi-kulu :erapaiva #inst "2021-12-01T00:00:00.000+02:00")})]))
 
 (defn riisu-kilkkeet 
   [kaikki rivi]
