@@ -170,7 +170,7 @@
                                            (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
     [:div
      [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut
-      {:voi-muokata voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+      {:voi-muokata? voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
        :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
        :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
        :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
