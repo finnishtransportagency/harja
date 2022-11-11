@@ -233,6 +233,7 @@
   TallennusOnnistui
   (process-event [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
         (assoc :syottomoodi false)
         (update :lomake resetoi-kulut)))
@@ -406,6 +407,7 @@
   (process-event
     [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
       (assoc :syottomoodi false)
       (update :lomake resetoi-kulut)))
@@ -437,23 +439,20 @@
 
   HaeUrakanValikatselmukset
   (process-event [_ app]
-    (let [urakka-id (-> @tila/yleiset :urakka :id)
-          _ (js/console.log "HaeUrakanValikatselmukset :: ")]
-      (tuck-apurit/post! :hae-urakan-valikatselmukset
-        {:urakka-id (-> @tila/yleiset :urakka :id)}
-        {:onnistui    ->HaeUrakanValikatselmuksetOnnistui
-         :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
-      app))
+    (tuck-apurit/post! :hae-urakan-valikatselmukset
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeUrakanValikatselmuksetOnnistui
+       :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
+    app)
 
   HaeUrakanValikatselmuksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeUrakanValikatselmuksetOnnistui :: vastaus" (pr-str vastaus))
     (assoc app :vuosittaiset-valikatselmukset vastaus))
 
   HaeUrakanValikatselmuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeUrakanValikatselmuksetEpaonnistui :: vastaus" (pr-str vastaus))
     (assoc app :vuosittaiset-valikatselmukset nil))
+
   ;; FORMITOIMINNOT
 
   KulujenSyotto
