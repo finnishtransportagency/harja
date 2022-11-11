@@ -38,7 +38,7 @@ SELECT
         WHEN tk.yksikko = 'tonni'
             THEN 't'
         END AS materiaali_yksikko,
-    'muu'::MATERIAALITYYPPI AS materiaali_tyyppi,
+    'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
     date_trunc('month', rtmaarat.alkanut) AS kk,
     SUM(rtmaarat.tehtavamaara) AS maara
   FROM raportti_toteuma_maarat rtmaarat

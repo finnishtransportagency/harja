@@ -282,7 +282,7 @@ VALUES
         formiaatit (apurit/taulukko-otsikolla vastaus "Formiaatit")
         kesasuolat (apurit/taulukko-otsikolla vastaus "Kesäsuola")
         hiekoitushiekat (apurit/taulukko-otsikolla vastaus "Hiekoitushiekka")
-        muut-materiaalit (apurit/taulukko-otsikolla vastaus "Muut materiaalit")
+        paikkausmateriaalit (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
         ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 0))
         ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 2))
         ;ymp-kaytetty-suolaliuos-hlk-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
@@ -292,8 +292,8 @@ VALUES
         ymp-formiaatit-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 3))
         ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 14 0))
         ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 15 0))
-        ymp-muut-kuumapaallyste (apurit/raporttisolun-arvo (apurit/taulukon-solu muut-materiaalit 3 2))
-        ymp-muut-massasaumaus (apurit/raporttisolun-arvo (apurit/taulukon-solu muut-materiaalit 4 3))
+        ymp-paikkaus-kuumapaallyste (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 3 0))
+        ymp-paikkaus-massasaumaus (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 4 1))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                        :suorita-raportti
@@ -338,8 +338,8 @@ VALUES
     (is (= 0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")
     (is (= 0 mat-kaytetty-hiekka) "Materiaaliraportin pitäisi raportoida hiekan määräksi nolla, koska toteumia ei ole")
     (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")
-    (is (= 1000M ymp-muut-kuumapaallyste mat-kaytetty-kuumapaallyste) "Onko testidata muuttunut? Ympäristöraportti odottaa, että kuumapaallyste-tehtävällä on toteumaa 1000t")
-    (is (= 1000M ymp-muut-massasaumaus mat-kaytetty-massasaumaus) "Onko testidata muuttunut? Ympäristöraportti odottaa, että massasaumaus-tehtävällä on toteumaa 1000t")))
+    (is (= 1000M ymp-paikkaus-kuumapaallyste mat-kaytetty-kuumapaallyste) "Onko testidata muuttunut? Ympäristöraportti odottaa, että kuumapaallyste-tehtävällä on toteumaa 1000t")
+    (is (= 1000M ymp-paikkaus-massasaumaus mat-kaytetty-massasaumaus) "Onko testidata muuttunut? Ympäristöraportti odottaa, että massasaumaus-tehtävällä on toteumaa 1000t")))
 
 (deftest jokainen-materiaali-vain-kerran
   (let [_ (varmista-tietokannan-tila)
@@ -377,7 +377,11 @@ VALUES
             nimet (filter #(not (str/includes? % "Ei tiedossa"))
                     (apurit/taulukon-sarake murskeettaulukko 1))]
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
-
+    (testing "Paikkausmateriaalit -taulukossa nimet vain kerran"
+      (let [muut-taulukko (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
+            nimet (filter #(not (str/includes? % "Ei tiedossa"))
+                    (apurit/taulukon-sarake muut-taulukko 1))]
+        (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
     (testing "Muut materiaalit -taulukossa nimet vain kerran"
       (let [muut-taulukko (apurit/taulukko-otsikolla vastaus "Muut materiaalit")
             nimet (filter #(not (str/includes? % "Ei tiedossa"))

@@ -126,7 +126,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
            WHEN tk.yksikko = 'tonni'
                THEN 't'
            END AS "materiaali-yksikko",
-       'muu'::MATERIAALITYYPPI AS materiaalityyppi
+       'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
     JOIN urakka u ON u.id = rtmaarat.urakka_id
     LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
@@ -169,7 +169,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
            WHEN tk.yksikko = 'tonni'
                THEN 't'
            END AS "materiaali-yksikko",
-       'muu'::MATERIAALITYYPPI AS materiaalityyppi
+       'paikkausmateriaali'::MATERIAALITYYPPI AS materiaalityyppi
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
@@ -214,7 +214,7 @@ SELECT SUM(rtmaarat.tehtavamaara) AS kokonaismaara,
            WHEN tk.yksikko = 'tonni'
                THEN 't'
            END AS "materiaali-yksikko",
-       'muu'::MATERIAALITYYPPI    AS materiaalityyppi,
+       'paikkausmateriaali'::MATERIAALITYYPPI    AS materiaalityyppi,
        o.elynumero
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)

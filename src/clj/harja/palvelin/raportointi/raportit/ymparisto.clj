@@ -586,6 +586,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                         (assoc :otsikko "Murskeet")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
      (koosta-taulukko (-> taulukon-tiedot
+                        (assoc :otsikko "Paikkausmateriaalit")
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "paikkausmateriaali"))
+                        (assoc :yksikot-soluissa? true)
+                        (assoc :nayta-suunnittelu? false)))
+     (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
                         (assoc :yksikot-soluissa? true)
