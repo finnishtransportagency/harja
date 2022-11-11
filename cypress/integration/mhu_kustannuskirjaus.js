@@ -27,7 +27,7 @@ let avaaKulunKirjaus = () => {
 let valitseKulunPvm = () => {
     cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
         cy.get('button').click();
-        cy.contains('Syyskuu - 1. hoitovuosi').click();
+        cy.contains('Syyskuu - 2. hoitovuosi').click();
     })
 
     cy.get('.kalenteri-kontti').within(() => {
