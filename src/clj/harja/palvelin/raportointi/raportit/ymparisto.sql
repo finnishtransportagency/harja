@@ -1,6 +1,15 @@
 -- name: hae-ymparistoraportti-tiedot
 -- Haetaan kuinka paljon jokaista materiaalia on käytetty. Tämä on "summarivi" hoitoluokittaisille riveille,
 -- lisäksi tälle riville otetaan mukaan frontin kautta raportoidut käytöt, jolle ei ole hoitoluokkatietoa.
+
+WITH paikkaustehtavat AS (SELECT tpk4.*
+                            FROM toimenpidekoodi tpk4
+                                     JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
+                                 -- "Päällysteiden paikkaus"-tehtävät
+                           WHERE tpk3.koodi = '20107'
+                             AND tpk4.poistettu IS NOT TRUE
+                             AND tpk4.yksikko = 'tonni')
+
 SELECT
   u.id AS urakka_id,
   u.nimi AS urakka_nimi,
@@ -43,18 +52,12 @@ SELECT
     SUM(rtmaarat.tehtavamaara) AS maara
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
-           LEFT JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
+           JOIN toimenpidekoodi tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
    AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alkupvm::TIMESTAMP AND :loppupvm::TIMESTAMP)
-   AND rtmaarat.toimenpidekoodi IN (SELECT tpk4.id
-                                      FROM toimenpidekoodi tpk4
-                                               JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
-                                           -- Päällysteiden paikkaus tehtävät
-                                     WHERE tpk3.koodi = '20107'
-                                       AND tpk4.poistettu IS NOT TRUE
-                                       AND tpk4.yksikko = 'tonni')
+   AND rtmaarat.toimenpidekoodi IN (SELECT id FROM paikkaustehtavat)
  GROUP BY u.id, u.nimi, materiaali_id, tk.nimi, materiaali_tyyppi, materiaali_yksikko, date_trunc('month', rtmaarat.alkanut)
 
 UNION
@@ -89,7 +92,12 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                END)
       AND mk.materiaalityyppi != 'erityisalue'
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), talvitieluokka, soratieluokka
+
+
+--- Suunnittelutietojen hakujen unionit alla ----
+
 UNION
+
 -- Liitä lopuksi mukaan suunnittelutiedot. Kuukausi on null, josta myöhemmin
 -- rivi tunnistetaan suunnittelutiedoksi.
 SELECT
@@ -143,7 +151,40 @@ WHERE ut.poistettu IS NOT TRUE
   AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
   -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
   AND u.tyyppi = 'teiden-hoito'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi;
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, tk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi
+
+UNION
+
+-- Ota mukaan tehtävät ja määrät -sivunsuunnittelutiedot "Päällysteiden paikkaus"-tehtäville MHU urakoiden osalta.
+-- Päällysteiden paikkauksen tehtävillä ei ole materiaalikoodeja, joten näiden tehtävien suunnittelutiedot on haettava
+-- eri tavalla.
+SELECT u.id AS urakka_id,
+       u.nimi AS urakka_nimi,
+       NULL::INTEGER AS talvitieluokka,
+       NULL::INTEGER AS soratieluokka,
+       -- Jokin materiaali_id valitettavasti täytyy olla, koska raportin generoinnin puolella filtteröidään pois sellaisia tuloksia, joilla ei ole ID:tä.
+       -- Syötetään tähän kovakoodattu ID, koska sitä ei varsinaisesti tarvita raportin puolella.
+       -1 AS materiaali_id,
+       tk.nimi AS materiaali_nimi,
+       CASE
+           WHEN tk.yksikko = 'tonni'
+               THEN 't'
+           END AS materiaali_yksikko,
+       'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
+       NULL AS kk,
+       SUM(ut.maara) AS maara
+  FROM urakka_tehtavamaara ut
+    JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
+    JOIN toimenpidekoodi tk ON ut.tehtava = tk.id
+ WHERE ut.poistettu IS NOT TRUE
+   -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
+   AND u.tyyppi = 'teiden-hoito'
+   AND (:urakka::INTEGER IS NULL OR ut.urakka = :urakka)
+   AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+   -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
+   AND ut."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM :alkupvm::DATE)
+   AND ut.tehtava IN (SELECT id FROM paikkaustehtavat)
+ GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi;
 
 
 -- name: hae-materiaalit

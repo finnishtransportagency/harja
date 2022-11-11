@@ -341,6 +341,28 @@ VALUES
     (is (= 1000M ymp-paikkaus-kuumapaallyste mat-kaytetty-kuumapaallyste) "Onko testidata muuttunut? Ympäristöraportti odottaa, että kuumapaallyste-tehtävällä on toteumaa 1000t")
     (is (= 1000M ymp-paikkaus-massasaumaus mat-kaytetty-massasaumaus) "Onko testidata muuttunut? Ympäristöraportti odottaa, että massasaumaus-tehtävällä on toteumaa 1000t")))
 
+(deftest raportin-suunnitellut-arvot-mhu
+  (let [_ (varmista-tietokannan-tila)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        param {:alkupvm (c/to-date (t/local-date 2021 10 1))
+               :loppupvm (c/to-date (t/local-date 2022 9 30))
+               :urakkatyyppi :hoito}
+        raportin-nimi "Ympäristöraportti"
+        teksti "Oulun MHU 2019-2024 (1238), Ympäristöraportti ajalta 01.10.2021 - 30.09.2022"
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :ymparistoraportti
+                   :konteksti "urakka"
+                   :urakka-id urakka-id
+                   :parametrit param})
+        paikkausmateriaalit (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
+        ymp-paikkaus-kuumapaallyste-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 15 0))]
+    (is (= raportin-nimi (:nimi (second vastaus))))
+    (is (= teksti (second (nth vastaus 2))))
+    (is (= 999M ymp-paikkaus-kuumapaallyste-suunniteltu)
+      "Onko testidata muuttunut? Ympäristöraportti odottaa, että 'Päällysteiden paikkaus' tehtävälle 'kuumapäällyste' on suunniteltu 999t")))
+
 (deftest jokainen-materiaali-vain-kerran
   (let [_ (varmista-tietokannan-tila)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
