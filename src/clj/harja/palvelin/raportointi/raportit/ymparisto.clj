@@ -588,7 +588,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Paikkausmateriaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "paikkausmateriaali"))
-                        (assoc :yksikot-soluissa? true)
+                        (assoc :yksikot-soluissa? false)
                         (assoc :nayta-suunnittelu? false)))
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
