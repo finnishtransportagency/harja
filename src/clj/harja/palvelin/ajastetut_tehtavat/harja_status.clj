@@ -106,11 +106,31 @@
     1 1                                                     ;; alkaa pyöriä 1 min 1 sekunnin kuluttua käynnistyksestä - ja sen jälkeen minuutin välein
     (fn [_] (tarkista-harja-status db itmf tloik-asetukset kehitysmoodi?))))
 
+(defn- poista-statusviestit [db]
+  (status-kyselyt/poista-statusviestit db))
+
+(defn- ajastus-poista-statusviestit [db]
+  (log/info "Ajastetaan statusviestien siivous - ajetaan kerran vuorokaudessa - poistetaan viikon kaikki yli kaksi päivää vanhat")
+  (ajastettu-tehtava/ajasta-paivittain [0 55 0]
+    (fn [_]
+      (lukot/yrita-ajaa-lukon-kanssa
+        db
+        "status_viestit"
+        #(do
+           (log/info "ajasta-paivittain :: status_viestit :: Alkaa " (pvm/nyt))
+           (poista-statusviestit db)
+           (log/info "ajasta-paivittain :: status_viestit :: Loppuu " (pvm/nyt)))))))
+
 (defrecord HarjaStatus [tloik kehitysmoodi]
   component/Lifecycle
   (start [{db :db itmf :itmf :as this}]
-    (assoc this :harja-status (tarkista-status db itmf tloik kehitysmoodi)))
-  (stop [this]
-    (let [lopeta (get this :harja-status)]
-      (when lopeta (lopeta)))
-    this))
+    (assoc this :harja-status (tarkista-status db itmf tloik kehitysmoodi)
+                :poista-turhat-statusviestit (ajastus-poista-statusviestit db)))
+  (stop [{harja-status :harja-status
+          poista-turhat-statusviestit :poista-turhat-statusviestit :as this}]
+    (do
+      (harja-status)
+      (poista-turhat-statusviestit))
+    (dissoc this
+      :harja-status
+      :poista-turhat-statusviestit)))
