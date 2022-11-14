@@ -54,7 +54,7 @@
     :vesivayla_bonus "Bonus"
 
     :lupausbonus "Lupausbonus"
-    :alihankintabonus "Alihankintabonus"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     "- valitse laji -"))
