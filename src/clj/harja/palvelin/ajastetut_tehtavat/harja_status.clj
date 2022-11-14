@@ -3,6 +3,9 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clojure.string :as str]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.tyokalut.lukot :as lukot]
+            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.jms :as jms-util]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -81,15 +84,15 @@
 
 (defn tarkista-sonja [db kehitysmoodi?]
   (let [sonjan-tilat (jarjestelman-tila-kyselyt/sonjan-tila db kehitysmoodi?)
-        palaute (doseq [tila sonjan-tilat]
-                  (let [lisatiedot (str (.getValue (:tila tila)))
-                        status (if (str/includes? lisatiedot "ACTIVE")
-                                 "ok" "nok")
-                        sonja {:palvelin (:palvelin tila)
-                               :komponentti "sonja"
-                               :status status
-                               :lisatiedot lisatiedot}
-                        _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
+        _ (doseq [tila sonjan-tilat]
+            (let [lisatiedot (str (.getValue (:tila tila)))
+                  status (if (str/includes? lisatiedot "ACTIVE")
+                           "ok" "nok")
+                  sonja {:palvelin (:palvelin tila)
+                         :komponentti "sonja"
+                         :status status
+                         :lisatiedot lisatiedot}
+                  _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
 
 (defn tarkista-harja-status [db itmf tloik-asetukset kehitysmoodi?]
   (try
@@ -102,6 +105,7 @@
 
 (defn tarkista-status [db itmf tloik-asetukset kehitysmoodi?]
   (log/debug (format "Tarkistetaan harjan status."))
+  ;; Tätä ei tarkoituksella ajeta lukon kanssa, koska halutaan, että kaikilta appista pyörittäviltä palvelimilta, tehdään sama toimenpide
   (ajastettu-tehtava/ajasta-minuutin-valein
     1 1                                                     ;; alkaa pyöriä 1 min 1 sekunnin kuluttua käynnistyksestä - ja sen jälkeen minuutin välein
     (fn [_] (tarkista-harja-status db itmf tloik-asetukset kehitysmoodi?))))
