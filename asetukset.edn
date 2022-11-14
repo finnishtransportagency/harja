@@ -233,6 +233,7 @@
                                :sonja-sahkoposti
                                :reittitarkistukset
                                :tiedostopesula
+                               :replica-db
                                :sampo}
 
  :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
