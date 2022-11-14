@@ -28,9 +28,10 @@
 (defn tarkista-replica [db kehitysmoodi?]
   (let [viive (status-kyselyt/hae-replikoinnin-viive db)
         status (cond
-                 (and (not (nil? viive)) (not kehitysmoodi?) (> 5 viive)) "ok"
-                 (and (not (nil? viive)) (not kehitysmoodi?) (> 10 viive)) "hidas"
-                 (not kehitysmoodi?) "nok"
+                 (not (ominaisuus-kaytossa? :replica-db)) "ei-kaytossa"
+                 (and (ominaisuus-kaytossa? :replica-db) (not (nil? viive)) (not kehitysmoodi?) (> 5 viive)) "ok"
+                 (and (ominaisuus-kaytossa? :replica-db) (not (nil? viive)) (not kehitysmoodi?) (> 10 viive)) "hidas"
+                 (and (ominaisuus-kaytossa? :replica-db) (not kehitysmoodi?)) "nok"
                  kehitysmoodi? "ei-kaytossa")
         replica {:palvelin palvelimen-nimi
                  :komponentti "replica"
