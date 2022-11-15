@@ -261,7 +261,6 @@
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
-          _ (println "Jarno count siltatietueet " (count siltatietueet-shapefilesta))
           tallennettavat-siltatietueet (jarjesta-voimassaolevat-sillat-yksittaisille-riveille
                                          (karsi-testisillat (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta)))]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))

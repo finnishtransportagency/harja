@@ -27,3 +27,8 @@ VALUES
 -- name: hae-tietokannan-tila
 -- single?: true
 select 1 from toteuma limit 1;
+
+-- name: poista-statusviestit
+DELETE
+  FROM komponenttien_status ks
+ WHERE ks.luotu < NOW() - INTERVAL '2 days';
