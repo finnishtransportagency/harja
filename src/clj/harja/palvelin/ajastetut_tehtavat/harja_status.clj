@@ -3,6 +3,9 @@
   (:require [com.stuartsierra.component :as component]
             [taoensso.timbre :as log]
             [clojure.string :as str]
+            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.palvelin.tyokalut.lukot :as lukot]
+            [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.palvelin.integraatiot.jms :as jms-util]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
@@ -25,9 +28,10 @@
 (defn tarkista-replica [db kehitysmoodi?]
   (let [viive (status-kyselyt/hae-replikoinnin-viive db)
         status (cond
-                 (and (not (nil? viive)) (not kehitysmoodi?) (> 5 viive)) "ok"
-                 (and (not (nil? viive)) (not kehitysmoodi?) (> 10 viive)) "hidas"
-                 (not kehitysmoodi?) "nok"
+                 (not (ominaisuus-kaytossa? :replica-db)) "ei-kaytossa"
+                 (and (ominaisuus-kaytossa? :replica-db) (not (nil? viive)) (not kehitysmoodi?) (> 5 viive)) "ok"
+                 (and (ominaisuus-kaytossa? :replica-db) (not (nil? viive)) (not kehitysmoodi?) (> 10 viive)) "hidas"
+                 (and (ominaisuus-kaytossa? :replica-db) (not kehitysmoodi?)) "nok"
                  kehitysmoodi? "ei-kaytossa")
         replica {:palvelin palvelimen-nimi
                  :komponentti "replica"
@@ -81,15 +85,15 @@
 
 (defn tarkista-sonja [db kehitysmoodi?]
   (let [sonjan-tilat (jarjestelman-tila-kyselyt/sonjan-tila db kehitysmoodi?)
-        palaute (doseq [tila sonjan-tilat]
-                  (let [lisatiedot (str (.getValue (:tila tila)))
-                        status (if (str/includes? lisatiedot "ACTIVE")
-                                 "ok" "nok")
-                        sonja {:palvelin (:palvelin tila)
-                               :komponentti "sonja"
-                               :status status
-                               :lisatiedot lisatiedot}
-                        _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
+        _ (doseq [tila sonjan-tilat]
+            (let [lisatiedot (str (.getValue (:tila tila)))
+                  status (if (str/includes? lisatiedot "ACTIVE")
+                           "ok" "nok")
+                  sonja {:palvelin (:palvelin tila)
+                         :komponentti "sonja"
+                         :status status
+                         :lisatiedot lisatiedot}
+                  _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
 
 (defn tarkista-harja-status [db itmf tloik-asetukset kehitysmoodi?]
   (try
@@ -102,15 +106,36 @@
 
 (defn tarkista-status [db itmf tloik-asetukset kehitysmoodi?]
   (log/debug (format "Tarkistetaan harjan status."))
+  ;; Tätä ei tarkoituksella ajeta lukon kanssa, koska halutaan, että kaikilta appista pyörittäviltä palvelimilta, tehdään sama toimenpide
   (ajastettu-tehtava/ajasta-minuutin-valein
     1 1                                                     ;; alkaa pyöriä 1 min 1 sekunnin kuluttua käynnistyksestä - ja sen jälkeen minuutin välein
     (fn [_] (tarkista-harja-status db itmf tloik-asetukset kehitysmoodi?))))
 
+(defn- poista-statusviestit [db]
+  (status-kyselyt/poista-statusviestit db))
+
+(defn- ajastus-poista-statusviestit [db]
+  (log/info "Ajastetaan statusviestien siivous - ajetaan kerran vuorokaudessa - poistetaan viikon kaikki yli kaksi päivää vanhat")
+  (ajastettu-tehtava/ajasta-paivittain [0 55 0]
+    (fn [_]
+      (lukot/yrita-ajaa-lukon-kanssa
+        db
+        "status_viestit"
+        #(do
+           (log/info "ajasta-paivittain :: status_viestit :: Alkaa " (pvm/nyt))
+           (poista-statusviestit db)
+           (log/info "ajasta-paivittain :: status_viestit :: Loppuu " (pvm/nyt)))))))
+
 (defrecord HarjaStatus [tloik kehitysmoodi]
   component/Lifecycle
   (start [{db :db itmf :itmf :as this}]
-    (assoc this :harja-status (tarkista-status db itmf tloik kehitysmoodi)))
-  (stop [this]
-    (let [lopeta (get this :harja-status)]
-      (when lopeta (lopeta)))
-    this))
+    (assoc this :harja-status (tarkista-status db itmf tloik kehitysmoodi)
+                :poista-turhat-statusviestit (ajastus-poista-statusviestit db)))
+  (stop [{harja-status :harja-status
+          poista-turhat-statusviestit :poista-turhat-statusviestit :as this}]
+    (do
+      (harja-status)
+      (poista-turhat-statusviestit))
+    (dissoc this
+      :harja-status
+      :poista-turhat-statusviestit)))

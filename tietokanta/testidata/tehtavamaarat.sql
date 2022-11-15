@@ -9,6 +9,7 @@ INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2020, (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 69.96);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from toimenpidekoodi where nimi = 'Sorateiden pölynsidonta (materiaali)'), 123.4);
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from toimenpidekoodi where nimi = 'Is ohituskaistat'), 5556);
+INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Oulun MHU 2019-2024'), 2021, (select id from toimenpidekoodi where nimi = 'Kuumapäällyste'), 999);
 
 -- Valtakunnallinen määrätoteumaraportti
 INSERT INTO urakka_tehtavamaara (urakka, "hoitokauden-alkuvuosi", tehtava, maara) VALUES ((select id from urakka where nimi = 'Ivalon MHU testiurakka (uusi)'), 2020, (SELECT id FROM toimenpidekoodi WHERE nimi = 'Vesakonraivaus' and poistettu = false), 111.1);
