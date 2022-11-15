@@ -237,6 +237,20 @@
       false
       true)))
 
+(defn- piirra-taulukko-rivi [asetukset tiedot]
+  [:tr.bottom-border {:class (str (:tr-luokka asetukset))}
+   [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+   [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+   [:td {:style {:width (:tehtava leveydet)
+                 :font-weight "700"}}
+    (:otsikko tiedot)]
+
+   [:td.numero {:style {:width (:suunniteltu leveydet)}} (:budjetoitu-summa tiedot)]
+   [:td.numero {:style {:width (:indeksikorjattu leveydet)}} (:indeksikorjattu-budjetoitu-summa tiedot)]
+   [:td.numero {:style {:width (:toteuma leveydet)}} (:toteutunut-summa tiedot)]
+   [:td {:style {:width (:erotus leveydet)}} (:erotus tiedot)]
+   [:td {:style {:width (:prosentti leveydet)}} (:prosentti tiedot)]])
+
 (defn- vuoden-paattamiskulu-rivi [toteutunut-rivi]
   [:tr.bottom-border.selectable
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
@@ -279,9 +293,9 @@
         jjhk-toimenpiteet (toimenpidetason-rivitys e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:lisatyot rivit-paaryhmittain))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
-        bonukset (get rivit-paaryhmittain :bonukset)
-        ulkopuoliset-rahavaraukset (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)))
-        sanktiot (get rivit-paaryhmittain :sanktiot)
+        bonukset (:bonukset rivit-paaryhmittain)
+        ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
+        sanktiot (:sanktiot rivit-paaryhmittain)
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
@@ -374,11 +388,19 @@
        ;; Lisätyöt
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
-         (paaryhman-rivitys e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :ulkopuoliset-rahavaraukset ulkopuoliset-rahavaraukset rivit-paaryhmittain)
-         (when (> (count (get-in rivit-paaryhmittain [:bonukset :tehtavat])) 0)
-           (toteuma-rivi bonukset))
-         (when (> (count (get-in rivit-paaryhmittain [:sanktiot :tehtavat])) 0)
-           (toteuma-rivi sanktiot))
+         (when (> (:ulkopuoliset-rahavaraukset-budjetoitu ulkopuoliset-rahavaraukset) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Tavoitehinnan ulkopuoliset rahavaraukset"
+              :budjetoitu-summa (str (fmt->big (:ulkopuoliset-rahavaraukset-budjetoitu ulkopuoliset-rahavaraukset)))
+              :indeksikorjattu-budjetoitu-summa (str (fmt->big (:ulkopuoliset-rahavaraukset-budjetoitu-indeksikorjattu ulkopuoliset-rahavaraukset)))}))
+         (when (> (count (:tehtavat bonukset)) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Bonukset"
+              :toteutunut-summa (str (fmt->big (:bonukset-toteutunut bonukset)))}))
+         (when (> (count (:tehtavat sanktiot)) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Sanktiot"
+              :toteutunut-summa (str (fmt->big (:sanktiot-toteutunut sanktiot)))}))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitepalkkio :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi tavoitepalkkio))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnan-ylitys :tehtavat])) 0)
@@ -430,7 +452,7 @@
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
         valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
     [:div.kustannusten-seuranta
-     [debug/debug app]
+     ;[debug/debug app]
      [:div
       [:div.row.header
        [:div.col-xs-12
