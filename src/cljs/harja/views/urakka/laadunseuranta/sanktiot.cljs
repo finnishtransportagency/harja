@@ -335,7 +335,13 @@
                       :pakollinen? true
                       ::lomake/col-luokka "col-xs-3"
                       :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-                      :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :kasittelyaika] arvo))
+                      :aseta (fn [rivi arvo] (cond-> rivi
+                                               (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                                               (assoc-in [:perintapvm] arvo)
+
+
+                                               true
+                                               (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
                      (if (and voi-muokata? (not lukutila?))
