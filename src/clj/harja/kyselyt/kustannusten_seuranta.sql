@@ -388,12 +388,12 @@ UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
-       SUM(kt.summa)                  AS budjetoitu_summa_indeksikorjattu, -- Näitä ei indeksikorjata
+       SUM(kt.summa)                                  AS budjetoitu_summa_indeksikorjattu, -- Näitä ei indeksikorjata
        0                                              AS toteutunut_summa,
        MIN(kt.tyyppi)::TEXT                           AS maksutyyppi,
        'bonus'                                        AS toimenpideryhma,
        'Tilaajan varaus'                              AS tehtava_nimi,
-       'MHU Hoidonjohto'                              AS toimenpide,
+       'Tavoitehinnan ulkopuoliset rahavaraukset'     AS toimenpide,
        MIN(kt.luotu)                                  AS luotu,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
@@ -423,8 +423,8 @@ UNION ALL
 SELECT 0                    AS budjetoitu_summa,
        0                    AS budjetoitu_summa_indeksikorjattu,
        CASE
-           WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
-               THEN SUM((SELECT korotettuna
+           WHEN ek.indeksin_nimi IS NOT NULL
+             THEN SUM((SELECT korotettuna
                          FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
                                                              (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
                                                              coalesce(ek.rahasumma, 0)::NUMERIC,
@@ -448,7 +448,7 @@ WHERE s.urakka = :urakka
   AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
-GROUP BY ek.tyyppi
+GROUP BY ek.tyyppi, ek.indeksin_nimi
 UNION ALL
 -- Sanktiot -- sanktiot taulusta. Lisätään sanktioille indeksi totetuneeseen summaan, mikäli indeksi on asetettu
 SELECT 0                       AS budjetoitu_summa,
