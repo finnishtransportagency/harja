@@ -398,7 +398,7 @@ SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
        0                                              AS jarjestys,
-       'bonukset'                                     AS paaryhma,
+       'ulkopuoliset-rahavaraukset'                   AS paaryhma,
        NOW()                                          AS indeksikorjaus_vahvistettu -- bonukset eli tavoitehinnan ulkopuolisia rahavarauksia ei vahvisteta
 FROM kustannusarvioitu_tyo kt,
      sopimus s
