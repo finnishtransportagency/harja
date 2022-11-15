@@ -365,6 +365,10 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            ;; varmista sopimus (id) mikäli sitä ei ole annettu
+            sopimus (if (nil? sopimus)
+                      (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
+                      sopimus)
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
