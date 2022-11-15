@@ -449,6 +449,35 @@ WHERE s.urakka = :urakka
   AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
 GROUP BY ek.tyyppi
+UNION ALL
+-- Sanktiot -- sanktiot taulusta. Lisätään sanktioille indeksi totetuneeseen summaan, mikäli indeksi on asetettu
+SELECT 0                       AS budjetoitu_summa,
+       0                       AS budjetoitu_summa_indeksikorjattu,
+       CASE
+           WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
+           ELSE
+                    SUM(s.maara + (SELECT korotus
+                    FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka::INTEGER, s.sakkoryhma)))
+                    * -1
+           END AS toteutunut_summa,
+       'sanktio'               AS maksutyyppi,
+       'sanktio'               AS toimenpideryhma,
+       MIN(tpk.nimi)::TEXT     AS tehtava_nimi,
+       'sanktiot'               AS toimenpide,
+       MIN(s.luotu)            AS luotu,
+       MIN(s.perintapvm)::TEXT AS ajankohta,
+       'sanktio'                 as toteutunut,
+       0                       AS jarjestys,
+       'sanktiot'              AS paaryhma,
+       NOW()                   AS indeksikorjaus_vahvistettu -- sanktioita ei indeksivahvisteta, joten ne on aina "true"
+FROM sanktio s
+     JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
+     JOIN sanktiotyyppi st ON s.tyyppi = st.id
+     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
+WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND s.poistettu = FALSE
+GROUP BY s.tyyppi, s.indeksi
+
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,
