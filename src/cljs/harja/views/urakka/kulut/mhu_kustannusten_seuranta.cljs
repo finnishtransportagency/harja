@@ -257,6 +257,21 @@
    [:td {:style {:width (:erotus leveydet)}}]
    [:td {:style {:width (:prosentti leveydet)}}]])
 
+(defn- toteuma-rivi [rivi]
+  (let [toteutunut-avain (keyword (str (:paaryhma rivi) "-toteutunut"))]
+    [:tr.bottom-border
+       [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+       [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+       [:td {:style {:width (:tehtava leveydet)
+                     :font-weight "700"}}
+        (str/capitalize (:toimenpide rivi))]
+
+       [:td.numero {:style {:width (:suunniteltu leveydet)}}]
+       [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
+       [:td.numero {:style {:width (:toteuma leveydet)}} (str (fmt->big (get rivi toteutunut-avain)))]
+       [:td {:style {:width (:erotus leveydet)}}]
+       [:td {:style {:width (:prosentti leveydet)}}]]))
+
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
@@ -264,7 +279,9 @@
         jjhk-toimenpiteet (toimenpidetason-rivitys e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:lisatyot rivit-paaryhmittain))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
-        bonukset (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:bonukset rivit-paaryhmittain)))
+        bonukset (get rivit-paaryhmittain :bonukset)
+        ulkopuoliset-rahavaraukset (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)))
+        sanktiot (get rivit-paaryhmittain :sanktiot)
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
@@ -357,7 +374,11 @@
        ;; Lisätyöt
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
-         (paaryhman-rivitys e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset bonukset rivit-paaryhmittain)
+         (paaryhman-rivitys e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :ulkopuoliset-rahavaraukset ulkopuoliset-rahavaraukset rivit-paaryhmittain)
+         (when (> (count (get-in rivit-paaryhmittain [:bonukset :tehtavat])) 0)
+           (toteuma-rivi bonukset))
+         (when (> (count (get-in rivit-paaryhmittain [:sanktiot :tehtavat])) 0)
+           (toteuma-rivi sanktiot))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitepalkkio :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi tavoitepalkkio))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnan-ylitys :tehtavat])) 0)
