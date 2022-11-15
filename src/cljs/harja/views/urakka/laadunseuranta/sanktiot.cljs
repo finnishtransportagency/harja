@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot
   "Sanktioiden listaus"
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
@@ -15,7 +16,7 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset  :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset  :refer [ajax-loader livi-pudotusvalikko] :as yleiset]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
@@ -450,7 +451,7 @@
   [:div.flex-row.tasaa-alkuun
    [valinnat/urakkavalinnat {:urakka valittu-urakka}
     ^{:key "urakkavalinnat"}
-    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka]]
+    [urakka-valinnat/urakan-hoitokausi-ja-kuukausi valittu-urakka {:kuukausi-otsikko "Käsittelykuukausi"}]]
 
    [lajisuodatin-valinnat lajisuodattimet]
    (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
@@ -520,10 +521,10 @@
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
-                            {:teksti (str (fmt/euro-opt true yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
-                            {:teksti (fmt/euro-opt true yhteensa-indeksit)
+                            {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
+                            {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Päivä\u00ADmäärä" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
+      [{:otsikko "Käsitelty" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt laji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2

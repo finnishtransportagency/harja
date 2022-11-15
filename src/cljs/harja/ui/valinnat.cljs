@@ -130,9 +130,10 @@
       kuukaudet]]))
 
 (defn hoitokauden-kuukausi
-  [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn]
+  [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn otsikko]
   [:div.label-ja-alasveto.kuukausi
-   [:span.alasvedon-otsikko "Kuukausi"]
+   (js/console.log "valinnat :: hoitokauden-kuukausi :: otsikko" (pr-str otsikko))
+   [:span.alasvedon-otsikko (or otsikko "Kuukausi")]
    [livi-pudotusvalikko {:valinta @valittu-kuukausi-atom
                          :format-fn #(if %
                                        (let [[alkupvm _] %
@@ -342,7 +343,7 @@
    (when-let [{:keys [hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn]} hoitokausi]
      [urakan-hoitokausi urakka hoitokaudet valittu-hoitokausi-atom valitse-hoitokausi-fn])
    (when-let [{:keys [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn]} kuukausi]
-     [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn])
+     [hoitokauden-kuukausi hoitokauden-kuukaudet valittu-kuukausi-atom valitse-kuukausi-fn (:otsikko kuukausi)])
    (when-let [{:keys [urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn]} toimenpide]
      [urakan-toimenpide urakan-toimenpideinstassit-atom valittu-toimenpideinstanssi-atom valitse-toimenpide-fn])
    (when-let [{:keys [valittu-aikavali-atom]} aikavali-optiot]
