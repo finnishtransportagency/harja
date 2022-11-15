@@ -273,7 +273,9 @@
                      (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut")
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
-                     (luo-excel-rivit kustannusdata "bonukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivit kustannusdata "ulkopuoliset-rahavaraukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivit kustannusdata "bonukset" "Bonukset")
+                     (luo-excel-rivit kustannusdata "sanktiot" "Sanktiot")
                      (luo-excel-rivi-vuoden-paatos kustannusdata)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))
