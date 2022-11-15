@@ -196,14 +196,15 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
-(defn bonustyypin-teksti [avainsana]
+(defn bonustyypin-teksti
   "Erilliskustannustyypin teksti avainsanaa vastaan"
+  [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
-    :alihankintabonus "Alihankintabonus"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"
-    :lupausbonus "Lupausbonus"    
+    :lupausbonus "Lupausbonus"
     "- Valitse tyyppi -"))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
