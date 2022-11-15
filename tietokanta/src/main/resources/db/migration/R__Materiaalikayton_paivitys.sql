@@ -22,8 +22,8 @@ BEGIN
              GROUP BY date_trunc('day',t.alkanut), tm.materiaalikoodi
   LOOP
     INSERT
-      INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-      VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara)
+      INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
+      VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara, current_timestamp)
       ON CONFLICT ON CONSTRAINT uniikki_sop_pvm_mk
       DO UPDATE SET maara = mat.maara;
   END LOOP;
@@ -51,8 +51,8 @@ BEGIN
               WHERE t.sopimus = sop
               GROUP BY date_trunc('day',t.alkanut), tm.materiaalikoodi
   LOOP
-    INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-    VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara);
+    INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
+    VALUES (sop, mat.alkupvm, mat.materiaalikoodi, mat.maara, current_timestamp);
   END LOOP;
 END;
 $$ LANGUAGE plpgsql;
@@ -64,8 +64,8 @@ BEGIN
   DELETE FROM sopimuksen_kaytetty_materiaali;
 
   -- Luodaan uudet haun perusteella
-  INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-      SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
+  INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
+      SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara), current_timestamp
         FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
        WHERE t.poistettu IS NOT TRUE and tm.poistettu IS NOT TRUE
 	GROUP BY t.sopimus, t.alkanut::date, tm.materiaalikoodi;
@@ -79,8 +79,8 @@ CREATE OR REPLACE FUNCTION paivita_sopimuksen_kaytetty_materiaali_pvm_aikavalill
 RETURNS void AS $$
 DECLARE
 BEGIN
-        INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara)
-        SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara)
+        INSERT INTO sopimuksen_kaytetty_materiaali (sopimus, alkupvm, materiaalikoodi, maara, muokattu)
+        SELECT t.sopimus, t.alkanut::date as alkupvm, tm.materiaalikoodi, SUM(tm.maara), current_timestamp
           FROM toteuma_materiaali tm join toteuma t ON tm.toteuma=t.id
          WHERE t.poistettu IS NOT TRUE and tm.poistettu IS NOT TRUE
             AND t.alkanut BETWEEN alku AND (select date_trunc('day', loppu) + interval '1 day' - interval '1 second')
