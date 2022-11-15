@@ -51,8 +51,8 @@
                 <xs:element name="lahetysaika" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
                 <xs:element name="peruutettu" type="xs:dateTime" minOccurs="1" maxOccurs="1" />
                 <xs:element name="ilmoitusId" type="xs:int" minOccurs="1" maxOccurs="1" />
-                <xs:element name="emonIlmoitusId" type="xs:int" minOccurs="0" maxOccurs="1" /> <!-- TODO: mitä jos lapsi perutaan? mitä jos emo perutaan, tätä tietoa ei välttämättä tarvita mutta mitä tehdään? -->
-                <xs:element name="peruuttaja" type="kasittelija" minOccurs="0" maxOccurs="1"/> <!-- TODO: tarvitaanok -->
+                <xs:element name="emonIlmoitusId" type="xs:int" minOccurs="0" maxOccurs="1" />
+                <xs:element name="peruuttaja" type="kasittelija" minOccurs="0" maxOccurs="1"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>
