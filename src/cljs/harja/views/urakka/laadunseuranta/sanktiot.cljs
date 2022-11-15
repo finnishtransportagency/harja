@@ -545,7 +545,7 @@
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :fmt fmt/euro-opt :leveys 1.5}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :tyyppi :numero :leveys 1.5}]
       sanktiot]
      (when yllapito?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
