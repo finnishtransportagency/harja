@@ -79,16 +79,18 @@
       {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)}
       {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
+       :alasveto-luokka "kavenna-jos-kapea"
        :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
-       :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
+       :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
+       :alasveto-luokka "kavenna-jos-kapea"
        :valinnat pot/+kaistat+ :valinta-arvo :koodi
        :valinta-nayta (fn [rivi]
                         (if rivi
                           (:nimi rivi)
                           "- Valitse kaista -"))
-       :tasaa :oikea :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
+       :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}
       {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
        :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
       {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true

@@ -48,7 +48,8 @@
 (def id-leveys 6)
 (def tunnus-leveys 6)
 (def kvl-leveys 5)
-(def yllapitoluokka-leveys 7)
+(def pk-luokka-leveys-aikataulu 3)
+(def pk-luokka-leveys 7)
 (def tr-leveys 8)
 (def tr-leveys-aikataulu 2)
 (def kohde-leveys (* tr-leveys 2))
@@ -104,12 +105,11 @@
              :kokonaisluku? true
              :muokattava? (or (:muokattava? tie) true-fn)}
             (when ajorata
-              {:otsikko "Ajo\u00ADrata"
+              {:otsikko "Ajo\u00ADrata" :alasveto-luokka "kavenna-jos-kapea"
                :nimi (:nimi ajorata)
                :muokattava? (or (:muokattava? ajorata) true-fn)
                :kentta-arity-3? (:arity-3? ajorata)
                :tyyppi :valinta
-               :tasaa :oikea
                :valinta-arvo :koodi
                :fmt ajorata-fmt-fn
                :valinta-nayta ajorata-valinta-nayta-fn
@@ -117,12 +117,11 @@
                :leveys perusleveys
                :validoi (:validoi ajorata)})
             (when kaista
-              {:otsikko "Kais\u00ADta"
+              {:otsikko "Kais\u00ADta" :alasveto-luokka "kavenna-jos-kapea"
                :muokattava? (or (:muokattava? kaista) true-fn)
                :kentta-arity-3? (:arity-3? kaista)
                :nimi (:nimi kaista)
                :tyyppi :valinta
-               :tasaa :oikea
                :valinta-arvo :koodi
                :fmt kaista-fmt-fn
                :valinta-nayta kaista-valinta-nayta-fn
@@ -178,7 +177,7 @@
              :salli-muokkaus-rivin-ollessa-disabloituna? (:salli-muokkaus-rivin-ollessa-disabloituna? let)
              :muokattava? (or (:muokattava? let) true-fn)}
             (merge
-              {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :numero :tasaa :oikea
+              {:otsikko "Pit. (m)" :nimi :pituus :leveys perusleveys :tyyppi :kokonaisluku :tasaa :oikea
                :muokattava? false-fn}
               pituus)]))))
 
@@ -243,7 +242,17 @@
                         (if aikataulu? tr-leveys-aikataulu tr-leveys)
                         tr-sarakkeet-asetukset
                         vain-nama-validoinnit?))
-                    [(assoc paallystys-tiedot/paallyste-grid-skeema
+                    [(assoc paallystys-tiedot/pk-lk-skeema
+                       :fokus-klikin-jalkeen? true
+                       :tasaa (when aikataulu? :oikea)
+                       :leveys (if aikataulu?
+                                 pk-luokka-leveys-aikataulu
+                                 pk-luokka-leveys)
+                       :tayta-alas? tayta-alas?-fn
+                       :tayta-sijainti :ylos
+                       :tayta-tooltip "Kopioi sama pk-lk alla oleville riveille"
+                       :kentta-arity-3? valinta-arity-3?)
+                     (assoc paallystys-tiedot/paallyste-grid-skeema
                             :fokus-klikin-jalkeen? true
                             :leveys paallyste-leveys
                             :tayta-alas? tayta-alas?-fn
@@ -611,15 +620,17 @@
                  :virheviesti "Tallentaminen epäonnistui."
                  :kun-onnistuu (partial kohdeosat-tallennettu-onnistuneesti kohdeosat-atom tallennettu-fn)}]))]
           :muokkaa-footer (fn [g]
-                            [:span#kohdeosien-pituus-yht
-                             "Tierekisterikohteiden pituus yhteensä: "
-                             (if (not (empty? @osan-pituudet-teille))
-                               (fmt/pituus (reduce + 0 (keep (fn [kohdeosa]
-                                                               (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
-                                                             (vals (grid/hae-muokkaustila g)))))
-                               "-")
-                             (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
-                               [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])])}
+                            [:span
+                             [:span#kohdeosien-pituus-yht
+                              "Tierekisterikohteiden pituus yhteensä: "
+                              (if (not (empty? @osan-pituudet-teille))
+                                (fmt/pituus (reduce + 0 (keep (fn [kohdeosa]
+                                                                (pituus (get @osan-pituudet-teille (:tr-numero kohdeosa)) kohdeosa))
+                                                              (vals (grid/hae-muokkaustila g)))))
+                                "-")
+                              (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
+                                [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])]
+                             [:span "Huom! Varsinaiset päällysteen toteumatiedot löytyvät päällystysilmoituksesta."]])}
          (if (contains? dissoc-cols :tr-muokkaus)
            skeema
            (conj skeema
@@ -1061,13 +1072,6 @@
                     [{:otsikko "KVL"
                       :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :numero :leveys kvl-leveys
                       :muokattava? (constantly (not yha-sidottu?))}
-                     {:otsikko "YP-lk"
-                      :nimi :yllapitoluokka :leveys yllapitoluokka-leveys :tyyppi :valinta
-                      :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat
-                      :valinta-nayta #(if % (:lyhyt-nimi %) "-")
-                      :fmt :lyhyt-nimi
-                      :muokattava? (constantly (not yha-sidottu?))}
-
                      (when paallystys?
                        {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
@@ -1164,7 +1168,7 @@
       {:otsikko "" :nimi :tr-loppuetaisyys :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
-      {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys yllapitoluokka-leveys}
+      {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys pk-luokka-leveys}
       {:otsikko (str
                   "Sakot ja bonukset"
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
