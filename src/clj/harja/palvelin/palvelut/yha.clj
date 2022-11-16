@@ -96,9 +96,9 @@
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
                                                             :kayttaja (:id user)}))
 
-(defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
-                                                          tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
-                                                          nimi] :as kohde}]
+(defn tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
+                                                         tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
+                                                         nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
   (let [kohde (yha-q/luo-yllapitokohde<!
                 db
@@ -138,7 +138,7 @@
                              :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                              :yhaid yha-id})]))))
 
-(defn- lisaa-kohteisiin-validointitiedot [db kohteet]
+(defn lisaa-kohteisiin-validointitiedot [db kohteet]
   (map
     (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
       (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)

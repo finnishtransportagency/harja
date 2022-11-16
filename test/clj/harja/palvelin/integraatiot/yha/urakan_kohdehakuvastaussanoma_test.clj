@@ -18,21 +18,21 @@
   (let [vastaus (vastaussanoma/lue-sanoma +onnistunut-urakan-kohdehakuvastaus+)
         kohteen-tierekisteriosoite (:tierekisteriosoitevali (first (:kohteet vastaus)))
         alikohteen-tierekisteriosoite (:tierekisteriosoitevali (first (:alikohteet (first (:kohteet vastaus)))))]
-    (is (= {:karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-            :aosa 3
-            :aet 3
-            :losa 3
-            :let 3
-            :tienumero 3}
+    (is (= {:aet 3
+            :aosa 101
+            :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+            :let 300
+            :losa 101
+            :tienumero 4}
            kohteen-tierekisteriosoite))
-    (is (= {:karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
-            :ajorata 0
+    (is (= {:aet 3
+            :ajorata 1
+            :aosa 101
             :kaista 11
-            :aosa 3
-            :aet 3
-            :losa 3
-            :let 3
-            :tienumero 3}
+            :karttapaivamaara #inst "2015-12-31T22:00:00.000-00:00"
+            :let 30
+            :losa 101
+            :tienumero 4}
            alikohteen-tierekisteriosoite))))
 
 (deftest tarkista-usean-urakan-hakuvastaus
