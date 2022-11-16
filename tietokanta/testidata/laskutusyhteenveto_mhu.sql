@@ -187,16 +187,27 @@ $$
                     (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava'));
 
         -- Bonukset - 10/2019
-        -- Erilliskustannukset - Alihankintabonus - lupausbonus
+        -- Erilliskustannukset - Alihankintabonus - lupausbonus - muubonus - asiakastyytyväisyysbonus
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
-            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
+            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, NULL,
                     'Alihankittu hyvin!', '2019-10-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
             VALUES ('lupausbonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
                     'Hyvin luvattu!', '2019-10-13', kayttaja_id);
+
+        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
+                                      lisatieto, luotu, luoja)
+        VALUES ('muu-bonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, NULL,
+                'Muu bonus', '2019-10-13', kayttaja_id);
+
+        INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
+                                      lisatieto, luotu, luoja)
+        VALUES ('asiakastyytyvaisyysbonus', sopimus_id, urakka_id, tpi, '2019-10-15', 1000, 'MAKU 2015',
+                'Asiakkaat tyytyväisiä!', '2019-10-13', kayttaja_id);
+
         -- Kulut - tavoitepalkkio
         INSERT INTO kulu (erapaiva, kokonaissumma, urakka, tyyppi, luotu, luoja, koontilaskun_kuukausi)
         VALUES ('2019-10-13', 1000, urakka_id, 'laskutettava', '2019-10-13'::TIMESTAMP, kayttaja_id, 'lokakuu/1-hoitovuosi');
