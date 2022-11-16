@@ -85,23 +85,23 @@
         <tunnus>A</tunnus>
         <tierekisteriosoitevali>
           <karttapaivamaara>2016-01-01</karttapaivamaara>
-          <tienumero>3</tienumero>
-          <aosa>3</aosa>
+          <tienumero>4</tienumero>
+          <aosa>101</aosa>
           <aet>3</aet>
-          <losa>3</losa>
-          <let>3</let>
+          <losa>101</losa>
+          <let>300</let>
         </tierekisteriosoitevali>
         <alikohteet>
           <alikohde>
             <yha-id>3</yha-id>
             <tierekisteriosoitevali>
               <karttapaivamaara>2016-01-01</karttapaivamaara>
-              <tienumero>3</tienumero>
-              <aosa>3</aosa>
+              <tienumero>4</tienumero>
+              <aosa>101</aosa>
               <aet>3</aet>
-              <losa>3</losa>
-              <let>3</let>
-              <ajorata>0</ajorata>
+              <losa>101</losa>
+              <let>30</let>
+              <ajorata>1</ajorata>
               <kaista>11</kaista>
             </tierekisteriosoitevali>
             <paallystystoimenpide>
@@ -120,12 +120,12 @@
             <yha-id>4</yha-id>
             <tierekisteriosoitevali>
               <karttapaivamaara>2016-01-01</karttapaivamaara>
-              <tienumero>3</tienumero>
-              <aosa>3</aosa>
-              <aet>3</aet>
-              <losa>3</losa>
-              <let>3</let>
-              <ajorata>0</ajorata>
+              <tienumero>4</tienumero>
+              <aosa>101</aosa>
+              <aet>30</aet>
+              <losa>101</losa>
+              <let>300</let>
+              <ajorata>1</ajorata>
               <kaista>11</kaista>
             </tierekisteriosoitevali>
             <paallystystoimenpide>

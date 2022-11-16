@@ -630,7 +630,7 @@
                                 "-")
                               (when (= (:yllapitokohdetyyppi yllapitokohde) :sora)
                                 [:p (ikonit/ikoni-ja-teksti (ikonit/livicon-info-sign) " Soratiekohteilla voi olla vain yksi alikohde")])]
-                             [:span "Huom! Varsinaiset päällysteen toteumatiedot löytyvät päällystysilmoituksesta."]])}
+                             [:span " Varsinaiset päällysteen toteumatiedot löytyvät päällystysilmoituksesta."]])}
          (if (contains? dissoc-cols :tr-muokkaus)
            skeema
            (conj skeema

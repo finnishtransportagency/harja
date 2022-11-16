@@ -82,7 +82,7 @@
 
            {:otsikko "YP-lk"
             :nimi :yllapitoluokka :leveys 3 :tyyppi :valinta :desimaalien-maara 0
-            :valinnat (map :numero yllapitokohteet-domain/nykyiset-yllapitoluokat)
+            :valinnat (map :numero yllapitokohteet-domain/paallysteen-korjausluokat)
             :valinta-nayta #(do (if % (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi %) "-"))
             :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
             :muokattava? #(boolean (not (:yllapitokohde-id %)))}
