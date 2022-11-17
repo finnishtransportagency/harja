@@ -400,7 +400,7 @@
        [yksittainen-kohdistus yhteiset-tiedot])]))
 
 (defn- maara-summa
-  [{:keys [paivitys-fn haetaan]}
+  [{:keys [paivitys-fn haetaan kulu-lukittu?]}
    {{:keys [kohdistukset] :as lomake} :lomake
     urakoitsija-maksaa? :urakoitsija-maksaa?}]
   (let [validius (:validius (meta lomake))
@@ -424,7 +424,7 @@
          :otsikon-tag :h5
          :luokka #{}
          :kentta-params {:tyyppi :euro
-                         :disabled (not= 0 haetaan)
+                         :disabled? (or (not= 0 haetaan) kulu-lukittu?)
                          :vaadi-negatiivinen? urakoitsija-maksaa?
                          :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
                          :input-luokka "maara-input"
@@ -456,22 +456,22 @@
       :teksti-nappi? true}]]])
 
 (defn- lisatiedot
-  [{:keys [paivitys-fn haetaan]}
+  [{:keys [paivitys-fn haetaan kulu-lukittu?]}
    {{:keys [lisatieto] :as _lomake} :lomake}]
   [:div.palsta
    [:h5 "Lisätiedot"]
-   [kentat/tee-otsikollinen-kentta 
+   [kentat/tee-otsikollinen-kentta
     {:otsikko "Kirjoita tähän halutessasi lisätietoa"
      :luokka #{}
      :kentta-params {:tyyppi :string
                      :vayla-tyyli? true
-                     :disabled? (not= 0 haetaan)}
-     :arvo-atom (r/wrap lisatieto 
-                  (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn 
+                     :disabled? (or (not= 0 haetaan) kulu-lukittu?)}
+     :arvo-atom (r/wrap lisatieto
+                  (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
                                                      :polku :lisatieto}))}]])
 
 (defn- liitteet
-  [{:keys [e!]}
+  [{:keys [e! kulu-lukittu?]}
    {{liitteet :liitteet :as _lomake} :lomake}]
   [:div.palsta
    [:h5 "Liite"]
@@ -482,11 +482,12 @@
                      (r/partial liitteen-naytto e!)
                      liitteet))
        [:div.liitelista "Ei liitteitä"])]
-    [:div.liitenappi
-     [liitteet/lisaa-liite
-      (-> @tila/yleiset :urakka :id)
-      {:nayta-lisatyt-liitteet? false
-       :liite-ladattu           #(e! (tiedot/->LiiteLisatty %))}]]]])
+    (when-not kulu-lukittu?
+      [:div.liitenappi
+       [liitteet/lisaa-liite
+        (-> @tila/yleiset :urakka :id)
+        {:nayta-lisatyt-liitteet? false
+         :liite-ladattu #(e! (tiedot/->LiiteLisatty %))}]])]])
 
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
@@ -625,7 +626,7 @@
    "Kattohinnan ylitys"])
 
 (defn tehtavien-syotto
-  [{:keys [paivitys-fn haetaan] :as opts}
+  [{:keys [paivitys-fn haetaan kulu-lukittu?] :as opts}
    {{:keys [kohdistukset vuoden-paatos-valittu?] :as lomake} :lomake
     tehtavaryhmat :tehtavaryhmat
     toimenpiteet :toimenpiteet
@@ -646,7 +647,7 @@
                                         (> (count kohdistukset) 1) false
                                         (= "lisatyo" (:maksueratyyppi (first kohdistukset))) false
                                         :else true)
-                     :disabloitu? (not= 0 haetaan)
+                     :disabloitu? (or (not= 0 haetaan) kulu-lukittu?)
                      :muutos-fn (r/partial #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                                              resetoi-kohdistukset)
                                                   jalkiprosessointi-fn (if (.. % -target -checked)
@@ -665,7 +666,7 @@
           :default-checked (if (and (not vuoden-paatos-valittu?) (> (count kohdistukset) 1))
                              true
                              false)
-          :disabled (not= 0 haetaan)
+          :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        lisaa-kohdistus
                                                        resetoi-kohdistukset)
@@ -693,7 +694,7 @@
                              (> (count kohdistukset) 1) false
                              (not (= "lisatyo" (:maksueratyyppi (first kohdistukset)))) false
                              :else true)
-          :disabled (not= 0 haetaan)
+          :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (if (.. % -target -checked)
                                                        (fn [kohdistukset]
                                                          (let [[kohdistukset] (resetoi-kohdistukset kohdistukset)]
@@ -715,7 +716,7 @@
          {:type :radio
           :name "kulu-group"
           :default-checked vuoden-paatos-valittu?
-          :disabled (not= 0 haetaan)
+          :disabled (or (not= 0 haetaan) kulu-lukittu?)
           :on-change #(let [kohdistusten-paivitys-fn (when (.. % -target -checked)
                                                        (fn [_]
                                                          (let [tavoitepalkkio-tr (avain->tehtavaryhma tehtavaryhmat :tavoitepalkkio)]
@@ -740,7 +741,7 @@
                            :toimenpiteet toimenpiteet
                            :kohdistukset-lkm kohdistukset-lkm
                            :paivitys-fn paivitys-fn
-                           :disabled (not= 0 haetaan)
+                           :disabled (or (not= 0 haetaan) kulu-lukittu?)
                            :muokataan? (muokattava? lomake)
                            :vuoden-paatos-valittu? vuoden-paatos-valittu?
                            :validius (:validius (meta lomake))
@@ -768,7 +769,8 @@
 (defn kulun-tiedot
   [{:keys [paivitys-fn e! haetaan]}
    {:keys [koontilaskun-kuukausi laskun-numero erapaiva erapaiva-tilapainen tarkistukset testidata] :as lomake}
-   vuosittaiset-valikatselmukset]
+   vuosittaiset-valikatselmukset
+   kulu-lukittu?]
   (let [{:keys [validius]} (meta lomake)
         erapaiva-meta (get validius [:erapaiva])
         koontilaskun-kuukausi-meta (get validius [:koontilaskun-kuukausi])
@@ -802,25 +804,26 @@
      [:h5 "Laskun tiedot"]
      [:label "Koontilaskun kuukausi *"]
      [yleiset/livi-pudotusvalikko
-      {:virhe?        (and
-                        (not kk-droppari-disabled)
-                        (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta)))
+      {:virhe? (and
+                 (not kk-droppari-disabled)
+                 (not (validi-ei-tarkistettu-tai-ei-koskettu? koontilaskun-kuukausi-meta)))
        :data-cy "koontilaskun-kk-dropdown"
-       :disabled      kk-droppari-disabled
-       :vayla-tyyli?  true
+       :disabled (or kk-droppari-disabled kulu-lukittu?)
+       :vayla-tyyli? true
        :skrollattava? true
-       :valinta      koontilaskun-kuukausi
-       :valitse-fn   (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
-                                                        :polku :koontilaskun-kuukausi
-                                                        :optiot {:validoitava? true}})
-       :format-fn    koontilaskun-kk-formatter}
+       :valinta koontilaskun-kuukausi
+       :valitse-fn (r/partial paivita-lomakkeen-arvo {:paivitys-fn paivitys-fn
+                                                      :polku :koontilaskun-kuukausi
+                                                      :optiot {:validoitava? true}})
+       :format-fn koontilaskun-kk-formatter}
       koontilaskun-kuukaudet]
      [:label "Laskun pvm *"]
      [paivamaaran-valinta {:disabled              (or 
                                                     (not= 0 haetaan)
                                                     laskun-nro-virhe?
                                                     laskun-nro-lukittu?
-                                                    (nil? koontilaskun-kuukausi))
+                                                    (nil? koontilaskun-kuukausi)
+                                                    kulu-lukittu?)
                            :placeholder (when (nil? koontilaskun-kuukausi) "Valitse koontilaskun kuukausi")
                            :erapaiva              erapaiva
                            :paivitys-fn           paivitys-fn
@@ -830,7 +833,8 @@
       {:kentta-params {:tyyppi :string
                        :vayla-tyyli? true
                        :on-blur #(e! (tiedot/->OnkoLaskunNumeroKaytossa (.. % -target -value)))
-                       :virhe? laskun-nro-virhe?}
+                       :virhe? laskun-nro-virhe?
+                       :disabled? kulu-lukittu?}
        :otsikko "Koontilaskun numero"
        :luokka #{}
        :arvo-atom (r/wrap 
@@ -871,7 +875,16 @@
             urakoitsija-maksaa? (and vuoden-paatos-valittu?
                                   (=
                                     (:id (avain->tehtavaryhma tehtavaryhmat :tavoitehinnan-ylitys))
-                                    (:tehtavaryhma (first (:kohdistukset lomake)))))]
+                                    (:tehtavaryhma (first (:kohdistukset lomake)))))
+            ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
+            erapaivan-hoitovuosi (when erapaiva
+                                   (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
+            kulu-lukittu? (when erapaivan-hoitovuosi
+                            (some #(and
+                                     (= erapaivan-hoitovuosi (:vuosi %))
+                                     (:paatos-tehty? %))
+                              (:vuosittaiset-valikatselmukset app)))
+            kulu-lukittu-teksti "Hoitokauden välikatselmus on pidetty ja kuluja ei voi enää lisätä tai muokata."]
         [:div.ajax-peitto-kontti.kulujen-kirjaus
          #_[debug/debug app]
          #_[debug/debug lomake]
@@ -888,7 +901,7 @@
                        "Muokkaa kulua"
                        "Uusi kulu"))]]
           [:div.palsta.flex
-           (when-not (nil? (:id lomake))
+           (when (and (not (nil? (:id lomake))) (not kulu-lukittu?))
              [napit/poista "Poista kulu"
               #(modal/nayta! {:otsikko "Haluatko varmasti poistaa kulun?"}
                              [kulun-poistovarmistus-modaali {:varmistus-fn          (fn []
@@ -903,8 +916,12 @@
                :teksti-nappi? true
                :style         {:font-size   "14px"
                                :margin-left "auto"}}])]]
+         (when kulu-lukittu?
+           [:div.palstat
+            [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
          [tehtavien-syotto {:paivitys-fn paivitys-fn
-                            :haetaan     haetaan}
+                            :haetaan     haetaan
+                            :kulu-lukittu? kulu-lukittu?}
           {:lomake        lomake
            :tehtavaryhmat tehtavaryhmat
            :toimenpiteet  toimenpiteet
@@ -916,18 +933,22 @@
                           :haetaan     haetaan
                           :e!          e!}
            lomake
-           (:vuosittaiset-valikatselmukset app)]
+           (:vuosittaiset-valikatselmukset app)
+           kulu-lukittu?]
           [lisatiedot
            {:paivitys-fn paivitys-fn
-            :haetaan     haetaan}
+            :haetaan     haetaan
+            :kulu-lukittu? kulu-lukittu?}
            {:lomake lomake}]]
          [:div.palstat
           {:style {:margin-top "56px"}}
           [maara-summa {:paivitys-fn paivitys-fn
-                        :haetaan     haetaan}
+                        :haetaan     haetaan
+                        :kulu-lukittu? kulu-lukittu?}
            {:lomake lomake
             :urakoitsija-maksaa? urakoitsija-maksaa?}]
-          [liitteet {:e! e!} {:lomake lomake}]]
+          [liitteet {:e! e!
+                     :kulu-lukittu? kulu-lukittu?} {:lomake lomake}]]
          [:div.kulu-napit
           [napit/tallenna
            "Tallenna"
@@ -941,6 +962,9 @@
            {:ikoni        [ikonit/remove]
             :luokka       "suuri"
             :vayla-tyyli? true}]]
+         (when kulu-lukittu?
+           [:div.palstat
+            [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
          (when (not= 0 haetaan)
            [:div.ajax-peitto [yleiset/ajax-loader "Odota"]])]))))
 
