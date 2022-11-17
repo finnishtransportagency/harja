@@ -126,10 +126,10 @@
         :fmt #(kustannustyyppi-fmt %)
         :validoi [[:ei-tyhja "Anna kustannustyyppi"]]}
        {:otsikko "Hinta" :nimi :hinta :tyyppi :numero :pakollinen? true}
-       {:otsikko "Ylläpitoluokka" :nimi :yllapitoluokka :tyyppi :valinta
+       {:otsikko "Pk-luokka" :nimi :yllapitoluokka :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- valitse -")
         :fmt :nimi
-        :valinnat yllapitokohteet-domain/nykyiset-yllapitoluokat}
+        :valinnat yllapitokohteet-domain/paallysteen-korjausluokat}
 
        {:otsikko "Laskentakohde"
         :nimi :laskentakohde
@@ -190,7 +190,7 @@
        {:otsikko "Tyyppi" :tyyppi :string :nimi :tyyppi :leveys 20 :fmt #(kustannustyyppi-fmt %)}
        {:otsikko "Selite" :tyyppi :string :nimi :selite :leveys 20}
        {:otsikko "Hinta" :tyyppi :numero :nimi :hinta :fmt (partial fmt/euro-opt true) :leveys 10}
-       {:otsikko "Ylläpitoluokka" :tyyppi :string :nimi :yllapitoluokka
+       {:otsikko "Pk-luokka" :tyyppi :string :nimi :yllapitoluokka
         :hae #(when (:yllapitoluokka %) (get-in % [:yllapitoluokka :nimi]))
         :leveys 10}
        {:otsikko "Laskentakohde" :tyyppi :string :nimi :laskentakohde :fmt second :leveys 10}]
