@@ -175,7 +175,7 @@
         tarkista-status-fn (fn [status]
                              (or (= "ok" status) (= "ei-kaytossa" status) false))
         harja-ok? (every? #(not= "nok" (:status %)) komponenttien-tila)
-        itmf-yhteys-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "itmf") komponenttien-tila))
+        itmf-yhteys-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "tloik") komponenttien-tila))
         sonja-yhteys-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "sonja") komponenttien-tila))
         replikoinnin-tila-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila))
         yhteys-master-kantaan-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila))

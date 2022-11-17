@@ -150,7 +150,9 @@
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/euro-opt (:lisatyot-summa data))]])
      (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
-       [:div.rivi [:span "Tavoitehinnan ulkopuoliset rahavaraukset"] [:span (fmt/euro-opt (:bonukset-toteutunut data))]])
+       [:div.rivi [:span "Bonukset"] [:span (fmt/euro-opt (:bonukset-toteutunut data))]])
+     (when (and (not (nil? (:sanktiot-toteutunut data))) (not= 0 (:sanktiot-toteutunut data)))
+       [:div.rivi [:span "Sanktiot"] [:span (fmt/euro-opt (:sanktiot-toteutunut data))]])
      (when lupausbonus-paatos
        [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt (::valikatselmus/tilaajan-maksu lupausbonus-paatos))]])
      (when lupaussanktio-paatos

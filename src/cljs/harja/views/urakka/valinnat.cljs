@@ -47,7 +47,8 @@
   [valinnat/hoitokauden-kuukausi
    (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)
    u/valittu-hoitokauden-kuukausi
-   u/valitse-hoitokauden-kuukausi!])
+   u/valitse-hoitokauden-kuukausi!
+   "Kuukausi"])
 
 (defn urakan-vuosi
   "Valitsee urakkavuoden urakan alku- ja loppupvm väliltä."
@@ -60,14 +61,18 @@
     u/valittu-urakan-vuosi
     u/valitse-urakan-vuosi!]))
 
-(defn urakan-hoitokausi-ja-kuukausi [urakka]
-  (let [kuukaudet (vec (concat [nil] (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)))]
-    [valinnat/urakan-valinnat urakka {:hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
-                                                   :valittu-hoitokausi-atom u/valittu-hoitokausi
-                                                   :valitse-hoitokausi-fn u/valitse-hoitokausi!}
-                                      :kuukausi {:hoitokauden-kuukaudet kuukaudet
-                                                 :valittu-kuukausi-atom u/valittu-hoitokauden-kuukausi
-                                                 :valitse-kuukausi-fn u/valitse-hoitokauden-kuukausi!}}]))
+(defn urakan-hoitokausi-ja-kuukausi
+  ([urakka]
+   (urakan-hoitokausi-ja-kuukausi urakka nil))
+  ([urakka opt]
+   (let [kuukaudet (vec (concat [nil] (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)))]
+     [valinnat/urakan-valinnat urakka {:hoitokausi {:hoitokaudet u/valitun-urakan-hoitokaudet
+                                                    :valittu-hoitokausi-atom u/valittu-hoitokausi
+                                                    :valitse-hoitokausi-fn u/valitse-hoitokausi!}
+                                       :kuukausi {:hoitokauden-kuukaudet kuukaudet
+                                                  :valittu-kuukausi-atom u/valittu-hoitokauden-kuukausi
+                                                  :valitse-kuukausi-fn u/valitse-hoitokauden-kuukausi!
+                                                  :otsikko (:kuukausi-otsikko opt)}}])))
 
 (defn aikavali []
   [valinnat/aikavali u/valittu-aikavali])
