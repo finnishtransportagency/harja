@@ -544,10 +544,13 @@
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
-          :leveys 3 :fmt #(or % "–")})
+          :leveys 3 :fmt #(cond
+                            (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
+                            (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
+                            :else "–")})
        (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
                               :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
-       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3.5
+       {:otsikko "Perustelu" :nimi :perustelu :leveys 3.5
         :tyyppi :komponentti :komponentti sanktion-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
