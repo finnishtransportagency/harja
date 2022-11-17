@@ -347,7 +347,6 @@
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
   [db user {:keys [urakka-id kulu-kohdistuksineen] :as tiedot}]
-  (log/debug "tallenna-kulu :: tiedot" tiedot)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (luo-tai-paivita-kulukohdistukset db user urakka-id kulu-kohdistuksineen))
 
