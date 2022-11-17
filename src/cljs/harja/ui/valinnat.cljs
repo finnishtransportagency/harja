@@ -132,7 +132,6 @@
 (defn hoitokauden-kuukausi
   [hoitokauden-kuukaudet valittu-kuukausi-atom valitse-fn otsikko]
   [:div.label-ja-alasveto.kuukausi
-   (js/console.log "valinnat :: hoitokauden-kuukausi :: otsikko" (pr-str otsikko))
    [:span.alasvedon-otsikko (or otsikko "Kuukausi")]
    [livi-pudotusvalikko {:valinta @valittu-kuukausi-atom
                          :format-fn #(if %
