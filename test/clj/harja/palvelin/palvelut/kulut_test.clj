@@ -396,7 +396,7 @@
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1233333")
         ;; Tallenna alkuperäinen kulu
-        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+        tallennettu-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                        {:urakka-id urakka-id
                         :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
         ;; Lisätään hoitokauden-alkuvuodelle 2020 uusi välikatselmus, jotta päivitys ei varmasti on
@@ -405,10 +405,33 @@
                   \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
                   (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
         100000, 0, 0, 2020 );"))
-        muokattu-kulu-eri-hoitokausi (assoc uusi-kulu-laskun-numerolla
+        muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
                                        :erapaiva #inst "2021-09-29T21:00:00.000-00:00"
                                        :koontilaskun-kuukausi "syyskuu/2-hoitovuosi")]
 
+    (is (thrown? Exception (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+                             {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+                              :kulu-kohdistuksineen muokattu-kulu-eri-hoitokausi})))))
+
+(deftest paivita-valikatselmuksen-jalkeen
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        uusi-kulu-laskun-numerolla (assoc uusi-kulu :laskun-numero "1234567")
+        ;; Tallenna alkuperäinen kulu - Menee hoitokaudelle 2021
+        tallennettu-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen uusi-kulu-laskun-numerolla})
+        ;; Lisätään hoitokauden-alkuvuodelle 2021 uusi välikatselmus, jotta päivitys ei varmasti onnistu
+        _ (u (str "INSERT INTO urakka_paatos
+                  (\"urakka-id\", luotu, \"luoja-id\", \"muokkaaja-id\", tyyppi, siirto, \"tilaajan-maksu\",
+                  \"urakoitsijan-maksu\", \"hoitokauden-alkuvuosi\" ) VALUES
+                  (" urakka-id ", NOW(), " (:id +kayttaja-jvh+) ", " (:id +kayttaja-jvh+) ", 'tavoitehinnan-alitus'::paatoksen_tyyppi,
+        1000, 0, 0, 2021 );"))
+        ;; Ja koitetaan siirtää kulu seuraavalle hoitokaudelle, jolla ei ole välikatselmusta tehtynä
+        muokattu-kulu-eri-hoitokausi (assoc tallennettu-kulu
+                                       :erapaiva #inst "2022-09-29T21:00:00.000-00:00"
+                                       :koontilaskun-kuukausi "syyskuu/3-hoitovuosi")]
+
+    ;; Tallennus ei saa onnistua, koska välikatselmus on pidetty ja hoitoivuosi 2021 "lukittu"
     (is (thrown? Exception (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                              {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                               :kulu-kohdistuksineen muokattu-kulu-eri-hoitokausi})))))

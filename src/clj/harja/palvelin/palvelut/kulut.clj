@@ -252,11 +252,15 @@
 (defn tarkista-saako-kulua-tallentaa
   "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
   hoitokauden päätökset (välikatselmointi tehty) ja mikäli niitä löytyy, niin estetään tallennus."
-  [db urakka-id erapaiva]
-  (let [joda-local-time (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
-        hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi joda-local-time)
+  [db urakka-id erapaiva vanha-erapaiva]
+  (let [joda-local-time-erapaiva (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
+        joda-local-time-vanha-erapaiva (when vanha-erapaiva
+                                         (pvm/ajan-muokkaus (pvm/joda-timeksi vanha-erapaiva) true 1 :paiva))
+        erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
+        vanhan-erapaivan-vuosi (when vanha-erapaiva
+                                 (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
         valikatselmus-pidetty? (valikatselmus-kyselyt/onko-valikatselmus-pidetty? db {:urakka-id urakka-id
-                                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                                                                      :vuodet [erapaivan-vuosi vanhan-erapaivan-vuosi]})]
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
@@ -268,10 +272,11 @@
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-laskunkirjoitus user urakka-id)
   (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
-  (let [saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva)
+  (let [vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+        saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
         _ (when (not saako-tallentaa)
             (throw (IllegalArgumentException.
-                     (str "Kulu kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
+                     (str "Kulu on tai kohdistuu hoitokaudelle, jonka välikatselmus on jo pidetty. Tallentaminen ei enää onnistu!"))))
         yhteiset-tiedot {:erapaiva              (konv/sql-date erapaiva)
                          :kokonaissumma         kokonaissumma
                          :urakka                urakka
