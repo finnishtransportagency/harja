@@ -394,40 +394,34 @@
 
 (defn- luo-uusi-yllapitokohdeosa [db user yllapitokohde-id
                                   {:keys [nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa
-                                          tr-loppuetaisyys tr-ajorata tr-kaista toimenpide poistettu
+                                          tr-loppuetaisyys tr-ajorata tr-kaista yllapitoluokka toimenpide poistettu
                                           paallystetyyppi raekoko tyomenetelma massamaara]}
                                   pot-versio]
   (log/debug "Luodaan uusi ylläpitokohdeosa, jonka ylläpitokohde-id: " yllapitokohde-id)
   (when-not poistettu
-    (let [insert-komento (if (= 2 pot-versio)
-                           q/luo-yllapitokohdeosa-paallystysilmoituksen-apista<!
-                           q/luo-yllapitokohdeosa<!)]
-      (insert-komento db       ;; POT1 ja POT2
-                      {:yllapitokohde yllapitokohde-id
-                       :nimi nimi
-                       :tunnus tunnus
-                       :tr_numero tr-numero
-                       :tr_alkuosa tr-alkuosa
-                       :tr_alkuetaisyys tr-alkuetaisyys
-                       :tr_loppuosa tr-loppuosa
-                       :tr_loppuetaisyys tr-loppuetaisyys
-                       :tr_ajorata tr-ajorata
-                       :tr_kaista tr-kaista
-
-                       ;; Vain POT1 saa muuttaa näitä YLLÄPITOKOHDEOSA-taulussa!
-                       ;; POT2 ei saa näitä nullata
-                       :paallystetyyppi paallystetyyppi
-                       :raekoko raekoko
-                       :tyomenetelma tyomenetelma
-                       :massamaara massamaara
-                       :toimenpide toimenpide
-                       :ulkoinen-id nil ;; yhteinen
-                       }))))
+    (q/luo-yllapitokohdeosa<! db
+                              {:yllapitokohde yllapitokohde-id
+                               :nimi nimi
+                               :tunnus tunnus
+                               :tr_numero tr-numero
+                               :tr_alkuosa tr-alkuosa
+                               :tr_alkuetaisyys tr-alkuetaisyys
+                               :tr_loppuosa tr-loppuosa
+                               :tr_loppuetaisyys tr-loppuetaisyys
+                               :tr_ajorata tr-ajorata
+                               :tr_kaista tr-kaista
+                               :yllapitoluokka yllapitoluokka
+                               :paallystetyyppi paallystetyyppi
+                               :raekoko raekoko
+                               :tyomenetelma tyomenetelma
+                               :massamaara massamaara
+                               :toimenpide toimenpide
+                               :ulkoinen-id nil})))
 
 (defn- paivita-yllapitokohdeosa [db user urakka-id
                                  {:keys [id nimi tunnus tr-numero tr-alkuosa tr-alkuetaisyys
-                                         tr-loppuosa tr-loppuetaisyys tr-ajorata
-                                         tr-kaista toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
+                                         tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
+                                         yllapitoluokka toimenpide paallystetyyppi raekoko tyomenetelma massamaara]
                                   :as kohdeosa}
                                  pot-versio]
   (log/debug "Päivitetään ylläpitokohdeosa")
@@ -447,6 +441,7 @@
 
                      ;; Vain POT1 saa muuttaa näitä YLLÄPITOKOHDEOSA-taulussa!
                      ;; POT2 ei saa näitä nullata
+                     :yllapitoluokka yllapitoluokka
                      :paallystetyyppi paallystetyyppi
                      :raekoko raekoko
                      :tyomenetelma tyomenetelma

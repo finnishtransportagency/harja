@@ -11,18 +11,10 @@
     [clojure.spec.gen.alpha :as gen]
     [harja.pvm :as pvm]
     #?@(:clj
-        [
-         [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-
-         [harja.pvm :as pvm]
-         [clojure.data :as data]
-         [clj-time.core :as t]
-         [taoensso.timbre :as log]
-         [clj-time.coerce :as c]
+        [[clj-time.coerce :as c]
          [harja.kyselyt
           [tieverkko :as q-tieverkko]
-          [yllapitokohteet :as q-yllapitokohteet]
-          [konversio :as konversio]]])))
+          [yllapitokohteet :as q-yllapitokohteet]]])))
 
 (s/def ::id ::spec-apurit/postgres-serial)
 (s/def ::kohdenumero (s/nilable string?))
@@ -30,11 +22,11 @@
 (s/def ::kokonaishinta (s/and number?))
 
 (def ^{:doc "Sisältää vain nykyisin käytössä olevat luokat 1,2 ja 3 (eli numerot 8, 9 ja 10)."}
-nykyiset-yllapitoluokat
-  [{:lyhyt-nimi "1" :nimi "Luokka 1" :numero 8}
-   {:lyhyt-nimi "2" :nimi "Luokka 2" :numero 9}
-   {:lyhyt-nimi "3" :nimi "Luokka 3" :numero 10}
-   {:lyhyt-nimi "-" :nimi "Ei ylläpitoluokkaa" :numero nil}])
+paallysteen-korjausluokat
+  [{:lyhyt-nimi "1" :nimi "PK1" :numero 8}
+   {:lyhyt-nimi "2" :nimi "PK2" :numero 9}
+   {:lyhyt-nimi "3" :nimi "PK3" :numero 10}
+   {:lyhyt-nimi "-" :nimi "Ei pk-luokkaa" :numero nil}])
 
 (def vanhat-yllapitoluokat ^{:doc "Sisältää vanhat ylläpitoluokat, tarvitaan YHA:n kanssa taakseepäinyhteensopivuuden vuoksi."}
 [{:lyhyt-nimi "1a" :nimi "Luokka 1a" :numero 1}
@@ -45,7 +37,7 @@ nykyiset-yllapitoluokat
  {:lyhyt-nimi "3a" :nimi "Luokka 3a" :numero 6}
  {:lyhyt-nimi "3b" :nimi "Luokka 3b" :numero 7}])
 
-(def kaikki-yllapitoluokat (concat nykyiset-yllapitoluokat vanhat-yllapitoluokat))
+(def kaikki-yllapitoluokat (concat paallysteen-korjausluokat vanhat-yllapitoluokat))
 
 (s/def ::yllapitoluokka (s/int-in (apply min (keep :numero kaikki-yllapitoluokat))
                                   (inc (apply max (keep :numero kaikki-yllapitoluokat)))))
