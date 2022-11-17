@@ -32,7 +32,7 @@ SELECT EXISTS(
     SELECT up.id as id
       FROM urakka_paatos up
      WHERE up.poistettu = FALSE
-       AND up."hoitokauden-alkuvuosi" = :hoitokauden-alkuvuosi
+       AND up."hoitokauden-alkuvuosi" in (:vuodet)
        AND up."urakka-id" = :urakka-id
        AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus'));
 
