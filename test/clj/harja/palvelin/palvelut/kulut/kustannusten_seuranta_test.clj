@@ -341,16 +341,14 @@ UNION ALL
   )
 
 (defn- bonukset-toteutuneet-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
-  (str " SELECT CASE
-                WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
-                THEN SUM((SELECT korotettuna
-                                 FROM laske_kuukauden_indeksikorotus("hoitokauden-alkuvuosi"::INTEGER, 9::INTEGER,
-                                                                      (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = "urakka")::VARCHAR,
-                                                                      coalesce(ek.rahasumma, 0)::NUMERIC,
-                                                                      (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC)))
-                ELSE SUM(ek.rahasumma)
-                END        AS toteutunut_summa,
-                0          AS budjetoitu_summa,
+  (str " SELECT CASE WHEN ek.indeksin_nimi IS NOT NULL
+                     THEN SUM((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi "::INTEGER, 9::INTEGER,
+                                (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = "urakka")::VARCHAR,
+                                coalesce(ek.rahasumma, 0)::NUMERIC,
+                                (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC)))
+                     ELSE SUM(ek.rahasumma)
+                     END AS toteutunut_summa,
+                 0          AS budjetoitu_summa,
                 'bonus'    AS toimenpideryhma,
                 'bonukset' AS paaryhma
            FROM erilliskustannus ek,
@@ -367,29 +365,43 @@ UNION ALL
                                              AND tpk2.koodi = '23150')
             AND ek.pvm BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
             AND ek.poistettu IS NOT TRUE
-          GROUP BY ek.tyyppi"))
+          GROUP BY ek.tyyppi, ek.indeksin_nimi"))
 
-(defn- bonukset-budjetoitu-sql-haku [urakka alkupvm loppupvm hoitokauden-alkuvuosi]
-  (str "SELECT kt.summa                                  AS budjetoitu_summa,
-         0                                              AS toteutunut_summa,
-         'bonus'                                        AS toimenpideryhma,
-         'bonukset'                                     AS paaryhma
-         FROM kustannusarvioitu_tyo kt,
+(defn- ulk-rvar-suunniteltu-sql-haku [urakka alkupvm loppupvm]
+  (format
+    "WITH urakan_toimenpideinstanssi_23150 AS
+             (SELECT tpi.id AS id
+              FROM toimenpideinstanssi tpi
+                       JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                       JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                   maksuera m
+              WHERE tpi.urakka = %s
+                AND m.toimenpideinstanssi = tpi.id
+                AND tpk2.koodi = '23150')
+    SELECT SUM(kt.summa) AS budjetoitu_summa, SUM(kt.summa) AS budjetoitu_summa_indeksikorjattu,
+    'ulkopuoliset-rahavaraukset' AS paaryhma
+    FROM kustannusarvioitu_tyo kt,
          sopimus s
-         WHERE s.urakka = "urakka"
-         AND kt.toimenpideinstanssi = (SELECT tpi.id AS id
-                                         FROM toimenpideinstanssi tpi
-                                              JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                              JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
-                                              maksuera m
-                                        WHERE tpi.urakka = "urakka"
-                                          AND m.toimenpideinstanssi = tpi.id
-                                           AND tpk2.koodi = '23150')
-         AND kt.tehtava IS NULL
-         AND kt.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
-         AND kt.sopimus = s.id
-         AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE)")
-  )
+    WHERE s.urakka = %s
+      AND kt.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
+      AND kt.tehtava IS NULL
+      AND kt.tehtavaryhma = (select id from tehtavaryhma tr where tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54')
+      AND kt.sopimus = s.id
+      AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE);" urakka urakka alkupvm loppupvm))
+
+(defn- sanktiot-toteutuneet-sql-haku [urakka alkupvm loppupvm]
+  (format
+    "SELECT
+      CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
+           ELSE SUM(s.maara + (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, %s::INTEGER, s.sakkoryhma))) * -1
+      END AS toteutunut_summa,
+      'sanktiot' AS paaryhma
+      FROM sanktio s
+           JOIN toimenpideinstanssi tpi ON tpi.urakka = %s AND tpi.id = s.toimenpideinstanssi
+           JOIN sanktiotyyppi st ON s.tyyppi = st.id\n     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
+     WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
+       AND s.poistettu = FALSE
+     GROUP BY s.tyyppi, s.indeksi" urakka urakka alkupvm loppupvm))
 
 (deftest hae-olemattomia-kustannuksia
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
@@ -596,7 +608,7 @@ UNION ALL
     (is (= lisatyot-summa sql-summa))
     (is (= (count luotu-lisatyo) 1))))
 
-;; Budjetoidut bonukset
+;; Bonukset
 (deftest bonukset-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         alkupvm "2019-10-01"
@@ -612,21 +624,60 @@ UNION ALL
                    vastaus)
 
         bonus-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
-        bonus-budjetoitu (apply + (map (fn [rivi] (:budjetoitu_summa rivi)) bonukset))
         bonukset-toteutuneet-sql (q (bonukset-toteutuneet-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
-        bonukset-budjetoitu-sql (q (bonukset-budjetoitu-sql-haku urakka-id alkupvm loppupvm hoitokauden-alkuvuosi))
         bonukset-sql-toteutunut-summa (reduce  (fn [summa b]
                                                  (if b
                                                    (+ summa b)
                                                    summa))
-                                              0M (map #(first %) bonukset-toteutuneet-sql))
-        bonukset-sql-budjetoitu-summa (reduce (fn [summa b]
-                                                (if b
-                                                  (+ summa b)
-                                                  summa))
-                                              0M (map #(first %) bonukset-budjetoitu-sql))]
-    (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))
-    (is (= bonus-budjetoitu bonukset-sql-budjetoitu-summa))))
+                                              0M (map #(first %) bonukset-toteutuneet-sql))]
+    (is (= bonus-toteutuneet bonukset-sql-toteutunut-summa))))
+
+;; Ulkopuoliset rahavaraukset
+(deftest ulkopuoliset-rahavaraukset-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        ulk-rvar (filter
+                   #(when (and
+                            (= "ulkopuoliset-rahavaraukset" (:paaryhma %))
+                            ;; Filtteröidään vielä lisätyöt pois
+                            (not= "lisatyo" (:toimenpideryhma %)))
+                      true)
+                   vastaus)
+        ulk-rvar-suunniteltu (apply + (map (fn [rivi] (:budjetoitu_summa_indeksikorjattu rivi)) ulk-rvar))
+        ulk-rvar-suunniteltu-sql (q (ulk-rvar-suunniteltu-sql-haku urakka-id alkupvm loppupvm))
+        ulk-rvar-sql-suunniteltu-summa (reduce (fn [summa b]
+                                                 (if b
+                                                   (+ summa b)
+                                                   summa))
+                                         0M (map #(first %) ulk-rvar-suunniteltu-sql))]
+    (is (= ulk-rvar-suunniteltu ulk-rvar-sql-suunniteltu-summa))))
+
+;; Sanktiot
+(deftest sanktiot-test
+  (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        alkupvm "2019-10-01"
+        loppupvm "2020-09-30"
+        hoitokauden-alkuvuosi 2019
+        vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
+        bonukset (filter
+                   #(when (and
+                            (= "sanktiot" (:paaryhma %))
+                            ;; Filtteröidään vielä lisätyöt pois
+                            (not= "lisatyo" (:toimenpideryhma %)))
+                      true)
+                   vastaus)
+
+        sanktiot-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
+        sanktiot-toteutuneet-sql (q (sanktiot-toteutuneet-sql-haku urakka-id alkupvm loppupvm))
+        sanktiot-sql-toteutunut-summa (reduce  (fn [summa b]
+                                                 (if b
+                                                   (+ summa b)
+                                                   summa))
+                                        0M (map #(first %) sanktiot-toteutuneet-sql))]
+    (is (= sanktiot-toteutuneet sanktiot-sql-toteutunut-summa))))
 
 ;; Tavoitehinnan oikaisut
 (deftest tavoitehinnanoikaisu-test-toimii
