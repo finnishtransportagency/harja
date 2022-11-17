@@ -138,6 +138,7 @@
                    :muokkaa! #(reset! tiedot/valittu-sanktio %)
                    :validoi-alussa? false
                    :voi-muokata? (and voi-muokata? (not lukutila?))
+                   :tarkkaile-ulkopuolisia-muutoksia? true
                    :footer-fn (fn [sanktio]
                                 [:span.nappiwrappi.flex-row
                                  (when-not lukutila?
@@ -189,17 +190,17 @@
                                             (assoc :tyyppi nil))
                                      s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
                                                 arvo kaikki-sanktiotyypit urakan-alkupvm)
-                                     rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
-                                                   (and
-                                                     (and (= 1 (count s-tyypit)) (first s-tyypit))
-                                                     ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
-                                                     ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                                     (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                     rivi (if
+                                            ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                            ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                            (and
+                                              (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                              (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))
                                             (assoc rivi
-                                              :tyyppi tyyppi
+                                              :tyyppi (first s-tyypit)
                                               :toimenpideinstanssi
-                                              (when tpk
-                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
+                                              (when (:toimenpidekoodi (first s-tyypit))
+                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi (first s-tyypit))))))
                                             rivi)]
                                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
