@@ -388,17 +388,17 @@ UNION ALL
 -- Budjetoidut bonukset eli tilaajan rahavaraukset - Jotka tulee toimenpideinstanssille, joka saadaan, kun käytetään
 -- toimenpidekoodia 23150
 SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
-       SUM(kt.summa)                  AS budjetoitu_summa_indeksikorjattu, -- Näitä ei indeksikorjata
+       SUM(kt.summa)                                  AS budjetoitu_summa_indeksikorjattu, -- Näitä ei indeksikorjata
        0                                              AS toteutunut_summa,
        MIN(kt.tyyppi)::TEXT                           AS maksutyyppi,
        'bonus'                                        AS toimenpideryhma,
        'Tilaajan varaus'                              AS tehtava_nimi,
-       'MHU Hoidonjohto'                              AS toimenpide,
+       'Tavoitehinnan ulkopuoliset rahavaraukset'     AS toimenpide,
        MIN(kt.luotu)                                  AS luotu,
        MIN(concat(kt.vuosi, '-', kt.kuukausi, '-01')) AS ajankohta,
        'budjetointi'                                  AS toteutunut,
        0                                              AS jarjestys,
-       'bonukset'                                     AS paaryhma,
+       'ulkopuoliset-rahavaraukset'                   AS paaryhma,
        NOW()                                          AS indeksikorjaus_vahvistettu -- bonukset eli tavoitehinnan ulkopuolisia rahavarauksia ei vahvisteta
 FROM kustannusarvioitu_tyo kt,
      sopimus s
@@ -423,8 +423,8 @@ UNION ALL
 SELECT 0                    AS budjetoitu_summa,
        0                    AS budjetoitu_summa_indeksikorjattu,
        CASE
-           WHEN ek.tyyppi::TEXT = 'lupausbonus' OR ek.tyyppi::TEXT = 'asiakastyytyvaisyysbonus'
-               THEN SUM((SELECT korotettuna
+           WHEN ek.indeksin_nimi IS NOT NULL
+             THEN SUM((SELECT korotettuna
                          FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
                                                              (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
                                                              coalesce(ek.rahasumma, 0)::NUMERIC,
@@ -434,7 +434,7 @@ SELECT 0                    AS budjetoitu_summa,
        'bonus'              AS maksutyyppi,
        'bonus'              AS toimenpideryhma,
        MIN(ek.tyyppi)::TEXT AS tehtava_nimi,
-       'bonus'              AS toimenpide,
+       'bonukset'           AS toimenpide,
        MIN(ek.luotu)        AS luotu,
        MIN(ek.pvm)::TEXT    AS ajankohta,
        'bonus'              as toteutunut,
@@ -448,7 +448,36 @@ WHERE s.urakka = :urakka
   AND ek.toimenpideinstanssi = (select id from urakan_toimenpideinstanssi_23150)
   AND ek.pvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND ek.poistettu IS NOT TRUE
-GROUP BY ek.tyyppi
+GROUP BY ek.tyyppi, ek.indeksin_nimi
+UNION ALL
+-- Sanktiot -- sanktiot taulusta. Lisätään sanktioille indeksi totetuneeseen summaan, mikäli indeksi on asetettu
+SELECT 0                       AS budjetoitu_summa,
+       0                       AS budjetoitu_summa_indeksikorjattu,
+       CASE
+           WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
+           ELSE
+                    SUM(s.maara + (SELECT korotus
+                    FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka::INTEGER, s.sakkoryhma)))
+                    * -1
+           END                 AS toteutunut_summa,
+       'sanktio'               AS maksutyyppi,
+       'sanktio'               AS toimenpideryhma,
+       MIN(st.nimi)::TEXT      AS tehtava_nimi,
+       'sanktiot'              AS toimenpide,
+       MIN(s.luotu)            AS luotu,
+       MIN(s.perintapvm)::TEXT AS ajankohta,
+       'sanktio'               AS toteutunut,
+       0                       AS jarjestys,
+       'sanktiot'              AS paaryhma,
+       NOW()                   AS indeksikorjaus_vahvistettu -- sanktioita ei indeksivahvisteta, joten ne on aina "true"
+FROM sanktio s
+     JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
+     JOIN sanktiotyyppi st ON s.tyyppi = st.id
+     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
+WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND s.poistettu = FALSE
+GROUP BY s.tyyppi, s.indeksi
+
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
 UNION ALL
 SELECT 0                                          AS budjetoitu_summa,

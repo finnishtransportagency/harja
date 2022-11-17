@@ -4,10 +4,10 @@
 ;; Raportin pääryhmät jäsennettynä samaan järjestykseen, kuin ui suunnitelmissa on tarkoitettu
 (def raportin-paaryhmat
   ["hankintakustannukset", "johto-ja-hallintakorvaus", "hoidonjohdonpalkkio", "erillishankinnat", "rahavaraukset",
-   "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys"])
+   "bonukset", "siirto", "tavoitehinnanoikaisu", "tavoitepalkkio", "tavoitehinnan-ylitys", "kattohinnan-ylitys", "sanktiot", "ulkopuoliset-rahavaraukset"])
 
 (def yhteenvedosta-jatettavat-paaryhmat
-  (set (map #(nth raportin-paaryhmat %) [5 8 9 10])))
+  (set (map #(nth raportin-paaryhmat %) [5 8 9 10 11 12])))
 
 (defn- toimenpide-jarjestys [toimenpide]
   (case (first toimenpide)
@@ -317,6 +317,8 @@
         tavoitepalkkiot (get paaryhmat (nth raportin-paaryhmat 8))
         tavoitehinnan-ylitykset (get paaryhmat (nth raportin-paaryhmat 9))
         kattohinnan-ylitykset (get paaryhmat (nth raportin-paaryhmat 10))
+        sanktiot (get paaryhmat (nth raportin-paaryhmat 11))
+        ulkopuoliset-rahavaraukset (get paaryhmat (nth raportin-paaryhmat 12))
 
         ;; Ryhmittele hankintakustannusten alla olevat tiedot toimenpiteen perusteella
         hankintakustannusten-toimenpiteet (sort-by toimenpide-jarjestys (group-by :toimenpide hankintakustannukset))
@@ -333,6 +335,8 @@
         tavoitepalkkiot (summaa-hoitokauden-paattamisen-kulut tavoitepalkkiot (nth raportin-paaryhmat 8))
         tavoitehinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut tavoitehinnan-ylitykset (nth raportin-paaryhmat 9))
         kattohinnan-ylitykset (summaa-hoitokauden-paattamisen-kulut kattohinnan-ylitykset (nth raportin-paaryhmat 10))
+        sanktio-tehtavat (summaa-paaryhman-tehtavat sanktiot (nth raportin-paaryhmat 11))
+        ulkopuoliset-rahavaraukset-tehtavat (summaa-paaryhman-tehtavat ulkopuoliset-rahavaraukset (nth raportin-paaryhmat 12))
 
         taulukon-rivit (-> {}
                            ;; Aseta pääryhmän avaimelle toimenpiteet
@@ -368,7 +372,14 @@
                            (summaa-paaryhman-toimenpiteet 9 tavoitehinnan-ylitykset)
 
                            (assoc (keyword (nth raportin-paaryhmat 10)) kattohinnan-ylitykset)
-                           (summaa-paaryhman-toimenpiteet 10 kattohinnan-ylitykset))
+                           (summaa-paaryhman-toimenpiteet 10 kattohinnan-ylitykset)
+
+                           (assoc (keyword (nth raportin-paaryhmat 11)) sanktio-tehtavat)
+                           (summaa-tehtavat sanktio-tehtavat 11)
+
+                           (assoc (keyword (nth raportin-paaryhmat 12)) ulkopuoliset-rahavaraukset-tehtavat)
+                           (summaa-tehtavat ulkopuoliset-rahavaraukset-tehtavat 12))
+
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map (fn [pr]
                                                         (get taulukon-rivit (keyword (str pr "-toteutunut"))))
