@@ -219,7 +219,7 @@ $$
         -- Bonukset - 03/2020
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
                                       lisatieto, luotu, luoja)
-            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2020-03-15', 500, 'MAKU 2015',
+            VALUES ('alihankintabonus', sopimus_id, urakka_id, tpi, '2020-03-15', 500, NULL,
                     'Alihankittu hyvin!', '2020-03-13', kayttaja_id);
 
         INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, rahasumma, indeksin_nimi,
