@@ -111,6 +111,7 @@
                                         (= :suola (nav/valittu-valilehti :suunnittelu))
                                         (= :tehtavat (nav/valittu-valilehti :suunnittelu))
                                         (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat))
+                                        (= :kohdistetut-kulut (nav/valittu-valilehti :laskutus))
                                         )
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))

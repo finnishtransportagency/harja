@@ -1,4 +1,4 @@
-(ns harja.tiedot.urakka.mhu-kulut
+(ns harja.tiedot.urakka.kulut.mhu-kulut
   (:require
     [clojure.string :as string]
     [tuck.core :as tuck]
@@ -42,6 +42,11 @@
 
 (defrecord LataaLiite [id])
 (defrecord PoistaLiite [id])
+
+;; Haetaan välikatselmukset, eli päätökset, koska kulua ei voi syöttää/päivittää niille hoitokausille, joille välikatselmus on jo tehty
+(defrecord HaeUrakanValikatselmukset [])
+(defrecord HaeUrakanValikatselmuksetOnnistui [vastaus])
+(defrecord HaeUrakanValikatselmuksetEpaonnistui [vastaus])
 
 (defn parsi-summa [summa]
   (cond
@@ -124,16 +129,20 @@
                             (haettava kohde)))
         (palautuksen-avain kohde)))))
 
-(defn resetoi-kulut []
+(defn alusta-lomake [app]
   (let [urakan-alkupvm (:alkupvm @navigaatio/valittu-urakka)
         kuluva-hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/nyt))
-        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))]
-    (assoc tila/kulut-lomake-default
-      :koontilaskun-kuukausi
-      (when (and
-              kuluva-hoitovuoden-nro
-              (not= "kk ei välillä 1-12" kuluva-kuukausi))
-        (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi")))))
+        kuluva-kuukausi (pvm/kuukauden-nimi (pvm/kuukausi (pvm/nyt)))
+        nyky-hoitokausi-lukittu? (some #(and
+                                     (= (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)) (:vuosi %))
+                                     (:paatos-tehty? %))
+                              (:vuosittaiset-valikatselmukset app))
+        perus-koontilaskun-kuukausi (when (and
+                                            (not nyky-hoitokausi-lukittu?)
+                                            kuluva-hoitovuoden-nro
+                                            (not= "kk ei välillä 1-12" kuluva-kuukausi))
+                                      (str kuluva-kuukausi "/" kuluva-hoitovuoden-nro "-hoitovuosi"))]
+    (assoc tila/kulut-lomake-default :koontilaskun-kuukausi perus-koontilaskun-kuukausi)))
 
 (defn- resetoi-kulunakyma []
   tila/kulut-default)
@@ -228,9 +237,10 @@
   TallennusOnnistui
   (process-event [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
         (assoc :syottomoodi false)
-        (update :lomake resetoi-kulut)))
+        (assoc :lomake (alusta-lomake app))))
   KuluhakuOnnistui
   (process-event [{tulos :tulos} {:keys [taulukko kulut toimenpiteet kulut] :as app}]
     (-> app
@@ -401,9 +411,10 @@
   (process-event
     [{tulos :tulos} {{:keys [viimeisin-haku]} :parametrit :as app}]
     ((tuck/current-send-function) (->HaeUrakanKulut viimeisin-haku))
+    ((tuck/current-send-function) (->HaeUrakanValikatselmukset))
     (-> app
       (assoc :syottomoodi false)
-      (update :lomake resetoi-kulut)))
+      (assoc :lomake (alusta-lomake app))))
   PoistaKulu
   (process-event
     [{:keys [id]} app]
@@ -430,11 +441,27 @@
         (assoc-in [:parametrit :haun-alkupvm] (or alkupvm (-> @tila/yleiset :urakka :alkupvm)))
         (assoc-in [:parametrit :haun-loppupvm] (or loppupvm (-> @tila/yleiset :urakka :loppupvm)))))
 
+  HaeUrakanValikatselmukset
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakan-valikatselmukset
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->HaeUrakanValikatselmuksetOnnistui
+       :epaonnistui ->HaeUrakanValikatselmuksetEpaonnistui})
+    app)
+
+  HaeUrakanValikatselmuksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :vuosittaiset-valikatselmukset vastaus))
+
+  HaeUrakanValikatselmuksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :vuosittaiset-valikatselmukset nil))
+
   ;; FORMITOIMINNOT
 
   KulujenSyotto
   (process-event
     [{:keys [auki?]} app]
     (-> app
-        (update :lomake resetoi-kulut)
-        (assoc :syottomoodi auki?))))
+      (assoc :lomake (alusta-lomake app))
+      (assoc :syottomoodi auki?))))

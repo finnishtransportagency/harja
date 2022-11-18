@@ -9,7 +9,7 @@
             [harja.views.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
-            [harja.views.urakka.kulut :as kohdistetut-kulut]
+            [harja.views.urakka.kulut.kulut :as kohdistetut-kulut]
             [harja.domain.oikeudet :as oikeudet])
 
   (:require-macros [cljs.core.async.macros :refer [go]]
