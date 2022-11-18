@@ -14,6 +14,7 @@
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.geometriapaivitykset :as geometriat-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
@@ -385,10 +386,16 @@
                           (toteumat-q/paivita-erilliskustannus! db (merge (dissoc parametrit :luoja)
                                                                      {:poistettu (or poistettu false)
                                                                       :id id
-                                                                      :muokkaaja (:id user)})))]
+                                                                      :muokkaaja (:id user)})))
+            bonuksen-liitteet-tietokannasta (when id
+                                              (laatupoikkeamat-kyselyt/hae-bonuksen-liitteet db id))]
         (when (not (empty? liitteet))
           (doseq [l liitteet]
-            (toteumat-q/tallenna-erilliskustannukselle-liitteet<! db {:bonus (or (:id tallennettu) id) :liite (:id l)})))
+            (let [onko-liite-kannassa? (some #(when (and %
+                                                      (= (:id %) (:id l)))
+                                                true) bonuksen-liitteet-tietokannasta)]
+              (when-not onko-liite-kannassa?
+                (toteumat-q/tallenna-erilliskustannukselle-liitteet<! db {:bonus (or (:id tallennettu) id) :liite (:id l)})))))
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (cond
           (and
