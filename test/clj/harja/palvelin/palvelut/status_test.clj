@@ -193,6 +193,6 @@
             {:harja-ok? false
              :itmf-yhteys-ok? true
              :replikoinnin-tila-ok? true
-             :sonja-yhteys-ok? true
+             :sonja-yhteys-ok? false
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))
