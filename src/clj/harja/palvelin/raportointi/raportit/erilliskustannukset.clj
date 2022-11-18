@@ -21,6 +21,7 @@
     "asiakastyytyvaisyysbonus" "As.tyyt.\u00ADbonus"
     "lupausbonus" "Lupaus\u00ADbonus"
     "muu" "Muu"
+    "muu-bonus" "Muu bonus"
     "tavoitepalkkio" "Tavoite\u00ADpalkkio"
 
     "Tuntematon kustannustyyppi"))

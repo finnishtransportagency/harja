@@ -345,7 +345,8 @@ UNION ALL
                      THEN SUM((SELECT korotettuna FROM laske_kuukauden_indeksikorotus(" hoitokauden-alkuvuosi "::INTEGER, 9::INTEGER,
                                 (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = "urakka")::VARCHAR,
                                 coalesce(ek.rahasumma, 0)::NUMERIC,
-                                (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC)))
+                                (SELECT indeksilaskennan_perusluku("urakka"::INTEGER))::NUMERIC,
+                                TRUE)))
                      ELSE SUM(ek.rahasumma)
                      END AS toteutunut_summa,
                  0          AS budjetoitu_summa,
