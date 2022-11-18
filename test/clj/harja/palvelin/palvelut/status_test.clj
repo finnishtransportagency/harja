@@ -179,14 +179,16 @@
       (is (= (get vastaus :status) 200)))))
 
 (deftest uusi-status-vastaa-virhetta
-  (testing "Uusi statuskysely toimii"
+  (testing "Uusi statuskysely palauttaa virhettä"
     (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-      (is (= (-> vastaus :body (cheshire/decode true))
+            (is (= (-> vastaus
+               :body
+               (cheshire/decode true)
+               (dissoc :viesti))
             {:harja-ok? false
              :itmf-yhteys-ok? true
-             :replikoinnin-tila-ok? false
+             :replikoinnin-tila-ok? true
              :sonja-yhteys-ok? true
-             :viesti "TLOIK ei ole käytössä, REPLICA rikki, "
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))
