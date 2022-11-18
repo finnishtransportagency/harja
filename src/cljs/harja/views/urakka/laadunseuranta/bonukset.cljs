@@ -74,20 +74,21 @@
       :voi-muokata? (and voi-muokata? (not lukutila?))
       :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
       :footer-fn (fn [bonus]
-                   [:<>
-                    [:span.nappiwrappi.flex-row
-                     [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
-                      {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}]
-                     (when (:id lomakkeen-tiedot)
-                       [napit/kielteinen "Poista" (fn [_]
-                                                    (varmista-kayttajalta/varmista-kayttajalta
-                                                      {:otsikko "Bonuksen poistaminen"
-                                                       :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
-                                                       :modal-luokka "varmistus-modal"
-                                                       :hyvaksy "Poista"
-                                                       :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
-                        {:luokka "oikealle"}])
-                     [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]])}
+                   (when-not lukutila?
+                     [:<>
+                      [:span.nappiwrappi.flex-row
+                       [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
+                        {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}]
+                       (when (:id lomakkeen-tiedot)
+                         [napit/kielteinen "Poista" (fn [_]
+                                                      (varmista-kayttajalta/varmista-kayttajalta
+                                                        {:otsikko "Bonuksen poistaminen"
+                                                         :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
+                                                         :modal-luokka "varmistus-modal"
+                                                         :hyvaksy "Poista"
+                                                         :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
+                          {:luokka "oikealle"}])
+                       [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]]))}
      [(let [hae-tpin-tiedot (comp hae-tpi-idlla :toimenpideinstanssi)
             tpi (hae-tpin-tiedot lomakkeen-tiedot)]
         {:otsikko "Bonus"
@@ -201,19 +202,21 @@
                                nil)
                          "- valitse käsittelytapa -")
        :valinnat sanktio-domain/kasittelytavat}
-      {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
-       :tyyppi :komponentti
-       ::lomake/col-luokka "col-xs-12"
-       :komponentti (fn [_]
-                      [liitteet/liitteet-ja-lisays urakka-id (get-in app [:lomake :liitteet])
-                       {:uusi-liite-atom (r/wrap uusi-liite
-                                           #(e! (tiedot/->LisaaLiite %)))
-                        :uusi-liite-teksti "Lisää liite"
-                        :salli-poistaa-lisatty-liite? true
-                        :poista-lisatty-liite-fn #(e! (tiedot/->PoistaLisattyLiite))
-                        :salli-poistaa-tallennettu-liite? true
-                        :nayta-lisatyt-liitteet? false
-                        :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])}]
+      ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
+      (when-not lukutila?
+        {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
+         :tyyppi :komponentti
+         ::lomake/col-luokka "col-xs-12"
+         :komponentti (fn [_]
+                        [liitteet/liitteet-ja-lisays urakka-id (get-in app [:lomake :liitteet])
+                         {:uusi-liite-atom (r/wrap uusi-liite
+                                             #(e! (tiedot/->LisaaLiite %)))
+                          :uusi-liite-teksti "Lisää liite"
+                          :salli-poistaa-lisatty-liite? true
+                          :poista-lisatty-liite-fn #(e! (tiedot/->PoistaLisattyLiite))
+                          :salli-poistaa-tallennettu-liite? true
+                          :nayta-lisatyt-liitteet? false
+                          :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])})]
      lomakkeen-tiedot]))
 
 (defn bonukset*
