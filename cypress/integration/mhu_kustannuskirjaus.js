@@ -26,13 +26,13 @@ let avaaKulunKirjaus = () => {
 
 let valitseKulunPvm = () => {
     cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
-        cy.get('button').click();
-        cy.contains('Syyskuu - 1. hoitovuosi').click();
+        cy.get('button').click({force: true});
+        cy.contains('Syyskuu - 2. hoitovuosi').click();
     })
 
     cy.get('.kalenteri-kontti').within(() => {
         cy.get('input').click();
-        cy.get('td').contains('30').click();
+        cy.get('td').contains('29').click();
     })
 }
 
@@ -41,9 +41,9 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
 
     cy.contains('Kulujen kohdistus')
 
-    cy.get('.pvm-kentta > input').eq(0).type('{selectall}30.09.2020')
-    cy.get('.pvm-kentta > input').eq(1).type('{selectall}30.09.2020')
-    cy.get('.pvm-kentta > input').eq(1).should('have.value', "30.09.2020").type('{enter}');
+    cy.get('.pvm-kentta > input').eq(0).type('{selectall}29.09.2021')
+    cy.get('.pvm-kentta > input').eq(1).type('{selectall}29.09.2021')
+    cy.get('.pvm-kentta > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
 
     if (Array.isArray(kuluTaiKulut)) {
