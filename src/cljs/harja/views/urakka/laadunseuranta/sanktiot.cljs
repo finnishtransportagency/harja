@@ -71,7 +71,7 @@
                                           :bonukset "Bonus"}} tila]
    [:hr]])
 
-(defn sanktion-tiedot
+(defn sivupaneeli
   [_]
   (let [tila (atom {:lukutila true :lomake :sanktiot})]
     (komp/luo      
@@ -578,5 +578,5 @@
               {:leveys "600px" :sulku-fn #(do
                                             (reset! auki? false)
                                             (reset! tiedot/valittu-sanktio nil))}
-              [sanktion-tiedot (assoc optiot :auki? auki?)]])
+              [sivupaneeli (assoc optiot :auki? auki?)]])
            [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])))))
