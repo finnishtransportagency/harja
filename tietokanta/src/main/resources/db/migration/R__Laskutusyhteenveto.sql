@@ -393,7 +393,7 @@ BEGIN
     vahinkojen_korjaukset_laskutetaan_ind_korotettuna := 0.0;
     vahinkojen_korjaukset_laskutetaan_ind_korotus := 0.0;
 
-    FOR mhti IN SELECT COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS mht_summa,
+    FOR mhti IN SELECT COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta, 0) AS mht_summa,
                        tot.alkanut AS tot_alkanut,
 		       tt.indeksi,
 		       tot.tyyppi
