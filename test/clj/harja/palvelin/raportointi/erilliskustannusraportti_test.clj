@@ -159,7 +159,13 @@
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Alihankinta­bonus"
                         500M
-                        56.18231046931407942000M]
+                        0]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Muu bonus"
+                        1000M
+                        0]
                        ["15.10.2019"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
@@ -171,13 +177,19 @@
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Alihankinta­bonus"
                         1000M
-                        90.55354993983152828000M]
+                        0]
+                       ["15.10.2019"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "As.tyyt.­bonus"
+                        1000M
+                        124.02226233453670277000M]
                        ("Yhteensä"
                          ""
                          ""
                          ""
-                         3000M
-                         293.47172081829121540000M))]]))))
+                         5000M
+                         270.75812274368231047000M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
