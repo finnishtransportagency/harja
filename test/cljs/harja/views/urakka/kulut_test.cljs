@@ -2,14 +2,9 @@
   "Kulut näkymän testi"
   (:require [cljs.test :as t :refer-macros [deftest is testing async]]
             [harja.testutils.shared-testutils :as u]
-            [harja.testutils :refer [fake-palvelut-fixture fake-palvelukutsu
-                                     jvh-fixture]]
-            [reagent.core :as r]
-            [harja.views.urakka.kulut :as kulut]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.urakka.kulut :refer [paivamaaran-valinta]]
-            [harja.pvm :as pvm])
-  (:require-macros [harja.testutils.macros :refer [komponenttitesti]]))
+            [harja.views.urakka.kulut.kulut :refer [paivamaaran-valinta]]
+            [harja.pvm :as pvm]))
 
 (t/use-fixtures :each u/komponentti-fixture)
 

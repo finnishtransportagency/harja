@@ -1,4 +1,4 @@
-(ns harja.views.urakka.kulut)
+(ns harja.views.urakka.kulut.kulut)
 
 (defmacro
   lomakkeen-osio

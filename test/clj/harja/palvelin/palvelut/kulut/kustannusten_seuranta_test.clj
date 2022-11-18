@@ -576,14 +576,22 @@ UNION ALL
 (deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
-        alkupvm "2019-10-01"
-        loppupvm "2020-09-30"
-        hoitokauden-alkuvuosi 2019
+        alkupvm "2020-10-01"
+        loppupvm "2021-09-30"
+        hoitokauden-alkuvuosi 2020
         kulun-summa 105.01
+        ;; Päivitellään kulun tiedot sellaiselle hoitokaudelle, jolle ei ole tehty välikatselmusta
+        kulu (uusi-kulu urakka-id kulun-summa)
+        kulu (-> kulu
+               (assoc :erapaiva (pvm/->pvm "15.08.2021")
+                      :koontilaskun-kuukausi "elokuu/2-hoitovuosi")
+               (assoc-in [:kohdistukset 0 :suoritus-alku] (pvm/->pvm "14.08.2021"))
+               (assoc-in [:kohdistukset 0 :suoritus-loppu] (pvm/->pvm "17.08.2021")))
+
         ;; Lisää uusi kulu listyöstä johto-ja hallintakorvaukselle
         _ (kutsu-http-palvelua :tallenna-kulu urakkavastaava
                                    {:urakka-id urakka-id
-                                    :kulu-kohdistuksineen (uusi-kulu urakka-id kulun-summa)})
+                                    :kulu-kohdistuksineen kulu})
 
         vastaus (hae-kustannukset urakka-id hoitokauden-alkuvuosi alkupvm loppupvm)
         lisatyot (filter
