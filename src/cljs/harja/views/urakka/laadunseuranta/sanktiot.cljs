@@ -184,13 +184,15 @@
                       :uusi-rivi? true :nimi :laji
                       :hae (comp keyword :laji)
                       :aseta (fn [rivi arvo]
-                               (let [rivi (-> rivi
+                               (let [;; Ota vanha tyyppi talteen, mikäli se on asetettu
+                                     vanha-tyyppi (:tyyppi rivi)
+                                     rivi (-> rivi
                                             (assoc :laji arvo)
                                             (dissoc :tyyppi)
                                             (assoc :tyyppi nil))
                                      s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
                                                 arvo kaikki-sanktiotyypit urakan-alkupvm)
-                                     rivi (if
+                                     rivi (cond
                                             ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                             ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
                                             (and
@@ -201,7 +203,13 @@
                                               :toimenpideinstanssi
                                               (when (:toimenpidekoodi (first s-tyypit))
                                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi (first s-tyypit))))))
-                                            rivi)]
+                                            ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
+                                            (and (> (count s-tyypit) 1)
+                                              (some #(= vanha-tyyppi %) s-tyypit))
+                                            (assoc rivi :tyyppi vanha-tyyppi
+                                                        :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                                            ;; Muussa tapauksessa, ei tehdä muutoksia
+                                            :else rivi)]
                                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                    rivi)))
