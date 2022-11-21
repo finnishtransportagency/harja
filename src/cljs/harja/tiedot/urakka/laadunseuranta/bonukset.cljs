@@ -85,13 +85,14 @@
   (process-event
     [{:keys [liite-id]} app]
     (let [{urakka-id :id} @nav/valittu-urakka
-          e! (tuck/current-send-function)]
-      (liitteet/poista-liite-kannasta
-        {:urakka-id urakka-id
-         :domain :bonukset
-         :domain-id (get-in app [:lomake :id])
-         :liite-id liite-id
-         :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})))
+          e! (tuck/current-send-function)
+          _ (liitteet/poista-liite-kannasta
+              {:urakka-id urakka-id
+               :domain :bonukset
+               :domain-id (get-in app [:lomake :id])
+               :liite-id liite-id
+               :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})]
+      app))
   LisaaLiite
   (process-event
     [{liite :liite} app]

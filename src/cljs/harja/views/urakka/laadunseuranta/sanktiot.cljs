@@ -71,7 +71,7 @@
                                           :bonukset "Bonus"}} tila]
    [:hr]])
 
-(defn sanktion-tiedot
+(defn sivupaneeli
   [_]
   (let [tila (atom {:lukutila true :lomake :sanktiot})]
     (komp/luo      
@@ -138,6 +138,7 @@
                    :muokkaa! #(reset! tiedot/valittu-sanktio %)
                    :validoi-alussa? false
                    :voi-muokata? (and voi-muokata? (not lukutila?))
+                   :tarkkaile-ulkopuolisia-muutoksia? true
                    :footer-fn (fn [sanktio]
                                 [:span.nappiwrappi.flex-row
                                  (when-not lukutila?
@@ -183,24 +184,32 @@
                       :uusi-rivi? true :nimi :laji
                       :hae (comp keyword :laji)
                       :aseta (fn [rivi arvo]
-                               (let [rivi (-> rivi
+                               (let [;; Ota vanha tyyppi talteen, mikäli se on asetettu
+                                     vanha-tyyppi (:tyyppi rivi)
+                                     rivi (-> rivi
                                             (assoc :laji arvo)
                                             (dissoc :tyyppi)
                                             (assoc :tyyppi nil))
                                      s-tyypit (sanktio-domain/sanktiolaji->sanktiotyypit
                                                 arvo kaikki-sanktiotyypit urakan-alkupvm)
-                                     rivi (if-let [{tpk :toimenpidekoodi :as tyyppi}
-                                                   (and
-                                                     (and (= 1 (count s-tyypit)) (first s-tyypit))
-                                                     ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
-                                                     ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                                     (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))]
+                                     rivi (cond
+                                            ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
+                                            ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
+                                            (and
+                                              (and (= 1 (count s-tyypit)) (first s-tyypit))
+                                              (not= (count @tiedot-urakka/urakan-toimenpideinstanssit) 1))
                                             (assoc rivi
-                                              :tyyppi tyyppi
+                                              :tyyppi (first s-tyypit)
                                               :toimenpideinstanssi
-                                              (when tpk
-                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                            rivi)]
+                                              (when (:toimenpidekoodi (first s-tyypit))
+                                                (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi (first s-tyypit))))))
+                                            ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
+                                            (and (> (count s-tyypit) 1)
+                                              (some #(= vanha-tyyppi %) s-tyypit))
+                                            (assoc rivi :tyyppi vanha-tyyppi
+                                                        :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                                            ;; Muussa tapauksessa, ei tehdä muutoksia
+                                            :else rivi)]
                                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
                                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                                    rivi)))
@@ -375,7 +384,11 @@
                                           [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"]]))}
                        {:otsikko "Laskutuskuukausi"
                         :nimi :perintapvm
-                        :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
+                        :fmt (fn [kk]
+                               (some #(when (and
+                                              (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
+                                              (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                                 laskutuskuukaudet))
                         :pakollinen? true
                         :tyyppi :pvm
                         ::lomake/col-luokka "col-xs-6"}))
@@ -543,10 +556,13 @@
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
-          :leveys 3 :fmt #(or % "–")})
+          :leveys 3 :fmt #(cond
+                            (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
+                            (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
+                            :else "–")})
        (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
                               :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
-       {:otsikko "Perus\u00ADtelu" :nimi :perustelu :leveys 3.5
+       {:otsikko "Perustelu" :nimi :perustelu :leveys 3.5
         :tyyppi :komponentti :komponentti sanktion-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
@@ -574,5 +590,5 @@
               {:leveys "600px" :sulku-fn #(do
                                             (reset! auki? false)
                                             (reset! tiedot/valittu-sanktio nil))}
-              [sanktion-tiedot (assoc optiot :auki? auki?)]])
+              [sivupaneeli (assoc optiot :auki? auki?)]])
            [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])))))
