@@ -19,7 +19,7 @@
         valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)})]
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
-            :testikeskiarvo-sanktio :vaihtosanktio :lupaussanktio]
+            :testikeskiarvo-sanktio :vaihtosanktio]
           alueurakan-lajit-ennen-2023 mhu-lajit-ennen-2023)
       "Hoidon sanktiolajit urakoille ennen 2023")
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]

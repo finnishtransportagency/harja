@@ -1,6 +1,7 @@
 (ns ^:integraatio harja.palvelin.palvelut.status-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
             [cheshire.core :as cheshire]
+            [harja.palvelin.asetukset :as a]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
@@ -171,10 +172,12 @@
           _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
           ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'sonja', NOW());"))
           _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
-          _ (Thread/sleep 1000)
-          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-      (is (= (-> vastaus :body (cheshire/decode true)
-               (dissoc :viesti))
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
+          body (-> vastaus
+                 :body
+                 (cheshire/decode true)
+                 (dissoc :viesti))]
+      (is (= body
             {:harja-ok? true
              :itmf-yhteys-ok? true
              :replikoinnin-tila-ok? true
@@ -184,15 +187,20 @@
 
 (deftest uusi-status-vastaa-virhetta
   (testing "Uusi statuskysely palauttaa virhettä"
-    (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
-          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-            (is (= (-> vastaus
-               :body
-               (cheshire/decode true)
-               (dissoc :viesti))
-            {:harja-ok? false
-             :itmf-yhteys-ok? true
-             :replikoinnin-tila-ok? true
-             :sonja-yhteys-ok? false
+    (let [;; Pakota replica pois käytöstä
+          _ (swap! a/pois-kytketyt-ominaisuudet conj :replica-db) ;; Pakota replica pois käytöstä
+          _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
+          _ (swap! a/pois-kytketyt-ominaisuudet disj :replica-db) ;; Pakota replica käyttöön
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
+          body (-> vastaus
+                 :body
+                 (cheshire/decode true)
+                 (dissoc :viesti))
+          sorted-body (into (sorted-map) body)]
+      (is (= sorted-body
+            {:harja-ok? false,
+             :itmf-yhteys-ok? true,
+             :replikoinnin-tila-ok? true,
+             :sonja-yhteys-ok? false,
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))

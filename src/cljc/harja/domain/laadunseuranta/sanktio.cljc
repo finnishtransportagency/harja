@@ -128,7 +128,7 @@
     ;; Sanktiolajit MH- ja Alueurakoille, joiden alkuvuosi on yhtäsuuri tai pienempi kuin 2022
     (and (or (= :teiden-hoito tyyppi) (= :hoito tyyppi)) (<= (pvm/vuosi alkupvm) 2022))
     [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
-     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio :lupaussanktio]
+     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Sanktiolajit MH-urakoille, joiden alkuvuosi on suurempi tai yhtäsuuri kuin 2023
     ;; TODO: Speksi varmistettava (Tämä tulee eteen vielä myöhemmin. Sääntö lisätty jo etukäteen tähän tuleville 2023 urakoille.
