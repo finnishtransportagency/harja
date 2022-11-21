@@ -147,5 +147,6 @@
        (if @laatupoikkeamat/valittu-laatupoikkeama
          [laatupoikkeamalomake e! laatupoikkeamat/valittu-laatupoikkeama
           (merge optiot
-                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle})]
+                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
+                  :nakyma (:tyyppi @nav/valittu-urakka)})]
          [laatupoikkeamalistaus e! app optiot])])))
