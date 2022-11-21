@@ -196,7 +196,7 @@
       (is (= sorted-body
             {:harja-ok? false,
              :itmf-yhteys-ok? true,
-             :sonja-yhteys-ok? false,
              :replikoinnin-tila-ok? true,
+             :sonja-yhteys-ok? false,
              :yhteys-master-kantaan-ok? true,}))
       (is (= (get vastaus :status) 503)))))
