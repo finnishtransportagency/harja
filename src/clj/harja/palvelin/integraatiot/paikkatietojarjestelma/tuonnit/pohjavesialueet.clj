@@ -13,11 +13,11 @@
           geometria (.toString (:the_geom pohjavesialue))
           suolarajoitus true ;; Riippumatta geometria-aineiston pvsuola-arvosta, suolarajoitus voidaan aina antaa
           tr_numero (:tie pohjavesialue)
-          tr_alkuosa (:osa pohjavesialue)
-          tr_alkuetaisyys (:etaisyys pohjavesialue)
+          tr_alkuosa (:aosa pohjavesialue)
+          tr_alkuetaisyys (:aet pohjavesialue)
           tr_loppuosa (:losa pohjavesialue)
           tr_loppuetaisyys (:let pohjavesialue)
-          tr_ajorata (:ajorata pohjavesialue)
+          tr_ajorata (:ajr pohjavesialue)
           aineisto_id (:id pohjavesialue)]
       (p/luo-pohjavesialue! db
                             nimi
