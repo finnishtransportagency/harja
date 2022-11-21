@@ -181,7 +181,9 @@
                                               :laskutuskuukausi (:pvm %)))
                              :format-fn :teksti}
                             laskutuskuukaudet]
-                           [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"]])}
+                           ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
+                           (when (not @tiedot-urakka/yllapitourakka?)
+                             [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])])}
           {:otsikko "Laskutuskuukausi"
            :nimi :laskutuskuukausi
            :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
