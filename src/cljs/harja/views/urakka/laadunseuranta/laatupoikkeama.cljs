@@ -90,7 +90,7 @@
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [_sanktiot-atom _paatosoikeus? _laatupoikkeama _muokattava? optiot]
   (let [urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-        yllapito? @urakka/yllapidon-urakka?
+        yllapito? @urakka/yllapitourakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
         ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
@@ -326,7 +326,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                             #(sanktiotietoja-annettu? @laatupoikkeama))
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)
-               yllapito? @urakka/yllapidon-urakka?
+               yllapito? @urakka/yllapitourakka?
                nakyma (:nakyma optiot)
                vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
                yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]

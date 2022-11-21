@@ -508,9 +508,21 @@
                   (= :paikkaus urakkatyyppi)
                   (= :tiemerkinta urakkatyyppi)))))
 
-(def yllapidon-urakka?
+(def yllapitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (urakka-domain/yllapidon-urakka? urakkatyyppi))))
+              (urakka-domain/yllapitourakka? urakkatyyppi))))
+
+(def hoitourakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/hoitourakka? urakkatyyppi))))
+
+(def mh-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/mh-urakka? urakkatyyppi))))
+
+(def hj-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/hj-urakka? urakkatyyppi (:alkupvm @nav/valittu-urakka)))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
 

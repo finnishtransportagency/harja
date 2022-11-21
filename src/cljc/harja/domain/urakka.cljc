@@ -5,6 +5,7 @@
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.sopimus :as sopimus]
+            [harja.pvm :as pvm]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
             ])
@@ -106,6 +107,27 @@
       (vesivaylaurakkatyyppi? tyyppi) :vv
       :else :hoito)))
 
-(defn yllapidon-urakka?
+(defn yllapitourakka?
+  "Onko urakka tyyppiä ylläpidon urakka"
   [urakan-tyyppi]
   (boolean (some #{urakan-tyyppi} #{:paallystys :paikkaus :tiemerkinta :valaistus})))
+
+(defn mh-urakka?
+  "Onko urakka tyyppiä MHU (Maanteiden hoitourakka)"
+  [urakan-tyyppi]
+  (= :teiden-hoito urakan-tyyppi))
+
+(defn alueurakka?
+  "Onko urakka tyyppiä alueurakka (poistuva)"
+  [urakan-tyyppi]
+  (= :hoito urakan-tyyppi))
+
+(defn hoitourakka?
+  "Onko urakka MHU (Maanteiden hoitourakka) tai vanhantyyppinen alueurakka (poistuva)"
+  [urakan-tyyppi]
+  (or (mh-urakka? urakan-tyyppi) (alueurakka? urakan-tyyppi)))
+
+(defn hj-urakka?
+  "Onko urakka tyyppiä 'Hoidon johdon' urakka"
+  [urakan-tyyppi alkupvm]
+  (and (= :teiden-hoito urakan-tyyppi) (< (pvm/vuosi alkupvm) 2019)))

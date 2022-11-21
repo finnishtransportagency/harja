@@ -118,7 +118,7 @@
     (apply sorted-set-by
       jarjesta-suodattimet
       (cond
-        (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
+        (u-domain/yllapitourakka? (:tyyppi @nav/valittu-urakka))
         (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
 
         :else sanktio-bonus-suodattimet-oletusarvo))))

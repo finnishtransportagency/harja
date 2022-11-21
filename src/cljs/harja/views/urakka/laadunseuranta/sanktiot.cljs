@@ -582,7 +582,7 @@
       (fn []
         (let [optiot (merge optiot
                        {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                        :yllapito? @tiedot-urakka/yllapidon-urakka?
+                        :yllapito? @tiedot-urakka/yllapitourakka?
                         :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
           [:div.laadunseuranta
            (when @auki?

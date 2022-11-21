@@ -137,7 +137,7 @@
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     :else []))
@@ -146,7 +146,7 @@
   [{:keys [tyyppi alkupvm] :as urakka}]
   (cond
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     ;; MHU ja muut

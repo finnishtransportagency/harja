@@ -66,7 +66,7 @@
        (when (valilehti-mahdollinen? :laatupoikkeamat ur)
          [tuck/tuck tila/laatupoikkeamat laatupoikkeamat/laatupoikkeamat])
 
-       (if @tiedot-urakka/yllapidon-urakka? "Sakot ja bonukset" "Sanktiot ja bonukset") :sanktiot
+       (if @tiedot-urakka/yllapitourakka? "Sakot ja bonukset" "Sanktiot ja bonukset") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
          [sanktiot/sanktiot])
 
