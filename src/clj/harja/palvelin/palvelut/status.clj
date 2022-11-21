@@ -161,11 +161,11 @@
   "Haetaan komponenttien status tietokannasta."
   [db]
   (let [komponenttien-tila (status-kyselyt/hae-komponenttien-tila db)
-        tilaviesti (reduce (fn [viestit {:keys [status komponentti] :as tila}]
+        tilaviesti (reduce (fn [viestit {:keys [status komponentti palvelin] :as tila}]
                         (let [viesti (cond
-                                       (= "nok" status) (str (str/upper-case komponentti) " rikki")
-                                       (= "hidas" status) (str (str/upper-case komponentti) " käy hitaalla.")
-                                       (= "ei-kaytossa" status) (str (str/upper-case komponentti) " ei ole käytössä")
+                                       (= "nok" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " rikki")
+                                       (= "hidas" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " käy hitaalla.")
+                                       (= "ei-kaytossa" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " ei ole käytössä")
                                        :else nil)
                               tulos (if viesti
                                       (str viesti ", " viestit)
@@ -174,11 +174,13 @@
                 "" komponenttien-tila)
         tarkista-status-fn (fn [status]
                              (or (= "ok" status) (= "ei-kaytossa" status) false))
-        harja-ok? (every? #(not= "nok" (:status %)) komponenttien-tila)
-        itmf-yhteys-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "tloik") komponenttien-tila))
-        sonja-yhteys-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "sonja") komponenttien-tila))
-        replikoinnin-tila-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila))
-        yhteys-master-kantaan-ok? (every? #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila))
+        ;; Yksittäinen komponentti on ok, jos joltakin palvelimelta on saatu ok status
+        itmf-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "tloik") komponenttien-tila)) false)
+        sonja-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "sonja") komponenttien-tila)) false)
+        replikoinnin-tila-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila)) false)
+        yhteys-master-kantaan-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila)) false)
+        ;; Harja on ok, mikäli kaikki komponentit on ok
+        harja-ok? (every? true? [itmf-yhteys-ok? sonja-yhteys-ok? replikoinnin-tila-ok? yhteys-master-kantaan-ok?])
         viesti (cond
                  (empty? tilaviesti) "Harja ok"
                  (and (not (empty? tilaviesti)) harja-ok?)  (str "Harja ok" ", " tilaviesti)

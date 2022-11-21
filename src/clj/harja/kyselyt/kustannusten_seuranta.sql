@@ -428,7 +428,9 @@ SELECT 0                    AS budjetoitu_summa,
                          FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
                                                              (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
                                                              coalesce(ek.rahasumma, 0)::NUMERIC,
-                                                             (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC)))
+                                                             (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC,
+                                                            -- MH-urakoissa pyöristestään indeksikerroin kolmeen desimaaliin (eli prosentin kymmenykseen).
+                                                             TRUE)))
            ELSE SUM(ek.rahasumma)
            END              AS toteutunut_summa,
        'bonus'              AS maksutyyppi,

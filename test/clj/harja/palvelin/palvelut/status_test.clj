@@ -167,26 +167,32 @@
                                        :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))
 (deftest uusi-status-toimii
   (testing "Uusi statuskysely toimii"
-    (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
+    (let [;; Lisää sonja tila ok:ksi tietokantaan
+          _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
+          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'sonja', NOW());"))
+          _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
+          _ (Thread/sleep 1000)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-      (is (= (-> vastaus :body (cheshire/decode true))
+      (is (= (-> vastaus :body (cheshire/decode true)
+               (dissoc :viesti))
             {:harja-ok? true
              :itmf-yhteys-ok? true
              :replikoinnin-tila-ok? true
              :sonja-yhteys-ok? true
-             :viesti "Harja ok, TLOIK ei ole käytössä, REPLICA ei ole käytössä, "
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 200)))))
 
 (deftest uusi-status-vastaa-virhetta
-  (testing "Uusi statuskysely toimii"
+  (testing "Uusi statuskysely palauttaa virhettä"
     (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-      (is (= (-> vastaus :body (cheshire/decode true))
+            (is (= (-> vastaus
+               :body
+               (cheshire/decode true)
+               (dissoc :viesti))
             {:harja-ok? false
              :itmf-yhteys-ok? true
-             :replikoinnin-tila-ok? false
-             :sonja-yhteys-ok? true
-             :viesti "TLOIK ei ole käytössä, REPLICA rikki, "
+             :replikoinnin-tila-ok? true
+             :sonja-yhteys-ok? false
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))
