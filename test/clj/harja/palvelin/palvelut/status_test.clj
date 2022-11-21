@@ -171,10 +171,12 @@
           _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
           ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'sonja', NOW());"))
           _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
-          _ (Thread/sleep 1000)
-          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-      (is (= (-> vastaus :body (cheshire/decode true)
-               (dissoc :viesti))
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
+          body (-> vastaus
+                 :body
+                 (cheshire/decode true)
+                 (dissoc :viesti))]
+      (is (= body
             {:harja-ok? true
              :itmf-yhteys-ok? true
              :replikoinnin-tila-ok? true
@@ -185,14 +187,16 @@
 (deftest uusi-status-vastaa-virhetta
   (testing "Uusi statuskysely palauttaa virhettä"
     (let [_ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
-          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)]
-            (is (= (-> vastaus
-               :body
-               (cheshire/decode true)
-               (dissoc :viesti))
-            {:harja-ok? false
-             :itmf-yhteys-ok? true
-             :replikoinnin-tila-ok? true
-             :sonja-yhteys-ok? false
-             :yhteys-master-kantaan-ok? true}))
+          vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
+          body (-> vastaus
+                 :body
+                 (cheshire/decode true)
+                 (dissoc :viesti))
+          sorted-body (into (sorted-map) body)]
+      (is (= sorted-body
+            {:harja-ok? false,
+             :itmf-yhteys-ok? true,
+             :sonja-yhteys-ok? false,
+             :replikoinnin-tila-ok? true,
+             :yhteys-master-kantaan-ok? true,}))
       (is (= (get vastaus :status) 503)))))
