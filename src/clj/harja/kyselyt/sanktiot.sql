@@ -220,7 +220,38 @@ SELECT ek.id,
                                     AND tpk2.koodi = '23150'
                                   LIMIT 1)
    AND ek.pvm BETWEEN :alku AND :loppu
-   AND ek.poistettu IS NOT TRUE;
+   AND ek.poistettu IS NOT TRUE
+
+UNION
+
+-- Hae ylläpidon urakoille poikkeuksellisesti bonus sanktio-taulusta
+SELECT s.id,
+       s.perintapvm AS perintapvm,
+       s.maara AS summa,
+       'yllapidon_bonus' AS laji,
+       s.indeksi AS indeksi,
+       TRUE AS suorasanktio,
+       TRUE AS bonus,
+       NULL AS laskutuskuukausi,
+       lp.kasittelytapa AS kasittelytapa,
+       s.toimenpideinstanssi AS toimenpideinstanssi,
+       0 AS indeksikorjaus,
+       lp.perustelu AS laatupoikkeama_paatos_perustelu
+  FROM sanktio s
+           JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+ WHERE lp.urakka = :urakka
+   AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
+   AND s.toimenpideinstanssi = (SELECT tpi.id AS id
+                                  FROM toimenpideinstanssi tpi
+                                           JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+                                           JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+                                       maksuera m
+                                 WHERE tpi.urakka = :urakka
+                                   AND m.toimenpideinstanssi = tpi.id
+                                   AND tpk2.koodi = '23150'
+                                 LIMIT 1)
+   AND s.perintapvm BETWEEN :alku AND :loppu
+   AND s.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-lupausbonukset
 -- Lupausbonukset
