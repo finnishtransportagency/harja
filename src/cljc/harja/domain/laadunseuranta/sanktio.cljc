@@ -205,6 +205,9 @@
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
+    ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
+    ;; Eli, tämä tyyppi ei ole yksi erilliskustannustyypeistä, vaan yksi sanktiolajeista.
+    :yllapidon_bonus "Ylläpidon bonus"
     "- Valitse tyyppi -"))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
@@ -215,11 +218,17 @@
              (= :muu-bonus %)
              true)
           (cond
-            (= :hoito urakkatyyppi)
+            (urakka-domain/alueurakka? urakkatyyppi)
             [:asiakastyytyvaisyysbonus :muu-bonus]
-            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
             [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
-            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
             [:muu-bonus]
-            :default
+
+            ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
+            ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
+            (urakka-domain/yllapitourakka? urakkatyyppi)
+            [:yllapidon_bonus]
+
+            :else
             [:asiakastyytyvaisyysbonus :muu-bonus])))
