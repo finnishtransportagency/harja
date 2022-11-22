@@ -163,7 +163,8 @@
   (= :muistutus (:laji rivi)))
 
 (defn- bonus? [rivi]
-  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus}
+  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus
+     :yllapidon_bonus}
    (:laji rivi)))
 
 (defn- sanktio? [rivi]
