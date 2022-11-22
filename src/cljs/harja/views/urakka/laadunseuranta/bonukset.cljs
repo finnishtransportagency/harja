@@ -4,12 +4,14 @@
             [tuck.core :as tuck]
 
             [harja.pvm :as pvm]
-            
+
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            
+            [harja.domain.yllapitokohde :as yllapitokohde-domain]
+
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
 
@@ -56,11 +58,19 @@
     @tiedot-urakka/urakan-toimenpideinstanssit))
 
 (defn bonukset-lomake
+  "MH-urakoidan ja ylläpitourakoiden yhteinen bonuslomake.
+  Huomioitavaa on, että ylläpidon urakoiden bonukset tallennetaankin oikeasti sanktioina, eikä bonuksina.
+  Ylläpidon urakoiden bonuslomakkeessa on myös muita pieniä poikkeuksia."
   [sulje-fn lukutila? voi-muokata? e! app]
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
-        laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)]
+        laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)
+
+        ;; Lista ylläpitokohteista ylläpitourakoiden kohteenvalintaa varten
+        yllapitokohteet (conj
+                          @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
+                          {:id nil})]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
@@ -99,6 +109,27 @@
          :valinta-nayta sanktio-domain/bonustyypin-teksti
          ::lomake/col-luokka "col-xs-12"
          :validoi [[:ei-tyhja "Valitse laji"]]})
+
+      (when @tiedot-urakka/yllapitourakka?
+        {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+         :pakollinen? false :muokattava? (constantly voi-muokata?)
+         ::lomake/col-luokka "col-xs-12"
+         :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
+         :valinta-nayta (fn [arvo voi-muokata?]
+                          (if (:id arvo)
+                            (yllapitokohde-domain/yllapitokohde-tekstina
+                              arvo
+                              {:osoite {:tr-numero (:tr-numero arvo)
+                                        :tr-alkuosa (:tr-alkuosa arvo)
+                                        :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                        :tr-loppuosa (:tr-loppuosa arvo)
+                                        :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                            (if (and voi-muokata? (not arvo))
+                              "- Valitse kohde -"
+                              (if (and voi-muokata? (nil? (:id arvo)))
+                                "Ei liity kohteeseen"
+                                ""))))})
+
       {:otsikko "Perustelu"
        :nimi :lisatieto
        :tyyppi :text
@@ -221,6 +252,7 @@
                           :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])})]
      lomakkeen-tiedot]))
 
+
 (defn bonukset*
   [auki? avattu-bonus haetut-sanktiot lukutila? voi-muokata?]
   (let [sulje-fn #(do
@@ -245,4 +277,5 @@
                                            (bonus->lomake avattu-bonus))
                                          {})})]
     (fn [_ _ _ lukutila? voi-muokata?]
-      [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)])))
+      [tuck/tuck bonukset-tila
+       (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)])))
