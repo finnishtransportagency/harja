@@ -56,8 +56,10 @@
     @tiedot-urakka/urakan-toimenpideinstanssit))
 
 (defn bonukset-lomake
-  [sulje-fn lukutila? voi-muokata? e! app]
-  (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
+  [sulje-fn lukutila? oikeudet-muokata? e! app]
+  (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu? tyyppi]} app
+        ;; Lupausbonus on aina lukutilassa. Niitä hallitaan välikatselmuksista
+        lukutila? (if (= tyyppi :lupausbonus) true lukutila?)
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
         laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)]
@@ -71,24 +73,29 @@
       :tarkkaile-ulkopuolisia-muutoksia? true
       :luokka "padding-16 taustavari-taso3"
       :validoi-alussa? false
-      :voi-muokata? (and voi-muokata? (not lukutila?))
+      :voi-muokata? (and oikeudet-muokata? (not lukutila?))
       :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
       :footer-fn (fn [bonus]
-                   (when-not lukutila?
-                     [:<>
-                      [:span.nappiwrappi.flex-row
-                       [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
-                        {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}]
-                       (when (:id lomakkeen-tiedot)
-                         [napit/kielteinen "Poista" (fn [_]
-                                                      (varmista-kayttajalta/varmista-kayttajalta
-                                                        {:otsikko "Bonuksen poistaminen"
-                                                         :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
-                                                         :modal-luokka "varmistus-modal"
-                                                         :hyvaksy "Poista"
-                                                         :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
-                          {:luokka "oikealle"}])
-                       [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]]))}
+                   [:<>
+                    [:span.nappiwrappi.row
+                     [:div.col-xs-8 {:style {:padding-left "0"}}
+                      (when-not lukutila?
+                        [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
+                         {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}])]
+                     [:div.col-xs-4 {:style (merge
+                                              {:text-align "end" :float "right"}
+                                              (when (not lukutila?)
+                                                {:display "contents"}))}
+                      (when (and (not lukutila?) (:id lomakkeen-tiedot))
+                        [napit/kielteinen "Poista" (fn [_]
+                                                     (varmista-kayttajalta/varmista-kayttajalta
+                                                       {:otsikko "Bonuksen poistaminen"
+                                                        :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
+                                                        :modal-luokka "varmistus-modal"
+                                                        :hyvaksy "Poista"
+                                                        :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
+                         {:luokka "oikealle"}])
+                      [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]]])}
      [(let [hae-tpin-tiedot (comp hae-tpi-idlla :toimenpideinstanssi)
             tpi (hae-tpin-tiedot lomakkeen-tiedot)]
         {:otsikko "Bonus"
@@ -160,7 +167,7 @@
                       (assoc :laskutuskuukausi-komp-tiedot lk)
 
                       true (assoc :pvm arvo))))}
-        (if (and voi-muokata? (not lukutila?))
+        (if (and oikeudet-muokata? (not lukutila?))
           {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
            :pakollinen? true
            :tyyppi :komponentti
@@ -220,7 +227,7 @@
      lomakkeen-tiedot]))
 
 (defn bonukset*
-  [auki? avattu-bonus haetut-sanktiot lukutila? voi-muokata?]
+  [auki? avattu-bonus haetut-sanktiot lukutila? oikeudet-muokata?]
   (let [sulje-fn #(do
                     (when (some? (:id %))
                       (if (some (fn [rivi] (= (:id rivi) (:id %))) @haetut-sanktiot)
@@ -242,5 +249,5 @@
                                          (when (some? (:id avattu-bonus))
                                            (bonus->lomake avattu-bonus))
                                          {})})]
-    (fn [_ _ _ lukutila? voi-muokata?]
-      [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)])))
+    (fn [_ _ _ lukutila? oikeudet-muokata?]
+      [tuck/tuck bonukset-tila (r/partial bonukset-lomake sulje-fn lukutila? oikeudet-muokata?)])))

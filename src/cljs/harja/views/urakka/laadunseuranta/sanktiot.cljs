@@ -98,11 +98,12 @@
               suorasanktio? (some? (:suorasanktio @muokattu))
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))
-              laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)]
+              laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
+              laji (:laji @muokattu)]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
-                  (str (laji->teksti (:laji @muokattu)))
+                  (str (laji->teksti laji))
 
                   (and muokataan-vanhaa? (not bonusten-syotto?))
                   "Muokkaa sanktiota"
@@ -114,7 +115,7 @@
                   "Lisää uusi")]
            (when-not muokataan-vanhaa?
              [bonus-sanktio-valikko (r/cursor tila [:lomake])])
-           (when (and lukutila? muokataan-vanhaa?)
+           (when (and lukutila? muokataan-vanhaa? (not (= :lupausbonus laji)) (not (= :lupaussanktio laji)))
              [:div.flex-row.alkuun.valistys16
               [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
                {:disabled (not suorasanktio?)}]
