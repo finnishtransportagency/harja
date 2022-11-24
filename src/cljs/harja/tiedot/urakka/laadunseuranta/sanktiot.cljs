@@ -167,8 +167,10 @@
    (:laji rivi)))
 
 (defn- sanktio? [rivi]
-  ((disj (set @urakka/valitun-urakan-sanktiolajit) :arvonvahennyssanktio :muistutus)
-   (:laji rivi)))
+  (let [sanktiolajit (-> (set @urakka/valitun-urakan-sanktiolajit)
+                       (disj :arvonvahennyssanktio :muistutus)
+                       (conj :lupaussanktio))]              ; lupaussanktio ei ole listassa, koska sitä ei voi ui:lta valita
+    (sanktiolajit (:laji rivi))))
 
 (defn- arvonvahennys? [rivi]
   (= :arvonvahennyssanktio (:laji rivi)))
