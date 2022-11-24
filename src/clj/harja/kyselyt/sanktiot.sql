@@ -211,7 +211,16 @@ SELECT ek.id,
                                                     NULL::SANKTIOLAJI))
            ELSE 0
            END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
-       ek.lisatieto           AS laatupoikkeama_paatos_perustelu -- TODO Varmista, mutta näyttää hyvältä
+       ek.lisatieto           AS lisatieto,
+       --  Muilla urakkatyypeillä kuin ylläpidon urakoilla ei voi olla bonukseen liitettyä ylläpitokohdetta
+       NULL AS yllapitokohde_tr_numero,
+       NULL AS yllapitokohde_tr_alkuosa,
+       NULL AS yllapitokohde_tr_alkuetaisyys,
+       NULL AS yllapitokohde_tr_loppuosa,
+       NULL AS yllapitokohde_tr_loppuetaisyys,
+       NULL AS yllapitokohde_numero,
+       NULL AS yllapitokohde_nimi,
+       NULL AS yllapitokohde_id
   FROM erilliskustannus ek
  WHERE ek.urakka = :urakka
    AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
@@ -244,9 +253,19 @@ SELECT s.id,
        lp.kasittelytapa AS kasittelytapa,
        s.toimenpideinstanssi AS toimenpideinstanssi,
        0 AS indeksikorjaus,
-       lp.perustelu AS laatupoikkeama_paatos_perustelu
+       lp.perustelu AS lisatieto,
+       -- Ylläpitourakoilla voi olla bonukseen liitetty ylläpitokohde
+       ypk.tr_numero                       AS yllapitokohde_tr_numero,
+       ypk.tr_alkuosa                      AS yllapitokohde_tr_alkuosa,
+       ypk.tr_alkuetaisyys                 AS yllapitokohde_tr_alkuetaisyys,
+       ypk.tr_loppuosa                     AS yllapitokohde_tr_loppuosa,
+       ypk.tr_loppuetaisyys                AS yllapitokohde_tr_loppuetaisyys,
+       ypk.kohdenumero                     AS yllapitokohde_numero,
+       ypk.nimi                            AS yllapitokohde_nimi,
+       ypk.id                              AS yllapitokohde_id
   FROM sanktio s
            JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+           LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
  WHERE lp.urakka = :urakka
    AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
    AND s.perintapvm BETWEEN :alku AND :loppu

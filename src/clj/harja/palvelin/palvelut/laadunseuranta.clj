@@ -132,6 +132,13 @@
                           [])
         ;; Muutetaan sanktiot miinusmerkkisiksi
         urakan-sanktiot (map #(konv/muunna % [:summa :indeksikorjaus] -) urakan-sanktiot)
+        urakan-sanktiot (into []
+                          (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
+                            (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
+                            (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
+                                           :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
+                            (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %)))
+                          urakan-sanktiot)
         urakan-bonukset (if hae-bonukset?
                           (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
@@ -142,23 +149,22 @@
                                                                         :alku (konv/sql-timestamp alku)
                                                                         :loppu (konv/sql-timestamp loppu)})
                                 [])
-        sanktiot (into []
-                       (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-                             (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-                             (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
-                                            :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
-                             (map konv/alaviiva->rakenne)
-                             (map #(konv/decimal->double % :summa))
-                             (map #(konv/decimal->double % :indeksikorjaus))
-                             (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %))
-                             (map #(assoc % :laji (keyword (:laji %)))))
+        bonukset (into []
                    (concat
-                     urakan-sanktiot
                      urakan-bonukset
-                     urakan-lupausbonukset))]
+                     urakan-lupausbonukset))
+        sanktiot-ja-bonukset (into []
+                               (comp
+                                 (map konv/alaviiva->rakenne)
+                                 (map #(assoc % :laji (keyword (:laji %))))
+                                 (map #(konv/decimal->double % :summa))
+                                 (map #(konv/decimal->double % :indeksikorjaus)))
+                               (concat
+                                 urakan-sanktiot
+                                 bonukset))]
     (if vain-yllapitokohteettomat?
-      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
-      sanktiot)))
+      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
+      sanktiot-ja-bonukset)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id urakan-alkupvm]

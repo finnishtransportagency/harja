@@ -497,7 +497,10 @@
     (viesti/nayta! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
 
-(defn- sanktion-kuvaus [{:keys [suorasanktio laatupoikkeama]}]
+(defn- sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
+  ;; Bonuksilla ei tällä hetkellä ole kuvausta.
+  ;; Näytetään sanktion kode, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
+  ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
   (let [kohde (:kohde laatupoikkeama)]
     (if suorasanktio
       (or kohde "–")
@@ -507,18 +510,25 @@
        (str (when (get-in laatupoikkeama [:tr :numero])
               (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))
 
-(defn- sanktion-perustelu [{:keys [suorasanktio laatupoikkeama] :as param}]
-  (let [perustelu (get-in laatupoikkeama [:paatos :perustelu])
-        kuvaus (:kuvaus laatupoikkeama)]
-    (if suorasanktio
-      [:span
-       perustelu]
+(defn- sanktion-tai-bonuksen-perustelu [{:keys [bonus] :as sanktio-tai-bonus}]
+  ;; Bonuksille näytetään pelkästään lisätieto
+  (if bonus
+    [:span (:lisatieto sanktio-tai-bonus)]
 
-      [:<>
-       (str "Laatupoikkeaman kuvaus: " kuvaus)
-       [:br]
-       [:br]
-       (str "Päätöksen selitys: " perustelu)])))
+    ;; Sanktioilla on kaksi vaihtoehtoista tekstiä:
+    ;; Jos sanktio on ns. suorasanktio, eli tehty suoraan sanktiolomakkeella, näytetään perustelu laatupoikkeamasta.
+    ;; Jos sanktio on tehty laatupoikkeamat-välilehden kautta, niin näytetään perustelun lisäksi kuvaus.
+    (let [perustelu (get-in sanktio-tai-bonus [:laatupoikkeama :paatos :perustelu])
+          kuvaus (get-in sanktio-tai-bonus [:laatupoikkeama :kuvaus])]
+      (if (:suorasanktio sanktio-tai-bonus)
+        [:span
+         perustelu]
+
+        [:<>
+         (str "Laatupoikkeaman kuvaus: " kuvaus)
+         [:br]
+         [:br]
+         (str "Päätöksen selitys: " perustelu)]))))
 
 (defn sanktiolistaus
   [optiot valittu-urakka]
@@ -561,9 +571,9 @@
                             (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
                             :else "–")})
        (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
-                              :tyyppi :komponentti :komponentti sanktion-kuvaus :leveys 3})
+                              :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
        {:otsikko "Perustelu" :nimi :perustelu :leveys 3.5
-        :tyyppi :komponentti :komponentti sanktion-perustelu}
+        :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
                 "Muistutus")}

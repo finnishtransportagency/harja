@@ -21,35 +21,6 @@
             [harja.ui.liitteet :as liitteet]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]))
 
-(defn- kannasta->lomake
-  [avain]
-  (or (get tiedot/konversioavaimet avain)    
-    avain))
-
-
-(defn- bonus->lomake
-  ([bonus]
-   (bonus->lomake bonus {}))
-  ([bonus acc]
-   (reduce (fn [acc [avain tiedot]]
-             (cond
-               (map? tiedot)
-               (bonus->lomake tiedot acc)
-
-               (and
-                 (some? tiedot)
-                 (nil? (get acc avain))
-                 (not= avain (kannasta->lomake avain)))
-               (assoc acc (kannasta->lomake avain) tiedot)
-
-               (and (some? tiedot)
-                 (nil? (get acc avain)))
-               (assoc acc avain tiedot)
-               
-               :else
-               acc))
-     acc bonus)))
-
 (defn- hae-tpi-idlla
   [tpi-id]
   (some
@@ -102,7 +73,8 @@
      [(let [hae-tpin-tiedot (comp hae-tpi-idlla :toimenpideinstanssi)
             tpi (hae-tpin-tiedot lomakkeen-tiedot)]
         {:otsikko "Bonus"
-         :nimi :tyyppi
+         ;; Laji on bonuksen tyyppi. Tämä on vastaava käsite kuin sanktion laji.
+         :nimi :laji
          :tyyppi :valinta
          :pakollinen? true
          ;; Valitse ainoa, jos tyyppejä on vain yksi.
@@ -154,7 +126,7 @@
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
-         :nimi :rahasumma
+         :nimi :summa
          :tyyppi :euro
          :vaadi-positiivinen-numero? true
          :pakollinen? true
@@ -165,7 +137,7 @@
                                (= :asiakastyytyvaisyysbonus (:tyyppi lomakkeen-tiedot)))
                          [(:indeksi @nav/valittu-urakka) nil])]
           {:otsikko "Indeksi"
-           :nimi :indeksin_nimi
+           :nimi :indeksi
            :tyyppi :valinta
            :disabled? (nil? valinnat)
            ::lomake/col-luokka "col-xs-4"
@@ -174,7 +146,7 @@
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Käsitelty"
-         :nimi :pvm
+         :nimi :perintapvm
          :tyyppi :pvm
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
@@ -188,12 +160,12 @@
                              laskutuskuukaudet)]
                     (cond-> rivi
                       (nil? (:laskutuskuukausi rivi))
-                      (assoc :laskutuskuukausi (:pvm lk))
+                      (assoc :laskutuskuukausi (:perintapvm lk))
 
                       (nil? (:laskutuskuukausi-komp-tiedot rivi))
                       (assoc :laskutuskuukausi-komp-tiedot lk)
 
-                      true (assoc :pvm arvo))))}
+                      true (assoc :perintapvm arvo))))}
         (if (and voi-muokata? (not lukutila?))
           {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
            :pakollinen? true
@@ -236,7 +208,7 @@
                                :kommentit "Harja-kommenttien perusteella"
                                :muu "Muu tapa"
                                nil)
-                         "- valitse käsittelytapa -")
+                             "- valitse käsittelytapa -")
        :valinnat sanktio-domain/kasittelytavat}
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
       (when-not lukutila?
@@ -277,8 +249,12 @@
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
                                          (when (some? (:id avattu-bonus))
-                                           (bonus->lomake avattu-bonus))
+                                           avattu-bonus)
                                          {})})]
     (fn [_ _ _ lukutila? voi-muokata?]
-      [tuck/tuck bonukset-tila
-       (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)])))
+      [:<>
+       [harja.ui.debug/debug avattu-bonus]
+       [harja.ui.debug/debug @bonukset-tila]
+
+       [tuck/tuck bonukset-tila
+        (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)]])))
