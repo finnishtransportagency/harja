@@ -127,63 +127,7 @@ WHERE
         AND (lp.yllapitokohde IS NULL
         OR
              lp.yllapitokohde IS NOT NULL AND
-             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS FALSE)
-UNION ALL
-SELECT p.id,
-       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
-       p."urakoitsijan-maksu"                          AS summa,
-       p.tyyppi::TEXT                                  AS laji,
-       u.indeksi,
-       TRUE                                            AS suorasanktio,
-       NULL                                            as toimenpideinstanssi,
-       NULL                                            as vakiofraasi,
-       (SELECT korotus
-        FROM sanktion_indeksikorotus(MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15), u.indeksi,
-                                     p."tilaajan-maksu", :urakka::INTEGER,
-                                     NULL::SANKTIOLAJI))
-                                                       AS indeksikorjaus,
-       null                                            AS laatupoikkeama_id,
-       null                                            AS laatupoikkeama_kohde,
-       null                                            AS laatupoikkeama_aika,
-       null                                            AS laatupoikkeama_tekija,
-       null                                            AS laatupoikkeama_urakka,
-       null                                            AS laatupoikkeama_tekijanimi,
-       null                                            AS laatupoikkeama_paatos_kasittelyaika,
-       null                                            AS laatupoikkeama_paatos_paatos,
-       null                                            AS laatupoikkeama_paatos_kasittelytapa,
-       null                                            AS laatupoikkeama_paatos_muukasittelytapa,
-       null                                            AS laatupoikkeama_kuvaus,
-       CONCAT('Urakoitsija sai ', p."lupaus-toteutuneet-pisteet", ' pistettä ja lupasi ',
-              p."lupaus-luvatut-pisteet", ' pistettä') AS laatupoikkeama_paatos_perustelu,
-       null                                            AS laatupoikkeama_tr_numero,
-       null                                            AS laatupoikkeama_tr_alkuosa,
-       null                                            AS laatupoikkeama_tr_loppuosa,
-       null                                            AS laatupoikkeama_tr_alkuetaisyys,
-       null                                            AS laatupoikkeama_tr_loppuetaisyys,
-       null                                            AS laatupoikkeama_sijainti,
-       null                                            AS laatupoikkeama_tarkastuspiste,
-       null                                            AS laatupoikkeama_selvityspyydetty,
-       null                                            AS laatupoikkeama_selvitysannettu,
-
-       null                                            AS yllapitokohde_tr_numero,
-       null                                            AS yllapitokohde_tr_alkuosa,
-       null                                            AS yllapitokohde_tr_alkuetaisyys,
-       null                                            AS yllapitokohde_tr_loppuosa,
-       null                                            AS yllapitokohde_tr_loppuetaisyys,
-       null                                            AS yllapitokohde_numero,
-       null                                            AS yllapitokohde_nimi,
-       null                                            AS yllapitokohde_id,
-
-       null                                            AS tyyppi_nimi,
-       null                                            AS tyyppi_id,
-       null                                            AS tyyppi_toimenpidekoodi,
-       null                                            AS tyyppi_koodi
-FROM urakka_paatos p
-         JOIN urakka u ON u.id = p."urakka-id"
-WHERE p."urakka-id" = :urakka
-  AND p.tyyppi = 'lupaussanktio'
-  AND MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) BETWEEN :alku AND :loppu
-  AND p.poistettu IS NOT TRUE;
+             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS FALSE);
 
 -- name: hae-urakan-bonukset
 -- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
@@ -221,30 +165,6 @@ SELECT ek.id,
                                   LIMIT 1)
    AND ek.pvm BETWEEN :alku AND :loppu
    AND ek.poistettu IS NOT TRUE;
-
--- name: hae-urakan-lupausbonukset
--- Lupausbonukset
-SELECT p.id,
-       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
-       p."tilaajan-maksu"                              AS summa,
-       p.tyyppi::TEXT                                  AS laji,
-       u.indeksi                                       AS indeksi,
-       TRUE                                            AS suorasanktio,
-       TRUE                                            as bonus,
-       NULL                                            AS toimenpideinstanssi,
-       (SELECT korotus
-        FROM sanktion_indeksikorotus(MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15), u.indeksi,
-                                     p."tilaajan-maksu", :urakka::INTEGER,
-                                     NULL::SANKTIOLAJI))
-                                                       AS indeksikorjaus,
-       CONCAT('Urakoitsija sai ', p."lupaus-toteutuneet-pisteet", ' pistettä ja lupasi ',
-              p."lupaus-luvatut-pisteet", ' pistettä') AS laatupoikkeama_paatos_perustelu
-FROM urakka_paatos p
-     JOIN urakka u ON u.id = p."urakka-id"
- WHERE p."urakka-id" = :urakka
-   AND p.tyyppi = 'lupausbonus'
-   AND MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) BETWEEN :alku AND :loppu
-   AND p.poistettu IS NOT TRUE;
 
 -- name: merkitse-maksuera-likaiseksi!
 -- Merkitsee sanktiota vastaavan maksuerän likaiseksi: lähtetetään seuraavassa päivittäisessä lähetyksessä
