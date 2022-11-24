@@ -113,6 +113,10 @@ FROM sanktio s
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE
   lp.urakka = :urakka
+  -- Ei haeta tässä ylläpidon bonus 'sanktioita', vaan haetaan ne bonuksina eri kyselyssä.
+  --   Tämä edistää ylläpidon bonusten käsittelyn refaktorointia myöhemmin siten, että niitäkin käsiteltäisiin samalla
+  --   logiikalla kuin muidenkin urakkatyyppien bonuksia.
+  AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
   AND lp.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
   AND (s.perintapvm >= :alku AND s.perintapvm <= :loppu
    -- VHAR-5849 halutaan että urakan päättymisen jälkeiset sanktiot näkyvät viimeisen hoitokauden listauksessa
@@ -225,9 +229,12 @@ SELECT ek.id,
 UNION
 
 -- Hae ylläpidon urakoille poikkeuksellisesti bonus sanktio-taulusta
+-- TODO refaktoroidaan myöhemmin ylläpidon bonusten käsittely sellaiseksi, että poikkeuksellista käsittelyä ei
+--      tarvitsisi tehdä.
 SELECT s.id,
        s.perintapvm AS perintapvm,
-       s.maara AS summa,
+       -- Muunna ylläpidon bonuksen summa positiiviseksi (se on käytännössä negatiivinen sanktio nykytoteuksella)
+       s.maara * -1 AS summa,
        'yllapidon_bonus' AS laji,
        s.indeksi AS indeksi,
        TRUE AS suorasanktio,
@@ -241,15 +248,6 @@ SELECT s.id,
            JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
  WHERE lp.urakka = :urakka
    AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
-   AND s.toimenpideinstanssi = (SELECT tpi.id AS id
-                                  FROM toimenpideinstanssi tpi
-                                           JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
-                                           JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
-                                       maksuera m
-                                 WHERE tpi.urakka = :urakka
-                                   AND m.toimenpideinstanssi = tpi.id
-                                   AND tpk2.koodi = '23150'
-                                 LIMIT 1)
    AND s.perintapvm BETWEEN :alku AND :loppu
    AND s.poistettu IS NOT TRUE;
 
