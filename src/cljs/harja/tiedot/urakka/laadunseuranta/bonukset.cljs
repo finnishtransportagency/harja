@@ -104,6 +104,10 @@
                  :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                                   :urakka (:id @nav/valittu-urakka)
                                   :yllapitokohde (:id (:yllapitokohde lomake))
+                                  ;; Laatupoikkeamalla on pakko olla jokin "havaintoaika", vaikka tässä on kyseessä bonus.
+                                  ;; Asetetaan se samaksi kuin käsittelyaika.
+                                  :aika (:pvm lomake)
+                                  ;; Päätös on poikkeuksellisesti "sanktio" vaikka oikeasti kyseessä on bonus.
                                   :paatos {:paatos "sanktio"
                                            :perustelu (:lisatieto lomake)
                                            :kasittelyaika (:pvm lomake)
