@@ -527,3 +527,6 @@ WHERE lp.urakka IN (SELECT id FROM urakka WHERE (TRUE IN (SELECT unnest(ARRAY[:u
 --name: hae-laatupoikkeaman-urakka-id
 SELECT urakka FROM laatupoikkeama
  WHERE id = :laatupoikkeamaid;
+
+-- name: poista-laatupoikkeama!
+UPDATE laatupoikkeama SET poistettu = true, muokkaaja = :kayttaja-id, muokattu = NOW() WHERE id = :id;

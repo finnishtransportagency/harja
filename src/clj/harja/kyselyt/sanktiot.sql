@@ -278,3 +278,5 @@ SELECT id
 SELECT urakka FROM laatupoikkeama lp
 JOIN sanktio s ON lp.id = s.laatupoikkeama
 WHERE s.id = :sanktioid;
+-- name: poista-sanktio!
+UPDATE sanktio set poistettu = TRUE, muokattu = NOW(), muokkaaja = :kayttaja-id WHERE id = :id;
