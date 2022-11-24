@@ -234,21 +234,20 @@
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
-    (testing "Päällystysurakan suorasanktion tallennus"
-      (let [sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                     +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-bonuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                        +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                            +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
-            lisatty-sakko (first (filter #(= -1234.0 (:summa %)) sanktiot-sakon-jalkeen))
-            lisatty-bonus (first (filter #(= 4321.0 (:summa %)) sanktiot-bonuksen-jalkeen))
-            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-muistutuksen-jalkeen))]
+    (testing "Päällystysurakan suorasanktion ja bonuksen tallennus"
+      (let [sanktiot-ja-bonukset-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                 +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-bonuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                    +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                        +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+            lisatty-sakko (first (filter #(= -1234.0 (:summa %)) sanktiot-ja-bonukset-sakon-jalkeen))
+            lisatty-bonus (first (filter #(= 4321.0 (:summa %)) sanktiot-ja-bonukset-bonuksen-jalkeen))
+            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-ja-bonukset-muistutuksen-jalkeen))]
         (is (number? (:id lisatty-sakko)) "Tallennus palauttaa uuden id:n")
         (is (= :yllapidon_sakko (:laji lisatty-sakko)) "Päällystysurakan bonuksen oikea sanktiolaji")
         (is (= "Ylläpidon sakko" (:nimi (:tyyppi lisatty-sakko))) "Päällystysurakan sakon oikea sanktiotyyppi")
-        (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea sanktiolaji")
-        (is (= "Ylläpidon bonus" (:nimi (:tyyppi lisatty-bonus))) "Päällystysurakan bonuksen oikea sanktiotyyppi")
+        (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea bonuslaji")
         (is (= "Ylläpidon muistutus" (:nimi (:tyyppi lisatty-muistutus))) "Päällystysurakan muistutuksen oikea sanktiotyyppi")
         (is (= -1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
         (is (= 4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
