@@ -22,6 +22,7 @@
     "lupaus-luvatut-pisteet" ::lupaus-luvatut-pisteet
     "lupaus-toteutuneet-pisteet" ::lupaus-toteutuneet-pisteet
     "lupaus-tavoitehinta" ::lupaus-tavoitehinta
+    "taulu_id" ::taulu-id
     "luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokattu" ::muokkaustiedot/muokattu

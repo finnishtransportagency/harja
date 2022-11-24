@@ -12,7 +12,13 @@
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+    [harja.kyselyt.konversio :as konv]
+    [harja.kyselyt.toteumat :as toteumat-q]
+    [harja.kyselyt.sanktiot :as sanktiot-q]
+    [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
+    [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
@@ -326,12 +332,13 @@
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
 
-(defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi]
+(defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi taulu_id]
   (merge tiedot {::valikatselmus/tyyppi (name (::valikatselmus/tyyppi tiedot))
                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                  ::valikatselmus/siirto (bigdec (or (::valikatselmus/siirto tiedot) 0))
                  ::valikatselmus/urakoitsijan-maksu (bigdec (or (::valikatselmus/urakoitsijan-maksu tiedot) 0))
                  ::valikatselmus/tilaajan-maksu (bigdec (or (::valikatselmus/tilaajan-maksu tiedot) 0))
+                 ::valikatselmus/taulu-id taulu_id
                  ::muokkaustiedot/poistettu? false
                  ::muokkaustiedot/luoja-id (:id kayttaja)
                  ::muokkaustiedot/muokkaaja-id (:id kayttaja)
@@ -343,6 +350,79 @@
     kayttaja
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
+
+(defn- tallenna-lupaussanktio [db {::valikatselmus/keys [tyyppi] :as paatoksen-tiedot} kayttaja]
+  (let [urakka-id (::urakka/id paatoksen-tiedot)
+        urakka (first (q-urakat/hae-urakka db urakka-id))
+        toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
+        perustelu (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
+                    " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
+        kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
+
+        ; "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
+        indeksi (if (and
+                      (= :teiden-hoito (:tyyppi urakka))
+                      (or
+                        (= (-> urakka :alkupvm pvm/vuosi) 2020)
+                        (= (-> urakka :alkupvm pvm/vuosi) 2019)))
+                  (:indeksi urakka)
+                  nil)
+        laatupoikkeama {:tekijanimi (:nimi kayttaja)
+                        :paatos {:paatos "sanktio", :kasittelyaika (pvm/nyt), :perustelu perustelu, :kasittelytapa :valikatselmus}
+                        :kohde nil
+                        :aika kohdistuspvm
+                        :urakka urakka-id
+                        :yllapitokohde nil}
+        sanktio {:kasittelyaika (pvm/nyt)
+                 :suorasanktio true,
+                 :laji :lupaussanktio,
+                 :summa (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot),
+                 :toimenpideinstanssi toimenpideinstanssi-id,
+                 :perintapvm kohdistuspvm
+                 ;; Lupaussanktion tyyppiä ei tarvitse valita
+                 :tyyppi {:id 8, :koodi 0, :nimi "Ei tarvita sanktiotyyppiä", :toimenpidekoodi 601}
+                 :indeksi indeksi}
+
+        ;; Tallennus palauttaa kaikki sanktiot. Joten emme voi hyödyntää vastausta
+        _ (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])
+        ;; Miten tuloksesta päätellään uusin sanktio
+        uusin-sanktio-id (sanktiot-q/hae-uusin-sanktio-id-urakalle db urakka-id)]
+    uusin-sanktio-id))
+
+(defn- tallenna-lupausbonus
+  "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
+  [db {::valikatselmus/keys [tyyppi] :as paatoksen-tiedot} kayttaja]
+  (let [urakka-id (::urakka/id paatoksen-tiedot)
+        urakan-tiedot (urakat-q/hae-urakka db urakka-id)
+        indeksin-nimi (:indeksi (first urakan-tiedot))
+        toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
+        sopimus-id (:id (first (urakat-q/hae-urakan-sopimukset db urakka-id)))
+        ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
+        laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
+        lisatiedot (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
+                     " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
+        ek {:tyyppi "lupausbonus"
+            :urakka urakka-id
+            :sopimus sopimus-id
+            :toimenpideinstanssi toimenpideinstanssi-id
+            :pvm laskutuspvm
+            :rahasumma (::valikatselmus/tilaajan-maksu paatoksen-tiedot)
+            :indeksin_nimi indeksin-nimi
+            :lisatieto lisatiedot
+            :laskutuskuukausi laskutuspvm
+            :kasittelytapa "valikatselmus"
+            :luoja (:id kayttaja)}
+        bonus (toteumat-q/luo-erilliskustannus<! db ek)]
+    (:id bonus)))
+
+(defn- tallenna-mahdollinen-bonus-tai-sanktio
+  "Lupausbonus ja lupaussanktio tallennetaan automaattisesti omiin tauluihinsa ja jotta poistettaessa ne saadaan
+  sieltä pois, niin luodaan tällainen linkitys taulujen välille."
+  [db {::valikatselmus/keys [tyyppi] :as paatoksen-tiedot} kayttaja]
+  (log/debug "tallenna-mahdollinen-bonus-tai-sanktio :: tyyppi " (pr-str tyyppi) (pr-str paatoksen-tiedot))
+  (cond  (= ::valikatselmus/lupausbonus tyyppi) (tallenna-lupausbonus db paatoksen-tiedot kayttaja)
+        (= ::valikatselmus/lupaussanktio tyyppi) (tallenna-lupaussanktio db paatoksen-tiedot kayttaja)
+         :else nil))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -362,25 +442,46 @@
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
-                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        taulu_id (tallenna-mahdollinen-bonus-tai-sanktio db tiedot kayttaja)]
     (case paatoksen-tyyppi
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
       ::valikatselmus/lupausbonus (tarkista-lupausbonus db kayttaja tiedot)
       ::valikatselmus/lupaussanktio (tarkista-lupaussanktio db kayttaja tiedot))
-    (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
+    (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi taulu_id))))
 
-(defn poista-paatos
-  [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-    kayttaja
-    (::urakka/id tiedot))
+(defn- poista-liitetty-lupausbonus [db urakka-id bonus-id kayttaja-id]
+  (let [_ (println "poista-liitetty-lupausbonus :: tää ei tee vielä mitään : urakka-id bonus-id kayttaja-id : " urakka-id bonus-id kayttaja-id)
+        _ (erilliskustannus-kyselyt/poista-erilliskustannus! db {:id bonus-id :kayttaja-id kayttaja-id})]))
+
+(defn- poista-liitetty-lupaussanktio [db urakka-id sanktio-id kayttaja-id]
+  (let [sanktio (first (sanktiot-q/hae-sanktio db sanktio-id))
+        laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db {:urakka urakka-id
+                                                                                :id (:laatupoikkeama-id sanktio)}))
+        _ (sanktiot-q/poista-sanktio! db {:id (:id sanktio) :kayttaja-id kayttaja-id})
+        _ (laatupoikkeamat-q/poista-laatupoikkeama! db {:id (:id laatupoikkeama) :kayttaja-id kayttaja-id})]))
+
+(defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id taulu_id] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
-  (let [vastaus (if-not (number? paatoksen-id)
-                  (heita-virhe "Päätöksen id puuttuu!")
-                  (valikatselmus-q/poista-paatos db paatoksen-id))]
-    vastaus))
+  (if (number? paatoksen-id)
+    (let [;; Poista mahdollinen lupausbonus / lupaussanktio
+          paatos (first (valikatselmus-q/hae-paatos db paatoksen-id))
+          urakka-id (:urakka-id paatos)
+          taulu-id (:taulu_id paatos)
+          ;; Poista joko lupaussanktio tai lupausbonus jos tyyppi täsmää
+          _ (cond
+              (and
+                (= (:tyyppi paatos) "lupaussanktio")
+                (not (nil? (:taulu_id paatos)))) (poista-liitetty-lupaussanktio db urakka-id taulu-id (:id kayttaja))
+              (and
+                (= (:tyyppi paatos) "lupausbonus")
+                (not (nil? (:taulu_id paatos))))(poista-liitetty-lupausbonus db urakka-id taulu-id (:id kayttaja)))
+          vastaus (valikatselmus-q/poista-paatos db paatoksen-id)]
+      vastaus)
+    (heita-virhe "Päätöksen id puuttuu!")))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
