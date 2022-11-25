@@ -218,6 +218,11 @@
                                      :laatupoikkeama lp
                                      :hoitokausi [hk-alkupvm hk-loppupvm]}))
 
+(defn palvelukutsu-poista-suorasanktio [kayttaja sanktio-id urakka-id]
+  (kutsu-http-palvelua
+    :poista-suorasanktio kayttaja {:id sanktio-id
+                                   :urakka-id urakka-id}))
+
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
   (let [perustelu "ABC kissa kävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
@@ -293,7 +298,14 @@
         (is (= "MAKU 2010" (:indeksi lisatty-hoidon-sakko)) "Indeksi oikein")
         (is (= nil (:summa lisatty-hoidon-muistutus)) "Hoitourakan bonuksen oikea summa")
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
-        (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))
+        (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-suorasanktio-rajapinnan kautta"
+          (let [poistettu-sanktio-id (palvelukutsu-poista-suorasanktio
+                                       +kayttaja-jvh+ (:id lisatty-hoidon-sakko) (hae-oulun-alueurakan-2014-2019-id))
+                poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama poistettu-sanktio-id)]
+            (is (= true (:poistettu poistettu-suorasanktio-kannassa)))
+            (is (= true (:lp_poistettu poistettu-suorasanktio-kannassa)))))))
 
 
     ;; Siivoa roskat

@@ -56,6 +56,33 @@ FROM sanktio s
 WHERE laatupoikkeama = :laatupoikkeama
       AND s.poistettu IS NOT TRUE;
 
+-- name: hae-suorasanktion-tiedot
+-- Hae yksittäisen suora sanktion tiedot
+SELECT s.id,
+       s.perintapvm,
+       s.maara AS summa,
+       s.sakkoryhma AS laji,
+       s.suorasanktio,
+       s.toimenpideinstanssi,
+       s.indeksi,
+       s.vakiofraasi,
+       s.laatupoikkeama AS laatupoikkeama_id,
+       t.id AS tyyppi_id,
+       t.nimi AS tyyppi_nimi,
+       t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
+       t.koodi AS tyyppi_koodi
+  FROM sanktio s
+           LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
+ WHERE s.id = :id;
+
+-- name: poista-sanktio!
+UPDATE sanktio
+   SET poistettu = TRUE,
+       muokattu  = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE id = :id;
+
+
 -- name: hae-urakan-sanktiot
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä

@@ -346,6 +346,30 @@
       (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
       (hae-urakan-sanktiot-ja-bonukset c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
+(defn poista-suorasanktio
+  "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
+  [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
+  (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
+
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+
+  (jdbc/with-db-transaction [c db]
+
+    (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))
+          ;; Poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+          ;;   koska laatupoikkeamalla voi olla 0...n sanktiota
+          poista-laatupoikkeama? (and (boolean (:suorasanktio sanktio)) (:laatupoikkeama_id sanktio))]
+      (when poista-laatupoikkeama?
+        (laatupoikkeamat-q/poista-laatupoikkeama c user {:id (:laatupoikkeama_id sanktio)
+                                                         :urakka-id urakka-id}))
+      (sanktiot/poista-sanktio! db {:id sanktio-id
+                                    :muokkaaja (:id user)})
+
+      ;; TODO: Pitääkö maksuerä merkitä likaiseksi myös poiston jälkeen?
+      #_(sanktiot/merkitse-maksuera-likaiseksi! db sanktio-id)
+
+      sanktio-id)))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
@@ -371,6 +395,10 @@
         (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
                                (get-in tiedot [:laatupoikkeama :urakka])
                                (:hoitokausi tiedot)))
+
+      :poista-suorasanktio
+      (fn [user tiedot]
+        (poista-suorasanktio db user tiedot))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
@@ -401,6 +429,7 @@
                      :hae-urakan-sanktiot-ja-bonukset
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
+                     :poista-suorasanktio
                      :hae-sanktion-liitteet
                      :hae-bonuksen-liitteet)
     this))

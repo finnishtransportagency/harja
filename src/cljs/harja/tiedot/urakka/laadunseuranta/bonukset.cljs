@@ -32,7 +32,8 @@
 (defn- tallenna-bonus-mhu
   "Muodostaa payloadin bonuslomakkeesta ja tallentaa bonuksen tiedot erilliskustannus-tauluun."
   [{:keys [lomake] :as app}]
-  (let [payload {:id (:id lomake)
+  (let [lomake (lomake/ilman-lomaketietoja lomake)
+        payload {:id (:id lomake)
                  :tyyppi (-> lomake :laji name)
                  :toimenpideinstanssi (:toimenpideinstanssi lomake)
                  :urakka-id (:id @nav/valittu-urakka)
@@ -55,7 +56,8 @@
   "Muodostaa payloadin bonuslomakkeesta ja tallentaa bonuksen sanktio-tauluun.
   Yllapidon urakoiden bonus tallennetaan poikkeuksellisesti sanktiona sanktio-tauluun."
   [{:keys [lomake] :as app}]
-  (let [payload {:sanktio {:id (:id lomake)
+  (let [lomake (lomake/ilman-lomaketietoja lomake)
+        payload {:sanktio {:id (:id lomake)
                            :laji :yllapidon_bonus
                            :suorasanktio true
                            :summa (:summa lomake)
@@ -81,6 +83,26 @@
       payload
       {:onnistui ->TallennusOnnistui
        :epaonnistui ->TallennusEpaonnistui})))
+
+(defn poista-bonus-mhu [{:keys [lomake] :as app}]
+  (let [payload {:id (:id lomake)
+                 :urakka-id (:id @nav/valittu-urakka)}]
+    (-> app
+      (tuck-apurit/post! :poista-erilliskustannus
+        payload
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
+      (assoc :tallennus-kaynnissa? true))))
+
+(defn poista-bonus-yllapito [{:keys [lomake] :as app}]
+  (let [payload {:id (:id lomake)
+                 :urakka-id (:id @nav/valittu-urakka)}]
+    (-> app
+      (tuck-apurit/post! :poista-suorasanktio
+        payload
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
+      (assoc :tallennus-kaynnissa? true))))
 
 (extend-protocol tuck/Event
   PoistaPoistetutLiitteet
@@ -208,13 +230,14 @@
     (log/debug "PoistaBonus")
 
     (let [bonuksen-laji (:laji lomake)
-          payload {:id (:id lomake)
-                   :urakka-id (:id @nav/valittu-urakka)}]
+          poista-fn (fn [app]
+                        ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
+                        ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
+                        (if (= :yllapidon_bonus bonuksen-laji)
+                          (poista-bonus-yllapito app)
+                          (poista-bonus-mhu app)))]
       (-> app
-        (tuck-apurit/post! :poista-erilliskustannus
-               payload
-               {:onnistui ->TallennusOnnistui
-                :epaonnistui ->TallennusEpaonnistui})
+        poista-fn
         (assoc :tallennus-kaynnissa? true))))
 
   TallennaBonus
