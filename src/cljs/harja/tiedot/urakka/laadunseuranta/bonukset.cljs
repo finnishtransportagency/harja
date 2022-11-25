@@ -207,10 +207,11 @@
     [_ {:keys [lomake] :as app}]
     (log/debug "PoistaBonus")
 
-    (let [payload {:poistettu true
+    (let [bonuksen-laji (:laji lomake)
+          payload {:id (:id lomake)
                    :urakka-id (:id @nav/valittu-urakka)}]
       (-> app
-        (tuck-apurit/post! :tallenna-erilliskustannus
+        (tuck-apurit/post! :poista-erilliskustannus
                payload
                {:onnistui ->TallennusOnnistui
                 :epaonnistui ->TallennusEpaonnistui})

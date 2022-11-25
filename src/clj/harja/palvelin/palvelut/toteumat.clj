@@ -414,6 +414,28 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
+(defn poista-erilliskustannus
+  "Merkitään erilliskustannus poistetuksi"
+  [db user {erilliskustannus-id :id urakka-id :urakka-id :as ek}]
+  (log/debug "Poista erilliskustannus:" ek)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
+  (tarkistukset/vaadi-erilliskustannus-kuuluu-urakkaan db erilliskustannus-id urakka-id)
+
+  (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+        (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
+
+    (jdbc/with-db-transaction
+      [db db]
+      (let [poistettu (toteumat-q/poista-erilliskustannus! db {:id erilliskustannus-id
+                                                               :muokkaaja (:id user)
+                                                               :urakka urakka-id})]
+
+        ;; TODO: Täytyykö merkitä toimepideinstanssin maksuerä likaiseksi myös poiston jälkeen?
+        #_(toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu))
+        erilliskustannus-id))
+
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
 (defn hae-tehtavan-toteumat [db user {:keys [urakka-id toimenpidekoodi-id hoitokauden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (let [alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -1149,6 +1171,9 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
+      :poista-erilliskustannus
+      (fn [user erilliskustannus]
+        (poista-erilliskustannus db user erilliskustannus))
       :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
         (hae-urakan-toimenpiteet db-replica user tiedot))
@@ -1223,6 +1248,7 @@
       :paivita-yk-hint-toteumien-tehtavat
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
+      :poista-erilliskustannus
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma
