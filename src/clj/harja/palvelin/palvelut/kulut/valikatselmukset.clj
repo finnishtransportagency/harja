@@ -351,6 +351,17 @@
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
 
+(defn- lupauksen-indeksi
+  "Lupausbonukselle ja -sanktiolle lisätään indeksi urakan tiedoista, mikäli ne on MH-urakoita ja alkavat vuonna -19 tai -20"
+  [urakan-tiedot]
+  (if (and
+        (= :teiden-hoito (:tyyppi urakan-tiedot))
+        (or
+          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2020)
+          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2019)))
+    (:indeksi urakan-tiedot)
+    nil))
+
 (defn- tallenna-lupaussanktio [db {::valikatselmus/keys [tyyppi] :as paatoksen-tiedot} kayttaja]
   (let [urakka-id (::urakka/id paatoksen-tiedot)
         urakka (first (q-urakat/hae-urakka db urakka-id))
@@ -360,13 +371,7 @@
         kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
 
         ; "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
-        indeksi (if (and
-                      (= :teiden-hoito (:tyyppi urakka))
-                      (or
-                        (= (-> urakka :alkupvm pvm/vuosi) 2020)
-                        (= (-> urakka :alkupvm pvm/vuosi) 2019)))
-                  (:indeksi urakka)
-                  nil)
+        indeksi (lupauksen-indeksi urakka)
         laatupoikkeama {:tekijanimi (:nimi kayttaja)
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/nyt), :perustelu perustelu, :kasittelytapa :valikatselmus}
                         :kohde nil
@@ -393,8 +398,8 @@
   "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
   [db {::valikatselmus/keys [tyyppi] :as paatoksen-tiedot} kayttaja]
   (let [urakka-id (::urakka/id paatoksen-tiedot)
-        urakan-tiedot (urakat-q/hae-urakka db urakka-id)
-        indeksin-nimi (:indeksi (first urakan-tiedot))
+        urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
+        indeksin-nimi (lupauksen-indeksi urakan-tiedot)
         toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
         sopimus-id (:id (first (urakat-q/hae-urakan-sopimukset db urakka-id)))
         ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle

@@ -16,6 +16,7 @@
             [clojure.set :as set]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.kommentit :as kommentit]
+            [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]))
 
@@ -453,6 +454,20 @@
          bonus-tai-sanktio (lupaus-domain/bonus-tai-sanktio {:toteuma (or toteuma-pisteet ennuste-pisteet)
                                                              :lupaus (:pisteet sitoutumistiedot)
                                                              :tavoitehinta tavoitehinta})
+         ;; Näille -19/-20 alkaneille MH-urakoille (muita ei voi tällä funktiolla käsitellä) lasketaan
+         ;; Indeksikorjaus automaattisesti hintaan mukaan
+         bonus-tai-sanktio-pvm (-> (second valittu-hoitokausi)
+                                 (pvm/vuosi)
+                                 (pvm/luo-pvm-dec-kk 9 15)
+                                 (konv/sql-date))
+         indeksikorotus-parametrit {:pvm bonus-tai-sanktio-pvm
+                                    :indeksi (:indeksi urakan-tiedot)
+                                    :maara (if (:sanktio bonus-tai-sanktio)
+                                             (:sanktio bonus-tai-sanktio)
+                                             (:bonus bonus-tai-sanktio))
+                                    :urakka-id urakka-id
+                                    :sanktiolaji (if (:sanktio bonus-tai-sanktio) "lupaussanktio" nil)}
+         indeksikorotus (:korotus (first (lupaus-kyselyt/hae-indeksikorotus-summalle db indeksikorotus-parametrit)))
          luvatut-pisteet-puuttuu? (not (:pisteet sitoutumistiedot))
          hoitovuosi-valmis? (boolean toteuma-pisteet)
          ;; Ennuste voidaan tehdä, jos hoitokauden alkupäivä on menneisyydessä ja bonus-tai-sanktio != nil
@@ -479,6 +494,7 @@
                              :ennuste ennuste-pisteet
                              :toteuma toteuma-pisteet}
                    :bonus-tai-sanktio bonus-tai-sanktio
+                   :indeksikorotus indeksikorotus
                    :tavoitehinta tavoitehinta
                    :odottaa-urakoitsijan-kannanottoa? odottaa-urakoitsijan-kannanottoa?
                    :valikatselmus-tehty-urakalle? valikatselmus-tehty-hoitokaudelle?
