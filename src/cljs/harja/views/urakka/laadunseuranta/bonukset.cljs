@@ -55,21 +55,26 @@
       :voi-muokata? (and voi-muokata? (not lukutila?))
       :muokkaa! #(e! (tiedot/->PaivitaLomaketta %))
       :footer-fn (fn [bonus]
-                   (when-not lukutila?
-                     [:<>
-                      [:span.nappiwrappi.flex-row
-                       [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
-                        {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}]
-                       (when (:id lomakkeen-tiedot)
-                         [napit/kielteinen "Poista" (fn [_]
-                                                      (varmista-kayttajalta/varmista-kayttajalta
-                                                        {:otsikko "Bonuksen poistaminen"
-                                                         :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
-                                                         :modal-luokka "varmistus-modal"
-                                                         :hyvaksy "Poista"
-                                                         :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
-                          {:luokka "oikealle"}])
-                       [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]]))}
+                   [:<>
+                    [:span.nappiwrappi.row
+                     [:div.col-xs-8 {:style {:padding-left "0"}}
+                      (when-not lukutila?
+                        [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
+                         {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}])]
+                     [:div.col-xs-4 {:style (merge
+                                              {:text-align "end" :float "right"}
+                                              (when (not lukutila?)
+                                                {:display "contents"}))}
+                      (when (and (not lukutila?) (:id lomakkeen-tiedot))
+                        [napit/kielteinen "Poista" (fn [_]
+                                                     (varmista-kayttajalta/varmista-kayttajalta
+                                                       {:otsikko "Bonuksen poistaminen"
+                                                        :sisalto "Haluatko varmasti poistaa bonuksen? Toimintoa ei voi perua."
+                                                        :modal-luokka "varmistus-modal"
+                                                        :hyvaksy "Poista"
+                                                        :toiminto-fn #(e! (tiedot/->PoistaBonus))}))
+                         {:luokka "oikealle"}])
+                      [napit/peruuta "Sulje" #(e! (tiedot/->TyhjennaLomake sulje-fn))]]]])}
      [(let [hae-tpin-tiedot (comp hae-tpi-idlla :toimenpideinstanssi)
             tpi (hae-tpin-tiedot lomakkeen-tiedot)]
         {:otsikko "Bonus"
