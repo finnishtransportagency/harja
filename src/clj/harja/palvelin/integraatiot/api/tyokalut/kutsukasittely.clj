@@ -574,7 +574,7 @@
                         status (if-not (str/blank? mahdollinen-virhe) 400 200)]
 
                        {:status status
-                        :headers (lisaa-request-headerit false origin-header)
+                        :headers (lisaa-request-headerit true origin-header)
                         :body vastauksen-data}))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
