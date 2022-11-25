@@ -120,8 +120,16 @@
                {:disabled (not suorasanktio?)}]
               (when (not suorasanktio?)
                 [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
+
+
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu tiedot/haetut-sanktiot-ja-bonukset lukutila? voi-muokata?]
+             [bonukset/bonukset* auki? @muokattu
+              ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
+              #(tiedot/paivita-sanktiot-ja-bonukset!)
+              lukutila? voi-muokata?]
+
+             ;; TODO: Siirrä sanktiolomake omaan nimiavaruuteen.
+             ;;       Pyhitetään tämä nimiavaruus sanktioiden listaukselle ja sanktiot&bonukset sivun layoutille
              [:<>
               ;; Vaadi tarvittavat tiedot ennen rendausta
               (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)

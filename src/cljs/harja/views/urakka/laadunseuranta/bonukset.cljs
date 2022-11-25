@@ -229,23 +229,12 @@
 
 
 (defn bonukset*
-  [auki? avattu-bonus haetut-sanktiot lukutila? voi-muokata?]
-  (let [sulje-fn #(do
-                    (when (some? (:id %))
-                      (if (some (fn [rivi] (= (:id rivi) (:id %))) @haetut-sanktiot)
-                        (swap! haetut-sanktiot (fn [sanktiolistaus]
-                                                 (if (:poistettu %)
-                                                   (into []
-                                                     (remove (fn [rivi]
-                                                               (= (:id rivi) (:id %)))
-                                                       sanktiolistaus))
-                                                   (mapv (fn [rivi]
-                                                           (if (= (:id rivi) (:id %))
-                                                             %
-                                                             rivi))
-                                                     sanktiolistaus))))
-                        (swap! haetut-sanktiot conj %)))
-                    (reset! auki? false))
+  [auki? avattu-bonus tallennus-onnistui-fn]
+  (let [tallennus-onnistui-fn (if (fn? tallennus-onnistui-fn) tallennus-onnistui-fn (constantly nil))
+        sulje-fn (fn [tallennus-onnistui?]
+                   (when tallennus-onnistui?
+                     (tallennus-onnistui-fn))
+                   (reset! auki? false))
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
                                          (when (some? (:id avattu-bonus))

@@ -15,6 +15,7 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
+
 (defn uusi-sanktio [urakkatyyppi]
   (let [nyt (pvm/nyt)
         default-kasittelyaika (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
@@ -71,16 +72,23 @@
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
 
+(def paivita-sanktiot-ja-bonukset-atom (atom false))
 (defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
                [kk-alku kk-loppu] @urakka/valittu-hoitokauden-kuukausi
-               _ @nakymassa?]
+               _ @nakymassa?
+               _ @paivita-sanktiot-ja-bonukset-atom]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
                 (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
                                                   :alku (or kk-alku (first hoitokausi))
                                                   :loppu (or kk-loppu (second hoitokausi))}))))
+
+(defn paivita-sanktiot-ja-bonukset!
+  "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
+  []
+  (swap! paivita-sanktiot-ja-bonukset-atom not))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n

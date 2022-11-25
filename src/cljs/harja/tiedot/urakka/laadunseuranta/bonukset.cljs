@@ -1,6 +1,5 @@
 (ns harja.tiedot.urakka.laadunseuranta.bonukset
-  (:require [clojure.set :as set]
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
@@ -10,29 +9,7 @@
             [harja.tiedot.urakka :as urakka]
 
             [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]
-            [taoensso.timbre :as log]
-            [clojure.spec.alpha :as s]))
-
-
-(defn- keywordisoi
-  [avain tiedot]
-  (let [keywordisoi? (some? (get #{:laji :kasittelytapa} avain))]
-    (if keywordisoi?
-      (keyword tiedot)
-      tiedot)))
-
-
-(defn- lomake->sanktiolistaus
-  [lomake]
-  (let [poistettu? (:poistettu lomake)
-        _ (println "### " (merge
-                            lomake
-                            {:bonus true :suorasanktio true :poistettu poistettu?}))]
-    (merge
-      lomake
-      {:bonus true :suorasanktio true :poistettu poistettu?})))
-
+            [taoensso.timbre :as log]))
 
 ;; ---------
 
@@ -66,9 +43,7 @@
                  :indeksin_nimi (:indeksi lomake)
                  :lisatieto (:lisatieto lomake)
                  :kasittelytapa (:kasittelytapa lomake)
-                 :liitteet (:liitteet lomake)
-
-                 :palauta-tallennettu? true}]
+                 :liitteet (:liitteet lomake)}]
 
     (tuck-apurit/post! app :tallenna-erilliskustannus
       payload
@@ -80,10 +55,11 @@
   "Muodostaa payloadin bonuslomakkeesta ja tallentaa bonuksen sanktio-tauluun.
   Yllapidon urakoiden bonus tallennetaan poikkeuksellisesti sanktiona sanktio-tauluun."
   [{:keys [lomake] :as app}]
-  (let [payload {:sanktio {:laji :yllapidon_bonus
+  (let [payload {:sanktio {:id (:id lomake)
+                           :laji :yllapidon_bonus
                            :suorasanktio true
-                           :summa (:rahasumma lomake)
-                           :indeksi (:indeksin_nimi lomake)
+                           :summa (:summa lomake)
+                           :indeksi (:indeksi lomake)
                            :kasittelyaika (:perintapvm lomake)
                            :perintapvm (:laskutuskuukausi lomake)
                            :toimenpideinstanssi (:toimenpideinstanssi lomake)}
@@ -180,12 +156,15 @@
 
   TyhjennaLomake
   (process-event
-    [{sulje-fn :sulje-fn} {:keys [tallennettu-lomake] :as app}]
+    [{sulje-fn :sulje-fn} {:keys [tallennus-onnistui?] :as app}]
     (log/debug "TyhjennaLomake")
 
-    (sulje-fn (lomake->sanktiolistaus tallennettu-lomake))
+    ;; Välitetään tieto tallentumisen onnistumisesta sulje-fn:lle.
+    ;; Sanktiot & bonukset listaus päivitetään tarvittaessa uudestaan tiedon perusteella.
+    (sulje-fn tallennus-onnistui?)
+
     (-> app
-      (dissoc :lomake)
+      (dissoc :lomake :tallennus-onnistui?)
       (assoc :voi-sulkea? false)))
 
   PaivitaLomaketta
@@ -208,11 +187,12 @@
     (log/debug "TallennusOnnistui")
 
     (viesti/nayta-toast! "Tallennus onnistui")
-    (let [tallennettu-bonus (merge vastaus optiot)
-          [hoitokausi-alku hoitokausi-loppu] @urakka/valittu-hoitokausi
-          bonus-hoitokaudella? (pvm/valissa? (:perintapvm tallennettu-bonus) hoitokausi-alku hoitokausi-loppu)]
-      (assoc app :tallennus-kaynnissa? false :voi-sulkea? true
-        :tallennettu-lomake (when bonus-hoitokaudella? (merge vastaus optiot)))))
+
+    ;; Merkitään tallennus onnistuneeksi, jotta tieto voidaan välittää ylemmälle kerrokselle
+    ;; Sanktiot & bonukset listaus päivitetään tarvittaessa uudestaan tiedon perusteella.
+    ;; Bonuksia tallennetaan erilliskustannust-tauluun (MHU ym.) ja sanktio-tauluun (ylläpito),
+    ;; joten on yksinkertaisempaa päivittää listauksen tiedot sanktiot & bonukset näkymässä tallennuksen jälkeen.
+    (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? true :voi-sulkea? true))
 
   TallennusEpaonnistui
   (process-event
@@ -220,7 +200,7 @@
     (log/debug "TallennusEpaonnistui")
 
     (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
-    (assoc app :tallennus-kaynnissa? false))
+    (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? false))
 
   PoistaBonus
   (process-event
@@ -228,8 +208,7 @@
     (log/debug "PoistaBonus")
 
     (let [payload {:poistettu true
-                   :urakka-id (:id @nav/valittu-urakka)
-                   :palauta-tallennettu? true}]
+                   :urakka-id (:id @nav/valittu-urakka)}]
       (-> app
         (tuck-apurit/post! :tallenna-erilliskustannus
                payload
@@ -242,9 +221,11 @@
     [_ {:keys [lomake] :as app}]
     (log/debug "TallennaBonus: " lomake)
 
-    (let [bonustyyppi (:tyyppi lomake)
+    (let [bonuksen-laji (:laji lomake)
           tallenna-fn (fn [app]
-                        (if (= :yllapidon_bonus bonustyyppi)
+                        ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
+                        ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
+                        (if (= :yllapidon_bonus bonuksen-laji)
                           (tallenna-bonus-yllapito app)
                           (tallenna-bonus-mhu app)))]
       (-> app
