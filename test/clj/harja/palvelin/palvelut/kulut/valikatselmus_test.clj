@@ -520,7 +520,8 @@
                                     ::valikatselmus/tilaajan-maksu bonuksen-maara}))
                   (catch Exception e e))
         ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupausbonus
-        lupausbonus (first (erilliskustannus-kyselyt/hae-erilliskustannus (:db jarjestelma) (::valikatselmus/taulu-id vastaus)))]
+        lupausbonus (first (erilliskustannus-kyselyt/hae-erilliskustannus (:db jarjestelma) {:urakka-id urakka-id
+                                                                                             :id (::valikatselmus/taulu-id vastaus)}))]
     (is (= bonuksen-maara (::valikatselmus/tilaajan-maksu vastaus)) "Lupausbonuspäätöslukemat täsmää validoinnin jälkeen")
     (is (= {:bonus bonuksen-maara} (lupaus-palvelu/tallennettu-bonus-tai-sanktio (:db jarjestelma) urakka-id hoitokauden-alkuvuosi)) "Tallennetun bonuksen määrä pitäisi täsmätä")
     (is (= bonuksen-maara (:rahasumma lupausbonus)))))

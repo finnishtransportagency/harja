@@ -17,6 +17,7 @@
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.geometriapaivitykset :as geometriat-q]
+            [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
@@ -387,6 +388,9 @@
                                                                      {:poistettu (or poistettu false)
                                                                       :id id
                                                                       :muokkaaja (:id user)})))
+            ;; Päivitys tai tallennus ei laske bonukselle indeksikorotusta, joten haetaan erilliskustannus uusiksi mahdollisen indeksikorotuksen kanssa
+            tallennettu (first (erilliskustannus-kyselyt/hae-erilliskustannus db {:urakka-id urakka-id
+                                                                                  :id (:id tallennettu)}))
             bonuksen-liitteet-tietokannasta (when id
                                               (laatupoikkeamat-kyselyt/hae-bonuksen-liitteet db id))]
         (when (not (empty? liitteet))
