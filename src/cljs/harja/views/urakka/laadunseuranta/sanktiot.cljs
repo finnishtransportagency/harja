@@ -171,14 +171,11 @@
                                           :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
                                           :modal-luokka "varmistus-modal"
                                           :hyvaksy "Poista"
-                                          :toiminto-fn #(do
-                                                          (let [res (tiedot/tallenna-sanktio
-                                                                      (assoc (lomake/ilman-lomaketietoja @muokattu)
-                                                                        :poistettu true)
-                                                                      urakka-id)]
-                                                            (do (viesti/nayta! "Sanktio poistettu")
-                                                                (reset! auki? false)
-                                                                (reset! tiedot/valittu-sanktio nil))))}))}
+                                          :toiminto-fn (fn []
+                                                         (tiedot/poista-suorasanktio
+                                                           (:id @muokattu)
+                                                           urakka-id
+                                                           #(reset! auki? false)))}))}
                                     (ikonit/livicon-trash) " Poista"])
                                  [napit/peruuta (if lukutila?
                                                   "Sulje"
@@ -502,7 +499,7 @@
   (if (= :virhe (tiedot/hae-sanktion-liitteet! (get-in rivi [:laatupoikkeama :urakka])
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
-    (viesti/nayta! "Sanktion liitteiden hakeminen epäonnistui" :warning)
+    (viesti/nayta-toast! "Sanktion liitteiden hakeminen epäonnistui" :warning)
     (log "Liitteet haettiin onnistuneesti.")))
 
 (defn- sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]

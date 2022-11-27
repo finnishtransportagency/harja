@@ -10,7 +10,8 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -145,6 +146,23 @@
           (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
       (reset! valittu-sanktio nil)
       (reset! haetut-sanktiot-ja-bonukset sanktiot-tallennuksen-jalkeen))))
+
+(defn poista-suorasanktio
+  [sanktion-id urakka-id onnistui-fn]
+  (go
+    (let [payload {:id sanktion-id
+                   :urakka-id urakka-id}
+          vastaus (<! (k/post! :poista-suorasanktio payload))]
+
+      (if (k/virhe? vastaus)
+        (viesti/nayta-toast! "Sanktion poisto epäonnistui!" :varoitus)
+        (do
+          (viesti/nayta-toast! "Sanktio poistettu" :onnistui)
+          (reset! valittu-sanktio nil)
+          ;; Haetaan onnistuneen poiston jälkeen uusiksi sanktiot & bonukset listan tiedot
+          (paivita-sanktiot-ja-bonukset!)
+          (when (fn? onnistui-fn) (onnistui-fn))))
+      vastaus)))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]

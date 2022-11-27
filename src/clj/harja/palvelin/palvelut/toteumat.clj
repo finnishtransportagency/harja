@@ -417,6 +417,9 @@
 (defn poista-erilliskustannus
   "Merkitään erilliskustannus poistetuksi"
   [db user {erilliskustannus-id :id urakka-id :urakka-id :as ek}]
+  (assert (integer? erilliskustannus-id) "Parametria 'erilliskustannus-id' ei ole määritelty")
+  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+
   (log/debug "Poista erilliskustannus:" ek)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
   (tarkistukset/vaadi-erilliskustannus-kuuluu-urakkaan db erilliskustannus-id urakka-id)
