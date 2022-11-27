@@ -346,6 +346,10 @@
                       :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
                       :fmt pvm/pvm :tyyppi :pvm
                       :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+                     ;; TODO:  Selvitä.
+                     ;;        Käsittelyaikaa pyöritellään myös laskutuskuukauden (eli :perintpvm nimisen input-kentän) kohdalla
+                     ;;        lomakkeella. Mistä on kyse? Tämä menee laatupoikkeaman käsittelyajaksi.
+                     ;;        Laskutuskuukaudessa haetaan myös laatupoikkeaman käsittelyajasta kuukausivalinta dropdown-valikkoon!
                      {:otsikko "Käsitelty" :nimi :kasittelyaika
                       :pakollinen? true
                       ::lomake/col-luokka "col-xs-3"
@@ -366,6 +370,11 @@
                         ::lomake/col-luokka "col-xs-6"
                         :huomauta [[:urakan-aikana-ja-hoitokaudella]]
                         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                                       ;; TODO:  Selvitä.
+                                       ;;        Kirjoitustilassa haetaan laskutuskuukauden päivämääräksi laatupoikkeaman käsittelyaika!
+                                       ;;        Lomakkeen lukutilassa (alla) haetaan vain perintapvm.
+                                       ;;        Kummasta päivämäärästä (perintapvm/kasittelyaika) laskutuskuukauden päivämäärä
+                                       ;;        (eli UI:ssa näkyvä tietyn hoitovuoden kuukauden nimi) kuuluu hakea?
                                        (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
                                          [:<>
                                           [yleiset/livi-pudotusvalikko
@@ -389,6 +398,9 @@
                                           ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                                           (when (not @tiedot-urakka/yllapitourakka?)
                                             [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))}
+                       ;; TODO:  Selvitä.
+                       ;;        Lukutilassa haetaan laskutuskuukauden päivämääräksi perintäpvm, kirjoitustilassa laatupoikkeaman käsittelyaika!
+                       ;;        Kummasta päivämäärästä laskutuskuukauden päivämäärä (eli UI:ssa näkyvä hoitovuoden kuukauden nimi) kuuluu hakea?
                        {:otsikko "Laskutuskuukausi"
                         :nimi :perintapvm
                         :fmt (fn [kk]

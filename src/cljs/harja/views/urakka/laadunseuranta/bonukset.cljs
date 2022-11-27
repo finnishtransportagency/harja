@@ -150,6 +150,13 @@
            :valinta-nayta #(or % "Ei indeksiä")}))
       (lomake/ryhma
         {:rivi? true}
+        ;; TODO: Selvitä.
+        ;;       Tässä on käytetty samaa perintapvm-termiä kuin sanktioiden puolella, jotta avaimien nimiä ei tarvitsisi
+        ;;       muuntaa bonusten tietoja hakiessa ja tallentaessa.
+        ;;       Sanktiolomakkeella kuitenkin perintapvm haetaan laatupoikkeaman käsittelyajasta,
+        ;;       Bonuksissa ei tunneta käsitettä "laatupoikkeama". PAITSI, ylläpidon bonuksissa, jotka tallennetaan sanktioina.
+        ;;       Tutki voisiko eri aikatermejä selkiyttää bonusten ja sanktioiden välillä, jotta samoihin asioihin viitataan
+        ;;       samoilla nimillä kummallakin lomakkeella ja sanktiot & bonukset-listauksessa.
         {:otsikko "Käsitelty"
          :nimi :perintapvm
          :tyyppi :pvm
@@ -172,6 +179,19 @@
 
                       true (assoc :perintapvm arvo))))}
         (if (and voi-muokata? (not lukutila?))
+          ;; TODO: Selvitä.
+          ;;       Laskutuskuukausi-termi on käytössä sanktiolomakkeellakin. MH-urakoiden bonukset tallennetaan
+          ;;       erilliskustannus-tauluun, jossa on laskutuskuukaudelle ihan oma sarake.
+          ;;       Sanktiolomakkeella laskutuskuukausi saattaa tarkoittaa eri asiaa?
+          ;;       Sanktiolomakkeella laskutuskuukauden arvoksi päätyy vuoroin perintapvm tai laatupoikkeaman käsittelyaika,
+          ;;       mikä on jotenkin kummallista.
+          ;;       - Koska ylläpidon bonus tallennetaan poikkeuksellisesti sanktiona, täytyy olla täysin selvää:
+          ;;         1. Mitä laskutuskuukausi tarkoittaa hoitourakoiden bonusten tapauksessa (erilliskustannus)?
+          ;;         2. Mitä laskutuskuukausi tarkoittaa hoitourakoiden sanktioiden ja ylläpidon bonuksen tapauksessa (sanktio+laatupoikkeama)?
+          ;;       -  Sanktiot tallennetaan sanktio-tauluun, jossa ei ole laskutuskuukaudelle omaa saraketta.
+          ;;       - Sanktio-taulussa on kuitenkin sarake perintapvm:lle.
+          ;;       - Sanktioon (ja siten myös ylläpidon bonukseen) liittyy aina "laatupoikkeama".
+          ;;       - Laatupoikkeama-taulussa on omat sarakkeet havaintoajalle ("aika") ja käsittelyajalle ("kasittelyaika")
           {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
            :pakollinen? true
            :tyyppi :komponentti
