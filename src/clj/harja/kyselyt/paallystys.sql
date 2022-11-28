@@ -43,7 +43,7 @@ WHERE ypk.urakka = :urakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
-  AND ((:paikkauskohteet ::TEXT IS NULL)
+  AND ((:paikkauskohteet ::TEXT IS NULL AND p."yllapitokohde-id" IS NULL)
    OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
