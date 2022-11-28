@@ -202,7 +202,8 @@
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
                    (< 2019 valittu-urakan-vuosi)
-                   (not paikkauskohteet?))
+                   ;; paikkauskohteiden YHA-lähetys saa mennä päälle kehitysympäristössä
+                   (or (not paikkauskohteet?) (k/kehitysymparistossa?)))
           ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
@@ -219,6 +220,10 @@
                            (ikonit/ikoni-ja-teksti (ikonit/livicon-document-full) " Aloita"))])}]
        paallystysilmoitukset])))
 
+(def pot-vinkki-paikkaus "Paikkauskohteiden POT:ien osalta YHA-lähetys tulee käyttöön vasta lähiaikoina.")
+
+(def pot-vinkki-paallystys "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s). Itse tiedot useassa tapauksessa ovat silti menneet onnistuneesti YHA:an perille, vaikka Harjan virheilmoitus sanoisi 'request timed out'. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta.")
+
 (defn ilmoitusluettelo
   [e! app]
   (komp/luo
@@ -226,8 +231,9 @@
                     (nav/vaihda-kartan-koko! :M)))
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
-      [:div
-       [yleiset/toast-viesti "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s). Itse tiedot useassa tapauksessa ovat silti menneet onnistuneesti YHA:an perille, vaikka Harjan virheilmoitus sanoisi 'request timed out'. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta."]
+      [:div.paallystysilmoitusluettelo
+       [yleiset/toast-viesti
+        (if paikkauskohteet? pot-vinkki-paikkaus pot-vinkki-paallystys)]
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}
@@ -239,7 +245,7 @@
        [paallystysilmoitukset-taulukko e! app]
        ;; TODO: YHA-lähetykset eivät ole paikkauskohteilla vielä käytössä
        (when-not paikkauskohteet?
-         [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHAan tai Velhoon."])])))
+         [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHA:an"])])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div

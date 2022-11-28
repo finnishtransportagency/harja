@@ -785,6 +785,7 @@ WHERE yllapitokohde = :id
 UPDATE yllapitokohteen_aikataulu
    SET
        kohde_alku       = :aikataulu_kohde_alku,
+       paallystys_loppu = :aikataulu_paallystys_valmis,
        kohde_valmis     = :aikataulu_kohde_valmis,
        muokattu         = NOW(),
        muokkaaja        = :aikataulu_muokkaaja
@@ -997,15 +998,16 @@ WHERE id = :id;
 -- name: hae-yllapitokohde
 SELECT
   ypk.id,
+  paik.id                    AS "paikkauskohde-id",
   ypk.urakka,
   sopimus,
   kohdenumero,
-  nimi,
+  ypk.nimi,
   ypkk.sopimuksen_mukaiset_tyot,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi,
   ypkk.kaasuindeksi,
-  poistettu,
+  ypk.poistettu,
   ypka.kohde_alku            AS "aikataulu_kohde_alku",
   ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
   ypka.paallystys_loppu      AS "aikataulu_paallystys_loppu",
@@ -1038,6 +1040,7 @@ SELECT
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde paik ON paik."yllapitokohde-id" = ypk.id AND paik.poistettu IS FALSE
 WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu

@@ -106,9 +106,10 @@ SELECT
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
   -- Paikkauskohteen kääntäminen pot lomakkeeksi vaatii muutamia lisäkenttiä
   p.takuuaika                   AS takuuaika,
+  p."toteutunut-hinta"          AS "paikkauskohde-toteutunut-hinta",
   ypka.paallystys_alku          AS "paallystys-alku",
-  ypka.paallystys_loppu         AS "paallystys-loppu",
   p.id                          AS "paikkauskohde-id",
+  p.nimi                        AS "paikkauskohde-nimi",
   ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
   ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
   ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",

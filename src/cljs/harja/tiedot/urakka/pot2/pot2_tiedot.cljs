@@ -249,7 +249,7 @@
                              (assoc lahetettava-data
                                :paikkauskohteen-tiedot
                                {:paallystys-alku (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-alku])
-                                :paallystys-loppu (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-loppu])
+                                :valmispvm-paallystys (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-paallystys])
                                 :valmispvm-kohde (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-kohde])
                                 :takuuaika (get-in paallystysilmoitus-lomakedata [:perustiedot :takuuaika])}))]
       (log "TallennaPot2Tiedot lahetettava-data: " (pr-str lahetettava-data))

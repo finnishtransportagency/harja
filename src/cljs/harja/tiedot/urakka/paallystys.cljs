@@ -79,6 +79,7 @@
     :yha-tr-osoite :muokattu
     :kokonaishinta-ilman-maaramuutoksia :maaramuutokset
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
+    :paikkauskohde-toteutunut-hinta :paikkauskohde-nimi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
 (def lahetyksen-tila-avaimet

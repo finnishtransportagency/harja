@@ -31,6 +31,8 @@
    (when (:tr-kaista osoite)
      [:kaista (:tr-kaista osoite)])])
 
+(def tyomenetelmasta-ei-tietoa 99)
+
 (defn tee-alikohde [{:keys [yhaid id paallystetyyppi raekoko kokonaismassamaara massamenekki rc% kuulamylly
                             pot2-tyomenetelma tyomenetelma leveys pinta-ala esiintyma km-arvo litteyslukuluokka muotoarvo sideainetyyppi pitoisuus
                             lisaaineet poistettu] :as alikohde}]
@@ -38,6 +40,7 @@
   ;; POT1:ssä muotoarvo tulee kentässä muotoarvo, mutta pot2:ssa käytetään litteyslukuluokkaa
   (let [muotoarvo (or litteyslukuluokka muotoarvo)]
     [:alikohde
+     ;; tämän oltava paikkauskohteiden potissa aina nil (ja onkin)
      (when yhaid [:yha-id yhaid])
      [:harja-id id]
      [:poistettu (if poistettu 1 0)]
@@ -53,8 +56,7 @@
         (when kuulamylly [:kuulamylly kuulamylly])
         [:paallystetyomenetelma (or pot2-tyomenetelma
                                     tyomenetelma
-                                    ;; 99 = ei tietoa
-                                    99)]
+                                    tyomenetelmasta-ei-tietoa)]
         (when leveys [:leveys leveys])
         (when pinta-ala [:pinta-ala pinta-ala])])
      ;; todo: täytyy varmistaa pitääkö alikohteelle voida kirjata useampia materiaaleja
@@ -100,12 +102,18 @@
      [:tekninen-toimenpide tekninen-toimenpide]
      (when massamaara [:massamenekki massamaara])]))
 
+;; YHA ohjaa paikkauskohteiden pot-lomakkeet poikkeuskäsittelyllä yhteisesti sovitun kohde id:n avulla
+(def paikkauskohteiden-yha-id 99)
+
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
-                         karttapvm nimi tunnus] :as kohde}
+                         karttapvm nimi tunnus paikkauskohde-id] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystysilmoitus}]
   [:kohde
-   (when yhaid [:yha-id yhaid])
+   ;; Tämän yhaid:n oltava paikkauskohteen POT:eilla aina 99
+   [:yha-id (if paikkauskohde-id
+              paikkauskohteiden-yha-id
+              yhaid)]
    [:harja-id id]
    (when yha-kohdenumero [:kohdenumero yha-kohdenumero])
    [:kohdetyyppi (kasittele-kohteen-tyyppi yllapitokohdetyyppi)]
