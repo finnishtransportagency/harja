@@ -8,7 +8,7 @@
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
             [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeama-tiedot]
-            [harja.views.urakka.laadunseuranta.sanktiot :as sanktiot]
+            [harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma :as sanktiot-ja-bonukset-nakyma]
             [harja.views.urakka.laadunseuranta.mobiilityokalu :as mobiilityokalu]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
             [harja.ui.komponentti :as komp]
@@ -68,7 +68,7 @@
 
        (if @tiedot-urakka/yllapitourakka? "Sakot ja bonukset" "Sanktiot ja bonukset") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
-         [sanktiot/sanktiot])
+         [sanktiot-ja-bonukset-nakyma/sanktiot-ja-bonukset])
 
        "Siltatarkastukset" :siltatarkastukset
        (when (valilehti-mahdollinen? :siltatarkastukset ur)

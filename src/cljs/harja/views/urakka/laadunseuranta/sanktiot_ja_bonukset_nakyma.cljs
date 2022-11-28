@@ -1,7 +1,6 @@
-(ns harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset
-  "Sanktioiden ja bonusten listaus"
+(ns harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma
+  "Sanktioiden ja bonusten välilehti"
   (:require [reagent.core :refer [atom] :as r]
-            [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
@@ -13,15 +12,11 @@
             
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
-            [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset  :refer [ajax-loader livi-pudotusvalikko] :as yleiset]
             [harja.ui.sivupalkki :as sivupalkki]
-            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
-            [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
 
             [harja.domain.oikeudet :as oikeudet]
@@ -31,7 +26,7 @@
             [harja.domain.tierekisteri :as tierekisteri]
             
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.laadunseuranta.bonukset :as bonukset]))
+            [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]))
 
 (defn laji->teksti
   [laji]
@@ -188,7 +183,7 @@
      (when yllapito?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
 
-(defn sanktiot [optiot]
+(defn sanktiot-ja-bonukset [optiot]
   (let [auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
@@ -206,5 +201,5 @@
               {:leveys "600px" :sulku-fn #(do
                                             (reset! auki? false)
                                             (reset! tiedot/valittu-sanktio nil))}
-              [sivupaneeli (assoc optiot :auki? auki?)]])
+              [sanktiot-lomake/sivupaneeli (assoc optiot :auki? auki?)]])
            [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])))))

@@ -19,7 +19,7 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
-            [harja.views.urakka.laadunseuranta.sanktiot :as v-sanktiot]
+            [harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma :as v-sanktiot]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]

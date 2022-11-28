@@ -267,7 +267,6 @@
                                          {})})]
     (fn [_ _ _ lukutila? voi-muokata?]
       [:<>
-       [harja.ui.debug/debug avattu-bonus]
        [harja.ui.debug/debug @bonukset-tila]
 
        [tuck/tuck bonukset-tila

@@ -1,37 +1,25 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
   (:require [reagent.core :refer [atom] :as r]
-            [clojure.string :as str]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]
-            [harja.loki :refer [log]]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
-            
-            [harja.ui.grid :as grid]
+
             [harja.ui.komponentti :as komp]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.yleiset  :refer [ajax-loader livi-pudotusvalikko] :as yleiset]
-            [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.viesti :as viesti]
-            [harja.ui.valinnat :as valinnat]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.kentat :as kentat]
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.domain.urakka :as u-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.domain.tierekisteri :as tierekisteri]
-            
-            [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.laadunseuranta.bonukset :as bonukset]))
+            [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]))
 
 (defn laji->teksti
   [laji]
@@ -123,7 +111,7 @@
 
 
            (if bonusten-syotto?
-             [bonukset/bonukset* auki? @muokattu
+             [bonukset-lomake/bonukset* auki? @muokattu
               ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
               #(tiedot/paivita-sanktiot-ja-bonukset!)
               lukutila? voi-muokata?]
