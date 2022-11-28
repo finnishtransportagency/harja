@@ -62,6 +62,7 @@ WHERE laatupoikkeama = :laatupoikkeama
 SELECT
   s.id,
   s.perintapvm,
+  lp.kasittelyaika                   AS kasiteltypvm,
   s.maara                             AS summa,
   s.sakkoryhma::text                  AS laji,
   s.indeksi,
@@ -131,6 +132,7 @@ WHERE
 UNION ALL
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS kasiteltypvm,
        p."urakoitsijan-maksu"                          AS summa,
        p.tyyppi::TEXT                                  AS laji,
        u.indeksi,
@@ -192,6 +194,7 @@ WHERE p."urakka-id" = :urakka
 -- Bonukset erilliskustannuksista
 SELECT ek.id,
        ek.pvm                 AS perintapvm,
+       ek.pvm                 AS kasiteltypvm,
        ek.rahasumma           AS summa,
        ek.tyyppi::TEXT        AS laji,
        ek.indeksin_nimi       AS indeksi,
