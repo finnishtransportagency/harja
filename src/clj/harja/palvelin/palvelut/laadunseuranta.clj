@@ -123,6 +123,7 @@
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   ;; Haetaan oletuksena sankiot ja bonukset.
+  ;; HOX: Suurin osa muunnoksista tehdään hae-urakan-sanktiot/hae-urakan-bonukset "row-fn" -funktioissa.
   (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
         hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
         urakan-sanktiot (if hae-sanktiot?
@@ -130,15 +131,6 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           [])
-        ;; Muutetaan sanktiot miinusmerkkisiksi
-        urakan-sanktiot (map #(konv/muunna % [:summa :indeksikorjaus] -) urakan-sanktiot)
-        urakan-sanktiot (into []
-                          (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-                            (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-                            (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
-                                           :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
-                            (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %)))
-                          urakan-sanktiot)
         urakan-bonukset (if hae-bonukset?
                           (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
@@ -153,15 +145,12 @@
                    (concat
                      urakan-bonukset
                      urakan-lupausbonukset))
+        ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
-                               (comp
-                                 (map konv/alaviiva->rakenne)
-                                 (map #(assoc % :laji (keyword (:laji %))))
-                                 (map #(konv/decimal->double % :summa))
-                                 (map #(konv/decimal->double % :indeksikorjaus)))
-                               (concat
-                                 urakan-sanktiot
-                                 bonukset))]
+                               (map konv/alaviiva->rakenne
+                                 (concat
+                                   urakan-sanktiot
+                                   bonukset)))]
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
       sanktiot-ja-bonukset)))

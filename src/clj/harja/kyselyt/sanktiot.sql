@@ -84,6 +84,7 @@ UPDATE sanktio
 
 
 -- name: hae-urakan-sanktiot
+-- row-fn: muunna-urakan-sanktio
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 SELECT
@@ -217,6 +218,7 @@ WHERE p."urakka-id" = :urakka
   AND p.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-bonukset
+-- row-fn: muunna-urakan-bonus
 -- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 
@@ -299,6 +301,7 @@ SELECT s.id,
    AND s.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-lupausbonukset
+-- row-fn: muunna-urakan-lupausbonus
 -- Lupausbonukset
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,

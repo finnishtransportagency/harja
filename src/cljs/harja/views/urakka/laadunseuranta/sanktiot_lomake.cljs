@@ -48,6 +48,8 @@
             (and yllapitokohdeurakka? yllapitokohteet)))
 
       [:div
+       #_[harja.ui.debug/debug @muokattu]
+
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
          :otsikko-elementti :h4
@@ -323,20 +325,13 @@
               :tyyppi :pvm
               ::lomake/col-luokka "col-xs-6"}))
 
-         {:otsikko "Käsittelytapa" :nimi :kasittelytapa
+         {:otsikko "Käsittelytapa" :nimi :kasittelytapa :tyyppi :valinta
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :hae (comp :kasittelytapa :paatos :laatupoikkeama)
           :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
-          :tyyppi :valinta
           :valinnat sanktio-domain/kasittelytavat
-          :valinta-nayta #(if % (case %
-                                  :tyomaakokous "Työmaakokous"
-                                  :valikatselmus "Välikatselmus"
-                                  :puhelin "Puhelimitse"
-                                  :kommentit "Harja-kommenttien perusteella"
-                                  :muu "Muu tapa"
-                                  nil) "- valitse käsittelytapa -")}
+          :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
          (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             ::lomake/col-luokka "col-xs-12"

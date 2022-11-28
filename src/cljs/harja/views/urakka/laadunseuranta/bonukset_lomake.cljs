@@ -222,19 +222,12 @@
            :tyyppi :pvm
            ::lomake/col-luokka "col-xs-6"}))
       {:otsikko "Käsittelytapa"
-       :nimi :kasittelytapa
-       :tyyppi :valinta
+       :nimi :kasittelytapa :tyyppi :valinta
        :pakollinen? true
        ::lomake/col-luokka "col-xs-12"
-       :valinta-nayta #(if % (case %
-                               :tyomaakokous "Työmaakokous"
-                               :valikatselmus "Välikatselmus"
-                               :puhelin "Puhelimitse"
-                               :kommentit "Harja-kommenttien perusteella"
-                               :muu "Muu tapa"
-                               nil)
-                             "- valitse käsittelytapa -")
-       :valinnat sanktio-domain/kasittelytavat}
+       :valinnat sanktio-domain/kasittelytavat
+       :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
+
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
       (when-not lukutila?
         {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
@@ -267,7 +260,7 @@
                                          {})})]
     (fn [_ _ _ lukutila? voi-muokata?]
       [:<>
-       [harja.ui.debug/debug @bonukset-tila]
+       #_[harja.ui.debug/debug @bonukset-tila]
 
        [tuck/tuck bonukset-tila
         (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata?)]])))

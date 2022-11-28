@@ -237,6 +237,16 @@
     :yllapidon_bonus "Ylläpidon bonus"
     "- Valitse tyyppi -"))
 
+(defn kasittelytapa->teksti
+  [avain]
+  (case avain
+    :tyomaakokous "Työmaakokous"
+    :valikatselmus "Välikatselmus"
+    :puhelin "Puhelimitse"
+    :kommentit "Harja-kommenttien perusteella"
+    :muu "Muu tapa"
+    nil))
+
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
   ;; Ei sallita urakoitsijan antaa itselleen bonuksia
   ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
