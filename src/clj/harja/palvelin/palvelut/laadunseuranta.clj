@@ -142,6 +142,8 @@
                                                                         :loppu (konv/sql-timestamp loppu)})
                                 [])
         bonukset (into []
+                   ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
+                   (map #(assoc % :bonus? true))
                    (concat
                      urakan-bonukset
                      urakan-lupausbonukset))

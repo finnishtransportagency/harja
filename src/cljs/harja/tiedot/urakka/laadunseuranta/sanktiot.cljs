@@ -22,9 +22,10 @@
         default-kasittelyaika (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:suorasanktio true
      :laji (cond
-             (#{:hoito :teiden-hoito} urakkatyyppi) :A
+             (u-domain/hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
+     ;; TODO: Tätä ei oikeasti käytetä missään. Sanktioilla käsittelyaika haetaan [:laadunseuranta :paatos :kasittelyaika].
      :kasittelyaika default-kasittelyaika
      :perintapvm default-kasittelyaika
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
@@ -185,20 +186,17 @@
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
 
-(defn- muistutus? [rivi]
-  (= :muistutus (:laji rivi)))
-
 (defn- bonus? [rivi]
-  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus
-     :yllapidon_bonus}
-   (:laji rivi)))
+  (boolean (:bonus? rivi)))
 
 (defn- sanktio? [rivi]
-  ((disj (set @urakka/valitun-urakan-sanktiolajit) :arvonvahennyssanktio :muistutus)
-   (:laji rivi)))
+  (not (:bonus? rivi)))
 
 (defn- arvonvahennys? [rivi]
   (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- muistutus? [rivi]
+  (= :muistutus (:laji rivi)))
 
 (defn- rivin-tyyppi [rivi]
   (cond

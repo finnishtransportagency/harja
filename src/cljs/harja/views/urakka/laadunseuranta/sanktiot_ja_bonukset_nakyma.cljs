@@ -185,6 +185,8 @@
                    (sort-by :perintapvm)
                    reverse)]
     [:div.sanktiot
+     #_[harja.ui.debug/debug sanktiot]
+
      [:h1 (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
