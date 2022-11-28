@@ -196,7 +196,7 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
-(defn laji->teksti
+(defn sanktiolaji->teksti
   [laji]
   (case laji
     :A "A-ryhmä (tehtäväkohtainen sanktio)"
@@ -223,8 +223,8 @@
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     nil))
 
-(defn bonustyypin-teksti
-  "Erilliskustannustyypin teksti avainsanaa vastaan"
+(defn bonuslaji->teksti
+  "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
@@ -235,7 +235,7 @@
     ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
     ;; Eli, tämä tyyppi ei ole yksi erilliskustannustyypeistä, vaan yksi sanktiolajeista.
     :yllapidon_bonus "Ylläpidon bonus"
-    "- Valitse tyyppi -"))
+    nil))
 
 (defn kasittelytapa->teksti
   [avain]

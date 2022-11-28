@@ -132,7 +132,7 @@
                          (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                          rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (sanktio-domain/laji->teksti %) "- valitse laji -")
+            :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
          (when-not (or yllapitourakka? vesivaylaurakka?)
            (if (not lukutila?)

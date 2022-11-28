@@ -60,7 +60,7 @@
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
-                  (str (sanktio-domain/laji->teksti (:laji @muokattu)))
+                  (str (sanktio-domain/sanktiolaji->teksti (:laji @muokattu)))
 
                   (and muokataan-vanhaa? (not bonusten-syotto?))
                   "Muokkaa sanktiota"
@@ -201,7 +201,7 @@
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
       [{:otsikko "Käsitelty" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
-       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt sanktio-domain/laji->teksti}
+       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
           :hae (fn [rivi]

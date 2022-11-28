@@ -86,7 +86,7 @@
          ;; Esimerkiksi ylläpitourakoiden tapauksessa on saatavilla vain "yllapidon_bonus"
          :valitse-ainoa? true
          :valinnat (sanktio-domain/luo-kustannustyypit (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
-         :valinta-nayta sanktio-domain/bonustyypin-teksti
+         :valinta-nayta #(or (sanktio-domain/bonuslaji->teksti %) "- Valitse tyyppi -")
          ::lomake/col-luokka "col-xs-12"
          :validoi [[:ei-tyhja "Valitse laji"]]})
 

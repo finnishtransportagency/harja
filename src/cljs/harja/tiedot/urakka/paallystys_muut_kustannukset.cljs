@@ -61,7 +61,7 @@
                    (if (:bonus ks)
                      {:hinta (-> ks :summa)
                       :pvm (-> ks :perintapvm)
-                      :selite (sanktio-domain/bonustyypin-teksti (-> ks :laji))
+                      :selite (sanktio-domain/bonuslaji->teksti (-> ks :laji))
                       :id (-> ks :id)}
 
                      ;; Muutoin, kustannus on sanktio
