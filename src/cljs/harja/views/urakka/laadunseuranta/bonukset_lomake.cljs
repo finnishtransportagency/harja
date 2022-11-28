@@ -1,4 +1,4 @@
-(ns harja.views.urakka.laadunseuranta.bonukset
+(ns harja.views.urakka.laadunseuranta.bonukset-lomake
   "Bonuksien käsittely ja luonti"
   (:require [reagent.core :as r]
             [tuck.core :as tuck]
