@@ -27,21 +27,7 @@
             [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
             [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]))
 
-
-(defn- lajisuodatin-valinnat [lajisuodattimet]
-  [:div.lajisuodattimet
-   [kentat/tee-otsikollinen-kentta
-    {:otsikko "Näytä lajit"
-     :otsikon-tag :div
-     :kentta-params {:tyyppi :checkbox-group
-                     :vaihtoehdot lajisuodattimet
-                     :vaihtoehto-nayta #(:teksti (tiedot/lajisuodatin-tiedot %))
-                     :label-luokka "margin-right-16"
-                     :nayta-rivina? true}
-     :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
-
-
-;; --- Sivupaneeli ---
+;; --- Sivupaneeli sanktio- ja bonuslomakkeille ---
 
 (defn bonus-sanktio-valikko
   [tila]
@@ -68,7 +54,7 @@
               voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                              (:id @nav/valittu-urakka))
               muokataan-vanhaa? (some? (:id @muokattu))
-              suorasanktio? (some? (:suorasanktio @muokattu))
+              suorasanktio? (:suorasanktio @muokattu)
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))]
           [:div.padding-16.ei-sulje-sivupaneelia
@@ -108,6 +94,18 @@
 
 
 ;; --- Sanktioiden listaus ---
+
+(defn- lajisuodatin-valinnat [lajisuodattimet]
+  [:div.lajisuodattimet
+   [kentat/tee-otsikollinen-kentta
+    {:otsikko "Näytä lajit"
+     :otsikon-tag :div
+     :kentta-params {:tyyppi :checkbox-group
+                     :vaihtoehdot lajisuodattimet
+                     :vaihtoehto-nayta #(:teksti (tiedot/lajisuodatin-tiedot %))
+                     :label-luokka "margin-right-16"
+                     :nayta-rivina? true}
+     :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
   [:div.flex-row.tasaa-alkuun
