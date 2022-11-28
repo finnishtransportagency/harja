@@ -196,6 +196,33 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
+(defn laji->teksti
+  [laji]
+  (case laji
+    :A "A-ryhmä (tehtäväkohtainen sanktio)"
+    :B "B-ryhmä (vakava laiminlyönti)"
+    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
+    :muistutus "Muistutus"
+    :vaihtosanktio "Vastuuhenkilön vaihto"
+    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
+    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
+    :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
+    :yllapidon_muistutus "Muistutus"
+    :yllapidon_sakko "Sakko"
+    :yllapidon_bonus "Bonus"
+    :vesivayla_muistutus "Muistutus"
+    :vesivayla_sakko "Sakko"
+    :vesivayla_bonus "Bonus"
+
+    :lupausbonus "Lupausbonus"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
+    nil))
+
 (defn bonustyypin-teksti
   "Erilliskustannustyypin teksti avainsanaa vastaan"
   [avainsana]

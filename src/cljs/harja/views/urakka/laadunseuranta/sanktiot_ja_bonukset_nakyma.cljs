@@ -27,32 +27,6 @@
             [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
             [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]))
 
-(defn laji->teksti
-  [laji]
-  (case laji
-    :A "A-ryhmä (tehtäväkohtainen sanktio)"
-    :B "B-ryhmä (vakava laiminlyönti)"
-    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
-    :muistutus "Muistutus"
-    :vaihtosanktio "Vastuuhenkilön vaihto"
-    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
-    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
-    :arvonvahennyssanktio "Arvonvähennys"
-    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
-    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
-    :lupaussanktio "Lupaussanktio"
-    :yllapidon_muistutus "Muistutus"
-    :yllapidon_sakko "Sakko"
-    :yllapidon_bonus "Bonus"
-    :vesivayla_muistutus "Muistutus"
-    :vesivayla_sakko "Sakko"
-    :vesivayla_bonus "Bonus"
-
-    :lupausbonus "Lupausbonus"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
-    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
-    "- valitse laji -"))
 
 (defn- lajisuodatin-valinnat [lajisuodattimet]
   [:div.lajisuodattimet
@@ -100,7 +74,7 @@
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
-                  (str (laji->teksti (:laji @muokattu)))
+                  (str (sanktio-domain/laji->teksti (:laji @muokattu)))
 
                   (and muokataan-vanhaa? (not bonusten-syotto?))
                   "Muokkaa sanktiota"
@@ -229,7 +203,7 @@
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
       [{:otsikko "Käsitelty" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
-       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt laji->teksti}
+       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt sanktio-domain/laji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
           :hae (fn [rivi]

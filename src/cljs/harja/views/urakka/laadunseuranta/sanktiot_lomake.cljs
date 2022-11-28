@@ -17,34 +17,6 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]))
 
-(defn laji->teksti
-  [laji]
-  (case laji
-    :A "A-ryhmä (tehtäväkohtainen sanktio)"
-    :B "B-ryhmä (vakava laiminlyönti)"
-    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
-    :muistutus "Muistutus"
-    :vaihtosanktio "Vastuuhenkilön vaihto"
-    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
-    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
-    :arvonvahennyssanktio "Arvonvähennys"
-    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
-    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
-    :lupaussanktio "Lupaussanktio"
-    :yllapidon_muistutus "Muistutus"
-    :yllapidon_sakko "Sakko"
-    :yllapidon_bonus "Bonus"
-    :vesivayla_muistutus "Muistutus"
-    :vesivayla_sakko "Sakko"
-    :vesivayla_bonus "Bonus"
-
-    :lupausbonus "Lupausbonus"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
-    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
-    "- valitse laji -"))
-
-
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata?]
   (let [muokattu (atom @tiedot/valittu-sanktio)
@@ -158,7 +130,7 @@
                          (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
                          rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta laji->teksti
+            :valinta-nayta #(or (sanktio-domain/laji->teksti %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
          (when-not (or yllapitourakka? vesivaylaurakka?)
            (if (not lukutila?)
