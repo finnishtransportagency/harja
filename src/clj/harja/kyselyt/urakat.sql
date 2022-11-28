@@ -145,7 +145,9 @@ SELECT
   u.sampoid,
   CASE WHEN u.tyyppi = 'paallystys' :: urakkatyyppi
       THEN ST_SimplifyPreserveTopology(u.alue, 50)
-          END as alue,
+        WHEN u.tyyppi = 'teiden-hoito' :: urakkatyyppi
+      THEN st_simplifypreservetopology(u.alue, 50)
+      END as alue,
   u.alkupvm,
   u.loppupvm,
   u.tyyppi,
