@@ -116,12 +116,15 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))
-          maaliskuun-sanktiot (first (sanktiot/hae-urakan-sanktiot (:db jarjestelma) @oulun-maanteiden-hoitourakan-2019-2024-id (konv/sql-timestamp (pvm/->pvm "1.3.2020")) (konv/sql-timestamp (pvm/->pvm "31.3.2020"))))
+          maaliskuun-sanktiot (first (sanktiot/hae-urakan-sanktiot
+                                       (:db jarjestelma) @oulun-maanteiden-hoitourakan-2019-2024-id
+                                       (konv/sql-timestamp (pvm/->pvm "1.3.2020"))
+                                       (konv/sql-timestamp (pvm/->pvm "31.3.2020"))))
           sanktiosumma-indeksikorotettuna (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
                                                    (:db jarjestelma)
                                                    {:hoitokauden-alkuvuosi 2019
                                                     :indeksinimi "MAKU 2015"
-                                                    :summa (* -1 (:summa maaliskuun-sanktiot))
+                                                    :summa (:summa maaliskuun-sanktiot)
                                                     :perusluku (:perusluku talvihoito)}))]
 
       (is (= (:sakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
