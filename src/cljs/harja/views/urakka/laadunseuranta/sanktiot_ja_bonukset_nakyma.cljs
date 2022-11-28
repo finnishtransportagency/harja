@@ -6,14 +6,13 @@
             [harja.loki :refer [log]]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.ui.yleiset  :refer [ajax-loader livi-pudotusvalikko] :as yleiset]
+            [harja.ui.yleiset  :refer [ajax-loader] :as yleiset]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
@@ -21,12 +20,12 @@
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.domain.urakka :as u-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tierekisteri]
             
             [harja.views.urakka.valinnat :as urakka-valinnat]
-            [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]))
+            [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
+            [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]))
 
 (defn laji->teksti
   [laji]
@@ -67,7 +66,76 @@
                      :nayta-rivina? true}
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
-(defn- suodattimet-ja-toiminnot [valittu-urakka auki? lajisuodattimet]
+
+;; --- Sivupaneeli ---
+
+(defn bonus-sanktio-valikko
+  [tila]
+  [:<>
+   [kentat/tee-kentta {:tyyppi :radio-group
+                       :vaihtoehdot [:sanktiot :bonukset]
+                       :vayla-tyyli? true
+                       :nayta-rivina? true
+                       :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                          :bonukset "Bonus"}} tila]
+   [:hr]])
+
+
+(defn sivupaneeli
+  [sivupaneeli-auki?-atom]
+  (let [tila (atom {:lukutila true :lomake :sanktiot})]
+    (komp/luo
+      (fn [sivupaneeli-auki?-atom]
+        (let [muokattu (atom @tiedot/valittu-sanktio)
+              _ (when (and
+                        (true? (:bonus @muokattu))
+                        (not= :bonukset (:lomake @tila)))
+                  (swap! tila assoc :lomake :bonukset))
+              voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                             (:id @nav/valittu-urakka))
+              muokataan-vanhaa? (some? (:id @muokattu))
+              suorasanktio? (some? (:suorasanktio @muokattu))
+              lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
+              bonusten-syotto? (= :bonukset (:lomake @tila))]
+          [:div.padding-16.ei-sulje-sivupaneelia
+           [:h2 (cond
+                  (and lukutila? muokataan-vanhaa?)
+                  (str (laji->teksti (:laji @muokattu)))
+
+                  (and muokataan-vanhaa? (not bonusten-syotto?))
+                  "Muokkaa sanktiota"
+
+                  (and muokataan-vanhaa? bonusten-syotto?)
+                  "Muokkaa bonusta"
+
+                  :else
+                  "Lisää uusi")]
+
+           (when-not muokataan-vanhaa?
+             [bonus-sanktio-valikko (r/cursor tila [:lomake])])
+
+           (when (and lukutila? muokataan-vanhaa?)
+             [:div.flex-row.alkuun.valistys16
+              [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
+               {:disabled (not suorasanktio?)}]
+              (when (not suorasanktio?)
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
+
+
+           (if bonusten-syotto?
+             ;; Bonus-lomake
+             [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
+              ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
+              #(tiedot/paivita-sanktiot-ja-bonukset!)
+              lukutila? voi-muokata?]
+
+             ;;Sanktio-lomake
+             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? voi-muokata?])])))))
+
+
+;; --- Sanktioiden listaus ---
+
+(defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
   [:div.flex-row.tasaa-alkuun
    [valinnat/urakkavalinnat {:urakka valittu-urakka}
     ^{:key "urakkavalinnat"}
@@ -85,13 +153,15 @@
        [:div.lisaa-nappi
         [napit/uusi "Lisää uusi"
          #(do
-            (reset! auki? true)
+            (reset! sivupaneeli-auki?-atom true)
             (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi valittu-urakka))))
          {:disabled (not oikeus?)}]]))])
 
 
-(defn valitse-sanktio! [rivi sanktio-atom]
+(defn valitse-sanktio-tai-bonus! [rivi sanktio-atom]
   (reset! sanktio-atom rivi)
+  ;; TODO: Tässä on jotakin sanktioiden liitteiden hakua valinnan yhteydessä?
+  ;;       Pitääkö tunnistaa lisäksi onko bonus valittu ja hakea myös bonuksen liitteet?
   (if (= :virhe (tiedot/hae-sanktion-liitteet! (get-in rivi [:laatupoikkeama :urakka])
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
@@ -131,22 +201,26 @@
          [:br]
          (str "Päätöksen selitys: " perustelu)]))))
 
-(defn sanktiolistaus
-  [optiot valittu-urakka]
-  (let [sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
+(defn sanktiot-ja-bonukset-listaus
+  [sivupaneeli-auki?-atom valittu-urakka]
+  (let [;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
+        ;;       Jos yllapitourakka? on OK, niin "yllapitokohdeurakka?" voi poistaa ja korvata viittaukset siihen "yllapitourakka?"-symbolilla.
+        yllapitourakka? @tiedot-urakka/yllapitourakka?
+        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+
+        sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
                    tiedot/suodata-sanktiot-ja-bonukset
                    (sort-by :perintapvm)
-                   reverse)
-        {:keys [yllapito? auki?]} optiot
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?]
+                   reverse)]
     [:div.sanktiot
-     [:h1 (if yllapito? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
-     [suodattimet-ja-toiminnot valittu-urakka auki? @tiedot/urakan-lajisuodattimet]
+     [:h1 (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
+     [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
+
      [grid/grid
       {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do
-                         (reset! auki? true)
-                         (valitse-sanktio! % tiedot/valittu-sanktio))
+                         (reset! sivupaneeli-auki?-atom true)
+                         (valitse-sanktio-tai-bonus! % tiedot/valittu-sanktio))
        :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
                                yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
@@ -163,7 +237,7 @@
                    (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
                                                                  :nimi (get-in rivi [:yllapitokohde :nimi])})
                    "Ei liity kohteeseen"))})
-       (if yllapito?
+       (if yllapitourakka?
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
@@ -171,8 +245,9 @@
                             (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
                             (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
                             :else "–")})
-       (when (not yllapito?) {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
-                              :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
+       (when (not yllapitourakka?)
+         {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
+          :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-kuvaus :leveys 3})
        {:otsikko "Perustelu" :nimi :perustelu :leveys 3.5
         :tyyppi :komponentti :komponentti sanktion-tai-bonuksen-perustelu}
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
@@ -180,26 +255,22 @@
                 "Muistutus")}
        {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :tyyppi :numero :leveys 1.5}]
       sanktiot]
-     (when yllapito?
+     (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))
 
-(defn sanktiot-ja-bonukset [optiot]
-  (let [auki? (r/atom false)]
+(defn sanktiot-ja-bonukset []
+  (let [sivupaneeli-auki? (r/atom false)]
     (komp/luo
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
                                                                    :default nil})
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn []
-        (let [optiot (merge optiot
-                       {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                        :yllapito? @tiedot-urakka/yllapitourakka?
-                        :vesivayla? (u-domain/vesivaylaurakka? @nav/valittu-urakka)})]
-          [:div.laadunseuranta
-           (when @auki?
-             [sivupalkki/oikea
-              {:leveys "600px" :sulku-fn #(do
-                                            (reset! auki? false)
-                                            (reset! tiedot/valittu-sanktio nil))}
-              [sanktiot-lomake/sivupaneeli (assoc optiot :auki? auki?)]])
-           [sanktiolistaus (assoc optiot :auki? auki?) @nav/valittu-urakka]])))))
+        [:div.laadunseuranta
+         (when @sivupaneeli-auki?
+           [sivupalkki/oikea
+            {:leveys "600px" :sulku-fn #(do
+                                          (reset! sivupaneeli-auki? false)
+                                          (reset! tiedot/valittu-sanktio nil))}
+            [sivupaneeli sivupaneeli-auki?]])
+         [sanktiot-ja-bonukset-listaus sivupaneeli-auki? @nav/valittu-urakka]]))))

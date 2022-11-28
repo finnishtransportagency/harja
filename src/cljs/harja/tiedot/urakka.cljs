@@ -502,6 +502,8 @@
           ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
           (sanktio-domain/urakan-sanktiolajit urakka))))))
 
+;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitourakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
+;;       Jos (def yllapitourakka?..) alempana on OK, niin tämän voi poistaa ja korvata viittaukset yllapitourakka? symbolilla.
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (or (= :paallystys urakkatyyppi)
@@ -511,6 +513,10 @@
 (def yllapitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (urakka-domain/yllapitourakka? urakkatyyppi))))
+
+(def vesivaylaurakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/vesivaylaurakka? urakkatyyppi))))
 
 (def hoitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]

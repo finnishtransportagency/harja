@@ -28,7 +28,7 @@
        %)
     @tiedot-urakka/urakan-toimenpideinstanssit))
 
-(defn bonukset-lomake
+(defn bonus-lomake*
   "MH-urakoidan ja ylläpitourakoiden yhteinen bonuslomake.
   Huomioitavaa on, että ylläpidon urakoiden bonukset tallennetaankin oikeasti sanktioina, eikä bonuksina.
   Ylläpidon urakoiden bonuslomakkeessa on myös muita pieniä poikkeuksia."
@@ -253,13 +253,13 @@
      lomakkeen-tiedot]))
 
 
-(defn bonukset*
-  [auki? avattu-bonus tallennus-onnistui-fn]
+(defn bonus-lomake
+  [sivupaneeli-auki?-atom avattu-bonus tallennus-onnistui-fn]
   (let [tallennus-onnistui-fn (if (fn? tallennus-onnistui-fn) tallennus-onnistui-fn (constantly nil))
         sulje-fn (fn [tallennus-onnistui?]
                    (when tallennus-onnistui?
                      (tallennus-onnistui-fn))
-                   (reset! auki? false))
+                   (reset! sivupaneeli-auki?-atom false))
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
                                          (when (some? (:id avattu-bonus))
@@ -270,4 +270,4 @@
        [harja.ui.debug/debug @bonukset-tila]
 
        [tuck/tuck bonukset-tila
-        (r/partial bonukset-lomake sulje-fn lukutila? voi-muokata?)]])))
+        (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata?)]])))
