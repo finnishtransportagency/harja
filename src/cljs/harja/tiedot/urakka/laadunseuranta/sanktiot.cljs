@@ -141,12 +141,18 @@
    :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
-  [sanktio urakka-id]
+  [sanktio urakka-id onnistui-fn]
   (go
-    (let [sanktiot-tallennuksen-jalkeen
-          (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
-      (reset! valittu-sanktio nil)
-      (reset! haetut-sanktiot-ja-bonukset sanktiot-tallennuksen-jalkeen))))
+    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
+      (if (k/virhe? vastaus)
+        (viesti/nayta-toast! "Sanktion tallennus epäonnistui!" :varoitus)
+        (do
+          (viesti/nayta-toast! "Sanktion tallennus onnistui" :onnistui)
+          (reset! valittu-sanktio nil)
+          ;; Haetaan onnistuneen tallennuksen jälkeen uusiksi sanktiot & bonukset listan tiedot
+          (paivita-sanktiot-ja-bonukset!)
+          (when (fn? onnistui-fn) (onnistui-fn))))
+      vastaus)))
 
 (defn poista-suorasanktio
   [sanktion-id urakka-id onnistui-fn]

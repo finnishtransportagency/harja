@@ -65,12 +65,13 @@
                        (when-not lukutila?
                          [napit/palvelinkutsu-nappi
                           (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                          #(tiedot/tallenna-sanktio (lomake/ilman-lomaketietoja @muokattu) urakka-id)
+                          (fn []
+                            (tiedot/tallenna-sanktio
+                              (lomake/ilman-lomaketietoja @muokattu)
+                              urakka-id
+                              #(reset! sivupaneeli-auki?-atom false)))
                           {:luokka "nappi-ensisijainen"
                            :ikoni (ikonit/tallenna)
-                           :kun-onnistuu #(do
-                                            (reset! tiedot/valittu-sanktio nil)
-                                            (reset! sivupaneeli-auki?-atom false))
                            :disabled (or (not voi-muokata?)
                                        (not (lomake/voi-tallentaa? sanktio)))}])
                        (when (and voi-muokata? (:id @muokattu) (not lukutila?))
@@ -257,7 +258,7 @@
             ::lomake/col-luokka "col-xs-3"
             :hae (comp :aika :laatupoikkeama)
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
-            :fmt pvm/pvm :tyyppi :pvm
+            :fmt pvm/pvm-opt :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
            {:otsikko "Käsitelty" :nimi :kasittelyaika
@@ -273,7 +274,7 @@
                                      ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
                                      true
                                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
-            :fmt pvm/pvm :tyyppi :pvm
+            :fmt pvm/pvm-opt :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
            (if (and voi-muokata? (not lukutila?))
