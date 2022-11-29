@@ -34,6 +34,7 @@
 
 (def tilaajan-urakanvalvoja "Tilaajan_Urakanvalvoja")
 (def ely-urakanvalvoja "ELY_Urakanvalvoja")
+(def ely-paakayttaja "ELY_Paakayttaja")
 
 
 (def toteumien-kirjaus

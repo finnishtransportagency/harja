@@ -46,7 +46,7 @@
 
 (defn hae-integraatiotapahtumat-tietokannasta []
   (q-map (str "SELECT it.id, it.integraatio, it.alkanut, it.paattynyt, it.onnistunut, i.jarjestelma, i.nimi
-            FROM integraatiotapahtuma it JOIN integraatio i ON i.id = it.integraatio order by it.id DESC;")))
+            FROM integraatiotapahtuma it JOIN integraatio i ON i.id = it.integraatio order by it.id ASC;")))
 
 ;; Testit
 (deftest yrita-laheta-maksuera-jota-ei-ole-olemassa
@@ -109,7 +109,8 @@
 
     ;; Varmistetaan, että kustannussuunnitelman status muuttuu tietokannassa oikein
     (is (nil? (:lahetetty ksuun-tiedot-alkuun)))
-    (is (not (nil? (:lahetetty ksuun-tiedot-lopuksi))))
+    ;; Lähetetty timestamppiä ei saada, koska lähetys epäonnistuu
+    (is (nil? (:lahetetty ksuun-tiedot-lopuksi)))
 
 
     ;; Varmistetaan, että integraatiologilla tilanne päivittyy oikein
