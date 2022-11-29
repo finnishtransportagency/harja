@@ -26,9 +26,11 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
+;; TODO: Parempi olisi muokata tämä käyttämään normaalia oikeustarkistusta.
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
   (or
     (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+    (roolit/roolissa? @istunto/kayttaja roolit/ely-paakayttaja)
     (roolit/jvh? @istunto/kayttaja)
     (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja urakka-id)))
 
