@@ -26,5 +26,5 @@
       vastaus)
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (do
-        (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
+        (log/error "rest-api api-sampo lähetys epäonnistui! " virheet)
         false))))
