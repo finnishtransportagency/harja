@@ -90,6 +90,10 @@ UPDATE sanktio
 SELECT
   s.id,
   s.perintapvm,
+  -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten.
+  -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
+  -- sanktion laatupoikkeamassa.
+  lp.kasittelyaika                    AS kasittelyaika,
   s.maara                             AS summa,
   s.sakkoryhma::text                  AS laji,
   s.indeksi,
@@ -160,9 +164,14 @@ WHERE
         OR
              lp.yllapitokohde IS NOT NULL AND
              (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS FALSE)
+
 UNION ALL
+
+-- Hae urakan päätöksen sanktiot
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
+       -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS kasittelyaika,
        p."urakoitsijan-maksu"                          AS summa,
        p.tyyppi::TEXT                                  AS laji,
        u.indeksi,

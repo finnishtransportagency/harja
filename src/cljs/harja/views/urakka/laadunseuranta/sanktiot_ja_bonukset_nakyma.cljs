@@ -182,7 +182,7 @@
 
         sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
                    tiedot/suodata-sanktiot-ja-bonukset
-                   (sort-by :perintapvm)
+                   (sort-by :kasittelyaika)
                    reverse)]
     [:div.sanktiot
      #_[harja.ui.debug/debug sanktiot]
@@ -202,7 +202,7 @@
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-indeksit))
                              :tasaa :oikea :luokka "lihavoitu"}])}
-      [{:otsikko "Käsitelty" :nimi :perintapvm :fmt pvm/pvm :leveys 1.5}
+      [{:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.5}
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 3 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2

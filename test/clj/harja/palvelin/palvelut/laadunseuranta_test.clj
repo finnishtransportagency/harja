@@ -21,7 +21,8 @@
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -495,7 +496,7 @@
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot

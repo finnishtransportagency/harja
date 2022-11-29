@@ -17,7 +17,7 @@
       :vakiofraasi)
     (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))
 
 (defn muunna-urakan-bonus
@@ -25,6 +25,8 @@
   [rivi]
   (-> rivi
     (konv/string->keyword :laji :kasittelytapa)
+    ;; Muunna timestampit java-date:ksi
+    (konv/muunna [:kasittelyaika] konv/java-date)
     (konv/decimal->double :summa :indeksiåkorjaus)))
 
 (defn muunna-urakan-lupausbonus
