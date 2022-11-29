@@ -51,10 +51,11 @@
                         (true? (:bonus @muokattu))
                         (not= :bonukset (:lomake @tila)))
                   (swap! tila assoc :lomake :bonukset))
-              voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                             (:id @nav/valittu-urakka))
+              oikeus-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
+                                (:id @nav/valittu-urakka))
               muokataan-vanhaa? (some? (:id @muokattu))
               suorasanktio? (:suorasanktio @muokattu)
+              lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))]
           [:div.padding-16.ei-sulje-sivupaneelia
@@ -77,9 +78,18 @@
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
               [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
-               {:disabled (not suorasanktio?)}]
-              (when (not suorasanktio?)
-                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18])])
+               ;; Estä muokkaus-nappulan käyttö laatupoikkeaman kautta tehdyille sanktioille
+               ;; ja urakan_paatos-taulusta haetuille sanktioille ja bonuksille
+               ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
+               ;;       niin, poista "lupaus?" ehto.
+               ;;       Tällä hetkellä lupaussanktio ja lupausbonus haetaan urakka_paatos-taulusta, eikä niiden tallentamiselle/poistamiselle
+               ;;       ole polkua sanktio/bonus lomakkeilla.
+               {:disabled (or (not suorasanktio?) lupaus?)}]
+              (cond
+                (not suorasanktio?)
+                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18]
+                lupaus?
+                [yleiset/vihje "Lupaussanktiota tai lupausbonusta ei voi muokata tällä lomakkeella" nil 18])])
 
 
            (if bonusten-syotto?
@@ -87,10 +97,10 @@
              [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
               ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
               #(tiedot/paivita-sanktiot-ja-bonukset!)
-              lukutila? voi-muokata?]
+              lukutila? oikeus-muokata?]
 
              ;;Sanktio-lomake
-             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? voi-muokata?])])))))
+             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))
 
 
 ;; --- Sanktioiden listaus ---
