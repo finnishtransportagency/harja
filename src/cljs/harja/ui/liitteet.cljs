@@ -247,7 +247,7 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:div {:class (str "file-upload nappi-toissijainen "
+            [:label {:class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
                    :on-click #(.stopPropagation %)}
@@ -258,6 +258,7 @@
                 (or nappi-teksti "Lisää liite"))]
              [:input.upload
               {:type "file"
+               :style {:display "none"}
                :on-change #(let [ch (k/laheta-liite! (.-target %) urakka-id)]
                              (go
                                (loop [ed (<! ch)]
