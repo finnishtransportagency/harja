@@ -38,8 +38,10 @@
                  :toimenpideinstanssi (:toimenpideinstanssi lomake)
                  :urakka-id (:id @nav/valittu-urakka)
 
-                 :pvm (:perintapvm lomake)
-                 :laskutuskuukausi (:laskutuskuukausi lomake)
+                 :pvm (:kasittelyaika lomake)
+                 ;; Erilliskustannus-taulussa ei ole saraketta 'perintapvm', joten perintapvm-kentän arvo
+                 ;; tallennetaan sarakkeeseen 'laskutuskuukausi'
+                 :laskutuskuukausi (:perintapvm lomake)
                  :rahasumma (:summa lomake)
                  :indeksin_nimi (:indeksi lomake)
                  :lisatieto (:lisatieto lomake)
@@ -62,19 +64,18 @@
                            :suorasanktio true
                            :summa (:summa lomake)
                            :indeksi (:indeksi lomake)
-                           :kasittelyaika (:perintapvm lomake)
-                           :perintapvm (:laskutuskuukausi lomake)
+                           :perintapvm (:perintapvm lomake)
                            :toimenpideinstanssi (:toimenpideinstanssi lomake)}
                  :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                                   :urakka (:id @nav/valittu-urakka)
                                   :yllapitokohde (:id (:yllapitokohde lomake))
                                   ;; Laatupoikkeamalla on pakko olla jokin "havaintoaika", vaikka tässä on kyseessä bonus.
                                   ;; Asetetaan se samaksi kuin käsittelyaika.
-                                  :aika (:perintapvm lomake)
+                                  :aika (:kasittelyaika lomake)
                                   ;; Päätös on poikkeuksellisesti "sanktio" vaikka oikeasti kyseessä on bonus.
                                   :paatos {:paatos "sanktio"
                                            :perustelu (:lisatieto lomake)
-                                           :kasittelyaika (:perintapvm lomake)
+                                           :kasittelyaika (:kasittelyaika lomake)
                                            :kasittelytapa (:kasittelytapa lomake)}
                                   :liitteet (:liiteet lomake)}
                  :hoitokausi @urakka/valittu-hoitokausi}]
@@ -194,7 +195,7 @@
     [{lomake :lomake} app]
     (let [{viimeksi-muokattu ::lomake/viimeksi-muokattu-kentta
            muokatut ::lomake/muokatut} lomake
-          pvm-muokattu-viimeksi? (= :perintapvm viimeksi-muokattu)
+          pvm-muokattu-viimeksi? (= :kasittelyaika viimeksi-muokattu)
           laskutuskuukausi-muokattuihin? (and pvm-muokattu-viimeksi?
                                            (nil? (:laskutuskuukausi muokatut))
                                            (some? (:laskutuskuukausi lomake)))

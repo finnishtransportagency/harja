@@ -224,13 +224,13 @@ WHERE p."urakka-id" = :urakka
 
 -- Bonukset erilliskustannuksista
 SELECT ek.id,
-       ek.pvm                 AS perintapvm,
+       ek.laskutuskuukausi    as perintapvm,
+       ek.pvm                 AS kasittelyaika,
        ek.rahasumma           AS summa,
        ek.tyyppi::TEXT        AS laji,
        ek.indeksin_nimi       AS indeksi,
        TRUE                   AS suorasanktio,
        TRUE                   as bonus,
-       ek.laskutuskuukausi    as laskutuskuukausi,
        ek.kasittelytapa       as kasittelytapa,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
        CASE
@@ -270,15 +270,16 @@ UNION
 -- TODO refaktoroidaan myöhemmin ylläpidon bonusten käsittely sellaiseksi, että poikkeuksellista käsittelyä ei
 --      tarvitsisi tehdä.
 SELECT s.id,
+       -- perintapvm sanktiolla vastaa erilliskustannuksen laskutuskuukautta
        s.perintapvm AS perintapvm,
+       -- Kasittelyaika haetaan sanktion suhteen laatupoikkeaman puolelta, erilliskustannuksissa se on 'pvm'-sarake.
+       lp.kasittelyaika AS kasittelyaika,
        -- Muunna ylläpidon bonuksen summa positiiviseksi (se on käytännössä negatiivinen sanktio nykytoteuksella)
        s.maara * -1 AS summa,
        'yllapidon_bonus' AS laji,
        s.indeksi AS indeksi,
        TRUE AS suorasanktio,
        TRUE AS bonus,
-       -- Sanktioilla ei ole "laskutuskuukautta", käytetään siinä perintäpvm-arvoa, samaan tyyliin kuin sanktiolomakkeella.
-       s.perintapvm AS laskutuskuukausi,
        lp.kasittelytapa AS kasittelytapa,
        s.toimenpideinstanssi AS toimenpideinstanssi,
        0 AS indeksikorjaus,

@@ -316,12 +316,12 @@
 
              {:otsikko "Laskutuskuukausi"
               :nimi :perintapvm
-              :fmt (fn [kk]
+              :fmt (fn [pvm]
                      ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
-                     (when kk
+                     (when pvm
                        (some #(when (and
-                                      (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
-                                      (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                                      (= (pvm/vuosi pvm) (pvm/vuosi (:pvm %)))
+                                      (= (pvm/kuukausi pvm) (pvm/kuukausi (:pvm %)))) (:teksti %))
                          laskutuskuukaudet)))
               :pakollinen? true
               :tyyppi :pvm

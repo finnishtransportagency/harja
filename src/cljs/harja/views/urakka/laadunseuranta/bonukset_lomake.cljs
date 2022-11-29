@@ -150,15 +150,10 @@
            :valinta-nayta #(or % "Ei indeksiä")}))
       (lomake/ryhma
         {:rivi? true}
-        ;; TODO: Selvitä.
-        ;;       Tässä on käytetty samaa perintapvm-termiä kuin sanktioiden puolella, jotta avaimien nimiä ei tarvitsisi
-        ;;       muuntaa bonusten tietoja hakiessa ja tallentaessa.
-        ;;       Sanktiolomakkeella kuitenkin perintapvm haetaan laatupoikkeaman käsittelyajasta,
-        ;;       Bonuksissa ei tunneta käsitettä "laatupoikkeama". PAITSI, ylläpidon bonuksissa, jotka tallennetaan sanktioina.
-        ;;       Tutki voisiko eri aikatermejä selkiyttää bonusten ja sanktioiden välillä, jotta samoihin asioihin viitataan
-        ;;       samoilla nimillä kummallakin lomakkeella ja sanktiot & bonukset-listauksessa.
         {:otsikko "Käsitelty"
-         :nimi :perintapvm
+         ;; Hox: Sanktioissa kasittelyaika päätyy laatupoikkeaman käsittelyajaksi, bonuksissa erilliskustannuksen pvm:ksi
+         ;;      Käytetään käsittelyajasta bonuksienkin puolella laatupoikkeamista tuttua termiä.
+         :nimi :kasittelyaika
          :tyyppi :pvm
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
@@ -166,34 +161,26 @@
          :aseta (fn [rivi arvo]
                   (cond-> rivi
                     ;; Jos laskutuskuukautta  ei ole vielä valittu, niin asetetaan
-                    ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
+                    ;; esivalintana perintapvm valittu kasittelyn pvm
                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                    (assoc-in [:laskutuskuukausi] arvo)
+                    (assoc :perintapvm arvo)
 
-                    ;; Tallennetaan aina valittu käsittelyaika perintapvm avaimen alle
+                    ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
                     true
-                    (assoc :perintapvm arvo)))}
+                    (assoc :kasittelyaika arvo)))}
         (if (and voi-muokata? (not lukutila?))
-          ;; TODO: Selvitä.
-          ;;       Laskutuskuukausi-termi on käytössä sanktiolomakkeellakin. MH-urakoiden bonukset tallennetaan
-          ;;       erilliskustannus-tauluun, jossa on laskutuskuukaudelle ihan oma sarake.
-          ;;       Sanktiolomakkeella laskutuskuukausi saattaa tarkoittaa eri asiaa?
-          ;;       Sanktiolomakkeella laskutuskuukauden arvoksi päätyy vuoroin perintapvm tai laatupoikkeaman käsittelyaika,
-          ;;       mikä on jotenkin kummallista.
-          ;;       - Koska ylläpidon bonus tallennetaan poikkeuksellisesti sanktiona, täytyy olla täysin selvää:
-          ;;         1. Mitä laskutuskuukausi tarkoittaa hoitourakoiden bonusten tapauksessa (erilliskustannus)?
-          ;;         2. Mitä laskutuskuukausi tarkoittaa hoitourakoiden sanktioiden ja ylläpidon bonuksen tapauksessa (sanktio+laatupoikkeama)?
-          ;;       -  Sanktiot tallennetaan sanktio-tauluun, jossa ei ole laskutuskuukaudelle omaa saraketta.
-          ;;       - Sanktio-taulussa on kuitenkin sarake perintapvm:lle.
-          ;;       - Sanktioon (ja siten myös ylläpidon bonukseen) liittyy aina "laatupoikkeama".
-          ;;       - Laatupoikkeama-taulussa on omat sarakkeet havaintoajalle ("aika") ja käsittelyajalle ("kasittelyaika")
-          {:otsikko "Laskutuskuukausi" :nimi :laskutuskuukausi
+          {:otsikko "Laskutuskuukausi"
+           ;; HOX: Sanktion tapauksessa laskutuskuukausi tallennetaan sanktion 'perintapvm'-sarakkeeseen.
+           ;;      Bonuksissa (erilliskustannus-taulu) ei ole perintapvm-saraketta, vaan laskutuskuukausi-sarake
+           ;;      johon tämä tieto tallennetaan. Lisäksi, yllapidon_bonus tallennetaan poikkeuksellisesti sanktiona.
+           ;;      Yhteneväisyyden vuoksi käytetään bonuslomakkeella laskutuskuukaudesta nimeä 'perintapvm'
+           :nimi :perintapvm
            :pakollinen? true
            :tyyppi :komponentti
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          (let [laskutuskuukausi (get-in data [:laskutuskuukausi])]
+                          (let [perintapvm (get-in data [:perintapvm])]
                             [:<>
                              [yleiset/livi-pudotusvalikko
                               {:data-cy "koontilaskun-kk-dropdown"
@@ -204,11 +191,11 @@
                                           ;; Näytetään valintana joko valittua laskutuskuukautta, tai
                                           (-> data :laskutuskuukausi-komp-tiedot)
                                           ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
-                                          (when laskutuskuukausi
+                                          (when perintapvm
                                             (some #(when (and
-                                                           (= (pvm/vuosi laskutuskuukausi)
+                                                           (= (pvm/vuosi perintapvm)
                                                              (:vuosi %))
-                                                           (= (pvm/kuukausi laskutuskuukausi)
+                                                           (= (pvm/kuukausi perintapvm)
                                                              (:kuukausi %))) %)
                                               laskutuskuukaudet)))
                                :valitse-fn #(muokkaa-lomaketta
@@ -217,20 +204,20 @@
                                                 ;;  sitä voi hyödyntää muualla lomakkeessa.
                                                 :laskutuskuukausi-komp-tiedot %
                                                 ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
-                                                :laskutuskuukausi (:pvm %)))
+                                                :perintapvm (:pvm %)))
                                :format-fn :teksti}
                               laskutuskuukaudet]
                              ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                              (when (not @tiedot-urakka/yllapitourakka?)
                                [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]))}
           {:otsikko "Laskutuskuukausi"
-           :nimi :laskutuskuukausi
-           :fmt (fn [kk]
+           :nimi :perintapvm
+           :fmt (fn [pvm]
                   ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
-                  (when kk
+                  (when pvm
                     (some #(when (and
-                                   (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
-                                   (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                                   (= (pvm/vuosi pvm) (pvm/vuosi (:pvm %)))
+                                   (= (pvm/kuukausi pvm) (pvm/kuukausi (:pvm %)))) (:teksti %))
                       laskutuskuukaudet)))
            :pakollinen? true
            :tyyppi :pvm
