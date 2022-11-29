@@ -256,9 +256,11 @@
                    (reset! sivupaneeli-auki?-atom false))
         bonukset-tila (r/atom {:liitteet-haettu? false
                                :lomake (or
+                                         ;; Muokataan vanhaa bonusta
                                          (when (some? (:id avattu-bonus))
                                            avattu-bonus)
-                                         {})})]
+                                         ;; tai alustetaan bonuslomakkeen tila
+                                         (tiedot/uusi-bonus))})]
     (fn [_ _ _ lukutila? voi-muokata?]
       [:<>
        #_[harja.ui.debug/debug @bonukset-tila]

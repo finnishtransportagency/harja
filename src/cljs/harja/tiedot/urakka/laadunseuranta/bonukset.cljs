@@ -9,7 +9,21 @@
             [harja.tiedot.urakka :as urakka]
 
             [harja.tyokalut.tuck :as tuck-apurit]
-            [taoensso.timbre :as log]))
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm]))
+
+(defn uusi-bonus []
+  (let [nyt (pvm/nyt)
+        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+    {:laji nil
+     :kasittelytapa nil
+     :perintapvm default-perintapvm
+     :kasittelyaika nyt
+     :toimenpideinstanssi (let [tpis (if urakka/mh-urakka?
+                                       (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
+                                       @urakka/urakan-toimenpideinstanssit)]
+                            (when (= 1 (count tpis))
+                              (:tpi_id (first tpis))))}))
 
 ;; ---------
 

@@ -6,6 +6,7 @@
             [harja.loki :refer [log]]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
+            [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             
@@ -37,7 +38,20 @@
                        :vayla-tyyli? true
                        :nayta-rivina? true
                        :vaihtoehto-nayta {:sanktiot "Sanktio"
-                                          :bonukset "Bonus"}} tila]
+                                          :bonukset "Bonus"}
+                       :valitse-fn (fn [valinta]
+                                     ;; Alusta sanktio/bonus joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
+                                     ;; lomakkeelle ei jää aiemman lomakkeen dataa.
+                                     ;; Note: Tätä ei tarvitse tehdä, kun saadaan myös sanktiolomake ja s&b listaus
+                                     ;;       kunnolla tuck tilanhallinnan piiriin.
+                                     ;;       Tällöin lomaketta avatessa voidaan alustaa helpommin tila halutuksi.
+                                     (case valinta
+                                       :sanktiot
+                                       (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
+                                       :bonukset
+                                       (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
+                                       nil))}
+    tila]
    [:hr]])
 
 
