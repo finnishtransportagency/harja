@@ -54,7 +54,12 @@
   (laheta-maksuera-sampoon [{:keys [db integraatioloki]} numero]
     (let [urakkaid (q-maksuerat/hae-maksueran-urakka db numero)
           summat (q-maksuerat/hae-urakan-maksueran-summat db urakkaid)
-          kustannussuunnitelman-lahetys (kustannussuunnitelmat/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki numero)
-          maksueran-lahetys (maksuerat/laheta-api-maksuera db api-sampo-asetukset integraatioloki numero summat)]
+          ;; Sampo joutuu prosessoimaan maksuerän lähetystä, jonka tuloksena kustannussuunnitelmaan tehdään jotain.
+          ;; Tämä prosessi on jonototeutuksessa toiminut ennen, koska Sampo on voinut itse valita, minkä viestin se lukee ensin.
+          ;; Jotta Sampo-järjestelmälle annetaan aikaa asioiden pureskeluun, niin lähetetään ensin maksuerä ja odotetaan lähetyksen tulosta, jonka jälkeen
+          ;; kustanussuunnitelma voidaan lähettää
+          maksueran-lahetys (maksuerat/laheta-api-maksuera db api-sampo-asetukset integraatioloki numero summat)
+          kustannussuunnitelman-lahetys (when maksueran-lahetys
+                                          (kustannussuunnitelmat/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki numero))]
       {:maksuera maksueran-lahetys
        :kustannussuunnitelma kustannussuunnitelman-lahetys})))

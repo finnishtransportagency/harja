@@ -157,12 +157,15 @@
               ;; Jos ulkoiseen järjestelmään ei saada yhteyttä, vastaus on false
               _ (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
                   ;; Merkitse virhe
-                (merkitse-maksueralle-lahetysvirhe db numero)
-                (merkitse-maksuera-odottamaan-vastausta db numero viesti-id))
-              _ (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+                  (do
+                    (merkitse-maksueralle-lahetysvirhe db numero)
+                    (log/debug (format "Maksuerälle (numero: %s) merkittiin virhe." numero)))
+                  (do
+                    (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+                    (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
               ;; Kuittaus pitänee käsitellä samantien
               _ (when-not (false? vastaus)
-                                 (kasittele-maksuera-kuittaus db vastaus viesti-id))]
+                  (kasittele-maksuera-kuittaus db vastaus viesti-id))]
           ;; Palautetaan vastaus true/false
           (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
             false
