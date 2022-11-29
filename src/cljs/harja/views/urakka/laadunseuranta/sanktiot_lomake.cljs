@@ -259,23 +259,24 @@
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
             :fmt pvm/pvm :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
-           ;; TODO:  Selvitä.
-           ;;        Käsittelyaikaa pyöritellään myös laskutuskuukauden (eli :perintpvm nimisen input-kentän) kohdalla
-           ;;        lomakkeella. Mistä on kyse? Tämä menee laatupoikkeaman käsittelyajaksi.
-           ;;        Laskutuskuukaudessa haetaan myös laatupoikkeaman käsittelyajasta kuukausivalinta dropdown-valikkoon!
+
            {:otsikko "Käsitelty" :nimi :kasittelyaika
             :pakollinen? true
             ::lomake/col-luokka "col-xs-3"
             :hae (comp :kasittelyaika :paatos :laatupoikkeama)
             :aseta (fn [rivi arvo] (cond-> rivi
+                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
+                                     ;; esivalintana laskutuskuukaudelle valittu käsittely pvm
                                      (nil? (:laskutuskuukausi-komp-tiedot rivi))
                                      (assoc-in [:perintapvm] arvo)
 
 
+                                     ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
                                      true
                                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
             :fmt pvm/pvm :tyyppi :pvm
             :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+
            (if (and voi-muokata? (not lukutila?))
              {:otsikko "Laskutuskuukausi" :nimi :perintapvm
               :pakollinen? true
@@ -283,40 +284,40 @@
               ::lomake/col-luokka "col-xs-6"
               :huomauta [[:urakan-aikana-ja-hoitokaudella]]
               :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                             ;; TODO:  Selvitä.
-                             ;;        Kirjoitustilassa haetaan laskutuskuukauden päivämääräksi laatupoikkeaman käsittelyaika!
-                             ;;        Lomakkeen lukutilassa (alla) haetaan vain perintapvm.
-                             ;;        Kummasta päivämäärästä (perintapvm/kasittelyaika) laskutuskuukauden päivämäärä
-                             ;;        (eli UI:ssa näkyvä tietyn hoitovuoden kuukauden nimi) kuuluu hakea?
-                             (let [kasittelyaika (get-in data [:laatupoikkeama :paatos :kasittelyaika])]
+                             (let [perintapvm (get-in data [:perintapvm])]
                                [:<>
                                 [yleiset/livi-pudotusvalikko
                                  {:data-cy "koontilaskun-kk-dropdown"
                                   :vayla-tyyli? true
                                   :skrollattava? true
                                   :pakollinen? true
-                                  :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
+                                  :valinta (or
+                                             ;; Näytetään valintana joko valittua laskutuskuukautta, tai
+                                             (-> data :laskutuskuukausi-komp-tiedot)
+                                             ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua perintapvm
                                              (some #(when (and
-                                                            (= (pvm/vuosi kasittelyaika)
+                                                            (= (pvm/vuosi perintapvm)
                                                               (:vuosi %))
-                                                            (= (pvm/kuukausi kasittelyaika)
+                                                            (= (pvm/kuukausi perintapvm)
                                                               (:kuukausi %))) %)
                                                laskutuskuukaudet))
                                   :valitse-fn #(muokkaa-lomaketta
                                                  (assoc data
+                                                   ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
+                                                   ;;  sitä voi hyödyntää muualla lomakkeessa.
                                                    :laskutuskuukausi-komp-tiedot %
+                                                   ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
                                                    :perintapvm (:pvm %)))
                                   :format-fn :teksti}
                                  laskutuskuukaudet]
                                 ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                                 (when (not yllapitourakka?)
                                   [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))}
-             ;; TODO:  Selvitä.
-             ;;        Lukutilassa haetaan laskutuskuukauden päivämääräksi perintäpvm, kirjoitustilassa laatupoikkeaman käsittelyaika!
-             ;;        Kummasta päivämäärästä laskutuskuukauden päivämäärä (eli UI:ssa näkyvä hoitovuoden kuukauden nimi) kuuluu hakea?
+
              {:otsikko "Laskutuskuukausi"
               :nimi :perintapvm
               :fmt (fn [kk]
+                     ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan perintapvm:stä
                      (some #(when (and
                                     (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
                                     (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
