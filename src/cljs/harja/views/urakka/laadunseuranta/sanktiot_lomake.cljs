@@ -266,10 +266,9 @@
             :hae (comp :kasittelyaika :paatos :laatupoikkeama)
             :aseta (fn [rivi arvo] (cond-> rivi
                                      ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                     ;; esivalintana laskutuskuukaudelle valittu käsittely pvm
+                                     ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
                                      (nil? (:laskutuskuukausi-komp-tiedot rivi))
                                      (assoc-in [:perintapvm] arvo)
-
 
                                      ;; Tallennetaan aina valittu käsittelyaika :laatupoikkaman käsittelyajaksi
                                      true
@@ -294,13 +293,14 @@
                                   :valinta (or
                                              ;; Näytetään valintana joko valittua laskutuskuukautta, tai
                                              (-> data :laskutuskuukausi-komp-tiedot)
-                                             ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua perintapvm
-                                             (some #(when (and
-                                                            (= (pvm/vuosi perintapvm)
-                                                              (:vuosi %))
-                                                            (= (pvm/kuukausi perintapvm)
-                                                              (:kuukausi %))) %)
-                                               laskutuskuukaudet))
+                                             ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
+                                             (when perintapvm
+                                               (some #(when (and
+                                                              (= (pvm/vuosi perintapvm)
+                                                                (:vuosi %))
+                                                              (= (pvm/kuukausi perintapvm)
+                                                                (:kuukausi %))) %)
+                                                 laskutuskuukaudet)))
                                   :valitse-fn #(muokkaa-lomaketta
                                                  (assoc data
                                                    ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
@@ -317,11 +317,12 @@
              {:otsikko "Laskutuskuukausi"
               :nimi :perintapvm
               :fmt (fn [kk]
-                     ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan perintapvm:stä
-                     (some #(when (and
-                                    (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
-                                    (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
-                       laskutuskuukaudet))
+                     ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
+                     (when kk
+                       (some #(when (and
+                                      (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
+                                      (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                         laskutuskuukaudet)))
               :pakollinen? true
               :tyyppi :pvm
               ::lomake/col-luokka "col-xs-6"}))

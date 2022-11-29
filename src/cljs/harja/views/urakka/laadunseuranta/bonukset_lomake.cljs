@@ -164,20 +164,15 @@
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
-                  (let [lk (some #(when (and
-                                          (some? (:kuukausi %))
-                                          (= (:kuukausi %) (pvm/kuukausi arvo))
-                                          (= (:vuosi %) (pvm/vuosi arvo)))
-                                    %)
-                             laskutuskuukaudet)]
-                    (cond-> rivi
-                      (nil? (:laskutuskuukausi rivi))
-                      (assoc :laskutuskuukausi (:perintapvm lk))
+                  (cond-> rivi
+                    ;; Jos laskutuskuukautta  ei ole vielä valittu, niin asetetaan
+                    ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
+                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                    (assoc-in [:laskutuskuukausi] arvo)
 
-                      (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                      (assoc :laskutuskuukausi-komp-tiedot lk)
-
-                      true (assoc :perintapvm arvo))))}
+                    ;; Tallennetaan aina valittu käsittelyaika perintapvm avaimen alle
+                    true
+                    (assoc :perintapvm arvo)))}
         (if (and voi-muokata? (not lukutila?))
           ;; TODO: Selvitä.
           ;;       Laskutuskuukausi-termi on käytössä sanktiolomakkeellakin. MH-urakoiden bonukset tallennetaan
@@ -198,26 +193,45 @@
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          [:<>
-                           [yleiset/livi-pudotusvalikko
-                            {:data-cy "koontilaskun-kk-dropdown"
-                             :vayla-tyyli? true
-                             :skrollattava? true
-                             :pakollinen? true
-                             :valinta (or (-> data :laskutuskuukausi-komp-tiedot)
-                                        (some #(when (= (-> data :laskutuskuukausi) (:pvm %)) %) laskutuskuukaudet))
-                             :valitse-fn #(muokkaa-lomaketta
-                                            (assoc data
-                                              :laskutuskuukausi-komp-tiedot %
-                                              :laskutuskuukausi (:pvm %)))
-                             :format-fn :teksti}
-                            laskutuskuukaudet]
-                           ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
-                           (when (not @tiedot-urakka/yllapitourakka?)
-                             [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])])}
+                          (let [laskutuskuukausi (get-in data [:laskutuskuukausi])]
+                            [:<>
+                             [yleiset/livi-pudotusvalikko
+                              {:data-cy "koontilaskun-kk-dropdown"
+                               :vayla-tyyli? true
+                               :skrollattava? true
+                               :pakollinen? true
+                               :valinta (or
+                                          ;; Näytetään valintana joko valittua laskutuskuukautta, tai
+                                          (-> data :laskutuskuukausi-komp-tiedot)
+                                          ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
+                                          (when laskutuskuukausi
+                                            (some #(when (and
+                                                           (= (pvm/vuosi laskutuskuukausi)
+                                                             (:vuosi %))
+                                                           (= (pvm/kuukausi laskutuskuukausi)
+                                                             (:kuukausi %))) %)
+                                              laskutuskuukaudet)))
+                               :valitse-fn #(muokkaa-lomaketta
+                                              (assoc data
+                                                ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
+                                                ;;  sitä voi hyödyntää muualla lomakkeessa.
+                                                :laskutuskuukausi-komp-tiedot %
+                                                ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
+                                                :laskutuskuukausi (:pvm %)))
+                               :format-fn :teksti}
+                              laskutuskuukaudet]
+                             ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
+                             (when (not @tiedot-urakka/yllapitourakka?)
+                               [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]))}
           {:otsikko "Laskutuskuukausi"
            :nimi :laskutuskuukausi
-           :fmt (fn [kk] (some #(when (= kk (:pvm %)) (:teksti %)) laskutuskuukaudet))
+           :fmt (fn [kk]
+                  ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
+                  (when kk
+                    (some #(when (and
+                                   (= (pvm/vuosi kk) (pvm/vuosi (:pvm %)))
+                                   (= (pvm/kuukausi kk) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                      laskutuskuukaudet)))
            :pakollinen? true
            :tyyppi :pvm
            ::lomake/col-luokka "col-xs-6"}))
