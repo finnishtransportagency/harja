@@ -358,8 +358,7 @@
       (sanktiot/poista-sanktio! db {:id sanktio-id
                                     :muokkaaja (:id user)})
 
-      ;; TODO: Pitääkö maksuerä merkitä likaiseksi myös poiston jälkeen?
-      #_(sanktiot/merkitse-maksuera-likaiseksi! db sanktio-id)
+      (sanktiot/merkitse-maksuera-likaiseksi! db sanktio-id)
 
       sanktio-id)))
 

@@ -429,12 +429,11 @@
 
     (jdbc/with-db-transaction
       [db db]
-      (let [poistettu (toteumat-q/poista-erilliskustannus! db {:id erilliskustannus-id
+      (let [poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
                                                                :muokkaaja (:id user)
                                                                :urakka urakka-id})]
-
-        ;; TODO: Täytyykö merkitä toimepideinstanssin maksuerä likaiseksi myös poiston jälkeen?
-        #_(toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu))
+        (when (:toimenpideinstanssi poistettu)
+          (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu)))
         erilliskustannus-id))
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
