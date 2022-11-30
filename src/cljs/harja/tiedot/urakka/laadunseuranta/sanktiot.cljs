@@ -22,7 +22,7 @@
         default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:suorasanktio true
      :laji (cond
-             (u-domain/hoitourakka? urakkatyyppi) :A
+             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
      :perintapvm default-perintapvm

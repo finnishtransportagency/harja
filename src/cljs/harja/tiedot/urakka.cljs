@@ -518,9 +518,9 @@
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (urakka-domain/vesivaylaurakka? urakkatyyppi))))
 
-(def hoitourakka?
+(def mh-tai-hoitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (urakka-domain/hoitourakka? urakkatyyppi))))
+              (urakka-domain/mh-tai-hoitourakka? urakkatyyppi))))
 
 (def mh-urakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]

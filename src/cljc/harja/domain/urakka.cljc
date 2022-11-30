@@ -122,7 +122,7 @@
   [urakan-tyyppi]
   (= :hoito urakan-tyyppi))
 
-(defn hoitourakka?
+(defn mh-tai-hoitourakka?
   "Onko urakka MHU (Maanteiden hoitourakka) tai vanhantyyppinen alueurakka (poistuva)"
   [urakan-tyyppi]
   (or (mh-urakka? urakan-tyyppi) (alueurakka? urakan-tyyppi)))
