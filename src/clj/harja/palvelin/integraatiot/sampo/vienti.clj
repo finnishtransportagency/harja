@@ -60,19 +60,22 @@
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
-        urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))]
-    (log/warn "Käsitellään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
-
-    (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
-      (try
-        (let [summat (urakoiden-summat urakkaid)]
-          (maksuera/laheta-api-maksuera db api-sampo-asetukset integraatioloki maksuera-numero summat))
-        (catch Exception e
-          (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
-
-    (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (try
-        (let [maksuera-numero (:maksuera kustannussuunnitelma)]
-          (kustannussuunnitelma/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki maksuera-numero))
-        (catch Exception e
-          (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e)))))))
+        urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))
+        _ (log/warn "Käsitellään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
+        ;; Sampo ei kykene käsittelemään kustannussuunnitelmia, ennen maksueriä.
+        ;; Sampo vastaa maksuerään xml viestillä, kun se on prosessoitu. Ja vastauksen jälkeen kustannussuunnitelmat voidaan lähettää.
+        ;; Joten otetaan maksuerien lähetystiedot tässä erikseen ylös ja lähetetään kustannussuunnitelmat, kun maksueriin on saatu vastaukset
+        maksuera-vastaukset (mapv (fn [{maksuera-numero :numero urakkaid :urakkaid}]
+                                    (try
+                                      (let [summat (urakoiden-summat urakkaid)]
+                                        (maksuera/laheta-api-maksuera db api-sampo-asetukset integraatioloki maksuera-numero summat))
+                                      (catch Exception e
+                                        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
+                              maksuerat)]
+    (when maksuera-vastaukset
+      (doseq [kustannussuunnitelma kustannussuunnitelmat]
+        (try
+          (let [maksuera-numero (:maksuera kustannussuunnitelma)]
+            (kustannussuunnitelma/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki maksuera-numero))
+          (catch Exception e
+            (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e))))))))
