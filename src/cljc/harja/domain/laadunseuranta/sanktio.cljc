@@ -137,7 +137,7 @@
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     :else []))
@@ -146,7 +146,7 @@
   [{:keys [tyyppi alkupvm] :as urakka}]
   (cond
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     ;; MHU ja muut
@@ -196,8 +196,35 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
-(defn bonustyypin-teksti
-  "Erilliskustannustyypin teksti avainsanaa vastaan"
+(defn sanktiolaji->teksti
+  [laji]
+  (case laji
+    :A "A-ryhmä (tehtäväkohtainen sanktio)"
+    :B "B-ryhmä (vakava laiminlyönti)"
+    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
+    :muistutus "Muistutus"
+    :vaihtosanktio "Vastuuhenkilön vaihto"
+    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
+    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
+    :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
+    :yllapidon_muistutus "Muistutus"
+    :yllapidon_sakko "Sakko"
+    :yllapidon_bonus "Bonus"
+    :vesivayla_muistutus "Muistutus"
+    :vesivayla_sakko "Sakko"
+    :vesivayla_bonus "Bonus"
+
+    :lupausbonus "Lupausbonus"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
+    nil))
+
+(defn bonuslaji->teksti
+  "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
@@ -205,7 +232,20 @@
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
-    "- Valitse tyyppi -"))
+    ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
+    ;; Eli, tämä tyyppi ei ole yksi erilliskustannustyypeistä, vaan yksi sanktiolajeista.
+    :yllapidon_bonus "Ylläpidon bonus"
+    nil))
+
+(defn kasittelytapa->teksti
+  [avain]
+  (case avain
+    :tyomaakokous "Työmaakokous"
+    :valikatselmus "Välikatselmus"
+    :puhelin "Puhelimitse"
+    :kommentit "Harja-kommenttien perusteella"
+    :muu "Muu tapa"
+    nil))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
   ;; Ei sallita urakoitsijan antaa itselleen bonuksia
@@ -215,11 +255,17 @@
              (= :muu-bonus %)
              true)
           (cond
-            (= :hoito urakkatyyppi)
+            (urakka-domain/alueurakka? urakkatyyppi)
             [:asiakastyytyvaisyysbonus :muu-bonus]
-            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
             [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
-            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
             [:muu-bonus]
-            :default
+
+            ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
+            ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
+            (urakka-domain/yllapitourakka? urakkatyyppi)
+            [:yllapidon_bonus]
+
+            :else
             [:asiakastyytyvaisyysbonus :muu-bonus])))

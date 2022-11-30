@@ -117,7 +117,7 @@
 (def +sakkorivin-nimi-yllapito+ "Sakot (-) ja bonukset (+)")
 
 (defn raporttirivit-yhteensa [rivit alueet {:keys [yhteensa-sarake? urakkatyyppi] :as optiot}]
-  (let [yllapito? (urakka-domain/yllapidon-urakka? urakkatyyppi)
+  (let [yllapito? (urakka-domain/yllapitourakka? urakkatyyppi)
         sakkorivin-nimi (if yllapito?
                           +sakkorivin-nimi-yllapito+
                           +sakkorivin-nimi-hoito+)

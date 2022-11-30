@@ -16,7 +16,8 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.pvm :as pvm]
     [clojure.string :as s]
-    [clojure.set :refer [rename-keys]])
+    [clojure.set :refer [rename-keys]]
+    [harja.domain.laadunseuranta.sanktio :as sanktio-domain])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -50,15 +51,24 @@
                                                                   :vain-yllapitokohteettomat? true
                                                                   ;; Haetaan vain sanktiot
                                                                   :hae-sanktiot? true
-                                                                  :hae-bonukset? false}))))
+                                                                  :hae-bonukset? true}))))
 
 (defn- grid-tiedot* [muut-kustannukset-tiedot kohdistamattomat-tiedot]
   (let [mk-id #(str "ypt-" (:id %))
         ks-id #(str "sanktio-" (:id %))
-        ks->grid (fn [ks] {:hinta (-> ks :summa -) ;; käännetään sanktioiden etumerkki ladattaessa (näitä ei tallenneta, ovat read-only gridissä)
-                           :pvm (-> ks :laatupoikkeama :aika)
-                           :selite (-> ks :tyyppi :nimi)
-                           :id (-> ks :id)})]
+        ks->grid (fn [ks]
+                   ;; Kustannus on bonus (:bonus = true)
+                   (if (:bonus ks)
+                     {:hinta (-> ks :summa)
+                      :pvm (-> ks :perintapvm)
+                      :selite (sanktio-domain/bonuslaji->teksti (-> ks :laji))
+                      :id (-> ks :id)}
+
+                     ;; Muutoin, kustannus on sanktio
+                     {:hinta (-> ks :summa -) ;; käännetään sanktioiden etumerkki ladattaessa (näitä ei tallenneta, ovat read-only gridissä)
+                      :pvm (-> ks :laatupoikkeama :aika)
+                      :selite (-> ks :tyyppi :nimi)
+                      :id (-> ks :id)}))]
     (concat
       (map #(assoc % :muokattava true :id (mk-id %)) muut-kustannukset-tiedot)
       (map #(-> % ks->grid (assoc :muokattava false :id (ks-id %))) kohdistamattomat-tiedot))))
