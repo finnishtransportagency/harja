@@ -25,7 +25,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM fim-test/+testi-fim+)
+                 (fim/->FIM {:url fim-test/+testi-fim+})
                  [:db :integraatioloki])))))
 
   (testit)
