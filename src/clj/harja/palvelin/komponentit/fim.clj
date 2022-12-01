@@ -111,14 +111,14 @@
                                     {:kayttajatunnus (:kayttajatunnus fim-asetukset)
                                      :salasana (:salasana fim-asetukset)})
                                   rajapinnan-parametrit)]
-      (when-not (empty? url)
+      (when-not (empty? (:url fim-asetukset))
         (integraatiotapahtuma/suorita-integraatio
           db integraatioloki "fim" "hae-urakan-kayttajat"
           #(-> (integraatiotapahtuma/laheta % :http rajapinnan-parametrit)
              :body
              lue-xml
              lue-fim-vastaus
-             (kuvaa-roolit urakan-sampo-id))))))
+             (kuvaa-roolit urakan-sampo-id)))))))
 
 (defrecord FakeFIM [tiedosto]
   component/Lifecycle
