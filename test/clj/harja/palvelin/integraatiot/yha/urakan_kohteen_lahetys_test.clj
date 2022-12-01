@@ -3,10 +3,13 @@
             [com.stuartsierra.component :as component]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.testi :refer :all]
+            [harja.kyselyt.yha :as yha-kyselyt]
+            [harja.palvelin.integraatiot.yha.sanomat.kohteen-lahetyssanoma :as kohteen-lahetyssanoma]
             [harja.palvelin.integraatiot.yha.yha-komponentti :as yha]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
             [harja.tyokalut.xml :as xml]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [clojure.string :as str])
   (:use [slingshot.slingshot :only [try+]]))
 
 (def kayttaja "jvh")
@@ -350,3 +353,84 @@
     (is (false? onnistui?))
     (is (false? (:lahetys_onnistunut lahetystiedot)) "Lähetys on merkitty epäonnistuneeksi")))
 
+(def +xsd-polku+ "xsd/yha/")
+
+(deftest paikkauskohteen-pot-lomakkeella-oikea-yhaid
+  (let [db (luo-testitietokanta)
+        odotettu-sanoma-xml (slurp "resources/xsd/yha/esimerkit/paikkauspot-toteumatietojen-kirjaus.xml")
+        odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
+        _ (println "Jarno odotettu sanoma " odotettu-sanoma-xml)
+        _ (println "Jarno odotettu PARSED " odotettu-xml-parsittu)
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        urakka (first (yha-kyselyt/hae-urakan-yhatiedot db {:urakka urakka-id}))
+        urakka (assoc urakka :harjaid urakka-id
+                             :sampoid (yha/yhaan-lahetettava-sampoid urakka))
+        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Pottilan AB-levityskohde'")
+        kohteet (mapv #(yha/hae-kohteen-tiedot db %) kohde-idt)
+        sisalto (kohteen-lahetyssanoma/muodosta urakka kohteet)
+        luotu-xml-parsittu (xml/lue sisalto)
+        urakka (xml/luetun-xmln-tagien-sisalto
+                 luotu-xml-parsittu :urakan-kohteiden-toteumatietojen-kirjaus :urakka)
+        kohde (xml/luetun-xmln-tagien-sisalto urakka :kohteet :kohde)
+        tr-osoite (xml/luetun-xmln-tagin-sisalto kohde :tierekisteriosoitevali)
+        virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" sisalto)
+        odotettu-alustarivi [{:attrs nil
+                              :content [{:attrs nil
+                                         :content ["2022-12-01"]
+                                         :tag :karttapaivamaara}
+                                        {:attrs nil
+                                         :content ["4"]
+                                         :tag :tienumero}
+                                        {:attrs nil
+                                         :content ["101"]
+                                         :tag :aosa}
+                                        {:attrs nil
+                                         :content ["1"]
+                                         :tag :aet}
+                                        {:attrs nil
+                                         :content ["101"]
+                                         :tag :losa}
+                                        {:attrs nil
+                                         :content ["200"]
+                                         :tag :let}
+                                        {:attrs nil
+                                         :content ["1"]
+                                         :tag :ajorata}
+                                        {:attrs nil
+                                         :content ["11"]
+                                         :tag :kaista}]
+                              :tag :tierekisteriosoitevali}
+                             {:attrs nil
+                              :content ["23"]
+                              :tag :kasittelymenetelma}
+                             {:attrs nil
+                              :content ["5"]
+                              :tag :kasittelypaksuus}
+                             {:attrs nil
+                              :content ["4"]
+                              :tag :tekninen-toimenpide}]]
+    (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) ["868309152"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
+
+
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["998"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Pottilan AB-levityskohde"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2022-11-01"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2022-11-05"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str "2022-11-11")]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2025-11-26"]))
+    ;; Todo: tätä ei vielä kaiveta paikkauskohteelle oikeasta paikasta, kaivapa se !
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5000.00"]))
+    (is (= (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet :alustalle-tehty-toimenpide) odotettu-alustarivi))
+
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["4"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aosa) ["101"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["101"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["200"]))
+    (is (nil? virheet) "Ei validointivirheitä")
+    (println "Jarno sisalto" sisalto)
+    (println "Jarno virheet" virheet)
+    (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))

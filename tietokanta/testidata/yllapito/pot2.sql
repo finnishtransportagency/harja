@@ -83,7 +83,18 @@ VALUES
 
 
     -- paikkaus-POT tiedot
-    INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, poistettu, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, yllapitokohdetyotyyppi, tunnus, yhaid, yllapitoluokka, lahetysaika, keskimaarainen_vuorokausiliikenne, nykyinen_paallyste, tr_ajorata, tr_kaista, suorittava_tiemerkintaurakka, lahetetty, lahetys_onnistunut, lahetysvirhe, yllapitokohdetyyppi, vuodet, yha_kohdenumero, muokattu, muokkaaja, yha_tr_osoite, velho_lahetyksen_aika, velho_lahetyksen_tila, velho_lahetyksen_vastaus) VALUES (5, 8, '999', 'Pottilan AB-levityskohde', false, 4, 101, 1, 101, 200, 'paallystys', null, null, null, null, null, null, null, null, null, '2022-11-28 09:33:49.375000', true, null, 'paallyste', '{2022}', null, '2022-11-28 10:27:23.266990', 3, null, '2022-11-28 09:33:49.407000', 'valmis', null);
+    INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, poistettu, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, yllapitokohdetyotyyppi, tunnus, yhaid, yllapitoluokka, lahetysaika, keskimaarainen_vuorokausiliikenne, nykyinen_paallyste, tr_ajorata, tr_kaista, lahetetty, lahetys_onnistunut, lahetysvirhe, yllapitokohdetyyppi, vuodet, yha_kohdenumero, muokattu, muokkaaja, yha_tr_osoite, velho_lahetyksen_aika, velho_lahetyksen_tila, velho_lahetyksen_vastaus, suorittava_tiemerkintaurakka) VALUES (5, 8, '999', 'Pottilan AB-levityskohde', false, 4, 101, 1, 101, 200, 'paallystys', null, null, null, null, null, 998, null, null, '2022-11-28 09:33:49.375000', true, null, 'paallyste', '{2022}', null, '2022-11-28 10:27:23.266990', 3, null, '2022-11-28 09:33:49.407000', 'valmis', null, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'));
+
+    INSERT INTO yllapitokohteen_aikataulu
+    (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
+     kohde_valmis, muokkaaja, muokattu, valmis_tiemerkintaan, tiemerkinta_takaraja, merkinta, jyrsinta, tiemerkinta_lisatieto, tiemerkinta_takaraja_kasin)
+    VALUES
+        ((SELECT id FROM yllapitokohde WHERE nimi = 'Pottilan AB-levityskohde'), '2022-11-01',
+         '2022-11-02', '2022-11-05', '2022-11-07',
+         '2022-11-09',
+         '2022-11-11', (SELECT id
+          FROM kayttaja
+         WHERE kayttajanimi = 'jvh'), NOW(), '2022-12-06 00:00:00.000000', '2022-12-21', 'massa', 'ei jyrsintää', NULL, false);
 
     INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, poistettu, sijainti, yhaid, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, paallystetyyppi, raekoko, tyomenetelma, massamaara, muokattu, keskimaarainen_vuorokausiliikenne, yllapitoluokka, nykyinen_paallyste) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Pottilan AB-levityskohde'), 'Pottilan AB-levityskohde osa 1', 4, 101, 1, 101, 200, false, '0105000000010000000102000000070000006EB1DE0E038D1741DBBB6DFD627359417E8CB96B2B8D174117D9CE6761735941F7E461E1768D174188F4DBF360735941992A18D5C18D1741D712F2B56173594155302A29C68E17419E5E297F6C73594196438B6C638F174152B81EDD6C7359416C66904CE28F174159CD3A006D735941', null, 1, 11, '12', null, null, null, null, null, '2022-11-28 10:27:23.266990', null, null, null);
 
