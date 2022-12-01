@@ -276,7 +276,7 @@
       :fim (component/using
              (if (and kehitysmoodi (:tiedosto (:fim asetukset)))
                (fim/->FakeFIM (:tiedosto (:fim asetukset)))
-               (fim/->FIM (:url (:fim asetukset))))
+               (fim/->FIM (:fim asetukset)))
              [:db :integraatioloki])
 
       ;; Sampo

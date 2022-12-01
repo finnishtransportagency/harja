@@ -21,7 +21,8 @@
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -37,7 +38,7 @@
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
@@ -218,6 +219,11 @@
                                      :laatupoikkeama lp
                                      :hoitokausi [hk-alkupvm hk-loppupvm]}))
 
+(defn palvelukutsu-poista-suorasanktio [kayttaja sanktio-id urakka-id]
+  (kutsu-http-palvelua
+    :poista-suorasanktio kayttaja {:id sanktio-id
+                                   :urakka-id urakka-id}))
+
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
   (let [perustelu "ABC kissa kävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
@@ -234,21 +240,20 @@
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
-    (testing "Päällystysurakan suorasanktion tallennus"
-      (let [sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                     +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-bonuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                        +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                            +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
-            lisatty-sakko (first (filter #(= -1234.0 (:summa %)) sanktiot-sakon-jalkeen))
-            lisatty-bonus (first (filter #(= 4321.0 (:summa %)) sanktiot-bonuksen-jalkeen))
-            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-muistutuksen-jalkeen))]
+    (testing "Päällystysurakan suorasanktion ja bonuksen tallennus"
+      (let [sanktiot-ja-bonukset-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                 +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-bonuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                    +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
+                                                        +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+            lisatty-sakko (first (filter #(= -1234.0 (:summa %)) sanktiot-ja-bonukset-sakon-jalkeen))
+            lisatty-bonus (first (filter #(= 4321.0 (:summa %)) sanktiot-ja-bonukset-bonuksen-jalkeen))
+            lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-ja-bonukset-muistutuksen-jalkeen))]
         (is (number? (:id lisatty-sakko)) "Tallennus palauttaa uuden id:n")
         (is (= :yllapidon_sakko (:laji lisatty-sakko)) "Päällystysurakan bonuksen oikea sanktiolaji")
         (is (= "Ylläpidon sakko" (:nimi (:tyyppi lisatty-sakko))) "Päällystysurakan sakon oikea sanktiotyyppi")
-        (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea sanktiolaji")
-        (is (= "Ylläpidon bonus" (:nimi (:tyyppi lisatty-bonus))) "Päällystysurakan bonuksen oikea sanktiotyyppi")
+        (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea bonuslaji")
         (is (= "Ylläpidon muistutus" (:nimi (:tyyppi lisatty-muistutus))) "Päällystysurakan muistutuksen oikea sanktiotyyppi")
         (is (= -1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
         (is (= 4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
@@ -294,7 +299,14 @@
         (is (= "MAKU 2010" (:indeksi lisatty-hoidon-sakko)) "Indeksi oikein")
         (is (= nil (:summa lisatty-hoidon-muistutus)) "Hoitourakan bonuksen oikea summa")
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
-        (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")))
+        (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-suorasanktio-rajapinnan kautta"
+          (let [poistettu-sanktio-id (palvelukutsu-poista-suorasanktio
+                                       +kayttaja-jvh+ (:id lisatty-hoidon-sakko) (hae-oulun-alueurakan-2014-2019-id))
+                poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama poistettu-sanktio-id)]
+            (is (= true (:poistettu poistettu-suorasanktio-kannassa)))
+            (is (= true (:lp_poistettu poistettu-suorasanktio-kannassa)))))))
 
 
     ;; Siivoa roskat
@@ -484,7 +496,7 @@
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 16, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370000000-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/sql-timestamp #inst "2019-10-10T21:06:06.370000000-00:00") :id 7, :perintapvm #inst "2019-10-11T21:00:00.000-00:00", :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
 
 (deftest hae-urakan-jalkeiset-sanktiot

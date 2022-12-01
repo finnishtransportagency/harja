@@ -49,7 +49,7 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")

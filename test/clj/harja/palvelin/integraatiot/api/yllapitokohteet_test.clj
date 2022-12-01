@@ -30,7 +30,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-paallystys
     :fim (component/using
-           (fim/->FIM +testi-fim+)
+           (fim/->FIM {:url +testi-fim+})
            [:db :integraatioloki])
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)

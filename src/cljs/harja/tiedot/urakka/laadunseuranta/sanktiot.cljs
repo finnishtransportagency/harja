@@ -10,21 +10,22 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.urakka :as u-domain])
+            [harja.domain.urakka :as u-domain]
+            [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
+
 (defn uusi-sanktio [urakkatyyppi]
   (let [nyt (pvm/nyt)
-        default-kasittelyaika (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
     {:suorasanktio true
      :laji (cond
-             (#{:hoito :teiden-hoito} urakkatyyppi) :A
+             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
              (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
              :else :yllapidon_sakko)
-     :kasittelyaika default-kasittelyaika
-     :perintapvm default-kasittelyaika
+     :perintapvm default-perintapvm
      :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
                             (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
@@ -71,16 +72,23 @@
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
 
+(def paivita-sanktiot-ja-bonukset-atom (atom false))
 (defonce haetut-sanktiot-ja-bonukset
   (reaction<! [urakka (:id @nav/valittu-urakka)
                hoitokausi @urakka/valittu-hoitokausi
                [kk-alku kk-loppu] @urakka/valittu-hoitokauden-kuukausi
-               _ @nakymassa?]
+               _ @nakymassa?
+               _ @paivita-sanktiot-ja-bonukset-atom]
               {:nil-kun-haku-kaynnissa? true}
               (when @nakymassa?
                 (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
                                                   :alku (or kk-alku (first hoitokausi))
                                                   :loppu (or kk-loppu (second hoitokausi))}))))
+
+(defn paivita-sanktiot-ja-bonukset!
+  "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
+  []
+  (swap! paivita-sanktiot-ja-bonukset-atom not))
 
 (defn hae-sanktion-liitteet!
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
@@ -118,7 +126,7 @@
     (apply sorted-set-by
       jarjesta-suodattimet
       (cond
-        (u-domain/yllapidon-urakka? (:tyyppi @nav/valittu-urakka))
+        (u-domain/yllapitourakka? (:tyyppi @nav/valittu-urakka))
         (disj sanktio-bonus-suodattimet-oletusarvo :arvonvahennykset)
 
         :else sanktio-bonus-suodattimet-oletusarvo))))
@@ -131,12 +139,35 @@
    :hoitokausi     @urakka/valittu-hoitokausi})
 
 (defn tallenna-sanktio
-  [sanktio urakka-id]
+  [sanktio urakka-id onnistui-fn]
   (go
-    (let [sanktiot-tallennuksen-jalkeen
-          (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
-      (reset! valittu-sanktio nil)
-      (reset! haetut-sanktiot-ja-bonukset sanktiot-tallennuksen-jalkeen))))
+    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
+      (if (k/virhe? vastaus)
+        (viesti/nayta-toast! "Sanktion tallennus epäonnistui!" :varoitus)
+        (do
+          (viesti/nayta-toast! "Sanktion tallennus onnistui" :onnistui)
+          (reset! valittu-sanktio nil)
+          ;; Haetaan onnistuneen tallennuksen jälkeen uusiksi sanktiot & bonukset listan tiedot
+          (paivita-sanktiot-ja-bonukset!)
+          (when (fn? onnistui-fn) (onnistui-fn))))
+      vastaus)))
+
+(defn poista-suorasanktio
+  [sanktion-id urakka-id onnistui-fn]
+  (go
+    (let [payload {:id sanktion-id
+                   :urakka-id urakka-id}
+          vastaus (<! (k/post! :poista-suorasanktio payload))]
+
+      (if (k/virhe? vastaus)
+        (viesti/nayta-toast! "Sanktion poisto epäonnistui!" :varoitus)
+        (do
+          (viesti/nayta-toast! "Sanktio poistettu" :onnistui)
+          (reset! valittu-sanktio nil)
+          ;; Haetaan onnistuneen poiston jälkeen uusiksi sanktiot & bonukset listan tiedot
+          (paivita-sanktiot-ja-bonukset!)
+          (when (fn? onnistui-fn) (onnistui-fn))))
+      vastaus)))
 
 (defn sanktion-tallennus-onnistui
   [palautettu-id sanktio]
@@ -159,19 +190,17 @@
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
 
-(defn- muistutus? [rivi]
-  (= :muistutus (:laji rivi)))
-
 (defn- bonus? [rivi]
-  (#{:muu-bonus :alihankintabonus :asiakastyytyvaisyysbonus :tavoitepalkkio :lupausbonus}
-   (:laji rivi)))
+  (boolean (:bonus? rivi)))
 
 (defn- sanktio? [rivi]
-  ((disj (set @urakka/valitun-urakan-sanktiolajit) :arvonvahennyssanktio :muistutus)
-   (:laji rivi)))
+  (not (:bonus? rivi)))
 
 (defn- arvonvahennys? [rivi]
   (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- muistutus? [rivi]
+  (= :muistutus (:laji rivi)))
 
 (defn- rivin-tyyppi [rivi]
   (cond
