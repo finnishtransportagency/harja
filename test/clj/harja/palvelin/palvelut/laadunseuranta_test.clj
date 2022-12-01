@@ -38,7 +38,7 @@
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)

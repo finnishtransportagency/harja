@@ -91,7 +91,7 @@
         (some? (some pidettavat-roolit kayttajan-roolit))))
     kayttajat))
 
-(defrecord FIM [url]
+(defrecord FIM [fim-asetukset]
   component/Lifecycle
   (start [this]
     this)
@@ -101,19 +101,24 @@
 
   FIMHaku
   (hae-urakan-kayttajat
-    [{:keys [url db integraatioloki]} urakan-sampo-id]
+    [{:keys [fim-asetukset db integraatioloki]} urakan-sampo-id]
     (assert urakan-sampo-id "Urakan sampo-id puutuu!")
-    (when-not (empty? url)
-      (integraatiotapahtuma/suorita-integraatio
-        db integraatioloki "fim" "hae-urakan-kayttajat"
-        #(-> (integraatiotapahtuma/laheta
-               % :http {:metodi :GET
-                        :url url
-                        :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)})
+    (let [rajapinnan-parametrit {:metodi :GET
+                                 :url (:url fim-asetukset)
+                                 :parametrit (urakan-kayttajat-parametrit urakan-sampo-id)}
+          rajapinnan-parametrit (if (and (:kayttajatunnus fim-asetukset) (:salasana fim-asetukset))
+                                  (merge rajapinnan-parametrit
+                                    {:kayttajatunnus (:kayttajatunnus fim-asetukset)
+                                     :salasana (:salasana fim-asetukset)})
+                                  rajapinnan-parametrit)]
+      (when-not (empty? (:url fim-asetukset))
+        (integraatiotapahtuma/suorita-integraatio
+          db integraatioloki "fim" "hae-urakan-kayttajat"
+          #(-> (integraatiotapahtuma/laheta % :http rajapinnan-parametrit)
              :body
              lue-xml
              lue-fim-vastaus
-             (kuvaa-roolit urakan-sampo-id))))))
+             (kuvaa-roolit urakan-sampo-id)))))))
 
 (defrecord FakeFIM [tiedosto]
   component/Lifecycle

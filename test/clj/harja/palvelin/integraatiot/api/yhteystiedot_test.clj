@@ -43,7 +43,7 @@
   (laajenna-integraatiojarjestelmafixturea
     livi-jarjestelmakayttaja
     :fim (component/using
-           (fim/->FIM fim-url)
+           (fim/->FIM {:url fim-url})
            [:db :integraatioloki])
     :api-yhteystiedot (component/using
                         (api-yhteystiedot/->Yhteystiedot)
