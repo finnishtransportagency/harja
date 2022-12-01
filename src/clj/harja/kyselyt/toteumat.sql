@@ -623,6 +623,15 @@ SET tyyppi              = :tyyppi :: erilliskustannustyyppi,
 WHERE id = :id
       AND urakka = :urakka;
 
+-- name: poista-erilliskustannus<!
+UPDATE erilliskustannus
+   SET muokattu  = NOW(),
+       muokkaaja = :muokkaaja,
+       poistettu = TRUE
+ WHERE id = :id
+   AND urakka = :urakka
+RETURNING *;
+
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava

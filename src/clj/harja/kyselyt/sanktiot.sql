@@ -56,12 +56,44 @@ FROM sanktio s
 WHERE laatupoikkeama = :laatupoikkeama
       AND s.poistettu IS NOT TRUE;
 
+-- name: hae-suorasanktion-tiedot
+-- Hae yksittäisen suora sanktion tiedot
+SELECT s.id,
+       s.perintapvm,
+       s.maara AS summa,
+       s.sakkoryhma AS laji,
+       s.suorasanktio,
+       s.toimenpideinstanssi,
+       s.indeksi,
+       s.vakiofraasi,
+       s.laatupoikkeama AS laatupoikkeama_id,
+       t.id AS tyyppi_id,
+       t.nimi AS tyyppi_nimi,
+       t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
+       t.koodi AS tyyppi_koodi
+  FROM sanktio s
+           LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
+ WHERE s.id = :id;
+
+-- name: poista-sanktio!
+UPDATE sanktio
+   SET poistettu = TRUE,
+       muokattu  = NOW(),
+       muokkaaja = :muokkaaja
+ WHERE id = :id;
+
+
 -- name: hae-urakan-sanktiot
+-- row-fn: muunna-urakan-sanktio
 -- Palauttaa kaikki urakalle kirjatut sanktiot perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 SELECT
   s.id,
   s.perintapvm,
+  -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten.
+  -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
+  -- sanktion laatupoikkeamassa.
+  lp.kasittelyaika                    AS kasittelyaika,
   s.maara                             AS summa,
   s.sakkoryhma::text                  AS laji,
   s.indeksi,
@@ -113,6 +145,10 @@ FROM sanktio s
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
 WHERE
   lp.urakka = :urakka
+  -- Ei haeta tässä ylläpidon bonus 'sanktioita', vaan haetaan ne bonuksina eri kyselyssä.
+  --   Tämä edistää ylläpidon bonusten käsittelyn refaktorointia myöhemmin siten, että niitäkin käsiteltäisiin samalla
+  --   logiikalla kuin muidenkin urakkatyyppien bonuksia.
+  AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
   AND lp.poistettu IS NOT TRUE AND s.poistettu IS NOT TRUE
   AND (s.perintapvm >= :alku AND s.perintapvm <= :loppu
    -- VHAR-5849 halutaan että urakan päättymisen jälkeiset sanktiot näkyvät viimeisen hoitokauden listauksessa
@@ -128,9 +164,14 @@ WHERE
         OR
              lp.yllapitokohde IS NOT NULL AND
              (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS FALSE)
+
 UNION ALL
+
+-- Hae urakan päätöksen sanktiot
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
+       -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS kasittelyaika,
        p."urakoitsijan-maksu"                          AS summa,
        p.tyyppi::TEXT                                  AS laji,
        u.indeksi,
@@ -144,11 +185,11 @@ SELECT p.id,
                                                        AS indeksikorjaus,
        null                                            AS laatupoikkeama_id,
        null                                            AS laatupoikkeama_kohde,
-       null                                            AS laatupoikkeama_aika,
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS laatupoikkeama_aika,
        null                                            AS laatupoikkeama_tekija,
        null                                            AS laatupoikkeama_urakka,
        null                                            AS laatupoikkeama_tekijanimi,
-       null                                            AS laatupoikkeama_paatos_kasittelyaika,
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS laatupoikkeama_paatos_kasittelyaika,
        null                                            AS laatupoikkeama_paatos_paatos,
        null                                            AS laatupoikkeama_paatos_kasittelytapa,
        null                                            AS laatupoikkeama_paatos_muukasittelytapa,
@@ -186,18 +227,19 @@ WHERE p."urakka-id" = :urakka
   AND p.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-bonukset
+-- row-fn: muunna-urakan-bonus
 -- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
 
 -- Bonukset erilliskustannuksista
 SELECT ek.id,
-       ek.pvm                 AS perintapvm,
+       ek.laskutuskuukausi    as perintapvm,
+       ek.pvm                 AS kasittelyaika,
        ek.rahasumma           AS summa,
        ek.tyyppi::TEXT        AS laji,
        ek.indeksin_nimi       AS indeksi,
        TRUE                   AS suorasanktio,
        TRUE                   as bonus,
-       ek.laskutuskuukausi    as laskutuskuukausi,
        ek.kasittelytapa       as kasittelytapa,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
        CASE
@@ -207,7 +249,16 @@ SELECT ek.id,
                                                     NULL::SANKTIOLAJI))
            ELSE 0
            END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
-       ek.lisatieto           AS laatupoikkeama_paatos_perustelu -- TODO Varmista, mutta näyttää hyvältä
+       ek.lisatieto           AS lisatieto,
+       --  Muilla urakkatyypeillä kuin ylläpidon urakoilla ei voi olla bonukseen liitettyä ylläpitokohdetta
+       NULL AS yllapitokohde_tr_numero,
+       NULL AS yllapitokohde_tr_alkuosa,
+       NULL AS yllapitokohde_tr_alkuetaisyys,
+       NULL AS yllapitokohde_tr_loppuosa,
+       NULL AS yllapitokohde_tr_loppuetaisyys,
+       NULL AS yllapitokohde_numero,
+       NULL AS yllapitokohde_nimi,
+       NULL AS yllapitokohde_id
   FROM erilliskustannus ek
  WHERE ek.urakka = :urakka
    AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
@@ -220,12 +271,51 @@ SELECT ek.id,
                                     AND tpk2.koodi = '23150'
                                   LIMIT 1)
    AND ek.pvm BETWEEN :alku AND :loppu
-   AND ek.poistettu IS NOT TRUE;
+   AND ek.poistettu IS NOT TRUE
+
+UNION
+
+-- Hae ylläpidon urakoille poikkeuksellisesti bonus sanktio-taulusta
+-- TODO refaktoroidaan myöhemmin ylläpidon bonusten käsittely sellaiseksi, että poikkeuksellista käsittelyä ei
+--      tarvitsisi tehdä.
+SELECT s.id,
+       -- perintapvm sanktiolla vastaa erilliskustannuksen laskutuskuukautta
+       s.perintapvm AS perintapvm,
+       -- Kasittelyaika haetaan sanktion suhteen laatupoikkeaman puolelta, erilliskustannuksissa se on 'pvm'-sarake.
+       lp.kasittelyaika AS kasittelyaika,
+       -- Muunna ylläpidon bonuksen summa positiiviseksi (se on käytännössä negatiivinen sanktio nykytoteuksella)
+       s.maara * -1 AS summa,
+       'yllapidon_bonus' AS laji,
+       s.indeksi AS indeksi,
+       TRUE AS suorasanktio,
+       TRUE AS bonus,
+       lp.kasittelytapa AS kasittelytapa,
+       s.toimenpideinstanssi AS toimenpideinstanssi,
+       0 AS indeksikorjaus,
+       lp.perustelu AS lisatieto,
+       -- Ylläpitourakoilla voi olla bonukseen liitetty ylläpitokohde
+       ypk.tr_numero                       AS yllapitokohde_tr_numero,
+       ypk.tr_alkuosa                      AS yllapitokohde_tr_alkuosa,
+       ypk.tr_alkuetaisyys                 AS yllapitokohde_tr_alkuetaisyys,
+       ypk.tr_loppuosa                     AS yllapitokohde_tr_loppuosa,
+       ypk.tr_loppuetaisyys                AS yllapitokohde_tr_loppuetaisyys,
+       ypk.kohdenumero                     AS yllapitokohde_numero,
+       ypk.nimi                            AS yllapitokohde_nimi,
+       ypk.id                              AS yllapitokohde_id
+  FROM sanktio s
+           JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+           LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+ WHERE lp.urakka = :urakka
+   AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
+   AND s.perintapvm BETWEEN :alku AND :loppu
+   AND s.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-lupausbonukset
+-- row-fn: muunna-urakan-lupausbonus
 -- Lupausbonukset
 SELECT p.id,
        MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS perintapvm,
+       MAKE_DATE(p."hoitokauden-alkuvuosi" + 1, 9, 15) AS kasittelyaika,
        p."tilaajan-maksu"                              AS summa,
        p.tyyppi::TEXT                                  AS laji,
        u.indeksi                                       AS indeksi,
