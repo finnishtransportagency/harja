@@ -59,3 +59,11 @@
                                 yllapitokohde
                                 sisaltaa-poikkeamaraportin?
                                 nil)))))
+
+(defn poista-laatupoikkeama
+  "Merkitsee laatupoikkeaman poistetuksi. Palauttaa laatupoikkeaman ID:n."
+  [db user {laatupoikkeama-id :id urakka-id :urakka-id :as tiedot}]
+
+  (log/debug "Merkitse laatupoikkeama " laatupoikkeama-id " poistetuksi urakalle " urakka-id)
+
+  (poista-laatupoikkeama! db {:id laatupoikkeama-id :muokkaaja (:id user) :urakka-id urakka-id}))
