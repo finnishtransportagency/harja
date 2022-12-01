@@ -20,6 +20,7 @@
          :kohdeluettelo-paallystys :paallystyskohteet
          :kohdeluettelo-paikkaukset :paikkauskohteet
          :raportit nil
+         :info nil
          :tilannekuva :nykytilanne
          :ilmoitukset :tieliikenne}))
 
