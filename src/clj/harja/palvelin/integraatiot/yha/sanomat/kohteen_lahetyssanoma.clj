@@ -20,7 +20,7 @@
 
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
-   [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
+   [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapaivamaara osoite) (:karttapaivamaara osoite) (pvm/nyt)))]
    [:tienumero (:tr-numero osoite)]
    [:aosa (:tr-alkuosa osoite)]
    [:aet (:tr-alkuetaisyys osoite)]
