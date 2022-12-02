@@ -20,7 +20,7 @@
 
 (defn tee-tierekisteriosoitevali [osoite]
   [:tierekisteriosoitevali
-   [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapvm osoite) (:karttapvm osoite) (pvm/nyt)))]
+   [:karttapaivamaara (xml/formatoi-paivamaara (if (:karttapaivamaara osoite) (:karttapaivamaara osoite) (pvm/nyt)))]
    [:tienumero (:tr-numero osoite)]
    [:aosa (:tr-alkuosa osoite)]
    [:aet (:tr-alkuetaisyys osoite)]
@@ -106,7 +106,7 @@
 (def paikkauskohteiden-yha-id 99)
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
-                         karttapvm nimi tunnus paikkauskohde-id] :as kohde}
+                         karttapaivamaara nimi tunnus paikkauskohde-id] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot paikkauskohde-toteutunut-hinta] :as paallystysilmoitus}]
   [:kohde
@@ -130,7 +130,7 @@
    (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
+             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]

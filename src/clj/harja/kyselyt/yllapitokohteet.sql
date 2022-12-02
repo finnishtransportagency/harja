@@ -1034,9 +1034,7 @@ SELECT
   keskimaarainen_vuorokausiliikenne,
   nykyinen_paallyste,
   suorittava_tiemerkintaurakka,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
+  karttapaivamaara
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
