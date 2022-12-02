@@ -703,12 +703,13 @@
         massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
                                   urakka-id
                                   " AND dop_nro = '764567-dop';")))
+        poista-kaytossa-oleva-massa (u (str "DELETE FROM pot2_paallystekerros WHERE materiaali = " massan-id ";"))
         {massat-jalkeen :massat murskeet-jalkeen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :poista-urakan-massa
                         +kayttaja-vastuuhlo-muhos+ {:id massan-id})]
     (is (not (empty? massat-ennen)))
-    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Mmurskeisiin ei koskettu")
+    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Murskeisiin ei koskettu")
     (is (not-empty (filter #(= massan-id (::pot2-domain/massa-id %))
                            massat-ennen)))
     (is (empty? (filter #(= massan-id (::pot2-domain/massa-id %))
@@ -724,7 +725,7 @@
 
         murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
                                   urakka-id
-                                  " AND dop_nro = '3524534-dop';")))
+                                  " AND dop_nro = 'ETR-444';")))
         {massat-jalkeen :massat murskeet-jalkeen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :poista-urakan-murske
