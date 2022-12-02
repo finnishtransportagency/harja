@@ -225,3 +225,6 @@ SELECT lsit.id, lsit.pisteet, lsit."urakka-id", lsit.luotu
 SELECT lp.id, lp.pisteet, lp.kuukausi, lp.vuosi, lp."urakka-id", lp.luoja, lp.luotu, lp.muokkaaja, lp.muokattu
   FROM lupaus_pisteet lp
  WHERE lp.id = :id;
+
+-- name: hae-indeksikorotus-summalle
+SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
