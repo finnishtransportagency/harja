@@ -711,8 +711,16 @@ SELECT EXISTS(
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
+-- TODO Tarkista rikkovatko lisätyt uudet kentät sijaintihakua muualla harjassa.
 SELECT u.id,
-       :urakkatyyppi as urakkatyyppi,
+       u.nimi,
+       u.tyyppi,
+       u.alkupvm,
+       u.loppupvm,
+       u.takuu_loppupvm,
+       u.urakkanro AS alueurakkanumero,
+       urk.nimi    AS urakoitsija_nimi,
+       urk.ytunnus AS urakoitsija_ytunnus,
        COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
                 ST_Distance84(vua.alue, st_makepoint(:x, :y)),
                 ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
@@ -720,6 +728,7 @@ FROM urakka u
          LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
          LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
+         JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE (CASE
            WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
                (u.tyyppi IN ('hoito', 'teiden-hoito') AND

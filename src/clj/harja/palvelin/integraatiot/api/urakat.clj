@@ -12,7 +12,8 @@
             [harja.kyselyt.materiaalit :as q-materiaalit]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi])
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-tehtavat [db urakka-id]
@@ -78,22 +79,62 @@
           urakat (konv/vector-mappien-alaviiva->rakenne (into organisaation-urakat erillisoikeus-urakat))]
       (muodosta-vastaus-urakoiden-haulle urakat))))
 
+(defn hae-urakka-sijainnilla [db parametrit {:keys [kayttajanimi] :as kayttaja}]
+  (println "DEBUG: hae-urakka-sijainnilla")
+  (parametrivalidointi/tarkista-parametrit parametrit {:x "X-koordinaatti puuttuu"
+                                                       :y "Y-koordinaatti puuttuu"})
+
+  ;; TODO: Kuka saa käyttää rajapintaa? Tarkasta käyttöoikeudet.
+
+  (let [{:keys [x y urakkatyyppi]} parametrit
+        x-easting (Double/parseDouble x)
+        y-northing (Double/parseDouble y)
+        ;; Haetaan oletuksena 1000 m etäisyydellä
+        haku-threshold 1000]
+
+    (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
+                 (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
+
+    (when urakkatyyppi
+      (validointi/tarkista-urakkatyyppi urakkatyyppi))
+
+    (let [urakat (q-urakat/hae-urakka-sijainnilla db {:x x-easting :y y-northing
+                                                      :threshold haku-threshold
+                                                      :urakkatyyppi urakkatyyppi})
+          ;; TODO: Validointi. Haku ei saa palauttaa urakoita, joihin käyttäjällä ei ole oikeuksia.
+          ;;       validointi/tarkista-kayttajan-oikeudet-urakkaan
+          urakat (konv/vector-mappien-alaviiva->rakenne urakat)]
+      (muodosta-vastaus-urakoiden-haulle urakat))))
+
 (def hakutyypit
-  [{:palvelu        :hae-urakka
-    :polku          "/api/urakat/:id"
+  [{:palvelu :hae-urakka
+    :polku "/api/urakat/:id"
     :vastaus-skeema json-skeemat/urakan-haku-vastaus
-    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-urakka-idlla db parametrit kayttaja-id))}
-   {:palvelu        :hae-kayttajan-urakat
-    :polku          "/api/urakat/haku/"
+    :kasittely-fn (fn [parametrit _ kayttaja-id db]
+                    (hae-urakka-idlla db parametrit kayttaja-id))}
+   {:palvelu :hae-kayttajan-urakat
+    :polku "/api/urakat/haku/"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
-    :kasittely-fn   (fn [parametrit _ kayttaja db]
-                      (hae-kayttajan-urakat db parametrit kayttaja))}
-   {:palvelu        :hae-urakka-ytunnuksella
-    :polku          "/api/urakat/haku/:ytunnus"
+    :kasittely-fn (fn [parametrit _ kayttaja db]
+                    (hae-kayttajan-urakat db parametrit kayttaja))}
+   {:palvelu :hae-urakka-sijainnilla
+    ;; Kaikilla sijaintihakutyypeille on oma polku /haku/sijainnilla
+    ;; Mahdollinen jousto tulevaisuudessa: Helppo lisätä uusia optioita &crs=EPSG:4326&threshold=1000,
+    ;; eikä hakuparametrien järjestyksellä ole väliä.
+    ;; HUOM: Täytyy määritellä ennen /haku/:y-tunnus polkua, jotta kyselyä ei ohjata väärälle käsittelijälle.
+    :polku "/api/urakat/haku/sijainnilla"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
-    :kasittely-fn   (fn [parametrit _ kayttaja-id db]
-                      (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
+    :kasittely-fn (fn [parametrit _ kayttaja-id db]
+                    (hae-urakka-sijainnilla db
+                      (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
+                      kayttaja-id))}
+   ;; TODO: Urakoiden hakua voisi yhtenäistää tulevaisuudessa.
+   ;;      Olisiko y-tunnuksella haku oikeastaan /api/urakat/haku parametri &ytunnus=...?
+   {:palvelu :hae-urakka-ytunnuksella
+    :polku "/api/urakat/haku/:ytunnus"
+    :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
+    :kasittely-fn (fn [parametrit _ kayttaja-id db]
+                    (hae-urakka-ytunnuksella db parametrit kayttaja-id))}])
 
 (defrecord Urakat []
   component/Lifecycle
@@ -106,5 +147,5 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :hae-urakka :hae-urakka-ytunnuksella :hae-kayttajan-urakat)
+    (apply poista-palvelut http (map :palvelu hakutyypit))
     this))
