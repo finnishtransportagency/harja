@@ -59,9 +59,7 @@ SELECT
   yhaid,
   toimenpide,
   tyomenetelma,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
+  karttapaivamaara
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde AND
       -- Tämä ottaa pois kaikki ne jotka on luotu Harjassa ja sen jälkeen poistettu,
