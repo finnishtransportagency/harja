@@ -101,7 +101,7 @@
      (when massamaara [:massamenekki massamaara])]))
 
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
-                         karttapvm nimi tunnus] :as kohde}
+                         karttapaivamaara nimi tunnus] :as kohde}
                  alikohteet
                  {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystysilmoitus}]
   [:kohde
@@ -120,7 +120,7 @@
    (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
-             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapvm)
+             (mapv #(tee-alustalle-tehty-toimenpide % tr-numero karttapaivamaara)
                    (:alustatoimet ilmoitustiedot))))
    (when alikohteet
      (reduce conj [:alikohteet]
