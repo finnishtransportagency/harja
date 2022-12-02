@@ -57,6 +57,7 @@
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :yha-id) [(str urakka-yhaid)]))
            (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
+           (is (= (xml/luetun-xmln-tagin-sisalto kohde :yha-id) ["13371"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["111"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
            (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
@@ -376,7 +377,7 @@
         virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" sisalto)
         odotettu-alustarivi [{:attrs nil
                               :content [{:attrs nil
-                                         :content ["2022-12-01"]
+                                         :content ["2022-12-02"]
                                          :tag :karttapaivamaara}
                                         {:attrs nil
                                          :content ["4"]
@@ -413,16 +414,16 @@
     (is (= (xml/luetun-xmln-tagin-sisalto urakka :harja-id) [(str urakka-id)]))
 
 
-    (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero) ["998"]))
+    (is (nil? (xml/luetun-xmln-tagin-sisalto kohde :kohdenumero)))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :yha-id) [(str kohteen-lahetyssanoma/paikkauskohteiden-yha-id)]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyyppi) ["1"]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohdetyotyyppi) ["paallystys"]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :nimi) ["Pottilan AB-levityskohde"]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :toiden-aloituspaivamaara) ["2022-11-01"]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :paallystyksen-valmistumispaivamaara) ["2022-11-05"]))
     (is (= (xml/luetun-xmln-tagin-sisalto kohde :kohteen-valmistumispaivamaara) [(str "2022-11-11")]))
-    (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2025-11-26"]))
-    ;; Todo: tätä ei vielä kaiveta paikkauskohteelle oikeasta paikasta, kaivapa se !
-    (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5000.00"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :takuupaivamaara) ["2025-11-05"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto kohde :toteutunuthinta) ["5000"]))
     (is (= (xml/luetun-xmln-tagien-sisalto kohde :alustalle-tehdyt-toimet :alustalle-tehty-toimenpide) odotettu-alustarivi))
 
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :tienumero) ["4"]))
@@ -431,6 +432,4 @@
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["101"]))
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["200"]))
     (is (nil? virheet) "Ei validointivirheitä")
-    (println "Jarno sisalto" sisalto)
-    (println "Jarno virheet" virheet)
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))

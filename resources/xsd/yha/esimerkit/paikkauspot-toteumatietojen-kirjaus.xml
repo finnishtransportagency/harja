@@ -12,10 +12,13 @@
                 <kohdetyyppi>1</kohdetyyppi>
                 <kohdetyotyyppi>paallystys</kohdetyotyyppi>
                 <nimi>Pottilan AB-levityskohde</nimi>
-                <takuupaivamaara>2025-11-26</takuupaivamaara>
-                <toteutunuthinta>0</toteutunuthinta>
+                <toiden-aloituspaivamaara>2022-11-01</toiden-aloituspaivamaara>
+                <paallystyksen-valmistumispaivamaara>2022-11-05</paallystyksen-valmistumispaivamaara>
+                <kohteen-valmistumispaivamaara>2022-11-11</kohteen-valmistumispaivamaara>
+                <takuupaivamaara>2025-11-05</takuupaivamaara>
+                <toteutunuthinta>5000</toteutunuthinta>
                 <tierekisteriosoitevali>
-                    <karttapaivamaara>2022-11-29</karttapaivamaara>
+                    <karttapaivamaara>2022-12-02</karttapaivamaara>
                     <tienumero>4</tienumero>
                     <aosa>101</aosa>
                     <aet>1</aet>
@@ -25,7 +28,7 @@
                 <alustalle-tehdyt-toimet>
                     <alustalle-tehty-toimenpide>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-11-29</karttapaivamaara>
+                            <karttapaivamaara>2022-12-02</karttapaivamaara>
                             <tienumero>4</tienumero>
                             <aosa>101</aosa>
                             <aet>1</aet>
@@ -44,7 +47,7 @@
                         <harja-id>44</harja-id>
                         <poistettu>0</poistettu>
                         <tierekisteriosoitevali>
-                            <karttapaivamaara>2022-11-29</karttapaivamaara>
+                            <karttapaivamaara>2022-12-02</karttapaivamaara>
                             <tienumero>4</tienumero>
                             <aosa>101</aosa>
                             <aet>1</aet>

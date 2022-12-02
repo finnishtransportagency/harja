@@ -108,7 +108,7 @@
 (defn tee-kohde [{:keys [yhaid yha-kohdenumero id yllapitokohdetyyppi yllapitokohdetyotyyppi tr-numero
                          karttapvm nimi tunnus paikkauskohde-id] :as kohde}
                  alikohteet
-                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot] :as paallystysilmoitus}]
+                 {:keys [aloituspvm valmispvm-paallystys valmispvm-kohde takuupvm ilmoitustiedot paikkauskohde-toteutunut-hinta] :as paallystysilmoitus}]
   [:kohde
    ;; Tämän yhaid:n oltava paikkauskohteen POT:eilla aina 99
    [:yha-id (if paikkauskohde-id
@@ -124,7 +124,9 @@
    (when valmispvm-paallystys [:paallystyksen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-paallystys)])
    (when valmispvm-kohde [:kohteen-valmistumispaivamaara (xml/formatoi-paivamaara valmispvm-kohde)])
    (when takuupvm [:takuupaivamaara (xml/formatoi-paivamaara takuupvm)])
-   [:toteutunuthinta (laske-hinta-kokonaishinta paallystysilmoitus)]
+   [:toteutunuthinta (if paikkauskohde-id
+                       paikkauskohde-toteutunut-hinta
+                       (laske-hinta-kokonaishinta paallystysilmoitus))]
    (tee-tierekisteriosoitevali (dissoc kohde :tr-ajorata :tr-kaista))
    (when (:alustatoimet ilmoitustiedot)
      (reduce conj [:alustalle-tehdyt-toimet]
