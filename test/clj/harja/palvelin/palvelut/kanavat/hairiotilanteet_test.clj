@@ -30,7 +30,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
