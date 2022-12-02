@@ -1,5 +1,5 @@
 INSERT INTO paikkauskohde ("luoja-id", luotu, "ulkoinen-id", nimi, "urakka-id", "yhalahetyksen-tila",
-                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id")
+                           "ilmoitettu-virhe", muokattu, "muokkaaja-id", tarkistettu, "tarkistaja-id", lisatiedot)
 VALUES ((SELECT id
          FROM kayttaja
          WHERE kayttajanimi = 'yit-rakennus'
@@ -21,7 +21,7 @@ VALUES ((SELECT id
 (SELECT id
    FROM kayttaja
   WHERE kayttajanimi = 'jvh'
-  LIMIT 1)),
+  LIMIT 1), 'Oulun testipaikkauskohde'),
   ((SELECT id
     FROM kayttaja
     WHERE kayttajanimi = 'destia'
@@ -32,6 +32,7 @@ VALUES ((SELECT id
   (SELECT id
     FROM urakka
     WHERE sampoid = '1245142-KAJ2'),
+   NULL,
    NULL,
    NULL,
    NULL,
@@ -53,6 +54,7 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
+   NULL,
    NULL),
    ((SELECT id
        FROM kayttaja
@@ -66,6 +68,7 @@ VALUES ((SELECT id
       WHERE sampoid = '1242141-OULU2'),
     NULL,
     'Testikohteen numero XYZ tiedot eivät pitäneet paikkaansa. Tsekkaisitko ja lähetä korjaukset. T. Pete',
+    NULL,
     NULL,
     NULL,
     NULL,
@@ -85,6 +88,7 @@ VALUES ((SELECT id
    NULL,
    NULL,
    NULL,
+   NULL,
    NULL),
   ((SELECT id
     FROM kayttaja
@@ -96,6 +100,7 @@ VALUES ((SELECT id
    (SELECT id
     FROM urakka
     WHERE sampoid = '4242523-TES2'),
+   NULL,
    NULL,
    NULL,
    NULL,
