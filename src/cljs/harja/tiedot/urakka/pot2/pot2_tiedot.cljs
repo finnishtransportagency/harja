@@ -248,7 +248,8 @@
                              lahetettava-data
                              (assoc lahetettava-data
                                :paikkauskohteen-tiedot
-                               {:paallystys-alku (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-alku])
+                               {:aloituspvm (get-in paallystysilmoitus-lomakedata [:perustiedot :aloituspvm])
+                                :paallystys-alku (get-in paallystysilmoitus-lomakedata [:perustiedot :paallystys-alku])
                                 :valmispvm-paallystys (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-paallystys])
                                 :valmispvm-kohde (get-in paallystysilmoitus-lomakedata [:perustiedot :valmispvm-kohde])
                                 :takuuaika (get-in paallystysilmoitus-lomakedata [:perustiedot :takuuaika])}))]

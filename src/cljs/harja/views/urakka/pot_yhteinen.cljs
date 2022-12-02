@@ -399,20 +399,13 @@
                :fmt fmt/euro-opt
                :tyyppi :numero :muokattava? false-fn
                ::lomake/col-luokka "col-xs-12 col-sm-6 col-md-6 col-lg-6"})
-            {:otsikko "Työ alkoi" :tyyppi :pvm :nimi (if paikkauskohteet?
-                                                       :paallystys-alku
-                                                       :aloituspvm)
+            {:otsikko "Työ aloitettu" :tyyppi :pvm :nimi :aloituspvm
              :label-ja-kentta-samalle-riville? true
              :ikoni-sisaan? true :vayla-tyyli? true :pakollinen? true
              ::lomake/col-luokka "col-xs-12"}
-            {:otsikko "Päällystystyö päättyi" :tyyppi :pvm :nimi :valmispvm-paallystys
+            {:otsikko "Kohde valmistunut" :tyyppi :pvm :nimi :valmispvm-kohde :pakollinen? true
              :label-ja-kentta-samalle-riville? true :ikoni-sisaan? true :vayla-tyyli? true
-             :pakollinen? true
-             :validoi [[:pvm-kentan-jalkeen :paallystys-alku "Päättymisen pitää tapahtua alkamisen jälkeen"]]
-             ::lomake/col-luokka "col-xs-12"}
-            {:otsikko "Kohteen valmistumispvm" :tyyppi :pvm :nimi :valmispvm-kohde
-             :label-ja-kentta-samalle-riville? true :ikoni-sisaan? true :vayla-tyyli? true
-             :validoi [[:pvm-kentan-jalkeen :paallystys-alku "Valmistuminen pitää tapahtua päällystyksen alkamisen jälkeen"]]
+             :validoi [[:pvm-kentan-jalkeen :aloituspvm "Valmistumisen pitää olla työn alkamisen jälkeen"]]
              ::lomake/col-luokka "col-xs-12"}
             (if paikkauskohteet?
               {:otsikko "Takuuaika" :tyyppi :valinta :nimi :takuuaika :label-ja-kentta-samalle-riville? true
