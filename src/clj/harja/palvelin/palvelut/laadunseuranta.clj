@@ -136,17 +136,10 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
-        urakan-lupausbonukset (if hae-bonukset?
-                                (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
-                                                                        :alku (konv/sql-timestamp alku)
-                                                                        :loppu (konv/sql-timestamp loppu)})
-                                [])
         bonukset (into []
                    ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
                    (map #(assoc % :bonus? true))
-                   (concat
-                     urakan-bonukset
-                     urakan-lupausbonukset))
+                   urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
@@ -184,7 +177,10 @@
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+  (let [summa (if (decimal? summa)
+                (Double/parseDouble (str summa))            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                summa)
+        urakan-tiedot (first (urakat/hae-urakka db urakka))
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
