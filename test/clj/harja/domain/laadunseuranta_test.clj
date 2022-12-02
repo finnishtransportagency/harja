@@ -51,12 +51,15 @@
         A-tyyppikoodit-ennen-2020 (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :A (pvm/hoitokauden-alkupvm 2019))
         A-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :A (pvm/hoitokauden-alkupvm 2020))
         B-tyyppikoodit-ennen-2020 (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :B (pvm/hoitokauden-alkupvm 2019))
-        B-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :B (pvm/hoitokauden-alkupvm 2020))]
+        B-tyyppikoodit-2020-tai-jalkeen (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :B (pvm/hoitokauden-alkupvm 2020))
+        lupaussanktio (sanktio-domain/sanktiolaji->sanktiotyyppi-koodi :lupaussanktio (pvm/hoitokauden-alkupvm 2020))]
 
     (is (= [13 14 15 16] muistutus-tyyppikoodit-ennen-2020 A-tyyppikoodit-ennen-2020 B-tyyppikoodit-ennen-2020)
       "Muistutus, A ja B lajien sanktiotyypit urakoissa ennen 2020")
 
     (is (= [13 14 17] muistutus-tyyppikoodit-2020-tai-jalkeen A-tyyppikoodit-2020-tai-jalkeen B-tyyppikoodit-2020-tai-jalkeen)
-      "Muistutus, A ja B lajien sanktiotyypit urakoissa 2020 tai sen jälkeen")))
+      "Muistutus, A ja B lajien sanktiotyypit urakoissa 2020 tai sen jälkeen")
+    (is (= [0] lupaussanktio)
+      "Lupaussanktio")))
 
 
