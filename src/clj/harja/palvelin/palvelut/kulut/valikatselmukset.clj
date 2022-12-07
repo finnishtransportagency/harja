@@ -19,6 +19,7 @@
     [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
+    [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
@@ -456,13 +457,6 @@
   (log/debug "poista-liitetty-lupausbonus :: tää ei tee vielä mitään : urakka-id bonus-id kayttaja-id : " urakka-id bonus-id kayttaja-id)
   (erilliskustannus-kyselyt/poista-erilliskustannus! db {:id bonus-id :kayttaja-id kayttaja-id}))
 
-(defn- poista-liitetty-lupaussanktio [db urakka-id sanktio-id kayttaja-id]
-  (let [sanktio (first (sanktiot-q/hae-sanktio db sanktio-id))
-        laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeaman-tiedot db {:urakka urakka-id
-                                                                                :id (:laatupoikkeama-id sanktio)}))
-        _ (sanktiot-q/poista-sanktio! db {:id (:id sanktio) :muokkaaja kayttaja-id})
-        _ (laatupoikkeamat-q/poista-laatupoikkeama! db {:id (:id laatupoikkeama) :muokkaaja kayttaja-id :urakka-id urakka-id})]))
-
 (defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id taulu_id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
@@ -474,10 +468,13 @@
           _ (cond
               (and
                 (= (:tyyppi paatos) "lupaussanktio")
-                (not (nil? (:sanktio_id paatos)))) (poista-liitetty-lupaussanktio db urakka-id (:sanktio_id paatos) (:id kayttaja))
+                (not (nil? (:sanktio_id paatos))))
+              (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (:sanktio_id paatos) :urakka-id urakka-id})
               (and
                 (= (:tyyppi paatos) "lupausbonus")
-                (not (nil? (:erilliskustannus_id paatos)))) (poista-liitetty-lupausbonus db urakka-id (:erilliskustannus_id paatos) (:id kayttaja)))
+                (not (nil? (:erilliskustannus_id paatos))))
+              (toteumat-palvelu/poista-erilliskustannus db kayttaja
+                {:id (:erilliskustannus_id paatos) :urakka-id urakka-id}))
           vastaus (valikatselmus-q/poista-paatos db paatoksen-id)]
       vastaus)
     (heita-virhe "Päätöksen id puuttuu!")))
