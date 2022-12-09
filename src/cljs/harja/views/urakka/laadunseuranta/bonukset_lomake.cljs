@@ -139,7 +139,7 @@
          :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}
         (let [valinnat (when (and
                                (<= urakan-alkuvuosi 2020)
-                               (= :asiakastyytyvaisyysbonus (:tyyppi lomakkeen-tiedot)))
+                               (= :asiakastyytyvaisyysbonus (:laji lomakkeen-tiedot)))
                          [(:indeksi @nav/valittu-urakka) nil])]
           {:otsikko "Indeksi"
            :nimi :indeksi
