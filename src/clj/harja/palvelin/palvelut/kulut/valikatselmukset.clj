@@ -453,10 +453,6 @@
       ::valikatselmus/lupaussanktio (tarkista-lupaussanktio db kayttaja tiedot))
     (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id))))
 
-(defn- poista-liitetty-lupausbonus [db urakka-id bonus-id kayttaja-id]
-  (log/debug "poista-liitetty-lupausbonus :: tää ei tee vielä mitään : urakka-id bonus-id kayttaja-id : " urakka-id bonus-id kayttaja-id)
-  (erilliskustannus-kyselyt/poista-erilliskustannus! db {:id bonus-id :kayttaja-id kayttaja-id}))
-
 (defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id taulu_id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
