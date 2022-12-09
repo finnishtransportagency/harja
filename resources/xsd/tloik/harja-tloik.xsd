@@ -29,7 +29,7 @@
                 <xs:element name="lisatieto" minOccurs="0">
                     <xs:simpleType>
                         <xs:restriction base="xs:string">
-                            <xs:maxLength value="2000" />
+                            <xs:maxLength value="4000" />
                         </xs:restriction>
                     </xs:simpleType>
                 </xs:element>
