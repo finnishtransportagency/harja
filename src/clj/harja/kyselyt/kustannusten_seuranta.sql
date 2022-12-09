@@ -12,8 +12,8 @@ WITH urakan_toimenpideinstanssi_23150 AS
             AND tpk2.koodi = '23150'
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
-SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
-       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
+SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
+       coalesce(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        kt.tyyppi::TEXT                                AS maksutyyppi,
        CASE
