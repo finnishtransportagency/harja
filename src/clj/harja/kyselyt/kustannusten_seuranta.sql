@@ -433,7 +433,9 @@ SELECT 0                    AS budjetoitu_summa,
                                                              TRUE)))
            ELSE SUM(ek.rahasumma)
            END              AS toteutunut_summa,
-       'bonus'              AS maksutyyppi,
+       CASE
+           WHEN ek.tyyppi = 'lupausbonus' THEN 'lupausbonus'
+           ELSE 'bonus' END  AS maksutyyppi,
        'bonus'              AS toimenpideryhma,
        MIN(ek.tyyppi)::TEXT AS tehtava_nimi,
        'bonukset'           AS toimenpide,
@@ -462,7 +464,9 @@ SELECT 0                       AS budjetoitu_summa,
                     FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka::INTEGER, s.sakkoryhma)))
                     * -1
            END                 AS toteutunut_summa,
-       'sanktio'               AS maksutyyppi,
+       CASE
+           WHEN s.sakkoryhma = 'lupaussanktio' THEN 'lupaussanktio'
+           ELSE 'sanktio' END  AS maksutyyppi,
        'sanktio'               AS toimenpideryhma,
        MIN(st.nimi)::TEXT      AS tehtava_nimi,
        'sanktiot'              AS toimenpide,
@@ -478,7 +482,7 @@ FROM sanktio s
      JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND s.poistettu = FALSE
-GROUP BY s.tyyppi, s.indeksi
+GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
 
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
 UNION ALL
