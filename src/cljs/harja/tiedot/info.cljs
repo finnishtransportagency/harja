@@ -1,5 +1,5 @@
 (ns harja.tiedot.info
-  "Infosivun rajapinta kutsut ja eventit"
+  "Infosivun kutsut"
   (:require [reagent.core :refer [atom] :as reagent]
             [tuck.core :as tuck]
             [harja.ui.viesti :as viesti]
@@ -21,9 +21,9 @@
   HaeKoulutusvideotOnnistui
   (process-event [{vastaus :vastaus} app]
                  (-> app
-                     (assoc :videot vastaus)))
+                     (assoc :videot vastaus))) 
 
   HaeKoulutusvideotEpaonnistui
   (process-event [{vastaus :vastaus} _]
-                 (js/console.log "HaeKoulutusvideotEpaonnistui :: vastaus" (pr-str vastaus))
-                 (viesti/nayta-toast! (str "HaeKoulutusvideotEpaonnistui :: vastaus" (pr-str vastaus) ) :varoitus)))
+                 (js/console.log "HaeKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus))
+                 (viesti/nayta-toast! (str "HaeKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus) ) :varoitus)))

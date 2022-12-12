@@ -14,7 +14,7 @@
   (start [this]
          (julkaise-palvelu (:http-palvelin this)
                            :hae-koulutusvideot
-                           (fn []
+                           (fn [_]
                              (hae-koulutusvideot (:db this))))
          this)
 
