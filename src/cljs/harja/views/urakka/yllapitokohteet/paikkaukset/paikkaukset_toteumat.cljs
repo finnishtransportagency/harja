@@ -206,7 +206,8 @@
                         {:ajorata (::paikkaus/ajorata toteumalomake)
                          :ajouravalit (::paikkaus/ajouravalit toteumalomake)
                          ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
-                         :kaista (first (::paikkaus/ajourat toteumalomake))})
+                         :ajourat (first (::paikkaus/ajourat toteumalomake))
+                         :reunat (first (::paikkaus/reunat toteumalomake))})
         ;; Toteuman tyyppi
         tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku

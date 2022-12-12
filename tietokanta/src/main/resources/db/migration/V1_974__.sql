@@ -1,10 +1,2 @@
-CREATE TABLE IF NOT EXISTS koulutusvideot
-( 
-	id                SERIAL PRIMARY KEY,
-	otsikko           VARCHAR(128),
-	linkki            VARCHAR(128),
-	pvm               DATE
-);
-
-COMMENT ON TABLE koulutusvideot IS 
-'Koulutusvideoiden siirto julkiselta sivulta harjan sisäiseen';
+ALTER TABLE yllapitokohde ADD COLUMN karttapaivamaara TIMESTAMP;
+ALTER TABLE yllapitokohdeosa ADD COLUMN karttapaivamaara TIMESTAMP;
