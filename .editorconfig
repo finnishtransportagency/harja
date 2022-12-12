@@ -1,0 +1,63 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+tab_width = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 120
+
+[{*.bb,*.clj,*.cljs,*.cljc}]
+indent_size = 2
+tab_width = 2
+## -- Intellij IDEA specific options for clojure (cursive) --
+ij_visual_guides = none
+
+# https://cursive-ide.com/userguide/formatting.html
+# https://tonsky.me/blog/clojurefmt/
+ij_clojure_defaultonlyindent = true
+ij_clojure_forceonlyindent = false
+
+ij_clojure_alignbindingforms = false
+ij_clojure_alignmapvalues = false
+ij_clojure_alignreaderconditionals = true
+ij_clojure_commentaligncolumn = 2
+ij_clojure_docstringfillwidth = 80
+ij_clojure_keepnssorted = true
+ij_clojure_keepsinglensrequireinvector = true
+ij_clojure_nsimportsuse = list
+ij_clojure_nsrequiresuse = vector
+ij_clojure_onespacelists = false
+ij_clojure_userecommendednsclauseorder = true
+ij_clojure_userecommendednscollections = true
+
+[package.json]
+indent_size = 2
+
+[*.less]
+indent_size = 2
+## -- Intellij IDEA specific options --
+# ij_visual_guides = none
+# ij_less_align_closing_brace_with_properties = false
+# ij_less_blank_lines_around_nested_selector = 1
+# ij_less_blank_lines_between_blocks = 1
+# ij_less_block_comment_add_space = false
+# ij_less_brace_placement = 0
+# ij_less_enforce_quotes_on_format = false
+# ij_less_hex_color_long_format = false
+# ij_less_hex_color_lower_case = false
+# ij_less_hex_color_short_format = false
+# ij_less_hex_color_upper_case = false
+# ij_less_keep_blank_lines_in_code = 2
+# ij_less_keep_indents_on_empty_lines = false
+# ij_less_keep_single_line_blocks = false
+# ij_less_line_comment_add_space = false
+# ij_less_line_comment_at_first_column = false
+# ij_less_space_after_colon = true
+# ij_less_space_before_opening_brace = true
+# ij_less_use_double_quotes = true
+# ij_less_value_alignment = 0
+
+
