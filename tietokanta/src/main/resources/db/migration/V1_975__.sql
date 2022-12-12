@@ -9,10 +9,3 @@ UPDATE sanktiotyyppi
 UPDATE sanktiotyyppi
    SET poistettu = TRUE
  WHERE koodi = 2;
-
-
--- Muuta vanhat Talvihoito-tyyppiset sanktiot 'Talvihoito, muut tiet'-tyyppisiksi
-UPDATE sanktio
-   SET tyyppi = (SELECT id FROM sanktiotyyppi WHERE koodi = 14)
- WHERE tyyppi = 2 -- 'Talvihoito'
-   AND perintapvm >= '2021-10-01';
