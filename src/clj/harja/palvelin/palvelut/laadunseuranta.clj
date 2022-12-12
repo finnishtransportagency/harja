@@ -123,42 +123,39 @@
   [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
   ;; Haetaan oletuksena sankiot ja bonukset.
+  ;; HOX: Suurin osa muunnoksista tehdään hae-urakan-sanktiot/hae-urakan-bonukset "row-fn" -funktioissa.
   (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
         hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
         urakan-sanktiot (if hae-sanktiot?
                           (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
-                          []) ;;Hox! Sisältää myös ylläpidon bonukset!
-        ;; Muutetaan sanktiot miinusmerkkisiksi ja ylläpidon bonukset plusmerkkisiksi
-        urakan-sanktiot (map #(konv/muunna % [:summa :indeksikorjaus] -) urakan-sanktiot)
+                          [])
         urakan-bonukset (if hae-bonukset?
                           (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
-                          [])
+                          []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
         urakan-lupausbonukset (if hae-bonukset?
                                 (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
                                                                         :alku (konv/sql-timestamp alku)
                                                                         :loppu (konv/sql-timestamp loppu)})
                                 [])
-        sanktiot (into []
-                       (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-                             (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-                             (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
-                                            :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
-                             (map konv/alaviiva->rakenne)
-                             (map #(konv/decimal->double % :summa))
-                             (map #(konv/decimal->double % :indeksikorjaus))
-                             (map #(if (:kasittelytapa %) (update % :kasittelytapa keyword) %))
-                             (map #(assoc % :laji (keyword (:laji %)))))
+        bonukset (into []
+                   ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
+                   (map #(assoc % :bonus? true))
                    (concat
-                     urakan-sanktiot
                      urakan-bonukset
-                     urakan-lupausbonukset))]
+                     urakan-lupausbonukset))
+        ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
+        sanktiot-ja-bonukset (into []
+                               (map konv/alaviiva->rakenne
+                                 (concat
+                                   urakan-sanktiot
+                                   bonukset)))]
     (if vain-yllapitokohteettomat?
-      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
-      sanktiot)))
+      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
+      sanktiot-ja-bonukset)))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id urakan-alkupvm]
@@ -340,6 +337,31 @@
       (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
       (hae-urakan-sanktiot-ja-bonukset c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
 
+(defn poista-suorasanktio
+  "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
+  [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
+  (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
+  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+  (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
+
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+
+  (jdbc/with-db-transaction [c db]
+
+    (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))
+          ;; Poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+          ;;   koska laatupoikkeamalla voi olla 0...n sanktiota
+          poista-laatupoikkeama? (and (boolean (:suorasanktio sanktio)) (:laatupoikkeama_id sanktio))]
+      (when poista-laatupoikkeama?
+        (laatupoikkeamat-q/poista-laatupoikkeama c user {:id (:laatupoikkeama_id sanktio)
+                                                         :urakka-id urakka-id}))
+      (sanktiot/poista-sanktio! db {:id sanktio-id
+                                    :muokkaaja (:id user)})
+
+      (sanktiot/merkitse-maksuera-likaiseksi! db sanktio-id)
+
+      sanktio-id)))
+
 (defrecord Laadunseuranta []
   component/Lifecycle
   (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
@@ -365,6 +387,10 @@
         (tallenna-suorasanktio db user (:sanktio tiedot) (:laatupoikkeama tiedot)
                                (get-in tiedot [:laatupoikkeama :urakka])
                                (:hoitokausi tiedot)))
+
+      :poista-suorasanktio
+      (fn [user tiedot]
+        (poista-suorasanktio db user tiedot))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
@@ -395,6 +421,7 @@
                      :hae-urakan-sanktiot-ja-bonukset
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
+                     :poista-suorasanktio
                      :hae-sanktion-liitteet
                      :hae-bonuksen-liitteet)
     this))

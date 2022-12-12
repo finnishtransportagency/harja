@@ -502,15 +502,33 @@
           ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
           (sanktio-domain/urakan-sanktiolajit urakka))))))
 
+;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitourakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
+;;       Jos (def yllapitourakka?..) alempana on OK, niin tämän voi poistaa ja korvata viittaukset yllapitourakka? symbolilla.
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (or (= :paallystys urakkatyyppi)
                   (= :paikkaus urakkatyyppi)
                   (= :tiemerkinta urakkatyyppi)))))
 
-(def yllapidon-urakka?
+(def yllapitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (urakka-domain/yllapidon-urakka? urakkatyyppi))))
+              (urakka-domain/yllapitourakka? urakkatyyppi))))
+
+(def vesivaylaurakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/vesivaylaurakka? urakkatyyppi))))
+
+(def mh-tai-hoitourakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/mh-tai-hoitourakka? urakkatyyppi))))
+
+(def mh-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/mh-urakka? urakkatyyppi))))
+
+(def hj-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/hj-urakka? urakkatyyppi (:alkupvm @nav/valittu-urakka)))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
 

@@ -361,6 +361,15 @@ VALUES (:lahde :: LAHDE, :urakka, :aika, :tekija :: OSAPUOLI, :kohde, :selvitys,
         :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :yllapitokohde, :sisaltaa_laatupoikkeaman, :ulkoinen_id);
 
+-- name: poista-laatupoikkeama!
+-- Merkitsee laatupoikkeaman poistetuksi
+UPDATE laatupoikkeama
+   SET muokkaaja = :muokkaaja,
+       muokattu  = CURRENT_TIMESTAMP,
+       poistettu = TRUE
+ WHERE id = :id
+   AND urakka = :urakka-id;
+
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.
 UPDATE laatupoikkeama
