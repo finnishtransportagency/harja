@@ -22,6 +22,8 @@
     "lupaus-luvatut-pisteet" ::lupaus-luvatut-pisteet
     "lupaus-toteutuneet-pisteet" ::lupaus-toteutuneet-pisteet
     "lupaus-tavoitehinta" ::lupaus-tavoitehinta
+    "erilliskustannus_id" ::erilliskustannus-id
+    "sanktio_id" ::sanktio-id
     "luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokattu" ::muokkaustiedot/muokattu
