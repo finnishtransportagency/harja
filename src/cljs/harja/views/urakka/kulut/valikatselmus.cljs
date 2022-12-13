@@ -441,7 +441,7 @@
                              tavoite-taytetty? 0M
                              :else nil)
         summa (cond
-                lupaussanktio lupaussanktio
+                lupaussanktio (- lupaussanktio)          ; Käännetään positiiviseksi, koska nyt maksetaan
                 lupausbonus lupausbonus
                 tavoite-taytetty? 0M)
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
@@ -485,7 +485,11 @@
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
            [:strong (fmt/euro-opt summa)]
-           " (100%)"]
+           (when (not (nil? (:indeksikorotus yhteenveto)))
+             (str " (+ indeksi  " (fmt/euro-opt (if lupaussanktio
+                                                  (* -1 (:indeksikorotus yhteenveto)) ;; Käännetään positiiviseksi
+                                                  (:indeksikorotus yhteenveto)
+                                                  )) " )"))]
 
           tavoite-taytetty?
           [:<>
