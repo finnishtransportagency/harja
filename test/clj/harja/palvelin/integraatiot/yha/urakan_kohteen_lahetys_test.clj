@@ -360,8 +360,6 @@
   (let [db (luo-testitietokanta)
         odotettu-sanoma-xml (slurp "resources/xsd/yha/esimerkit/paikkauspot-toteumatietojen-kirjaus.xml")
         odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
-        _ (println "Jarno odotettu sanoma " odotettu-sanoma-xml)
-        _ (println "Jarno odotettu PARSED " odotettu-xml-parsittu)
         urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         urakka (first (yha-kyselyt/hae-urakan-yhatiedot db {:urakka urakka-id}))
         urakka (assoc urakka :harjaid urakka-id
@@ -377,7 +375,7 @@
         virheet (xml/validoi-xml +xsd-polku+ "yha.xsd" sisalto)
         odotettu-alustarivi [{:attrs nil
                               :content [{:attrs nil
-                                         :content ["2022-12-02"]
+                                         :content ["2022-12-13"]
                                          :tag :karttapaivamaara}
                                         {:attrs nil
                                          :content ["4"]
@@ -431,5 +429,6 @@
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :aet) ["1"]))
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :losa) ["101"]))
     (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :let) ["200"]))
+    (is (= (xml/luetun-xmln-tagin-sisalto tr-osoite :karttapaivamaara) ["2022-12-13"]))
     (is (nil? virheet) "Ei validointivirheitä")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))
