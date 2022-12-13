@@ -276,6 +276,12 @@ SELECT id
   FROM sanktiotyyppi
  WHERE koodi IN (:koodit);
 
+--name: hae-sanktiotyypin-tiedot-koodilla
+SELECT id, nimi, toimenpidekoodi, koodi
+FROM sanktiotyyppi
+WHERE koodi = :koodit
+  AND poistettu = false;
+
 
 --name: hae-sanktion-urakka-id
 SELECT urakka FROM laatupoikkeama lp

@@ -381,6 +381,7 @@
                          :aika kohdistuspvm
                          :urakka urakka-id
                          :yllapitokohde nil}
+         lupaussanktiotyyppi (first (sanktiot-q/hae-sanktiotyypin-tiedot-koodilla db {:koodit 0}))
          sanktio {:kasittelyaika (pvm/nyt)
                   :suorasanktio true,
                   :laji :lupaussanktio,
@@ -388,7 +389,7 @@
                   :toimenpideinstanssi toimenpideinstanssi-id,
                   :perintapvm kohdistuspvm
                   ;; Lupaussanktion tyyppiä ei tarvitse valita
-                  :tyyppi {:id 8, :koodi 0, :nimi "Ei tarvita sanktiotyyppiä", :toimenpidekoodi 601}
+                  :tyyppi lupaussanktiotyyppi
                   :indeksi indeksi}
 
          ;; Tallennus palauttaa sanktio-id:n
