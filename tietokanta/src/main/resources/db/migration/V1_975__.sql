@@ -1,6 +1,11 @@
-ALTER TABLE urakka_paatos
-    ADD erilliskustannus_id integer default null,
-    ADD sanktio_id integer default null;
+-- Sanktiotyyppien korjaus VHAR-7050
 
-comment on column urakka_paatos.erilliskustannus_id is 'Lupausbonus sidotaan erilliskustannustauluun tällä id:llä.';
-comment on column urakka_paatos.sanktio_id is 'Lupaussanktio sanktiotauluun tällä id:llä';
+-- Palauta takaisin 'Ei tarvita sanktiotyyppiä' sanktiotyyppi, joka oli vahingossa merkitty poistetuksi
+UPDATE sanktiotyyppi
+   SET poistettu = FALSE
+ WHERE koodi = 0;
+
+-- Merkitse talvihoito-tyyppi poistetuksi
+UPDATE sanktiotyyppi
+   SET poistettu = TRUE
+ WHERE koodi = 2;
