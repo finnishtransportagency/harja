@@ -225,7 +225,8 @@
                                    :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
-  (let [perustelu "ABC kissa kävelee"
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        perustelu "ABC kissa kävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko {:suorasanktio true
                       :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
@@ -236,17 +237,29 @@
         muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :summa nil})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-urakan-id-nimella "Muhoksen päällystysurakka"),
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka urakka-id,
                         :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
     (testing "Päällystysurakan suorasanktion ja bonuksen tallennus"
-      (let [sanktiot-ja-bonukset-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                 +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-ja-bonukset-bonuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                    +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-ja-bonukset-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                        +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sakko laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-sakon-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                  :alku hk-alkupvm
+                                                                                                  :loppu hk-loppupvm})
+            _ (palvelukutsu-tallenna-suorasanktio
+                +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-bonuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                    :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                     :alku hk-alkupvm
+                                                                                                     :loppu hk-loppupvm})
+            muistutus-id (palvelukutsu-tallenna-suorasanktio
+                           +kayttaja-jvh+ muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset-muistutuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                        :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                         :alku hk-alkupvm
+                                                                                                         :loppu hk-loppupvm})
             lisatty-sakko (first (filter #(= -1234.0 (:summa %)) sanktiot-ja-bonukset-sakon-jalkeen))
             lisatty-bonus (first (filter #(= 4321.0 (:summa %)) sanktiot-ja-bonukset-bonuksen-jalkeen))
             lisatty-muistutus (first (filter #(and (= nil (:summa %))) sanktiot-ja-bonukset-muistutuksen-jalkeen))]
@@ -265,7 +278,8 @@
     (poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
-  (let [perustelu "ABC gorilla gävelee hoidon urakka-alueella"
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "ABC gorilla gävelee hoidon urakka-alueella"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko-hoito {:suorasanktio true
                             :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id)
@@ -279,14 +293,22 @@
                                                      :nimi "Talvihoito, päätiet"}})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka (hae-oulun-alueurakan-2014-2019-id)}
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka urakka-id}
         hk-alkupvm (pvm/->pvm "1.1.2017")
         hk-loppupvm (pvm/->pvm "31.12.2017")]
     (testing "Hoitourakan suorasanktion tallennus"
-      (let [sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                     +kayttaja-jvh+ hoidon-sakko laatupoikkeama hk-alkupvm hk-loppupvm)
-            sanktiot-muistutuksen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                            +kayttaja-jvh+ hoidon-muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ hoidon-sakko laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-sakon-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                      :alku hk-alkupvm
+                                                                                      :loppu hk-loppupvm})
+            muistutus-id (palvelukutsu-tallenna-suorasanktio
+                           +kayttaja-jvh+ hoidon-muistutus laatupoikkeama hk-alkupvm hk-loppupvm)
+            sanktiot-muistutuksen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                            :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                             :alku hk-alkupvm
+                                                                                             :loppu hk-loppupvm})
             lisatty-hoidon-sakko (first (filter #(= -665.9 (:summa %)) sanktiot-sakon-jalkeen))
             lisatty-hoidon-muistutus (first (filter #(= nil (:summa %)) sanktiot-muistutuksen-jalkeen))]
         (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
@@ -313,7 +335,8 @@
     (poista-sanktio-perustelulla perustelu)))
 
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
-  (let [perustelu "ABC koira kävelee MHU-alueella"
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC koira kävelee MHU-alueella"
         tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
         sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
@@ -321,11 +344,15 @@
                           :nimi "Talvihoito, päätiet", :toimenpidekoodi 618}}
         laatupoikkeama {:tekijanimi "Max Power"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00"), :urakka (hae-iin-maanteiden-hoitourakan-2021-2026-id)}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00"), :urakka urakka-id}
         hk-alkupvm (pvm/->pvm "1.10.2021")
         hk-loppupvm (pvm/->pvm "31.12.2021")
-        sanktiot-sakon-jalkeen (palvelukutsu-tallenna-suorasanktio
+        sanktio-id (palvelukutsu-tallenna-suorasanktio
                                  +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+        sanktiot-sakon-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+          :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                           :alku hk-alkupvm
+                                                           :loppu hk-loppupvm})
         lisatty-hoidon-sakko (first (filter #(= (get-in % [:laatupoikkeama :paatos :perustelu]) perustelu)
                                             sanktiot-sakon-jalkeen))]
     (is (number? (:id lisatty-hoidon-sakko)) "Tallennus palauttaa uuden id:n")
@@ -391,7 +418,8 @@
     (poista-sanktio-perustelulla perustelu)))
 
 (deftest suorasanktion-poistaminen-vs-laatupoikkeamaan-liitetyn-sanktion-poistaminen
-  (let [perustelu "ABC lehmä lepäilee"
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "ABC lehmä lepäilee"
         lp-aika (pvm/->pvm-aika "1.1.2017 08:00:00")
         lp-aika2 (pvm/->pvm-aika "1.1.2017 09:00:00")
         perintapvm (pvm/->pvm "3.1.2017")
@@ -411,26 +439,41 @@
                            :aika lp-aika2, :urakka (hae-oulun-alueurakan-2014-2019-id)}
         hk-alkupvm (pvm/->pvm "1.10.2016")
         hk-loppupvm (pvm/->pvm "30.09.2017")
-        sanktiot-suorasanktion-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                         +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
-        sanktiot-lp-liittyvan-sanktion-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                 +kayttaja-jvh+ hoidon-sakko-laatupoikkeamaan-liittyva laatupoikkeama-lp hk-alkupvm hk-loppupvm)
+        lisatyn-sanktion-id (palvelukutsu-tallenna-suorasanktio
+                     +kayttaja-jvh+ hoidon-sakko-suorasanktio laatupoikkeama-ss hk-alkupvm hk-loppupvm)
+        sanktiot-suorasanktion-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                          :alku hk-alkupvm
+                                                                                          :loppu hk-loppupvm})
+        lp-sanktio-id (palvelukutsu-tallenna-suorasanktio
+                        +kayttaja-jvh+ hoidon-sakko-laatupoikkeamaan-liittyva laatupoikkeama-lp hk-alkupvm hk-loppupvm)
+        sanktiot-lp-liittyvan-sanktion-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                  :alku hk-alkupvm
+                                                                                                  :loppu hk-loppupvm})
         lisatty-hoidon-sakko (first (filter #(= -637.27 (:summa %)) sanktiot-suorasanktion-jalkeen))
-        lisatyn-sanktion-id (:id lisatty-hoidon-sakko)
         lisatyn-laatupoikkeaman-id (:id (:laatupoikkeama lisatty-hoidon-sakko))
         lisatty-hoidon-sakko-lp (first (filter #(= -200.27 (:summa %)) sanktiot-lp-liittyvan-sanktion-jalkeen))
         lisatyn-sanktion-id-lp (:id lisatty-hoidon-sakko-lp)
         lisatyn-laatupoikkeaman-id-lp (:id (:laatupoikkeama lisatty-hoidon-sakko-lp))]
-    (let [sanktiot-suorasanktion-poistamisen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                       +kayttaja-jvh+
-                                                       (merge hoidon-sakko-suorasanktio {:id lisatyn-sanktion-id
-                                                                                         :poistettu true})
-                                                       (merge laatupoikkeama-ss {:id lisatyn-laatupoikkeaman-id}) hk-alkupvm hk-loppupvm)
-          sanktiot-lp-sanktion-poistamisen-jalkeen (palvelukutsu-tallenna-suorasanktio
-                                                     +kayttaja-jvh+
-                                                     (merge hoidon-sakko-laatupoikkeamaan-liittyva {:id lisatyn-sanktion-id-lp
-                                                                                                    :poistettu true})
-                                                     (merge laatupoikkeama-lp {:id lisatyn-laatupoikkeaman-id-lp}) hk-alkupvm hk-loppupvm)
+    (let [poistettu-sanktio-id (palvelukutsu-tallenna-suorasanktio
+                                 +kayttaja-jvh+
+                                 (merge hoidon-sakko-suorasanktio {:id lisatyn-sanktion-id
+                                                                   :poistettu true})
+                                 (merge laatupoikkeama-ss {:id lisatyn-laatupoikkeaman-id}) hk-alkupvm hk-loppupvm)
+          sanktiot-suorasanktion-poistamisen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                       :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                        :alku hk-alkupvm
+                                                                                                        :loppu hk-loppupvm})
+          poistetun-suorasanktion-id (palvelukutsu-tallenna-suorasanktio
+                                       +kayttaja-jvh+
+                                       (merge hoidon-sakko-laatupoikkeamaan-liittyva {:id lisatyn-sanktion-id-lp
+                                                                                      :poistettu true})
+                                       (merge laatupoikkeama-lp {:id lisatyn-laatupoikkeaman-id-lp}) hk-alkupvm hk-loppupvm)
+          sanktiot-lp-sanktion-poistamisen-jalkeen (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                      :alku hk-alkupvm
+                                                                                                      :loppu hk-loppupvm})
           poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id)
           poistettu-lp-sanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id-lp)
           poistettu-hoidon-sakko (first (filter #(= -637.27 (:summa %)) sanktiot-suorasanktion-poistamisen-jalkeen))]
@@ -440,7 +483,7 @@
         (is (not= true (:poistettu lisatty-hoidon-sakko)) "Sakkoa ei poistettu")
         (is (nil? poistettu-hoidon-sakko) "Sakko poistettu")
         (is (and (= true (:poistettu poistettu-suorasanktio-kannassa))
-                 (= true (:lp_poistettu poistettu-suorasanktio-kannassa))))
+              (= true (:lp_poistettu poistettu-suorasanktio-kannassa))))
         (is (= lp-aika (get-in lisatty-hoidon-sakko [:laatupoikkeama :aika]) (:lp_aika poistettu-suorasanktio-kannassa)))
         (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
         (is (=marginaalissa? -637.27 (:summa lisatty-hoidon-sakko) (:summa poistettu-suorasanktio-kannassa)) "Hoitourakan sakon oikea summa")
@@ -449,7 +492,7 @@
 
       (testing "laatupoikkeamaan-liitetyn-sanktion-poistaminen-ei-poista-laatupoikkeamaa"
         (is (and (= true (:poistettu poistettu-lp-sanktio-kannassa))
-                 (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))
+              (= false (:lp_poistettu poistettu-lp-sanktio-kannassa))))))
 
     ;; Siivoa roskat
     (poista-sanktio-perustelulla perustelu)))
