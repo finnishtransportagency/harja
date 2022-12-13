@@ -391,10 +391,8 @@
                   :tyyppi {:id 8, :koodi 0, :nimi "Ei tarvita sanktiotyyppiä", :toimenpidekoodi 601}
                   :indeksi indeksi}
 
-         ;; Tallennus palauttaa kaikki sanktiot. Joten emme voi hyödyntää vastausta
-         _ (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])
-         ;; Miten tuloksesta päätellään uusin sanktio
-         uusin-sanktio-id (sanktiot-q/hae-uusin-sanktio-id-urakalle db urakka-id)]
+         ;; Tallennus palauttaa sanktio-id:n
+         uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])]
      uusin-sanktio-id)))
 
 (defn- tallenna-lupausbonus

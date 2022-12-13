@@ -322,16 +322,16 @@
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                                             :poistettu poista-laatupoikkeama?))
-          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-      (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-                                                        (konv/sql-timestamp kasittelyaika)
-                                                        (name paatos) perustelu
-                                                        (name kasittelytapa) muukasittelytapa
-                                                        (:id user)
-                                                        id)
-      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
-      (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
-      (hae-urakan-sanktiot-ja-bonukset c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
+          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
+          _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
+              (konv/sql-timestamp kasittelyaika)
+              (name paatos) perustelu
+              (name kasittelytapa) muukasittelytapa
+              (:id user)
+              id)
+          sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+          _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
+      sanktio-id)))
 
 (defn poista-suorasanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
