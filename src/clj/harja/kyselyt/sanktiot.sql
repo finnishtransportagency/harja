@@ -282,16 +282,6 @@ SELECT urakka FROM laatupoikkeama lp
 JOIN sanktio s ON lp.id = s.laatupoikkeama
 WHERE s.id = :sanktioid;
 
-
--- name: hae-uusin-sanktio-id-urakalle
--- single?: true
-SELECT s.id AS id
-FROM sanktio s
-         JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama AND lp.urakka = :urakka-id
-WHERE s.poistettu IS NOT TRUE
-ORDER BY lp.id DESC, s.id DESC
-LIMIT 1;
-
 -- name: hae-sanktio
 SELECT s.id AS id, s.perintapvm, s.indeksi, s.maara, s.laatupoikkeama as "laatupoikkeama-id", s.toimenpideinstanssi, s.tyyppi, s.suorasanktio,
        s.ulkoinen_id, s.vakiofraasi, s.sakkoryhma, s.muokattu, s.muokkaaja, s.luoja, s.luotu, s.poistettu
