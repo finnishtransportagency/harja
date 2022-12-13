@@ -136,17 +136,10 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
-        urakan-lupausbonukset (if hae-bonukset?
-                                (sanktiot/hae-urakan-lupausbonukset db {:urakka urakka-id
-                                                                        :alku (konv/sql-timestamp alku)
-                                                                        :loppu (konv/sql-timestamp loppu)})
-                                [])
         bonukset (into []
                    ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
                    (map #(assoc % :bonus? true))
-                   (concat
-                     urakan-bonukset
-                     urakan-lupausbonukset))
+                   urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
@@ -184,7 +177,10 @@
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+  (let [summa (if (decimal? summa)
+                (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                summa)
+        urakan-tiedot (first (urakat/hae-urakka db urakka))
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -326,16 +322,16 @@
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                                             :poistettu poista-laatupoikkeama?))
-          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-      (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-                                                        (konv/sql-timestamp kasittelyaika)
-                                                        (name paatos) perustelu
-                                                        (name kasittelytapa) muukasittelytapa
-                                                        (:id user)
-                                                        id)
-      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
-      (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
-      (hae-urakan-sanktiot-ja-bonukset c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
+          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
+          _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
+              (konv/sql-timestamp kasittelyaika)
+              (name paatos) perustelu
+              (name kasittelytapa) muukasittelytapa
+              (:id user)
+              id)
+          sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+          _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
+      sanktio-id)))
 
 (defn poista-suorasanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
