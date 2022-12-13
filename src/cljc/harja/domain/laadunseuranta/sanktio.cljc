@@ -34,14 +34,14 @@
                              ;; Talvihoito, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                              #_2
                              13 14]
-                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
-                            ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                            (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2021)
+                            ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2020 tai pienempi.
+                            (when (< (pvm/vuosi urakan-alkupvm) 2021)
                               [15 16])
 
-                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
-                            ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                            (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2021)
+                            ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2021 tai suurempi
+                            (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                               [17])))
                      :A (vec (concat
                                [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
@@ -50,14 +50,14 @@
                                 #_2
 
                                 13 14]
-                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
-                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2021)
+                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2020 tai pienempi.
+                               (when (< (pvm/vuosi urakan-alkupvm) 2021)
                                  [15 16])
 
-                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2021)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                                  [17])))
                      :B (vec (concat
                                [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
@@ -68,12 +68,12 @@
                                 13 14]
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
                                ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (< (pvm/vuosi urakan-alkupvm) 2021)
                                  [15 16])
 
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                                  [17])))
 
                      :C [8 9 10 11 12]
