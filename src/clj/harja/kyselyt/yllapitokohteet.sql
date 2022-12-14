@@ -902,7 +902,7 @@ SELECT
             -- varmistetaan ettei alikohdetta ole poistettu
             EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
      FROM pot2_paallystekerros paall
-    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS toimenpiteet,
+    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS toimenpiteet,
   (SELECT string_agg(DISTINCT (
       select t.lyhenne || m.max_raekoko || ', ' || m.kuulamyllyluokka
       FROM pot2_mk_urakan_massa m
@@ -911,7 +911,7 @@ SELECT
          -- varmistetaan ettei alikohdetta ole poistettu
            EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
     FROM pot2_paallystekerros paall
-   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS paallysteet,
+   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS paallysteet,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",
