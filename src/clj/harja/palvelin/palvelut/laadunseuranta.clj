@@ -360,7 +360,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti pdf-vienti excel-vienti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -407,6 +407,10 @@
       :hae-bonuksen-liitteet
       (fn [user {:keys [urakka-id bonus-id]}]
         (hae-bonuksen-liitteet db user urakka-id bonus-id)))
+    (when pdf-vienti
+      (pdf-vienti/rekisteroi-pdf-kasittelija! pdf-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-pdf db)))
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-excel db)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
