@@ -479,9 +479,8 @@ SELECT 0                       AS budjetoitu_summa,
 FROM sanktio s
      JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
      JOIN sanktiotyyppi st ON s.tyyppi = st.id
-     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-  AND s.poistettu = FALSE
+  AND s.poistettu IS NOT TRUE
 GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
 
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
