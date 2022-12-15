@@ -170,10 +170,9 @@
                 sanktiot-ja-bonukset
                 ;; Jos kaikki ei täsmää, niin sitten otetaan filtterillä oikeasti osa ulos
                 (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))
-        ;rapsa
-        #_(laadunseuranta-pdf/sanktiot-ja-bonukset-pdf alku loppu (:nimi urakan-tiedot) yllapitourakka?
+        rapsa (laadunseuranta-pdf/sanktiot-ja-bonukset-pdf alku loppu (:nimi urakan-tiedot) yllapitourakka?
             suodattimet rivit)]
-    #_ (raportointi-pdf/muodosta-pdf rapsa)))
+    (raportointi-pdf/muodosta-pdf rapsa)))
 
 (defn- bonukset-ja-sanktiot-excel
   [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
