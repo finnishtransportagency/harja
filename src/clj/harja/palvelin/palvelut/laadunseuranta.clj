@@ -30,8 +30,9 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
-            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-pdf :as laadunseuranta-pdf]
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
             [harja.palvelin.raportointi.pdf :as raportointi-pdf]
+            [harja.palvelin.raportointi.excel :as raportointi-excel]
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat]
@@ -156,10 +157,7 @@
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
       sanktiot-ja-bonukset)))
 
-(defn- bonukset-ja-sanktiot-pdf
-  [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (log/debug "bonukset-ja-sanktiot-pdf :: tiedot:" tiedot)
+(defn- yhteiset-tulostetiedot [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
   (let [urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
         yllapitourakka? (domain-urakka/yllapitourakka? (:tyyppi urakan-tiedot))
         sanktiot-ja-bonukset (hae-urakan-sanktiot-ja-bonukset db user tiedot)
@@ -169,20 +167,20 @@
                 ;; rivin-tyyppi vertailuehto ei toimi kaikilla tyypeillä, joten tehdään sille oma tarkistus ensin
                 sanktiot-ja-bonukset
                 ;; Jos kaikki ei täsmää, niin sitten otetaan filtterillä oikeasti osa ulos
-                (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))
-        rapsa (laadunseuranta-pdf/sanktiot-ja-bonukset-pdf alku loppu (:nimi urakan-tiedot) yllapitourakka?
-            suodattimet rivit)]
-    (raportointi-pdf/muodosta-pdf rapsa)))
+                (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))]
+    (laadunseuranta-tulosteet/sanktiot-ja-bonukset-raportti alku loppu (:nimi urakan-tiedot) yllapitourakka?
+      suodattimet rivit)))
 
-(defn- bonukset-ja-sanktiot-excel
+(defn- bonukset-ja-sanktiot-pdf
   [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiot-ja-bonukset (hae-urakan-sanktiot-ja-bonukset db user tiedot)]
-    #_ (laadunseuranta-pdf/sanktiot-ja-bonukset-pdf
-      (pvm/pvm "19.12.2022")
-      (pvm/pvm "19.12.2022")
-      "urakan-nimi"
-      sanktiot-ja-bonukset)))
+  (log/debug "bonukset-ja-sanktiot-pdf :: tiedot:" tiedot)
+  (raportointi-pdf/muodosta-pdf (yhteiset-tulostetiedot db user tiedot)))
+
+(defn- bonukset-ja-sanktiot-excel
+  [db workbook user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (raportointi-excel/muodosta-excel (yhteiset-tulostetiedot db user tiedot) workbook))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id urakan-alkupvm]

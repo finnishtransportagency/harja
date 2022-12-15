@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.laadunseuranta.laadunseuranta-pdf
+(ns harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet
   (:require [harja.tyokalut.xsl-fo :as xsl-fo]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
@@ -12,22 +12,6 @@
                         :border-top border
                         :border-left border
                         :border-right border})
-
-(defn- valiotsikko-rivi [otsikko]
-  [:fo:block {:margin-top "4mm"
-              :margin-bottom "2mm"}
-   [:fo:block {:font-weight "bold"
-               :font-size 12}
-    (str otsikko)]])
-
-(defn- rivi [otsikko & sisaltosolut]
-  [:fo:table-row
-   [:fo:table-cell
-    [:fo:block {:margin-bottom "2mm"}
-     [:fo:block {:font-size 8} otsikko]]]
-   (for [sisalto sisaltosolut]
-     [:fo:table-cell
-      [:fo:block sisalto]])])
 
 (defn- taulukko [rivit]
   [:fo:table (merge borders {:table-layout "fixed"})
@@ -75,20 +59,17 @@
                                   :else "–"))
     (not yllapitourakka?) (conj (sanktion-tai-bonuksen-kuvaus r))
     true (conj (get-in r [:laatupoikkeama :paatos :perustelu]))
-    true (conj (fmt/euro-opt false (:summa r)))
-    true (conj (fmt/euro-opt false (:indeksikorjaus r)))))
+    true (conj (:summa r) )
+    true (conj (:indeksikorjaus r))))
 
-(defn sanktiot-ja-bonukset-pdf
-  [alkupvm loppupvm urakan-nimi yllapitourakka? valitut-lajit rivit]
-  (let [raportin-nimi "Sanktiot, bonukset ja arvonvähennykset"
-        normaali-leveydet {:kasitelty 1.5
+(defn- muodosta-otsikot [yllapitourakka?]
+  (let [normaali-leveydet {:kasitelty 1.5
                            :laji 3
                            :tyyppi 2
                            :kuvaus 3.5
                            :perustelu 4.5
                            :maara 1.5
                            :indeksi 1.5}
-        normaali-kokonais-leveys (apply + (vals normaali-leveydet))
         yllapito-leveydet {:kasitelty 1.5
                            :laji 3
                            :kohde 2
@@ -97,25 +78,24 @@
                            :perustelu 4.5
                            :maara 1.5
                            :indeksi 1.5}
-        yllapito-kokonais-leveys (apply + (vals normaali-leveydet))
         leveydet (if yllapitourakka?
                    yllapito-leveydet
                    normaali-leveydet)
-        kokonaisleveys (if yllapitourakka?
-                         yllapito-kokonais-leveys
-                         normaali-kokonais-leveys)
-        otsikot [{:otsikko "Käsitelty" :leveys (str (* 100 (/ (:kasitelty leveydet) kokonaisleveys)) "%")}
-                 {:otsikko "Laji" :leveys (str (* 100 (/ (:laji leveydet) kokonaisleveys)) "%")}
-                 (when yllapitourakka?
-                   {:otsikko "Kohde" :leveys (str (* 100 (/ (:kohde leveydet) kokonaisleveys)) "%")})
-                 (if yllapitourakka?
-                   {:otsikko "Kuvaus" :leveys (str (* 100 (/ (:kuvaus leveydet) kokonaisleveys)) "%")}
-                   {:otsikko "Tyyppi" :leveys (str (* 100 (/ (:tyyppi leveydet) kokonaisleveys)) "%")})
-                 (when (not yllapitourakka?)
-                   {:otsikko "Tapahtumapaikka/kuvaus" :leveys (str (* 100 (/ (:kuvaus leveydet) kokonaisleveys)) "%")})
-                 {:otsikko "Perustelu" :leveys (str (* 100 (/ (:perustelu leveydet) kokonaisleveys)) "%")}
-                 {:otsikko "Määrä (€)" :leveys (str (* 100 (/ (:maara leveydet) kokonaisleveys)) "%") :tasaa :oikea}
-                 {:otsikko "Indeksi (€)" :leveys (str (* 100 (/ (:indeksi leveydet) kokonaisleveys)) "%") :tasaa :oikea}]
+        otsikot (cond-> []
+                  true (conj {:otsikko "Käsitelty" :leveys (:kasitelty leveydet)})
+                  true (conj {:otsikko "Laji" :leveys (:laji leveydet)})
+                  yllapitourakka? (conj {:otsikko "Kohde" :leveys (:kohde leveydet)})
+                  yllapitourakka? (conj {:otsikko "Kuvaus" :leveys (:kuvaus leveydet)})
+                  (not yllapitourakka?) (conj {:otsikko "Tyyppi" :leveys (:tyyppi leveydet)})
+                  (not yllapitourakka?) (conj {:otsikko "Tapahtumapaikka/kuvaus" :leveys (:kuvaus leveydet)})
+                  true (conj {:otsikko "Perustelu" :leveys (:perustelu leveydet)})
+                  true (conj {:otsikko "Määrä (€)" :leveys (:maara leveydet) :tasaa :oikea :fmt :raha})
+                  true (conj {:otsikko "Indeksi (€)" :leveys (:indeksi leveydet) :tasaa :oikea :fmt :raha}))]
+    otsikot))
+(defn sanktiot-ja-bonukset-raportti
+  [alkupvm loppupvm urakan-nimi yllapitourakka? valitut-lajit rivit]
+  (let [raportin-nimi "Sanktiot, bonukset ja arvonvähennykset"
+        otsikot (muodosta-otsikot yllapitourakka?)
         taulukko-rivit (into []
                          (concat
                            (for [r rivit]
@@ -131,8 +111,8 @@
                    (not yllapitourakka?) (conj nil)
                    (not yllapitourakka?) (conj nil)
                    true (conj nil)
-                   true (conj (fmt/euro-opt false yht-summa))
-                   true (conj (fmt/euro-opt false yht-indeksit)))
+                   true (conj yht-summa)
+                   true (conj yht-indeksit))
         taulukko-rivit (conj taulukko-rivit yht-rivi)
         taulukko [:taulukko {:viimeinen-rivi-yhteenveto? true}
                   otsikot
