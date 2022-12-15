@@ -190,25 +190,6 @@
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
 
-(defn- bonus? [rivi]
-  (boolean (:bonus? rivi)))
-
-(defn- sanktio? [rivi]
-  (not (:bonus? rivi)))
-
-(defn- arvonvahennys? [rivi]
-  (= :arvonvahennyssanktio (:laji rivi)))
-
-(defn- muistutus? [rivi]
-  (= :muistutus (:laji rivi)))
-
-(defn- rivin-tyyppi [rivi]
-  (cond
-    (muistutus? rivi) :muistutukset
-    (bonus? rivi) :bonukset
-    (sanktio? rivi) :sanktiot
-    (arvonvahennys? rivi) :arvonvahennykset))
-
 (defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
   (let [kaikki @urakan-lajisuodattimet
         valitut @sanktio-bonus-suodattimet]

@@ -269,3 +269,22 @@
 
             :else
             [:asiakastyytyvaisyysbonus :muu-bonus])))
+
+(defn- bonus? [rivi]
+  (boolean (:bonus? rivi)))
+
+(defn- sanktio? [rivi]
+  (not (:bonus? rivi)))
+
+(defn- arvonvahennys? [rivi]
+  (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- muistutus? [rivi]
+  (= :muistutus (:laji rivi)))
+
+(defn rivin-tyyppi [rivi]
+  (cond
+    (muistutus? rivi) :muistutukset
+    (bonus? rivi) :bonukset
+    (arvonvahennys? rivi) :arvonvahennykset
+    (sanktio? rivi) :sanktiot))
