@@ -11,6 +11,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
             [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -197,5 +198,5 @@
       ;; Kaikki suodattimet valittu, ei suodateta mitään pois.
       sanktiot-ja-bonukset
       (filter
-        #(valitut (rivin-tyyppi %))
+        #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))
