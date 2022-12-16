@@ -58,20 +58,23 @@
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
   niiden käsittely koordinaattimuotoon on monimutkaista."
-  [reitti koordinaattimuutos?]
-  (let [tee-koordinaatit (fn [sijainti]
+  [reitti lisaa-epsg-4326-koordinaatit?]
+  (let [tee-koordinaatit (fn [sijainti x-avain y-avain]
                            (when sijainti (let [sijainnit (-> sijainti
                                                             (str/replace #"\(|\)" "")
                                                             (str/split #","))]
-                                            {:x (first sijainnit)
-                                             :y (second sijainnit)})))
-        koordinaatit-3067 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg3067]))
-        koordinaatit-4326 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg4326]))
+                                            {x-avain (first sijainnit)
+                                             y-avain (second sijainnit)})))
+        koordinaatit-3067 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg3067]) :x :y)
+        koordinaatit-4326 (when lisaa-epsg-4326-koordinaatit?
+                            ;; PostGIS palauttaa epsg:4326-koordinaatin lon-lat järjestyksessä, täsmäten 3067:n järjestystä
+                            ;; Käytetään avaimina :lat ja :lon, jotta pysyy selkeänä, mikä suunta on mikäkin
+                            (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg4326]) :lon :lat))
 
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
                  (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067))
-        reitti (if koordinaattimuutos?
+        reitti (if lisaa-epsg-4326-koordinaatit?
                  (assoc-in reitti [:reittipiste :koordinaatit-4326] koordinaatit-4326)
                  reitti)]
     reitti))
@@ -103,7 +106,8 @@
     reitti))
 
 (defn palauta-toteumat
-  "Haetaan toteumat annettujen alku- ja loppuajan puitteissa."
+  "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
+  koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
   (tarkista-toteumahaun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
