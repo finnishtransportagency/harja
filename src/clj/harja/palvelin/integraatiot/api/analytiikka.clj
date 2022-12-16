@@ -51,20 +51,27 @@
 (def db-reitti->avaimet
   {:f1 :reittipiste_aika
    :f2 :reittipiste_tehtavat
-   :f3 :reittipiste_sijainti
-   :f4 :reittipiste_materiaalit})
+   :f3 :reittipiste_sijainti_epsg4326
+   :f4 :reittipiste_sijainti_epsg3067
+   :f5 :reittipiste_materiaalit})
 
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
   niiden käsittely koordinaattimuotoon on monimutkaista."
   [reitti]
-  (let [sijainti (:sijainti (:reittipiste reitti))
-        sijainnit (when sijainti (str/split sijainti #","))
-        koordinaatit (when sijainnit {:x (str/replace (first sijainnit) #"\(" "")
-                                      :y (str/replace (second sijainnit) #"\)" "")})
+  (let [tee-koordinaatit (fn [sijainti]
+                           (when sijainti (let [sijainnit (-> sijainti
+                                                            (str/replace #"\(|\)" "")
+                                                            (str/split #","))]
+                                            {:x (first sijainnit)
+                                             :y (second sijainnit)})))
+        koordinaatit-3067 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg3067]))
+        koordinaatit-4326 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg4326]))
+
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
-                 (assoc-in [:reittipiste :koodinaatit] koordinaatit))]
+                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067)
+                 (assoc-in [:reittipiste :koordinaatit-4326] koordinaatit-4326))]
     reitti))
 
 (defn rakenna-reittipiste-tehtavat [reitti]
