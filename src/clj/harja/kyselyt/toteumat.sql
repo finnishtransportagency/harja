@@ -1443,7 +1443,7 @@ SELECT t.toteuma_tunniste_id,
            WHEN :koordinaattimuutos THEN
                json_agg(row_to_json(row (rp.aika, rp.tehtavat, st_transform(st_setsrid(rp.sijainti::geometry, 3067), 4326)::point, rp.sijainti, rp.materiaalit)))
            ELSE
-               json_agg(row_to_json(row (rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit)))
+               json_agg(row_to_json(row (rp.aika, rp.tehtavat, null::point, rp.sijainti, rp.materiaalit)))
            END AS reitti,
        t.toteuma_tiesijainti_numero,
        t.toteuma_tiesijainti_aosa,
