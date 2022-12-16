@@ -44,6 +44,15 @@
         (when (get-in laatupoikkeama [:tr :numero])
           (str " (" (tierekisteri/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")"))))))
 
+(defn sanktion-tai-bonuksen-perustelu [sanktio-tai-bonus]
+  (let [perustelu (get-in sanktio-tai-bonus [:laatupoikkeama :paatos :perustelu])
+        kuvaus (get-in sanktio-tai-bonus [:laatupoikkeama :kuvaus])]
+    (if (:bonus sanktio-tai-bonus)
+      (:lisatieto sanktio-tai-bonus)
+      (if (:suorasanktio sanktio-tai-bonus)
+        perustelu
+        (str (str "Laatupoikkeaman kuvaus: " kuvaus " \n " "Päätöksen selitys: " perustelu))))))
+
 (defn- muodosta-taulukon-rivi [r yllapitourakka?]
   (cond-> []
     true (conj (pvm/pvm-opt (:kasittelyaika r)))
@@ -58,7 +67,7 @@
                                   (and (:tyyppi r) (not= "Ei tarvita sanktiotyyppiä" (get-in r [:tyyppi :nimi]))) (get-in r [:tyyppi :nimi])
                                   :else "–"))
     (not yllapitourakka?) (conj (sanktion-tai-bonuksen-kuvaus r))
-    true (conj (get-in r [:laatupoikkeama :paatos :perustelu]))
+    true (conj (sanktion-tai-bonuksen-perustelu r))
     true (conj (:summa r) )
     true (conj (:indeksikorjaus r))))
 
