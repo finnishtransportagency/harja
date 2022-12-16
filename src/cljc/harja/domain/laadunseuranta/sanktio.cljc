@@ -280,7 +280,9 @@
   (= :arvonvahennyssanktio (:laji rivi)))
 
 (defn- muistutus? [rivi]
-  (= :muistutus (:laji rivi)))
+  (or
+    (= :muistutus (:laji rivi))
+    (= :yllapidon_muistutus (:laji rivi))))
 
 (defn rivin-tyyppi [rivi]
   (cond
