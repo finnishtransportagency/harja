@@ -581,7 +581,7 @@ FROM toimenpidekoodi tk,
      urakka u
 WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
-  AND tk.kasin_lisattava_maara = true
+  AND tk.aluetieto = false
   AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
