@@ -58,7 +58,7 @@
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
   niiden käsittely koordinaattimuotoon on monimutkaista."
-  [reitti]
+  [reitti koordinaattimuutos?]
   (let [tee-koordinaatit (fn [sijainti]
                            (when sijainti (let [sijainnit (-> sijainti
                                                             (str/replace #"\(|\)" "")
@@ -70,8 +70,10 @@
 
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
-                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067)
-                 (assoc-in [:reittipiste :koordinaatit-4326] koordinaatit-4326))]
+                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067))
+        reitti (if koordinaattimuutos?
+                 (assoc-in reitti [:reittipiste :koordinaatit-4326] koordinaatit-4326)
+                 reitti)]
     reitti))
 
 (defn rakenna-reittipiste-tehtavat [reitti]
@@ -102,14 +104,15 @@
 
 (defn palauta-toteumat
   "Haetaan toteumat annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
   (tarkista-toteumahaun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
-                                                                       :loppuaika loppuaika} )
+                                                                       :loppuaika loppuaika
+                                                                       :koordinaattimuutos koordinaattimuutos})
         toteumat (->> toteumat
                    (map (fn [toteuma]
                            (-> toteuma
@@ -145,7 +148,7 @@
                                         ;; Muokkaa reittipisteen nimet oikein
                                         r (-> r
                                             (konversio/alaviiva->rakenne)
-                                            (rakenna-reittipiste-sijainti)
+                                            (rakenna-reittipiste-sijainti koordinaattimuutos)
                                             (rakenna-reittipiste-tehtavat)
                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
                                     r))
