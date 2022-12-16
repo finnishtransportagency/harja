@@ -93,7 +93,7 @@
                   true (conj {:otsikko "Indeksi (€)" :leveys (:indeksi leveydet) :tasaa :oikea :fmt :raha}))]
     otsikot))
 (defn sanktiot-ja-bonukset-raportti
-  [alkupvm loppupvm urakan-nimi yllapitourakka? valitut-lajit rivit]
+  [alkupvm loppupvm urakan-nimi yllapitourakka? valitut-lajit kaikki-lajit rivit]
   (let [raportin-nimi "Sanktiot, bonukset ja arvonvähennykset"
         otsikot (muodosta-otsikot yllapitourakka?)
         taulukko-rivit (into []
@@ -114,9 +114,15 @@
                    true (conj yht-summa)
                    true (conj yht-indeksit))
         taulukko-rivit (conj taulukko-rivit yht-rivi)
-        taulukko [:taulukko {:viimeinen-rivi-yhteenveto? true}
+        taulukko [:taulukko {:viimeinen-rivi-yhteenveto? true
+                             :sheet-nimi raportin-nimi}
                   otsikot
-                  taulukko-rivit]]
+                  taulukko-rivit]
+        checkboxit (cond-> []
+                     (contains? kaikki-lajit :bonukset) (conj ["Bonukset" (contains? valitut-lajit :bonukset) 10])
+                     (contains? kaikki-lajit :muistutukset) (conj ["Muistutukset" (contains? valitut-lajit :muistutukset) 10])
+                     (contains? kaikki-lajit :sanktiot) (conj ["Sanktiot" (contains? valitut-lajit :sanktiot) 10])
+                     (contains? kaikki-lajit :arvonvahennykset) (conj ["Arvonvähennykset" (contains? valitut-lajit :arvonvahennykset) 10]))]
     [:raportti {:nimi raportin-nimi
                 :raportin-yleiset-tiedot {:raportin-nimi raportin-nimi
                                           :urakka urakan-nimi
@@ -126,8 +132,5 @@
                 :tietoja [["Urakka" urakan-nimi]
                           ["Aika" (str (pvm/pvm-opt alkupvm) "-" (pvm/pvm-opt loppupvm))]]}
      [:teksti-paksu "Näytettävät lajit:" ]
-     [:checkbox-lista [["Bonukset" (contains? valitut-lajit :bonukset) 10]
-                       ["Muistutukset" (contains? valitut-lajit :muistutukset) 10]
-                       ["Sanktiot" (contains? valitut-lajit :sanktiot) 10]
-                       ["Arvonvähennykset" (contains? valitut-lajit :arvonvahennykset) 10]]]
+     [:checkbox-lista checkboxit]
      taulukko]))

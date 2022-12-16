@@ -159,17 +159,19 @@
 
 (defn- yhteiset-tulostetiedot [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
   (let [urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
-        yllapitourakka? (domain-urakka/yllapitourakka? (:tyyppi urakan-tiedot))
+        yllapitourakka? (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
         sanktiot-ja-bonukset (hae-urakan-sanktiot-ja-bonukset db user tiedot)
         ;; Filtteröidään halutut matkaan
-        kaikki-lajit #{:muistutukset :sanktiot :bonukset :arvonvahennykset}
+        kaikki-lajit (if (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
+                       #{:muistutukset :sanktiot :bonukset}
+                       #{:muistutukset :sanktiot :bonukset :arvonvahennykset})
         rivit (if (= kaikki-lajit suodattimet)
                 ;; rivin-tyyppi vertailuehto ei toimi kaikilla tyypeillä, joten tehdään sille oma tarkistus ensin
                 sanktiot-ja-bonukset
                 ;; Jos kaikki ei täsmää, niin sitten otetaan filtterillä oikeasti osa ulos
                 (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))]
     (laadunseuranta-tulosteet/sanktiot-ja-bonukset-raportti alku loppu (:nimi urakan-tiedot) yllapitourakka?
-      suodattimet rivit)))
+      suodattimet kaikki-lajit rivit)))
 
 (defn- bonukset-ja-sanktiot-pdf
   [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
