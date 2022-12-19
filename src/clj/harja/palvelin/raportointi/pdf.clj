@@ -410,6 +410,15 @@
          ;;" / " [:fo:page-number-citation {:ref-id "raportti-loppu"}]
          ]]]]]))
 
+(defmethod muodosta-pdf :checkbox-lista [[_ otsikot-ja-arvot]]
+  [:fo:table {:font-size otsikon-fonttikoko}
+   [:fo:table-body
+    [:fo:table-row
+     (for [[otsikko vaihtoehto koko] otsikot-ja-arvot]
+       [:fo:table-cell
+        [:fo:block
+            (fo/checkbox koko vaihtoehto)
+            " " otsikko]])]]])
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]

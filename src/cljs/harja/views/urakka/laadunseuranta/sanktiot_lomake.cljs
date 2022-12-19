@@ -214,6 +214,7 @@
            (if (not lukutila?)
              {:otsikko "Kulun kohdistus"
               :pakollinen? true
+              :disabled? (when (empty @tiedot-urakka/urakan-toimenpideinstanssit) true)
               ::lomake/col-luokka "col-xs-12"
               :nimi :toimenpideinstanssi
               :tyyppi :valinta
@@ -247,7 +248,7 @@
                               :muokattava? (constantly (not lukutila?))
                               :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
                               :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
-                              :valinnat (if (tiedot-urakka/indeksi-kaytossa-sakoissa?)
+                              :valinnat (if (and (tiedot-urakka/indeksi-kaytossa-sakoissa?) (not (nil? (:indeksi @nav/valittu-urakka))))
                                           [(:indeksi @nav/valittu-urakka) nil]
                                           [nil])
                               :valinta-nayta #(or % "Ei indeksiä")})]))

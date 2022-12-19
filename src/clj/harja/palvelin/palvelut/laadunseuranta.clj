@@ -25,13 +25,19 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
+            [harja.palvelin.raportointi.pdf :as raportointi-pdf]
+            [harja.palvelin.raportointi.excel :as raportointi-excel]
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
+            [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
@@ -120,8 +126,9 @@
   "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
   Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
   Tarvittaessa optioilla voi estää sanktioiden/bonusten palauttamisen ja hakea vain toista tyyppiä."
-  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (log/debug "hae-urakan-sanktiot-ja-bonukset :: tiedot:" tiedot)
   ;; Haetaan oletuksena sankiot ja bonukset.
   ;; HOX: Suurin osa muunnoksista tehdään hae-urakan-sanktiot/hae-urakan-bonukset "row-fn" -funktioissa.
   (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
@@ -149,6 +156,33 @@
     (if vain-yllapitokohteettomat?
       (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
       sanktiot-ja-bonukset)))
+
+(defn- yhteiset-tulostetiedot [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (let [urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
+        yllapitourakka? (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
+        sanktiot-ja-bonukset (hae-urakan-sanktiot-ja-bonukset db user tiedot)
+        ;; Filtteröidään halutut matkaan
+        kaikki-lajit (if (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
+                       #{:muistutukset :sanktiot :bonukset}
+                       #{:muistutukset :sanktiot :bonukset :arvonvahennykset})
+        rivit (if (= kaikki-lajit suodattimet)
+                ;; rivin-tyyppi vertailuehto ei toimi kaikilla tyypeillä, joten tehdään sille oma tarkistus ensin
+                sanktiot-ja-bonukset
+                ;; Jos kaikki ei täsmää, niin sitten otetaan filtterillä oikeasti osa ulos
+                (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))]
+    (laadunseuranta-tulosteet/sanktiot-ja-bonukset-raportti alku loppu (:nimi urakan-tiedot) yllapitourakka?
+      suodattimet kaikki-lajit rivit)))
+
+(defn- bonukset-ja-sanktiot-pdf
+  [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (log/debug "bonukset-ja-sanktiot-pdf :: tiedot:" tiedot)
+  (raportointi-pdf/muodosta-pdf (yhteiset-tulostetiedot db user tiedot)))
+
+(defn- bonukset-ja-sanktiot-excel
+  [db workbook user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (raportointi-excel/muodosta-excel (yhteiset-tulostetiedot db user tiedot) workbook))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id urakan-alkupvm]
@@ -360,7 +394,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti pdf-vienti excel-vienti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -407,6 +441,10 @@
       :hae-bonuksen-liitteet
       (fn [user {:keys [urakka-id bonus-id]}]
         (hae-bonuksen-liitteet db user urakka-id bonus-id)))
+    (when pdf-vienti
+      (pdf-vienti/rekisteroi-pdf-kasittelija! pdf-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-pdf db)))
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-excel db)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
