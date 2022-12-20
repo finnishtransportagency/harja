@@ -83,24 +83,12 @@
                                                        :status status
                                                        :lisatiedot lisatiedot})]))
 
-(defn tarkista-sonja [db kehitysmoodi?]
-  (let [sonjan-tilat (jarjestelman-tila-kyselyt/sonjan-tila db kehitysmoodi?)
-        _ (doseq [tila sonjan-tilat]
-            (let [lisatiedot (str (.getValue (:tila tila)))
-                  status (if (str/includes? lisatiedot "ACTIVE")
-                           "ok" "nok")
-                  sonja {:palvelin (:palvelin tila)
-                         :komponentti "sonja"
-                         :status status
-                         :lisatiedot lisatiedot}
-                  _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
 
 (defn tarkista-harja-status [db itmf tloik-asetukset kehitysmoodi?]
   (try
     (let [_ (tarkista-tietokanta db)
           _ (tarkista-replica db kehitysmoodi?)
-          _ (tarkista-tloik db itmf tloik-asetukset)
-          _ (tarkista-sonja db kehitysmoodi?)])
+          _ (tarkista-tloik db itmf tloik-asetukset)])
     (catch Exception e
       (log/error e (format "Harjan statusta ei voitu tarkistaa: %s" e)))))
 

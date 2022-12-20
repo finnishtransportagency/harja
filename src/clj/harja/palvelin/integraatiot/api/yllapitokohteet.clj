@@ -576,10 +576,9 @@
            fim :fim
            liitteiden-hallinta :liitteiden-hallinta
            vkm :vkm
+           api-sahkoposti :api-sahkoposti
            :as this}]
-    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                                                                            (:sonja-sahkoposti this)
-                                                                            (:api-sahkoposti this)) :vkm vkm
+    (palvelut/julkaise http db integraatioloki (palvelut {:fim fim :email api-sahkoposti :vkm vkm
                                                           :liitteiden-hallinta liitteiden-hallinta}))
     this)
   (stop [{http :http-palvelin :as this}]

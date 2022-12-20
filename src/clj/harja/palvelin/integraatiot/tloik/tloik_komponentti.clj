@@ -56,30 +56,14 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db api-sahkoposti sonja-sahkoposti] :as this} jonot]
+(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db] :as this} jonot]
   (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         itmf (:toimenpideviestijono jonot))
-        email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                sonja-sahkoposti
-                api-sahkoposti)]
+                                         itmf (:toimenpideviestijono jonot))]
     (when-let [labyrintti labyrintti]
       (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
       (sms/rekisteroi-kuuntelija! labyrintti
                                   (fn [numero viesti]
-                                    (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))
-    (when-let [email email]
-      (log/debug "Yhdistetään kuuntelija Sonjan sähköpostijonoihin")
-      (sahkoposti/rekisteroi-kuuntelija!
-        email
-        (fn [viesti]
-          (try
-            (when-let [vastaus (sahkopostiviesti/vastaanota-sahkopostikuittaus jms-lahettaja db viesti)]
-              (sahkoposti/laheta-viesti! email (sahkoposti/vastausosoite email)
-                                         (:lahettaja viesti)
-                                         (:otsikko vastaus)
-                                         (:sisalto vastaus)))
-            (catch Throwable t
-              (log/error t "Virhe T-LOIK kuittaussähköpostin vastaanotossa"))))))))
+                                    (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))))
 
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (:toimenpideviestijono asetukset)))
@@ -97,13 +81,11 @@
 
 (defrecord Tloik [asetukset kehitysmoodi? ]
   component/Lifecycle
-  (start [{:keys [labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
+  (start [{:keys [labyrintti api-sahkoposti] :as this}]
     (rekisteroi-kuittauskuuntelijat! this asetukset)
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
-          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  sonja-sahkoposti
-                  api-sahkoposti)
+          email api-sahkoposti
           _ (log/info "Tloik - Käynnistettiin käyttämään sähköpostipalvelua: " email)
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                               {:sms labyrintti
