@@ -16,7 +16,7 @@
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
-            [harja.views.hallinta.pohjavesialueidensiirto_nakyma :as pohjavesialueidensiirto-nakyma]
+            [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -97,8 +97,8 @@
      ^{:key "toteumatyokalu"}
      [toteumatyokalu-nakyma/simuloi-toteuma])
 
-  "Pohjavesialueiden siirto"
-  :pohjavesialueiden-siirto
+  "Koulutusvideot"
+  :koulutusvideot
   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto)
-    ^{:key "pohjavesialueiden-siirto"}
-    [pohjavesialueidensiirto-nakyma/nakyma])])
+    ^{:key "koulutusvideot"}
+    [koulutusvideot/nakyma])]) 

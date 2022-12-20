@@ -67,10 +67,10 @@
           (concat [nil] @istunto/testikayttajat)]]))))
 
 (defn harja-info [s]
-  [:a {:role "presentation"
+  [:div {:role "presentation"
        :id (str "info" (when (= s :info) "-active"))}
    
-   ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle)
+   (ikonit/livicon-info-circle)
    [linkki " Info" #(nav/vaihda-sivu! :info)]])
 
 (defn- mobiiliselain? []

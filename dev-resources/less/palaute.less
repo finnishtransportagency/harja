@@ -22,6 +22,14 @@
     }
 }
 
+.info-info {
+    font-family: "Open Sans", Arial, sans-serif;
+    font-style: normal;
+    font-weight: 600;
+    font-size: 1rem;
+    padding-top: 10px;
+}
+
 .info-video {
     height: 500px;
     transition: 0.4s;
@@ -29,35 +37,58 @@
     margin-top: 10px;
 }
 
-.info-title.main {
-    padding-top: 30px;
-    padding-bottom: 30px;
-    border-bottom: 0.5em solid #0088ce;
+.otsikko-viiva {
+    margin-top: 5px;
     border-top: 0.2em solid #c8c8c8;
 }
 
-.info-heading.main {
-    padding-bottom: 30px;
+.info-heading.f {
+    margin-top: 10px;
+}
+
+.info-heading-small.main {
+    padding-bottom: 10px;
+    border-bottom: 0.5em solid #0088ce;
+}
+
+.info-lista {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 20px;
 }
 
 .info-title {
-    /* Title */
     font-family: 'Open Sans';
     font-style: normal;
     font-weight: 600;
     font-size: 28px;
     line-height: 32px;
     list-style: none;
-    padding-top: 30px;
+    padding-top: 10px;
 }
 
 .info-heading {
-    /* Heaing */
+    text-align: left;
     font-family: 'Open Sans';
     font-style: normal;
     font-weight: 600;
     font-size: 20px;
     line-height: 24px;
+    padding-top: 20px;
+}
+
+.info-videot {
+    padding-top: 5px;
+}
+
+.info-heading-small {
+    font-family: 'Open Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 20px;
 }
 
 .info-iframe {
@@ -65,8 +96,7 @@
     margin: auto;
     height: 100%;
     width: 100%;
-    max-width: 750px;
-
+    max-width: 850px;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -79,9 +109,9 @@
 
 .info-click {
     transition: 0.5s;
-    height: 60px;
+    height: 40px; 
     cursor: pointer;
-    color: hwb(203 10% 23%);
+    color: hwb(203 10% 23%); 
     width: 100%;
     transition: 0.1s;
 }
@@ -89,19 +119,17 @@
 .embed-title {
     position: relative;
     float: top;
-    width: 100%;
+    width: 80%;
     padding: 15px;
     text-align: center;
+    margin: auto;
     transition: 0.4s;
+    line-height: 25px;
 
     font-family: 'Open Sans';
     font-style: normal;
     font-weight: 600;
     font-size: 28px;
-
-    border-radius: 2px;
-    border-style: dotted;
-    border-color: red;
 }
 
 .crash-component {
