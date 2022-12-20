@@ -324,8 +324,7 @@
                              paallystysilmoitus)
         ;; Paikkauskohteen päällystysilmoituksella ei ensimmäisellä hakukerralla ole olemassa päällystyskerrosta, joten kasataan se käsin
         paallystysilmoitus (if (and paikkauskohde? (empty? (:paallystekerros paallystysilmoitus)))
-                             (assoc paallystysilmoitus :paallystekerros [{;:kohdeosa-id 3231
-                                                                          :nimi (:kohdenimi paallystysilmoitus)
+                             (assoc paallystysilmoitus :paallystekerros [{:nimi (:kohdenimi paallystysilmoitus)
                                                                           :toimenpide nil
                                                                           :tr-ajorata (:tr-ajorata paallystysilmoitus)
                                                                           :tr-alkuetaisyys (:tr-alkuetaisyys paallystysilmoitus)
@@ -458,10 +457,10 @@
   [db perustiedot paallystyskohde-id urakka-id kayttaja-id]
   (let [;; Muokkaa takuupäivämäärästä päällystyksen loppupäivämäärän suhteen takuuajanmukainen
         ;; eli lisää takuuaika (vuodet) päällystyksen loppuaikaan
-        takuupvm (when (and (:paallystys-loppu perustiedot) (:takuuaika perustiedot))
+        takuupvm (when (and (:valmispvm-paallystys perustiedot) (:takuuaika perustiedot))
                    (coerce/to-sql-time
                      (pvm/ajan-muokkaus
-                       (pvm/joda-timeksi (:paallystys-loppu perustiedot))
+                       (pvm/joda-timeksi (:valmispvm-paallystys perustiedot))
                        true (:takuuaika perustiedot) :vuosi)))
         ;; Tallennetaan ylläpitokohteelle aikataulu
         _ (yllapitokohteet-q/tallenna-paallystyskohteen-aikataulu!
@@ -469,7 +468,7 @@
                 :urakka urakka-id
                 :aikataulu_kohde_alku (:aloituspvm perustiedot)
                 :aikataulu_paallystys_alku (:paallystys-alku perustiedot)
-                :aikataulu_paallystys_loppu (:paallystys-loppu perustiedot)
+                :aikataulu_paallystys_loppu (:valmispvm-paallystys perustiedot)
                 :aikataulu_kohde_valmis (:valmispvm-kohde perustiedot)
                 :aikataulu_muokkaaja kayttaja-id})
         ;; Hae kyseessä oleva paikkauskohde
@@ -527,6 +526,7 @@
                                                                     {:id paallystyskohde-id
                                                                      :urakka urakka-id
                                                                      :aikataulu_kohde_alku (:aloituspvm perustiedot)
+                                                                     :aikataulu_paallystys_valmis (:valmispvm-paallystys perustiedot)
                                                                      :aikataulu_kohde_valmis (:valmispvm-kohde perustiedot)
                                                                      :aikataulu_muokkaaja (:id user)}))
 

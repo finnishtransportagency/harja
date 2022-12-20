@@ -127,6 +127,6 @@
                            (catch Throwable t
                              (log/warn t "Poikkeus piped-input-streamissä hiccup->PDF")))))}))
         (catch Exception e
-          (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja)
+          (log/warn e "Virhe PDF-muodostuksessa: " tyyppi ", käyttäjä: " kayttaja " virhe: " (pr-str e))
           {:status 500
            :body "Virhe PDF-muodostuksessa"})))))

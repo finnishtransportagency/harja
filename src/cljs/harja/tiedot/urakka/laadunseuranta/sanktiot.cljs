@@ -11,6 +11,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
             [harja.ui.viesti :as viesti])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
@@ -190,25 +191,6 @@
               (when laadunseurannassa?
                 (k/get! :hae-sanktiotyypit))))
 
-(defn- bonus? [rivi]
-  (boolean (:bonus? rivi)))
-
-(defn- sanktio? [rivi]
-  (not (:bonus? rivi)))
-
-(defn- arvonvahennys? [rivi]
-  (= :arvonvahennyssanktio (:laji rivi)))
-
-(defn- muistutus? [rivi]
-  (= :muistutus (:laji rivi)))
-
-(defn- rivin-tyyppi [rivi]
-  (cond
-    (muistutus? rivi) :muistutukset
-    (bonus? rivi) :bonukset
-    (sanktio? rivi) :sanktiot
-    (arvonvahennys? rivi) :arvonvahennykset))
-
 (defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
   (let [kaikki @urakan-lajisuodattimet
         valitut @sanktio-bonus-suodattimet]
@@ -216,5 +198,5 @@
       ;; Kaikki suodattimet valittu, ei suodateta mitään pois.
       sanktiot-ja-bonukset
       (filter
-        #(valitut (rivin-tyyppi %))
+        #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))

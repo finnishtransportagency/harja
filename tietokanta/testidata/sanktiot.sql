@@ -680,11 +680,11 @@ VALUES ('A'::SANKTIOLAJI, 1000, '2022-02-22'::DATE, (SELECT indeksi FROM urakka 
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu MHU Talvihoito TP'),
         (SELECT id
            FROM sanktiotyyppi
-                -- 2, Talvihoito
-                -- Tämä (koodi = 2) on vanha poistetuksi merkitty sanktiotyyppi. Vanhojen sanktiokirjausten sanktiotyyppien
+                -- 1, Muu tuote
+                -- Tämä (koodi = 1) on vanha poistetuksi merkitty sanktiotyyppi. Vanhojen sanktiokirjausten sanktiotyyppien
                 -- tulisi näkyä oikein UI:n puolella, mutta poistettuja sanktiotyyppejä ei saisi enää pystyä valitsemaan
                 -- uuteen sanktioon.
-          WHERE koodi = 2), FALSE, 2);
+          WHERE koodi = 1), FALSE, 2);
 
 -----------------------------------------
 -- Kanavat

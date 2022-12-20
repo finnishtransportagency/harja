@@ -12,8 +12,8 @@ WITH urakan_toimenpideinstanssi_23150 AS
             AND tpk2.koodi = '23150'
           limit 1)
 -- Haetaan budjetoidut hankintakustannukset kustannusarvioitu-työ taulusta
-SELECT SUM(kt.summa)                                  AS budjetoitu_summa,
-       SUM(kt.summa_indeksikorjattu)                  AS budjetoitu_summa_indeksikorjattu,
+SELECT coalesce(SUM(kt.summa), 0)                     AS budjetoitu_summa,
+       coalesce(SUM(kt.summa_indeksikorjattu), 0)     AS budjetoitu_summa_indeksikorjattu,
        0                                              AS toteutunut_summa,
        kt.tyyppi::TEXT                                AS maksutyyppi,
        CASE
@@ -433,7 +433,9 @@ SELECT 0                    AS budjetoitu_summa,
                                                              TRUE)))
            ELSE SUM(ek.rahasumma)
            END              AS toteutunut_summa,
-       'bonus'              AS maksutyyppi,
+       CASE
+           WHEN ek.tyyppi = 'lupausbonus' THEN 'lupausbonus'
+           ELSE 'bonus' END  AS maksutyyppi,
        'bonus'              AS toimenpideryhma,
        MIN(ek.tyyppi)::TEXT AS tehtava_nimi,
        'bonukset'           AS toimenpide,
@@ -462,7 +464,9 @@ SELECT 0                       AS budjetoitu_summa,
                     FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka::INTEGER, s.sakkoryhma)))
                     * -1
            END                 AS toteutunut_summa,
-       'sanktio'               AS maksutyyppi,
+       CASE
+           WHEN s.sakkoryhma = 'lupaussanktio' THEN 'lupaussanktio'
+           ELSE 'sanktio' END  AS maksutyyppi,
        'sanktio'               AS toimenpideryhma,
        MIN(st.nimi)::TEXT      AS tehtava_nimi,
        'sanktiot'              AS toimenpide,
@@ -475,10 +479,9 @@ SELECT 0                       AS budjetoitu_summa,
 FROM sanktio s
      JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
      JOIN sanktiotyyppi st ON s.tyyppi = st.id
-     JOIN toimenpidekoodi tpk ON tpk.id = st.toimenpidekoodi
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-  AND s.poistettu = FALSE
-GROUP BY s.tyyppi, s.indeksi
+  AND s.poistettu IS NOT TRUE
+GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
 
 -- Urakan päätös-taulusta haetaan toteutumiin edellisen vuoden siirrot.
 UNION ALL

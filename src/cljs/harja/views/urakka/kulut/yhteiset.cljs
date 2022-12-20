@@ -61,7 +61,23 @@
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
         lupausbonus-paatos (filtteroi-paatos-fn :lupausbonus)
         lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)
-        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)]
+        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)
+        lupausbonus (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
+                                                         %) (get-in data [:bonukset :tehtavat]))))
+        bonus-maara (:bonukset-toteutunut data)
+        toteutunut-bonus (if (and (not (nil? bonus-maara)) (not= 0 bonus-maara))
+                           (if (not (nil? lupausbonus))
+                             (- bonus-maara lupausbonus)
+                             bonus-maara)
+                           nil)
+        lupaussanktio (:toteutunut_summa (first (filter #(when (= "lupaussanktio" (:maksutyyppi %))
+                                                           %) (get-in data [:sanktiot :tehtavat]))))
+        sanktio-maara (:sanktiot-toteutunut data)
+        toteutunut-sanktio (if (and (not (nil? sanktio-maara)) (not= 0 sanktio-maara))
+                             (if (not (nil? lupaussanktio))
+                               (- sanktio-maara lupaussanktio)
+                               sanktio-maara)
+                             nil)]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
@@ -149,14 +165,14 @@
 
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/euro-opt (:lisatyot-summa data))]])
-     (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
-       [:div.rivi [:span "Bonukset"] [:span (fmt/euro-opt (:bonukset-toteutunut data))]])
-     (when (and (not (nil? (:sanktiot-toteutunut data))) (not= 0 (:sanktiot-toteutunut data)))
-       [:div.rivi [:span "Sanktiot"] [:span (fmt/euro-opt (:sanktiot-toteutunut data))]])
+     (when toteutunut-bonus
+       [:div.rivi [:span "Bonukset"] [:span (fmt/euro-opt toteutunut-bonus)]])
+     (when toteutunut-sanktio
+       [:div.rivi [:span "Sanktiot"] [:span (fmt/euro-opt toteutunut-sanktio)]])
      (when lupausbonus-paatos
-       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt (::valikatselmus/tilaajan-maksu lupausbonus-paatos))]])
+       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt lupausbonus)]])
      (when lupaussanktio-paatos
-       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu lupaussanktio-paatos))]])
+       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
         [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))

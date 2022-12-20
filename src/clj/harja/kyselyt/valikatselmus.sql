@@ -43,3 +43,22 @@ SELECT up."hoitokauden-alkuvuosi"
  WHERE up.poistettu = FALSE
    AND up."urakka-id" = :urakka-id
    AND up.tyyppi IN ('tavoitehinnan-ylitys', 'kattohinnan-ylitys', 'tavoitehinnan-alitus')
+
+-- name: hae-urakan-bonuksen-toimenpideinstanssi-id
+-- single?: true
+SELECT tpi.id AS id
+FROM toimenpideinstanssi tpi
+         JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
+         JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
+     maksuera m
+WHERE tpi.urakka = :urakka-id
+  AND m.toimenpideinstanssi = tpi.id
+  AND tpk2.koodi = '23150'
+limit 1;
+
+-- name: hae-paatos
+SELECT id, "hoitokauden-alkuvuosi", "urakka-id", "hinnan-erotus", "urakoitsijan-maksu", "tilaajan-maksu",
+       siirto, tyyppi, "lupaus-luvatut-pisteet", "lupaus-toteutuneet-pisteet", "lupaus-tavoitehinta",
+       muokattu, "muokkaaja-id", "luoja-id", luotu, poistettu, erilliskustannus_id, sanktio_id
+FROM urakka_paatos
+WHERE id = :id;

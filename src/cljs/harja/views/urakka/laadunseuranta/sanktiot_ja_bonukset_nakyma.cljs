@@ -4,6 +4,9 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
+            [harja.transit :as t]
+
+            [harja.asiakas.kommunikaatio :as k]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
@@ -166,7 +169,7 @@
 
 (defn- sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
   ;; Bonuksilla ei tällä hetkellä ole kuvausta.
-  ;; Näytetään sanktion kode, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
+  ;; Näytetään sanktion kohde, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
   ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
   (let [kohde (:kohde laatupoikkeama)]
     (if suorasanktio
@@ -207,11 +210,45 @@
         sanktiot (->> @tiedot/haetut-sanktiot-ja-bonukset
                    tiedot/suodata-sanktiot-ja-bonukset
                    (sort-by :kasittelyaika)
-                   reverse)]
+                   reverse)
+        hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
+        hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
+        urakka-id (when valittu-urakka (:id valittu-urakka))
+        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
+
     [:div.sanktiot
      #_[harja.ui.debug/debug sanktiot]
 
-     [:h1 (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
+     [:div.header-rivi
+      [:h1 {:style {:width "545px"}} (if yllapitourakka? "Sakot ja bonukset" "Sanktiot, bonukset ja arvonvähennykset")]
+      [:div.header-export
+       [:div
+        ^{:key "raporttixls"}
+        [:form {:style {:margin-left "auto"}
+                :target "_blank" :method "POST"
+                :action (k/excel-url :bonukset-ja-sanktiot)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (t/clj->transit {:urakka-id urakka-id
+                                          :urakka-nimi urakka-nimi
+                                          :alku hoitokauden-alku
+                                          :loppu hoitokauden-loppu
+                                          :suodattimet @tiedot/sanktio-bonus-suodattimet})}]
+         [:button {:type "submit"
+                   :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]
+       [:div
+        ^{:key "raporttipdf"}
+        [:form {:style {:margin-left "16px"
+                        :margin-right "64px"}
+                :target "_blank" :method "POST"
+                :action (k/pdf-url :bonukset-ja-sanktiot)}
+         [:input {:type "hidden" :name "parametrit"
+                  :value (t/clj->transit {:urakka-id urakka-id
+                                          :urakka-nimi urakka-nimi
+                                          :alku hoitokauden-alku
+                                          :loppu hoitokauden-loppu
+                                          :suodattimet @tiedot/sanktio-bonus-suodattimet})}] ;#{:muistutukset :sanktiot :bonukset :arvonvahennykset}
+         [:button {:type "submit"
+                   :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]]]]
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
@@ -251,7 +288,7 @@
        {:otsikko "Määrä (€)" :nimi :summa :leveys 1.5 :tyyppi :numero :tasaa :oikea
         :hae #(or (fmt/euro-opt false (:summa %))
                 "Muistutus")}
-       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :tasaa :oikea :tyyppi :numero :leveys 1.5}]
+       {:otsikko "Indeksi (€)" :nimi :indeksikorjaus :fmt #(fmt/euro-opt false %) :tasaa :oikea :tyyppi :numero :leveys 1.5}]
       sanktiot]
      (when yllapitourakka?
        (yleiset/vihje "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."))]))

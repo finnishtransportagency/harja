@@ -78,7 +78,7 @@ Oletuksena muodostuu A4 sivu.
 (defn checkbox [size checked?]
   [:fo:instream-foreign-object
    [:svg:svg {:width size :height size :viewBox "0 0 20 20" :preserveAspectRatio "xMidYMid meet"}
-    [:svg:g {:style "fill: none; stroke: black;"}
+    [:svg:g {:style "fill: none; stroke: black; stroke-width: 2px;"}
      [:svg:rect {:x 0 :y 0 :width 20 :height 20}]
      (when checked?
        [:svg:line {:x1 4 :y1 10 :x2 10 :y2 17}])

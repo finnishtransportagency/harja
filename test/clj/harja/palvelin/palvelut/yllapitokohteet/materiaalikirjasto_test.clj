@@ -508,22 +508,19 @@
   (let [muut-urakat-kemi (kutsu-palvelua (:http-palvelin jarjestelma)
                                          :hae-muut-urakat-joissa-materiaaleja
                                          +kayttaja-jvh+ {:urakka-id (hae-kemin-paallystysurakan-2019-2023-id)})
-        muut-urakat-muhos (kutsu-palvelua (:http-palvelin jarjestelma)
-                        :hae-muut-urakat-joissa-materiaaleja
-                        +kayttaja-jvh+ {:urakka-id (hae-muhoksen-paallystysurakan-testipaikkauskohteen-id)})
+        muut-urakat-utajarvi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :hae-muut-urakat-joissa-materiaaleja
+                                          +kayttaja-jvh+ {:urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")})
         muut-urakat-oulu (kutsu-palvelua (:http-palvelin jarjestelma)
                         :hae-muut-urakat-joissa-materiaaleja
                         +kayttaja-jvh+ {:urakka-id (hae-oulun-alueurakan-2014-2019-id)})
         oletetut-kemin-urakoitsija (list) ;; Tällä urakoitsijalla ei materiaaleja
         oletetut-skanska (list {:id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-                                :nimi "Muhoksen päällystysurakka"}
-                               {:id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-                                :nimi "Utajärven päällystysurakka"}
-                               )
+                                :nimi "Muhoksen päällystysurakka"})
         oletetut-yit (list {:id (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")
                             :nimi "Aktiivinen Oulu Päällystys Testi"})]
     (is (= muut-urakat-kemi oletetut-kemin-urakoitsija) "Muut urakat oikein")
-    (is (= muut-urakat-muhos oletetut-skanska) "Muut urakat oikein")
+    (is (= muut-urakat-utajarvi oletetut-skanska) "Muut urakat oikein")
     (is (= muut-urakat-oulu oletetut-yit) "Muut urakat oikein")))
 
 (deftest hae-urakan-massat-ja-murskeet-eri-kayttajilla
@@ -703,12 +700,13 @@
         massan-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_massa WHERE urakka_id = "
                                   urakka-id
                                   " AND dop_nro = '764567-dop';")))
+        poista-kaytossa-oleva-massa (u (str "DELETE FROM pot2_paallystekerros WHERE materiaali = " massan-id ";"))
         {massat-jalkeen :massat murskeet-jalkeen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :poista-urakan-massa
                         +kayttaja-vastuuhlo-muhos+ {:id massan-id})]
     (is (not (empty? massat-ennen)))
-    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Mmurskeisiin ei koskettu")
+    (is (= 2 (count murskeet-ennen) (count murskeet-jalkeen)) "Murskeisiin ei koskettu")
     (is (not-empty (filter #(= massan-id (::pot2-domain/massa-id %))
                            massat-ennen)))
     (is (empty? (filter #(= massan-id (::pot2-domain/massa-id %))
@@ -724,7 +722,7 @@
 
         murskeen-id (ffirst (q (str "SELECT id FROM pot2_mk_urakan_murske WHERE urakka_id = "
                                   urakka-id
-                                  " AND dop_nro = '3524534-dop';")))
+                                  " AND dop_nro = 'ETR-444';")))
         {massat-jalkeen :massat murskeet-jalkeen :murskeet}
         (kutsu-palvelua (:http-palvelin jarjestelma)
                         :poista-urakan-murske
