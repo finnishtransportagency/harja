@@ -32,7 +32,6 @@
     [harja.palvelin.integraatiot.yha.yha-komponentti :as yha-integraatio]
     [harja.palvelin.integraatiot.yha.yha-paikkauskomponentti :as yha-paikkauskomponentti]
 
-    [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]
     [harja.palvelin.integraatiot.vkm.vkm-komponentti :as vkm]
     [harja.palvelin.integraatiot.reimari.reimari-komponentti :as reimari]
 
@@ -349,7 +348,7 @@
                   [:http-palvelin :db])
       :urakat (component/using
                 (urakat/->Urakat)
-                [:http-palvelin :db :sahke])
+                [:http-palvelin :db])
       :urakan-toimenpiteet (component/using
                              (urakan-toimenpiteet/->Urakan-toimenpiteet)
                              [:http-palvelin :db])
@@ -572,12 +571,6 @@
                (debug/->Debug)
                {:db :db-replica
                 :http-palvelin :http-palvelin})
-
-      ;; TODO: Poista
-      :sahke (component/using
-               (let [{:keys [lahetysjono uudelleenlahetysaika]} (:sahke asetukset)]
-                 (sahke/->Sahke lahetysjono uudelleenlahetysaika))
-               [:db :integraatioloki :sonja])
 
       :reimari (component/using
                  (let [{:keys [url kayttajatunnus salasana]} (:reimari asetukset)]
