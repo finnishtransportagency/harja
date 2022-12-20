@@ -60,7 +60,7 @@
                                                yllapitokohteet))]
 
     (is (= 200 (:status vastaus)))
-    (is (= 12 (count yllapitokohteet))
+    (is (= 13 (count yllapitokohteet))
         "Palautuu kaikkien vuosien kohteet (2017 & 2018)")
 
     (testing "2017 kohde palautuu oikein"

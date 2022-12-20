@@ -505,7 +505,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :labyrintti])
+                        [:http-palvelin :db :fim :api-sahkoposti :sonja-sahkoposti :labyrintti :pdf-vienti :excel-vienti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)

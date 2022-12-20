@@ -190,7 +190,7 @@
             kuittaus)
           (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
         (catch Object e
-          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
+          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Rest-Api tapahtui poikkeus: %s." numero e))
           (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)

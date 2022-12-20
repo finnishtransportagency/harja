@@ -581,7 +581,7 @@ FROM toimenpidekoodi tk,
      urakka u
 WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
-  AND tk.kasin_lisattava_maara = true
+  AND tk.aluetieto = false
   AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
@@ -1439,7 +1439,12 @@ SELECT t.toteuma_tunniste_id,
        t.toteuma_lisatieto,
        t.toteumatehtavat,
        t.toteumamateriaalit,
-       json_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
+       CASE
+           WHEN :koordinaattimuutos THEN
+               json_agg(row_to_json(row (rp.aika, rp.tehtavat, st_transform(st_setsrid(rp.sijainti::geometry, 3067), 4326)::point, rp.sijainti, rp.materiaalit)))
+           ELSE
+               json_agg(row_to_json(row (rp.aika, rp.tehtavat, null::point, rp.sijainti, rp.materiaalit)))
+           END AS reitti,
        t.toteuma_tiesijainti_numero,
        t.toteuma_tiesijainti_aosa,
        t.toteuma_tiesijainti_aet,

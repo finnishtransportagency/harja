@@ -43,7 +43,7 @@ WHERE ypk.urakka = :urakka
   AND (:vuosi :: INTEGER IS NULL OR (cardinality(vuodet) = 0
                                          OR vuodet @> ARRAY [:vuosi] :: INT []))
   AND ypk.poistettu IS NOT TRUE
-  AND ((:paikkauskohteet ::TEXT IS NULL)
+  AND ((:paikkauskohteet ::TEXT IS NULL AND p."yllapitokohde-id" IS NULL)
    OR (:paikkauskohteet ::TEXT IS NOT NULL AND p."yllapitokohde-id" IS NOT NULL));
 
 -- name: hae-urakan-paallystysilmoituksen-id-paallystyskohteella
@@ -106,9 +106,10 @@ SELECT
   ypk.yha_tr_osoite             AS "yha-tr-osoite",
   -- Paikkauskohteen kääntäminen pot lomakkeeksi vaatii muutamia lisäkenttiä
   p.takuuaika                   AS takuuaika,
+  p."toteutunut-hinta"          AS "paikkauskohde-toteutunut-hinta",
   ypka.paallystys_alku          AS "paallystys-alku",
-  ypka.paallystys_loppu         AS "paallystys-loppu",
   p.id                          AS "paikkauskohde-id",
+  p.nimi                        AS "paikkauskohde-nimi",
   ypk.velho_lahetyksen_aika     AS "velho-lahetyksen-aika",
   ypk.velho_lahetyksen_vastaus  AS "velho-lahetyksen-vastaus",
   ypk.velho_lahetyksen_tila     AS "velho-lahetyksen-tila",

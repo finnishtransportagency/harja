@@ -91,7 +91,7 @@
         tavoitehinnan-alitus-paatos (filtteroi-paatos-fn :tavoitehinnan-alitus)
         tavoitehinnan-ylitys-paatos (filtteroi-paatos-fn :tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
-        lupausbonus-paatos (filtteroi-paatos-fn :lupaus-onus)
+        lupausbonus-paatos (filtteroi-paatos-fn :lupausbonus)
         lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)]
     (and
       (<= valittu-hoitokauden-alkuvuosi (pvm/vuosi (pvm/nyt)))

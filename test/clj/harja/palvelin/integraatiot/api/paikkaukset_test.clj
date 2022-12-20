@@ -115,9 +115,9 @@
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus/kustannus"] kayttaja portti json)
         poisto-json (slurp "test/resurssit/api/paikkaustietojen-poisto.json")
-        poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE id = " 1 ";")))
+        poistettu-ennen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti poisto-json)
-        poistettu-jalkeen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE id = " 1 ";")))
+        poistettu-jalkeen (:poistettu (first (q-map "SELECT * FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
         odotetut-paikkaustoteumat [{:harja.domain.paikkaus/selite "Lähtömaksu",
                                     :harja.domain.paikkaus/urakka-id 4,
                                     :harja.domain.paikkaus/hinta 450.3M,
