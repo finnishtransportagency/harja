@@ -22,7 +22,6 @@
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-    [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
@@ -467,7 +466,7 @@
                     [:http-palvelin :db])
       :maksuerat (component/using
                    (maksuerat/->Maksuerat)
-                   [:http-palvelin :sampo :api-sampo :db])
+                   [:http-palvelin :api-sampo :db])
 
       :liitteet (component/using
                   (liitteet/->Liitteet)

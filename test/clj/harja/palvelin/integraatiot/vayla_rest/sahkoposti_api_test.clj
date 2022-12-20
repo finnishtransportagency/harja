@@ -12,7 +12,6 @@
             [clojure.data.zip.xml :as z]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.itmf :as itmf]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.integraatio :as integraatio]
             [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.palvelin.integraatiot.jms :as jms]

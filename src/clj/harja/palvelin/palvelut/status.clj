@@ -50,14 +50,7 @@
                                    (get-in host-tila [:db-replica :kaikki-ok?]))
                                  @komponenttien-tila)))))
 
-(defn sonja-yhteyden-tila-ok?
-  [timeout-ms komponenttien-tila]
-  (tarkista-tila! timeout-ms
-                  (fn []
-                    (and (> (count @komponenttien-tila) 1)
-                         (every? (fn [[_ host-tila]]
-                                   (get-in host-tila [:sonja :kaikki-ok?]))
-                                 @komponenttien-tila)))))
+
 (defn itmf-yhteyden-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
@@ -94,14 +87,7 @@
        :viesti (when-not replikoinnin-tila-ok?
                  (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))})))
 
-(defn sonja-yhteyden-tila [komponenttien-tila]
-  (async/go
-    (let [timeout-ms 120000
-          yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
-      {:ok? yhteys-ok?
-       :komponentti :sonja
-       :viesti (when-not yhteys-ok?
-                 (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
+
 
 (defn itmf-yhteyden-tila [komponenttien-tila]
   (async/go
@@ -132,7 +118,6 @@
 (defn- nimea-komponentin-tila [komponentti ok?]
   (clj-set/rename-keys {komponentti ok?}
                        {:harja :harja-ok?
-                        :sonja :sonja-yhteys-ok?
                         :itmf :itmf-yhteys-ok?
                         :db :yhteys-master-kantaan-ok?
                         :db-replica :replikoinnin-tila-ok?}))
@@ -176,11 +161,10 @@
                              (or (= "ok" status) (= "ei-kaytossa" status) false))
         ;; Yksittäinen komponentti on ok, jos joltakin palvelimelta on saatu ok status
         itmf-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "tloik") komponenttien-tila)) false)
-        sonja-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "sonja") komponenttien-tila)) false)
         replikoinnin-tila-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila)) false)
         yhteys-master-kantaan-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila)) false)
         ;; Harja on ok, mikäli kaikki komponentit on ok
-        harja-ok? (every? true? [itmf-yhteys-ok? sonja-yhteys-ok? replikoinnin-tila-ok? yhteys-master-kantaan-ok?])
+        harja-ok? (every? true? [itmf-yhteys-ok? replikoinnin-tila-ok? yhteys-master-kantaan-ok?])
         viesti (cond
                  (empty? tilaviesti) "Harja ok"
                  (and (not (empty? tilaviesti)) harja-ok?)  (str "Harja ok" ", " tilaviesti)
@@ -188,7 +172,6 @@
     {:status (if harja-ok? 200 503)
      :harja-ok? harja-ok?
      :itmf-yhteys-ok? itmf-yhteys-ok?
-     :sonja-yhteys-ok? sonja-yhteys-ok?
      :replikoinnin-tila-ok? replikoinnin-tila-ok?
      :yhteys-master-kantaan-ok? yhteys-master-kantaan-ok?
      :viesti viesti}))
@@ -216,7 +199,6 @@
           (let [testit (async/merge
                          [(tietokannan-tila komponenttien-tila)
                           (replikoinnin-tila komponenttien-tila)
-                          (sonja-yhteyden-tila komponenttien-tila)
                           (itmf-yhteyden-tila komponenttien-tila)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]

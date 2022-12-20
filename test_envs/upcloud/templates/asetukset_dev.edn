@@ -19,7 +19,7 @@
                       :yhteyspoolin-koko 32
                       :kayttaja "harja"
                       :salasana "harja123"}
- :fim {:url "https://testisonja.vayla.fi/FIM/Person.svc/"}
+ :fim {:url ""}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        :hipchat {:taso :warn
@@ -29,14 +29,6 @@
        :email {:taso :error
                :palvelin "solita-service-1.solita.fi"
                :vastaanottaja []}}
-
- ;; Jos haluat käyttää Sonjaa, ota se pois kommenteista
- ;; tarvii SSH-tunnelin testi-Sonjaan!!
- :sonja
- {:url "tcp://localhost:61616"
-  :kayttaja "harja"
-  :salasana "harjaxx"
-  :tyyppi :activemq}
 
  :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
          :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"

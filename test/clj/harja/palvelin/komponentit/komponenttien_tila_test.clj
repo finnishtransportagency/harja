@@ -22,8 +22,7 @@
                   (fn [_]
                     (component/start
                       (component/system-map
-                        :komponenttien-tila (komponenttien-tila/komponentin-tila {:sonja {:paivitystiheys-ms 5000}
-                                                                                  :itmf {:paivitystiheys-ms 5000}
+                        :komponenttien-tila (komponenttien-tila/komponentin-tila {:itmf {:paivitystiheys-ms 5000}
                                                                                   :db {:paivitystiheys-ms 5000}
                                                                                   :db-replica {:paivitystiheys-ms 5000}})))))
   (alter-var-root #'kaikkien-tapahtumien-kuuntelija
@@ -54,23 +53,13 @@
                                     :kaikki-ok? true}
                               ::ei-ok {:viesti "Harja käynnistyy"
                                        :kaikki-ok? false}}
-                 :harjajarjestelman-restart {::ok #{:sonja}}
+                 :harjajarjestelman-restart {::ok #{}}
                  :harjajarjestelman-restart-onnistui {::ok tapahtuma-tulkkaus/tyhja-arvo}
                  :harjajarjestelman-restart-epaonnistui {::ok tapahtuma-tulkkaus/tyhja-arvo}
-                 :jms-tila {::ok {"sonja" {:yhteyden-tila "ACTIVE"
-                                           :istunnot [{:istunnon-tila "ACTIVE"
-                                                       :jarjestelma "foo"
-                                                       :jonot [{:foo-jono {:tuottaja nil
-                                                                           :vastaanottaja {:virheet nil
-                                                                                           :vastaanottajan-tila "ACTIVE"}}}]}]}}
-                            ::ei-ok {"sonja" {:yhteyden-tila "ACTIVE"
-                                              :istunnot [{:istunnon-tila "CLOSED"
-                                                          :jarjestelma "foo"
-                                                          :jonot [{:foo-jono {:tuottaja nil
-                                                                              :vastaanottaja {:virheet nil
-                                                                                              :vastaanottajan-tila "ACTIVE"}}}]}]}}
+                 :jms-tila {::ok {}
+                            ::ei-ok {}
                             ::virhe {:virhe nil}}
-                 :jms-uudelleenkaynnistys-epaonnistui {::ok "sonja"}
+                 :jms-uudelleenkaynnistys-epaonnistui {::ok ""}
                  :db-tila {::ok true
                            ::ei-ok false}
                  :db-replica-tila {::ok true

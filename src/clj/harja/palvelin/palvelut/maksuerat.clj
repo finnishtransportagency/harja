@@ -3,7 +3,6 @@
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [harja.kyselyt.maksuerat :as q]
-            [harja.palvelin.integraatiot.sampo.sampo-komponentti :as sampo]
             [harja.palvelin.integraatiot.vayla-rest.sampo-api :as api-sampo]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.kyselyt.konversio :as konversio]
@@ -31,13 +30,11 @@
     (assoc (first muunnetut-tilat) :numero maksueranumero)))
 
 (defn laheta-maksuera-sampoon
-  [sampo api-sampo db _ maksueranumero]
+  [api-sampo db _ maksueranumero]
   (assert (number? maksueranumero) " maksueranumeron oltava numero.")
   (log/debug "Lähetetään maksuera Sampoon, jonka numero on: " maksueranumero)
   ;; Käytetään rest-api toteutusta, jos se on käytössä
-  (if (ominaisuus-kaytossa? :api-sampo)
-    (api-sampo/laheta-maksuera-sampoon api-sampo maksueranumero)
-    (sampo/laheta-maksuera-sampoon sampo maksueranumero))
+  (api-sampo/laheta-maksuera-sampoon api-sampo maksueranumero)
   (let [tilat (hae-maksueran-ja-kustannussuunnitelman-tilat db maksueranumero)]
     (log/debug "Maksuerän tilat" tilat)
     tilat))
@@ -63,10 +60,10 @@
 
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon."
-  [db user {:keys [sampo api-sampo maksueranumerot urakka-id]}]
+  [db user {:keys [api-sampo maksueranumerot urakka-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laskutus-maksuerat user urakka-id)
   (mapv (fn [maksueranumero]
-          (laheta-maksuera-sampoon sampo api-sampo db user maksueranumero))
+          (laheta-maksuera-sampoon api-sampo db user maksueranumero))
         maksueranumerot))
 
 
@@ -82,8 +79,7 @@
                                                   (laheta-maksuerat-sampoon
                                                     (:db this)
                                                     user
-                                                    {:sampo (when-not (ominaisuus-kaytossa? :api-sampo) (:sampo this))
-                                                     :api-sampo (when (ominaisuus-kaytossa? :api-sampo) (:api-sampo this))
+                                                    {:api-sampo (:api-sampo this)
                                                      :maksueranumerot maksueranumerot
                                                      :urakka-id urakka-id})))
     this)
