@@ -836,11 +836,11 @@
         (System/exit 1)))))
 
 (defn sammuta-jarjestelma []
-  (sammuta-harja-tarkkailija!)
   (when harja-jarjestelma
     (alter-var-root #'harja-jarjestelma (fn [s]
                                           (component/stop s)
-                                          nil))))
+                                          nil)))
+  (sammuta-harja-tarkkailija!))
 
 (defn -main [& argumentit]
   (kaynnista-jarjestelma (or (first argumentit) asetukset-tiedosto) true)
