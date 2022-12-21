@@ -35,7 +35,6 @@
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)
            [:db :integraatioloki])
-    :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset

@@ -121,9 +121,7 @@
   (start [{db :db
            http :http-palvelin
            fim :fim :as this}]
-    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+    (let [email (:api-sahkoposti this)]
       (http-palvelin/julkaise-palvelu http :hae-vesivayla-materiaalilistaus
         (fn [user haku]
           (hae-materiaalilistaus db user haku))

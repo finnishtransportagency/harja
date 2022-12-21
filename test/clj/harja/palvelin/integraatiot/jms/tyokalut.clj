@@ -14,11 +14,9 @@
                  :body sanoma}]
     @(http/post (str "http://"
                      (case jms-client
-                       "sonja" (env/env "HARJA_SONJA_BROKER_HOST" "localhost")
                        "itmf" (env/env "HARJA_ITMF_BROKER_HOST" "localhost"))
                      ":"
                      (case jms-client
-                       "sonja" (env/env "HARJA_SONJA_BROKER_AI_PORT" 8161)
                        "itmf" (env/env "HARJA_ITMF_BROKER_AI_PORT" 8171))
                      "/api/message/"
                      jonon-nimi
@@ -31,11 +29,9 @@
                  :body (cheshire/encode sanoma)}]
     @(http/post (str "http://"
                      (case jms-client
-                       "sonja" (env/env "HARJA_SONJA_BROKER_HOST" "localhost")
                        "itmf" (env/env "HARJA_ITMF_BROKER_HOST" "localhost"))
                      ":"
                      (case jms-client
-                       "sonja" (env/env "HARJA_SONJA_BROKER_AI_PORT" 8161)
                        "itmf" (env/env "HARJA_ITMF_BROKER_AI_PORT" 8171))
                      "/api/jolokia/")
                 options)))
@@ -100,21 +96,6 @@
                       operation)]
     (jms-jolokia jms-client sanoma)))
 
-(defn sonja-laheta [jonon-nimi sanoma]
-  (jms-laheta "sonja" jonon-nimi sanoma))
-
-(defn sonja-jolokia [sanoma]
-  (jms-jolokia "sonja" sanoma))
-
-(defn sonja-jolokia-jono [jonon-nimi attribute operation]
-  (jms-jolokia-jono "sonja" jonon-nimi attribute operation))
-
-(defn sonja-jolokia-connection [attribute operation]
-  (jms-jolokia-connection "sonja" attribute operation))
-
-(defn sonja-jolokia-broker [attribute operation]
-  (jms-jolokia-broker "sonja" attribute operation))
-
 (defn itmf-laheta [jonon-nimi sanoma]
   (jms-laheta "itmf" jonon-nimi sanoma))
 
@@ -139,7 +120,6 @@
                                                     "WHERE iv.sisalto ILIKE('" (clj-str/replace sanoma #"ä" "Ã¤") "') AND "
                                                     "it.paattynyt IS NOT NULL")))))]
     (case jms-client
-      "sonja" (sonja-laheta jonon-nimi sanoma)
       "itmf" (itmf-laheta jonon-nimi sanoma))
     (<!!
       (go-loop [kasitelty? (kasitellyn-tapahtuman-id)

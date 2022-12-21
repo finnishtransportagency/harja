@@ -17,11 +17,9 @@
 (comment
   ;; Funktion kutsuminen REPListä
   (try
-    (let [{:keys [db api-sahkoposti sonja-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
+    (let [{:keys [db api-sahkoposti fim]} harja.palvelin.main/harja-jarjestelma
           nykyhetki (harja.pvm/luo-pvm 2021 10 1)]
-      (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                                                                                                 sonja-sahkoposti
-                                                                                                 api-sahkoposti ) {:nykyhetki nykyhetki}))
+      (harja.palvelin.ajastetut-tehtavat.urakan-lupausmuistutukset/muistuta-lupauksista db fim api-sahkoposti {:nykyhetki nykyhetki}))
     (catch Exception e
       (taoensso.timbre/error e))))
 
@@ -94,10 +92,8 @@
 
 (defrecord UrakanLupausMuistutukset []
   component/Lifecycle
-  (start [{:keys [db fim api-sahkoposti sonja-sahkoposti] :as this}]
-    (assoc this :urakan-lupausmuistutukset (ajastus db fim (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                                                             sonja-sahkoposti
-                                                             api-sahkoposti ))))
+  (start [{:keys [db fim api-sahkoposti] :as this}]
+    (assoc this :urakan-lupausmuistutukset (ajastus db fim api-sahkoposti)))
   (stop [this]
     (let [lopeta (get this :urakan-lupausmuistutukset)]
       (when lopeta (lopeta)))
