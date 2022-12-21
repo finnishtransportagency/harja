@@ -699,6 +699,7 @@
       :harja-status (component/using
                       (harja-status/->HarjaStatus (:kehitysmoodi asetukset))
                       {:db :db
+                       :itmf :itmf
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
                        :labyrintti :labyrintti})
