@@ -175,9 +175,12 @@
 
 (deftest uusi-status-vastaa-virhetta
   (testing "Uusi statuskysely palauttaa virhettä"
-    (let [;; Pakota replica pois käytöstä
+    (let [ ;; Merkitään itmf tila virheelliseksi
+          _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
+          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ERROR\"}', 'itmf', NOW());"))
+          ;; Pakota replica pois käytöstä
           _ (swap! a/pois-kytketyt-ominaisuudet conj :replica-db) ;; Pakota replica pois käytöstä
-          _ (harja-status/tarkista-harja-status (:db jarjestelma) false)
+          _ (harja-status/tarkista-harja-status (:db jarjestelma) true)
           _ (swap! a/pois-kytketyt-ominaisuudet disj :replica-db) ;; Pakota replica käyttöön
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
           body (-> vastaus
