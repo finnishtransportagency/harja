@@ -111,7 +111,7 @@
                              (muodosta-taulukon-rivi r yllapitourakka?))))
         yht-kpl (count rivit)
         yht-summa (apply + (map #(if (:summa %) (:summa %) 0) rivit))
-        yht-indeksit (apply + (map :indeksikorjaus rivit))
+        yht-indeksit (apply + (map #(if (:indeksikorjaus %) (:indeksikorjaus %) 0) rivit))
         yht-rivi (cond-> []
                    true (conj "Yht.")
                    true (conj (str yht-kpl " kpl"))
