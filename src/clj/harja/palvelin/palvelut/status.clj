@@ -160,7 +160,7 @@
         tarkista-status-fn (fn [status]
                              (or (= "ok" status) (= "ei-kaytossa" status) false))
         ;; Yksittäinen komponentti on ok, jos joltakin palvelimelta on saatu ok status
-        itmf-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "tloik") komponenttien-tila)) false)
+        itmf-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "itmf") komponenttien-tila)) false)
         replikoinnin-tila-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila)) false)
         yhteys-master-kantaan-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila)) false)
         ;; Harja on ok, mikäli kaikki komponentit on ok
