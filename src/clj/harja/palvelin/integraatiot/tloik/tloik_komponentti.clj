@@ -86,7 +86,6 @@
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
           email api-sahkoposti
-          _ (log/info "Tloik - Käynnistettiin käyttämään sähköpostipalvelua: " email)
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
                               {:sms labyrintti
                                :email email})
