@@ -169,9 +169,6 @@
 
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
-   (s/optional-key :sahke) {:lahetysjono s/Str
-                            (s/optional-key :uudelleenlahetysaika) [s/Num]}
-
    (s/optional-key :turvalaitteet) {:geometria-url s/Str
                                     :paivittainen-tarkistusaika [s/Num]
                                     :paivitysvali-paivissa s/Num}

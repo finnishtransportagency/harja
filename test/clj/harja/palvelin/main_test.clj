@@ -36,7 +36,6 @@
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
-                             (assoc :sampo integraatio/integraatio-sampo-asetukset)
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
@@ -99,7 +98,7 @@
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tloik :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -109,7 +108,7 @@
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
-    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
+    :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
@@ -166,7 +165,7 @@
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :sampo :tierekisteri :labyrintti
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
     :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
@@ -176,7 +175,7 @@
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
-    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
+    :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama

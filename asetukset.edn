@@ -221,8 +221,6 @@
                                :replica-db
                                :sampo}
 
- :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
-
  :reimari {:url "https://www.example.com/HarjaWebService"
            :kayttajatunnus "reimaritunnus"
            :salasana "reimarisalasana"}
