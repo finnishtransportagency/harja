@@ -144,9 +144,3 @@
             ;; Viestin parsinta epäonnistui, kirjataan suoraan epäonnistunut integraatio
             (lokittaja :epaonnistunut viestin-sisalto (str "Viestin lukeminen epäonnistui" (.getMessage data))
                        tapahtuma-id ulkoinen-id)))))))
-
-(defn kuuntele [lokittaja sonja jono-sisaan viestiparseri kasittelija]
-  (jms-kuuntelu lokittaja sonja jono-sisaan nil viestiparseri nil kasittelija))
-
-(defn kuuntele-ja-kuittaa [lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija]
-  (jms-kuuntelu lokittaja sonja jono-sisaan jono-ulos viestiparseri kuittausmuodostaja kasittelija))

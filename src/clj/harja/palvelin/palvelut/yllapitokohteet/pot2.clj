@@ -436,9 +436,7 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+          email (:api-sahkoposti this)]
 
       (julkaise-palvelu http :hae-urakan-massat-ja-murskeet
                         (fn [user tiedot]

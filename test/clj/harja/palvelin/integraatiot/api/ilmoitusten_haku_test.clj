@@ -140,44 +140,6 @@
    "yhteydenottopyynto" false})
 
 
-;; Toistuvasti feilaa, kommentoidaan pois. Olisi hyvä korjata vakaaksi.
-;; Älä poista testiä kokonaan. Sitä voi käyttää lokaalisti, vaikka se häiriköikin ci-puolella.
-#_(deftest kuuntele-urakan-ilmoituksia
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
-        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 185)))
-        aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
-                            (t/now))
-        _ (Thread/sleep 2000)
-        ;;TODO VHAR-1754 Väliaikasesti ilmoitusaika = lähetysaika
-        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 180)))
-        lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 180)))
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id
-                                                      "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
-        _ (Thread/sleep 2000)
-        tloik-kuittaukset (atom [])
-        sonja-kuittaus (jms/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
-        _ (Thread/sleep 2000)
-        sonja-ilmoitus (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))]
-    (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 30000)
-    (is (= 200 (:status @vastaus)))
-
-    (let [vastausdata (cheshire/decode (:body @vastaus))
-          ilmoitus (get (first (get vastausdata "ilmoitukset")) "ilmoitus")]
-      (when (not= 1 (count (get vastausdata "ilmoitukset")))
-        (println @vastaus))
-      (is (= 1 (count (get vastausdata "ilmoitukset"))))
-      (is (= (odotettu-ilmoitus (str ilmoitusaika "Z") (str lahetysaika "Z")) ilmoitus)))
-
-
-    (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 20000)
-
-    (let [xml (first @tloik-kuittaukset)
-          data (xml/lue xml)]
-      (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text))))))
-
 (deftest hae-muuttuneet-ilmoitukset
   (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour'
            WHERE urakka = 4 AND id IN (SELECT id FROM ilmoitus WHERE urakka = 4 LIMIT 1)"))

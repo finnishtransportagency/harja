@@ -14,9 +14,7 @@ node {
              "HARJA_SALLI_OLETUSKAYTTAJA=${params.HARJA_SALLI_OLETUSKAYTTAJA}",
              "HARJA_AJA_GATLING_RAPORTTI=${params.HARJA_AJA_GATLING_RAPORTTI}",
              "HARJA_NOLOG=${params.HARJA_NOLOG}",
-             "HARJA_DEV_RESOURCES_PATH=${params.HARJA_DEV_RESOURCES_PATH}",
-             "HARJA_SONJA_BROKER_PORT=${params.HARJA_SONJA_BROKER_PORT}",
-             "HARJA_SONJA_BROKER_HOST=${params.HARJA_SONJA_BROKER_HOST}"]) {
+             "HARJA_DEV_RESOURCES_PATH=${params.HARJA_DEV_RESOURCES_PATH}"]) {
 
         // Tämä Checkout on sama kuin omatFunktiot.checkoutHarja muuten paitsi otetaan vain Jenkins kansion sisältö.
         // Tämä pitää tehdä ennen, kuin groovy filejä voi ladata workspacesta
