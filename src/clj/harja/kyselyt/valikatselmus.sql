@@ -10,10 +10,11 @@ FROM urakka_tavoite ut
 WHERE ut.urakka = :urakka-id
   AND EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 = :hoitokauden-alkuvuosi;
 
+
 -- name: hae-oikaistu-kattohinta
 -- single?: true
-SELECT COALESCE(k."uusi-kattohinta", ut.kattohinta_indeksikorjattu +
-                                     COALESCE((t.summa * 1.1), 0)) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+SELECT COALESCE(k."uusi-kattohinta", ut.kattohinta_indeksikorjattu
+    + (COALESCE(t.summa,0) * 1.1)) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
          LEFT JOIN (SELECT SUM(t.summa) AS summa, t."urakka-id", t."hoitokauden-alkuvuosi"
