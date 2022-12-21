@@ -17,8 +17,7 @@
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea +kayttaja-jvh+
-                                           :komponenttien-tila (komponenttien-tila/komponentin-tila {:sonja {:paivitystiheys-ms (:paivitystiheys-ms integraatio/sonja-asetukset)}
-                                                                                                     :itmf {:paivitystiheys-ms (:paivitystiheys-ms integraatio/itmf-asetukset)}
+                                           :komponenttien-tila (komponenttien-tila/komponentin-tila {:itmf {:paivitystiheys-ms (:paivitystiheys-ms integraatio/itmf-asetukset)}
                                                                                                      :db {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
                                                                                                           :kyselyn-timeout-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :kyselyn-timeout-ms])}
                                                                                                      :db-replica {:paivitystiheys-ms (get-in testitietokanta [:tarkkailun-timeout-arvot :paivitystiheys-ms])
@@ -26,9 +25,6 @@
                                            :status (component/using
                                                      (status/luo-status true)
                                                      [:http-palvelin :db :komponenttien-tila])
-                                           :sonja (component/using
-                                                    (sonja/luo-oikea-sonja integraatio/sonja-asetukset)
-                                                    [:db])
                                            :itmf (component/using
                                                    (itmf/luo-oikea-itmf integraatio/itmf-asetukset)
                                                    [:db])
@@ -37,7 +33,7 @@
                                                     [:db :itmf :integraatioloki])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloitettavat-jmst* #{"sonja"}
+                      (binding [*aloitettavat-jmst* #{"itmf"}
                                 *kaynnistyksen-jalkeen-hook*
                                 (fn []
                                   (swap! (-> jarjestelma :komponenttien-tila :komponenttien-tila)
@@ -46,13 +42,11 @@
                                                (assoc-in [tapahtuma-apurit/host-nimi :harja :kaikki-ok?] true)
                                                (assoc-in [tapahtuma-apurit/host-nimi :db :kaikki-ok?] true)
                                                (assoc-in [tapahtuma-apurit/host-nimi :db-replica :kaikki-ok?] true)
-                                               (assoc-in [tapahtuma-apurit/host-nimi :sonja :kaikki-ok?] true)
                                                (assoc-in [tapahtuma-apurit/host-nimi :itmf :kaikki-ok?] true)
                                                (assoc-in ["testihost" :harja :kaikki-ok?] true)
                                                (assoc-in ["testihost" :harja :viesti] "kaik kivast")
                                                (assoc-in ["testihost" :db :kaikki-ok?] true)
                                                (assoc-in ["testihost" :db-replica :kaikki-ok?] true)
-                                               (assoc-in ["testihost" :sonja :kaikki-ok?] true)
                                                (assoc-in ["testihost" :itmf :kaikki-ok?] true)))))
                                 *ennen-sulkemista-hook* (fn []
                                                           (reset! (-> jarjestelma :komponenttien-tila :komponenttien-tila) nil))]
@@ -68,7 +62,6 @@
       (is (= (-> vastaus :body (cheshire/decode true))
              {:viesti ""
               :harja-ok? true
-              :sonja-yhteys-ok? true
               :itmf-yhteys-ok? true
               :yhteys-master-kantaan-ok? true
               :replikoinnin-tila-ok? true}))
@@ -84,7 +77,6 @@
         (is (= (-> vastaus :body (cheshire/decode true))
                {:viesti (format "HOST: %s\nVIESTI: poks\nHOST: testihost\nVIESTI: kaik kivast" tapahtuma-apurit/host-nimi)
                 :harja-ok? false
-                :sonja-yhteys-ok? true
                 :itmf-yhteys-ok? true
                 :yhteys-master-kantaan-ok? true
                 :replikoinnin-tila-ok? true}))
@@ -99,7 +91,6 @@
         (is (= (-> vastaus :body (cheshire/decode true))
                {:viesti (str "Ei saatu yhteyttä kantaan 50 sekunnin kuluessa.")
                 :harja-ok? true
-                :sonja-yhteys-ok? true
                 :itmf-yhteys-ok? true
                 :yhteys-master-kantaan-ok? false
                 :replikoinnin-tila-ok? true}))
@@ -109,7 +100,6 @@
       (is (= (-> vastaus :body (cheshire/decode true))
              {:viesti ""
               :harja-ok? true
-              :sonja-yhteys-ok? true
               :itmf-yhteys-ok? true
               :yhteys-master-kantaan-ok? true
               :replikoinnin-tila-ok? true}))
@@ -167,9 +157,9 @@
                                        :toimenpideviestijono tloik-tyokalut/+tloik-toimenpideviestijono+}))
 (deftest uusi-status-toimii
   (testing "Uusi statuskysely toimii"
-    (let [;; Lisää sonja tila ok:ksi tietokantaan
+    (let [;; Lisää itmf tila ok:ksi tietokantaan
           _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
-          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'sonja', NOW());"))
+          ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'itmf', NOW());"))
           _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
           body (-> vastaus
@@ -180,7 +170,6 @@
             {:harja-ok? true
              :itmf-yhteys-ok? true
              :replikoinnin-tila-ok? true
-             :sonja-yhteys-ok? true
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 200)))))
 
@@ -200,6 +189,5 @@
             {:harja-ok? false,
              :itmf-yhteys-ok? true,
              :replikoinnin-tila-ok? true,
-             :sonja-yhteys-ok? false,
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))

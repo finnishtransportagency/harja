@@ -34,8 +34,7 @@
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
-(defonce asetukset {:itmf integraatio/itmf-asetukset
-                    :sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset})
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -47,7 +46,6 @@
     :pdf-vienti (component/using
                   (pdf-vienti/luo-pdf-vienti)
                   [:http-palvelin])
-    :sonja (feikki-jms "sonja")
     :api-sahkoposti (component/using
                               (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                                :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
@@ -60,7 +58,7 @@
              [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
+                      (binding [*aloitettavat-jmst* #{"itmf"}
                                 *lisattavia-kuuntelijoita?* true
                                 *jms-kaynnistetty-fn* (fn []
                                                         (jms-tyokalut/itmf-jolokia-jono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+ nil :purge)

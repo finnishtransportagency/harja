@@ -77,11 +77,8 @@
                                          (recur (conj sarja (rand-nth ok-tapahtumat))
                                                 (= (into #{} ok-tapahtumat) (into #{} sarja)))))
         ok-tapahtumien-nimet (into #{} (map first) ok-tapahtumat)
-        kaikki-ok? (fn [{:keys [sonja harja db db-replica]}]
+        kaikki-ok? (fn [{:keys [harja db db-replica]}]
                      (and
-                       ;; sonja tapahtumaa ei annettu tai sitten sonja on ok
-                       (or (empty? (clj-set/intersection ok-tapahtumien-nimet #{:jms-tila :harjajarjestelman-restart}))
-                           (:kaikki-ok? sonja))
                        ;; harja tapahtumaa ei annettu tai sitten harja on ok
                        (or (empty? (clj-set/intersection ok-tapahtumien-nimet #{:harja-tila :harjajarjestelman-restart :harjajarjestelman-restart-onnistui}))
                            (:kaikki-ok? harja))

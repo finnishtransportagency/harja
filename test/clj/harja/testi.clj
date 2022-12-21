@@ -77,10 +77,8 @@
 (defn ei-lisattavia-kuuntelijoita! []
   "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
    on lisätty oikea sonja"
-  {:pre [(not (nil? *lisattavat-kuuntelijat*))
-         (not (nil? @sonja-aloitus-go))]}
-  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa)
-  (async/<!! @sonja-aloitus-go))
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))]}
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa) )
 
 (defn circleci? []
   (not (nil? (env/env "CIRCLE_BRANCH"))))
@@ -1383,8 +1381,7 @@
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}
-                                                                                                :itmf {:paivitystiheys-ms (* 1000 10)}}
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:itmf {:paivitystiheys-ms (* 1000 10)}}
                                                                                                (atom nil))
                                                  (reify component/Lifecycle
                                                    (start [this]
@@ -1395,8 +1392,6 @@
 (defn jms-kasittely [kuuntelijoiden-lopettajat]
   (when *aloitettavat-jmst*
     (let [jms-kaynnistaminen! (fn []
-                                (when (contains? *aloitettavat-jmst* "sonja")
-                                  (<!! (jms/aloita-jms (:sonja jarjestelma))))
                                 (when (contains? *aloitettavat-jmst* "itmf")
                                   (<!! (jms/aloita-jms (:itmf jarjestelma))))
                                 (when *jms-kaynnistetty-fn*
@@ -1405,11 +1400,7 @@
         (reset! sonja-aloitus-go
                 (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
                                                       (timeout 5000)])
-                          sonja-kuuntelijat (get jms-kuuntelijat "sonja")
                           itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
-                      (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))
-                        (doseq [[kanava f] sonja-kuuntelijat]
-                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
                       (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
                         (doseq [[kanava f] itmf-kuuntelijat]
                           (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
