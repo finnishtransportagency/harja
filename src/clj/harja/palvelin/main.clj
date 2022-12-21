@@ -697,9 +697,8 @@
                 [:http-palvelin :komponenttien-tila :db])
 
       :harja-status (component/using
-                      (harja-status/->HarjaStatus (:tloik asetukset) (:kehitysmoodi asetukset))
-                      {:itmf :itmf
-                       :db :db
+                      (harja-status/->HarjaStatus (:kehitysmoodi asetukset))
+                      {:db :db
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
                        :labyrintti :labyrintti})

@@ -160,7 +160,7 @@
     (let [;; Lisää itmf tila ok:ksi tietokantaan
           _ (u (str "INSERT INTO jarjestelman_tila (palvelin, tila, \"osa-alue\", paivitetty) VALUES
           ('test-palvelin', '{\"istunnot\": [], \"yhteyden-tila\": \"ACTIVE\"}', 'itmf', NOW());"))
-          _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset true)
+          _ (harja-status/tarkista-harja-status (:db jarjestelma) true)
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
           body (-> vastaus
                  :body
@@ -177,7 +177,7 @@
   (testing "Uusi statuskysely palauttaa virhettä"
     (let [;; Pakota replica pois käytöstä
           _ (swap! a/pois-kytketyt-ominaisuudet conj :replica-db) ;; Pakota replica pois käytöstä
-          _ (harja-status/tarkista-harja-status (:db jarjestelma) (:itmf jarjestelma) tloik-asetukset false)
+          _ (harja-status/tarkista-harja-status (:db jarjestelma) false)
           _ (swap! a/pois-kytketyt-ominaisuudet disj :replica-db) ;; Pakota replica käyttöön
           vastaus (tyokalut/get-kutsu ["/uusi-status"] +kayttaja-jvh+ portti)
           body (-> vastaus
@@ -187,7 +187,7 @@
           sorted-body (into (sorted-map) body)]
       (is (= sorted-body
             {:harja-ok? false,
-             :itmf-yhteys-ok? true,
+             :itmf-yhteys-ok? false,
              :replikoinnin-tila-ok? true,
              :yhteys-master-kantaan-ok? true}))
       (is (= (get vastaus :status) 503)))))
