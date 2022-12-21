@@ -68,11 +68,6 @@
   :julkaise-tila? true}
 
 
- ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
- ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
- ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
- ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika [16 44 0]}
  :sampo-api {:lahetys-url "/harja/api/sampo/xml"
              :paivittainen-lahetysaika [16 44 0]
              :palvelin "http://localhost:8084"

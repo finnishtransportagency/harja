@@ -30,12 +30,6 @@
                :palvelin "solita-service-1.solita.fi"
                :vastaanottaja []}}
 
- :sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
-         :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
-         :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
-         :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
-         :paivittainen-lahetysaika nil
-         }
  :tloik {:ilmoitusviestijono "tloik-ilmoitukset"
          :ilmoituskuittausjono "tloik-ilmoituskuittaukset"
          :toimenpideviestijono "Harja.HarjaToT-LOIK.Msg"

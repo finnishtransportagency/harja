@@ -63,11 +63,6 @@
 
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
-   (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
-                            :kuittausjono-sisaan s/Str
-                            :lahetysjono-ulos s/Str
-                            :kuittausjono-ulos s/Str
-                            :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :sampo-api) {:lahetys-url s/Str
                                 :paivittainen-lahetysaika [s/Num]
                                 :palvelin s/Str
