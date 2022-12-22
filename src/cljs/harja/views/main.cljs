@@ -71,7 +71,7 @@
          :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
 
    [ikonit/livicon-info-circle]
-   [linkki " Info" #(nav/vaihda-sivu! :info)]])
+   [linkki " INFO" #(nav/vaihda-sivu! :info)]])
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
