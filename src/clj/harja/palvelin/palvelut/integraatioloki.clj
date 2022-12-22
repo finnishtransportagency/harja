@@ -19,7 +19,11 @@
 (def viesti-xf
   (comp
     (map #(assoc % :parametrit (muunna-merkkijono-kartaksi (:parametrit %))))
-    (map #(assoc % :otsikko (muunna-merkkijono-kartaksi (:otsikko %))))))
+    (map #(assoc % :otsikko (muunna-merkkijono-kartaksi (:otsikko %))))
+    (map (fn [v]
+            (if (= "application/xml" (:sisaltotyyppi v))
+              (assoc v :sisalto (konversio/ppxml (:sisalto v)))
+              v)))))
 
 (def tapahtuma-xf
   (comp
