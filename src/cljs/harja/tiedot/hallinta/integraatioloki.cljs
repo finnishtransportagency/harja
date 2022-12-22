@@ -49,6 +49,20 @@
 (defonce tapahtuma-id (atom nil))
 (defonce tultiin-urlin-kautta (atom nil))
 
+(defonce nayta-graafit? (atom false))
+(defonce nayta-kutsutut-integraatiot? (atom false))
+
+(defn nayta-graafit! []
+  (js/console.log "click" @nayta-graafit?)
+  (if @nayta-graafit?
+    (reset! nayta-graafit? false)
+    (reset! nayta-graafit? true)))
+
+(defn nayta-kutsutut-integraatiot! []
+  (js/console.log "click" @nayta-kutsutut-integraatiot?)
+  (if @nayta-kutsutut-integraatiot?
+    (reset! nayta-kutsutut-integraatiot? false)
+    (reset! nayta-kutsutut-integraatiot? true)))
 
 
 (def tapahtumien-maarat (atom []))
