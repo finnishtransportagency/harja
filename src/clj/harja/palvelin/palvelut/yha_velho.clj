@@ -19,8 +19,8 @@
   (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet))
-        ;; Velholäetys on päällä vain kehitysympäristöissä
-        velho-lahetys (when kehitysmoodi?
+        ;; Velho-lähetys toistaiseksi pois päältä. Testattu enimmäkseen toimivaksi testiympäristössä. On vielä selvityksessä, otetaanko Velho-lähetys käyttöön.
+        #_velho-lahetys #_(when kehitysmoodi?
                         (try+ (velho/laheta-kohde velho urakka-id kohde-id)
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet)))
