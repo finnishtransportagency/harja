@@ -204,9 +204,7 @@
          :tyyppi :komponentti :leveys 25
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                   (< 2019 valittu-urakan-vuosi)
-                   ;; paikkauskohteiden YHA-lähetys saa mennä päälle kehitysympäristössä
-                   (or (not paikkauskohteet?) (k/kehitysymparistossa?)))
+                   (< 2019 valittu-urakan-vuosi))
           ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
