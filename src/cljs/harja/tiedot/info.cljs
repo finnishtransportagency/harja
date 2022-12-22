@@ -5,7 +5,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tyokalut.tuck :as tuck-apurit]))
 
-(def data (atom {}))
+(defonce tila (atom {}))
 (defrecord TallennaVideo [videot])
 (defrecord HaeKoulutusvideot [])
 (defrecord HaeKoulutusvideotOnnistui [vastaus])
@@ -17,38 +17,34 @@
 
   TallennaVideo
   (process-event [{videot :videot} app]
-    (-> app
-        (tuck-apurit/post! :paivita-koulutusvideot
-                           {:tiedot videot}
-                           {:onnistui ->PaivitaKoulutusvideotOnnistui
-                            :epaonnistui ->PaivitaKoulutusvideotEpaonnistui})))
+    (tuck-apurit/post! app :paivita-koulutusvideot
+                       {:tiedot videot}
+                       {:onnistui ->PaivitaKoulutusvideotOnnistui
+                        :epaonnistui ->PaivitaKoulutusvideotEpaonnistui}))
 
   HaeKoulutusvideot
   (process-event [_ app]
-    (tuck-apurit/post! :hae-koulutusvideot
+    (tuck-apurit/post! app :hae-koulutusvideot
                        {}
                        {:onnistui ->HaeKoulutusvideotOnnistui
-                        :epaonnistui ->HaeKoulutusvideotEpaonnistui})
-    app)
+                        :epaonnistui ->HaeKoulutusvideotEpaonnistui}))
 
   HaeKoulutusvideotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-        (assoc :videot vastaus)))
+    (assoc app :videot vastaus))
 
   HaeKoulutusvideotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "HaeKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus))
+    (js/console.warn "HaeKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "HaeKoulutusvideotEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app)
 
   PaivitaKoulutusvideotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
-        (assoc :videot vastaus)))
+    (assoc app :videot vastaus))
 
   PaivitaKoulutusvideotEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (js/console.log "PaivitaKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus))
+    (js/console.warn "PaivitaKoulutusvideotEpaonnistui :: vastaus: " (pr-str vastaus))
     (viesti/nayta-toast! (str "PaivitaKoulutusvideotEpaonnistui \n Vastaus: " (pr-str vastaus)) :varoitus)
     app))

@@ -11,7 +11,7 @@
             [harja.ui.viesti :refer [viesti-container toast-viesti-container]]
             [harja.tiedot.navigaatio :as nav]
             [harja.loki :refer [log logt]]
-            [harja.tiedot.hairioilmoitukset :as hairiotiedot] 
+            [harja.tiedot.hairioilmoitukset :as hairiotiedot]
             [harja.views.murupolku :as murupolku]
             [harja.views.haku :as haku]
             [cljs.core.async :refer [put! close! chan timeout]]
@@ -68,9 +68,9 @@
 
 (defn harja-info [s]
   [:div {:role "presentation"
-       :id (str "info" (when (= s :info) "-active"))}
-   
-   (ikonit/livicon-info-circle)
+         :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
+
+   [ikonit/livicon-info-circle]
    [linkki " Info" #(nav/vaihda-sivu! :info)]])
 
 (defn- mobiiliselain? []

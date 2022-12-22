@@ -99,6 +99,6 @@
 
   "Koulutusvideot"
   :koulutusvideot
-  (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-pohjavesialueidensiirto)
+  (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
     ^{:key "koulutusvideot"}
     [koulutusvideot/nakyma])]) 

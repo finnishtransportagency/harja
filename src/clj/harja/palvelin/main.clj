@@ -477,8 +477,8 @@
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
       :info (component/using
-                    (info/->Info)
-                    [:http-palvelin :db])
+             (info/->Info)
+             [:http-palvelin :db])
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])

@@ -9,38 +9,36 @@
   (into []
         (q/hae-koulutusvideot db)))
 
-(defn syotetaan-uusi-rivi 
+(defn syotetaan-uusi-rivi?
   "Palauttaa true/false jos halutaan inserttaa uusi rivi"
   [poistetaan indeksi]
   (and
-   (= (nil? poistetaan) true)
+   (nil? poistetaan)
    (< indeksi 0)))
 
-(defn paivita-koulutusvideot [db user tiedot]
-  (oikeudet/ei-oikeustarkistusta!)
+(defn paivita-koulutusvideot [db user {:keys [tiedot]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-koulutusvideot user)
+  
+  (doseq [x tiedot]
 
-  (let [tieto (:tiedot tiedot)]
+    (if (syotetaan-uusi-rivi? (:poistettu x) (:id x))
 
-    (doseq [x tieto]
+      ; Käyttäjä lisäsi uuden rivin
+      (q/lisaa-video! db {:otsikko (:otsikko x)
+                          :linkki (:linkki x)
+                          :pvm (:pvm x)})
 
-      (if (syotetaan-uusi-rivi (:poistettu x) (:id x))
+      ; Käyttäjä muokkaa rivejä
+      (if (and (not= (:id x) -1) (:poistettu x))
 
-        ; Käyttäjä lisäsi uuden rivin
-        (q/lisaa-video! db {:otsikko (:otsikko x)
-                            :linkki (:linkki x)
-                            :pvm (:pvm x)})
+        ; Poistettu true => Käyttäjä poistaa rivin
+        (q/poista-video! db {:id (:id x)})
 
-        ; Käyttäjä muokkaa rivejä
-        (if (and (not= (:id x) -1) (:poistettu x))
-
-          ; Poistettu true => Käyttäjä poistaa rivin
-          (q/poista-video! db {:id (:id x)})
-
-          ; Poistettu False => Käyttäjä päivittää tiedot
-          (q/paivita-video! db {:otsikko (:otsikko x)
-                                :linkki (:linkki x)
-                                :pvm (:pvm x)
-                                :id (:id x)})))))
+        ; Poistettu False => Käyttäjä päivittää tiedot
+        (q/paivita-video! db {:otsikko (:otsikko x)
+                              :linkki (:linkki x)
+                              :pvm (:pvm x)
+                              :id (:id x)}))))
   ; Palauta päivitetty lista
   (into []
         (q/hae-koulutusvideot db)))

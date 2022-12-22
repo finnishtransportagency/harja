@@ -5,19 +5,19 @@
             [reagent.core :refer [atom] :as reagent]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [clojure.string :as st]
+            [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.tiedot.info :as tiedot]))
 
-(def clicked (atom [])) 
+(def klikattu (atom [])) 
 
-(defn lisaa-asetus
-  [asetus]
-  (swap! clicked conj asetus))
+(defn lisaa-asetus [asetus]
+  (swap! klikattu conj asetus))
 
-(defn swap-clicked
-  "Muokkaa clicked atom arvoa"
+(defn swap-klikattu
+  "Muokkaa klikattu atom arvoa"
   [params]
-  (swap! clicked
+  (swap! klikattu
          (fn [old]
            (mapv (fn [order]
                    (if (= (:id order) 
@@ -33,11 +33,9 @@
     x))
 
 (defn klikattu? 
-  "Palauttaa onko @clicked indeksiä olemassa"
+  "Palauttaa onko @klikattu indeksiä olemassa"
   [indeksi]
-  (if (= (hae-arvo @clicked indeksi) ())
-    false
-    true))
+  (seq (hae-arvo @klikattu indeksi)))
 
 (defn formatoi-embed-linkki
   "Palauttaa annetun linkin videokoodin"
@@ -46,97 +44,78 @@
   ; (println "Link: " (nth (re-seq
   ;                        #"^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu.be))(\/(?:[\w\-]+\?v=|embed|live\/|v\/)?)([\w\-]+)(\S+)?$"
   ;                        linkki) 6))
-  (second (st/split (get (st/split linkki #"/") 3) #"v=")))
+  (second (str/split (get (str/split linkki #"/") 3) #"v=")))
 
-(defn listaa-videot
-  "Iteroi kaikki tietokannan tulokset (:id,otsikko,linkki,pvm) joka palautetaan html listana"
-  [_ app]
-  
-  (let [videot (:videot app)]
+(defn videolistaus [_ videot]
+  [:div
+   [:ul {:class "info-lista"}
 
-    [:div
-     [:ul {:class "info-lista"}
+    (doall
+     (map (fn [{:as m}]
+            ^{:key (m :id)}
 
-      (doall (map (fn [{:as m}]
-                    ^{:key (m :id)}
-                    [:li
-                     [:div {:class "info-videot"
-                            :on-click (fn []
-                                        ; Videon "klikattu" arvoa ei ole olemassa => create 
-                                        (when (not (klikattu? (m :id)))
-                                          (lisaa-asetus {:id (m :id) :open false}))
+            [:li
+             [:div
+              {:class "video-wrap"
+               :on-click (fn []
+                           ; Videon "klikattu" arvoa ei ole olemassa => lisää 
+                           (when (not (klikattu? (m :id)))
+                             (lisaa-asetus {:id (m :id) :open false}))
 
-                                        ; Vaihda arvo
-                                        (swap-clicked
-                                         {:id (m :id)
-                                          :open (not (:open (first (hae-arvo @clicked (m :id)))))}))}
+                           ; Vaihda arvo
+                           (swap-klikattu
+                            {:id (m :id)
+                             :open (not (:open (first (hae-arvo @klikattu (m :id)))))}))}
+              ; Päivämäärä
+              [:span [ikonit/ikoni-ja-teksti [ikonit/harja-icon-misc-clock] (pvm/pvm (m :pvm))]]
+              [:br]
 
-                      (let [paivamaara (st/join " " (rest (take 4 (st/split (.toDateString (js/Date. (m :pvm))) #" "))))
-                            ikoni (ikonit/harja-icon-misc-clock)
-                            suomennettu (-> paivamaara
-                                            (st/replace #"Jan" "Tammikuu")
-                                            (st/replace #"Feb" "Helmikuu")
-                                            (st/replace #"Mar" "Maaliskuu")
-                                            (st/replace #"Apr" "Huhtikuu")
-                                            (st/replace #"May" "Toukokuu")
-                                            (st/replace #"Jun" "Kesäkuu")
-                                            (st/replace #"Jul" "Heinäkuu")
-                                            (st/replace #"Aug" "Elokuu")
-                                            (st/replace #"Sep" "Syyskuu")
-                                            (st/replace #"Oct" "Lokakuu")
-                                            (st/replace #"Nov" "Marraskuu")
-                                            (st/replace #"Dec" "Joulukuu"))]
+              ; Video
+              [:span
+               (if (:open (first (hae-arvo @klikattu (m :id))))
 
-                        [:span ikoni " " suomennettu])
+                 ; Video on auki => näytä video
+                 [:div {:class "info-video"}
+                  [:div {:class "upotettu-otsikko"} (m :otsikko)]
+                  [:iframe {:class "video-iframe"
+                            :src (str "https://www.youtube.com/embed/" (formatoi-embed-linkki (m :linkki)))}]]
 
-                      [:br]
-                      [:span
-                       (if (:open (first (hae-arvo @clicked (m :id))))
+                 ; Video on kiinni => näytä pelkkä otsikko
+                 [:div {:class "video-otsikko"} (m :otsikko)])]]])
 
-                         ; Video on auki => näytä video
-                         [:div {:class "info-video"}
-                          [:div {:class "embed-title"} (m :otsikko)]
-                          [:iframe {:class "info-iframe"
-                                    :src (str "https://www.youtube.com/embed/" (formatoi-embed-linkki (m :linkki)))}]]
+          videot))]])
 
-                         ; Video on kiinni => näytä pelkkä otsikko
-                         [:div {:class "info-click"} (m :otsikko)])]]])
-
-                  videot))]]))
-
-(defn videot*
-  "Rajapintakutsun callback"
-  [e!]
-
+(defn videot* [e! _]
   (komp/luo
    (komp/sisaan
     #(do
        (e! (tiedot/->HaeKoulutusvideot))))
 
-   (fn [e! app]
-     (when (:videot app)
+   (fn [e! {:keys [videot]}]
+     [:span
+      [:div.section
+       [:h1 {:class "header-yhteiset"} "Harja Info"
+        [:div {:class "otsikko-viiva"}]
 
-       [:span
-        [:div.section
-         [:h3 {:class "info-title"} "Harja Info"
-          [:div {:class "otsikko-viiva"}]
-          [:ul {:class "info-heading f"} "Harja uutiset"
+        [:ul
+         [:h2 {:class "header-yhteiset"} "Harja uutiset"]
+         [:ul
+          [:h3 {:class "header-yhteiset"} [:a {:href "https://finnishtransportagency.github.io/harja/" :target "_blank" :style {:color "#004D99"}}
+                                           [ikonit/ikoni-ja-teksti "https://finnishtransportagency.github.io/harja/ " [ikonit/link]]]]]]
 
-           [:ul [:a {:class "info-heading-small" :href "https://finnishtransportagency.github.io/harja/" :target "_blank"}
-                 "https://finnishtransportagency.github.io/harja/ " (ikonit/link)]]]
+        [:ul
+         [:h2 {:class "header-yhteiset"} "Harja Tietosuojaseloste"]
+         [:ul
+          [:h3 {:class "header-yhteiset"} [:a {:href "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja" :target "_blank" :style {:color "#004D99"}}
+                                           [ikonit/ikoni-ja-teksti "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja " [ikonit/link]]]]]]
 
-          [:ul {:class "info-heading f"} "Harja Tietosuojaseloste"
-           [:ul [:a {:class "info-heading-small" :href "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja" :target "_blank"}
-                 "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja " (ikonit/link)]]]
+        [:ul {:class "info-heading"} "Harja koulutusvideot"
+         [:p {:class "info-heading-pieni main"} "Koulutusvideoita HARJA:n käytön tueksi."]
 
-          [:ul {:class "info-heading"} "Harja koulutusvideot"
-
-           [:p {:class "info-heading-small main"} "Koulutusvideoita HARJA:n käytön tueksi."]
-
-           [:div {:class "videot"}
-            [:div (listaa-videot e! app)]]]]]]))))
+         [:div {:class "videot"}
+          [videolistaus e! videot]]]]]])))
 
 (defn info 
   "Hakee koulutusvideot kun käyttäjä tulee näkymään"
   []
-  [tuck tiedot/data videot*]) 
+  [tuck tiedot/tila videot*]) 

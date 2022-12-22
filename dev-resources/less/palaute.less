@@ -11,87 +11,92 @@
   }
 }
 
-#info {
+/* Info-näkymän avaus painike (oikea ylä) */
+.info-nakyma {
+    cursor: pointer;
     color: @sininen5;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    line-height: 1.0625rem;
 
-    &-active {
-        color: @sininen5;
-        font-size: 14px;
+    &.aktiivinen {
         font-weight: 900;
-        text-decoration: none;
     }
 }
 
-.info-info {
-    font-family: "Open Sans", Arial, sans-serif;
-    font-style: normal;
+/* Video-lista komponentti, oma fonttikoko. Pienempi header on liian pieni */
+.info-lista {
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 17px;
+    line-height: 20px;
+
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
     padding-top: 10px;
+
+    &:last-child {
+        padding-bottom: 10px;
+    }
+
+    .video-wrap {
+        padding-top: 5px;
+
+        /* Otsikko & iframe sisällä */
+        .info-video {
+            height: 500px;
+            transition: 0.4s;
+            margin-bottom: 130px;
+            margin-top: 10px;
+        }
+    }
 }
 
-.info-video {
-    height: 500px;
-    transition: 0.4s;
-    margin-bottom: 130px;
-    margin-top: 10px;
-}
-
+/* Pääotsikon alaviiva */
 .otsikko-viiva {
     margin-top: 5px;
     border-top: 0.2em solid #c8c8c8;
 }
 
-.info-heading.f {
-    margin-top: 10px;
-}
-
-.info-heading-small.main {
-    padding-bottom: 10px;
-    border-bottom: 0.5em solid #0088ce;
-}
-
-.info-lista {
-    font-family: 'Open Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 17px;
-    line-height: 20px;
-}
-
-.info-title {
-    font-family: 'Open Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 28px;
-    line-height: 32px;
-    list-style: none;
-    padding-top: 10px;
-}
-
+/* Nämä tarvitaan, ei käytetä yleisiä typography classeja */
 .info-heading {
     text-align: left;
-    font-family: 'Open Sans';
-    font-style: normal;
     font-weight: 600;
     font-size: 20px;
     line-height: 24px;
     padding-top: 20px;
+
+    .info-heading-pieni {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 20px;
+    }
+    
+    .info-heading-pieni.main {
+        padding-bottom: 10px;
+        border-bottom: 0.5em solid #0088ce;
+    }
 }
 
-.info-videot {
-    padding-top: 5px;
+/* Video linkit */
+.video-otsikko {
+    transition: 0.5s;
+    height: 40px; 
+    cursor: pointer;
+    color: #004D99;
+    width: 100%;
+    transition: 0.1s;
 }
 
-.info-heading-small {
-    font-family: 'Open Sans';
-    font-style: normal;
-    font-weight: 600;
-    font-size: 16px;
-    line-height: 20px;
+.video-otsikko:hover {
+    color: hwb(204 51% 28%);
+    transition: 0.1s;
 }
 
-.info-iframe {
+/* Upotettu video iframe */
+.video-iframe {
     text-align: center;
     margin: auto;
     height: 100%;
@@ -102,21 +107,8 @@
     justify-content: center;
 }
 
-.info-click:hover {
-    color: hwb(204 51% 28%);
-    transition: 0.1s;
-}
-
-.info-click {
-    transition: 0.5s;
-    height: 40px; 
-    cursor: pointer;
-    color: hwb(203 10% 23%); 
-    width: 100%;
-    transition: 0.1s;
-}
-
-.embed-title {
+/* Avatun videon otsikko */
+.upotettu-otsikko {
     position: relative;
     float: top;
     width: 80%;
@@ -125,29 +117,30 @@
     margin: auto;
     transition: 0.4s;
     line-height: 25px;
-
-    font-family: 'Open Sans';
-    font-style: normal;
     font-weight: 600;
     font-size: 28px;
 }
 
 .crash-component {
-  background: @oranssi-kevyt;
-  border: 1px dashed @punainen1;
-  padding: 5px;
-  a{
-    color: @punainen1;
-  }
-  span {
-    font-weight: bold;
-  }
-  .crash-details {
-    display: none;
-    color: black;
-    font-size: 10px;
-  }
-  .details-open {
-    display: block;
-  }
+    background: @oranssi-kevyt;
+    border: 1px dashed @punainen1;
+    padding: 5px;
+
+    a {
+        color: @punainen1;
+    }
+
+    span {
+        font-weight: bold;
+    }
+
+    .crash-details {
+        display: none;
+        color: black;
+        font-size: 10px;
+    }
+
+    .details-open {
+        display: block;
+    }
 }
