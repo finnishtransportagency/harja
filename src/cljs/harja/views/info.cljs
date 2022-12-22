@@ -49,41 +49,44 @@
 (defn videolistaus [_ videot]
   [:div
    [:ul {:class "info-lista"}
+    
+    (if (empty? videot)
+      [:span "Ei videoita."]
 
-    (doall
-     (map (fn [{:as m}]
-            ^{:key (m :id)}
+      (doall
+       (map (fn [{:as m}]
+              ^{:key (m :id)}
 
-            [:li
-             [:div
-              {:class "video-wrap"
-               :on-click (fn []
-                           ; Videon "klikattu" arvoa ei ole olemassa => lisää 
-                           (when (not (klikattu? (m :id)))
-                             (lisaa-asetus {:id (m :id) :open false}))
+              [:li
+               [:div
+                {:class "video-wrap"
+                 :on-click (fn []
+                             ; Videon "klikattu" arvoa ei ole olemassa => lisää 
+                             (when (not (klikattu? (m :id)))
+                               (lisaa-asetus {:id (m :id) :open false}))
 
-                           ; Vaihda arvo
-                           (swap-klikattu
-                            {:id (m :id)
-                             :open (not (:open (first (hae-arvo @klikattu (m :id)))))}))}
-              ; Päivämäärä
-              [:span [ikonit/ikoni-ja-teksti [ikonit/harja-icon-misc-clock] (pvm/pvm (m :pvm))]]
-              [:br]
+                             ; Vaihda arvo
+                             (swap-klikattu
+                              {:id (m :id)
+                               :open (not (:open (first (hae-arvo @klikattu (m :id)))))}))}
+                ; Päivämäärä
+                [:span [ikonit/ikoni-ja-teksti [ikonit/harja-icon-misc-clock] (pvm/pvm (m :pvm))]]
+                [:br]
 
-              ; Video
-              [:span
-               (if (:open (first (hae-arvo @klikattu (m :id))))
+                ; Video
+                [:span
+                 (if (:open (first (hae-arvo @klikattu (m :id))))
 
-                 ; Video on auki => näytä video
-                 [:div {:class "info-video"}
-                  [:div {:class "upotettu-otsikko"} (m :otsikko)]
-                  [:iframe {:class "video-iframe"
-                            :src (str "https://www.youtube.com/embed/" (formatoi-embed-linkki (m :linkki)))}]]
+                   ; Video on auki => näytä video
+                   [:div {:class "info-video"}
+                    [:div {:class "upotettu-otsikko"} (m :otsikko)]
+                    [:iframe {:class "video-iframe"
+                              :src (str "https://www.youtube.com/embed/" (formatoi-embed-linkki (m :linkki)))}]]
 
-                 ; Video on kiinni => näytä pelkkä otsikko
-                 [:div {:class "video-otsikko"} (m :otsikko)])]]])
+                   ; Video on kiinni => näytä pelkkä otsikko
+                   [:div {:class "video-otsikko"} (m :otsikko)])]]])
 
-          videot))]])
+            videot)))]])
 
 (defn videot* [e! _]
   (komp/luo
