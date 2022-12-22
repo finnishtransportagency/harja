@@ -53,11 +53,6 @@
          (s/optional-key :testidata?) s/Bool
          (s/optional-key :ei-logiteta) #{s/Str}}
    (s/optional-key :integraatiot) {:paivittainen-lokin-puhdistusaika [s/Num]}
-   (s/optional-key :sonja) {:url s/Str
-                            :kayttaja s/Str
-                            :salasana s/Str
-                            (s/optional-key :tyyppi) s/Keyword
-                            :julkaise-tila? s/Bool}
    (s/optional-key :api-sahkoposti) {:vastausosoite s/Str
                                      :suora? s/Bool
                                      :sahkoposti-lahetys-url s/Str
@@ -66,24 +61,8 @@
                                      :kayttajatunnus s/Str
                                      :salasana s/Str}
 
-   ;; Lisään vielä hetkeksi tämän takaisin. Saa poistaa, kunhan api-sahkoposti on otettu käyttöön.
-   ;; Tämän ennen aikainen poistaminen on jotanut turhiin virheisiin Harjan käynnistyksessä
-   (s/optional-key :sonja-sahkoposti) {:vastausosoite s/Str
-                                       (s/optional-key :suora?) s/Bool
-                                       (s/optional-key :palvelin) s/Str
-                                       :jonot {(s/optional-key :sahkoposti-sisaan-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ulos-kuittausjono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-jono) s/Str
-                                               (s/optional-key :sahkoposti-ja-liite-ulos-kuittausjono) s/Str}}
-
    (s/optional-key :solita-sahkoposti) {:vastausosoite s/Str
                                         (s/optional-key :palvelin/Str) s/Str}
-   (s/optional-key :sampo) {:lahetysjono-sisaan s/Str
-                            :kuittausjono-sisaan s/Str
-                            :lahetysjono-ulos s/Str
-                            :kuittausjono-ulos s/Str
-                            :paivittainen-lahetysaika [s/Num]}
    (s/optional-key :sampo-api) {:lahetys-url s/Str
                                 :paivittainen-lahetysaika [s/Num]
                                 :palvelin s/Str
@@ -185,9 +164,6 @@
 
    (s/optional-key :pois-kytketyt-ominaisuudet) #{s/Keyword}
 
-   (s/optional-key :sahke) {:lahetysjono s/Str
-                            (s/optional-key :uudelleenlahetysaika) [s/Num]}
-
    (s/optional-key :turvalaitteet) {:geometria-url s/Str
                                     :paivittainen-tarkistusaika [s/Num]
                                     :paivitysvali-paivissa s/Num}
@@ -212,8 +188,7 @@
 
 
    (s/optional-key :yllapitokohteet) {:paivittainen-sahkopostin-lahetysaika [s/Num]}
-   :komponenttien-tila {:sonja {:paivitystiheys-ms s/Int}
-                        :itmf {:paivitystiheys-ms s/Int}
+   :komponenttien-tila {:itmf {:paivitystiheys-ms s/Int}
                         :db {:paivitystiheys-ms s/Int
                              :kyselyn-timeout-ms s/Int}
                         :db-replica {:paivitystiheys-ms s/Int

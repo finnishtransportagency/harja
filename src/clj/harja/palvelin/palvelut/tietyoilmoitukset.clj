@@ -314,10 +314,10 @@
            db :db
            http :http-palvelin
            pdf :pdf-vienti
-           fim :fim :as this}]
-    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+           fim :fim
+           api-sahkoposti :api-sahkoposti
+           :as this}]
+    (let [email api-sahkoposti]
     (julkaise-palvelu http :hae-tietyoilmoitukset
                       (fn [user tiedot]
                         (hae-tietyoilmoitukset db user tiedot 501))

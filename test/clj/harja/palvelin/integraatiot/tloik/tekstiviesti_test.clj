@@ -29,7 +29,6 @@
     :api-ilmoitukset (component/using
                        (api-ilmoitukset/->Ilmoitukset)
                        [:http-palvelin :db :integraatioloki])
-    :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
@@ -52,78 +51,6 @@
 (defn ilmoitus-aiheutti-toimenpiteita? [id]
   (ffirst (q (str "SELECT \"aiheutti-toimenpiteita\" FROM ilmoitus WHERE id = " id ";"))))
 
-(deftest tarkista-kuittauksen-vastaanotto-tekstiviestilla
-  (tuo-ilmoitus)
-  (let [integraatioloki (:integraatioloki jarjestelma)
-        db (:db jarjestelma)
-        lokittaja (integraatioloki/lokittaja integraatioloki db "tloik" "toimenpiteen-lahetys")
-        jms-lahettaja (jms/jonolahettaja lokittaja (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+)
-        ilmoitus (first (hae-testi-ilmoitukset))
-        ilmoitus-id (:ilmoitus-id ilmoitus)
-        urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        yhteyshenkilo (tee-testipaivystys urakka-id)
-        yhteyshenkilo-id (first yhteyshenkilo)
-        puhelinnumero (second yhteyshenkilo)]
-
-    (paivystajatekstiviestit/kirjaa-uusi-paivystajatekstiviesti<! db puhelinnumero ilmoitus-id yhteyshenkilo-id)
-
-    (is (= "Viestiäsi ei voitu käsitellä. Antamasi kuittaus ei ole validi. Vastaa viestiin kuittauskoodilla ja kommentilla."
-           (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db "0834" "TESTI"))
-        "Tuntematon käyttäjä käsitellään oikein")
-    (is (= "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu."
-           (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero ""))
-        "Puuttuva toimenpide tai viestinumero käsitellään oikein.")
-
-    (is (= "Viestiäsi ei voitu käsitellä. Antamallasi viestinumerolla ei löydy avointa ilmoitusta. Vastaa viestiin kuittauskoodilla ja kommentilla."
-           (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V2"))
-        "Tuntematon viestinumero käsitellään oikein.")
-
-    (let [viesti (atom nil)]
-      (jms-util/kuuntele! (:sonja jarjestelma) +tloik-ilmoitustoimenpideviestijono+ #(reset! viesti (.getText %)))
-
-      (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
-             (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "V1 Asia selvä."))
-          "Onnistunut viestin käsittely")
-
-      (let [xml (odota-arvo viesti)
-            data (xml/lue xml)]
-        (is (= "123456789" (z/xml1-> data :ilmoitusId z/text)) "Kuittaus on tehty oikeaan viestiin.")
-        (is (= "vastaanotto" (z/xml1-> data :tyyppi z/text)) "Kuittaus on tehty oikeaan viestiin.")
-        (is (= "Asia selvä." (z/xml1-> data :vapaateksti z/text)) "Kuittaus on tehty oikeaan viestiin."))
-
-      (is (= "Kuittaus käsiteltiin onnistuneesti. Kiitos!"
-             (tekstiviestit/vastaanota-tekstiviestikuittaus jms-lahettaja db puhelinnumero "T1 Lopetettu toimenpitein."))
-          "Lopetus toimenpitein onnistunut")
-      (is (ilmoitus-aiheutti-toimenpiteita? (:id ilmoitus)) "Ilmoitus on merkitty aiheuttaneeksi toimenpiteitä"))
-
-    (poista-paivystajatekstiviestit)
-    (poista-ilmoitus 123456789)))
-
-(deftest tarkista-ilmoituksen-lahettaminen-tekstiviestilla
-  (tuo-ilmoitus)
-  (let [fake-vastaus [{:url +labyrintti-url+ :method :post} {:status 200}]
-        paivystaja (hae-paivystaja)
-        paivystaja {:id (first paivystaja) :matkapuhelin (second paivystaja)}
-        ilmoitus (first (hae-testi-ilmoitukset))
-        paivystajaviestien-maara (fn []
-                                   (count
-                                     (q (format "select * from paivystajatekstiviesti where yhteyshenkilo = %s and ilmoitus = %s;"
-                                                (:id paivystaja)
-                                                (:id ilmoitus)))))]
-    (with-fake-http
-      [{:url +labyrintti-url+ :method :get} fake-vastaus]
-
-      (let [viestien-maara-ennen (paivystajaviestien-maara)]
-
-        (tekstiviestit/laheta-ilmoitus-tekstiviestilla (:labyrintti jarjestelma)
-                                                       (:db jarjestelma)
-                                                       ilmoitus
-                                                       paivystaja)
-
-        (is (= (inc viestien-maara-ennen) (paivystajaviestien-maara))))
-
-      (poista-paivystajatekstiviestit)
-      (poista-ilmoitus 123456789))))
 
 (deftest tekstiviestin-muodostus
   (let [ilmoitus {:tunniste "UV666"

@@ -321,10 +321,10 @@
                  :nimi :suirun-pinta-ala}
                 {:otsikko "kg/m²"
                  :leveys 5
-                 :nimi ::paikkaus/massamenekki}
+                 :nimi ::paikkaus/massamaara}
                 {:otsikko "t"
                  :leveys 5
-                 :nimi ::paikkaus/massamaara}
+                 :nimi ::paikkaus/massamenekki}
                 {:otsikko "Raekoko"
                  :leveys 5
                  :nimi ::paikkaus/raekoko}
@@ -455,8 +455,8 @@
             (when (or urapaikkaus? levittimella-tehty?)
               [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
                (when (not= 0 arvo-pinta-ala) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-               (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-               (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
+               (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
+               (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])])
             [:div.basis192.nogrow.body-text.shrink2.rajaus
              [yleiset/linkki "Lisää toteuma"
               #(luo-uusi-toteuma-kohteelle

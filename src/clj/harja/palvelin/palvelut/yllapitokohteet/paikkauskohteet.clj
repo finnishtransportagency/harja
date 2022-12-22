@@ -589,9 +589,7 @@
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))
+          email (:api-sahkoposti this)
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle

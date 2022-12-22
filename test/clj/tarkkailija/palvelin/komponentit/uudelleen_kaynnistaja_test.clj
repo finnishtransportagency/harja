@@ -31,8 +31,7 @@
 
 (def kayttaja "skanska")
 
-(defonce asetukset {:sonja (assoc integraatio/sonja-asetukset :julkaise-tila? true)
-                    :itmf (assoc integraatio/itmf-asetukset :julkaise-tila? true)})
+(defonce asetukset {:itmf (assoc integraatio/itmf-asetukset :julkaise-tila? true)})
 
 (def koko-testin-tila (atom {}))
 

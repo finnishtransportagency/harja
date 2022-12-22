@@ -80,20 +80,11 @@
 
 (defn jmsjonot* [e! app]
   (komp/luo
-    (komp/sisaan-ulos #(do (e! (tila/->AloitaJMSTilanHakeminen :sonja))
-                           (e! (tila/->AloitaJMSTilanHakeminen :itmf)))
-                      #(do (e! (tila/->LopetaJMSTilanHakeminen :sonja))
-                           (e! (tila/->LopetaJMSTilanHakeminen :itmf))))
+    (komp/sisaan-ulos #(e! (tila/->AloitaJMSTilanHakeminen :itmf))
+                      #(e! (tila/->LopetaJMSTilanHakeminen :itmf)))
     (fn [e! {jarjestelmien-tilat :jarjestelmien-tilat :as app}]
       [:div
        [debug/debug app]
-       [:div
-        (if-let [sonjan-tila (:sonja jarjestelmien-tilat)]
-          (map #(with-meta
-                  [tila e! % "Sonja"]
-                  {:key (:palvelin %)})
-               sonjan-tila)
-          [virhe "sonja" app])]
        [:div
         (if-let [itmfn-tila (:itmf jarjestelmien-tilat)]
           (map #(with-meta

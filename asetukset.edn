@@ -56,15 +56,6 @@
                       "sillat"}
        }
 
- :sonja
- {:url #=(eval (str "tcp://"
-                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_HOST" "localhost")
-                 ":"
-                 (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616)))
-  :kayttaja ""
-  :salasana ""
-  :tyyppi :activemq
-  :julkaise-tila? true}
 
  :itmf
  {:url #=(eval (str "tcp://"
@@ -77,11 +68,6 @@
   :julkaise-tila? true}
 
 
- ;:sampo {:lahetysjono-sisaan "Harja13-16.SampoToHarja.Msg"
- ;        :kuittausjono-sisaan "Harja13-16.HarjaToSampo.Ack"
- ;        :lahetysjono-ulos "Harja17.HarjaToSampo.Msg"
- ;        :kuittausjono-ulos "Harja17.SampoToHarja.Ack"
- ;        :paivittainen-lahetysaika [16 44 0]}
  :sampo-api {:lahetys-url "/harja/api/sampo/xml"
              :paivittainen-lahetysaika [16 44 0]
              :palvelin "http://localhost:8084"
@@ -102,14 +88,6 @@
         :salasana #=(slurp "../.harja/turi-salasana")
         :paivittainen-lahetysaika [0 0 0]}
 
- :sonja-sahkoposti {:vastausosoite "harja-ilmoitukset@example.com"
-                    :suora? true
-                    ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
-                    :jonot {:sahkoposti-sisaan-jono "Harja.Incoming.Email.InQ"
-                            :sahkoposti-ulos-jono "Harja.Send.Email.InQ"
-                            :sahkoposti-ulos-kuittausjono "Harja.Send.Email.Status"
-                            :sahkoposti-ja-liite-ulos-jono "Harja.Send.EmailWithAttachment.InQ"
-                            :sahkoposti-ja-liite-ulos-kuittausjono "Harja.Send.EmailWithAttachment.Status"}}
 
  :solita-sahkoposti {:vastausosoite "harja-ala-vastaa@vayla.fi"
                      ;; :palvelin "solita-service-1.solita.fi"
@@ -232,12 +210,11 @@
                                :sonja-uudelleen-kaynnistys
                                :itmf-uudelleen-kaynnistys
                                :sonja-sahkoposti
+                               :sonja
                                :reittitarkistukset
                                :tiedostopesula
                                :replica-db
                                :sampo}
-
- :sahke {:lahetysjono "Harja13-16.HarjaToSahke.Msg"}
 
  :reimari {:url "https://www.example.com/HarjaWebService"
            :kayttajatunnus "reimaritunnus"
@@ -260,8 +237,7 @@
 
  :yllapitokohteet {:paivittainen-sahkopostin-lahetysaika [12 12 00]}
 
- :komponenttien-tila {:sonja {:paivitystiheys-ms 10000}
-                      :itmf {:paivitystiheys-ms 10000}
+ :komponenttien-tila {:itmf {:paivitystiheys-ms 10000}
                       :db {:paivitystiheys-ms 10000
                            :kyselyn-timeout-ms 20000}
                       :db-replica {:paivitystiheys-ms 10000

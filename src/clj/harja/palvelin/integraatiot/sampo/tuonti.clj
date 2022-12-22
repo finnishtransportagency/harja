@@ -16,16 +16,6 @@
             [harja.palvelin.tyokalut.lukot :as lukot])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
-(defn laheta-kuittaus [sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id lisatietoja]
-  (log/debug "Lähetetään kuittaus Sampon jonoon:" kuittaus)
-  (jms/laheta sonja kuittausjono kuittaus {:correlation-id korrelaatio-id})
-  (integraatioloki/kirjaa-lahteva-jms-kuittaus
-    integraatioloki
-    kuittaus
-    tapahtuma-id
-    (kuittaus-sampoon-sanoma/onko-kuittaus-positiivinen? kuittaus)
-    lisatietoja
-    kuittausjono))
 
 (defn tuo-sampo-viestin-data [db data]
   (let [hankkeet (:hankkeet data)
@@ -56,33 +46,6 @@
           kuittaukset (tuo-sampo-viestin-data db data)]
       kuittaukset)))
 
-(defn kasittele-jms-viesti [sonja integraatioloki db kuittausjono viesti]
-  (log/debug "Vastaanotettiin Sampon viestijonosta viesti:" viesti)
-  (let [viesti-id (.getJMSMessageID viesti)
-        korrelaatio-id (.getJMSCorrelationID viesti)
-        viestin-sisalto (.getText viesti)
-        tapahtuma-id (integraatioloki/kirjaa-saapunut-jms-viesti integraatioloki
-                                                                 "sampo"
-                                                                 "sisaanluku"
-                                                                 viesti-id
-                                                                 viestin-sisalto
-                                                                 kuittausjono)]
-    (try+
-      (let [kuittaukset (kasittele-sisaanluku db viestin-sisalto)]
-        (doseq [kuittaus kuittaukset]
-          (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id nil)))
-      (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
-        (when (not ei-kriittinen?)
-          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet))
-        (laheta-kuittaus sonja integraatioloki kuittausjono kuittaus korrelaatio-id tapahtuma-id (str virheet)))
-      (catch Exception e
-        (log/error e "Sampo sisäänluvussa tapahtui poikkeus.")
-        (integraatioloki/kirjaa-epaonnistunut-integraatio
-          integraatioloki
-          "Sampo sisäänluvussa tapahtui poikkeus"
-          (str "Poikkeus: " e)
-          tapahtuma-id
-          nil)))))
 
 (defn kasittele-api-viesti [db integraatioloki viesti tapahtuma-id]
   (log/debug "Vastaanotettiin Sampon viesti api:sta:" viesti)
