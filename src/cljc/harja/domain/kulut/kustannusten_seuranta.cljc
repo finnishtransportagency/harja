@@ -118,17 +118,17 @@
          :toimenpide (:toimenpide (first tehtavat))
          :jarjestys (:jarjestys (first tehtavat))
          (keyword (str paaryhmaotsikko "-toteutunut")) (reduce (fn [summa tehtava]
-                                                                 (+ summa (:toteutunut_summa tehtava)))
+                                                                 (+ summa (or (:toteutunut_summa tehtava) 0)))
                                                          0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
          (keyword (str paaryhmaotsikko "-budjetoitu")) (reduce (fn [summa tehtava]
-                                                                 (+ summa (:budjetoitu_summa tehtava)))
+                                                                 (+ summa (or (:budjetoitu_summa tehtava) 0)))
                                                          0 tehtavat)
          (keyword (str paaryhmaotsikko "-budjetoitu-indeksikorjattu")) (reduce (fn [summa tehtava]
-                                                                                 (+ summa (:budjetoitu_summa_indeksikorjattu tehtava)))
+                                                                                 (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
                                                                          0 tehtavat)
          :lisatyot-summa (reduce (fn [summa tehtava]
                                    (if (= "lisatyo" (:maksutyyppi tehtava))
-                                     (+ summa (:toteutunut_summa tehtava))
+                                     (+ summa (or (:toteutunut_summa tehtava) 0))
                                      summa))
                            0 tehtavat)
          :lisatyot (filter (fn [tehtava]
@@ -210,7 +210,7 @@
                                                                    toimistotehtavat))
            :lisatyot-summa (reduce (fn [summa tehtava]
                                      (if (= "lisatyo" (:maksutyyppi tehtava))
-                                       (+ summa (:toteutunut_summa tehtava))
+                                       (+ summa (or (:toteutunut_summa tehtava) 0))
                                        summa))
                              0 tehtavat)
            :lisatyot (filter (fn [tehtava]
