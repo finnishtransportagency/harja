@@ -13,7 +13,8 @@
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
-            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit])
+            [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
+            [clojure.java.jdbc :as jdbc])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn hae-tehtavat [db urakka-id]
@@ -79,32 +80,52 @@
           urakat (konv/vector-mappien-alaviiva->rakenne (into organisaation-urakat erillisoikeus-urakat))]
       (muodosta-vastaus-urakoiden-haulle urakat))))
 
+(defn- hae-urakka-sijainnilla*
+  "Hakee urakan urakkatyypin perusteella, tai pyrkii hakemaan tulokset kaikilla urakkatyypeillä mikäli urakkatyyppiä
+  ei ole määritelty."
+  [db {:keys [x y threshold urakkatyyppi]}]
+
+
+  (if urakkatyyppi
+    (q-urakat/hae-urakka-sijainnilla db {:x x :y y
+                                         :threshold threshold
+                                         :urakkatyyppi urakkatyyppi})
+
+    ;; Jos urakkatyyppiä ei ole määritelty, yritetään hakea kaikki urakkatyypit annetulla sijainnilla
+    (let [urakat (mapv (fn [urakkatyyppi]
+                         (let [res (q-urakat/hae-urakka-sijainnilla db {:x x :y y
+                                                                        :threshold threshold
+                                                                        :urakkatyyppi urakkatyyppi})]
+                           res))
+                   ["hoito" "valaistus" "paallystys" "tekniset-laitteet" "siltakorjaus"])]
+      (into [] (flatten urakat)))))
+
 (defn hae-urakka-sijainnilla [db parametrit {:keys [kayttajanimi] :as kayttaja}]
   (println "DEBUG: hae-urakka-sijainnilla")
   (parametrivalidointi/tarkista-parametrit parametrit {:x "X-koordinaatti puuttuu"
                                                        :y "Y-koordinaatti puuttuu"})
-
   ;; TODO: Kuka saa käyttää rajapintaa? Tarkasta käyttöoikeudet.
 
-  (let [{:keys [x y urakkatyyppi]} parametrit
-        x-easting (Double/parseDouble x)
-        y-northing (Double/parseDouble y)
-        ;; Haetaan oletuksena 1000 m etäisyydellä
-        haku-threshold 1000]
+  (jdbc/with-db-transaction [db db]
+    (let [{:keys [x y urakkatyyppi]} parametrit
+          x-easting (Double/parseDouble x)
+          y-northing (Double/parseDouble y)
+          ;; Haetaan oletuksena 1000 m säteellä
+          haku-threshold 1000]
 
-    (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
-                 (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
+      (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
+                   (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
 
-    (when urakkatyyppi
-      (validointi/tarkista-urakkatyyppi urakkatyyppi))
+      (when urakkatyyppi
+        (validointi/tarkista-urakkatyyppi urakkatyyppi))
 
-    (let [urakat (q-urakat/hae-urakka-sijainnilla db {:x x-easting :y y-northing
-                                                      :threshold haku-threshold
-                                                      :urakkatyyppi urakkatyyppi})
-          ;; TODO: Validointi. Haku ei saa palauttaa urakoita, joihin käyttäjällä ei ole oikeuksia.
-          ;;       validointi/tarkista-kayttajan-oikeudet-urakkaan
-          urakat (konv/vector-mappien-alaviiva->rakenne urakat)]
-      (muodosta-vastaus-urakoiden-haulle urakat))))
+      (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
+                                                :threshold haku-threshold
+                                                :urakkatyyppi urakkatyyppi})
+            ;; TODO: Validointi. Haku ei saa palauttaa urakoita, joihin käyttäjällä ei ole oikeuksia.
+            ;;       validointi/tarkista-kayttajan-oikeudet-urakkaan
+            urakat (konv/vector-mappien-alaviiva->rakenne urakat)]
+        (muodosta-vastaus-urakoiden-haulle urakat)))))
 
 (def hakutyypit
   [{:palvelu :hae-urakka
@@ -119,7 +140,7 @@
                     (hae-kayttajan-urakat db parametrit kayttaja))}
    {:palvelu :hae-urakka-sijainnilla
     ;; Kaikilla sijaintihakutyypeille on oma polku /haku/sijainnilla
-    ;; Mahdollinen jousto tulevaisuudessa: Helppo lisätä uusia optioita &crs=EPSG:4326&threshold=1000,
+    ;; Mahdollinen jousto tulevaisuudessa: Helppo lisätä uusia optioita esim. &crs=EPSG:4326&threshold=1000&hakutyyppi=piste,
     ;; eikä hakuparametrien järjestyksellä ole väliä.
     ;; HUOM: Täytyy määritellä ennen /haku/:y-tunnus polkua, jotta kyselyä ei ohjata väärälle käsittelijälle.
     :polku "/api/urakat/haku/sijainnilla"

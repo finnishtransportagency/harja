@@ -1,12 +1,13 @@
 (ns harja.palvelin.integraatiot.api.urakat-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.api.urakat :as api-urakat]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [com.stuartsierra.component :as component]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.kyselyt.konversio :as konversio]))
+            [harja.kyselyt.konversio :as konversio]
+            [clojure.string :as str]))
 
 (def kayttaja "yit-rakennus")
 
@@ -47,6 +48,50 @@
     (is (= 200 (:status vastaus)))
     (is (every? #(= urakkatyyppi (get-in % [:urakka :tiedot :tyyppi])) urakat))))
 
+(deftest hae-urakka-sijainnilla-ja-tyypilla
+  (testing "Urakkatyyppi: hoito"
+    (let [urakkatyyppi "hoito"
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" 427232.596 "y" 7211474.342} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+      (is (every?
+            (fn [nimi]
+              ;; Testataan löytyykö resultsetistä oikeat urakan nimet, mutta ei oteta MHU:ssa huomioon vuosilukuja,
+              ;; jotka voivat vaihtua testidataa päivittäessä.
+              (some #(clojure.string/includes? nimi %) #{"Oulun MHU" "Aktiivinen Oulu Testi"}))
+            (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
+
+  (testing "Urakkatyyppi: paallystys"
+    (let [urakkatyyppi "paallystys"
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+                    {"urakkatyyppi" urakkatyyppi
+                     ;; Oulun lähiseutu (EPSG:3067)
+                     "x" 427232.596 "y" 7211474.342} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      ;; TODO: Muhoksen päällystysurakka pitäisi saada tärppäämään hakuun
+      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+      (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))))
+
+(deftest hae-urakka-pelkalla-sijainnilla
+  (testing "Sijainti (epsg:3067): 427232.596,7211474.342"
+    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+                    {;; Oulun lähiseutu (EPSG:3067)
+                     "x" 427232.596 "y" 7211474.342} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      ;; TODO: Ainakin päällystysurakat pitäisi saada vielä tärppäämään hakuun.
+      ;;       Muut erikoisemmat urakkatyypit myös vielä testaamatta ja sopivat hakukoordinaatit & testiurakat testejä varten
+      ;;       ovat vielä kysymysmerkkejä.
+      #_(is (= :FOR-DEBUGGING-RESPONSE-DIFF enkoodattu-body))
+      ;; TODO: Nyt tulee vain hoidon urakoita osumiin, samalla alueella pitäisi olla myös päällystysurakka Muhoksen päällystysurakka
+      (is (= 3 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))))
+
+
 (deftest hae-urakka-idlla
          (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/1"] "yit-rakennus" portti)
                encoodattu-body (cheshire/decode (:body vastaus) true)
@@ -54,6 +99,7 @@
                apitunnus 987654]
          (is (= 200 (:status vastaus)))
          (is (some #(= % apitunnus) tunnukset) "Tehtävien id on toimenpidekoodi-taulun apitunnus.")))
+
 
 ;; teiden-hoito urakkatyyppi palautetaan API:ssa hoito-urakkatyyppinä
 (deftest varmista-urakkatyyppien-yhteensopivuus
