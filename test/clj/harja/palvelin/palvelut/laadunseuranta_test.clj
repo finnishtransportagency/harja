@@ -52,7 +52,6 @@
                         :raportit (component/using
                                     (raportit/->Raportit)
                                     [:http-palvelin :db :raportointi :pdf-vienti])
-                        :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
                                           (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false

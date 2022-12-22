@@ -20,8 +20,7 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]))
+            [clj-time.coerce :as c]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -430,6 +429,7 @@
                            (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
                          (q/hae-harjassa-luodut-urakat db))
                    {:sopimus      :sopimukset
+                    ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
                     :sahkelahetys :sahkelahetykset})]
       (namespacefy urakat {:ns    :harja.domain.urakka
                            :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
@@ -437,16 +437,11 @@
                                    :sopimukset      {:ns :harja.domain.sopimus}
                                    :hanke           {:ns :harja.domain.hanke}}}))))
 
-(defn laheta-urakka-sahkeeseen [sahke user urakka-id]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (sahke/laheta-urakka-sahkeeseen sahke urakka-id)))
 
 (defrecord Urakat []
   component/Lifecycle
   (start [{http  :http-palvelin
            db    :db
-           sahke :sahke
            :as   this}]
     (julkaise-palvelu http
                       :hallintayksikon-urakat
@@ -505,10 +500,6 @@
                         (hae-harjassa-luodut-urakat db user))
                       {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
-    (julkaise-palvelu http
-                      :laheta-urakka-sahkeeseen
-                      (fn [user urakka-id]
-                        (laheta-urakka-sahkeeseen sahke user urakka-id)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -521,7 +512,6 @@
                      :tallenna-urakan-tyyppi
                      :aseta-takuun-loppupvm
                      :tallenna-vesivaylaurakka
-                     :hae-harjassa-luodut-urakat
-                     :laheta-urakka-sahkeeseen)
+                     :hae-harjassa-luodut-urakat)
 
     this))

@@ -43,10 +43,10 @@
       (assoc this :paivittainen-lahetys-tehtava (tee-paivittainen-lahetys-tehtava this api-sampo-asetukset))
       this))
   (stop [{http :http-palvelin :as this}]
-    (when (ominaisuus-kaytossa? :sampo)
+    (when (ominaisuus-kaytossa? :api-sampo)
       (poista-palvelut http
         :sampo-vastaanotto))
-    (if (ominaisuus-kaytossa? :sampo)
+    (if (ominaisuus-kaytossa? :api-sampo)
       (dissoc this :paivittainen-lahetys-tehtava)
       this))
 

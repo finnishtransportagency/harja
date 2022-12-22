@@ -41,10 +41,3 @@
   (let [kutsu-xml (muodosta-kutsu paivitettava-testitietue)
         xsd "paivitaTietue.xsd"]
     (is (xml/validi-xml? +xsd+ xsd kutsu-xml) "Muodostettu kutsu on XSD-skeeman mukainen")))
-
-; REPL-testausta varten
-#_(defn paivita-testitietue []
-  (let [testitietokanta (:db testi/jarjestelma)
-        integraatioloki (assoc (integraatioloki/->Integraatioloki nil) :db testitietokanta)]
-    (component/start integraatioloki)
-    (harja.palvelin.integraatiot.tierekisteri.tietue/paivita-tietue integraatioloki "https://testisonja.liikennevirasto.fi/harja/tierekisteri" paivitettava-testitietue)))

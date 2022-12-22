@@ -39,11 +39,8 @@
 
 (def ehdon-timeout 20000)
 
-(defn testien-alustus! []
-  (swap! a/pois-kytketyt-ominaisuudet conj :sonja-sahkoposti)) ;; Pakota sonja-sahkoposti pois käytöstä
 
 (defn jarjestelma-fixture [testit]
-  (testien-alustus!)
   (alter-var-root #'jarjestelma
                   (fn [_]
                     (component/start
@@ -56,7 +53,6 @@
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
                                           (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset

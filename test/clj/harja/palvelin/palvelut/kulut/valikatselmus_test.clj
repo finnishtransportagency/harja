@@ -61,6 +61,43 @@
     (is (some? vastaus))
     (is (= (::valikatselmus/summa vastaus) 9001M))))
 
+(deftest tavoitehinnan-oikaisu-muuttaa-kattohintaa-onnistuneesti
+  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        oikaisun-summa 9001M
+        oikaistu-tavoitehinta-ennen (q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
+                                                                              :urakka-id urakka-id})
+        oikaistu-kattohinta-ennen (q/hae-oikaistu-kattohinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
+                                                                                    :urakka-id urakka-id})
+        ;; With-redefsillä laitetaan (pvm/nyt) palauttamaan tietty ajankohta. Tämä sen takia, että
+        ;; rajapinta antaa virheen, mikäli kutsuhetkellä ei saa tehdä tavoitehinnan oikaisuja.
+        ;; Tätä tulee käyttää varoen, koska tämä ylirjoittaa kaikki (pvm/nyt) kutsut blokin sisällä, joita saattaa
+        ;; tapahtua pinnan alla.
+        hoitokauden-alkuvuosi 2021
+        vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
+                  (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :tallenna-tavoitehinnan-oikaisu
+                    (kayttaja urakka-id)
+                    {::urakka/id urakka-id
+                     ::valikatselmus/otsikko "Oikaisu"
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                     ::valikatselmus/summa oikaisun-summa
+                     ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+
+        oikaistu-tavoitehinta-jalkeen (q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
+                                                                                    :urakka-id urakka-id})
+        oikea-tavoitehinta (+ oikaistu-tavoitehinta-ennen oikaisun-summa)
+        oikaistu-kattohinta-jalkeen (q/hae-oikaistu-kattohinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
+                                                                                :urakka-id urakka-id})
+        ;; Kattohinta kasvaa 10% myös tavoitehinnan oikaisusta
+        oikea-kattohinta (+ (* oikaisun-summa 1.1M) oikaistu-kattohinta-ennen)]
+    (is (some? vastaus))
+    ;; Menikö oikaisu oikein?
+    (is (= (::valikatselmus/summa vastaus) oikaisun-summa))
+    ;; Muuttuiko tavoitehihinta?
+    (is (= oikaistu-tavoitehinta-jalkeen oikea-tavoitehinta))
+    ;; Muuttuiko kattohinta?
+    (is (= oikaistu-kattohinta-jalkeen oikea-kattohinta))))
+
 (deftest oikaisun-teko-epaonnistuu-alkuvuodesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
