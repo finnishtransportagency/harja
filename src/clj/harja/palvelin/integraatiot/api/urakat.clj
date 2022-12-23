@@ -142,7 +142,7 @@
     ;; Kaikilla sijaintihakutyypeille on oma polku /haku/sijainnilla
     ;; Mahdollinen jousto tulevaisuudessa: Helppo lisätä uusia optioita esim. &crs=EPSG:4326&threshold=1000&hakutyyppi=piste,
     ;; eikä hakuparametrien järjestyksellä ole väliä.
-    ;; HUOM: Täytyy määritellä ennen /haku/:y-tunnus polkua, jotta kyselyä ei ohjata väärälle käsittelijälle.
+    ;; HUOM: Tämä polku täytyy määritellä järjestyksessä ennen /haku/:y-tunnus polkua (alla), jotta kyselyä ei ohjata väärälle käsittelijälle.
     :polku "/api/urakat/haku/sijainnilla"
     :vastaus-skeema json-skeemat/urakoiden-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]

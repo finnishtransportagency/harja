@@ -73,7 +73,6 @@
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      ;; TODO: Muhoksen päällystysurakka pitäisi saada tärppäämään hakuun
       (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
       (is (= "Muhoksen päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))))
 
@@ -84,11 +83,6 @@
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      ;; TODO: Ainakin päällystysurakat pitäisi saada vielä tärppäämään hakuun.
-      ;;       Muut erikoisemmat urakkatyypit myös vielä testaamatta ja sopivat hakukoordinaatit & testiurakat testejä varten
-      ;;       ovat vielä kysymysmerkkejä.
-      #_(is (= :FOR-DEBUGGING-RESPONSE-DIFF enkoodattu-body))
-      ;; TODO: Nyt tulee vain hoidon urakoita osumiin, samalla alueella pitäisi olla myös päällystysurakka Muhoksen päällystysurakka
       (is (= 3 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))))
 
 

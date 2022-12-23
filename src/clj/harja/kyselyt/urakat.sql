@@ -745,10 +745,15 @@ WHERE (CASE
                WHERE vu.valaistusurakkanro = u.urakkanro
                  AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
     OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-        exists(SELECT id
-               FROM paallystyspalvelusopimus pps
-               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
-                 AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+        (CASE
+             WHEN u.sopimustyyppi = 'palvelusopimus' THEN
+                 EXISTS(SELECT id
+                          FROM paallystyspalvelusopimus pps
+                         WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
+                           AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
+             ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
+                   (st_contains(ua.alue, st_makepoint(:x, :y))))
+            END))
     OR ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
