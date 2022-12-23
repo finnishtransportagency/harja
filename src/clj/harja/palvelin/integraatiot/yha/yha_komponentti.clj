@@ -18,6 +18,7 @@
             [clojure.string :as clj-str]
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
@@ -144,10 +145,6 @@
     (assoc parametrit avain arvo)
     parametrit))
 
-(defn- yha-otsikot [api-key]
-  (merge {"Content-Type" "text/xml; charset=utf-8"}
-         (when api-key {"x-api-key" api-key})) )
-
 (defn hae-kohteen-paallystysilmoitus [db kohde-id]
   (let [ilmoitus (first (q-paallystys/hae-paallystysilmoitus-kohdetietoineen-paallystyskohteella db {:paallystyskohde kohde-id}))
         ilmoitus (update ilmoitus :vuodet (fn [vuodet]
@@ -211,7 +208,7 @@
                              (conj (when (not (empty? yha-nimi)) ["nimi" yha-nimi]))
                              (conj (when (not (empty? sampotunniste)) ["sampo-id" sampotunniste]))
                              (conj (when vuosi ["vuosi" vuosi])))
-              otsikot (yha-otsikot api-key)
+              otsikot (yha-yhteiset/yha-otsikot api-key false)
               http-asetukset {:metodi :GET
                               :url url
                               :parametrit parametrit
@@ -232,7 +229,7 @@
                                (lisaa-http-parametri "yha-id" yha-id)
                                (lisaa-http-parametri "vuosi" vuosi)
                                (lisaa-http-parametri "kayttaja" hakijan-tunnus))
-                otsikot (yha-otsikot api-key)
+                otsikot (yha-yhteiset/yha-otsikot api-key false)
                 http-asetukset {:metodi :GET
                                 :url url
                                 :parametrit parametrit
@@ -271,7 +268,7 @@
                 kohteet (mapv #(hae-kohteen-tiedot db %) kohde-idt)
                 url (str url "toteumatiedot")
                 kutsudata (kohteen-lahetyssanoma/muodosta urakka kohteet)
-                otsikot (yha-otsikot api-key)
+                otsikot (yha-yhteiset/yha-otsikot api-key false)
                 http-asetukset {:metodi :POST
                                 :url url
                                 :otsikot otsikot}
@@ -303,7 +300,7 @@
       (let [url (str url "toteumakohde/" yha-kohde-id)
             http-asetukset {:metodi         :DELETE
                             :url            url
-                            :otsikot (yha-otsikot api-key)}
+                            :otsikot (yha-yhteiset/yha-otsikot api-key false)}
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
         (kasittele-kohteen-poistamisen-vastaus body yha-kohde-id)))))
 

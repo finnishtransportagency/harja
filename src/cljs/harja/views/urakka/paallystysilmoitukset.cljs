@@ -204,9 +204,7 @@
          :tyyppi :komponentti :leveys 25
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                   (< 2019 valittu-urakan-vuosi)
-                   ;; paikkauskohteiden YHA-lähetys saa mennä päälle kehitysympäristössä
-                   (or (not paikkauskohteet?) (k/kehitysymparistossa?)))
+                   (< 2019 valittu-urakan-vuosi))
           ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
@@ -223,9 +221,7 @@
                            (ikonit/ikoni-ja-teksti (ikonit/livicon-document-full) " Aloita"))])}]
        paallystysilmoitukset])))
 
-(def pot-vinkki-paikkaus "Paikkauskohteiden POT:ien osalta YHA-lähetys tulee käyttöön vasta lähiaikoina.")
-
-(def pot-vinkki-paallystys "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s). Itse tiedot useassa tapauksessa ovat silti menneet onnistuneesti YHA:an perille, vaikka Harjan virheilmoitus sanoisi 'request timed out'. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta.")
+(def pot-vinkki-yha-ongelmat "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s, request timed out). Tiedot ovat useassa tapauksessa silti menneet onnistuneesti YHA:an perille. Voit myös tarkistaa asian YHA:sta, jos sinulla on käyttöoikeudet. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta.")
 
 (defn ilmoitusluettelo
   [e! app]
@@ -235,8 +231,7 @@
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
       [:div.paallystysilmoitusluettelo
-       [yleiset/toast-viesti
-        (if paikkauskohteet? pot-vinkki-paikkaus pot-vinkki-paallystys)]
+       [yleiset/toast-viesti pot-vinkki-yha-ongelmat]
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}
