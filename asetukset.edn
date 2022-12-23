@@ -34,7 +34,9 @@
  :tarkkailija {:loop-odotus 100}
  :fim {:url
        "https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity"
-       :tiedosto "dev-resources/fim.edn"}
+       :tiedosto "dev-resources/fim.edn"
+       :kayttajatunnus ""
+       :salasana ""}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        ;; :slack {:taso :warn
