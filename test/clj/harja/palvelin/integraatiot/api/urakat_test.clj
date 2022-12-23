@@ -51,7 +51,7 @@
 (deftest hae-urakka-sijainnilla-ja-tyypilla
   (testing "Urakkatyyppi: hoito"
     (let [urakkatyyppi "hoito"
-          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "yit-rakennus"
                     {"urakkatyyppi" urakkatyyppi
                      ;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
@@ -67,7 +67,7 @@
 
   (testing "Urakkatyyppi: paallystys"
     (let [urakkatyyppi "paallystys"
-          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
+          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
                     {"urakkatyyppi" urakkatyyppi
                      ;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
@@ -78,12 +78,23 @@
 
 (deftest hae-urakka-pelkalla-sijainnilla
   (testing "Sijainti (epsg:3067): 427232.596,7211474.342"
+    ;; TODO: Pitää keksiä testikäyttäjä, jolla olisi oikeuksia useampaan urakkatyyppiin.
+    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-jvh+)
+                    {;; Oulun lähiseutu (EPSG:3067)
+                     "x" 427232.596 "y" 7211474.342} portti)
+          enkoodattu-body (cheshire/decode (:body vastaus) true)]
+      (is (= 200 (:status vastaus)))
+      (is (= 3 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
+
+  (testing "Käyttäjällä ei oikeuksia urakoihin"
     (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
                     {;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 3 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))))
+      ;; Livi käyttäjällä ei ole oikeuksia yhteenkään urakkaan, joka osuu hakuun.
+      ;; Pitäisi palautua kolmen sijasta nolla urakkaa.
+      (is (= 0 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))))
 
 
 (deftest hae-urakka-idlla

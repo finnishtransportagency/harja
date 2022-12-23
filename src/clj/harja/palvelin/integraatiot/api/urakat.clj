@@ -2,10 +2,10 @@
   "Urakan yleistietojen API-kutsut"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
+            [harja.kyselyt.kayttajat :as kayttajat-q]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu]]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodit]
@@ -15,7 +15,7 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
             [clojure.java.jdbc :as jdbc])
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn hae-tehtavat [db urakka-id]
   (let [yksikkohintaiset-tehtavat (q-toimenpidekoodit/hae-apin-kautta-seurattavat-yksikkohintaiset-tehtavat db urakka-id)
@@ -122,10 +122,19 @@
       (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
                                                 :threshold haku-threshold
                                                 :urakkatyyppi urakkatyyppi})
-            ;; TODO: Validointi. Haku ei saa palauttaa urakoita, joihin käyttäjällä ei ole oikeuksia.
-            ;;       validointi/tarkista-kayttajan-oikeudet-urakkaan
-            urakat (konv/vector-mappien-alaviiva->rakenne urakat)]
-        (muodosta-vastaus-urakoiden-haulle urakat)))))
+            urakat (konv/vector-mappien-alaviiva->rakenne urakat)
+            urakat-suodatettu (into []
+                                (filter (fn [urakka]
+                                          ;; Ota tuloksiin mukaan vain urakat, joihin käyttäjällä on oikeus
+                                          ;; Validointi heittää slingshot-virheen, jos käyttäjällä ei ole oikeuksia.
+                                          (try+
+                                            (validointi/tarkista-kayttajan-oikeudet-urakkaan
+                                              db (:id urakka) kayttaja)
+                                            true
+                                            (catch Object _
+                                              false))))
+                                urakat)]
+        (muodosta-vastaus-urakoiden-haulle urakat-suodatettu)))))
 
 (def hakutyypit
   [{:palvelu :hae-urakka
