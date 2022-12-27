@@ -880,9 +880,7 @@
     (let [http (:http-palvelin this)
           db (:db this)
           fim (:fim this)
-          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))
+          email (:api-sahkoposti this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :urakan-paallystysilmoitukset
                         (fn [user tiedot]

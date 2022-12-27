@@ -10,7 +10,6 @@
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.komponentit.itmf :as itmf]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [org.httpkit.fake :refer [with-fake-http]]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.integraatioloki :refer [->Integraatioloki]]
@@ -22,7 +21,6 @@
             [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
-            [harja.palvelin.integraatiot.sonja.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
             [harja.pvm :as pvm]
@@ -38,8 +36,7 @@
 (def timeout 2000)
 (def kuittaus-timeout 20000)
 
-(defonce asetukset {:itmf integraatio/itmf-asetukset
-                    :sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset})
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -50,9 +47,6 @@
     :itmf (component/using
              (itmf/luo-oikea-itmf (:itmf asetukset))
              [:db])
-    :sonja (component/using
-            (sonja/luo-oikea-sonja (:sonja asetukset))
-            [:db])
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
@@ -64,7 +58,7 @@
              [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
+                      (binding [*aloitettavat-jmst* #{"itmf"}
                                 *lisattavia-kuuntelijoita?* true
                                 *jms-kaynnistetty-fn* (fn []
                                                           (jms-tk/itmf-jolokia-jono +tloik-ilmoitusviestijono+ nil :purge)

@@ -66,29 +66,6 @@
 (defn uusin-onnistunut-lahetys [lahetykset]
   (first (filter :onnistui (lahetykset-uusimmasta-vanhimpaan lahetykset))))
 
-(defn urakan-sahke-tila [{:keys [hanke sopimukset urakoitsija sahkelahetykset] :as urakka}]
-  (let [uusin-tieto (uusin-tieto hanke sopimukset urakoitsija urakka)
-        uusin-lahetys (uusin-lahetys sahkelahetykset)
-        uusin-onnistunut (uusin-onnistunut-lahetys sahkelahetykset)]
-    (cond
-      (nil? uusin-lahetys)
-      :lahettamatta
-
-      (nil? uusin-onnistunut)
-      :epaonnistunut
-
-      (pvm/jalkeen? uusin-onnistunut uusin-tieto)
-      :lahetetty
-
-      (and
-        (not (:onnistui uusin-lahetys))
-        (pvm/jalkeen? uusin-lahetys uusin-tieto))
-      :epaonnistunut
-
-      (pvm/jalkeen? uusin-tieto uusin-onnistunut)
-      :lahettamatta
-
-      :else :lahetetty)))
 
 (defrecord ValitseUrakka [urakka])
 (defrecord Nakymassa? [nakymassa?])
@@ -104,9 +81,6 @@
 (defrecord HaeLomakevaihtoehdot [])
 (defrecord LomakevaihtoehdotHaettu [tulos])
 (defrecord LomakevaihtoehdotEiHaettu [virhe])
-(defrecord LahetaUrakkaSahkeeseen [urakka])
-(defrecord SahkeeseenLahetetty [tulos urakka])
-(defrecord SahkeeseenEiLahetetty [virhe urakka])
 
 (extend-protocol tuck/Event
   ValitseUrakka
@@ -250,29 +224,5 @@
   LomakevaihtoehdotEiHaettu
   (process-event [_ app]
     (viesti/nayta! "Hupsista, ongelmia Harjan kanssa juttelussa." :danger)
-    app)
-
-  LahetaUrakkaSahkeeseen
-  (process-event [{urakka :urakka} app]
-    (let [tulos! (tuck/send-async! ->SahkeeseenLahetetty urakka)
-          fail! (tuck/send-async! ->SahkeeseenEiLahetetty urakka)]
-      (go
-        (try
-          (let [vastaus (<! (k/post! :laheta-urakka-sahkeeseen (::u/id urakka)))]
-            (if (k/virhe? vastaus)
-              (fail! vastaus)
-              (tulos! vastaus)))
-          (catch :default e
-            (fail! nil)
-            (throw e)))))
-    (update app :kaynnissa-olevat-sahkelahetykset conj (::u/id urakka)))
-
-  SahkeeseenLahetetty
-  (process-event [{tulos :tulos urakka :urakka} app]
-    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka)))
-
-  SahkeeseenEiLahetetty
-  (process-event [{virhe :virhe urakka :urakka} app]
-    (viesti/nayta! [:span "Urakan '" (::u/nimi urakka) "' lähetys epäonnistui."] :danger)
-    (update app :kaynnissa-olevat-sahkelahetykset disj (::u/id urakka))))
+    app))
 

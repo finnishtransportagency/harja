@@ -184,45 +184,6 @@
            (muokkaus-otsikko sopimus "Sopimusta" "Sopimus")))
        (muokkaus-otsikko urakoitsija "Urakoitsijaa" "Urakoitsija"))]))
 
-(defn sahke-nappi [e! {lahetykset :kaynnissa-olevat-sahkelahetykset} urakka]
-  (let [lahetys-kaynnissa? (some? (lahetykset (::u/id urakka)))
-        tila (tiedot/urakan-sahke-tila urakka)]
-    [:button
-     ;; TODO Käytä harja.ui.napit rajapintaa
-     {:disabled (or (not (oikeudet/hallinta-vesivaylat)) lahetys-kaynnissa?)
-      :class (str (case tila
-                    :lahetetty "nappi-toissijainen "
-                    :epaonnistunut "nappi-kielteinen "
-                    :lahettamatta "nappi-ensisijainen ")
-                  "nappi-grid")
-      :on-click #(do
-                   (.preventDefault %)
-                   (.stopPropagation %)
-                   (modal/nayta!
-                     {:otsikko "Urakan lähettäminen Sähkeeseen"
-                      :footer
-                      [:span
-                       [:button.nappi-toissijainen {:on-click (fn [e]
-                                                                (.preventDefault e)
-                                                                (modal/piilota!))}
-                        [ikonit/ikoni-ja-teksti (ikonit/livicon-chevron-left) "Sulje"]]
-                       [:button.nappi-kielteinen {:on-click (fn [e]
-                                                              (.preventDefault e)
-                                                              (e! (tiedot/->LahetaUrakkaSahkeeseen urakka))
-                                                              (modal/piilota!))}
-                        [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Lähetä"]]]}
-                     [muokkaus-tiedot urakka]))}
-     (if lahetys-kaynnissa?
-       [ajax-loader-pieni "Odota"]
-       [ikonit/ikoni-ja-teksti
-        (case tila
-          :lahetetty (ikonit/livicon-check)
-          :epaonnistunut (ikonit/livicon-upload)
-          :lahettamatta (ikonit/livicon-upload))
-        (case tila
-          :lahetetty "Lähetetty"
-          :epaonnistunut "Yritä uudelleen"
-          :lahettamatta "Tietoja lähettämättä")])]))
 
 (defn urakkagrid [e! app]
   (komp/luo
@@ -251,7 +212,7 @@
          {:otsikko "Alku" :nimi ::u/alkupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "Loppu" :nimi ::u/loppupvm :tyyppi :pvm :fmt pvm/pvm}
          {:otsikko "FIM lähetys" :nimi :sahke-lahetys :tyyppi :komponentti
-          :komponentti (fn [urakka] [sahke-nappi e! app urakka])}]
+          :komponentti (fn [urakka] [napit/yleinen-ensisijainen "Sähke-lähetys pois käytöstä" #() {:disabled true}])}]
         haetut-urakat]])))
 
 (defn vesivaylaurakoiden-luonti* [e! app]

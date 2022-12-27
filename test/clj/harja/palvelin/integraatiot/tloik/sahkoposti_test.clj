@@ -28,7 +28,6 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja
     :itmf (feikki-jms "itmf")
-    :sonja (feikki-jms "sonja")
     :api-sahkoposti (component/using
                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                        :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})

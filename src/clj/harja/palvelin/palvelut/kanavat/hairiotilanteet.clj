@@ -64,9 +64,7 @@
   (start [{http :http-palvelin
            db :db
            fim :fim :as this}]
-    (let [email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))]
+    (let [email (:api-sahkoposti this)]
     (julkaise-palvelu
       http
       :hae-hairiotilanteet

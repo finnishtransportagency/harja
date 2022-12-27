@@ -999,48 +999,11 @@ FROM urakka u
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
 
--- name: hae-urakka-lahetettavaksi-sahkeeseen
--- Hakee urakan perustiedot id:llä APIa varten.
-SELECT
-  u.id,
-  u.sampoid,
-  u.nimi,
-  u.tyyppi,
-  u.alkupvm,
-  u.loppupvm,
-  u.indeksi,
-  u.takuu_loppupvm,
-  u.urakkanro,
-  u.hanke     AS "hanke-id",
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus,
-  y.id        AS "yhteyshenkilo-id",
-  o.ytunnus   AS "urakoitsija-y-tunnus",
-  o.nimi      AS "urakoitsijanimi"
-FROM urakka u
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
-  LEFT JOIN yhteyshenkilo_urakka yu ON u.id = yu.urakka AND yu.rooli = 'Sampo yhteyshenkilö'
-  LEFT JOIN yhteyshenkilo y ON yu.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio o ON u.urakoitsija = o.id
-WHERE u.id = :id;
-
--- name: kirjaa-sahke-lahetys!
-INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
-VALUES (:urakka, now(), :onnistunut)
-ON CONFLICT (urakka)
-  DO
-  UPDATE SET lahetetty = now(), onnistunut = :onnistunut;
-
 -- name: perustettu-harjassa?
 -- single?: true
 SELECT harjassa_luotu
 FROM urakka u
 WHERE u.sampoid = :sampoid;
-
--- name: hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut
-SELECT urakka
-FROM sahkelahetys
-WHERE onnistunut IS FALSE;
 
 -- name: hae-jarjestelmakayttajan-urakat
 SELECT

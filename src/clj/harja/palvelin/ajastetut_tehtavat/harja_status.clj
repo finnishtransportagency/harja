@@ -39,77 +39,32 @@
                  :lisatiedot nil}
         _ (status-kyselyt/aseta-komponentin-tila<! db replica)]))
 
-(defn tarkista-tloik [db itmf tloik-asetukset]
-  (let [lahetysjonot (when (and tloik-asetukset itmf)
-                       (vals (select-keys tloik-asetukset [:ilmoitusviestijono :toimenpidekuittausjono])))
-        kuuntelijajonot (when (and tloik-asetukset itmf)
-                          (vals (select-keys tloik-asetukset [:ilmoituskuittausjono :toimenpideviestijono])))
-        lahetysjonot-status (reduce (fn [viesti j]
-                                      (let [olemassa? (jms-util/jms-jono-olemassa? itmf j)
-                                            ok? (jms-util/jms-jono-ok? itmf j)
-                                            ;; Onnistumisesta ei oteta tarkempia tietoja
-                                            jono-status (when (or (not olemassa?) (not ok?))
-                                                          (str j ": - olemassa: " olemassa? " - status: " ok? "\n"))]
-                                        (str viesti jono-status)))
-                              "" lahetysjonot)
-        kuuntelijajonot-status (reduce (fn [viesti j]
-                                         (let [ok? (jms-util/jms-jono-ok? itmf j)
-                                               jono-status (when (not ok?) (str j " - status: " ok? "\n"))]
-                                           (str viesti jono-status)))
-                                 "" kuuntelijajonot)
-        ilmoitusviestijonon-kuuntelija-status (let [ok? (or (nil? (:ilmoitusviestijono tloik-asetukset))
-                                                          (jms-util/jms-jonolla-kuuntelija? itmf
-                                                            (:ilmoitusviestijono tloik-asetukset)
-                                                            :tloik-ilmoitusviesti))
-                                                    jono-status (when (not ok?)
-                                                                  (str (:ilmoitusviestijono tloik-asetukset) " - status: " ok? "\n"))]
-                                                jono-status)
-        toimenpidekuittausjonon-kuuntelija-status (let [ok? (or (nil? (:toimenpidekuittausjono tloik-asetukset))
-                                                              (jms-util/jms-jonolla-kuuntelija? itmf
-                                                                (:toimenpidekuittausjono tloik-asetukset)
-                                                                :tloik-toimenpidekuittaus))
-                                                        jono-status (when (not ok?)
-                                                                      (str (:toimenpidekuittausjono tloik-asetukset) " - status: " ok? "\n"))]
-                                                    jono-status)
-        status (cond (and (not (nil? lahetysjonot)) (= "" lahetysjonot-status) (= "" kuuntelijajonot-status)) "ok"
-                     (and (nil? lahetysjonot) (nil? kuuntelijajonot)) "ei-kaytossa"
-                     :else "nok")
-        lisatiedot (when (not= "ok" status)
-                     (str lahetysjonot-status kuuntelijajonot-status
-                       ilmoitusviestijonon-kuuntelija-status
-                       toimenpidekuittausjonon-kuuntelija-status))
-        _ (status-kyselyt/aseta-komponentin-tila<! db {:palvelin palvelimen-nimi
-                                                       :komponentti "tloik"
-                                                       :status status
-                                                       :lisatiedot lisatiedot})]))
-
-(defn tarkista-sonja [db kehitysmoodi?]
-  (let [sonjan-tilat (jarjestelman-tila-kyselyt/sonjan-tila db kehitysmoodi?)
-        _ (doseq [tila sonjan-tilat]
+(defn tarkista-itmf [db kehitysmoodi?]
+  (let [itmfn-tilat (jarjestelman-tila-kyselyt/itmfn-tila db kehitysmoodi?)
+        _ (doseq [tila itmfn-tilat]
             (let [lisatiedot (str (.getValue (:tila tila)))
                   status (if (str/includes? lisatiedot "ACTIVE")
                            "ok" "nok")
-                  sonja {:palvelin (:palvelin tila)
-                         :komponentti "sonja"
-                         :status status
-                         :lisatiedot lisatiedot}
-                  _ (status-kyselyt/aseta-komponentin-tila<! db sonja)]))]))
+                  itmf {:palvelin (:palvelin tila)
+                        :komponentti "itmf"
+                        :status status
+                        :lisatiedot lisatiedot}
+                  _ (status-kyselyt/aseta-komponentin-tila<! db itmf)]))]))
 
-(defn tarkista-harja-status [db itmf tloik-asetukset kehitysmoodi?]
+(defn tarkista-harja-status [db kehitysmoodi?]
   (try
     (let [_ (tarkista-tietokanta db)
           _ (tarkista-replica db kehitysmoodi?)
-          _ (tarkista-tloik db itmf tloik-asetukset)
-          _ (tarkista-sonja db kehitysmoodi?)])
+          _ (tarkista-itmf db kehitysmoodi?)])
     (catch Exception e
       (log/error e (format "Harjan statusta ei voitu tarkistaa: %s" e)))))
 
-(defn tarkista-status [db itmf tloik-asetukset kehitysmoodi?]
+(defn tarkista-status [db kehitysmoodi?]
   (log/debug (format "Tarkistetaan harjan status."))
   ;; Tätä ei tarkoituksella ajeta lukon kanssa, koska halutaan, että kaikilta appista pyörittäviltä palvelimilta, tehdään sama toimenpide
   (ajastettu-tehtava/ajasta-minuutin-valein
     1 1                                                     ;; alkaa pyöriä 1 min 1 sekunnin kuluttua käynnistyksestä - ja sen jälkeen minuutin välein
-    (fn [_] (tarkista-harja-status db itmf tloik-asetukset kehitysmoodi?))))
+    (fn [_] (tarkista-harja-status db kehitysmoodi?))))
 
 (defn- poista-statusviestit [db]
   (status-kyselyt/poista-statusviestit db))
@@ -126,10 +81,10 @@
            (poista-statusviestit db)
            (log/info "ajasta-paivittain :: status_viestit :: Loppuu " (pvm/nyt)))))))
 
-(defrecord HarjaStatus [tloik kehitysmoodi]
+(defrecord HarjaStatus [kehitysmoodi]
   component/Lifecycle
-  (start [{db :db itmf :itmf :as this}]
-    (assoc this :harja-status (tarkista-status db itmf tloik kehitysmoodi)
+  (start [{db :db :as this}]
+    (assoc this :harja-status (tarkista-status db kehitysmoodi)
                 :poista-turhat-statusviestit (ajastus-poista-statusviestit db)))
   (stop [{harja-status :harja-status
           poista-turhat-statusviestit :poista-turhat-statusviestit :as this}]

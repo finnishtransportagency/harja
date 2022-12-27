@@ -1,7 +1,7 @@
 (ns tarkkailija.palvelin.komponentit.tapahtumat
   "Klusteritason tapahtumien kuuntelu
 
-  Tätä käytetään mm TLOIK-komponentissa, Sonja-yhteysvarmistuksessa, ja ilmoitukset-APIssa.
+  Tätä käytetään mm TLOIK-komponentissa ja ilmoitukset-APIssa.
   Ilmoitusten suhteen on olemassa urakkakohtaisia notifikaatiojonoja, joiden kautta voidaan seurata
   ja ilmoittaa urakkakohtaisista ilmoitukset-tapahtumista"
 

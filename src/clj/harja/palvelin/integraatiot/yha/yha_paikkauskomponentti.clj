@@ -10,7 +10,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [cheshire.core :as cheshire]
-            [harja.pvm :as pvm])
+            [harja.pvm :as pvm]
+            [harja.palvelin.integraatiot.yha.yha-yhteiset :as yha-yhteiset])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (def +virhe-paikkauskohteen-lahetyksessa+ ::yha-virhe-paikkauskohteen-lahetyksessa)
@@ -53,7 +54,7 @@
   "Lähettää YHA:aan paikkauskohteen kaikki paikkaukset. Sanomaa käytetää uuden paikkauskohteen tietojen lähettämiseen sekä
   olemassa olevan paikauskohteen tietojen päivittämiseen. Päivittäminen poistaa ne paikkaukset, jotka eivät siirry sanomassa.
   YHA:aan lähetetään siis aina kaikki paikkauskohteen paikkaukset."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-id]
   (assert (integer? urakka-id) "Urakka-id:n on oltava numero")
   (assert (integer? kohde-id) "Kohde-id:n on oltava numero")
   (try+
@@ -63,9 +64,7 @@
         (paivita-lahetyksen-tila db kohde-id :odottaa_vastausta)
         (let [http-asetukset {:metodi :POST
                               :url (str url "paikkaus/paivitys/")
-                              :kayttajatunnus kayttajatunnus
-                              :salasana salasana
-                              :otsikot {"Content-Type" "application/json"}}
+                              :otsikot (yha-yhteiset/yha-otsikot api-key true)}
               viestisisalto (paikkauskohteen-lahetyssanoma/muodosta db urakka-id kohde-id)
               {vastaus :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)
               enkoodattu-body (cheshire/decode vastaus true)]
@@ -103,7 +102,7 @@
   YHA:aan lähetetään kohteen kaikkien paikkausten sekä kohteen itsensä harja-id:t.
   Yksittäisen paikkauksen poisto tapahtuu lähettämällä päivitetty paikkauskohde uudelleen YHA:aan.
   Tämä funktio poistaa paikkauskohteen YHA:sta kokonaisuudessaan."
-  [integraatioloki db {:keys [url kayttajatunnus salasana]} urakka-id kohde-id]
+  [integraatioloki db {:keys [url api-key]} urakka-id kohde-id]
   ;; Paikkauskohteen ID:llä poistetaan, yksi kohde kerrallaan
   (integraatiotapahtuma/suorita-integraatio
     db integraatioloki "yha" "poista-lahetetty-paikkauskohde" nil
@@ -111,9 +110,7 @@
       (let [url (str url "paikkaus/poisto/")
             http-asetukset {:metodi         :POST
                             :url            url
-                            :kayttajatunnus kayttajatunnus
-                            :salasana       salasana
-                            :otsikot {"Content-Type" "application/json"}}
+                            :otsikot (yha-yhteiset/yha-otsikot api-key true)}
             viestisisalto (paikkauskohteen-poistosanoma/muodosta db urakka-id kohde-id)
             {body :body} (integraatiotapahtuma/laheta konteksti :http http-asetukset viestisisalto)
             enkoodattu-body (cheshire/decode body true)]
