@@ -90,5 +90,5 @@
                  (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
         (catch Exception e
           (do (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
-              (log/warn (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. %s Tarkista tarvitaessa konfiguraatio asetukset-tiedostossa ja tietokantatauluissa." paivitystunnus (.getMessage e)))
+              (log/warn (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. %s Tarkista konfiguraatio asetukset.edn-tiedostossa ja tietokantatauluissa." paivitystunnus (.getMessage e)))
               (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus nil)))))
