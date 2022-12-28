@@ -147,9 +147,9 @@
                         :valaistusurakoiden-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL167&outputFormat=SHAPE-ZIP"
                         :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/TL167.shz"
 
-                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/TL151.shp"
-                        :paallystyspalvelusopimusten-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL151&outputFormat=SHAPE-ZIP"
-                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/TL151.shz"
+                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/palvelusopimusLine.shp"
+                        :paallystyspalvelusopimusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip"
+                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/palvelusopimukset.shz"
 
                         :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
