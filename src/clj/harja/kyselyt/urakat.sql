@@ -853,11 +853,6 @@ FROM valaistusurakka;
 SELECT count(*) as lkm
 FROM valaistusurakka;
 
--- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
-SELECT alueurakka
-FROM valaistusurakka
-WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
-
 -- name: luo-valaistusurakka<!
 INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro, paivitetty)
 VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
@@ -869,11 +864,6 @@ FROM paallystyspalvelusopimus;
 -- name: tarkista-paallystyspalvelusopimusdata
 SELECT count(*) as lkm
 FROM paallystyspalvelusopimus;
-
--- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla
-SELECT alueurakka
-FROM paallystyspalvelusopimus
-WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
 
 -- name: luo-paallystyspalvelusopimus<!
 INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro, paivitetty)
