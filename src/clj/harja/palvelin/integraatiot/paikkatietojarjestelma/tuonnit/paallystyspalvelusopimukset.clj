@@ -27,7 +27,6 @@
                                     (let [urakat (shapefile/tuo shapefile)]
                                          (doseq [urakka urakat]
                                                 (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:paalurak urakka)))))
-                                    (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db)))) (throw+ {:type    :virhe-geometria-aineistossa
-                                                                                                            :virheet [{:koodi :puuttuva-paallystyspalvelusopimusnumero :viesti "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa."}]})))
-                                    (log/debug "Päällystyksen palvelusopimusten tuonti kantaan valmis."))
-        (log/debug "Päällystyksen palvelusopimusten tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+                                    (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db))))
+                                          (throw (Exception. "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
+        (throw (Exception. (format "Päällystyksen palvelusopimusten geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
