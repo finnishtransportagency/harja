@@ -854,8 +854,8 @@ SELECT count(*) as lkm
 FROM valaistusurakka;
 
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro, paivitetty)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
+INSERT INTO valaistusurakka (alue, valaistusurakkanro, paivitetty)
+VALUES (ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
 DELETE
