@@ -9,11 +9,8 @@ Cypress.on('uncaught:exception', (err, runnable) => {
 describe('Tehtävämäärien syöttö ja käpistely', () => {
   before(() => {
     cy.server()
-   // cy.visit('/')
     cy.visit('http://localhost:3000/#urakat/suunnittelu/tehtavat?&hy=13&u=32')
-    //cy.route('POST', '_/tehtavat').as('tehtavat')
-cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
-    //cy.wait('@tehtavat')
+    cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.wait('@tehtavamaarat')
     cy.viewport(1100, 2000)
   })
@@ -62,11 +59,11 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
     cy.contains('Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä').should('not.exist')
   })
 
-    it('Määrän voi syöttää', () => {
-        cy.server()
-    cy.route('POST', '_/tallenna-tehtavamaarat').as('tehtavamaarat')
+  it('Määrän voi syöttää', () => {
+      cy.server()
+      cy.route('POST', '_/tallenna-tehtavamaarat').as('tehtavamaarat')
       cy.get('table.grid').contains('Ise 2-ajorat').parent().find('td.muokattava').find('input').clear().type('666').blur()
-        cy.wait('@tehtavamaarat')
+      cy.wait('@tehtavamaarat')
   })
 
   it('Toimenpidettä voi vaihtaa', () => {
