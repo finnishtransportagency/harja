@@ -9,7 +9,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [digest :as digest])
+            [digest :as digest]
+            [clojure.data.xml :as data-xml])
   (:import (clojure.lang Keyword)
            (java.io ByteArrayOutputStream ObjectOutputStream)
            (java.text SimpleDateFormat)))
@@ -440,20 +441,6 @@
     (digest/sha-256 x)
     (digest/sha-256 (to-byte-array x))))
 
-(defn ppxml
-  "Prettyprintataan xml data"
-  [xml]
-  (let [in (javax.xml.transform.stream.StreamSource.
-             (java.io.StringReader. xml))
-        writer (java.io.StringWriter.)
-        out (javax.xml.transform.stream.StreamResult. writer)
-        transformer (.newTransformer
-                      (javax.xml.transform.TransformerFactory/newInstance))]
-    (.setOutputProperty transformer
-      javax.xml.transform.OutputKeys/INDENT "yes")
-    (.setOutputProperty transformer
-      "{http://xml.apache.org/xslt}indent-amount" "2")
-    (.setOutputProperty transformer
-      javax.xml.transform.OutputKeys/METHOD "xml")
-    (.transform transformer in out)
-    (-> out .getWriter .toString)))
+(defn prettyprint-xml [xml]
+  (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
+    (data-xml/indent-str parsittu-xml)))
