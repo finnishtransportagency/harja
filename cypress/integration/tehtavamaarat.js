@@ -78,7 +78,7 @@ cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
 
   it('Hoitokautta voi vaihtaa', () => {
     let hoitokausiNyt = kuluvaHoitovuosi();
-    let hoitokausiViimeinen = kuluvaHoitovuosi(2);
+    let hoitokausiViimeinen = kuluvaHoitovuosi(1);
 
     cy.server()
     cy.route('POST', '_/tehtavamaarat-hierarkiassa').as('tehtavamaarat')
