@@ -6,14 +6,13 @@
             [clojure.string :as str])
    (:use [slingshot.slingshot :only [throw+]]))
 
-(defn tuo-urakka [db alueurakkanro geometria paallystyssopimusnro]
+(defn tuo-urakka [db geometria paallystyssopimusnro]
   (if (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
     (if geometria
-      (let [alueurakkanro (str alueurakkanro)
-            paallystyssopimusnro (when (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
+      (let [paallystyssopimusnro (when (and paallystyssopimusnro (not (empty? (str/trim paallystyssopimusnro))))
                                    (str (int (Double/parseDouble paallystyssopimusnro))))
             geometria (.toString geometria)]
-        (u/luo-paallystyspalvelusopimus<! db alueurakkanro geometria paallystyssopimusnro))
+        (u/luo-paallystyspalvelusopimus<! db geometria paallystyssopimusnro))
       (log/warn (format "Palvelusopimusta (paallystyssopimusnro: %s ei voida tuoda geometriaa, sillä se on tyhjä"
                         paallystyssopimusnro)))
     (log/warn "Geometriaa ei voida tuoda ilman päällystyssopimusnumeroa")))
@@ -26,8 +25,7 @@
                                     (u/tuhoa-paallystyspalvelusopimusdata! db)
                                     (let [urakat (shapefile/tuo shapefile)]
                                          (doseq [urakka urakat]
-                                                (tuo-urakka db (:ualue urakka) (:the_geom urakka) (str (:paalurak urakka)))))
-                                    (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db)))) (throw+ {:type    :virhe-geometria-aineistossa
-                                                                                                            :virheet [{:koodi :puuttuva-paallystyspalvelusopimusnumero :viesti "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa."}]})))
-                                    (log/debug "Päällystyksen palvelusopimusten tuonti kantaan valmis."))
-        (log/debug "Päällystyksen palvelusopimusten tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+                                                (when (= (:teemat urakka) "Päällysteiden ylläpito") (tuo-urakka db (:the_geom urakka) (str (:urakkakood urakka))))))
+                                    (when (= 0 (:lkm (first (u/tarkista-paallystyspalvelusopimusdata db))))
+                                          (throw (Exception. "Yhtään päällystyspalvelusopimusta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
+        (throw (Exception. (format "Päällystyksen palvelusopimusten geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
