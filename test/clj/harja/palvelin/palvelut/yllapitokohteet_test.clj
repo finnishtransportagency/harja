@@ -1418,7 +1418,7 @@
         paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
-        vuosi 2022
+        vuosi 2023
         kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id false)]
         kohde (first kohteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1442,7 +1442,7 @@
         paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
-        vuosi 2022
+        vuosi 2023
         kohteet [(yllapitokohde-aikataulun-tallentamiseen puolangantie-kohde-id true)]
         kohde (first kohteet)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1784,22 +1784,6 @@
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
                   :loppusarake "H"}]]}
-        {:lihavoi? false
-         :rivi [547523069
-                "L42"
-                "B"
-                "Tärkeä kohde mt20 2022"
-                0M
-                [:varillinen-teksti
-                 {:arvo 0
-                  :fmt :raha
-                  :tyyli :disabled}]
-                0M
-                0M
-                [:kaava
-                 {:alkusarake "E"
-                  :kaava :summaa-vieressaolevat
-                  :loppusarake "H"}]]}
         [nil nil nil nil nil nil nil nil nil]
         [nil nil nil nil nil nil nil nil nil]
         [nil
@@ -1809,23 +1793,23 @@
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 7}]
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 7}]
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 7}]
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 7}]
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
-           :loppurivi 7}]]))
+           :loppurivi 6}]]))
 
 (deftest muodosta-paallystysexcelin-kohteiden-rivit
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
