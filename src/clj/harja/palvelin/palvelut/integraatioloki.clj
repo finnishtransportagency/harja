@@ -21,8 +21,10 @@
     (map #(assoc % :parametrit (muunna-merkkijono-kartaksi (:parametrit %))))
     (map #(assoc % :otsikko (muunna-merkkijono-kartaksi (:otsikko %))))
     (map (fn [v]
-            (if (= "application/xml" (:sisaltotyyppi v))
-              (assoc v :sisalto (konversio/ppxml (:sisalto v)))
+            (if (or
+                  (and (not (nil? (:sisaltotyyppi v))) (= "application/xml" (:sisaltotyyppi v)))
+                  (str/includes? (:sisalto v) "<?xml"))
+              (assoc v :sisalto (konversio/prettyprint-xml (:sisalto v)))
               v)))))
 
 (def tapahtuma-xf
