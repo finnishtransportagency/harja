@@ -107,7 +107,10 @@
               (and (some? lahetys-onnistunut) (false? lahetys-onnistunut) (some? lahetysvirhe)))
       [:div
        (when (some? lahetysvirhe)
-         [:pre pre-tyyli lahetysvirhe])
+         [:div
+          (when lahetetty
+            [:p (str "Edellisen kerran lähetetty " (fmt/pvm lahetetty))])
+          [:pre pre-tyyli lahetysvirhe]])
        (when (some? velho-lahetyksen-vastaus)
          [:pre pre-tyyli velho-lahetyksen-vastaus])])))
 
