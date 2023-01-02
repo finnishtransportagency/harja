@@ -7,19 +7,22 @@
 (def ^{:doc "Talvihoitoluokat voimaan 1.10.2019 alkaen urakoissa. Tierekisteriin nämä tulivat voimaan jo 14.6.2018 ja AVA:n geometria-aineistoon 2.7.2018. Nimi kertoo käyttöliittymässä käytetyn
 nimen. Numero on tierekisterin koodi luokalle. Jos hoitoluokkaa ei saada geometrioista
 selvitettyä, se asetetaan arvoon 100. Arvolla NULL PSQL upsert ei toimisi, koska UNIQUE
-constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia."}
+constrait vertailussa NULL arvot eivät aiheuta koskaan konfliktia.
+2023 lähtien talvihoitoluokat tulevat Harjaan Velhon tiedoista muodostetusta aineistosta, jossa hoitoluokka on numeron sijaan merkkijono.
+Talvihoito-avaimeen on tallennettu merkkijono sellaisena kuin se geometria-aineistoissa on.
+Geometria-aineiston tapauksia Hoito osin ja Talvihoito ei ole tuotu Harjaan."}
 talvihoitoluokat
-  [{:nimi "IsE"  :numero 1 :numero-str "1"}
-   {:nimi "Is"  :numero 2 :numero-str "2"}
-   {:nimi "I"   :numero 3 :numero-str "3"}
-   {:nimi "Ib"  :numero 4 :numero-str "4"}
-   {:nimi "Ic" :numero 5 :numero-str "5"}
-   {:nimi "II"  :numero 6 :numero-str "6"}
-   {:nimi "III" :numero 7 :numero-str "7"}
-   {:nimi "L"  :numero 8 :numero-str "8"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
-   {:nimi "K1"  :numero 9 :numero-str "9"}
-   {:nimi "K2"  :numero 10 :numero-str "10"}
-   {:nimi "K (ei talvihoitoa)" :numero 11 :numero-str "11"}
+  [{:nimi "IsE"  :numero 1 :numero-str "1" :talvihoito "Ise"}
+   {:nimi "Is"  :numero 2 :numero-str "2" :talvihoito "Is"}
+   {:nimi "I"   :numero 3 :numero-str "3" :talvihoito "I"}
+   {:nimi "Ib"  :numero 4 :numero-str "4" :talvihoito "Ib"}
+   {:nimi "Ic" :numero 5 :numero-str "5" :talvihoito "Ic"}
+   {:nimi "II"  :numero 6 :numero-str "6" :talvihoito "II"}
+   {:nimi "III" :numero 7 :numero-str "7" :talvihoito "II"}
+   {:nimi "L"  :numero 8 :numero-str "8" :talvihoito "L"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
+   {:nimi "K1"  :numero 9 :numero-str "9" :talvihoito "K1"}
+   {:nimi "K2"  :numero 10 :numero-str "10" :talvihoito "K2"}
+   {:nimi "K (ei talvihoitoa)" :numero 11 :numero-str "11" :talvihoito "Ei talvihoitoa"}
    {:nimi "Käsin kirjattu" :numero 99 :numero-str "99"}
    {:nimi ei-talvihoitoluokkaa-nimi :numero 100 :numero-str "100"}])
 
