@@ -6,29 +6,25 @@
 
 (defn vie-hoitoluokka-entry [db soratie]
   (if (:the_geom soratie)
-    (let [kokonaisluvuksi #(when % (int %))]
-      (hoitoluokat/vie-hoitoluokkatauluun!
-        db
-        (kokonaisluvuksi (:ajorata soratie))
-        (kokonaisluvuksi (:aosa soratie))
-        (kokonaisluvuksi (:tie soratie))
-        (kokonaisluvuksi (:piirinro soratie))
-        (kokonaisluvuksi (:let soratie))
-        (kokonaisluvuksi (:losa soratie))
-        (kokonaisluvuksi (:aet soratie))
-        (kokonaisluvuksi (:osa soratie))
-        (kokonaisluvuksi (:soratielk soratie))
-        (str (:the_geom soratie))
-        "soratie"))
-    (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa. Virheviesti: " (:loc_error soratie))))
+    (hoitoluokat/vie-hoitoluokkatauluun! db
+                                         (:alkusijain soratie) ;; tienumero
+                                         (:alkusijai0 soratie) ;; aosa
+                                         (:alkusijai1 soratie) ;; aet
+                                         (:loppusija0 soratie) ;; losa
+                                         (:loppusija1 soratie) ;; let
+                                         (int (:soratieluo soratie)) ;; hoitoluokka
+                                         (.toString (:the_geom soratie))
+                                         "soratie")
+    (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa.")))
 
 (defn vie-hoitoluokat-kantaan [db shapefile]
   (if shapefile
     (do
       (log/debug (str "Tuodaan soratiehoitoluokkatietoja kantaan tiedostosta " shapefile))
       (jdbc/with-db-transaction [db db]
-        (hoitoluokat/tuhoa-hoitoluokkadata! db "soratie")
-        (doseq [soratie (shapefile/tuo shapefile)]
-          (vie-hoitoluokka-entry db soratie))
-        (log/debug "Soratiehoitoluokkatietojen tuonti kantaan valmis")))
-    (log/debug "Soratiehoitoluokkatietojen tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+                                (hoitoluokat/tuhoa-hoitoluokkadata! db "soratie")
+                                (doseq [soratie (shapefile/tuo shapefile)]
+                                       (vie-hoitoluokka-entry db soratie))
+                                (when (= 0 (:lkm (first (hoitoluokat/tarkista-hoitoluokkadata db "soratie"))))
+                                      (throw (Exception. "Yhtään soratiehoitoluokkageometriaa ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
+    (throw (Exception. (format "Soratiehoitoluokkatietojen geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
