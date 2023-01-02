@@ -125,17 +125,17 @@
                         :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
                         :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/pohjavesialueetLine.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/TL132.shp"
-                        :talvihoidon-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL132&outputFormat=SHAPE-ZIP"
-                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/TL132.shz"
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/talvihoitoluokkaLine.shp"
+                        :talvihoidon-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:talvihoitoluokka&outputFormat=SHAPE-ZIP"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/talvihoitoluokkaLine.shz"
 
-                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/TL149.shp"
-                        :soratien-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL149&outputFormat=SHAPE-ZIP"
-                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/TL149.shz"
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/soratieluokkaLine.shp"
+                        :soratien-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:soratieluokka&outputFormat=SHAPE-ZIP"
+                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
 
                         :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
                         :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
-                        :siltojen-tuontikohde "./shp/Sillat/TL261_H.shz"
+                        :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
                         :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tierekisteri:tie_hoitourakat&outputformat=shape-zip"
