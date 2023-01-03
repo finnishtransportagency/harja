@@ -225,7 +225,7 @@ kuittaustyyppi->enum {:vastaanotettu "vastaanotto"
   "Käsittelee sisään tulevan sähköpostikuittauksen ja palauttaa takaisin viestin, joka lähetetään
 kuittauksen lähettäjälle."
   [jms-lahettaja db {:keys [lahettaja otsikko sisalto] :as viesti}]
-  (log/debug (format "Vastaanotettiin T-LOIK kuittaus sähköpostilla. Viesti: %s." viesti))
+  (log/debug (format "Vastaanotettiin urakoitsijan lähettämä Toimenpidepyynnön kuittaus sähköpostilla. Viesti: %s." viesti))
   (let [v (lue-kuittausviesti otsikko sisalto)]
     (if (:ilmoitus-id v)
       (if (= (:kuittaustyyppi v) :toimenpiteet-aloitettu)
