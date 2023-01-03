@@ -463,7 +463,8 @@
                  maara))))
 
 (defn- footer-vasemmat-napit [e! toteumalomake muokkaustila?]
-  (let [voi-tallentaa? (::tila/validi? toteumalomake)]
+  ;; Poista tallennus käytöstä kun paikkauskohde on valmis
+  (let [voi-tallentaa? (and (::tila/validi? toteumalomake) (not (= "valmis" (:paikkauskohde-tila toteumalomake))))]
     [:div
      ;; Lomake on auki
      (when muokkaustila?
