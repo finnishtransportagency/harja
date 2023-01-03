@@ -9,7 +9,8 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [digest :as digest])
+            [digest :as digest]
+            [clojure.data.xml :as data-xml])
   (:import (clojure.lang Keyword)
            (java.io ByteArrayOutputStream ObjectOutputStream)
            (java.text SimpleDateFormat)))
@@ -439,3 +440,7 @@
   (if (string? x)
     (digest/sha-256 x)
     (digest/sha-256 (to-byte-array x))))
+
+(defn prettyprint-xml [xml]
+  (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
+    (data-xml/indent-str parsittu-xml)))

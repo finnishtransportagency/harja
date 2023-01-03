@@ -99,9 +99,11 @@
                      {:nimi :tr-numero :otsikko "Tie"
                       :tyyppi :positiivinen-numero :kokonaisluku? true :pakollinen? true}
                      {:otsikko "Ajorata" :nimi :tr-ajorata :pakollinen? true :tyyppi :valinta
+                      :alasveto-luokka "kavenna-jos-kapea"
                       :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
                       :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))}
                      {:otsikko "Kaista" :nimi :tr-kaista :pakollinen? true :tyyppi :valinta
+                      :alasveto-luokka "kavenna-jos-kapea"
                       :valinnat pot/+kaistat+ :valinta-arvo :koodi
                       :valinta-nayta (fn [rivi]
                                        (if rivi

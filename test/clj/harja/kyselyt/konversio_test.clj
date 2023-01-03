@@ -94,3 +94,13 @@
   (testing "ClassCastException - palautetaan virhe"
     (let [nyt (t/now)]
       (is (thrown? ClassCastException (konversio/java-date nyt))))))
+
+
+(deftest xml-prettyprint-data-xml-toimii
+  (let [data-xml (slurp "test/resurssit/konversio/prettyprint-xml.xml" )
+        prettyprint-xml (konversio/prettyprint-xml data-xml)]
+    (is (not (nil? prettyprint-xml)))))
+
+(deftest xml-prettyprint-xxe-palauttaa-virheen
+  (let [data-xml (slurp "test/resurssit/konversio/xxe-xml.xml" )]
+    (is (thrown? Exception (konversio/prettyprint-xml data-xml)))))

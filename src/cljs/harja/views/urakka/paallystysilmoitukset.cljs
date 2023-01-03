@@ -221,7 +221,6 @@
                            (ikonit/ikoni-ja-teksti (ikonit/livicon-document-full) " Aloita"))])}]
        paallystysilmoitukset])))
 
-(def pot-vinkki-yha-ongelmat "Huom! Osa POT-lomakkeista raportoi Harjassa YHA-lähetysvirhettä, jos prosessointi YHA:n päässä kestää yli sallitun maksimiajan (29s, request timed out). Tiedot ovat useassa tapauksessa silti menneet onnistuneesti YHA:an perille. Voit myös tarkistaa asian YHA:sta, jos sinulla on käyttöoikeudet. Selvittelemme tilannetta YHA-tiimin kanssa, pahoittelut asiasta.")
 
 (defn ilmoitusluettelo
   [e! app]
@@ -231,7 +230,6 @@
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
       [:div.paallystysilmoitusluettelo
-       [yleiset/toast-viesti pot-vinkki-yha-ongelmat]
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}
@@ -241,7 +239,6 @@
           [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
            {:margin-left "24px"}])]
        [paallystysilmoitukset-taulukko e! app]
-       ;; TODO: YHA-lähetykset eivät ole paikkauskohteilla vielä käytössä
        (when-not paikkauskohteet?
          [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHA:an"])])))
 
