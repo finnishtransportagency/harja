@@ -23,7 +23,7 @@
     (map (fn [v]
             (if (or
                   (and (not (nil? (:sisaltotyyppi v))) (= "application/xml" (:sisaltotyyppi v)))
-                  (str/includes? (:sisalto v) "<?xml"))
+                  (and (not (nil? (:sisalto v))) (str/includes? (:sisalto v) "<?xml")))
               (assoc v :sisalto (konversio/prettyprint-xml (:sisalto v)))
               v)))))
 
