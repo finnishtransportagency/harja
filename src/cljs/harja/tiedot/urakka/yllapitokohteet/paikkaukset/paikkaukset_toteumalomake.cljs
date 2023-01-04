@@ -196,7 +196,7 @@
   (process-event [{toteuma :toteuma} app]
     (let [toteuma (-> toteuma
                       (assoc :urakka-id (-> @tila/tila :yleiset :urakka :id))
-                      (dissoc ::paikkaus/ajourat ::paikkaus/reunat ::paikkaus/ajorata
+                      (dissoc ::paikkaus/ajourat ::paikkaus/reunat ::paikkaus/ajorata ::paikkaus/kaista
                               ::paikkaus/keskisaumat ::paikkaus/tienkohta-id ::paikkaus/ajouravalit))]
       (do
         (tallenna-toteuma toteuma

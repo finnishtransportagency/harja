@@ -427,7 +427,7 @@ select pk.id                                       AS id,
            p."paikkauskohde-id",
            pk.nimi,
            pk.yksikko,
-           pt.id, pt.ajorata, pt.reunat, pt.ajourat, pt.ajouravalit, pt.keskisaumat
+           pt.id, pt.ajorata, pt.reunat, pt.ajourat, pt.ajouravalit, pt.keskisaumat, pt.kaista
 
            ))) as paikkaukset
 FROM paikkauskohde pk

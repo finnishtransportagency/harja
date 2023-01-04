@@ -390,13 +390,10 @@
                                                        :aet (:aet paikkaus) :losa (:losa paikkaus)
                                                        :loppuet (:let paikkaus)})
         tyomenetelmat (hae-paikkauskohteiden-tyomenetelmat db)
-        ;; Paikkauksissa käytetään liian yksinkertaista tierekisteriosoitetta ja kaista/ajoratatietoa
-        ;; on mahdoton sinne tallentaa. Joten laajennetaan paikkaus_tienkohta tauluun
-        ;; nämä paikkaustaulusta ylimenevät tiedot.
         tienkohdat (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                               (:kaista paikkaus))
                      {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))
-                      ::paikkaus/ajourat [(:kaista paikkaus)]}
+                      ::paikkaus/kaista (konversio/konvertoi->int (:kaista paikkaus))}
                      ;; Muut kuin levittimellä tehdyt voi käyttää yksinkertaisempaa tienkohtaa
                      {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))})
         ;; Muutetaan työmenetelmä tarvittaessa ID:ksi

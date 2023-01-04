@@ -1,23 +1,24 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake
-  (:require 
-            [clojure.string :as str]
+  (:require
+    [clojure.string :as str]
 
-            [reagent.core :as r]
-            
-            [harja.domain.paikkaus :as paikkaus]
-            
-            [harja.pvm :as pvm]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.debug :as debug]
-            
-            [harja.ui.validointi :as validointi]
-            
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
+    [reagent.core :as r]
+
+    [harja.domain.paikkaus :as paikkaus]
+
+    [harja.pvm :as pvm]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.debug :as debug]
+
+    [harja.ui.validointi :as validointi]
+
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+    [harja.domain.paallystysilmoitus :as pot]))
 
 (defn- fmt-vector
   "Input -kentälle voidaan antaa joko numeerin arvo esim. 1, tai sitten vectorissa arvot [1 2].
@@ -198,12 +199,12 @@
             :rivi-luokka "lomakeryhman-rivi-tausta"})
          {:otsikko "Pinta-ala"
           :tyyppi :positiivinen-numero
-          :nimi :pinta-ala
+          :nimi :pinta-ala :vihje "Huomaa myös autom. pinta-alan laskenta taulukossa."
           :yksikko "m2"
           :piilota-yksikko-otsikossa? true
           :pakollinen? true
           :vayla-tyyli? true
-          :virheviesti (tila/tee-virheviesti 
+          :virheviesti (tila/tee-virheviesti
                         toteumalomake
                         {:arvo :pinta-ala
                          :tarkista-validointi-avaimella [:pinta-ala]}
@@ -314,24 +315,23 @@
                          "Ei ajorataa")
                    0 0
                    1 1
-                   2 2} ; TODO: Hae tietokannasta
+                   2 2}
         :valinta-arvo first
         :valinta-nayta second
         :nimi :ajorata
         :vayla-tyyli? true
         ;; Levittimellä tehdyt paikkaukset vaativat ajoradan. Sen vuoksi myös valintalistaan nil arvon teksti muutetaan
-        :pakollinen? (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
-                       true
-                       false)}
+        :pakollinen? (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)}
        (when (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
-         {:otsikko "Kaista"
-          :tyyppi :positiivinen-numero
-          :kokonaisluku? true
-          :nimi :kaista
+         {:otsikko "Kaista" :nimi :kaista :tyyppi :valinta
+          :valinnat pot/+kaistat+ :valinta-arvo :koodi
           :pakollinen? true
-          :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:kaista] toteumalomake)
-          :rivi-luokka "lomakeryhman-rivi-tausta"}))
+          :vayla-tyyli? true :rivi-luokka "lomakeryhman-rivi-tausta"
+          :valinta-nayta (fn [rivi]
+                           (if rivi
+                             (:nimi rivi)
+                             "Valitse"))
+          :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}))
      (lomake/rivi
        {:otsikko "A-osa"
         :tyyppi :positiivinen-numero
