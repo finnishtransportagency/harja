@@ -7,8 +7,6 @@
 
 
 (defn vie-hoitoluokka-entry [db talvihoito]
-      (when (= nil (:numero (first (filter #(= (:nimi %) (:talvihoito talvihoito)) domain/talvihoitoluokat))))
-            (println "HLNIMI" (:talvihoito talvihoito)))
   (if (:the_geom talvihoito)
     (hoitoluokat/vie-hoitoluokkatauluun! db
                                          (:alkusijain talvihoito) ;; tienumero

@@ -18,7 +18,7 @@ talvihoitoluokat
    {:nimi "Ib"  :numero 4 :numero-str "4" :talvihoito "Ib"}
    {:nimi "Ic" :numero 5 :numero-str "5" :talvihoito "Ic"}
    {:nimi "II"  :numero 6 :numero-str "6" :talvihoito "II"}
-   {:nimi "III" :numero 7 :numero-str "7" :talvihoito "II"}
+   {:nimi "III" :numero 7 :numero-str "7" :talvihoito "III"}
    {:nimi "L"  :numero 8 :numero-str "8" :talvihoito "L"} ; 1.10.2019 alkaen käyttöön kentällä. On jo tierekisterissä 14.6.2018 alkaen ja talvihoitoluokat-geom.aineistossa.
    {:nimi "K1"  :numero 9 :numero-str "9" :talvihoito "K1"}
    {:nimi "K2"  :numero 10 :numero-str "10" :talvihoito "K2"}
