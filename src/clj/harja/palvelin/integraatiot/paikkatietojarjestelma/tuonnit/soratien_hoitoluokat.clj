@@ -1,8 +1,8 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.soratien-hoitoluokat
-  (:require [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.hoitoluokat :as hoitoluokat]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]))
+    (:require [taoensso.timbre :as log]
+      [clojure.java.jdbc :as jdbc]
+      [harja.kyselyt.hoitoluokat :as hoitoluokat]
+      [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile] [harja.domain.hoitoluokat :as domain]))
 
 (defn vie-hoitoluokka-entry [db soratie]
   (if (:the_geom soratie)
@@ -12,7 +12,7 @@
                                          (:alkusijai1 soratie) ;; aet
                                          (:loppusija0 soratie) ;; losa
                                          (:loppusija1 soratie) ;; let
-                                         (int (:soratieluo soratie)) ;; hoitoluokka
+                                         (:numero (first (filter #(= (:nimi %) (:soratieluo soratie)) domain/soratieluokat))) ;; hoitoluokka
                                          (.toString (:the_geom soratie))
                                          "soratie")
     (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa.")))

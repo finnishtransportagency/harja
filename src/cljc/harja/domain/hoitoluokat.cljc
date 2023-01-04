@@ -56,11 +56,11 @@ talvihoitoluokan-nimi-str
 (def ^{:doc "Mahdolliset soratieluokat. Nimi kertoo käyttöliittymässä käytetyn nimen.
 Numero on tierekisterin koodi luokalle."}
   soratieluokat
-  [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1}
-   {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2}
-   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3}
+  [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1 :soratieluo "I lk"}
+   {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2 :soratieluo "II lk"}
+   {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3 :soratieluo "III lk"}
    {:nimi "Käsin kirjattu" :kuvaus "Käsin kirjattu" :numero 99}
-   {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100}])
+   {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100 :soratieluo ""}])
 
 (def ^{:doc "Mäppäys soratieluokan numerosta sen nimeen."}
   soratieluokan-nimi

@@ -28,4 +28,4 @@ WHERE tietolajitunniste = :tietolaji :: hoitoluokan_tietolajitunniste;
 
 -- name: tarkista-hoitoluokkadata
 SELECT count(*) as lkm
-FROM hoitoluokka WHERE tietolajitunniste = :hoitoluokkatyyppi;
+FROM hoitoluokka WHERE tietolajitunniste = :hoitoluokkatyyppi ::hoitoluokan_tietolajitunniste;
