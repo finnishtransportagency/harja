@@ -13,42 +13,6 @@ UPDATE paikkauskohde
     "tarkistaja-id"             = :tarkistaja-id
 WHERE id = :id;
 
--- name: hae-paikkauskohteen-mahdolliset-kustannukset
-SELECT pk.id              AS "paikkauskohde_id",
-       pk.nimi            AS "paikkauskohde_nimi",
-       pt.tyomenetelma,
-       pt.valmistumispvm,
-       (pt.tierekisteriosoite).tie AS tie,
-       (pt.tierekisteriosoite).aosa AS aosa,
-       (pt.tierekisteriosoite).aet AS aet,
-       (pt.tierekisteriosoite).losa AS losa,
-       (pt.tierekisteriosoite).let AS let,
-       pt.kirjattu,
-       pt.hinta,
-       pt.id              AS "paikkaustoteuma-id",
-       pt.poistettu       AS "paikkaustoteuma-poistettu"
-FROM paikkaustoteuma pt
-     JOIN paikkauskohde pk ON (pt."paikkauskohde-id"=pk.id AND
-                                   pt.tyyppi = :tyyppi::paikkaustoteumatyyppi AND
-                                   pt.poistettu IS NOT TRUE)
-WHERE pt."urakka-id"=:urakka-id AND
-      (:alkuaika :: TIMESTAMP IS NULL OR pt.valmistumispvm >= :alkuaika) AND
-      (:loppuaika :: TIMESTAMP IS NULL OR pt.valmistumispvm <= :loppuaika) AND
-      (:numero :: INTEGER IS NULL OR (pt.tierekisteriosoite).tie = :numero) AND
-      (:alkuosa :: INTEGER IS NULL OR (pt.tierekisteriosoite).aosa >= :alkuosa) AND
-      (:alkuetaisyys :: INTEGER IS NULL OR
-       ((pt.tierekisteriosoite).aet >= :alkuetaisyys AND
-        ((pt.tierekisteriosoite).aosa = :alkuosa OR
-         :alkuosa :: INTEGER IS NULL)) OR
-       (pt.tierekisteriosoite).aosa > :alkuosa) AND
-      (:loppuosa :: INTEGER IS NULL OR (pt.tierekisteriosoite).losa <= :loppuosa) AND
-      (:loppuetaisyys :: INTEGER IS NULL OR
-       ((pt.tierekisteriosoite).let <= :loppuetaisyys AND
-        ((pt.tierekisteriosoite).losa = :loppuosa OR
-         :loppuosa :: INTEGER IS NULL)) OR
-       (pt.tierekisteriosoite).losa < :loppuosa) AND
-      (:paikkaus-idt :: INTEGER [] IS NULL OR pk.id = ANY (:paikkaus-idt :: INTEGER [])) AND
-      (:tyomenetelmat :: VARCHAR [] IS NULL OR pt.tyomenetelma::VARCHAR = ANY (:tyomenetelmat :: VARCHAR []));
 
 --name: paivita-paikkaustoteuma!
 UPDATE paikkaustoteuma
