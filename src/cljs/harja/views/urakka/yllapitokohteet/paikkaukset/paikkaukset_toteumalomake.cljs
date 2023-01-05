@@ -97,11 +97,11 @@
 
 (defn maara-kentat [toteumalomake tyomenetelmat]
   (let [ ;; UREM tyyppisiä toteumia ei voi lisätä, mutta niiden tiedot näytetään lomakkeella
-        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))]
-    (if (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            urem?)
+        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))
+        levitin? (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
+                     (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
+                     (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)))]
+    (if (or urem? levitin?)
       [(lomake/ryhma
          {:otsikko "Määrä"
           :ryhman-luokka "lomakeryhman-otsikko-tausta"
@@ -162,8 +162,7 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:kuulamylly] toteumalomake)
             ::lomake/col-luokka "col-sm-3"
-            :rivi-luokka "lomakeryhman-rivi-tausta"})
-         )
+            :rivi-luokka "lomakeryhman-rivi-tausta"}))
        (lomake/rivi
          {:otsikko "Kok. massam."
           :tyyppi :positiivinen-numero
@@ -197,18 +196,28 @@
             :virhe? (validointi/nayta-virhe? [:leveys] toteumalomake)
             ::lomake/col-luokka "col-sm-3"
             :rivi-luokka "lomakeryhman-rivi-tausta"})
-         {:otsikko "Pinta-ala"
-          :tyyppi :positiivinen-numero
-          :nimi :pinta-ala :vihje "Huomaa myös autom. pinta-alan laskenta taulukossa."
-          :yksikko "m2"
-          :piilota-yksikko-otsikossa? true
-          :pakollinen? true
+
+         ;; Pinta-alan säännöt:
+         ;; Työmenetelmille joilla ei voida suoraan laskea pinta-alaa: tyhjä pinta-ala kenttä joka pakollinen ja johon syötetään
+         ;; Työmenetelmillä joilla voidaan suoraan laskea pinta-ala (levittimellä tehdyt paikkaukset):
+         ;; disabled/readonly kenttä samassa kohti johon on valmiiksi laskettu leveys*pituus
+         {:otsikko "Pinta-ala" :tyyppi :positiivinen-numero
+          :nimi :pinta-ala :yksikko "m2" :piilota-yksikko-otsikossa? true
+          :pakollinen? false :muokattava? (constantly false)
+          :hae (fn [rivi]
+                 (if levitin?
+                   (if (and (:leveys rivi) (:pituus rivi))
+                    (* (:leveys rivi) (:pituus rivi))
+                    ;; Fallbackinä API:n kautta raportoitu pinta-ala, ei pitäisi käytännössä tulla tänne asti ellei pituuden tai leveyden suhteen ole ongelmaa
+                    (:pinta-ala rivi))
+                   ;; UREM: otetaan suoraan API:n kautta raportoitu pinta-ala
+                   (:pinta-ala rivi)))
           :vayla-tyyli? true
           :virheviesti (tila/tee-virheviesti
-                        toteumalomake
-                        {:arvo :pinta-ala
-                         :tarkista-validointi-avaimella [:pinta-ala]}
-                        {:testi [tila/ei-nil tila/ei-tyhja] :virheviesti ::tila/ei-tyhja})
+                         toteumalomake
+                         {:arvo :pinta-ala
+                          :tarkista-validointi-avaimella [:pinta-ala]}
+                         {:testi [tila/ei-nil tila/ei-tyhja] :virheviesti ::tila/ei-tyhja})
           :virhe? (validointi/nayta-virhe? [:pinta-ala] toteumalomake)
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"})]
