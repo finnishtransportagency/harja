@@ -181,7 +181,6 @@ describe('Paikkauskohteet latautuu oikein', function () {
         cy.get('label[for=massamaara] + span > input').type('5')
         cy.get('label[for=massamenekki] + span > input').type('5')
         cy.get('label[for=leveys] + span > input').type('5')
-        cy.get('label[for=pinta-ala] + span > input').type('5')
         cy.contains('Tallenna').should('not.be.disabled')
         cy.contains('Tallenna').click()
         cy.get('.toast-viesti', {timeout: 60000}).should('be.visible')
