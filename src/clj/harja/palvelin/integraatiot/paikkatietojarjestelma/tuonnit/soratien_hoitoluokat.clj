@@ -12,7 +12,7 @@
                                          (:alkusijai1 soratie) ;; aet
                                          (:loppusija0 soratie) ;; losa
                                          (:loppusija1 soratie) ;; let
-                                         (:numero (first (filter #(= (:nimi %) (:soratieluo soratie)) domain/soratieluokat))) ;; hoitoluokka
+                                         (:numero (first (filter #(= (:soratieluo %) (:soratieluo soratie)) domain/soratieluokat))) ;; hoitoluokka
                                          (.toString (:the_geom soratie))
                                          "soratie")
     (log/warn "Soratiehoitoluokkaa ei voida tuoda ilman geometriaa.")))

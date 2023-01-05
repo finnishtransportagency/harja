@@ -14,7 +14,7 @@
                                          (:alkusijai1 talvihoito) ;; aet
                                          (:loppusija0 talvihoito) ;; losa
                                          (:loppusija1 talvihoito) ;; let
-                                         (:numero (first (filter #(= (:nimi %) (:talvihoito talvihoito)) domain/talvihoitoluokat))) ;; hoitoluokka
+                                         (:numero (first (filter #(= (:talvihoito %) (:talvihoito talvihoito)) domain/talvihoitoluokat))) ;; hoitoluokka
                                          (.toString (:the_geom talvihoito))
                                          "talvihoito")
     (log/warn "Talvihoitoluokkaa ei voida tuoda ilman geometriaa.")))
