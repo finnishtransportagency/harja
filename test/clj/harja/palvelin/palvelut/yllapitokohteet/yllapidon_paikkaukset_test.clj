@@ -7,7 +7,6 @@
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.domain.tierekisteri :as tierekisteri]
-            [harja.domain.paikkaus :as paikkaus]
             [harja.tyokalut.paikkaus-test :refer :all]
             [taoensso.timbre :as log]
             [clj-time.core :as t]
@@ -59,6 +58,28 @@
     (is (> (count (::paikkaus/paikkaukset (first paikkaukset))) 0))
     ;; Annetulla aikavälillä ei löydy mitään
     (is (= 0 (count paikaukset-paikkauskohteet-filtteri)))))
+
+(deftest levitinpaikkauksen-kaista-ja-pinta-ala-testi
+  (let [urakka-id @muhoksen-paallystysurakan-id
+        paikkaukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                    :hae-urakan-paikkaukset
+                                    +kayttaja-jvh+
+                                    {::paikkaus/urakka-id urakka-id
+                                     :ensimmainen-haku? true})
+        levitinpaikkauskohde (first (filter #(= (::paikkaus/nimi %) "Levitinpaikkaus") paikkaukset))
+        levitinpaikkaus (first (::paikkaus/paikkaukset levitinpaikkauskohde))]
+
+    (is (> (count paikkaukset) 0))
+    (is (= (::paikkaus/nimi levitinpaikkauskohde) "Levitinpaikkaus"))
+    (is (= (:ajorata levitinpaikkauskohde) 1))
+    (is (= (::paikkaus/ajorata levitinpaikkaus) 1))
+    (is (= (::paikkaus/kaista levitinpaikkaus) 11))
+    (is (= (::paikkaus/leveys levitinpaikkaus) 4))
+    (is (= (:suirun-pituus levitinpaikkaus) 1000))
+    ;; Levitin paikkauksissa pinta-ala voidaan laskea kertolaskulla, koska koko kaistan levyinen paikkaus
+    (is (= (:suirun-pinta-ala levitinpaikkaus) 4000 (* (::paikkaus/leveys levitinpaikkaus)
+                                                       (:suirun-pituus levitinpaikkaus))))
+    (is (nil? (::paikkaus/pinta-ala levitinpaikkaus)))))
 
 (deftest hae-urakan-paikkauskohteet-ei-toimi-ilman-oikeuksia
   (let [urakka-id @oulun-alueurakan-2014-2019-id]
