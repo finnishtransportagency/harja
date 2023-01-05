@@ -104,8 +104,7 @@
               :kuulamylly [tila/ei-nil tila/ei-tyhja]
               :massamenekki [tila/ei-nil tila/ei-tyhja tila/numero]
               :massamaara [tila/ei-nil tila/ei-tyhja tila/numero]
-              :leveys [tila/ei-nil tila/ei-tyhja tila/numero]
-              :pinta-ala [tila/ei-nil tila/ei-tyhja tila/numero]}
+              :leveys [tila/ei-nil tila/ei-tyhja tila/numero]}
              {(paikkauksen-yksikon-maara-avain (:kohteen-yksikko @lomake-atom)) [tila/ei-nil tila/ei-tyhja tila/numero]}))))
 
 (defn- validoi-lomake [toteumalomake]
@@ -126,8 +125,7 @@
             [:kuulamylly] (validoinnit :kuulamylly)
             [:massamenekki] (validoinnit :massamenekki)
             [:massamaara] (validoinnit :massamaara)
-            [:leveys] (validoinnit :leveys)
-            [:pinta-ala] (validoinnit :pinta-ala)]
+            [:leveys] (validoinnit :leveys)]
 
            [[:tie] (validoinnit :tie)
             [:aosa] (validoinnit :aosa)

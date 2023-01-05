@@ -173,7 +173,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         //cy.get('label[for=losa] + span > input').type("5")
         cy.get('label[for=let] + span > input').type("5")
         cy.contains('Tallenna').should('be.disabled')
-        cy.get('label[for=kaista] + span > input').type('1')
+        cy.get('label[for=kaista] + div').valinnatValitse({valinta: '1'})
         cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
         cy.get('label[for=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
         cy.get('label[for=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})
@@ -191,20 +191,6 @@ describe('Paikkauskohteet latautuu oikein', function () {
 })
 
 describe('Paikkaustoteumat toimii', function () {
-    /*beforeEach(() => {
-        cy.viewport(1100, 2000)
-        cy.visit("/")
-        cy.contains('.haku-lista-item', 'Lappi').click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Päällystys'})
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Kemin päällystysurakka', {timeout: clickTimeout}).click()
-        // Kemin päällystysurakka on puutteellinen ja YHA lähetyksestä tulee varoitus. Suljetaan modaali
-        cy.contains('.nappi-toissijainen', 'Sulje').click()
-        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
-        // Avataan myös toteuma välilehti ja palataan paikkauskohteisiin
-        cy.get('[data-cy=tabs-taso2-Toteumat]').click()
-        cy.get('[data-cy=tabs-taso1-Paikkaukset]').click()
-    })*/
     it('Mene paikkaustoteumat välilehdelle ja lisää toteuma', function () {
         cy.viewport(1100, 2000)
         avaaToteumat()
@@ -215,7 +201,7 @@ describe('Paikkaustoteumat toimii', function () {
         //cy.get('label[for=losa] + span > input').type("5")
         cy.get('label[for=let] + span > input').type("5")
         cy.contains('Tallenna').should('be.disabled')
-        cy.get('label[for=kaista] + span > input').type('1')
+        cy.get('label[for=kaista] + div').valinnatValitse({valinta: '1'})
         cy.get('label[for=ajorata] + div').valinnatValitse({valinta: '2'})
         cy.get('label[for=massatyyppi] + div').valinnatValitse({valinta: 'AB, Asfalttibetoni'})
         cy.get('label[for=kuulamylly] + div').valinnatValitse({valinta: 'AN5'})

@@ -212,15 +212,7 @@
                     (:pinta-ala rivi))
                    ;; UREM: otetaan suoraan API:n kautta raportoitu pinta-ala
                    (:pinta-ala rivi)))
-          :vayla-tyyli? true
-          :virheviesti (tila/tee-virheviesti
-                         toteumalomake
-                         {:arvo :pinta-ala
-                          :tarkista-validointi-avaimella [:pinta-ala]}
-                         {:testi [tila/ei-nil tila/ei-tyhja] :virheviesti ::tila/ei-tyhja})
-          :virhe? (validointi/nayta-virhe? [:pinta-ala] toteumalomake)
-          ::lomake/col-luokka "col-sm-3"
-          :rivi-luokka "lomakeryhman-rivi-tausta"})]
+          :vayla-tyyli? true ::lomake/col-luokka "col-sm-3" :rivi-luokka "lomakeryhman-rivi-tausta"})]
 
       ;; Muille työmenetelmille lomake on hieman erilainen
       [(lomake/ryhma
