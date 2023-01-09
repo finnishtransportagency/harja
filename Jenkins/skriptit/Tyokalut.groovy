@@ -2,7 +2,7 @@ import hudson.scm.ChangeLogSet
 import hudson.plugins.git.GitChangeSet
 
 def hoidaMahdollisenErrorinKorjaantuminen(stageNimi, viesti = 'Pipeline korjaantui') {
-    // Jos edellinen buildi hajosi ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
+    // Jos edellinen buildi epäonnistui ja tämä buildi korjasi sen, niin lähetetään viesti Slackiin
     if (currentBuild.previousBuild.buildVariables.FAILED_STAGE == stageNimi) {
         slackSend([color  : 'good',
                    message: viesti])
@@ -113,18 +113,18 @@ def etsiKaytettavaJar(valitetaankoTestiBranchista, valitetaankoEpaonnistuneestaA
 def ajaTestikannanLuonti (stagenNimi) {
     try {
         sh([script: "sh Jenkins/skriptit/testitietokanta.sh"])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui Jenkinsin testikannan luomiseen")
     }
 }
 
 def ajaTestikannanLuontiTestStg (stagenNimi) {
     try {
         sh([script: "sh Jenkins/skriptit/testitietokanta_test_stg.sh"])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa Jenkinsin testikannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu Jenkinsin testikannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi Jenkinsin testikannan luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui Jenkinsin testikannan luomiseen")
     }
 }
 
@@ -136,7 +136,7 @@ def ajaJarJaTestit (stagenNimi) {
         sh([script: "lein tuotanto"])
         // Säilötään se jarri
         archiveArtifacts([artifacts: 'target/harja-*-standalone.jar, doc/*'])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testien ajamiseen/JAR:in luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testien ajamiseen/JAR:in luomiseen")
     } catch (e) {
         String muutokset = changeSets2String()
         mail([from   : params.LAHETTAJA_SPOSTI,
@@ -146,7 +146,7 @@ def ajaJarJaTestit (stagenNimi) {
               bcc    : '',
               subject: "Pipelinen ajaminen epäonnistui ${env.BUILD_NUMBER}",
               body   : "Build: ${env.BUILD_URL}\n" + "Job name: ${env.JOB_BASE_NAME}" + muutokset])
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi testien ajamiseen/JAR:in luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui testien ajamiseen/JAR:in luomiseen")
     } finally {
         // Testitulokset
         junit([testResults: 'test2junit/xml/*.xml'])
@@ -173,9 +173,9 @@ def ajaTestiserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testiserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(stagenNimi, "Pipeline epäonnistui testiserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -189,9 +189,9 @@ def ajaTestiserverinApp(stagenNimi, buildNumber) {
                             jenkins_build_number: buildNumber,
                             jenkins_job_name: env.JOB_BASE_NAME
                         ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa testiserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu testiserverin appiksen luomiseen")
     } catch (e) {
-        hoidaErrori(stagenNimi, "Pipeline hajosi testiserverin appiksen luomiseen")
+        hoidaErrori(stagenNimi, "Pipeline epäonnistui testiserverin appiksen luomiseen")
     }
 }
 
@@ -204,11 +204,11 @@ def ajaE2ETestit(stagenNimi) {
                 }
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa E2E testeihin")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu E2E testeihin")
         env.E2E_ONNISTUI = true
     } catch (e) {
         env.E2E_ONNISTUI = false
-        hoidaErrori(stagenNimi, "Pipeline hajosi E2E testeihin")
+        hoidaErrori(stagenNimi, "Pipeline epäonnistui E2E testeihin")
     } finally {
         junit([testResults: 'test2junit/xml/*.xml'])
     }
@@ -233,9 +233,9 @@ def ajaStagingserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu stagingserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui stagingserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -249,9 +249,9 @@ def ajaStagingserverinApp(stagenNimi, buildNumber) {
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
                          ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa stagingserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu stagingserverin appiksen luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi stagingserverin appiksen luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui stagingserverin appiksen luomiseen")
     }
 }
 
@@ -274,9 +274,9 @@ def ajaTuotantoserverinKanta(stagenNimi) {
                         " -Dflyway.user=$KAYTTAJA -Dflyway.password=$SALASANA"])
             }
         }
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin kannan luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu tuotantoserverin kannan luomiseen")
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin kannan luomiseen: " + e.getMessage())
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui tuotantoserverin kannan luomiseen: " + e.getMessage())
     }
 }
 
@@ -292,11 +292,11 @@ def ajaTuotantoerverinApp(stagenNimi, buildNumber) {
                                  jenkins_build_number: buildNumber,
                                  jenkins_job_name: env.JOB_BASE_NAME
                          ]])
-        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää hajoa tuotantoserverin appiksen luomiseen")
+        hoidaMahdollisenErrorinKorjaantuminen(stagenNimi, "Pipeline ei enää epäonnistu tuotantoserverin appiksen luomiseen")
         slackSend([color  : 'good',
                    message: 'Tuotanto deployment onnistui'])
     } catch (e) {
-        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline hajosi tuotantoserverin appiksen luomiseen")
+        hoidaErrori(e.getMessage(), stagenNimi, "Pipeline epäonnistui tuotantoserverin appiksen luomiseen")
     }
 }
 

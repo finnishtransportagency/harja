@@ -1,23 +1,24 @@
 (ns harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake
-  (:require 
-            [clojure.string :as str]
+  (:require
+    [clojure.string :as str]
 
-            [reagent.core :as r]
-            
-            [harja.domain.paikkaus :as paikkaus]
-            
-            [harja.pvm :as pvm]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.debug :as debug]
-            
-            [harja.ui.validointi :as validointi]
-            
-            [harja.tiedot.urakka.urakka :as tila]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
-            [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]))
+    [reagent.core :as r]
+
+    [harja.domain.paikkaus :as paikkaus]
+
+    [harja.pvm :as pvm]
+    [harja.ui.lomake :as lomake]
+    [harja.ui.modal :as modal]
+    [harja.ui.napit :as napit]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.debug :as debug]
+
+    [harja.ui.validointi :as validointi]
+
+    [harja.tiedot.urakka.urakka :as tila]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
+    [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
+    [harja.domain.paallystysilmoitus :as pot]))
 
 (defn- fmt-vector
   "Input -kentälle voidaan antaa joko numeerin arvo esim. 1, tai sitten vectorissa arvot [1 2].
@@ -96,11 +97,11 @@
 
 (defn maara-kentat [toteumalomake tyomenetelmat]
   (let [ ;; UREM tyyppisiä toteumia ei voi lisätä, mutta niiden tiedot näytetään lomakkeella
-        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))]
-    (if (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
-            urem?)
+        urem? (= "UREM" (paikkaus/tyomenetelma-id->lyhenne (:tyomenetelma toteumalomake) tyomenetelmat))
+        levitin? (or (= "AB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
+                     (= "PAB-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat))
+                     (= "SMA-paikkaus levittäjällä" (paikkaus/tyomenetelma-id->nimi (:tyomenetelma toteumalomake) tyomenetelmat)))]
+    (if (or urem? levitin?)
       [(lomake/ryhma
          {:otsikko "Määrä"
           :ryhman-luokka "lomakeryhman-otsikko-tausta"
@@ -161,8 +162,7 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:kuulamylly] toteumalomake)
             ::lomake/col-luokka "col-sm-3"
-            :rivi-luokka "lomakeryhman-rivi-tausta"})
-         )
+            :rivi-luokka "lomakeryhman-rivi-tausta"}))
        (lomake/rivi
          {:otsikko "Kok. massam."
           :tyyppi :positiivinen-numero
@@ -196,21 +196,23 @@
             :virhe? (validointi/nayta-virhe? [:leveys] toteumalomake)
             ::lomake/col-luokka "col-sm-3"
             :rivi-luokka "lomakeryhman-rivi-tausta"})
-         {:otsikko "Pinta-ala"
-          :tyyppi :positiivinen-numero
-          :nimi :pinta-ala
-          :yksikko "m2"
-          :piilota-yksikko-otsikossa? true
-          :pakollinen? true
-          :vayla-tyyli? true
-          :virheviesti (tila/tee-virheviesti 
-                        toteumalomake
-                        {:arvo :pinta-ala
-                         :tarkista-validointi-avaimella [:pinta-ala]}
-                        {:testi [tila/ei-nil tila/ei-tyhja] :virheviesti ::tila/ei-tyhja})
-          :virhe? (validointi/nayta-virhe? [:pinta-ala] toteumalomake)
-          ::lomake/col-luokka "col-sm-3"
-          :rivi-luokka "lomakeryhman-rivi-tausta"})]
+
+         ;; Pinta-alan säännöt:
+         ;; Työmenetelmille joilla ei voida suoraan laskea pinta-alaa: tyhjä pinta-ala kenttä joka pakollinen ja johon syötetään
+         ;; Työmenetelmillä joilla voidaan suoraan laskea pinta-ala (levittimellä tehdyt paikkaukset):
+         ;; disabled/readonly kenttä samassa kohti johon on valmiiksi laskettu leveys*pituus
+         {:otsikko "Pinta-ala" :tyyppi :positiivinen-numero
+          :nimi :pinta-ala :yksikko "m2" :piilota-yksikko-otsikossa? true
+          :pakollinen? false :muokattava? (constantly false)
+          :hae (fn [rivi]
+                 (if levitin?
+                   (if (and (:leveys rivi) (:pituus rivi))
+                    (* (:leveys rivi) (:pituus rivi))
+                    ;; Fallbackinä API:n kautta raportoitu pinta-ala, ei pitäisi käytännössä tulla tänne asti ellei pituuden tai leveyden suhteen ole ongelmaa
+                    (:pinta-ala rivi))
+                   ;; UREM: otetaan suoraan API:n kautta raportoitu pinta-ala
+                   (:pinta-ala rivi)))
+          :vayla-tyyli? true ::lomake/col-luokka "col-sm-3" :rivi-luokka "lomakeryhman-rivi-tausta"})]
 
       ;; Muille työmenetelmille lomake on hieman erilainen
       [(lomake/ryhma
@@ -314,24 +316,23 @@
                          "Ei ajorataa")
                    0 0
                    1 1
-                   2 2} ; TODO: Hae tietokannasta
+                   2 2}
         :valinta-arvo first
         :valinta-nayta second
         :nimi :ajorata
         :vayla-tyyli? true
         ;; Levittimellä tehdyt paikkaukset vaativat ajoradan. Sen vuoksi myös valintalistaan nil arvon teksti muutetaan
-        :pakollinen? (if (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
-                       true
-                       false)}
+        :pakollinen? (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)}
        (when (paikkaus/levittimella-tehty? toteumalomake tyomenetelmat)
-         {:otsikko "Kaista"
-          :tyyppi :positiivinen-numero
-          :kokonaisluku? true
-          :nimi :kaista
+         {:otsikko "Kaista" :nimi :kaista :tyyppi :valinta
+          :valinnat pot/+kaistat+ :valinta-arvo :koodi
           :pakollinen? true
-          :vayla-tyyli? true
-          :virhe? (validointi/nayta-virhe? [:kaista] toteumalomake)
-          :rivi-luokka "lomakeryhman-rivi-tausta"}))
+          :vayla-tyyli? true :rivi-luokka "lomakeryhman-rivi-tausta"
+          :valinta-nayta (fn [rivi]
+                           (if rivi
+                             (:nimi rivi)
+                             "Valitse"))
+          :kokonaisluku? true :validoi [[:ei-tyhja "Anna arvo"]]}))
      (lomake/rivi
        {:otsikko "A-osa"
         :tyyppi :positiivinen-numero

@@ -103,6 +103,7 @@
 (def tienkohta-perustiedot
   #{::tienkohta-id
     ::ajorata
+    ::kaista
     ::reunat
     ::ajourat
     ::ajouravalit
@@ -246,7 +247,8 @@
    :f26 :harja.domain.paikkaus/reunat,
    :f27 :harja.domain.paikkaus/ajourat,
    :f28 :harja.domain.paikkaus/ajouravalit,
-   :f29 :harja.domain.paikkaus/keskisaumat})
+   :f29 :harja.domain.paikkaus/keskisaumat,
+   :f30 :harja.domain.paikkaus/kaista})
 
 (def speqcl-avaimet->paikkaus
   {:harja.domain.paikkaus/id :id
