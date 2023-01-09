@@ -99,7 +99,7 @@
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
     (is (=marginaalissa? nurkkasumma -2500.00))
-    (let [otsikko "Pohjois-Pohjanmaa, Sakko- ja bonusraportti ajalta 01.01.2017 - 31.12.2017"
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -149,7 +149,7 @@
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
     (is (=marginaalissa? nurkkasumma -5500.00M))
-    (let [otsikko "KOKO MAA, Sakko- ja bonusraportti ajalta 01.01.2017 - 31.12.2017"
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
