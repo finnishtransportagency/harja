@@ -45,7 +45,7 @@
   ([rivit suodattimet]
    [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
                       :yksikko " kpl"
-                      :fmt? false}]))
+                      :fmt :numero}]))
 
 
 (defn sakkojen-summa
