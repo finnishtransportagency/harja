@@ -34,7 +34,7 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :tilannekuva (component/using
                                        (->Tilannekuva)
@@ -171,7 +171,7 @@
     (is (not (contains? vastaus :tarkastus)))
     (is (= (count (:laatupoikkeamat vastaus)) 50))
     (is (= (count (:paallystys vastaus)) 1))
-    (is (= (count (:paikkaus vastaus)) 11))
+    (is (= (count (:paikkaus vastaus)) 13))
     (is (= (count (:ilmoitukset vastaus)) 48))
     (is (= (count (:tietyomaat vastaus)) 1))
     (is (= (count (:tietyoilmoitukset vastaus)) 4))))

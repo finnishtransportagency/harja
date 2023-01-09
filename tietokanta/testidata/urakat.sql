@@ -29,7 +29,7 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
   VALUES ('4242523-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'POP'), 'Muhoksen päällystysurakka',
-          '2014-10-01', '2022-09-30', 'paallystys', 'muho1', (SELECT id
+          '2017-01-01', '2024-12-31', 'paallystys', 'muho1', (SELECT id
                                                               FROM organisaatio
                                                               WHERE ytunnus = '0651792-4')),
          ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
@@ -63,10 +63,10 @@ END $$;
 INSERT INTO yhatiedot (urakka, yhaid, yhatunnus)
   VALUES ((SELECT id
            FROM urakka
-           WHERE nimi = 'Muhoksen päällystysurakka'), 76745, 'YHA34434'),
+           WHERE nimi = 'Muhoksen päällystysurakka'), 868309152, 'YHA34434'),
           ((SELECT id
             FROM urakka
-            WHERE nimi = 'Utajärven päällystysurakka'), 521048475, 'YHA7331');
+            WHERE nimi = 'Utajärven päällystysurakka'), 741834794, 'YHA7331');
 
 INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, loppupvm, tyyppi, urakoitsija, urakkanro)
 VALUES ('4242566-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id

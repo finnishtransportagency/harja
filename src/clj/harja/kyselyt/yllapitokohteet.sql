@@ -339,6 +339,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -364,6 +365,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -389,6 +391,7 @@ SELECT
   ypko.tr_loppuetaisyys              AS "tr-loppuetaisyys",
   ypko.tr_ajorata                    AS "tr-ajorata",
   ypko.tr_kaista                     AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -494,22 +497,23 @@ WHERE id = :id
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
                               paallystetyyppi, raekoko, tyomenetelma, massamaara,
-                              ulkoinen_id, sijainti)
+                              ulkoinen_id, yllapitoluokka, sijainti)
 VALUES (:yllapitokohde,
-  :nimi,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_alkuetaisyys,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :tr_ajorata,
-  :tr_kaista,
-  :toimenpide,
-  :paallystetyyppi,
-  :raekoko,
-  :tyomenetelma,
-  :massamaara,
-  :ulkoinen-id,
+        :nimi,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :tr_ajorata,
+        :tr_kaista,
+        :toimenpide,
+        :paallystetyyppi,
+        :raekoko,
+        :tyomenetelma,
+        :massamaara,
+        :ulkoinen-id,
+        :yllapitoluokka,
   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
    FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
                                           CAST(:tr_alkuosa AS INTEGER),
@@ -551,6 +555,7 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys,
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
+  yllapitoluokka   = :yllapitoluokka,
   paallystetyyppi  = :paallystetyyppi,
   raekoko          = :raekoko,
   tyomenetelma     = :tyomenetelma,
@@ -780,6 +785,7 @@ WHERE yllapitokohde = :id
 UPDATE yllapitokohteen_aikataulu
    SET
        kohde_alku       = :aikataulu_kohde_alku,
+       paallystys_loppu = :aikataulu_paallystys_valmis,
        kohde_valmis     = :aikataulu_kohde_valmis,
        muokattu         = NOW(),
        muokkaaja        = :aikataulu_muokkaaja
@@ -896,7 +902,7 @@ SELECT
             -- varmistetaan ettei alikohdetta ole poistettu
             EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
      FROM pot2_paallystekerros paall
-    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS toimenpiteet,
+    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS toimenpiteet,
   (SELECT string_agg(DISTINCT (
       select t.lyhenne || m.max_raekoko || ', ' || m.kuulamyllyluokka
       FROM pot2_mk_urakan_massa m
@@ -905,7 +911,7 @@ SELECT
          -- varmistetaan ettei alikohdetta ole poistettu
            EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
     FROM pot2_paallystekerros paall
-   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS paallysteet,
+   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS paallysteet,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",
@@ -992,15 +998,16 @@ WHERE id = :id;
 -- name: hae-yllapitokohde
 SELECT
   ypk.id,
+  paik.id                    AS "paikkauskohde-id",
   ypk.urakka,
   sopimus,
   kohdenumero,
-  nimi,
+  ypk.nimi,
   ypkk.sopimuksen_mukaiset_tyot,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi,
   ypkk.kaasuindeksi,
-  poistettu,
+  ypk.poistettu,
   ypka.kohde_alku            AS "aikataulu_kohde_alku",
   ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
   ypka.paallystys_loppu      AS "aikataulu_paallystys_loppu",
@@ -1027,12 +1034,11 @@ SELECT
   keskimaarainen_vuorokausiliikenne,
   nykyinen_paallyste,
   suorittava_tiemerkintaurakka,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
+  karttapaivamaara
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde paik ON paik."yllapitokohde-id" = ypk.id AND paik.poistettu IS FALSE
 WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu

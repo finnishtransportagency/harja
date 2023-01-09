@@ -7,6 +7,7 @@
             [harja.testi :refer :all]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.tloik.sanomat.harja-kuittaus-sanoma :as harja-kuittaus-sanoma]
+            [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
             [harja.pvm :as pvm])
   (:import (java.io ByteArrayInputStream)
            (java.text SimpleDateFormat)
@@ -57,3 +58,15 @@
                     nil))
         xsd "harja-tloik.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd xml) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+
+(deftest tarkista-tloik-kuittaus-sanoman-validius-validilla-viestilla
+  (let [tloik-kuittaus-vastaanotto-xml (slurp "test/resurssit/tloik/tloik-kuittaus-vastaanotto.xml")
+        vastaus (tloik-kuittaus-sanoma/lue-kuittaus tloik-kuittaus-vastaanotto-xml)]
+    (is (nil? (:virhe vastaus)))))
+
+(deftest tarkista-tloik-kuittaus-sanoman-validius-epavalidilla-viestilla
+  (let [;; Tuotannossa, joihinkin viesteihin tulee vastapalloon sama viesti, joka tloikin jonoihin lähetettiin
+        ;; Varmistetaan, että saman viestin vastaanotto ei aiheuta "onnistunut" tyyppistä merkintää Harjassa
+        tloik-kuittaus-vastaanotto-xml (slurp "test/resurssit/tloik/tloik-valipalikan-kuittaus-viesti.xml")
+        vastaus (tloik-kuittaus-sanoma/lue-kuittaus tloik-kuittaus-vastaanotto-xml)]
+    (is (not (nil? (:virhe vastaus))))))

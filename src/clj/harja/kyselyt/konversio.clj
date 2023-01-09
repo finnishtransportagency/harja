@@ -9,9 +9,11 @@
             [clojure.java.jdbc :as jdbc]
             [clojure.string :as str]
             [harja.pvm :as pvm]
-            [digest :as digest])
+            [digest :as digest]
+            [clojure.data.xml :as data-xml])
   (:import (clojure.lang Keyword)
-           (java.io ByteArrayOutputStream ObjectOutputStream)))
+           (java.io ByteArrayOutputStream ObjectOutputStream)
+           (java.text SimpleDateFormat)))
 
 
 (defn yksi
@@ -208,6 +210,10 @@
   [^java.util.Date dt]
   (when dt
     (java.sql.Date. (.getTime dt))))
+
+(defn java-util-date->sql-date-str [^java.util.Date dt]
+  (when dt
+    (.format (SimpleDateFormat. "yyyy-MM-dd") dt)))
 
 (defn sql-timestamp
   "Luo java.sql.Timestamp objektin annetusta java.util.Date objektista."
@@ -434,3 +440,7 @@
   (if (string? x)
     (digest/sha-256 x)
     (digest/sha-256 (to-byte-array x))))
+
+(defn prettyprint-xml [xml]
+  (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
+    (data-xml/indent-str parsittu-xml)))

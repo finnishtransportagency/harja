@@ -93,7 +93,8 @@
         lakkautuspvm (when (> (count lakkautuspvm_str) 0) (c/to-date (str (subs lakkautuspvm_str 0 4) "-" (subs lakkautuspvm_str 4 6) "-" (subs lakkautuspvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
         muutospvm_str (:muutospvm silta)
         muutospvm (when (> (count muutospvm_str) 0) (c/to-date (str (subs muutospvm_str 0 4) "-" (subs muutospvm_str 4 6) "-" (subs muutospvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
-        status (int (:status silta))
+        ;; uudessa rajapinnassa statuskenttä puuttuu. Tuotannossa suurin osa statuksella 1, joten siihen fallback
+        status (int (or (:status silta) 1))
         laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
         tunnus (when (not-empty laani-lyhenne)
                  (str laani-lyhenne "-" siltanumero))
@@ -228,7 +229,7 @@
 (defn karsi-testisillat [sillat]
   (remove #(= true
               (boolean
-                (re-find #"TENTTI_" (:siltanimi %))))
+                (re-find #"TENTTI_" (:nimi %))))
           sillat))
 
 (defn karsi-voimassaolevien-siltojen-poistetut-osuudet

@@ -19,7 +19,6 @@
             [cljs.core.async :refer [<!]]
             [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset-nakyma]
-            [harja.views.urakka.laadunseuranta.sanktiot :as v-sanktiot]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.urakka :as urakka]
@@ -90,7 +89,7 @@
 sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (id avaimena)"
   [_sanktiot-atom _paatosoikeus? _laatupoikkeama _muokattava? optiot]
   (let [urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-        yllapito? @urakka/yllapidon-urakka?
+        yllapito? @urakka/yllapitourakka?
         vesivayla? (u-domain/vesivaylaurakkatyyppi? (:nakyma optiot))
         urakan-tpit @urakka/urakan-toimenpideinstanssit
         ;; Laatupoikkeama näyttää oman karsitun setin lajeista, vaihtelee urakkatyypin mukaan.
@@ -135,7 +134,8 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                              (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
                              paivitetty)))
                 :valinnat mahdolliset-sanktiolajit
-                :valinta-nayta v-sanktiot/laji->teksti
+                :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
+                :sarake-disabloitu-arvo-fn #(sanktio-domain/sanktiolaji->teksti (get-in % [:rivi :laji]))
                 :validoi [[:ei-tyhja "Valitse laji"]]})
 
              (cond yllapito?
@@ -325,7 +325,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                                             #(sanktiotietoja-annettu? @laatupoikkeama))
                kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
                yllapitokohteet (:yllapitokohteet optiot)
-               yllapito? @urakka/yllapidon-urakka?
+               yllapito? @urakka/yllapitourakka?
                nakyma (:nakyma optiot)
                vesivayla? (u-domain/vesivaylaurakkatyyppi? nakyma)
                yllapitokohdeurakka? @urakka/yllapitokohdeurakka?]

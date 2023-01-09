@@ -22,6 +22,8 @@
     "lupaus-luvatut-pisteet" ::lupaus-luvatut-pisteet
     "lupaus-toteutuneet-pisteet" ::lupaus-toteutuneet-pisteet
     "lupaus-tavoitehinta" ::lupaus-tavoitehinta
+    "erilliskustannus_id" ::erilliskustannus-id
+    "sanktio_id" ::sanktio-id
     "luoja-id" ::muokkaustiedot/luoja-id
     "luotu" ::muokkaustiedot/luotu
     "muokattu" ::muokkaustiedot/muokattu
@@ -52,7 +54,7 @@
     "poistettu" ::muokkaustiedot/poistettu?}])
 
 (def paatosten-tyypit
-  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupaus-bonus ::lupaus-sanktio})
+  #{::tavoitehinnan-ylitys ::tavoitehinnan-alitus ::kattohinnan-ylitys ::lupausbonus ::lupaussanktio})
 
 (def luokat
   #{"Tiestömuutokset" "Tehtävämuutokset" "Työmäärämuutokset" "Hoitoluokkamuutokset"

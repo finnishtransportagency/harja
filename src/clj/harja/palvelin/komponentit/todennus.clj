@@ -243,7 +243,8 @@ req mäpin, jossa käyttäjän tiedot on lisätty avaimella :kayttaja."))
         (if-let [kayttajatiedot (koka->kayttajatiedot db headerit oikeudet)]
           (assoc req :kayttaja kayttajatiedot)
           (do
-            (log/warn "Ei löydetty koka-käyttäjätietoja id:lle" (pr-str (headerit "oam_remote_user")))
+            (log/warn (str "Ei löydetty koka-käyttäjätietoja id:lle: " (headerit "oam_remote_user")
+                        " Jos kyseessä on järjestelmäkäyttäjä, tarkista kutsutaanko oikeaa endpointtia: " (:uri req)))
             (throw+ todennusvirhe)))))))
 
 (defrecord FeikkiHttpTodennus [kayttaja]

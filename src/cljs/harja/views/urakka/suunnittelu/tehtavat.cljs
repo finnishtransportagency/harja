@@ -146,14 +146,8 @@
        [:div.flex-row.tasaa-alas.loppuun
         (doall 
           (for [vuosi (range
-                        (-> @tila/yleiset
-                          :urakka
-                          :alkupvm
-                          pvm/vuosi)
-                        (-> @tila/yleiset
-                          :urakka
-                          :loppupvm
-                          pvm/vuosi))]
+                        (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+                        (-> @tila/yleiset :urakka :loppupvm pvm/vuosi))]
             ^{:key (str "vetolaatikko-input-" nimi "-" vuosi)}
             [:div.vetolaatikko-kentat
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
@@ -237,11 +231,11 @@
                "60%"
                "70%")}
             ;; ennen urakkaa -moodi         
-            {:otsikko "Tarjouksen määrä" :nimi :sopimuksen-aluetieto-maara :tyyppi :numero :leveys "180px"
+            {:otsikko "Tarjouksen määrä" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
              :muokattava? (constantly (if sopimukset-syotetty? false true)) :tasaa :oikea :veda-oikealle? true}
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty? 
-              {:otsikko "Muuttunut määrä" :nimi :muuttunut-aluetieto-maara :tyyppi :numero :muokattava? kun-yksikko :leveys "180px" :tasaa :oikea :veda-oikealle? true})
+              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :muokattava? kun-yksikko :leveys "180px" :tasaa :oikea :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            aluetiedot-tila]])
        (when (and (> maara-tehtavia 0) nayta-suunniteltavat-tehtavat?)
@@ -278,7 +272,7 @@
                "70%")}
             ;; ennen urakkaa -moodi
             (when (not sopimukset-syotetty?)
-              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimuksen-tehtavamaara :tyyppi :numero :leveys "180px" 
+              {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :leveys "180px"
                :muokattava? (comp kun-yksikko kun-kaikki-samat) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
@@ -289,7 +283,7 @@
               {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string 
                :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara :tyyppi :numero :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
+              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            maarat-tila]])])))
 
@@ -297,8 +291,8 @@
   [e! {:keys [valinnat taulukko] :as app}]
   (let [{:keys [nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} valinnat]
     [:div
-     [debug/debug valinnat]
-     [debug/debug taulukko]
+     ;[debug/debug valinnat]
+     ;[debug/debug taulukko]
      (if (or nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?)
        [:div 
         (doall
@@ -334,9 +328,9 @@
            (comp
              (vieritys/vierita ::top)
              #(e! (t/->TallennaSopimus false))) {:ikoni [ikonit/pencil]}])]
-       [debug/debug app]
-       [debug/debug @t/taulukko-tila]
-       [debug/debug @t/taulukko-virheet]
+       ;[debug/debug app]
+       ;[debug/debug @t/taulukko-tila]
+       ;[debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)

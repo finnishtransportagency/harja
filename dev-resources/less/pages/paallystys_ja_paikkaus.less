@@ -16,6 +16,8 @@
         margin-top: 3rem;
         margin-bottom: 3rem;
     }
+}
+.paallystysilmoitusluettelo {
     .harja-icon-status-selected {
         color: @green-dark;
     }
@@ -113,6 +115,9 @@
             }
             .pvm-kentta > .form-control {
                 max-width: 243px;
+            }
+            .solujen-valistys-8 td {
+                min-width: 51px; //pot-tietojen tapauksessa basis256 TR-osoitekentän vuoksi tämä
             }
         }
     }
@@ -224,11 +229,6 @@
 // ylläpitokohteet näkymässä headeri on matalampi, siinä tuoreusvihjettä ei ole tarvetta laskea keinotekoisesti alaspäin
 .paallystyskohteet .tuoreusvihje {
     top: 0;
-}
-.pot2-alustan-vinkki {
-    font-size: 0.75rem;
-    font-weight: normal;
-    margin-top: 12px;
 }
 .yha-ja-velho-lahetyksen-tila {
     > .info-laatikko {

@@ -581,33 +581,56 @@ FROM toimenpidekoodi tk,
      urakka u
 WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
-  AND tk.kasin_lisattava_maara = true
+  AND tk.aluetieto = false
   AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
   AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
 
 
+-- name: tallenna-erilliskustannukselle-liitteet<!
+-- Lisää liitteet
+INSERT INTO erilliskustannus_liite
+  (bonus, liite)
+VALUES (:bonus, :liite);
+
 -- name: luo-erilliskustannus<!
 -- Listaa urakan erilliskustannukset
 INSERT
 INTO erilliskustannus
 (tyyppi, urakka, sopimus, toimenpideinstanssi, pvm,
- rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
+ rahasumma, indeksin_nimi, lisatieto, luotu, luoja, laskutuskuukausi, kasittelytapa)
 VALUES (:tyyppi :: erilliskustannustyyppi, :urakka, :sopimus, :toimenpideinstanssi, :pvm,
-        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja);
+        :rahasumma, :indeksin_nimi, :lisatieto, NOW(), :luoja, :laskutuskuukausi,
+        :kasittelytapa :: laatupoikkeaman_kasittelytapa);
 
 -- name: paivita-erilliskustannus!
 -- Päivitä erilliskustannus
 UPDATE erilliskustannus
-SET tyyppi            = :tyyppi :: erilliskustannustyyppi, urakka = :urakka, sopimus = :sopimus,
-  toimenpideinstanssi = :toimenpideinstanssi,
-  pvm                 = :pvm,
-  rahasumma           = :rahasumma, indeksin_nimi = :indeksin_nimi, lisatieto = :lisatieto, muokattu = NOW(),
-  muokkaaja           = :muokkaaja,
-  poistettu           = :poistettu
+SET tyyppi              = :tyyppi :: erilliskustannustyyppi,
+    urakka              = :urakka,
+    sopimus             = :sopimus,
+    toimenpideinstanssi = :toimenpideinstanssi,
+    pvm                 = :pvm,
+    rahasumma           = :rahasumma,
+    indeksin_nimi       = :indeksin_nimi,
+    kasittelytapa       = :kasittelytapa :: laatupoikkeaman_kasittelytapa,
+    laskutuskuukausi    = :laskutuskuukausi,
+    lisatieto           = :lisatieto,
+    muokattu            = NOW(),
+    muokkaaja           = :muokkaaja,
+    poistettu           = :poistettu
 WHERE id = :id
       AND urakka = :urakka;
+
+-- name: poista-erilliskustannus<!
+UPDATE erilliskustannus
+   SET muokattu  = NOW(),
+       muokkaaja = :muokkaaja,
+       poistettu = TRUE
+ WHERE id = :id
+   AND urakka = :urakka
+RETURNING *;
 
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
@@ -1416,7 +1439,12 @@ SELECT t.toteuma_tunniste_id,
        t.toteuma_lisatieto,
        t.toteumatehtavat,
        t.toteumamateriaalit,
-       json_agg(row_to_json(row(rp.aika, rp.tehtavat, rp.sijainti, rp.materiaalit))) AS reitti,
+       CASE
+           WHEN :koordinaattimuutos THEN
+               json_agg(row_to_json(row (rp.aika, rp.tehtavat, st_transform(st_setsrid(rp.sijainti::geometry, 3067), 4326)::point, rp.sijainti, rp.materiaalit)))
+           ELSE
+               json_agg(row_to_json(row (rp.aika, rp.tehtavat, null::point, rp.sijainti, rp.materiaalit)))
+           END AS reitti,
        t.toteuma_tiesijainti_numero,
        t.toteuma_tiesijainti_aosa,
        t.toteuma_tiesijainti_aet,

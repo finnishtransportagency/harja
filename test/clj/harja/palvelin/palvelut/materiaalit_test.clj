@@ -602,8 +602,8 @@
         hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
                                           (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
 
-    (is (= (map #(dissoc % :pvm) ennen) (map #(dissoc % :pvm) (conj odotettu-ennen odotettu-yht-rivi))) "Suolatoteumat ennen lisäystä")
-    (is (= (map #(dissoc % :pvm) jalkeen) (map #(dissoc % :pvm) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
+    (is (= (map #(dissoc % :pvm :tid :toteumaidt) ennen) (map #(dissoc % :pvm :tid :toteumaidt) (conj odotettu-ennen odotettu-yht-rivi))) "Suolatoteumat ennen lisäystä")
+    (is (= (map #(dissoc % :pvm :tid :toteumaidt) jalkeen) (map #(dissoc % :pvm :tid :toteumaidt) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
 
     (is (= sopimuksen-mat-kaytto-ennen sopimuksen-kaytetty-mat-ennen-odotettu) "Materiaalicache 1 ennen OK")
     (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu [2 #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")

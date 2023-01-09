@@ -410,6 +410,48 @@
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
       vastaus)))
 
+(defn kasittele-sahkoposti-kutsu
+  "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu ja
+  lähetetty data on XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin. Sisään tuleva data validoidaan
+  käyttäen annettuja XML -skeemoja.
+
+  Käsittely voi palauttaa seuraavat HTTP-statukset: 200 = ok, 400 = kutsun data on viallista & 500 = sisäinen
+  käsittelyvirhe.
+  Hox. Tämä lähes identtinen muiden kasittele-kutsu funktioiden kanssa, mutta on eriytetty, jotta sähköpostiapin hallinta
+  yksinkertaistuu"
+
+  [db integraatioloki resurssi request kutsun-skeema vastauksen-skeema kasittele-kutsu-fn]
+  (if-not (= (kutsun-formaatti request) "xml")
+    {:status 415
+     :headers (lisaa-request-headerit-cors {"Content-Type" "text/plain"} (get (:headers request) "origin"))
+     :body "Virhe: Väärä content-type. Käytä application/xml\n"}
+    (let [xml? (= (kutsun-formaatti request) "xml")
+          body (lue-body request)
+          tapahtuma-id (when integraatioloki
+                         (lokita-kutsu integraatioloki resurssi request body))
+          parametrit (:params request)
+          headerit (:headers request)
+          vastaus (aja-virhekasittelyn-kanssa
+                    resurssi
+                    parametrit
+                    headerit
+                    body
+                    #(let
+                       [kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))
+                        origin-header (get (:headers request) "origin")
+                        kutsun-data (lue-kutsu xml? kutsun-skeema request body)
+                        vastauksen-data (kasittele-kutsu-fn parametrit kutsun-data kayttaja db)
+                        vastauksen-xml (xml/tee-xml-sanoma vastauksen-data)]
+
+                       ;; Jos vain mahdollista, eikä todella vakavia virheitä satu, raportoidaan 200 ok vastaukseksi, vaikka
+                       ;; itse käsittely ei ole välttämättä onnistunut
+                       {:status 200
+                        :headers (lisaa-request-headerit false origin-header)
+                        :body vastauksen-xml}))]
+      (when integraatioloki
+        (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))
+      vastaus)))
+
 (defn kasittele-get-kutsu
   "Käsittelee synkronisesti annetun kutsun ja palauttaa käsittelyn tuloksen mukaisen vastauksen. Vastaanotettu data
    tulee GET pyyntönä parametrien kanssa. Lähetetty data on JSON/ tai XML -formaatissa, joka muunnetaan Clojure dataksi ja toisin päin.
@@ -532,7 +574,7 @@
                         status (if-not (str/blank? mahdollinen-virhe) 400 200)]
 
                        {:status status
-                        :headers (lisaa-request-headerit false origin-header)
+                        :headers (lisaa-request-headerit true origin-header)
                         :body vastauksen-data}))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi vastaus tapahtuma-id))

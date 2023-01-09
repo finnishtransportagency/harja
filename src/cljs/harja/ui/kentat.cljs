@@ -372,11 +372,13 @@
            (when (and yksikko vayla-tyyli?)
              [:span.sisainen-label.black-lighter {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
-(defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja salli-whitespace?] :as kentta} data]
+(defmethod nayta-arvo :numero [{:keys [jos-tyhja salli-whitespace? yksikko] :as kentta} data]
  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
-             (normalisoi-numero (fmt @data) salli-whitespace?))]))
+             (normalisoi-numero (fmt @data) salli-whitespace?))
+     (when yksikko
+       (str " " yksikko))]))
 
 (defmethod tee-kentta :negatiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-negatiivinen? true
@@ -392,6 +394,23 @@
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
+
+(defmethod tee-kentta :euro [{:keys [fmt] :as kentta} data]
+  [tee-kentta (assoc kentta
+                :tyyppi :numero
+                :fmt (or fmt (partial fmt/euro-opt false))
+                :salli-whitespace? true
+                :yksikko "€"
+                :desimaalien-maara 2
+                :veda-oikealle? true)
+   data])
+
+(defmethod nayta-arvo :euro [{:keys [fmt] :as kentta} data]
+  [nayta-arvo (assoc kentta
+                :tyyppi :numero
+                :fmt (or fmt (partial fmt/euro-opt false))
+                :yksikko "€"
+                :salli-whitespace? true) data])
 
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
@@ -761,12 +780,27 @@
             valinnat valinnat-fn rivi on-focus on-blur jos-tyhja
             jos-tyhja-fn disabled? fokus-klikin-jalkeen? virhe?
             nayta-ryhmat ryhmittely ryhman-otsikko vayla-tyyli? elementin-id
-            pakollinen? tarkenne muokattu?]} data]
+            pakollinen? tarkenne muokattu? valitse-oletus?]} data]
     ;; valinta-arvo: funktio rivi -> arvo, jolla itse lomakken data voi olla muuta kuin valinnan koko item
     ;; esim. :id
     (assert (or valinnat valinnat-fn) "Anna joko valinnat tai valinnat-fn")
 
-    (let [nykyinen-arvo @data
+   (let [nykyinen-arvo (cond
+                         (and
+                           valitse-oletus?
+                           valinta-arvo
+                           (= 1 (count valinnat)))
+                         (valinta-arvo (first valinnat))
+                         
+                         (and
+                           valitse-oletus?
+                           (not valinta-arvo)
+                           (= 1 (count valinnat)))
+                         (first valinnat)
+                         
+                         :else
+                         @data)
+         _ (when (and valitse-oletus? (not= nykyinen-arvo @data)) (reset! data nykyinen-arvo))
           ;; Valintalistaus pitää olla muodostettuna ennen valinnan tekemistä
           valinnat (or valinnat (valinnat-fn rivi))
           valinta (when valinta-arvo

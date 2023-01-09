@@ -4,35 +4,26 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko +korostuksen-kesto+]]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader +korostuksen-kesto+]]
             [harja.ui.napit :as napit]
             [harja.ui.viesti :as viesti]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallinta.indeksit :as i]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.urakka.toteumat :as toteumat]
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
 
             [harja.ui.lomake :refer [lomake]]
-            [harja.loki :refer [log logt]]
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
-            [cljs.core.async :refer [<! >! chan]]
             [cljs.core.async :refer [<! timeout]]
-            [harja.ui.protokollat :refer [Haku hae]]
-            [harja.domain.skeema :refer [+tyotyypit+]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as urakka-domain]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka :as urakka]
             [harja.asiakas.kommunikaatio :as k])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [reagent.ratom :refer [reaction]]))
 
 (defonce valittu-kustannus (atom nil))
 
@@ -41,7 +32,7 @@
             sopimus-id (first (:sopimus muokattu))
             tpi-id (:tpi_id (:toimenpideinstanssi muokattu))
             tyyppi (name (:tyyppi muokattu))
-            indeksi (if (or (not (urakka/indeksi-kaytossa?))
+            indeksi (if (or (not (u/indeksi-kaytossa?))
                             (= yleiset/+ei-sidota-indeksiin+ (:indeksin_nimi muokattu)))
                       nil
                       (:indeksin_nimi muokattu))
@@ -70,8 +61,9 @@
 (def +valitse-tyyppi+
   "- Valitse tyyppi -")
 
-(defn erilliskustannustyypin-teksti [avainsana]
+(defn erilliskustannustyypin-teksti
   "Erilliskustannustyypin teksti avainsanaa vastaan"
+  [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :muu "Muu"
@@ -79,23 +71,6 @@
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
     +valitse-tyyppi+))
-
-(defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
-  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
-  ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
-  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
-  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
-             (= :muu %)
-             true)
-          (cond
-            (= :hoito urakkatyyppi)
-            [:asiakastyytyvaisyysbonus :muu]
-            (and (= :teiden-hoito urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:asiakastyytyvaisyysbonus :alihankintabonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
-            (and (= :teiden-hoito urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
-            [:muu]
-            :default
-            [:asiakastyytyvaisyysbonus :muu])))
 
 (defn maksajavalinnan-teksti [avain]
   (case avain
@@ -106,9 +81,6 @@
 (defn maksajavalinnat
   [ek]
   (case (:tyyppi ek)
-    :asiakastyytyvaisyysbonus
-    [:tilaaja]
-
     :muu
     [:tilaaja :urakoitsija]
 
@@ -132,12 +104,6 @@
       +rivin-luokka+
       "")))
 
-(defn- mhu-bonuksen-indeksi [bonus-tyyppi urakan-indeksi]
-  (if (or
-        (= :asiakastyytyvaisyysbonus bonus-tyyppi)
-        (= :lupausbonus bonus-tyyppi))
-    urakan-indeksi
-    yleiset/+ei-sidota-indeksiin+))
 
 (defn erilliskustannusten-toteuman-muokkaus
   "Erilliskustannuksen muokkaaminen ja lisääminen"
@@ -255,31 +221,19 @@
             :valinta-arvo identity
             :valinta-nayta (fn [arvo]
                              (if arvo (erilliskustannustyypin-teksti arvo) +valitse-tyyppi+))
-            :valinnat (luo-kustannustyypit (:tyyppi ur) @istunto/kayttaja (:toimenpideinstanssi @muokattu))
+            ;; Ainoa valinta tällä hetkellä on ":muu", bonukset lisätään bonuslomakkeella Laadunseuranta -> Sanktiot ja Bonukset
+            :valinnat [:muu]
             :fmt #(erilliskustannustyypin-teksti %)
             :validoi [[:ei-tyhja "Anna kustannustyyppi"]]
             :palstoja 1
             :aseta (fn [rivi arvo]
                      (assoc (cond
                               (and
-                                (not= :teiden-hoito urakan-tyyppi)
-                                urakan-indeksi
-                                (= :asiakastyytyvaisyysbonus arvo))
-                              (assoc rivi :indeksin_nimi urakan-indeksi
-                                          :maksaja :tilaaja)
-                              (and
                                 (= :teiden-hoito urakan-tyyppi)
-                                (or (= :lupausbonus arvo)
-                                    (= :asiakastyytyvaisyysbonus arvo)))
-                              (assoc rivi :indeksin_nimi urakan-indeksi
-                                          :maksaja :tilaaja)
-                              (and
-                                (= :teiden-hoito urakan-tyyppi)
-                                (or (not= :lupausbonus arvo)
-                                    (not= :asiakastyytyvaisyysbonus arvo)))
+                                (= :muu arvo))
                               (assoc rivi :indeksin_nimi "Ei sidota indeksiin"
                                           :maksaja :tilaaja)
-                              :default rivi)
+                              :else rivi)
                        :tyyppi arvo))}
            {:otsikko "Toteutunut pvm" :nimi :pvm :tyyppi :pvm
             :pakollinen? true
@@ -293,37 +247,26 @@
             :validoi [[:ei-tyhja "Anna rahamäärä"]]
             :palstoja 1}
 
-           (when (urakka/indeksi-kaytossa?)
+           (when (u/indeksi-kaytossa?)
              {:otsikko "Indeksi" :nimi :indeksin_nimi :tyyppi :valinta
               :pakollinen? true
               ;; Hoitourakoissa as.tyyt.bonuksen laskennan indeksi menee urakan alkamisvuoden mukaan - indeksi pakotetaan
               ;; Maanteiden hoitourakoissa (MHU) as.tyyt.bonuksen laskennan indeksi ja lupausbonus menee urakan alkamisvuoden mukaan - indeksi pakotetaan
               ;; Sen sijaan maanteiden hoitourakoissa (MHU) alihankintabonukselle ja tavoitepalkkiolle ei saa valita indeksiä.
-              :muokattava? #(not (or
-                                   (and
-                                     (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                                     (= :hoito (:tyyppi ur)))
-                                   (= :teiden-hoito (:tyyppi ur))))
+              :muokattava? #(not (= :teiden-hoito (:tyyppi ur)))
               :valinnat (if (= :teiden-hoito (:tyyppi ur))
-                          (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
+                          yleiset/+ei-sidota-indeksiin+
                           (conj valittavat-indeksit yleiset/+ei-sidota-indeksiin+))
               :fmt #(cond
                       (and (= :hoito (:tyyppi ur)) (nil? %))
                       yleiset/+valitse-indeksi+
                       (and (= :teiden-hoito (:tyyppi ur)) (nil? %))
-                      (mhu-bonuksen-indeksi (:tyyppi @muokattu) urakan-indeksi)
-                      :default (str %))
-              :palstoja 1
-              :vihje (when (and
-                             (= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
-                             (= :hoito (:tyyppi ur)))
-                       (str "Asiakastyytyväisyysbonuksen indeksitarkistus lasketaan"
-                            " automaattisesti laskutusyhteenvedossa. Käytettävä indeksi"
-                            " määräytyy urakan kilpailuttamisajankohdan perusteella."))})
+                      yleiset/+ei-sidota-indeksiin+
+                      :else (str %))
+              :palstoja 1})
 
-           ;; asiakastyytyväisyysbonuksen voi maksaa vain tilaaja
            {:otsikko "Maksaja" :nimi :maksaja :tyyppi :valinta
-            :muokattava? #(not= :asiakastyytyvaisyysbonus (:tyyppi @muokattu))
+            :muokattava? (constantly true)
             :pakollinen? true
             :valinta-nayta #(maksajavalinnan-teksti %)
             :valinnat-fn #(maksajavalinnat @muokattu)

@@ -40,10 +40,9 @@
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :http-palvelin (testi-http-palvelin)
-                        :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
                                           (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset

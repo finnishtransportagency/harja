@@ -34,14 +34,14 @@
                              ;; Talvihoito, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                              #_2
                              13 14]
-                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
-                            ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                            (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2021)
+                            ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2020 tai pienempi.
+                            (when (< (pvm/vuosi urakan-alkupvm) 2021)
                               [15 16])
 
-                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
-                            ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                            (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                            ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2021)
+                            ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2021 tai suurempi
+                            (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                               [17])))
                      :A (vec (concat
                                [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
@@ -50,14 +50,14 @@
                                 #_2
 
                                 13 14]
-                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
-                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2021)
+                               ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2020 tai pienempi.
+                               (when (< (pvm/vuosi urakan-alkupvm) 2021)
                                  [15 16])
 
-                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
+                               ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2021)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                                  [17])))
                      :B (vec (concat
                                [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
@@ -68,12 +68,12 @@
                                 13 14]
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Poistetaan urakoista 2020)
                                ;; 15, "Liikenneympäristön hoito" ja 16, "Sorateiden hoito ja ylläpito" mukana urakoissa, joiden alkuvuosi on 2019 tai pienempi.
-                               (when (< (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (< (pvm/vuosi urakan-alkupvm) 2021)
                                  [15 16])
 
                                ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2020)
                                ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2020 tai suurempi
-                               (when (>= (pvm/vuosi urakan-alkupvm) 2020)
+                               (when (>= (pvm/vuosi urakan-alkupvm) 2021)
                                  [17])))
 
                      :C [8 9 10 11 12]
@@ -137,7 +137,7 @@
     [:muistutus :A :B :C :arvonvahennyssanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
 
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     :else []))
@@ -146,13 +146,15 @@
   [{:keys [tyyppi alkupvm] :as urakka}]
   (cond
     ;; Yllapidon urakka?
-    (urakka-domain/yllapidon-urakka? tyyppi)
+    (urakka-domain/yllapitourakka? tyyppi)
     [:yllapidon_sakko :yllapidon_muistutus]
 
     ;; MHU ja muut
     :else [:muistutus :A :B :C :arvonvahennyssanktio]))
 
 
+
+(def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
 
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
@@ -194,5 +196,97 @@
   (second
     (sanktiofraasi-avaimella fraasin-avain)))
 
-(def hoidon-indeksivalinnat
-  ["MAKU 2015" "MAKU 2010" "MAKU 2005"])
+(defn sanktiolaji->teksti
+  [laji]
+  (case laji
+    :A "A-ryhmä (tehtäväkohtainen sanktio)"
+    :B "B-ryhmä (vakava laiminlyönti)"
+    :C "C-ryhmä (määräpäivän ylitys, hallinnollinen laiminlyönti jne.)"
+    :muistutus "Muistutus"
+    :vaihtosanktio "Vastuuhenkilön vaihto"
+    :testikeskiarvo-sanktio "Vastuuhenkilön testipistemäärän alentuminen"
+    :tenttikeskiarvo-sanktio "Vastuuhenkilön tenttipistemäärän alentuminen"
+    :arvonvahennyssanktio "Arvonvähennys"
+    :pohjavesisuolan_ylitys "Pohjavesialueen suolankäytön ylitys"
+    :talvisuolan_ylitys "Talvisuolan kokonaiskäytön ylitys"
+    :lupaussanktio "Lupaussanktio"
+    :yllapidon_muistutus "Muistutus"
+    :yllapidon_sakko "Sakko"
+    :yllapidon_bonus "Bonus"
+    :vesivayla_muistutus "Muistutus"
+    :vesivayla_sakko "Sakko"
+    :vesivayla_bonus "Bonus"
+
+    :lupausbonus "Lupausbonus"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
+    nil))
+
+(defn bonuslaji->teksti
+  "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
+  [avainsana]
+  (case avainsana
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
+    :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
+    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :tavoitepalkkio "Tavoitepalkkio"
+    :lupausbonus "Lupausbonus"
+    ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
+    ;; Eli, tämä tyyppi ei ole yksi erilliskustannustyypeistä, vaan yksi sanktiolajeista.
+    :yllapidon_bonus "Ylläpidon bonus"
+    nil))
+
+(defn kasittelytapa->teksti
+  [avain]
+  (case avain
+    :tyomaakokous "Työmaakokous"
+    :valikatselmus "Välikatselmus"
+    :puhelin "Puhelimitse"
+    :kommentit "Harja-kommenttien perusteella"
+    :muu "Muu tapa"
+    nil))
+
+(defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
+  ;; Ei sallita urakoitsijan antaa itselleen bonuksia
+  ;; Eikä sallita teiden-hoito tyyppisille urakoille kaikkia bonustyyppejä valita miten halutaan vaan hallinnollisille
+  ;; toimenpiteille on omat bonukset ja muille toimenpideinstansseille on vain "muu" erilliskustannus
+  (filter #(if (= "urakoitsija" (get-in kayttaja [:organisaatio :tyyppi]))
+             (= :muu-bonus %)
+             true)
+          (cond
+            (urakka-domain/alueurakka? urakkatyyppi)
+            [:asiakastyytyvaisyysbonus :muu-bonus]
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
+            (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
+            [:muu-bonus]
+
+            ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
+            ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
+            (urakka-domain/yllapitourakka? urakkatyyppi)
+            [:yllapidon_bonus]
+
+            :else
+            [:asiakastyytyvaisyysbonus :muu-bonus])))
+
+(defn- bonus? [rivi]
+  (boolean (:bonus? rivi)))
+
+(defn- sanktio? [rivi]
+  (not (:bonus? rivi)))
+
+(defn- arvonvahennys? [rivi]
+  (= :arvonvahennyssanktio (:laji rivi)))
+
+(defn- muistutus? [rivi]
+  (or
+    (= :muistutus (:laji rivi))
+    (= :yllapidon_muistutus (:laji rivi))))
+
+(defn rivin-tyyppi [rivi]
+  (cond
+    (muistutus? rivi) :muistutukset
+    (bonus? rivi) :bonukset
+    (arvonvahennys? rivi) :arvonvahennykset
+    (sanktio? rivi) :sanktiot))

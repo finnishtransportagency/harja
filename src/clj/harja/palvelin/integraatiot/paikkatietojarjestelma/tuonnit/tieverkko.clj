@@ -247,7 +247,7 @@
                                        {:tie tie
                                         :osa osa
                                         :ajorata ajorata
-                                        :pituus (:tr_pituus (ajoradat ajorata))})))]
+                                        :pituus (:ajr_pituus (ajoradat ajorata))})))]
 
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 1 :geom (some-> oikea str)})
     (k/vie-tien-osan-ajorata! db {:tie tie :osa osa :ajorata 2 :geom (some-> vasen str)})
@@ -374,8 +374,8 @@
         (doseq [tr-tieto tr-tiedot]
           (k/vie-laajennettu-tien-osa-kantaan<! db tr-tieto))
         (k/paivita-tr-tiedot db)
-        (log/debug "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
-    (log/debug "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+        (log/info "Laajennetun tieosoiteverkon tuonti kantaan valmis.")))
+    (log/info "Laajennetun tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
 
 ;; Tuonnin testaus REPListä:
 ;;(def db (:db harja.palvelin.main/harja-jarjestelma))

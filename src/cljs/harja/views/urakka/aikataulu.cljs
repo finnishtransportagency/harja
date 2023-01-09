@@ -583,12 +583,12 @@
   [nakyma]
   (case nakyma
     :tiemerkinta
-    [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
+    [{:teksti "" :sarakkeita 5 :luokka "paallystys-tausta"}
      {:teksti "Päällystys" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
      {:teksti "Tiemerkintä" :sarakkeita 7 :luokka "tiemerkinta-tausta"}]
 
     ;; kaikki muut, käytännössä :paallystys
-    [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
+    [{:teksti "" :sarakkeita 5 :luokka "paallystys-tausta"}
      {:teksti "Päällystys" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
      {:teksti "Tiemerkintä" :sarakkeita 6 :luokka "tiemerkinta-tausta"}
      {:teksti "" :sarakkeita 1 :luokka "paallystys-tausta-tumma"}]))
@@ -655,10 +655,6 @@
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
        :tyyppi :positiivinen-numero
        :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "PK-lk"
-       :nimi :yllapitoluokka :leveys 3 :tyyppi :string
-       :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
        :muokattava? (constantly false)}
       (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
         {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku

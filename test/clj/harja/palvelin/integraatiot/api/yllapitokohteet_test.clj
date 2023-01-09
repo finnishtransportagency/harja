@@ -30,12 +30,11 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-paallystys
     :fim (component/using
-           (fim/->FIM +testi-fim+)
+           (fim/->FIM {:url +testi-fim+})
            [:db :integraatioloki])
     :vkm (component/using
            (vkm/->VKM +testi-vkm+)
            [:db :integraatioloki])
-    :sonja (feikki-jms "sonja")
     :itmf (feikki-jms "itmf")
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
@@ -60,7 +59,7 @@
                                                yllapitokohteet))]
 
     (is (= 200 (:status vastaus)))
-    (is (= 12 (count yllapitokohteet))
+    (is (= 13 (count yllapitokohteet))
         "Palautuu kaikkien vuosien kohteet (2017 & 2018)")
 
     (testing "2017 kohde palautuu oikein"

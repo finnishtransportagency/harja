@@ -19,8 +19,7 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as urakka-domain])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [reagent.ratom :refer [reaction]]))
 
 (defn urakan-oletussopimus [urakka]
   (let [{:keys [sopimukset paasopimus]} urakka]
@@ -237,15 +236,20 @@
 (defn valitse-urakan-oletusvuosi! [urakka]
   (reset! valittu-urakan-vuosi (urakan-oletusvuosi urakka)))
 
+(def default-hoitokausi (atom {:ylikirjoita? false}))
+
 (defonce valittu-hoitokauden-kuukausi
   (reaction-writable
     (let [hk @valittu-hoitokausi
           ur @nav/valittu-urakka
           kuuluu-hoitokauteen? #(pvm/valissa? (second %) (first hk) (second hk))
           nykyinen-kk (pvm/kuukauden-aikavali (pvm/nyt))
-          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))]
+          edellinen-kk (pvm/ed-kk-aikavalina (pvm/nyt))
+          default-hoitokausi @default-hoitokausi]
       (when (and hk ur)
         (cond
+          (:ylikirjoita? default-hoitokausi)
+          (:default default-hoitokausi)
           ;; mm. toteumanäkymissä halutaan käynnissä oleva kuukausi,
           ;; heidän liputettava anna-kuluva-kk-jos-hoitokaudella
           (and @aseta-kuluva-kk-jos-hoitokaudella? (kuuluu-hoitokauteen? nykyinen-kk))
@@ -498,15 +502,33 @@
           ;; Kaikki muut sivut käyttävät geneeneristä urakan-sanktiolajit apufunktiota
           (sanktio-domain/urakan-sanktiolajit urakka))))))
 
+;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitourakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
+;;       Jos (def yllapitourakka?..) alempana on OK, niin tämän voi poistaa ja korvata viittaukset yllapitourakka? symbolilla.
 (def yllapitokohdeurakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
               (or (= :paallystys urakkatyyppi)
                   (= :paikkaus urakkatyyppi)
                   (= :tiemerkinta urakkatyyppi)))))
 
-(def yllapidon-urakka?
+(def yllapitourakka?
   (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
-              (urakka-domain/yllapidon-urakka? urakkatyyppi))))
+              (urakka-domain/yllapitourakka? urakkatyyppi))))
+
+(def vesivaylaurakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/vesivaylaurakka? urakkatyyppi))))
+
+(def mh-tai-hoitourakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/mh-tai-hoitourakka? urakkatyyppi))))
+
+(def mh-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/mh-urakka? urakkatyyppi))))
+
+(def hj-urakka?
+  (reaction (when-let [urakkatyyppi (:tyyppi @nav/valittu-urakka)]
+              (urakka-domain/hj-urakka? urakkatyyppi (:alkupvm @nav/valittu-urakka)))))
 
 (def paallystysurakan-indeksitiedot (atom nil))
 

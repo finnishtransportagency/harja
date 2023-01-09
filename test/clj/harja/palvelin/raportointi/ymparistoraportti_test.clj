@@ -162,7 +162,7 @@ VALUES
         talvisuolojen-kaytto (nth vastaus 3)]
     (is (vector? vastaus))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           talvisuolataulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
@@ -270,7 +270,7 @@ VALUES
                :loppupvm (c/to-date (t/local-date 2015 9 30))
                :urakkatyyppi :hoito}
         raportin-nimi "Ympäristöraportti"
-        teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
+        teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2014 - 30.09.2015"
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -282,6 +282,7 @@ VALUES
         formiaatit (apurit/taulukko-otsikolla vastaus "Formiaatit")
         kesasuolat (apurit/taulukko-otsikolla vastaus "Kesäsuola")
         hiekoitushiekat (apurit/taulukko-otsikolla vastaus "Hiekoitushiekka")
+        paikkausmateriaalit (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
         ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 0))
         ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 2))
         ;ymp-kaytetty-suolaliuos-hlk-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
@@ -291,6 +292,8 @@ VALUES
         ymp-formiaatit-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 3))
         ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 14 0))
         ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 15 0))
+        ymp-paikkaus-kuumapaallyste (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 3 0))
+        ymp-paikkaus-massasaumaus (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 4 1))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                        :suorita-raportti
@@ -305,6 +308,8 @@ VALUES
         mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 3 0)
         mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 4 0)
         mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 5 0)
+        mat-kaytetty-kuumapaallyste (apurit/taulukon-solu materiaali 6 0)
+        mat-kaytetty-massasaumaus (apurit/taulukon-solu materiaali 7 0)
         suola-sakko-taulukko (apurit/taulukko-otsikolla
                 (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -332,7 +337,31 @@ VALUES
     ;; Testidatasta riippuvia testejä.. vähän huonoja
     (is (= 0 ymp-hiekka-totpros) "Ympäristöraportin hiekan toteumaprosentin pitäisi olla nolla, toteumia ei ole")
     (is (= 0 mat-kaytetty-hiekka) "Materiaaliraportin pitäisi raportoida hiekan määräksi nolla, koska toteumia ei ole")
-    (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")))
+    (is (= 800M ymp-hiekka-suunniteltu) "Onko testidata muuttunut? Ympäristöraportti odottaa, että hiekoitushiekkaa on suunniteltu 800t")
+    (is (= 1000M ymp-paikkaus-kuumapaallyste mat-kaytetty-kuumapaallyste) "Onko testidata muuttunut? Ympäristöraportti odottaa, että kuumapaallyste-tehtävällä on toteumaa 1000t")
+    (is (= 1000M ymp-paikkaus-massasaumaus mat-kaytetty-massasaumaus) "Onko testidata muuttunut? Ympäristöraportti odottaa, että massasaumaus-tehtävällä on toteumaa 1000t")))
+
+(deftest raportin-suunnitellut-arvot-mhu
+  (let [_ (varmista-tietokannan-tila)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        param {:alkupvm (c/to-date (t/local-date 2021 10 1))
+               :loppupvm (c/to-date (t/local-date 2022 9 30))
+               :urakkatyyppi :hoito}
+        raportin-nimi "Ympäristöraportti"
+        teksti "Oulun MHU 2019-2024 (1238), Ympäristöraportti ajalta 01.10.2021 - 30.09.2022"
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :ymparistoraportti
+                   :konteksti "urakka"
+                   :urakka-id urakka-id
+                   :parametrit param})
+        paikkausmateriaalit (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
+        ymp-paikkaus-kuumapaallyste-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 15 0))]
+    (is (= raportin-nimi (:nimi (second vastaus))))
+    (is (= teksti (second (nth vastaus 2))))
+    (is (= 999M ymp-paikkaus-kuumapaallyste-suunniteltu)
+      "Onko testidata muuttunut? Ympäristöraportti odottaa, että 'Päällysteiden paikkaus' tehtävälle 'kuumapäällyste' on suunniteltu 999t")))
 
 (deftest jokainen-materiaali-vain-kerran
   (let [_ (varmista-tietokannan-tila)
@@ -369,6 +398,16 @@ VALUES
       (let [murskeettaulukko (apurit/taulukko-otsikolla vastaus "Murskeet")
             nimet (filter #(not (str/includes? % "Ei tiedossa"))
                     (apurit/taulukon-sarake murskeettaulukko 1))]
+        (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
+    (testing "Paikkausmateriaalit -taulukossa nimet vain kerran"
+      (let [muut-taulukko (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
+            nimet (filter #(not (str/includes? % "Ei tiedossa"))
+                    (apurit/taulukon-sarake muut-taulukko 1))]
+        (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))
+    (testing "Muut materiaalit -taulukossa nimet vain kerran"
+      (let [muut-taulukko (apurit/taulukko-otsikolla vastaus "Muut materiaalit")
+            nimet (filter #(not (str/includes? % "Ei tiedossa"))
+                    (apurit/taulukon-sarake muut-taulukko 1))]
         (is (= (count nimet) (count (into #{} nimet))) "Materiaalien nimet ovat ympäristöraportissa vain kerran.")))))
 
 (deftest ymparistoraportin-hoitoluokittaiset-maarat
@@ -404,7 +443,7 @@ VALUES
           pop-ely-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 5))
 
 
-          teksti-oulu "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          teksti-oulu "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 1))
@@ -462,7 +501,7 @@ VALUES
 
     (is (vector? vastaus-oulu))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+          teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           _ (println "taulukko-oulu: " taulukko-oulu)
@@ -772,8 +811,7 @@ VALUES
                                      :urakkatyyppi :hoito}})]
 
     (is (vector? vastaus-oulu))
-    (let [raportin-nimi "Oulun alueurakka 2014-2019, Ympäristöraportti ajalta 01.01.2019 - 31.12.2019"
-          otsikko-oulu "Talvisuolat"
+    (let [otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
           oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
           oulu-talvisuola-luokka-IsE-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))

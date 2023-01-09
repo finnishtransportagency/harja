@@ -299,6 +299,19 @@ FROM liite l
 WHERE hl.laatupoikkeama = :laatupoikkeamaid
 ORDER BY l.luotu ASC;
 
+-- name: hae-bonuksen-liitteet
+-- Hakee bonuksen liitteet
+select
+  l.id        as id,
+  l.tyyppi    as tyyppi,
+  l.koko      as koko,
+  l.nimi      as nimi,
+  l.liite_oid as oid
+from liite l
+  join erilliskustannus_liite el on l.id = el.liite
+where el.bonus = :bonus
+order by l.luotu asc;
+
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama
@@ -347,6 +360,15 @@ INTO laatupoikkeama
 VALUES (:lahde :: LAHDE, :urakka, :aika, :tekija :: OSAPUOLI, :kohde, :selvitys, :luoja, current_timestamp, :kuvaus,
         :sijainti :: GEOMETRY, :tr_numero, :tr_alkuosa, :tr_loppuosa, :tr_alkuetaisyys,
         :tr_loppuetaisyys, :yllapitokohde, :sisaltaa_laatupoikkeaman, :ulkoinen_id);
+
+-- name: poista-laatupoikkeama!
+-- Merkitsee laatupoikkeaman poistetuksi
+UPDATE laatupoikkeama
+   SET muokkaaja = :muokkaaja,
+       muokattu  = CURRENT_TIMESTAMP,
+       poistettu = TRUE
+ WHERE id = :id
+   AND urakka = :urakka-id;
 
 -- name: kirjaa-laatupoikkeaman-paatos!
 -- Kirjaa havainnolle päätöksen.

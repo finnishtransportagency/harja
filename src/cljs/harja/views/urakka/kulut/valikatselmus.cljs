@@ -26,9 +26,11 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
+;; TODO: Parempi olisi muokata tämä käyttämään normaalia oikeustarkistusta.
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
   (or
     (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+    (roolit/roolissa? @istunto/kayttaja roolit/ely-paakayttaja)
     (roolit/jvh? @istunto/kayttaja)
     (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja urakka-id)))
 
@@ -170,7 +172,7 @@
                                            (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
     [:div
      [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut
-      {:voi-muokata voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+      {:voi-muokata? voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
        :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
        :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
        :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
@@ -429,23 +431,23 @@
         luvatut-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
         toteutuneet-pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         tavoitehinta (get-in app [:yhteenveto :tavoitehinta])
-        lupaus-bonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
-        lupaus-sanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
+        lupausbonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
+        lupaussanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
-        urakoitsijan-maksu (cond lupaus-sanktio lupaus-sanktio
+        urakoitsijan-maksu (cond lupaussanktio lupaussanktio
                                  tavoite-taytetty? 0M
                                  :else nil)
-        tilaajan-maksu (cond lupaus-bonus lupaus-bonus
+        tilaajan-maksu (cond lupausbonus lupausbonus
                              tavoite-taytetty? 0M
                              :else nil)
         summa (cond
-                lupaus-sanktio lupaus-sanktio
-                lupaus-bonus lupaus-bonus
+                lupaussanktio (- lupaussanktio)          ; Käännetään positiiviseksi, koska nyt maksetaan
+                lupausbonus lupausbonus
                 tavoite-taytetty? 0M)
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
         sitoutumis-pisteet (get-in app [:lupaus-sitoutuminen :pisteet])
-        lupaus-tyyppi (if (or lupaus-bonus tavoite-taytetty?) ::valikatselmus/lupaus-bonus ::valikatselmus/lupaus-sanktio)
-        lomake-avain (if (or lupaus-bonus tavoite-taytetty?) :lupaus-bonus-lomake :lupaus-sanktio-lomake)
+        lupaus-tyyppi (if (or lupausbonus tavoite-taytetty?) ::valikatselmus/lupausbonus ::valikatselmus/lupaussanktio)
+        lomake-avain (if (or lupausbonus tavoite-taytetty?) :lupausbonus-lomake :lupaussanktio-lomake)
         paatos-id (get-in app [lomake-avain ::valikatselmus/paatoksen-id])
         paatoksen-tiedot (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                                  ::valikatselmus/tyyppi lupaus-tyyppi
@@ -468,22 +470,26 @@
 
       [:div.paatos-sisalto {:style {:flex-grow 7}}
        (cond
-         lupaus-sanktio
+         lupaussanktio
          [:h3 "Lupaukset: Urakoitsija maksaa sakkoa " (fmt/euro-opt summa) " luvatun pistemäärän alittamisesta."]
-         lupaus-bonus
+         lupausbonus
          [:h3 (str "Lupaukset: Urakoitsija saa bonusta " (fmt/euro-opt summa) " luvatun pistemäärän ylittämisestä.")]
          tavoite-taytetty?
          [:h3 (str "Lupaukset: Urakoitsija pääsi tavoitteeseen.")])
        [:p "Urakoitsija sai " pisteet " ja lupasi " sitoutumis-pisteet " pistettä." " Tavoitehinta: " (fmt/euro-opt tavoitehinta)]
        [:div {:style {:padding-top "22px"}}
         (cond
-          (or lupaus-bonus lupaus-sanktio)
+          (or lupausbonus lupaussanktio)
           [:<>
-           (if lupaus-sanktio
+           (if lupaussanktio
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
            [:strong (fmt/euro-opt summa)]
-           " (100%)"]
+           (when (not (nil? (:indeksikorotus yhteenveto)))
+             (str " (+ indeksi  " (fmt/euro-opt (if lupaussanktio
+                                                  (* -1 (:indeksikorotus yhteenveto)) ;; Käännetään positiiviseksi
+                                                  (:indeksikorotus yhteenveto)
+                                                  )) " )"))]
 
           tavoite-taytetty?
           [:<>
@@ -503,7 +509,7 @@
               #(e! (valikatselmus-tiedot/->TallennaPaatos
                      ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
                      (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))]
-             (if lupaus-sanktio
+             (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
           [:div {:style {:flex-grow 1}}
@@ -513,7 +519,7 @@
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
               {:luokka "nappi-toissijainen napiton-nappi"
                :ikoni [ikonit/harja-icon-action-undo]}]
-             (if lupaus-sanktio
+             (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
         [:div {:style {:flex-grow 1
@@ -540,7 +546,7 @@
 (defn paatokset [e! app]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         hoitokausi-nro (urakka-tiedot/hoitokauden-jarjestysnumero hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app)
+        {:keys [tavoitehinta]} (t-yhteiset/hoitokauden-tavoitehinta hoitokausi-nro app)
         oikaistu-tavoitehinta (t-yhteiset/hoitokauden-oikaistu-tavoitehinta hoitokausi-nro app)
         oikaistu-kattohinta (t-yhteiset/hoitokauden-oikaistu-kattohinta hoitokausi-nro app)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)

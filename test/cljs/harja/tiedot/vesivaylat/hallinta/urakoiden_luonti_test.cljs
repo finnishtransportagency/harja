@@ -154,20 +154,6 @@
 (deftest lomakevaihtoehtojen-hakemisen-epaonnistuminen
   (is (= {:foo :bar} (e! (luonti/->LomakevaihtoehdotEiHaettu "virhe") {:foo :bar}))))
 
-(deftest sahke-lahetyksen-aloitus
-  (vaadi-async-kutsut
-    #{luonti/->SahkeeseenLahetetty luonti/->SahkeeseenEiLahetetty}
-    (is (= {:kaynnissa-olevat-sahkelahetykset #{1}}
-           (e! (luonti/->LahetaUrakkaSahkeeseen {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{}})))))
-
-(deftest sahke-lahetyksen-valmistuminen
-  (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-         (e! (luonti/->SahkeeseenLahetetty {} {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{1}}))))
-
-(deftest sahke-lahetyksen-epaonnistuminen
-  (is (= {:kaynnissa-olevat-sahkelahetykset #{}}
-         (e! (luonti/->SahkeeseenEiLahetetty "virhe" {::u/id 1}) {:kaynnissa-olevat-sahkelahetykset #{1}}))))
-
 (deftest paasopimuksen-kasittely
   (testing "Uuden pääsopimuksen asettaminen"
     (is (= [{::s/id 1 ::s/paasopimus-id nil} {::s/id 2 ::s/paasopimus-id 1}]

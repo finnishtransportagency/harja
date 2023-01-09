@@ -44,14 +44,6 @@
                     :mhu-yllapito
                     :mhu-korvausinvestointi})
 
-(defn maarille-tehtavien-tiedot
-  [maarat-map {:keys [id maarat] :as _r}]
-  (assoc-in maarat-map [id] maarat))
-
-(defn sopimuksen-maarille-tehtavien-tiedot
-  [maarat-map {:keys [tehtava-id] :as rivi}]
-  (assoc-in maarat-map [tehtava-id] rivi))
-
 (defn- sovittuja-jaljella
   [sovitut-maarat syotetyt-maarat-yhteensa]
   (cond 
@@ -82,13 +74,12 @@
 
 (defn- laske-sopimusmaarat
   [rivi]
-  (let [{:keys [samat-maarat-vuosittain?]} rivi
-        maarat-tahan-asti (get rivi :maarat)
+  (let [suunnitellut-maarat (get rivi :suunnitellut-maarat)
         hoitokaudet (range 
                       (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
                       (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
-        sovitut-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaarat)) 0 hoitokaudet)
-        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat maarat-tahan-asti) 0 hoitokaudet)]
+        sopimuksen-maarat (reduce (r/partial summaa-maarat (get rivi :sopimuksen-tehtavamaarat)) 0 hoitokaudet)
+        syotetyt-maarat-yhteensa (reduce (r/partial summaa-maarat suunnitellut-maarat) 0 hoitokaudet)]
     (assoc rivi
       :sopimuksen-tehtavamaara (get-in 
                                  rivi 
@@ -99,12 +90,16 @@
                                     keys
                                     first)])
                                         ; nämä käytössä suunniteltavien määrien syöttönäkymässä
-      :sopimuksen-tehtavamaarat-yhteensa sovitut-maarat
-      :sovittuja-jaljella (sovittuja-jaljella sovitut-maarat syotetyt-maarat-yhteensa))))
+      :sopimuksen-tehtavamaarat-yhteensa sopimuksen-maarat
+      :sovittuja-jaljella (sovittuja-jaljella sopimuksen-maarat syotetyt-maarat-yhteensa))))
 
 (defn- map->id-map-maaralla
   [hoitokausi rivi]
-  (let [{:keys [samat-maarat-vuosittain? aluetieto?]} rivi]
+  (let [{:keys [samat-maarat-vuosittain? aluetieto?]} rivi
+        sopimuksen-aluetietomaara (first (vals (:sopimuksen-aluetieto-maara rivi)))
+        muuttunut-tarjouksesta? (if aluetieto?
+                                  (not= (get-in rivi [:suunnitellut-maarat hoitokausi]) sopimuksen-aluetietomaara)
+                                  true)]
     [(:id rivi)
      (cond-> rivi
        true (assoc  
@@ -112,9 +107,9 @@
               :joka-vuosi-erikseen? (if (some? samat-maarat-vuosittain?)
                                       (not samat-maarat-vuosittain?)
                                       false))
-       (not aluetieto?) (assoc :maara
-                          (get-in rivi [:maarat hoitokausi]))
-       aluetieto? (assoc :muuttunut-aluetieto-maara (get-in rivi [:maarat hoitokausi]))
+       muuttunut-tarjouksesta? (assoc :maara-muuttunut-tarjouksesta (get-in rivi [:suunnitellut-maarat hoitokausi])) ;; Hoitovuoden suunniteltu määrä (input kenttä)
+       aluetieto? (assoc :sopimus-maara sopimuksen-aluetietomaara)
+       (not aluetieto?) (assoc :sopimus-maara (get-in rivi [:sopimuksen-tehtavamaarat hoitokausi]))
        (not aluetieto?) laske-sopimusmaarat)]))
 
 (defn liita-sopimusten-tiedot 
@@ -159,8 +154,14 @@
 
 (defn paivita-tehtavien-maarat-hoitokaudelle
   "Taulukolla näkyvälle kentälle päivitetään valitun hoitokauden määrät"
-  [hoitokausi [id tehtava]] 
-  [id (assoc tehtava (if (:aluetieto? tehtava) :muuttunut-aluetieto-maara :maara) (get-in tehtava [:maarat hoitokausi]))])
+  [hoitokausi [id tehtava]]
+  (let [muuttunut-tarjouksesta? (if (:aluetieto? tehtava)
+                                  (not= (get-in tehtava [:sopimuksen-aluetieto-maara hoitokausi]) (get-in tehtava [:suunnitellut-maarat hoitokausi]))
+                                  ;; Suunniteltavat määrät ovat aina "muuttuneet" tarjouksesta
+                                  true)]
+    [id (assoc tehtava :maara-muuttunut-tarjouksesta (if muuttunut-tarjouksesta?
+                                                      (get-in tehtava [:suunnitellut-maarat hoitokausi])
+                                                      nil))]))
 
 (defn paivita-toimenpiteiden-tehtavien-maarat-hoitokaudelle
   [hoitokausi [vanhempi-id tehtavat]]
@@ -194,16 +195,27 @@
     (map (r/partial nayta-valittu-toimenpide-tai-kaikki (-> valinnat :toimenpide :id)))              
     taulukko))
 
-(defn paivita-maarat-ja-laske-sovitut
-  [tehtavan-tiedot {:keys [sopimuksen-tehtavamaarat maarat]}]
-  (let [taulukkorakenne (assoc-in tehtavan-tiedot [:maarat] maarat)
-        maarat-yhteensa (reduce (r/partial summaa-maarat maarat) 0 (keys maarat))
-        sovitut-maarat (reduce (r/partial summaa-maarat sopimuksen-tehtavamaarat) 0 (keys sopimuksen-tehtavamaarat))]    
-    (assoc-in taulukkorakenne [:sovittuja-jaljella] (sovittuja-jaljella sovitut-maarat maarat-yhteensa))))
+(defn- paivita-maarat-ja-laske-sovitut
+  [{:keys [suunnitellut-maarat sopimuksen-tehtavamaarat] :as taulukon-tila}]
+  (let [taulukkorakenne (assoc-in taulukon-tila [:suunnitellut-maarat] suunnitellut-maarat)
+        suunnitellut-maarat-yhteensa (reduce (r/partial summaa-maarat suunnitellut-maarat) 0 (keys suunnitellut-maarat))
+        sovitut-maarat (reduce (r/partial summaa-maarat sopimuksen-tehtavamaarat) 0 (keys sopimuksen-tehtavamaarat))
+        sovittuja-jaljella-yht (sovittuja-jaljella sovitut-maarat suunnitellut-maarat-yhteensa)]
+    (assoc-in taulukkorakenne [:sovittuja-jaljella] sovittuja-jaljella-yht)))
 
 (defn paivita-sovitut-jaljella-sarake
-  [taulukon-tila {:keys [vanhempi id] :as tehtava}]
-  (update-in taulukon-tila [:maarat vanhempi id] paivita-maarat-ja-laske-sovitut tehtava))
+  [taulukon-tila {:keys [vanhempi id] :as tehtava} samat-tuleville? hoitokauden-alkuvuosi urakan-loppuvuosi]
+  (let [nykyiset-suunnitellut-maarat (get-in taulukon-tila [:maarat vanhempi id :suunnitellut-maarat])
+        uusi-arvo (get-in taulukon-tila [:maarat vanhempi id :maara-muuttunut-tarjouksesta])
+        kasiteltavat-vuodet (if samat-tuleville?
+                              (range hoitokauden-alkuvuosi urakan-loppuvuosi)
+                              [hoitokauden-alkuvuosi])
+        uudet-suunnitellut-maarat (reduce (fn [lopputulos vuosi]
+                                            (assoc-in lopputulos [vuosi] uusi-arvo))
+                                    nykyiset-suunnitellut-maarat kasiteltavat-vuodet)
+        taulukon-tila (assoc-in taulukon-tila [:maarat vanhempi id :suunnitellut-maarat] uudet-suunnitellut-maarat)]
+    (-> taulukon-tila
+      (update-in [:maarat vanhempi id] paivita-maarat-ja-laske-sovitut))))
 
 (defn vain-taso-3 
   [data]
@@ -223,53 +235,40 @@
 (def valitason-toimenpiteet
   (filter vain-taso-3))
 
-(defn sopimuksen-tehtavamaarallinen
-  [_]
-  true)
-
-(defn kaikki-sopimusmaarat
-  [sopimuksen-tehtavamaarat hoitokaudet _]
-  (every? (fn [vuosi]
-            (some? (get sopimuksen-tehtavamaarat vuosi))) hoitokaudet))
-
-(defn sopimus-maara-syotetty 
+(defn sopimus-maara-syotetty
   [virheet-kaikki r]
-  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimuksen-tehtavamaara sopimuksen-aluetieto-maara aluetieto?]} (second r)
-        hoitokaudet (range 
-                      (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi) 
-                      (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))
+  (let [{:keys [yksikko sopimuksen-tehtavamaarat sopimus-maara sopimuksen-aluetieto-maara aluetieto?]} (second r)
         id (first r)
-        kaikki-maarat-fn (r/partial kaikki-sopimusmaarat 
-                           sopimuksen-tehtavamaarat
-                           hoitokaudet)
         virheviesti ["Syötä 0 tai luku"]
         syotetty? (cond-> false
                     (or (nil? yksikko)
                       (= "" yksikko)
-                      (= "-" yksikko)) ((constantly true)) 
+                      (= "-" yksikko)) ((constantly true))
 
                     (and
                       aluetieto?
-                      (some? sopimuksen-aluetieto-maara)) ((constantly true))
-                    
-                    (and
-                      (not aluetieto?)
-                      (some? sopimuksen-tehtavamaara)) ((constantly true))
+                      (or
+                        (some #(when (some? %) %) (vals sopimuksen-aluetieto-maara))
+                        sopimus-maara)) ((constantly true))
 
                     (and
                       (not aluetieto?)
-                      (some? sopimuksen-tehtavamaarat)) kaikki-maarat-fn)] 
+                      (or
+                        (some #(when (some? %) %) (vals sopimuksen-tehtavamaarat))
+                        sopimus-maara)) ((constantly true)))]
     (cond
+      ;; Määrä riveille virhe
       (and
         (not syotetty?)
         (not aluetieto?))
-      (assoc-in virheet-kaikki [id :sopimuksen-tehtavamaara] virheviesti)
+      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
 
+      ;; Alue riveille virhe
       (and
         (not syotetty?)
         aluetieto?)
-      (assoc-in virheet-kaikki [id :sopimuksen-aluetieto-maara] virheviesti)
-      
+      (assoc-in virheet-kaikki [id :sopimus-maara] virheviesti)
+
       :else
       virheet-kaikki)))
 
@@ -486,46 +485,51 @@
     [{:keys [vastaus]} {:keys [tallennettava] :as app}]
     (viesti/nayta-toast! "Tallennus epäonnistui" :danger)
     (let [{:keys [id]} tallennettava
-          virheet (assoc-in {} [id :sopimuksen-tehtavamaara] ["Tallennus epäonnistui"])] 
+          virheet (assoc-in {} [id :sopimus-maara] ["Tallennus epäonnistui"])]
       (reset! taulukko-virheet virheet))      
     (dissoc app :tallennettava))
 
   TallennaMuuttunutAluemaara
   (process-event
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
-    (let [{:keys [id muuttunut-aluetieto-maara vanhempi]} tehtava]
-      (swap! taulukko-tila assoc-in [:alueet vanhempi id :maarat hoitokausi] muuttunut-aluetieto-maara)
+    (let [{:keys [id maara-muuttunut-tarjouksesta vanhempi]} tehtava
+          urakan-vuodet (range
+                                   hoitokausi
+                                   (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi))]
+      ;; Päivitä myös viewin käyttämä atomi
+      (doseq [vuosi urakan-vuodet]
+        (swap! taulukko-tila assoc-in [:alueet vanhempi id :suunnitellut-maarat vuosi] maara-muuttunut-tarjouksesta))
       (-> app
         (tallenna-tehtavamaarat
           {:hoitokausi hoitokausi
            :tehtavamaarat (into [] (map
                                      #(-> {:tehtava-id id
                                            :hoitokauden-alkuvuosi %
-                                           :maara      muuttunut-aluetieto-maara}))
-                            (range hoitokausi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)))})           
-        (update :valinnat 
-          assoc 
+                                           :maara maara-muuttunut-tarjouksesta}))
+                            urakan-vuodet)})
+        (update :valinnat
+          assoc
           :virhe-tallennettaessa false
           :tallennetaan true))))
 
   TallennaSopimuksenAluemaara
   (process-event
     [{:keys [tehtava]} app]
-    (let [{:keys [id sopimuksen-aluetieto-maara]} tehtava]     
+    (let [{:keys [id sopimus-maara]} tehtava]
       (-> app                             
         (assoc :tallennettava tehtava)
-        (tallenna-sopimuksen-tehtavamaara {:maara sopimuksen-aluetieto-maara
+        (tallenna-sopimuksen-tehtavamaara {:maara sopimus-maara
                                            :vuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)
                                            :tehtava id
                                            :samat? false}))))
 
   TallennaSopimuksenTehtavamaara
   (process-event 
-    [{{:keys [sopimuksen-tehtavamaara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
+    [{{:keys [sopimus-maara id vanhempi joka-vuosi-erikseen? hoitokausi] :as tehtava} :tehtava} {:keys [taulukko] :as app}]
     (swap! taulukko-tila paivita-vuosien-maarat tehtava)
     (-> app                             
       (assoc :tallennettava tehtava)
-      (tallenna-sopimuksen-tehtavamaara {:maara sopimuksen-tehtavamaara
+      (tallenna-sopimuksen-tehtavamaara {:maara sopimus-maara
                                          :samat? (not (true? joka-vuosi-erikseen?))
                                          :tehtava id
                                          :vuosi hoitokausi})))
@@ -533,36 +537,27 @@
   TallennaTehtavamaara
   (process-event
     [{tehtava :tehtava} {{samat-tuleville? :samat-tuleville :keys [hoitokausi] :as valinnat} :valinnat taulukko :taulukko :as app}]
-    (let [{:keys [id maara]} tehtava
+    (let [{:keys [id maara-muuttunut-tarjouksesta]} tehtava
+          urakan-loppuvuosi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)
           tehtava (if samat-tuleville? 
-                    (reduce syotetty-maara-tuleville-vuosille 
-                      tehtava 
-                      (range hoitokausi
-                        (-> @tiedot/yleiset
-                          :urakka
-                          :loppupvm
-                          pvm/vuosi)))
+                    (reduce syotetty-maara-tuleville-vuosille tehtava (range hoitokausi urakan-loppuvuosi))
                     (-> tehtava
                       (assoc :hoitokausi hoitokausi)
                       (update :maarat assoc hoitokausi (:maara tehtava))))]
       (if samat-tuleville?
         (doseq [vuosi (mapv (comp keyword str)
-                        (range hoitokausi
-                          (-> @tiedot/yleiset
-                            :urakka
-                            :loppupvm
-                            pvm/vuosi)))]
+                        (range hoitokausi urakan-loppuvuosi))]
           (tallenna-tehtavamaarat app {:hoitokausi hoitokausi
                                        :tehtavamaarat [{:tehtava-id id
-                                                        :maara      maara
+                                                        :maara maara-muuttunut-tarjouksesta
                                                         :hoitokauden-alkuvuosi (-> vuosi
                                                                                  name
                                                                                  js/parseInt)}]}))
         (tallenna-tehtavamaarat app {:hoitokausi hoitokausi
                                      :tehtavamaarat [{:tehtava-id id
-                                                      :maara maara
+                                                      :maara maara-muuttunut-tarjouksesta
                                                       :hoitokauden-alkuvuosi hoitokausi}]})) 
-      (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava)
+      (swap! taulukko-tila paivita-sovitut-jaljella-sarake tehtava samat-tuleville? hoitokausi urakan-loppuvuosi)
       
       (update app :valinnat 
         assoc 
@@ -633,15 +628,22 @@
 
   JokaVuosiErikseenKlikattu
   (process-event [{:keys [ruksittu? vanhempi id]} app]
-    (let [vuosi (-> @tiedot/yleiset
-                  :urakka
-                  :alkupvm
-                  pvm/vuosi)
-          loppuvuosi (-> @tiedot/yleiset
-                       :urakka
-                       :loppupvm
-                       pvm/vuosi)
-          sopimuksen-tehtavamaara (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaara])]
+    (let [vuosi (-> @tiedot/yleiset :urakka :alkupvm pvm/vuosi)
+          loppuvuosi (-> @tiedot/yleiset :urakka :loppupvm pvm/vuosi)
+          sopimuksen-tehtavamaara (get-in @taulukko-tila [:maarat vanhempi id :sopimus-maara])
+          sopimuksen-tehtavamaarat (get-in @taulukko-tila [:maarat vanhempi id :sopimuksen-tehtavamaarat])
+          sopimuksen-tehtavamaara (if (nil? sopimuksen-tehtavamaara)
+                                    (let [uusi-tehtavamaara (first (filter #(when-not (nil? %) %)
+                                                                     (vals sopimuksen-tehtavamaarat)))
+                                          _ (swap! taulukko-tila assoc-in [:maarat vanhempi id :sopimus-maara] uusi-tehtavamaara)]
+                                      uusi-tehtavamaara)
+                                    sopimuksen-tehtavamaara)
+          ;; Päivitä yhdestä arvosta jokaiselle vuodelle arvo, jos ruksittu?
+          _ (when (and ruksittu? (not (nil? sopimuksen-tehtavamaara)))
+              (swap! taulukko-tila assoc-in [:maarat vanhempi id :sopimuksen-tehtavamaarat]
+                (reduce (fn [lopputulos vuosi] (assoc-in lopputulos [vuosi] sopimuksen-tehtavamaara))
+                  sopimuksen-tehtavamaarat (range vuosi loppuvuosi))))]
+
       (if-not ruksittu?
         (tallenna-sopimuksen-tehtavamaara
           app

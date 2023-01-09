@@ -251,6 +251,7 @@ SELECT
   tpk.koodi                AS toimenpidekoodi,
   s.sampoid                AS sopimus_sampoid,
   u.sampoid                AS urakka_sampoid,
+  u.loppupvm               AS urakka_loppupvm,
   u.tyyppi                 AS urakka_tyyppi,
   k.tila                   AS kustannussuunnitelma_tila,
   k.lahetetty              AS kustannussuunnitelma_lahetetty,

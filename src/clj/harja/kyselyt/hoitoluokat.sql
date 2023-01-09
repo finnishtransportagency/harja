@@ -16,10 +16,10 @@ WHERE tie = :tie
 
 -- name: vie-hoitoluokkatauluun!
 -- vie entryn hoitoluokkatauluun
-INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoitoluokka, geometria, tietolajitunniste)
+INSERT INTO hoitoluokka (ajorata, aosa, tie, piirinro, let, losa, aet, osa, hoitoluokka, geometria, tietolajitunniste, paivitetty)
 VALUES
   (:ajorata, :aosa, :tie, :piirinro, :let, :losa, :aet, :osa, :hoitoluokka, ST_GeomFromText(:geometria) :: GEOMETRY,
-             :tietolajitunniste :: hoitoluokan_tietolajitunniste);
+             :tietolajitunniste :: hoitoluokan_tietolajitunniste, current_timestamp);
 
 -- name: tuhoa-hoitoluokkadata!
 -- poistaa tietyn tietolajitunnisteen hoitoluokkatiedot

@@ -32,7 +32,7 @@
 jos niille ei löydy yhteistä tietä tieverkolta."}
 maksimi-linnuntien-etaisyys 200)
 
-(defn- yhdista-viivat [viivat]
+(defn yhdista-viivat [viivat]
   (if-not (empty? viivat)
     {:type :multiline
      :lines (mapcat
@@ -180,7 +180,7 @@ maksimi-linnuntien-etaisyys 200)
   (let [reittitoteumat (if (:reittitoteuma data)
                          [data]
                          (:reittitoteumat data))
-        materiaaleja-hyotykuormassa? (some #(get-in % [:reittitoteuma :toteuma :materiaalit])
+        materiaaleja-hyotykuormassa? (some #(not-empty (get-in % [:reittitoteuma :toteuma :materiaalit]))
                                            reittitoteumat)
         suolauksen-toimenpidekoodi (:id (first (materiaalit/hae-suolauksen-toimenpidekoodi db)))
         tehtavissa-suolausta? (some #(some
@@ -199,8 +199,9 @@ maksimi-linnuntien-etaisyys 200)
             viimeinen-toteuma-alkanut-str (get-in viimeinen-toteuma [:reittitoteuma :toteuma :alkanut])
             ensimmainen-toteuman-alkanut-pvm (pvm-string->joda-date ensimmainen-toteuma-alkanut-str)
             viimeinen-toteuman-paattynyt-pvm (pvm-string->joda-date (get-in viimeinen-toteuma [:reittitoteuma :toteuma :paattynyt]))
-            toteumien-eri-pvmt (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)]
-
+            toteumien-eri-pvmt (if (pvm/ennen? ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm) ;; Poikkeustilanteissa toteumat tulevat ajallisesti väärässä järjestyksessä, huomioi se.
+                                     (pvm/paivat-aikavalissa ensimmainen-toteuman-alkanut-pvm viimeinen-toteuman-paattynyt-pvm)
+                                     (pvm/paivat-aikavalissa viimeinen-toteuman-paattynyt-pvm ensimmainen-toteuman-alkanut-pvm))]
 
         ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
         ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys

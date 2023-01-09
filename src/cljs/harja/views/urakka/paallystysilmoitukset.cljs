@@ -191,7 +191,10 @@
        [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
         {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
-        {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+        ;; Paikkauskohteta ei haeta YHA:sta eikä niillä ole YHA-id:tä, joten näytetään Harja-ID
+        (if paikkauskohteet?
+          {:otsikko "Harja-id" :nimi :paallystyskohde-id :muokattava? (constantly false) :tyyppi :numero :leveys 15}
+          {:otsikko "YHA-id" :nimi :yhaid :muokattava? (constantly false) :tyyppi :numero :leveys 15})
         {:otsikko "Takuupvm" :nimi :takuupvm :tyyppi :pvm :leveys 18 :muokattava? (fn [t] (not (nil? (:id t))))
          :fmt pvm/pvm-opt
          :tayta-alas? #(not (nil? %))
@@ -201,8 +204,7 @@
          :tyyppi :komponentti :leveys 25
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                   (< 2019 valittu-urakan-vuosi)
-                   (not paikkauskohteet?))
+                   (< 2019 valittu-urakan-vuosi))
           ; TODO enable VELHO {:otsikko "Lähetys YHA / Velho:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha-velho :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
@@ -219,6 +221,7 @@
                            (ikonit/ikoni-ja-teksti (ikonit/livicon-document-full) " Aloita"))])}]
        paallystysilmoitukset])))
 
+
 (defn ilmoitusluettelo
   [e! app]
   (komp/luo
@@ -226,7 +229,7 @@
                     (nav/vaihda-kartan-koko! :M)))
     (fn [e! {paikkauskohteet? :paikkauskohteet? ;; Päällystysilmoitukset renderöidään myös paikkaukset välilehden alle
              :as app}]
-      [:div
+      [:div.paallystysilmoitusluettelo
        [:div {:style {:display "inline-block"
                       :position "relative"
                       :top "28px"}}
@@ -236,9 +239,8 @@
           [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
            {:margin-left "24px"}])]
        [paallystysilmoitukset-taulukko e! app]
-       ;; TODO: YHA-lähetykset eivät ole paikkauskohteilla vielä käytössä
        (when-not paikkauskohteet?
-         [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHAan tai Velhoon."])])))
+         [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHA:an"])])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
   [:div

@@ -116,12 +116,15 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           talvihoito (first (filter #(= (:tuotekoodi %) "23100") @oulun-mhu-urakka-2020-03))
-          maaliskuun-sanktiot (first (sanktiot/hae-urakan-sanktiot (:db jarjestelma) @oulun-maanteiden-hoitourakan-2019-2024-id (konv/sql-timestamp (pvm/->pvm "1.3.2020")) (konv/sql-timestamp (pvm/->pvm "31.3.2020"))))
+          maaliskuun-sanktiot (first (sanktiot/hae-urakan-sanktiot
+                                       (:db jarjestelma) @oulun-maanteiden-hoitourakan-2019-2024-id
+                                       (konv/sql-timestamp (pvm/->pvm "1.3.2020"))
+                                       (konv/sql-timestamp (pvm/->pvm "31.3.2020"))))
           sanktiosumma-indeksikorotettuna (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
                                                    (:db jarjestelma)
                                                    {:hoitokauden-alkuvuosi 2019
                                                     :indeksinimi "MAKU 2015"
-                                                    :summa (* -1 (:summa maaliskuun-sanktiot))
+                                                    :summa (:summa maaliskuun-sanktiot)
                                                     :perusluku (:perusluku talvihoito)}))]
 
       (is (= (:sakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
@@ -131,6 +134,11 @@
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
               (reset! oulun-mhu-urakka-2020-03 (hae-2020-03-tiedot)))
           hoidonjohto (first (filter #(= (:tuotekoodi %) "23150") @oulun-mhu-urakka-2020-03))
+          muu-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
+          (tyyppi = 'muu-bonus')
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
+          AND poistettu IS NOT TRUE
+          AND pvm >= '2019-10-01'::DATE AND pvm <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           (tyyppi = 'lupausbonus' OR tyyppi = 'asiakastyytyvaisyysbonus' )
           AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
@@ -155,7 +163,7 @@
                                              AND kt.sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))]
 
       (is (= (:bonukset_laskutettu hoidonjohto)
-             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio tav_ulk_rah))))))
+             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio muu-bonus tav_ulk_rah))))))
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot"

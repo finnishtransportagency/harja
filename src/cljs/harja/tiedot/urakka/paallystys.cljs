@@ -29,7 +29,8 @@
     [harja.ui.lomakkeen-muokkaus :as lomakkeen-muokkaus]
     [harja.tyokalut.vkm :as vkm]
     [clojure.string :as str]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -78,6 +79,7 @@
     :yha-tr-osoite :muokattu
     :kokonaishinta-ilman-maaramuutoksia :maaramuutokset
     ;; Poikkeukset paikkauskohteen tietojen täydentämiseksi
+    :paikkauskohde-toteutunut-hinta :paikkauskohde-nimi
     :paikkauskohde-id :paallystys-alku :paallystys-loppu :takuuaika})
 
 (def lahetyksen-tila-avaimet
@@ -184,6 +186,19 @@
                          {:yllapitokohde-id yllapitokohde-id})))))
 
 ;; Yhteiset UI-asiat
+(def pk-lk-skeema
+  {:otsikko "PK-lk" :alasveto-luokka "kavenna-jos-kapea"
+   :nimi :yllapitoluokka :tyyppi :valinta
+   :valinta-arvo :numero
+   :valinnat yllapitokohteet-domain/paallysteen-korjausluokat
+   :valinta-nayta #(cond
+                     (map? %)
+                     (:lyhyt-nimi %)
+
+                     (number? %)
+                     yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
+
+                     :else "-")})
 
 (def paallyste-grid-skeema
   {:otsikko "Päällyste"

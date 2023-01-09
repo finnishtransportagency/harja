@@ -10,7 +10,10 @@
             [harja.kyselyt.konversio :as konv]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
-            [taoensso.timbre :as log]))
+            [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
+            [harja.geo :as geo]))
 
 (defn hae-toteuman-reitti-ja-pisteet [db toteuma-id]
   (let [tulos (konv/sarakkeet-vektoriin
@@ -30,10 +33,36 @@
   (let [parsittu  (cheshire/decode json)
         reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
                    (get-in parsittu ["reittitoteumat" 0 "reittitoteuma" "reitti"]))
-        pisteet (mapv (fn [{{koordinaatit "koordinaatit"} "reittipiste"}]
-                        [(get koordinaatit "x") (get koordinaatit "y")])
+        pisteet (mapv (fn [{{koordinaatit "koordinaatit"
+                             aika "aika"} "reittipiste"}]
+                        [(get koordinaatit "x") (get koordinaatit "y") aika])
                       reitti)]
     (reittitoteuma/hae-reitti db pisteet)))
+
+(defn geometrisoi-tarkastus [db json]
+  (let [tarkastukset (get-in (cheshire/decode json) ["tarkastukset"])
+        geometriat (mapv (fn [{tarkastus "tarkastus"}]
+                        (let [alkusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["alkusijainti"]))
+                              loppusijainti (clojure.walk/keywordize-keys (get-in tarkastus ["loppusijainti"]))
+                              tr-osoite (sijainnit/hae-tierekisteriosoite db alkusijainti loppusijainti)
+                              pisteet-alku (tierekisteri-haku/hae-tr-pisteella db alkusijainti)
+                              pisteet-loppu (tierekisteri-haku/hae-tr-pisteella db loppusijainti)
+                              geometria (if tr-osoite
+                                          (:geometria tr-osoite)
+                                          (sijainnit/tee-geometria alkusijainti loppusijainti))]
+                          {:reitit (geo/pg->clj geometria)
+                           :alkupisteet pisteet-alku
+                           :loppupisteet pisteet-loppu}))
+                         tarkastukset)
+        reitit (mapv :reitit geometriat)
+        alkupisteet (mapv :alkupisteet geometriat)
+        loppupisteet (mapv :loppupisteet geometriat)
+
+        yhtena-geometriana (reittitoteuma/yhdista-viivat reitit)]
+    yhtena-geometriana
+    {:reitti yhtena-geometriana
+     :alkupisteet alkupisteet
+     :loppupisteet loppupisteet}))
 
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
@@ -57,6 +86,8 @@
       (vaadi-jvh! (partial #'hae-toteuman-reitti-ja-pisteet db))
       :debug-geometrisoi-reittitoteuma
       (vaadi-jvh! (partial #'geometrisoi-reittoteuma db))
+      :debug-geometrisoi-tarkastus
+      (vaadi-jvh! (partial #'geometrisoi-tarkastus db))
       :debug-geometrisoi-reittipisteet
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
@@ -68,6 +99,7 @@
       http
       :debug-hae-toteuman-reitti-ja-pisteet
       :debug-geometrisoi-reittitoteuma
+      :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet)
     this))

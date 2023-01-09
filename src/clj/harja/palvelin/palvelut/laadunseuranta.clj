@@ -25,13 +25,19 @@
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.palvelut.laadunseuranta.viestinta :as viestinta]
             [harja.palvelin.palvelut.laadunseuranta.yhteiset :as yhteiset]
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
+            [harja.palvelin.raportointi.pdf :as raportointi-pdf]
+            [harja.palvelin.raportointi.excel :as raportointi-excel]
 
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
+            [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.geo :as geo]
@@ -72,7 +78,13 @@
     (let [laatupoikkeaman-urakka (:urakka (first (laatupoikkeamat-q/hae-laatupoikkeaman-urakka-id db {:laatupoikkeamaid laatupoikkeama-id})))]
       (when-not (= laatupoikkeaman-urakka urakka-id)
         (throw (SecurityException. (str "Laatupoikkeama " laatupoikkeama-id " ei kuulu valittuun urakkaan "
-                                        urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+                                     urakka-id " vaan urakkaan " laatupoikkeaman-urakka)))))))
+
+(defn- hae-bonuksen-liitteet
+  "Hakee bonuksen liitteet"
+  [db user urakka-id bonus-id]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
+  (into [] (laatupoikkeamat-q/hae-bonuksen-liitteet db bonus-id)))
 
 (defn- hae-sanktion-liitteet
   "Hakee yhden sanktion (laatupoikkeaman kautta) liitteet"
@@ -110,25 +122,67 @@
                         (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
-(defn hae-urakan-sanktiot
-  "Hakee urakan sanktiot perintäpvm:n mukaan"
-  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat?]}]
+(defn hae-urakan-sanktiot-ja-bonukset
+  "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
+  Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
+  Tarvittaessa optioilla voi estää sanktioiden/bonusten palauttamisen ja hakea vain toista tyyppiä."
+  [db user {:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (let [sanktiot (into []
-                       (comp (geo/muunna-pg-tulokset :laatupoikkeama_sijainti)
-                             (map #(konv/string->keyword % :laatupoikkeama_paatos_kasittelytapa :vakiofraasi))
-                             (map #(assoc % :laatupoikkeama_aika (konv/java-date (:laatupoikkeama_aika %))
-                                            :laatupoikkeama_paatos_kasittelyaika (konv/java-date (:laatupoikkeama_paatos_kasittelyaika %))))
-                             (map konv/alaviiva->rakenne)
-                             (map #(konv/decimal->double % :summa))
-                             (map #(konv/decimal->double % :indeksikorjaus))
-                             (map #(assoc % :laji (keyword (:laji %)))))
-                       (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
-                                                         :alku (konv/sql-timestamp alku)
-                                                         :loppu (konv/sql-timestamp loppu)}))]
+  (log/debug "hae-urakan-sanktiot-ja-bonukset :: tiedot:" tiedot)
+  ;; Haetaan oletuksena sankiot ja bonukset.
+  ;; HOX: Suurin osa muunnoksista tehdään hae-urakan-sanktiot/hae-urakan-bonukset "row-fn" -funktioissa.
+  (let [hae-sanktiot? (if (boolean? hae-sanktiot?) hae-sanktiot? true)
+        hae-bonukset? (if (boolean? hae-bonukset?) hae-bonukset? true)
+        urakan-sanktiot (if hae-sanktiot?
+                          (sanktiot/hae-urakan-sanktiot db {:urakka urakka-id
+                                                            :alku (konv/sql-timestamp alku)
+                                                            :loppu (konv/sql-timestamp loppu)})
+                          [])
+        urakan-bonukset (if hae-bonukset?
+                          (sanktiot/hae-urakan-bonukset db {:urakka urakka-id
+                                                            :alku (konv/sql-timestamp alku)
+                                                            :loppu (konv/sql-timestamp loppu)})
+                          []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
+        bonukset (into []
+                   ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
+                   (map #(assoc % :bonus? true))
+                   urakan-bonukset)
+        ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
+        sanktiot-ja-bonukset (into []
+                               (map konv/alaviiva->rakenne
+                                 (concat
+                                   urakan-sanktiot
+                                   bonukset)))]
     (if vain-yllapitokohteettomat?
-      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot)
-      sanktiot)))
+      (filter #(nil? (get-in % [:yllapitokohde :id])) sanktiot-ja-bonukset)
+      sanktiot-ja-bonukset)))
+
+(defn- yhteiset-tulostetiedot [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (let [urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
+        yllapitourakka? (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
+        sanktiot-ja-bonukset (hae-urakan-sanktiot-ja-bonukset db user tiedot)
+        ;; Filtteröidään halutut matkaan
+        kaikki-lajit (if (domain-urakka/yllapitourakka? (keyword (:tyyppi urakan-tiedot)))
+                       #{:muistutukset :sanktiot :bonukset}
+                       #{:muistutukset :sanktiot :bonukset :arvonvahennykset})
+        rivit (if (= kaikki-lajit suodattimet)
+                ;; rivin-tyyppi vertailuehto ei toimi kaikilla tyypeillä, joten tehdään sille oma tarkistus ensin
+                sanktiot-ja-bonukset
+                ;; Jos kaikki ei täsmää, niin sitten otetaan filtterillä oikeasti osa ulos
+                (filter #(suodattimet (sanktiot-domain/rivin-tyyppi %)) sanktiot-ja-bonukset))]
+    (laadunseuranta-tulosteet/sanktiot-ja-bonukset-raportti alku loppu (:nimi urakan-tiedot) yllapitourakka?
+      suodattimet kaikki-lajit rivit)))
+
+(defn- bonukset-ja-sanktiot-pdf
+  [db user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (log/debug "bonukset-ja-sanktiot-pdf :: tiedot:" tiedot)
+  (raportointi-pdf/muodosta-pdf (yhteiset-tulostetiedot db user tiedot)))
+
+(defn- bonukset-ja-sanktiot-excel
+  [db workbook user {:keys [urakka-id alku loppu suodattimet] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (raportointi-excel/muodosta-excel (yhteiset-tulostetiedot db user tiedot) workbook))
 
 (defn- vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
   [db sanktiolaji sanktiotyypin-id urakan-alkupvm]
@@ -157,7 +211,10 @@
                    toimenpideinstanssi vakiofraasi poistettu] :as sanktio} laatupoikkeama urakka]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
-  (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+  (let [summa (if (decimal? summa)
+                (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                summa)
+        urakan-tiedot (first (urakat/hae-urakka db urakka))
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -299,20 +356,45 @@
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                                             :poistettu poista-laatupoikkeama?))
-          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
-      (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-                                                        (konv/sql-timestamp kasittelyaika)
-                                                        (name paatos) perustelu
-                                                        (name kasittelytapa) muukasittelytapa
-                                                        (:id user)
-                                                        id)
-      (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
-      (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)
-      (hae-urakan-sanktiot c user {:urakka-id urakka :alku hk-alkupvm :loppu hk-loppupvm}))))
+          {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
+          _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
+              (konv/sql-timestamp kasittelyaika)
+              (name paatos) perustelu
+              (name kasittelytapa) muukasittelytapa
+              (:id user)
+              id)
+          sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka)
+          _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
+      sanktio-id)))
+
+(defn poista-suorasanktio
+  "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
+  [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
+  (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
+  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+  (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
+
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+
+  (jdbc/with-db-transaction [c db]
+
+    (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))
+          ;; Poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
+          ;;   koska laatupoikkeamalla voi olla 0...n sanktiota
+          poista-laatupoikkeama? (and (boolean (:suorasanktio sanktio)) (:laatupoikkeama_id sanktio))]
+      (when poista-laatupoikkeama?
+        (laatupoikkeamat-q/poista-laatupoikkeama c user {:id (:laatupoikkeama_id sanktio)
+                                                         :urakka-id urakka-id}))
+      (sanktiot/poista-sanktio! db {:id sanktio-id
+                                    :muokkaaja (:id user)})
+
+      (sanktiot/merkitse-maksuera-likaiseksi! db sanktio-id)
+
+      sanktio-id)))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti sonja-sahkoposti] :as this}]
+  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti pdf-vienti excel-vienti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -325,9 +407,7 @@
       (fn [user laatupoikkeama]
         (tallenna-laatupoikkeama
           {:db db :user user :fim fim
-           :email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                    (:sonja-sahkoposti this)
-                    (:api-sahkoposti this))
+           :email api-sahkoposti
            :sms labyrintti :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio
@@ -336,13 +416,17 @@
                                (get-in tiedot [:laatupoikkeama :urakka])
                                (:hoitokausi tiedot)))
 
+      :poista-suorasanktio
+      (fn [user tiedot]
+        (poista-suorasanktio db user tiedot))
+
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
         (hae-laatupoikkeaman-tiedot db user urakka-id laatupoikkeama-id))
 
-      :hae-urakan-sanktiot
+      :hae-urakan-sanktiot-ja-bonukset
       (fn [user tiedot]
-        (hae-urakan-sanktiot db user tiedot))
+        (hae-urakan-sanktiot-ja-bonukset db user tiedot))
 
       :hae-sanktiotyypit
       (fn [user]
@@ -350,7 +434,15 @@
 
       :hae-sanktion-liitteet
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
-        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id)))
+        (hae-sanktion-liitteet db user urakka-id laatupoikkeama-id))
+      
+      :hae-bonuksen-liitteet
+      (fn [user {:keys [urakka-id bonus-id]}]
+        (hae-bonuksen-liitteet db user urakka-id bonus-id)))
+    (when pdf-vienti
+      (pdf-vienti/rekisteroi-pdf-kasittelija! pdf-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-pdf db)))
+    (when excel-vienti
+      (excel-vienti/rekisteroi-excel-kasittelija! excel-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-excel db)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
@@ -358,8 +450,10 @@
                      :hae-urakan-laatupoikkeamat
                      :tallenna-laatupoikkeama
                      :hae-laatupoikkeaman-tiedot
-                     :hae-urakan-sanktiot
+                     :hae-urakan-sanktiot-ja-bonukset
                      :hae-sanktiotyypit
                      :tallenna-suorasanktio
-                     :hae-sanktion-liitteet)
+                     :poista-suorasanktio
+                     :hae-sanktion-liitteet
+                     :hae-bonuksen-liitteet)
     this))

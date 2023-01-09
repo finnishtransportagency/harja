@@ -99,9 +99,11 @@
                      {:nimi :tr-numero :otsikko "Tie"
                       :tyyppi :positiivinen-numero :kokonaisluku? true :pakollinen? true}
                      {:otsikko "Ajorata" :nimi :tr-ajorata :pakollinen? true :tyyppi :valinta
+                      :alasveto-luokka "kavenna-jos-kapea"
                       :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
                       :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))}
                      {:otsikko "Kaista" :nimi :tr-kaista :pakollinen? true :tyyppi :valinta
+                      :alasveto-luokka "kavenna-jos-kapea"
                       :valinnat pot/+kaistat+ :valinta-arvo :koodi
                       :valinta-nayta (fn [rivi]
                                        (if rivi
@@ -180,11 +182,6 @@
                                    :koodistot materiaalikoodistot})
           alustalomake]]))))
 
-;; Tämä on väliaikainen infoteksti, poista vuonna 2022
-(defn- ohje-alustan-validointiin-liittyen []
-  [yleiset/vihje "Alustarivien validointia on muutettu sallivammaksi syyskuussa 2021. Alustarivin tierekisteriosoitteen ei enää ole pakko osua yhden kulutuskerrosrivin sisälle kuten aiemmin."
-   "pot2-alustan-vinkki"])
-
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
@@ -201,10 +198,7 @@
                                 :materiaalikoodistot materiaalikoodistot
                                 :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
-      {:otsikko
-       [:span
-        "Alusta"
-        [ohje-alustan-validointiin-liittyen]]
+      {:otsikko "Alusta"
        :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?
        :rivinumerot? true ;; Nämä tarkoituksella piilotetaan tyyleissä. Halutaan samoihin kohtiin sarakkeet kuin päällystekerroksessa
        :voi-kumota? false :voi-lisata? false

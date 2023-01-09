@@ -34,8 +34,8 @@
 (defn yhteenveto-laatikko [e! app data sivu]
   (let [valittu-hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         valittu-hoitovuosi-nro (urakka-tiedot/hoitokauden-jarjestysnumero valittu-hoitokauden-alkuvuosi (-> @tila/yleiset :urakka :loppupvm))
-        tavoitehinta (or (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app) 0)
-        kattohinta (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
+        {:keys [tavoitehinta] indeksikorjattu-tavoitehinta? :indeksikorjattu?} (t/hoitokauden-tavoitehinta valittu-hoitovuosi-nro app 0)
+        {:keys [kattohinta] indeksikorjattu-kattohinta? :indeksikorjattu?} (or (t/hoitokauden-kattohinta valittu-hoitovuosi-nro app) 0)
         oikaistu-kattohinta (or (t/hoitokauden-oikaistu-kattohinta valittu-hoitovuosi-nro app) 0)
         toteuma (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         oikaisujen-summa (t/oikaisujen-summa (:tavoitehinnan-oikaisut app) valittu-hoitokauden-alkuvuosi)
@@ -59,9 +59,25 @@
         tavoitehhinnan-ylitys-prosentit (paatoksen-maksu-prosentit tavoitehinnan-ylitys-paatos tavoitehinnan-ylitys)
         kattohinnan-ylitys-paatos (filtteroi-paatos-fn :kattohinnan-ylitys)
         kattohinnan-ylitys-prosentit (paatoksen-maksu-prosentit kattohinnan-ylitys-paatos kattohinnan-ylitys)
-        lupaus-bonus-paatos (filtteroi-paatos-fn :lupaus-bonus)
-        lupaus-sanktio-paatos (filtteroi-paatos-fn :lupaus-sanktio)
-        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)]
+        lupausbonus-paatos (filtteroi-paatos-fn :lupausbonus)
+        lupaussanktio-paatos (filtteroi-paatos-fn :lupaussanktio)
+        valikatselmus-tekematta? (t/valikatselmus-tekematta? app)
+        lupausbonus (:toteutunut_summa (first (filter #(when (= "lupausbonus" (:maksutyyppi %))
+                                                         %) (get-in data [:bonukset :tehtavat]))))
+        bonus-maara (:bonukset-toteutunut data)
+        toteutunut-bonus (if (and (not (nil? bonus-maara)) (not= 0 bonus-maara))
+                           (if (not (nil? lupausbonus))
+                             (- bonus-maara lupausbonus)
+                             bonus-maara)
+                           nil)
+        lupaussanktio (:toteutunut_summa (first (filter #(when (= "lupaussanktio" (:maksutyyppi %))
+                                                           %) (get-in data [:sanktiot :tehtavat]))))
+        sanktio-maara (:sanktiot-toteutunut data)
+        toteutunut-sanktio (if (and (not (nil? sanktio-maara)) (not= 0 sanktio-maara))
+                             (if (not (nil? lupaussanktio))
+                               (- sanktio-maara lupaussanktio)
+                               sanktio-maara)
+                             nil)]
     [:div.yhteenveto.elevation-2
      [:h2 [:span "Yhteenveto"]]
      (when (and valikatselmus-tekematta? (not= :valikatselmus sivu))
@@ -70,18 +86,24 @@
         [napit/yleinen-ensisijainen
          "Tee välikatselmus"
          #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake))]])
-     [:div.rivi [:span (if oikaisuja? "Alkuperäinen tavoitehinta (indeksikorjattu)"
-                                      "Tavoitehinta (indeksikorjattu)")] [:span (fmt/euro-opt tavoitehinta)]]
+     [:div.rivi 
+      [:span (if oikaisuja? 
+               (str "Alkuperäinen tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))
+               (str "Tavoitehinta " (if indeksikorjattu-tavoitehinta? "(indeksikorjattu)" "(indeksikorjaamaton)")))] 
+      [:span (fmt/euro-opt tavoitehinta)]]
      (when oikaisuja?
        [:<>
         [:div.rivi [:span "Tavoitehinnan oikaisu"] [:span (str (when (pos? (:b oikaisujen-summa)) "+") (fmt/euro-opt oikaisujen-summa))]]
         [:div.rivi [:span "Oikaistu tavoitehinta "] [:span (fmt/euro-opt oikaistu-tavoitehinta)]]])
      (if (or oikaisuja? kattohintaa-oikaistu?)
        [:<>
-        [:div.rivi [:span "Alkuperäinen kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]]
+        [:div.rivi [:span (str "Alkuperäinen kattohinta " (if indeksikorjattu-kattohinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))] 
+         [:span (fmt/euro-opt kattohinta)]]
         [:div.rivi [:span "Oikaistu kattohinta"] [:span (fmt/euro-opt oikaistu-kattohinta)]]]
 
-       [:div.rivi [:span "Kattohinta (indeksikorjattu)"] [:span (fmt/euro-opt kattohinta)]])
+       [:div.rivi 
+        [:span (str "Kattohinta " (if indeksikorjattu-kattohinta? "(indeksikorjattu)" "(indeksikorjaamaton)"))] 
+        [:span (fmt/euro-opt kattohinta)]])
 
      [:div.rivi [:span "Toteuma"] [:span (fmt/euro-opt toteuma)]]
      [:hr]
@@ -143,12 +165,14 @@
 
      (when (and (not (nil? (:lisatyot-summa data))) (not= 0 (:lisatyot-summa data)))
        [:div.rivi [:span "Lisätyöt"] [:span (fmt/euro-opt (:lisatyot-summa data))]])
-     (when (and (not (nil? (:bonukset-toteutunut data))) (not= 0 (:bonukset-toteutunut data)))
-       [:div.rivi [:span "Tavoitehinnan ulkopuoliset rahavaraukset"] [:span (fmt/euro-opt (:bonukset-toteutunut data))]])
-     (when lupaus-bonus-paatos
-       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt (::valikatselmus/tilaajan-maksu lupaus-bonus-paatos))]])
-     (when lupaus-sanktio-paatos
-       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt (::valikatselmus/urakoitsijan-maksu lupaus-sanktio-paatos))]])
+     (when toteutunut-bonus
+       [:div.rivi [:span "Bonukset"] [:span (fmt/euro-opt toteutunut-bonus)]])
+     (when toteutunut-sanktio
+       [:div.rivi [:span "Sanktiot"] [:span (fmt/euro-opt toteutunut-sanktio)]])
+     (when lupausbonus-paatos
+       [:div.rivi [:span "Lupauksien bonus"] [:span.positiivinen-numero (fmt/euro-opt lupausbonus)]])
+     (when lupaussanktio-paatos
+       [:div.rivi [:span "Lupauksien sanktio"] [:span.negatiivinen-numero (fmt/euro-opt lupaussanktio)]])
      (when (and (not valikatselmus-tekematta?) (not= :valikatselmus sivu))
        [:div.valikatselmus-tehty
         [napit/yleinen-ensisijainen "Avaa välikatselmus" #(e! (kustannusten-seuranta-tiedot/->AvaaValikatselmusLomake)) {:luokka "napiton-nappi tumma" :ikoni (ikonit/harja-icon-action-show)}]])]))
