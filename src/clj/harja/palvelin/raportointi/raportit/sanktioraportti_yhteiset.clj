@@ -26,7 +26,7 @@
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
-        (or (nil? sanktiotyyppi) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
+        (or (nil? sanktiotyyppi) (nil? (:sanktiotyyppi_nimi rivi)) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
