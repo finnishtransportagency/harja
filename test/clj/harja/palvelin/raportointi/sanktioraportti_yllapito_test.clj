@@ -38,7 +38,7 @@
                       urakkatieto-fixture))
 
 (defn muistutus-solu [arvo]
-  [:arvo-ja-yksikko {:arvo arvo :yksikko " kpl" :fmt? false}])
+  [:arvo-ja-yksikko {:arvo arvo :yksikko " kpl" :fmt :numero}])
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -54,8 +54,9 @@
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
     (is (=marginaalissa? nurkkasumma -2500.00))
-    (let [otsikko "Muhoksen päällystysurakka, Sakko- ja bonusraportti tammikuussa 2017"
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= "Muhoksen päällystysurakka" (:otsikko (second (nth taulukko 2)))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Muhoksen päällystysurakka"})
