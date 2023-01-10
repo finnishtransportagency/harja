@@ -272,8 +272,7 @@
                {:itmf :itmf
                 :db :db
                 :integraatioloki :integraatioloki
-                :api-sahkoposti :api-sahkoposti
-                :labyrintti :labyrintti})
+                :api-sahkoposti :api-sahkoposti})
 
       ;; Tierekisteri
       :tierekisteri (let [asetukset (:tierekisteri asetukset)]

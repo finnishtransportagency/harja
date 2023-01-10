@@ -17,12 +17,10 @@
             [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [hiccup.core :refer [html h]]
             [harja.palvelin.integraatiot.tloik.sanomat.tloik-kuittaus-sanoma :as tloik-kuittaus-sanoma]
-            [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik
              [ilmoitukset :as ilmoitukset]
              [ilmoitustoimenpiteet :as ilmoitustoimenpiteet]
-             [tekstiviesti :as tekstiviesti]
              [sahkoposti :as sahkopostiviesti]]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]))
 
@@ -56,15 +54,6 @@
         (ilmoitustoimenpiteet/vastaanota-kuittaus (:db this) viesti-id onnistunut))
       {:jms-kuuntelija :tloik-toimenpidekuittaus})))
 
-(defn rekisteroi-kuittauskuuntelijat! [{:keys [itmf labyrintti db] :as this} jonot]
-  (let [jms-lahettaja (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys")
-                                         itmf (:toimenpideviestijono jonot))]
-    (when-let [labyrintti labyrintti]
-      (log/debug "Yhdistetään kuuntelija Labyritin SMS Gatewayhyn")
-      (sms/rekisteroi-kuuntelija! labyrintti
-                                  (fn [numero viesti]
-                                    (tekstiviesti/vastaanota-tekstiviestikuittaus jms-lahettaja db numero viesti))))))
-
 (defn tee-ilmoitustoimenpide-jms-lahettaja [this asetukset]
   (jms/jonolahettaja (tee-lokittaja this "toimenpiteen-lahetys") (:itmf this) (:toimenpideviestijono asetukset)))
 
@@ -81,14 +70,12 @@
 
 (defrecord Tloik [asetukset kehitysmoodi? ]
   component/Lifecycle
-  (start [{:keys [labyrintti api-sahkoposti] :as this}]
-    (rekisteroi-kuittauskuuntelijat! this asetukset)
+  (start [{:keys [api-sahkoposti] :as this}]
     (let [{:keys [ilmoitusviestijono ilmoituskuittausjono toimenpidekuittausjono
                   uudelleenlahetysvali-minuuteissa]} asetukset
           email api-sahkoposti
           ilmoitusasetukset (merge (:ilmoitukset asetukset)
-                              {:sms labyrintti
-                               :email email})
+                              {:email email})
           toimenpide-jms-lahettaja (tee-ilmoitustoimenpide-jms-lahettaja this asetukset)]
       (assoc this
         :itmf-ilmoitusviestikuuntelija (tee-ilmoitusviestikuuntelija
