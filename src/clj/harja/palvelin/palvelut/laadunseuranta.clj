@@ -255,13 +255,10 @@
         (sanktiot/merkitse-maksuera-likaiseksi! db id)
         id))))
 
-(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db sms fim email urakka-id
+(defn- valita-tieto-pyydetysta-selvityksesta [{:keys [db fim email urakka-id
                                                       laatupoikkeama selvityksen-pyytaja]}]
   (viestinta/laheta-sposti-laatupoikkeamasta-selvitys-pyydetty
     {:db db :fim fim :email email :laatupoikkeama laatupoikkeama
-     :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id})
-  (viestinta/laheta-tekstiviesti-laatupoikkeamasta-selvitys-pyydetty
-    {:db db :fim fim :sms sms :laatupoikkeama laatupoikkeama
      :selvityksen-pyytaja selvityksen-pyytaja :urakka-id urakka-id}))
 
 (defn- tallenna-laatupoikkeaman-kommentit [{:keys [db user urakka laatupoikkeama id]}]
@@ -303,7 +300,7 @@
       (doseq [sanktio (:sanktiot laatupoikkeama)]
         (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka)))))
 
-(defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
+(defn tallenna-laatupoikkeama [{:keys [db user fim email laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
     (log/debug "Tallenna laatupoikkeama: " laatupoikkeama)
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-laatupoikkeamat user urakka-id)
@@ -328,7 +325,7 @@
           (when (and (not (:selvitys-pyydetty laatupoikkeama-kannassa-ennen-tallennusta))
                      (:selvitys-pyydetty laatupoikkeama))
             (valita-tieto-pyydetysta-selvityksesta {:db db :fim fim :email email :urakka-id urakka-id
-                                                    :sms sms :laatupoikkeama (assoc laatupoikkeama :id id)
+                                                    :laatupoikkeama (assoc laatupoikkeama :id id)
                                                     :selvityksen-pyytaja (str (:etunimi user)
                                                                               " "
                                                                               (:sukunimi user))}))
@@ -394,7 +391,7 @@
 
 (defrecord Laadunseuranta []
   component/Lifecycle
-  (start [{:keys [http-palvelin db fim labyrintti api-sahkoposti pdf-vienti excel-vienti] :as this}]
+  (start [{:keys [http-palvelin db fim api-sahkoposti pdf-vienti excel-vienti] :as this}]
 
     (julkaise-palvelut
       http-palvelin
@@ -408,7 +405,7 @@
         (tallenna-laatupoikkeama
           {:db db :user user :fim fim
            :email api-sahkoposti
-           :sms labyrintti :laatupoikkeama laatupoikkeama}))
+           :laatupoikkeama laatupoikkeama}))
 
       :tallenna-suorasanktio
       (fn [user tiedot]

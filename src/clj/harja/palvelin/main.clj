@@ -473,7 +473,7 @@
 
       :laadunseuranta (component/using
                         (laadunseuranta/->Laadunseuranta)
-                        [:http-palvelin :db :fim :api-sahkoposti :labyrintti :pdf-vienti :excel-vienti])
+                        [:http-palvelin :db :fim :api-sahkoposti :pdf-vienti :excel-vienti])
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
