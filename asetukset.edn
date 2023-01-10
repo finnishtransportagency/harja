@@ -178,11 +178,6 @@
 
  :yha-velho {}
 
- ;; Labyrintin SMS Gatewayn testaukseen tarvitaan SSH tunneli harja-app1-stg serverille porttiin 28080
- :labyrintti {:url "http://localhost:28080/sendsms"
-              :kayttajatunnus "solita-2"
-              :salasana #=(slurp "../.harja/labyrintti-salasana")}
-
  ;; ClamAV-palvelun osoite
  :virustarkistus {:url "http://localhost:8080/scan"}
 

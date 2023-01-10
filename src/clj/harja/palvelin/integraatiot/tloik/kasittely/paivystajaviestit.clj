@@ -2,7 +2,6 @@
   (:require [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.tloik.sahkoposti :as tloik-sahkoposti]
-            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
             [harja.palvelin.integraatiot.tloik.ilmoitustoimenpiteet :as ilmoitustoimenpiteet])
   (:use [slingshot.slingshot :only [try+]]))
 
@@ -28,12 +27,5 @@
            (log/error "Ilmoituksen lähettämisessä sähköpostilla tapahtui poikkeus." e)))))
     (log/warn "Ilmoitusta %s ei voida lähettää sähköpostilla ilman sähköpostiosoitetta." id)))
 
-(defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
-  (tloik-tekstiviesti/laheta-ilmoitus-tekstiviestilla sms db ilmoitus paivystaja))
-
-(defn laheta [{sms :sms :as ilmoitusasetukset} db ilmoitus paivystaja]
-  (when (and sms
-             (:vastuuhenkilo paivystaja)
-             (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
-    (laheta-ilmoitus-tekstiviestilla sms db ilmoitus paivystaja))
+(defn laheta [ilmoitusasetukset db ilmoitus paivystaja]
   (laheta-ilmoitus-sahkopostilla ilmoitusasetukset db ilmoitus paivystaja))

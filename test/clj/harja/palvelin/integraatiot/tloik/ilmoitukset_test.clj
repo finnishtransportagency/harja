@@ -18,8 +18,6 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
@@ -50,12 +48,9 @@
     :api-sahkoposti (component/using
                        (sahkoposti-api/->ApiSahkoposti {:tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                        [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
-                  [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
+             [:db :itmf :integraatioloki :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf"}
@@ -181,7 +176,6 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -268,7 +262,6 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"
@@ -323,8 +316,6 @@
                     (list {:id 1
                            :etunimi "Pekka"
                            :sukunimi "Päivystäjä"
-                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
-                           ;; Jos puhelinnumero annetaan, kaikki toimii kuten pitääkin, eli tekstaria ei lähetetä, mutta errori logitetaan
                            :matkapuhelin nil
                            :tyopuhelin nil
                            :sahkoposti "" ;Testataan ikäänkuin epävalidilla emailosoitteella
@@ -335,7 +326,6 @@
                       {:id 2
                        :etunimi "Pekka2"
                        :sukunimi "Päivystäjä2"
-                       ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                        :matkapuhelin nil
                        :tyopuhelin nil
                        :sahkoposti nil ;"Testataan kokonaan puuttuvalla emailosoitteella
@@ -383,7 +373,6 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti "email.email@example.com"

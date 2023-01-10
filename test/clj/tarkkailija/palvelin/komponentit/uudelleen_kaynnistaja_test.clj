@@ -19,7 +19,6 @@
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [->Labyrintti]]
             [harja.palvelin.integraatiot.jms.tyokalut :as s-tk]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as event-apurit]
             [harja.palvelin.tyokalut.komponentti-protokollat :as kp]

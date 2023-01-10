@@ -11,7 +11,7 @@ sed -i -e 's/:kehitysmoodi true/:kehitysmoodi false/g' asetukset.edn
 sed -i -e "s/:palvelin \"localhost\"/:palvelin \"postgres\"/g" asetukset.edn
 mkdir -p ../.harja
 echo aaaa > ../.harja/anti-csrf-token
-touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti,salasana}
+touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,velho-salasana,velho-varuste-salasana,api-sahkoposti,salasana}
 java -jar /jar/harja.jar > harja.out 2>&1 &
 javapid=$!
 for i in $(seq 4); do

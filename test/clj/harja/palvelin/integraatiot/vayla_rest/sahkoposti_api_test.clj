@@ -21,7 +21,6 @@
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tyokalut]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]
             [harja.palvelin.integraatiot.integraatiopisteet.http :as integraatiopiste-http]
@@ -53,12 +52,9 @@
                                                                        :ilmoitusviestijono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+
                                                                        :ilmoituskuittausjono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+}})
                               [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (component/using
-                  (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
-                  [:db :http-palvelin :integraatioloki])
     :tloik (component/using
              (tloik-testi-tyokalut/luo-tloik-komponentti)
-             [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
+             [:db :itmf :integraatioloki :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
                       (binding [*aloitettavat-jmst* #{"itmf"}
@@ -322,7 +318,6 @@
                   (fn [db urakka-id] (list {:id 1
                                             :etunimi "Pekka"
                                             :sukunimi "Päivystäjä"
-                                            ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                             :matkapuhelin nil
                                             :tyopuhelin nil
                                             :sahkoposti paivystajan-email
@@ -335,7 +330,6 @@
                     (list {:id 1
                            :etunimi "Pekka"
                            :sukunimi "Päivystäjä"
-                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                            :matkapuhelin nil
                            :tyopuhelin nil
                            :sahkoposti paivystajan-email

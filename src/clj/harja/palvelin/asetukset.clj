@@ -149,10 +149,6 @@
 
    (s/optional-key :yha-velho) {}
 
-   (s/optional-key :labyrintti) {:url s/Str
-                                 :kayttajatunnus s/Str
-                                 :salasana s/Str}
-
    (s/optional-key :virustarkistus) {:url s/Str}
    (s/optional-key :tiedostopesula) {:base-url s/Str}
 

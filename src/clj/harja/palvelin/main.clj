@@ -24,7 +24,6 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
-    [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
     [harja.palvelin.integraatiot.velho.velho-komponentti :as velho-integraatio]
@@ -280,13 +279,6 @@
                         (tierekisteri/->Tierekisteri (:url asetukset)
                                                      (:uudelleenlahetys-aikavali-minuutteina asetukset))
                         [:db :integraatioloki]))
-
-      ;; Labyrintti SMS Gateway
-      :labyrintti (component/using
-                    (if kehitysmoodi
-                      (labyrintti/feikki-labyrintti)
-                      (labyrintti/luo-labyrintti (:labyrintti asetukset)))
-                    [:http-palvelin :db :integraatioloki])
 
       :turi (component/using
               (turi/->Turi (:turi asetukset))

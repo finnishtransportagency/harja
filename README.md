@@ -362,31 +362,6 @@ ssh -L7777:localhost:5432 harja-db1-stg
 
 Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
 
-## Labyrintin SMS-gateway
-
-Harja käyttää Labyrintin SMS-gatewaytä SMS-viestien lähettämiseen. Labyrintin komponentista on olemassa kaksi eri versiota: Labyrintti ja FeikkiLabyrintti. FeikkiLabyrintti on käytössä vain lokaalissa kehitysympäristössä ja se ainoastaan logittaa viestit REPLiin.
-
-Jos haluat kehityskäytössä testata SMS-gatewayta, vaihda main.clj tiedostosta oikea Labyrinttikomponentti käyttöön feikin sijasta.
-
-SMS:n lähetys kehitystympäristöstä vaatii SSH-putken, jonka voi avata seuraavalla komennolla: ssh -L 28080:gw.labyrintti.com:28080 harja-app1-stg
-
-Huom! Tätä ei saa enää käyttää kuin hätätilanteessa. Labyrintin liikenne ohjautuu tällöin devausympäristöön
-tuotannon sijasta. Oikeiden Labyrintin SMS viestien vastaanottoa voi testata tekemällä reverse SSH-tunneli
-harja-front1-stg palvelimelle sekä muuttamalla NginX:n reititys osoittamaan
-harja-app1-stg palvelimen sijasta localhostin SSH tunnelin porttiin.
-
-1. Avaa reverse SSH-tunneli molemmille tuotannon fronttipalvelimille:
-harja-front1 palvelimelle: ssh -R 6666:localhost:8000 harja-front1
-harja-front2 palvelimelle: ssh -R 6666:localhost:8000 harja-front2
-2. Avaa NginX:n konfiguraatio: sudo vi /etc/nginx/conf.d/site.conf
-3. Vaihda SMS-käsittelijä upstreamiin localhost:6666                                                           
-upstream sms-kasittelija {
-   server localhost:6666;
-}
-4. Käynnistä nginx uudestan: sudo service nginx restart
-5. Luo SSH-tunneli: ssh -L 28080:gw.labyrintti.com:28080 harja-app1-stg
-6. Lähetä tekstiviesti numeroon +358 50 9023530
--> Viesti pitäisi välittyä REPL:n
 
 ## Väylän Harja-järjestelmän laadunseurantatyökalu #
 
