@@ -10,10 +10,8 @@
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
-            [harja.palvelin.integraatiot.labyrintti.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
-            [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
             [clojure.java.io :as io]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -61,12 +59,9 @@
                                                                                             :vastausosoite "harja-ala-vastaa@vayla.fi"}
                                                                            :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                                           [:http-palvelin :db :integraatioloki :itmf])
-                        :labyrintti (component/using (labyrintti/->Labyrintti +testi-sms-url+
-                                                                              "testi" "testi" (atom #{}))
-                                                     [:db :integraatioloki :http-palvelin])
                         :laadunseuranta (component/using
                                           (ls/->Laadunseuranta)
-                                          [:http-palvelin :db :fim :api-sahkoposti :labyrintti])))))
+                                          [:http-palvelin :db :fim :api-sahkoposti])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -157,34 +152,6 @@
     ;; Siivoa roskat
     (poista-sanktio-perustelulla "Testi")))
 
-(deftest laatupoikkeaman-selvityspyynnosta-lahtee-sms
-  (let [laatupoikkeama {:sijainti {:type :point
-                                   :coordinates [382554.0523636384 6675978.549765582]}
-                        :kuvaus "Kuvaus"
-                        :aika #inst "2016-09-15T09:00:01.000-00:00"
-                        :tr {:alkuosa 1
-                             :numero 1
-                             :alkuetaisyys 1
-                             :loppuetaisyys 2
-                             :loppuosa 2}
-                        :urakka (hae-oulun-alueurakan-2014-2019-id)
-                        :sanktiot nil
-                        :selvitys-pyydetty true
-                        :tekija :tilaaja
-                        :kohde "Kohde"}
-        tekstiviesti-valitetty (atom false)
-        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-hoidon-urakan-kayttajat.xml"))
-        viesti-id (str (UUID/randomUUID))]
-
-    (with-fake-http
-      [+testi-fim+ fim-vastaus
-       +testi-sms-url+ (fn [_ _ _]
-                         (reset! tekstiviesti-valitetty true)
-                         "ok")
-       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
-      (odota-ehdon-tayttymista #(true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin" 5000)
-      (is (true? @tekstiviesti-valitetty) "Tekstiviesti lähetettiin"))))
 
 (deftest laatupoikkeaman-selvityspyynnosta-lahtee-sahkoposti
   (let [laatupoikkeama {:sijainti {:type :point
@@ -206,7 +173,6 @@
 
     (with-fake-http
       [+testi-fim+ fim-vastaus
-       +testi-sms-url+ "ok"
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
 

@@ -4,7 +4,6 @@
             [taoensso.timbre :as log]
             [clojure.test :refer [deftest is use-fixtures]]
             [harja.testi :refer :all]
-            [harja.palvelin.integraatiot.labyrintti.sms :refer [feikki-labyrintti]]
             [harja.jms-test :refer [feikki-jms]]
             [com.stuartsierra.component :as component]
             [harja.integraatio :as integraatio]
@@ -32,7 +31,6 @@
                       (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
                                                        :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
                       [:http-palvelin :db :integraatioloki :itmf])
-    :labyrintti (feikki-labyrintti)
     :tloik (component/using
              (luo-tloik-komponentti)
              [:db :itmf :integraatioloki :api-sahkoposti])))
@@ -170,7 +168,6 @@
        (fn [db urakka-id] (list {:id 1
                                  :etunimi "Pekka"
                                  :sukunimi "Päivystäjä"
-                                 ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                  :matkapuhelin nil
                                  :tyopuhelin nil
                                  :sahkoposti paivystajan-email
@@ -183,7 +180,6 @@
        (fn [db urakka-id lahettaja] (list {:id 1
                                            :etunimi "Pekka"
                                            :sukunimi "Päivystäjä"
-                                           ;; Testi olettaa, että labyrinttiä ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
                                            :matkapuhelin nil
                                            :tyopuhelin nil
                                            :sahkoposti paivystajan-email
