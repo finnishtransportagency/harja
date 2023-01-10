@@ -700,8 +700,7 @@
                       {:db :db
                        :itmf :itmf
                        :integraatioloki :integraatioloki
-                       :api-sahkoposti :api-sahkoposti
-                       :labyrintti :labyrintti})
+                       :api-sahkoposti :api-sahkoposti})
 
       :vaylien-geometriahaku
       (component/using
