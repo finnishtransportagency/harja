@@ -41,7 +41,7 @@
 (defn lahetys-virheet-nappi [rivi muoto]
   (let [nayta-virheet-fn (fn [{:keys [velho-lahetyksen-aika velho-lahetyksen-vastaus] :as rivi}]
                            (varmista-kayttajalta/varmista-kayttajalta
-                             {:otsikko "YHA/Velho-lähetyksessä virhe"
+                             {:otsikko "YHA-lähetyksessä virhe"
                               :sisalto (pot-yhteinen/lahetys-virhe-teksti rivi)
                               :hyvaksy "OK"
                               :toiminto-fn (constantly nil)

@@ -373,6 +373,9 @@
                        arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
                                       "X"
                                       arvo-datassa)
+                       sarake-fmt (:fmt sarake)
+                       solu-fmt (and (vector? arvo-datassa)
+                                  (:fmt (second arvo-datassa)))
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
                        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
@@ -393,12 +396,13 @@
                                       (partial tyyli-format-mukaan formaatti nil)
 
                                       formatoi-solu?
-                                      (partial tyyli-format-mukaan (:fmt sarake) (:voi-muokata? sarake))
+                                      (partial tyyli-format-mukaan (or solu-fmt sarake-fmt)
+                                        (:voi-muokata? sarake))
 
                                       :default
                                       (constantly nil))
                        naytettava-arvo (cond
-                                         (and (number? naytettava-arvo) (= :prosentti (:fmt sarake)))
+                                         (and (number? naytettava-arvo) (= :prosentti sarake-fmt))
                                          ;; Jos excelissä formatoidaan luku prosentiksi,
                                          ;; excel olettaa, että kyseessä on sadasosia.
                                          ;; Eli kokonaisluku 25 -> 2500%
@@ -407,7 +411,7 @@
                                          (/ naytettava-arvo 100)
 
                                          ;; Jos excelissä on raha määrityksenä. Pyöristä kahteen desimaaliin
-                                         (and (= :raha (:fmt sarake)) (number? naytettava-arvo))
+                                         (and (= :raha sarake-fmt) (number? naytettava-arvo))
                                          (BigDecimal.
                                            (as-> (str/replace (fmt/desimaaliluku-opt naytettava-arvo 2 false) "," ".") naytettava-arvo
                                              (str/replace naytettava-arvo "−" "-"))) ;; Mutetaan jostain erikoisesta tilanteesta
@@ -415,9 +419,9 @@
 
                                          :default
                                          naytettava-arvo)
-                       tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (:fmt sarake)])]
+                       tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (or solu-fmt sarake-fmt)])]
                                tyyli
-                               (luo-uusi-tyyli solun-tyyli formaatti-fn (:fmt sarake)))]
+                               (luo-uusi-tyyli solun-tyyli formaatti-fn (or solu-fmt sarake-fmt)))]
                    (if (raportti-domain/excel-kaava? arvo-datassa)
                      (aseta-kaava! arvo-datassa workbook cell)
                      (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))

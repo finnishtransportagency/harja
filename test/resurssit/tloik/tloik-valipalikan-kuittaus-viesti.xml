@@ -1,0 +1,33 @@
+<harja:toimenpide xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
+    <viestiId>9e97c2bc-f34a-4e69-bd43-43bc050be671</viestiId>
+    <ilmoitusId>50575025</ilmoitusId>
+    <tyyppi>vastaanotto</tyyppi>
+    <aika>2022-12-21T10:50:00.358</aika>
+    <vakiofraasi></vakiofraasi>
+    <vapaateksti>
+        <![CDATA[' Viesti ulkopuoliselta lähettäjältä: Ole varovainen linkkien ja tiedostojen kanssa. Meddelande från externa avsändare: Var försiktig med internetlänkar och filer. '   Skickat från Outlook för Android<https://eur05.safelinks.protection.outlook.com/?url=https%3A%2F%2Faka.ms%2FAAb9ysg&data=05%7C01%7Charja%40vayla.fi%7C90445421402b4c24f2cd08dae33fdfaa%7C9b16f04ada3947e083ab13df71913d16%7C0%7C0%7C638072160734217452%7CUnknown%7CTWFpbGZsb3d8eyJWIjoiMC4wLjAwMDAiLCJQIjoiV2luMzIiLCJBTiI6Ik1haWwiLCJXVCI6Mn0%3D%7C1000%7C%7C%7C&sdata=uuDFAoyE86ZBYfynRssflUaM34CnEZMyiCEWMN5F0BI%3D&reserved=0>]]></vapaateksti>
+    <kasittelija>
+        <henkilo>
+            <etunimi></etunimi>
+            <sukunimi></sukunimi>
+            <matkapuhelin></matkapuhelin>
+            <sahkoposti></sahkoposti>
+        </henkilo>
+        <organisaatio>
+            <nimi></nimi>
+            <ytunnus></ytunnus>
+        </organisaatio>
+    </kasittelija>
+    <ilmoittaja>
+        <henkilo>
+            <etunimi>Päivystys</etunimi>
+            <sukunimi>PAV</sukunimi>
+            <matkapuhelin>+358505703345</matkapuhelin>
+            <sahkoposti>paivystys@pav.fi</sahkoposti>
+        </henkilo>
+        <organisaatio>
+            <nimi>PAV Oy Ab</nimi>
+            <ytunnus>0847201-0</ytunnus>
+        </organisaatio>
+    </ilmoittaja>
+</harja:toimenpide>

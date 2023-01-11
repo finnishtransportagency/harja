@@ -189,7 +189,6 @@
                                                               :losa (:losa paikkauskohde)
                                                               :yksikko (::paikkaus/yksikko paikkauskohde)})))))
 
-;; TODO: Funktion toteutus näyttää monimutkaiselta. Refaktoroi, kun on aikaa
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat paikkauskohde r]
   (let [_ (if (not (nil? (::paikkaus/sijainti r)))
@@ -200,14 +199,16 @@
                 (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
             ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
             (reset! tiedot/valitut-kohteet-atom #{}))
-        toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
-        toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
+        toteumalomake (-> r
+                          (set/rename-keys paikkaus/speqcl-avaimet->paikkaus)
+                          (set/rename-keys paikkaus/speqcl-avaimet->tierekisteri))
         toteumalomake (merge toteumalomake
-                        {:ajorata (::paikkaus/ajorata toteumalomake)
-                         :ajouravalit (::paikkaus/ajouravalit toteumalomake)
-                         ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
-                         :ajourat (first (::paikkaus/ajourat toteumalomake))
-                         :reunat (first (::paikkaus/reunat toteumalomake))})
+                             {:ajorata (::paikkaus/ajorata toteumalomake)
+                              :kaista (::paikkaus/kaista toteumalomake)
+                              :ajouravalit (::paikkaus/ajouravalit toteumalomake)
+                              ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
+                              :ajourat (first (::paikkaus/ajourat toteumalomake))
+                              :reunat (first (::paikkaus/reunat toteumalomake))})
         ;; Toteuman tyyppi
         tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku
@@ -281,8 +282,8 @@
                 :tasaa :oikea :kokonaisluku? true}
                {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/ajourat
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :fmt #(str/join %)}
+               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
                {:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}]
 
