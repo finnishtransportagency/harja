@@ -230,13 +230,13 @@
          (when (and voi-muokata? (or (zero? oikaistu-tavoitehinta) (nil? oikaistu-tavoitehinta)))
            [urakalla-ei-tavoitehintaa-varoitus])
          [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot)
-             {:disabled? (not voi-muokata?)})]]
+          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (not voi-muokata?)}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled? (not voi-muokata?)
+         {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]
     )
@@ -312,13 +312,13 @@
            [urakalla-ei-tavoitehintaa-varoitus])
 
          [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot)
-             {:disabled? (not voi-muokata?)})]]
+          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (not voi-muokata?)}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled? (not voi-muokata?)
+         {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
@@ -424,7 +424,7 @@
             {:luokka "nappi-toissijainen napiton-nappi"
              :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
-(defn lupaus-lomake [e! oikaistu-tavoitehinta app]
+(defn lupaus-lomake [e! oikaistu-tavoitehinta app voi-muokata?]
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
@@ -508,7 +508,8 @@
              [napit/yleinen-ensisijainen "Tallenna päätös"
               #(e! (valikatselmus-tiedot/->TallennaPaatos
                      ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
-                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))]
+                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))
+              {:disabled (not voi-muokata?)}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
@@ -518,7 +519,8 @@
               "Kumoa päätös"
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
               {:luokka "nappi-toissijainen napiton-nappi"
-               :ikoni [ikonit/harja-icon-action-undo]}]
+               :ikoni [ikonit/harja-icon-action-undo]
+               :disabled (not voi-muokata?)}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
@@ -583,7 +585,7 @@
          [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
        [:h2 "Lupauksiin liittyvät päätökset"]
        (if lupaukset-valmiina?
-         [lupaus-lomake e! oikaistu-tavoitehinta app]
+         [lupaus-lomake e! oikaistu-tavoitehinta app voi-muokata?]
          [lupaus-ilmoitus e! app])])))
 
 (defn valikatselmus [e! app]
