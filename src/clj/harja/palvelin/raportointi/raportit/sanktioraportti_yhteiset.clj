@@ -133,6 +133,39 @@
            (when-not yllapito?
              (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
 
+(defn koosta-taulukko [{:keys [raportin-rivit raportin-otsikot otsikko nimi urakka osamateriaalit]}]
+
+  (println otsikko)
+  (println urakka)
+  (println "rivit " raportin-rivit)
+  (println "otsikot: " raportin-otsikot)
+  (println "--------------------------------------------------")
+
+  [:taulukko {:otsikko otsikko
+              :sheet-nimi nimi
+              :sivuttain-rullattava? true
+              :esta-tiivis-grid? true
+              :ensimmainen-sarake-sticky? false
+              :samalle-sheetille? true}
+
+   ;; Muodostaa taulukon urakka otsikot
+   (into [] (concat
+             (map (fn [otsikko-rivi]
+                    otsikko-rivi) raportin-otsikot)))
+   ;; Taulukon rivit 
+   (mapcat (fn [rivi]
+             
+             (if (:otsikko rivi)
+               [rivi]
+               
+               (let [korosta-rivi? (str/includes? (first rivi) "yht.")]
+                 [{:korosta-hennosti? korosta-rivi? 
+                   :lihavoi? korosta-rivi?
+                   :rivi (into []
+                               (concat
+                                (map (fn [x]
+                                       x) rivi)))}]))) osamateriaalit)])
+
 (defn suorita-runko [db user {:keys [alkupvm loppupvm
                                      urakka-id hallintayksikko-id
                                      urakkatyyppi db-haku-fn
@@ -188,13 +221,28 @@
                                            :sanktiot-kannassa sanktiot-kannassa
                                            :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
                                            :yhteensa-sarake? yhteensa-sarake?})
+
+        taulukon-tiedot {:urakka nil
+                         :otsikko nil
+                         :osamateriaalit nil
+                         :nimi raportin-nimi
+                         :raportin-rivit raportin-rivit
+                         :raportin-otsikot raportin-otsikot}
+
         runko [:raportti {:nimi raportin-nimi
                           :orientaatio :landscape}
-               [:taulukko {:otsikko otsikko
-                           :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
-                           :sheet-nimi raportin-nimi}
-                raportin-otsikot
-                raportin-rivit]]]
+
+               #_[:taulukko {:otsikko otsikko
+                             :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
+                             :sheet-nimi raportin-nimi}
+                  raportin-otsikot
+                  raportin-rivit]
+               
+               ;; Uusi taulukon tyyli
+               (koosta-taulukko (-> taulukon-tiedot
+                                    (assoc :otsikko otsikko)
+                                    (assoc :urakka (:otsikko (second raportin-otsikot)))
+                                    (assoc :osamateriaalit raportin-rivit)))]]
     (if info-teksti
       (conj runko [:teksti info-teksti])
       runko)))

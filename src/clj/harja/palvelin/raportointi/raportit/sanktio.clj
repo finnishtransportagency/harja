@@ -16,12 +16,13 @@
                                      {:sakkoryhma :A
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Päätiet" rivit alueet
+   ; Content kopioitu figmasta, tyhjän välin voisi formatoida html mutta näin ehkä helpompi?
+   (yhteiset/luo-rivi-sakkojen-summa "        • Päätiet" rivit alueet
                                      {:sanktiotyyppi "Talvihoito, päätiet"
                                       :sakkoryhma :A
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Muut tiet" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Muut tiet" rivit alueet
                                      {:sanktiotyyppi "Talvihoito, muut tiet"
                                       :sakkoryhma :A
                                       :talvihoito? true
@@ -30,12 +31,12 @@
                                      {:sakkoryhma :B
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Päätiet" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Päätiet" rivit alueet
                                      {:sanktiotyyppi "Talvihoito, päätiet"
                                       :sakkoryhma :B
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Muut tiet" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Muut tiet" rivit alueet
                                      {:sanktiotyyppi "Talvihoito, muut tiet"
                                       :sakkoryhma :B
                                       :talvihoito? true
@@ -58,12 +59,12 @@
                                      {:sakkoryhma :A
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneymp. hoito" rivit alueet
                                      {:sanktiotyyppi "Liikenneympäristön hoito"
                                       :sakkoryhma :A
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
                                      {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
                                       :sakkoryhma :A
                                       :talvihoito? false
@@ -72,12 +73,12 @@
                                      {:sakkoryhma :B
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Liikenneymp. hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneymp. hoito" rivit alueet
                                      {:sanktiotyyppi "Liikenneympäristön hoito"
                                       :sakkoryhma :B
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "- Sorateiden hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
                                      {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
                                       :sakkoryhma :B
                                       :talvihoito? false
