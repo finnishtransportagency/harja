@@ -571,7 +571,9 @@
                          (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                          (or
                            poikkeusvuosi?
-                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
+                           ;; Niin moni urakka ei ole tehnyt välikatselmusta, että otetaan tarkistus hetkeksi pois käytöstä
+                           #_ (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))
+                           )))]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
     (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
