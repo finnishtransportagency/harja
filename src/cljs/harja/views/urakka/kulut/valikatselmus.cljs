@@ -98,7 +98,7 @@
      (when (and hoitokausi-menneisyydessa? (not jvh?))
        [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
         [ikonit/harja-icon-status-alert]
-        [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
+        [:span "Hoitovuosi on lukittu vuoden vaihteessa ja välikatselmusta ei voi enää muokata."]])]))
 
 (defn kattohinnan-oikaisu [e! app]
   (let [oikaistu-kattohinta (some->
