@@ -10,11 +10,11 @@
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
 (defn- raporttirivit-talvihoito [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "Talvihoito"}
+  [{:otsikko "Tehtäväkohtaiset sanktiot / TALVIHOITO"}
    (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" rivit alueet
                                          {:talvihoito? true
                                           :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Sakko A" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "A-ryhmä (tehtäväkohtainen sanktio)" rivit alueet
                                      {:sakkoryhma :A
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
@@ -29,7 +29,7 @@
                                       :sakkoryhma :A
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Sakko B" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
                                      {:sakkoryhma :B
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
@@ -43,25 +43,25 @@
                                       :sakkoryhma :B
                                       :talvihoito? true
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Talvihoito, sakot yht." rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "Talvihoito yhteensä" rivit alueet
                                      {:talvihoito? true
                                       :sakkoryhma #{:A :B}
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Talvihoito, indeksit yht." rivit alueet
+   (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
                                       {:talvihoito? true
                                        :sakkoryhma #{:A :B}
                                        :yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit-muut-tuotteet [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "Muut tuotteet"}
+  [{:otsikko "Tehtäväkohtaiset sanktiot / MUUT TEHTÄVÄKOKONAISUUDET"}
    (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" rivit alueet
                                          {:talvihoito? false
                                           :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Sakko A" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "A-ryhmä (tehtäväkohtainen sanktio)" rivit alueet
                                      {:sakkoryhma :A
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneymp. hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
                                      {:sanktiotyyppi "Liikenneympäristön hoito"
                                       :sakkoryhma :A
                                       :talvihoito? false
@@ -71,11 +71,11 @@
                                       :sakkoryhma :A
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Sakko B" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
                                      {:sakkoryhma :B
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneymp. hoito" rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
                                      {:sanktiotyyppi "Liikenneympäristön hoito"
                                       :sakkoryhma :B
                                       :talvihoito? false
@@ -85,19 +85,19 @@
                                       :sakkoryhma :B
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "Muut tuotteet, sakot yht." rivit alueet
+   (yhteiset/luo-rivi-sakkojen-summa "Muut tehtäväkokonaisuudet yhteensä" rivit alueet
                                      {:talvihoito? false
                                       :sakkoryhma #{:A :B}
                                       :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Muut tuotteet, indeksit yht." rivit alueet
+   (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
                                       {:talvihoito? false
                                        :sakkoryhma #{:A :B}
                                        :yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit-ryhma-c [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "Ryhmä C"}
-   (yhteiset/luo-rivi-sakkojen-summa "Ryhmä C, sakot yht." rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Ryhmä C, indeksit yht." rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])
+  [{:otsikko "C-ryhmä"}
+   (yhteiset/luo-rivi-sakkojen-summa "C-ryhmä yhteensä" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
+   (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])
 
 
 (defn- raporttirivit [rivit alueet optiot]

@@ -214,6 +214,8 @@
                                       lihavoi? (:lihavoi? optiot)
                                       korosta? (:korosta? optiot)
                                       korosta-hennosti? (:korosta-hennosti? optiot)
+                                      korosta-harmaa? (:korosta-harmaa? optiot)
+                                      valkoinen? (:valkoinen? optiot)
                                       rivin-luokka (:rivin-luokka optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
@@ -226,6 +228,12 @@
 
                                           korosta-hennosti?
                                           (assoc :korosta-hennosti true)
+                                    
+                                          korosta-harmaa?
+                                          (assoc :korosta-harmaa? true)
+                                    
+                                          valkoinen?
+                                          (assoc :valkoinen true)
 
                                           (or korosta? (when korosta-rivit (korosta-rivit index)))
                                           (assoc :korosta true)
@@ -243,6 +251,10 @@
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
+
+(defmethod muodosta-html :jakaja [_]
+  [:hr {:style {:margin-top "30px"
+                :margin-bottom "30px"}}])
 
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
