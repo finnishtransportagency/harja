@@ -34,12 +34,12 @@
     paluuarvo))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
+  [db user {:keys [alkupvm loppupvm] :as params}]
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
      {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:taulukko
-      {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
+      {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
        :sheet-nimi "Määrätoteumat"}
       otsikot
       rivit]]))
