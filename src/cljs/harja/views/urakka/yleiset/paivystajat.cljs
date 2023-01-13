@@ -56,65 +56,64 @@
 
 (defn paivystajalista
   [ur paivystajat tallenna!]
-  (fn [ur paivystajat tallenna!]
-    (let [varoita-paivystyksen-puuttumisesta? (and
-                                                (urakka-tiedot/urakka-kaynnissa? ur)
-                                                (not-any? #(paivystys-voimassa? %) paivystajat))]
-      [:div
-       [grid/grid
-        {:otsikko "Päivystystiedot"
-         :tyhja "Ei päivystystietoja."
-         :tallenna tallenna!
-         :rivin-luokka #(when (paivystys-voimassa? %)
-                          " bold")}
-        [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                  nimi
-                                  (str (:etunimi %)
-                                       (when-let [suku (:sukunimi %)]
-                                         (str " " suku))))
-          :aseta (fn [yht arvo]
-                   (assoc yht :nimi arvo))
+  (let [varoita-paivystyksen-puuttumisesta? (and
+                                              (urakka-tiedot/urakka-kaynnissa? ur)
+                                              (not-any? #(paivystys-voimassa? %) paivystajat))]
+    [:div
+     [grid/grid
+      {:otsikko "Päivystystiedot"
+       :tyhja "Ei päivystystietoja."
+       :tallenna tallenna!
+       :rivin-luokka #(when (paivystys-voimassa? %)
+                        " bold")}
+      [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
+                                nimi
+                                (str (:etunimi %)
+                                     (when-let [suku (:sukunimi %)]
+                                       (str " " suku))))
+        :aseta (fn [yht arvo]
+                 (assoc yht :nimi arvo))
+        :tyyppi :string :leveys 15
+        :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
+       {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
+        :tyyppi :valinta
+        :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
+        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
 
-
-          :tyyppi :string :leveys 15
-          :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
-         {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
-          :tyyppi :valinta
-          :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-          :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
-         {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
-          :pituus 16}
-         {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
-          :pituus 16}
-         {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20}
-         {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-          :validoi [[:ei-tyhja "Aseta alkupvm"]
-                    (fn [alku rivi]
-                      (let [id (:id rivi)
-                            loppu (:loppu rivi)]
-                        (when (and alku loppu
-                                   (t/before? loppu alku))
-                          "Loppupvm ei voi olla alkua ennen.")
-                        (when (and (neg? id)
-                                   alku
-                                   (t/before? alku (pvm/paivan-alussa-opt (pvm/nyt))))
-                          "Et saa asettaa uuden päivystyksen alkamishetkeä menneisyyteen.")))]}
-         {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
-          :validoi [[:ei-tyhja "Aseta loppupvm"]
-                    (fn [loppu rivi]
-                      (let [alku (:alku rivi)]
-                        (when (and alku loppu
-                                   (t/before? loppu alku))
-                          "Loppupvm ei voi olla alkua ennen.")))]}
-         {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
-          :leveys 10
-          :fmt fmt/totuus :tasaa :keskita}]
-        paivystajat]
-       (if varoita-paivystyksen-puuttumisesta?
-         [yleiset/toast-viesti "Urakka on käynnissä mutta vuorossaoleva päivystäjä puuttuu! Tieliikenneilmoituksia ei voi toimittaa urakkaan. Ole hyvä ja lisää vuorossaoleva päivystäjä." "varoitus"]
-         [yleiset/vihje "Kaikista ilmoituksista lähetetään aina kaikille vuorossaoleville päivystäjille tieto sähköpostilla.
-   Uusista toimenpidepyynnöistä lähetetään tekstiviesti vain vuorossaoleville vastuuhenkilöille"])])))
+       {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
+        :pituus 16}
+       {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
+        :pituus 16}
+       {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20}
+       {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
+        :validoi [[:ei-tyhja "Aseta alkupvm"]
+                  (fn [alku rivi]
+                    (let [id (:id rivi)
+                          loppu (:loppu rivi)]
+                      (when (and alku loppu
+                                 (t/before? loppu alku))
+                        "Loppupvm ei voi olla alkua ennen.")
+                      (when (and (neg? id)
+                                 alku
+                                 (t/before? alku (pvm/paivan-alussa-opt (pvm/nyt))))
+                        "Et saa asettaa uuden päivystyksen alkamishetkeä menneisyyteen.")))]}
+       {:otsikko "Loppupvm" :nimi :loppu :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
+        :validoi [[:ei-tyhja "Aseta loppupvm"]
+                  (fn [loppu rivi]
+                    (let [alku (:alku rivi)]
+                      (when (and alku loppu
+                                 (t/before? loppu alku))
+                        "Loppupvm ei voi olla alkua ennen.")))]}
+       {:otsikko "Vastuuhenkilö" :nimi :vastuuhenkilo :tyyppi :checkbox
+        :leveys 10
+        :fmt fmt/totuus :tasaa :keskita}]
+      paivystajat]
+     (if varoita-paivystyksen-puuttumisesta?
+       [yleiset/info-laatikko :varoitus
+        "Urakka on käynnissä mutta vuorossaoleva päivystäjä puuttuu!"
+        "Tieliikenneilmoituksia ei voi toimittaa urakkaan. Ole hyvä ja lisää vuorossaoleva päivystäjä." nil]
+       [yleiset/vihje "Kaikista ilmoituksista lähetetään aina kaikille vuorossaoleville päivystäjille tieto sähköpostilla.
+   Uusista toimenpidepyynnöistä lähetetään tekstiviesti vain vuorossaoleville vastuuhenkilöille"])]))
 
 (defn- aikajanariveiksi
   "Muunna päivystäjälista aikajanriveiksi. Ryhmitellään tiedot nimen ja organisaation mukaan,
