@@ -78,13 +78,14 @@
 
 (deftest hae-urakka-pelkalla-sijainnilla
   (testing "Sijainti (epsg:3067): 427232.596,7211474.342"
-    ;; TODO: Pitää keksiä testikäyttäjä, jolla olisi oikeuksia useampaan urakkatyyppiin.
-    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-jvh+)
+    ;; TODO: Pitäisi keksiä testikäyttäjä, jolla olisi oikeuksia vähän useampaan erilaiseen urakkatyyppiin.
+    ;;       Siten saisi tässä testattua myös palautuuko samaan pisteeseen osuvat erilaiset urakkatyypit hausta.
+    (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-yit_uuvh+)
                     {;; Oulun lähiseutu (EPSG:3067)
                      "x" 427232.596 "y" 7211474.342} portti)
           enkoodattu-body (cheshire/decode (:body vastaus) true)]
       (is (= 200 (:status vastaus)))
-      (is (= 3 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
+      (is (= 2 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))))
 
   (testing "Käyttäjällä ei oikeuksia urakoihin"
     (let [vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] "livi"
