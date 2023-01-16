@@ -711,7 +711,6 @@ SELECT EXISTS(
 -- name: hae-urakka-sijainnilla
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
--- TODO Tarkista rikkovatko lisätyt uudet kentät sijaintihakua muualla harjassa.
 SELECT u.id,
        u.nimi,
        u.tyyppi,
@@ -751,8 +750,12 @@ WHERE (CASE
                           FROM paallystyspalvelusopimus pps
                          WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
                            AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
-             ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
-                   (st_contains(ua.alue, st_makepoint(:x, :y))))
+            -- Kommentoitu pois koska ilmoitusten urakan haku sijainnilla menee rikki.
+            -- TODO Täytyykö pystyä hakemaan sijainnilla myös 'kokonaisurakka' sopimuksen piirissä olevia urakoita?
+            --      Riittääkö keskittyminen pelkästään palvelusopimuksen piirissä oleviin päällystysurakoihin,
+            --      vai tehdäänkö erillinen 'sopimustyyppi' parametri, jolla hakua voi suodattaa?
+             --ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
+             --      (st_contains(ua.alue, st_makepoint(:x, :y))))
             END))
     OR ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
