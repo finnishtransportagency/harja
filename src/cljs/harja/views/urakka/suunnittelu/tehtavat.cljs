@@ -291,8 +291,8 @@
   [e! {:keys [valinnat taulukko] :as app}]
   (let [{:keys [nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} valinnat]
     [:div
-     [debug/debug valinnat]
-     [debug/debug taulukko]
+     ;[debug/debug valinnat]
+     ;[debug/debug taulukko]
      (if (or nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?)
        [:div 
         (doall
@@ -328,9 +328,9 @@
            (comp
              (vieritys/vierita ::top)
              #(e! (t/->TallennaSopimus false))) {:ikoni [ikonit/pencil]}])]
-       [debug/debug app]
-       [debug/debug @t/taulukko-tila]
-       [debug/debug @t/taulukko-virheet]
+       ;[debug/debug app]
+       ;[debug/debug @t/taulukko-tila]
+       ;[debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
        (when (not sopimukset-syotetty?)

@@ -229,19 +229,6 @@
     (update! db ::paikkaus/paikkaus paikkaus ehdot)
     (first (hae-paikkaukset db ehdot))))
 
-(defn- paivita-paikkaustoteuma [db urakka-id paikkaustoteuma]
-  "Päivittää paikkauskustannuksen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
-  (let [id (::paikkaus/id paikkaustoteuma)
-        luoja-id (::muokkaustiedot/luoja-id paikkaustoteuma)
-        ulkoinen-id (::paikkaus/ulkoinen-id paikkaustoteuma)
-        ehdot (if (id-olemassa? id)
-                {::paikkaus/id id}
-                {::paikkaus/ulkoinen-id ulkoinen-id
-                 ::paikkaus/urakka-id urakka-id
-                 ::muokkaustiedot/luoja-id luoja-id})]
-    (update! db ::paikkaus/paikkaustoteuma paikkaustoteuma ehdot)
-    (first (hae-paikkaustoteumat db ehdot))))
-
 (defn- paivita-paikkauskohde
   "Päivittää paikkauskohteen tiedot, jos ulkoinen-id, urakka-id ja käyttäjä täsmäävät."
   [db urakka-id paikkauskohde]
@@ -403,13 +390,10 @@
                                                        :aet (:aet paikkaus) :losa (:losa paikkaus)
                                                        :loppuet (:let paikkaus)})
         tyomenetelmat (hae-paikkauskohteiden-tyomenetelmat db)
-        ;; Paikkauksissa käytetään liian yksinkertaista tierekisteriosoitetta ja kaista/ajoratatietoa
-        ;; on mahdoton sinne tallentaa. Joten laajennetaan paikkaus_tienkohta tauluun
-        ;; nämä paikkaustaulusta ylimenevät tiedot.
         tienkohdat (if (and (paikkaus/levittimella-tehty? paikkaus tyomenetelmat)
                               (:kaista paikkaus))
                      {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))
-                      ::paikkaus/ajourat [(:kaista paikkaus)]}
+                      ::paikkaus/kaista (konversio/konvertoi->int (:kaista paikkaus))}
                      ;; Muut kuin levittimellä tehdyt voi käyttää yksinkertaisempaa tienkohtaa
                      {::paikkaus/ajorata (konversio/konvertoi->int (:ajorata paikkaus))})
         ;; Muutetaan työmenetelmä tarvittaessa ID:ksi

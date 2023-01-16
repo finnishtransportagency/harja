@@ -9,6 +9,7 @@
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
+    [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka-domain]))
 
 (defn- rivi-kuuluu-talvihoitoon? [rivi]
@@ -26,7 +27,7 @@
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
-        (or (nil? sanktiotyyppi) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
+        (or (nil? sanktiotyyppi) (nil? (:sanktiotyyppi_nimi rivi)) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
     rivit))
 
@@ -45,7 +46,7 @@
   ([rivit suodattimet]
    [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
                       :yksikko " kpl"
-                      :fmt? false}]))
+                      :fmt :numero}]))
 
 
 (defn sakkojen-summa
@@ -176,13 +177,7 @@
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
-        otsikko (yleinen/raportin-otsikko
-                  (case konteksti
-                    :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
-                                                     db hallintayksikko-id)))
-                    :koko-maa "KOKO MAA")
-                  raportin-nimi alkupvm loppupvm)
+        otsikko (str "Sanktiot, bonukset ja arvonvähennykset " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         raportin-rivit (raportin-rivit-fn {:konteksti konteksti
                                            :naytettavat-alueet naytettavat-alueet
                                            :sanktiot-kannassa sanktiot-kannassa
@@ -190,7 +185,8 @@
                                            :yhteensa-sarake? yhteensa-sarake?})
         runko [:raportti {:nimi raportin-nimi
                           :orientaatio :landscape}
-               [:taulukko {:otsikko otsikko
+               [:otsikko otsikko]
+               [:taulukko {:otsikko "Sanktiot"
                            :oikealle-tasattavat-kentat (into #{} (range 1 (yleinen/sarakkeiden-maara raportin-otsikot)))
                            :sheet-nimi raportin-nimi}
                 raportin-otsikot

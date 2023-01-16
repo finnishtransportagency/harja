@@ -31,7 +31,9 @@
    :tietokanta-replica Tietokanta
    :tarkkailija {:loop-odotus s/Int}
    :fim {:url s/Str
-         (s/optional-key :tiedosto) s/Str}
+         (s/optional-key :tiedosto) s/Str
+         :kayttajatunnus s/Str
+         :salasana s/Str}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
          (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword

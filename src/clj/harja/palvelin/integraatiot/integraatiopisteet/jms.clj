@@ -36,13 +36,14 @@
 (defn laheta-jonoon
   ([lokittaja jms-client jono viesti] (laheta-jonoon lokittaja jms-client jono viesti nil))
   ([lokittaja jms-client jono viesti viesti-id]
-   (log/debug (format "Lähetetään JMS jonoon: %s viesti: %s." jono viesti))
+   (log/debug (format "Käynnistetään lähetys JMS jonoon: %s viesti: %s." jono viesti))
    (let [tapahtuma-id (lokittaja :alkanut nil nil)
          client-nimi (:nimi jms-client)
          viesti (muodosta-viesti lokittaja tapahtuma-id viesti client-nimi)]
      (try+
        (if-let [jms-viesti-id (jms/laheta jms-client jono viesti nil)]
          (do
+           (log/debug (format "Lähetys onnistui !! JMS jonoon: %s viesti: %s." jono viesti))
            ;; Käytetään joko ulkopuolelta annettua ulkoista id:tä tai JMS-yhteyden antamaa id:täs
            (lokittaja :jms-viesti tapahtuma-id (or viesti-id jms-viesti-id) "ulos" viesti jono)
            jms-viesti-id)

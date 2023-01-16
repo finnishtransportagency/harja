@@ -118,17 +118,17 @@
          :toimenpide (:toimenpide (first tehtavat))
          :jarjestys (:jarjestys (first tehtavat))
          (keyword (str paaryhmaotsikko "-toteutunut")) (reduce (fn [summa tehtava]
-                                                                 (+ summa (:toteutunut_summa tehtava)))
+                                                                 (+ summa (or (:toteutunut_summa tehtava) 0)))
                                                          0 toteutuneet-tehtavat) ;; vain toteutuneet tehtävät ilman lisätöitä
          (keyword (str paaryhmaotsikko "-budjetoitu")) (reduce (fn [summa tehtava]
-                                                                 (+ summa (:budjetoitu_summa tehtava)))
+                                                                 (+ summa (or (:budjetoitu_summa tehtava) 0)))
                                                          0 tehtavat)
          (keyword (str paaryhmaotsikko "-budjetoitu-indeksikorjattu")) (reduce (fn [summa tehtava]
-                                                                                 (+ summa (:budjetoitu_summa_indeksikorjattu tehtava)))
+                                                                                 (+ summa (or (:budjetoitu_summa_indeksikorjattu tehtava) 0)))
                                                                          0 tehtavat)
          :lisatyot-summa (reduce (fn [summa tehtava]
                                    (if (= "lisatyo" (:maksutyyppi tehtava))
-                                     (+ summa (:toteutunut_summa tehtava))
+                                     (+ summa (or (:toteutunut_summa tehtava) 0))
                                      summa))
                            0 tehtavat)
          :lisatyot (filter (fn [tehtava]
@@ -184,13 +184,13 @@
            :toimenpide "Palkat"
            :jarjestys (some #(:jarjestys %) palkkatehtavat)
            :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
-                                                        (:toteutunut_summa rivi))
+                                                        (or (:toteutunut_summa rivi) 0))
                                                    palkkatehtavat))
            :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
-                                                        (:budjetoitu_summa rivi))
+                                                        (or (:budjetoitu_summa rivi) 0))
                                                    palkkatehtavat))
            :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                                        (:budjetoitu_summa_indeksikorjattu rivi))
+                                                                        (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
                                                                    palkkatehtavat))
            :tehtavat toteutuneet-palkat
            ;; Asetetaan vahvistus-status nulliksi, jos yhtään toteumaa tai budjettia ei ole annettu.
@@ -200,17 +200,17 @@
            :toimenpide "Toimistokulut"
            :jarjestys (some #(:jarjestys %) toimistotehtavat)
            :toimenpide-toteutunut-summa (apply + (map (fn [rivi]
-                                                        (:toteutunut_summa rivi))
+                                                        (or (:toteutunut_summa rivi) 0))
                                                    toimistotehtavat))
            :toimenpide-budjetoitu-summa (apply + (map (fn [rivi]
-                                                        (:budjetoitu_summa rivi))
+                                                        (or (:budjetoitu_summa rivi) 0))
                                                    toimistotehtavat))
            :toimenpide-budjetoitu-summa-indeksikorjattu (apply + (map (fn [rivi]
-                                                                        (:budjetoitu_summa_indeksikorjattu rivi))
+                                                                        (or (:budjetoitu_summa_indeksikorjattu rivi) 0))
                                                                    toimistotehtavat))
            :lisatyot-summa (reduce (fn [summa tehtava]
                                      (if (= "lisatyo" (:maksutyyppi tehtava))
-                                       (+ summa (:toteutunut_summa tehtava))
+                                       (+ summa (or (:toteutunut_summa tehtava) 0))
                                        summa))
                              0 tehtavat)
            :lisatyot (filter (fn [tehtava]

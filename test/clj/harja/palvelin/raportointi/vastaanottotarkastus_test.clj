@@ -87,7 +87,7 @@
     (is (= kohdeluettelo odotettu-kohdeluettelo-2017))))
 
 
-(def odotettu-yha-kohteet-2022
+(def odotettu-yha-kohteet-2023
   [:taulukko
    {:otsikko "YHA-kohteet"
     :sheet-nimi "YHA-kohteet"
@@ -112,10 +112,9 @@
          {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
    (list (list "L14" nil "Ouluntie 2" 22 nil nil 13 0 13 3888 nil nil nil 0M 0 0M 0M 0M)
-         (list "L15" "A" "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil 400M 20M 4543.95M 0M 4963.95M)
-         (list "L42" "B" "Tärkeä kohde mt20 2022" 20 nil nil 1 1066 1 3827 2761 nil nil 0M 0 0M 0M 0M))])
+         (list "L15" "A" "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil 400M 20M 4543.95M 0M 4963.95M))])
 
-(def odotettu-yhteenveto-2022
+(def odotettu-yhteenveto-2023
   [:taulukko
    {:otsikko "Yhteenveto"
     :sheet-nimi "Ylläpitokohteet yhteensä"
@@ -138,106 +137,155 @@
          {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
          {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   [(list nil nil nil nil nil nil nil nil nil nil nil nil -1300M 0 4543.95M 0M 3663.95M)]])
+   [(list nil nil nil nil nil nil nil nil nil nil nil nil 0 0 4543.95M 0M 4963.95M)]])
 
-(def odotettu-aikataulu-2022
+(def odotettu-aikataulu-2023
   [:aikajana
    {}
-   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2022-04-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Tärkeä kohde mt20 2022"
-                                                        :loppu nil
-                                                        :reuna "black"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: aloitus 19.04.2022"}
-                                    #:harja.ui.aikajana{:alku #inst "2022-04-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Tärkeä kohde mt20 2022"
-                                                        :loppu #inst "2022-04-20T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.04.2022 – 21.04.2022"
-                                                        :vari "#282B2A"}
-                                    #:harja.ui.aikajana{:alku #inst "2022-04-21T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Tärkeä kohde mt20 2022"
-                                                        :loppu #inst "2022-04-22T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Tiemerkintä: 22.04.2022 – 23.04.2022"
-                                                        :vari "#DECB03"}]
-                             :otsikko "L42 - Tärkeä kohde mt20 2022"
-                             :valitavoitteet nil}
-         #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2022-05-15T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2022-05-23T21:00:00.000-00:00"
-                                                        :reuna "black"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: 16.05.2022 – 24.05.2022"}
-                                    #:harja.ui.aikajana{:alku #inst "2022-05-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2022-05-20T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.05.2022 – 21.05.2022"
-                                                        :vari "#282B2A"}
-                                    #:harja.ui.aikajana{:alku #inst "2022-05-21T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Ouluntie 2"
-                                                        :loppu #inst "2022-05-22T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Tiemerkintä: 22.05.2022 – 23.05.2022"
-                                                        :vari "#DECB03"}]
-                             :otsikko "L14 - Ouluntie 2"
-                             :valitavoitteet nil}
-         #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2022-06-13T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Puolangantie"
-                                                        :loppu nil
-                                                        :reuna "black"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Koko kohde: aloitus 14.06.2022"}
-                                    #:harja.ui.aikajana{:alku #inst "2022-06-18T21:00:00.000-00:00"
-                                                        :drag nil
-                                                        :kohde-nimi "Puolangantie"
-                                                        :loppu #inst "2022-06-20T21:00:00.000-00:00"
-                                                        :sahkopostitiedot nil
-                                                        :teksti "Päällystys: 19.06.2022 – 21.06.2022"
-                                                        :vari "#282B2A"}]
-                             :otsikko "L15 - Puolangantie"
-                             :valitavoitteet nil})])
+   (list #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-05-15T21:00:00.000-00:00"
+                                                   :drag nil
+                                                   :kohde-nimi "Ouluntie 2"
+                                                   :loppu #inst "2023-05-23T21:00:00.000-00:00"
+                                                   :reuna "black"
+                                                   :sahkopostitiedot nil
+                                                   :teksti "Koko kohde: 16.05.2023 – 24.05.2023"}
+                               #:harja.ui.aikajana{:alku #inst "2023-05-18T21:00:00.000-00:00"
+                                                   :drag nil
+                                                   :kohde-nimi "Ouluntie 2"
+                                                   :loppu #inst "2023-05-20T21:00:00.000-00:00"
+                                                   :sahkopostitiedot nil
+                                                   :teksti "Päällystys: 19.05.2023 – 21.05.2023"
+                                                   :vari "#282B2A"}
+                               #:harja.ui.aikajana{:alku #inst "2023-05-21T21:00:00.000-00:00"
+                                                   :drag nil
+                                                   :kohde-nimi "Ouluntie 2"
+                                                   :loppu #inst "2023-05-22T21:00:00.000-00:00"
+                                                   :sahkopostitiedot nil
+                                                   :teksti "Tiemerkintä: 22.05.2023 – 23.05.2023"
+                                                   :vari "#DECB03"}]
+                        :otsikko "L14 - Ouluntie 2"
+                        :valitavoitteet nil}
+     #:harja.ui.aikajana{:ajat [#:harja.ui.aikajana{:alku #inst "2023-06-13T21:00:00.000-00:00"
+                                                    :drag nil
+                                                    :kohde-nimi "Puolangantie"
+                                                    :loppu nil
+                                                    :reuna "black"
+                                                    :sahkopostitiedot nil
+                                                    :teksti "Koko kohde: aloitus 14.06.2023"}
+                                #:harja.ui.aikajana{:alku #inst "2023-06-18T21:00:00.000-00:00"
+                                                    :drag nil
+                                                    :kohde-nimi "Puolangantie"
+                                                    :loppu #inst "2023-06-20T21:00:00.000-00:00"
+                                                    :sahkopostitiedot nil
+                                                    :teksti "Päällystys: 19.06.2023 – 21.06.2023"
+                                                    :vari "#282B2A"}]
+                         :otsikko "L15 - Puolangantie"
+                         :valitavoitteet nil})])
 
-(def odotettu-kohdeluettelo-2022
+(def odotettu-kohdeluettelo-2023
   [:taulukko
    {:otsikko "Kohdeluettelo"}
-   [{:leveys 4 :nimi :kohdenumero :otsikko "Koh­de" :tyyppi :string}
-    {:leveys 8 :nimi :nimi :otsikko "Nimi" :tyyppi :string}
-    {:leveys 8 :nimi :tr-osoite :otsikko "Tieosoite" :tasaa :oikea}
-    {:leveys 2 :nimi :tr-ajoradat :otsikko "Ajo­radat" :tasaa :oikea
+   [{:leveys 4
+     :nimi :kohdenumero
+     :otsikko "Koh­de"
      :tyyppi :string}
-    {:leveys 2 :nimi :tr-kaistat :otsikko "Kais­tat" :tasaa :oikea
+    {:leveys 8
+     :nimi :nimi
+     :otsikko "Nimi"
      :tyyppi :string}
-    {:leveys 2 :nimi :pituus :otsikko "Pituus" :tasaa :oikea
+    {:leveys 8
+     :nimi :tr-osoite
+     :otsikko "Tieosoite"
+     :tasaa :oikea}
+    {:leveys 2
+     :nimi :tr-ajoradat
+     :otsikko "Ajo­radat"
+     :tasaa :oikea
      :tyyppi :string}
-    {:leveys 2 :nimi :yllapitoluokka :otsikko "YP-lk" :tyyppi :string}
-    {:leveys 6 :nimi :aikataulu-kohde-alku :otsikko "Koh­teen aloi­tus" :tyyppi :pvm}
-    {:leveys 6 :nimi :aikataulu-paallystys-alku :otsikko "Pääl­lystyk­sen aloi­tus" :tyyppi :pvm}
-    {:leveys 6 :nimi :aikataulu-paallystys-loppu :otsikko "Pääl­lystyk­sen lope­tus" :tyyppi :pvm}
-    {:leveys 6 :nimi :valmis-tiemerkintaan :otsikko "Val­mis tie­merkin­tään"} {:leveys 6 :nimi :aikataulu-tiemerkinta-takaraja :otsikko "Tie­merkin­tä val­mis vii­meis­tään" :tyyppi :pvm}
-    {:leveys 6 :nimi :aikataulu-tiemerkinta-alku :otsikko "Tiemer­kinnän aloi­tus" :tyyppi :pvm}
-    {:leveys 6 :nimi :aikataulu-tiemerkinta-loppu :otsikko "Tiemer­kinnän lope­tus" :tyyppi :pvm}
-    {:leveys 6 :nimi :aikataulu-kohde-valmis :otsikko "Pääl­lystys­koh­de val­mis" :tyyppi :pvm}]
-   [["L42" "Tärkeä kohde mt20 2022" "20 / 1 / 1066 / 1 / 3827" "" "" "2761" "-" "19.04.2022" "19.04.2022" "21.04.2022" "" "" "22.04.2022" "23.04.2022" ""]
-    ["L14" "Ouluntie 2" "22 / 13 / 0 / 13 / 3888" "" "" "" "-" "16.05.2022" "19.05.2022" "21.05.2022" "21.05.2022" "04.06.2022" "22.05.2022" "23.05.2022" "24.05.2022"]
-    ["L15" "Puolangantie" "837 / 2 / 0 / 2 / 1000" "" "" "1000" "-" "14.06.2022" "19.06.2022" "21.06.2022" "03.03.2022" "" "" "" ""]]])
+    {:leveys 2
+     :nimi :tr-kaistat
+     :otsikko "Kais­tat"
+     :tasaa :oikea
+     :tyyppi :string}
+    {:leveys 2
+     :nimi :pituus
+     :otsikko "Pituus"
+     :tasaa :oikea
+     :tyyppi :string}
+    {:leveys 2
+     :nimi :yllapitoluokka
+     :otsikko "YP-lk"
+     :tyyppi :string}
+    {:leveys 6
+     :nimi :aikataulu-kohde-alku
+     :otsikko "Koh­teen aloi­tus"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :aikataulu-paallystys-alku
+     :otsikko "Pääl­lystyk­sen aloi­tus"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :aikataulu-paallystys-loppu
+     :otsikko "Pääl­lystyk­sen lope­tus"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :valmis-tiemerkintaan
+     :otsikko "Val­mis tie­merkin­tään"}
+    {:leveys 6
+     :nimi :aikataulu-tiemerkinta-takaraja
+     :otsikko "Tie­merkin­tä val­mis vii­meis­tään"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :aikataulu-tiemerkinta-alku
+     :otsikko "Tiemer­kinnän aloi­tus"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :aikataulu-tiemerkinta-loppu
+     :otsikko "Tiemer­kinnän lope­tus"
+     :tyyppi :pvm}
+    {:leveys 6
+     :nimi :aikataulu-kohde-valmis
+     :otsikko "Pääl­lystys­koh­de val­mis"
+     :tyyppi :pvm}]
+   [["L14"
+     "Ouluntie 2"
+     "22 / 13 / 0 / 13 / 3888"
+     ""
+     ""
+     ""
+     "-"
+     "16.05.2023"
+     "19.05.2023"
+     "21.05.2023"
+     "21.05.2023"
+     "04.06.2023"
+     "22.05.2023"
+     "23.05.2023"
+     "24.05.2023"]
+    ["L15"
+     "Puolangantie"
+     "837 / 2 / 0 / 2 / 1000"
+     ""
+     ""
+     "1000"
+     "-"
+     "14.06.2023"
+     "19.06.2023"
+     "21.06.2023"
+     "03.03.2023"
+     ""
+     ""
+     ""
+     ""]]])
 
-(deftest raportin-suoritus-urakalle-toimii-vuosi-2022
+(deftest raportin-suoritus-urakalle-toimii-vuosi-2023
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :vastaanottotarkastusraportti
                                  :konteksti "urakka"
                                  :urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
-                                 :parametrit {:vuosi 2022 :urakkatyyppi :paallystys}})
+                                 :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
         otsikko (-> vastaus (nth 1))
         yha-kohteet (-> vastaus (nth 2))
         yhteenveto (-> vastaus (nth 6))
@@ -245,11 +293,11 @@
         aikataulu (-> vastaus last second)
         kohdeluettelo (-> vastaus last last)]
     (is (vector? vastaus))
-    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2022"}))
-    (is (= yha-kohteet odotettu-yha-kohteet-2022))
+    (is (= otsikko {:orientaatio :landscape, :nimi "Utajärven päällystysurakka, Vastaanottotarkastus 2023"}))
+    (is (= yha-kohteet odotettu-yha-kohteet-2023))
     ;; muut kustannukset ja paikkauskohteet -osalta ei ole loogisia sarakemuutoksia vs. 2017, eikä testidatassa mitään sisältöä, joten ei assertoida
     ;; muita kustannuksia ja paikkauskohteita koska se on tehty 2017-testissä
-    (is (= yhteenveto odotettu-yhteenveto-2022))
+    (is (= yhteenveto odotettu-yhteenveto-2023))
     (is (= aikataulu-otsikko [:otsikko "Aikataulu"]))
-    (is (= aikataulu odotettu-aikataulu-2022))
-    (is (= kohdeluettelo odotettu-kohdeluettelo-2022))))
+    (is (= aikataulu odotettu-aikataulu-2023))
+    (is (= kohdeluettelo odotettu-kohdeluettelo-2023))))

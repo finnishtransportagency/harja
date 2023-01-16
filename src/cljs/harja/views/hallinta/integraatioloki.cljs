@@ -128,7 +128,9 @@
                                                               [(:pvm (first rivit))
                                                                (reduce + (keep :maara rivit))])) pvm-kohtaiset-tiedot))]
     [:span.pylvaat
-     [:h5 (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa)")]
+     [:h5 {:on-click #(tiedot/nayta-graafit!)
+           :style {:cursor "pointer"}}
+      (str "Päivittäiset pyynnöt " eka-pvm " - " vika-pvm " (ei huomioi kellonaikaa) <Avaa klikkaamalla>")]
      (let [lkm-max (reduce max (map :maara pvm-kohtaiset-maarat-summattu))
            tikit (distinct [0
                             (js/Math.round (* .25 lkm-max))
@@ -136,15 +138,16 @@
                             (js/Math.round (* .75 lkm-max))
                             lkm-max])
            nayta-labelit? (< (count pvm-kohtaiset-maarat-summattu) 100)]
-       [vis/bars {:width w
-                  :height (min 200 h)
-                  :label-fn #(if nayta-labelit?
-                               (pvm/paiva-kuukausi (:pvm %))
-                               "")
-                  :value-fn :maara
-                  :format-amount str
-                  :ticks tikit}
-        pvm-kohtaiset-maarat-summattu])]))
+       (when @tiedot/nayta-graafit?
+         [vis/bars {:width w
+                    :height (min 200 h)
+                    :label-fn #(if nayta-labelit?
+                                 (pvm/paiva-kuukausi (:pvm %))
+                                 "")
+                    :value-fn :maara
+                    :format-amount str
+                    :ticks tikit}
+          pvm-kohtaiset-maarat-summattu]))]))
 
 (defn eniten-kutsutut-integraatiot [tiedot]
   (let [ryhmittele #(group-by :integraatio %)
@@ -157,16 +160,21 @@
                                         (reduce + (keep :maara rivit))]))
                              ryhmitellyt)
         eniten-kutsutut (take 5 (reverse (sort-by :maara maarat-summattu)))]
-    [grid
-     {:otsikko "Eniten kutsutut integraatiot"
-      :voi-muokata? false
-      :tunniste :integraatio}
+    [:div
+     [:h5 {:on-click #(tiedot/nayta-kutsutut-integraatiot!)
+           :style {:cursor "pointer"}}
+      "Eniten kutsutut integraatiot <Avaa klikkaamalla>"]
+     (when @tiedot/nayta-kutsutut-integraatiot?
+       [grid
+        {;:otsikko "Eniten kutsutut integraatiot"
+         :voi-muokata? false
+         :tunniste :integraatio}
 
-     [{:otsikko "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
-      {:otsikko "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
-      {:otsikko "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
+        [{:otsikko "Järjestelmä" :nimi :jarjestelma :leveys "15%" :tyyppi :string}
+         {:otsikko "Nimi" :nimi :nimi :leveys "40%" :tyyppi :string}
+         {:otsikko "Määrä" :nimi :maara :leveys "10%" :tyyppi :string}]
 
-     eniten-kutsutut]))
+        eniten-kutsutut])]))
 
 (defn tapahtumien-paanakyma []
   (let [maara-per-sivu 100

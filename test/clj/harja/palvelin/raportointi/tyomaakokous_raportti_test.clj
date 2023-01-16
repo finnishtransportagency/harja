@@ -36,9 +36,9 @@
                       urakkatieto-fixture))
 
 
-(deftest tyomaakokousraportin-suoritus-mhu-urakalle-toimii-hoitokausi-2021-2022
+(deftest tyomaakokousraportin-suoritus-mhu-urakalle-toimii-hoitokausi-2022-2023
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        parametrit  {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2021-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2020-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot true, :urakkatyyppi :teiden-hoito}
+        parametrit  {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot true, :urakkatyyppi :teiden-hoito}
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
@@ -53,15 +53,15 @@
         laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 13)
         muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 16) second :otsikko)
         sanktioraportin-otsikko (-> (nth raportit 18) second :otsikko)]
-    (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2021"))
+    (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= 234.2M (-> laskutusyhteenveto-hoidon-johto-arvo
+    (is (= 252.20M (-> laskutusyhteenveto-hoidon-johto-arvo
                    last
                    first
                    second
                    second
                    :arvo)))
-    (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2021, Toimenpide: kaikki"
+    (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki"
            muutos-ja-lisatoiden-raportin-otsikko))
     (is (= "Oulun MHU 2019-2024, Sanktioiden yhteenveto tammikuussa 2021") sanktioraportin-otsikko)))
 

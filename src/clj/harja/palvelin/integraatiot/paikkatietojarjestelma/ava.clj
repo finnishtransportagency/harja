@@ -60,7 +60,7 @@
 ;; koska paikallinen päivitystapa on poikkeus, tehdään tarkistukset jotka varmistavat, että asetukset ovat oikein ja kansio olemassa.
 (defn kaynnista-paivitys [integraatioloki db paivitystunnus tiedostourl kohdetiedoston-polku shapefile paivitys kayttajatunnus salasana]
       (log/debug (format "[KÄYNNISTETTY-GEOMETRIAPAIVITYS] %s" paivitystunnus))
-      (try+
+      (try
         (let [paivitystyyppi (geometriapaivitykset/pitaako-paivittaa? db paivitystunnus)
               ava-paivitys (fn [] (aja-paivitys
                                     integraatioloki
@@ -85,7 +85,10 @@
                    nil)
              ;; Päivitetään jos tarvetta
              (when (#{:palvelimelta :paikallinen} paivitystyyppi)
-                   (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)))
+               (if (lukko/yrita-ajaa-lukon-kanssa db paivitystunnus ava-paivitys)
+                 (log/debug (format "[ONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+                 (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s. Päivitystä ei ajettu LUKKO-taulun konfiguraation takia." paivitystunnus)))))
         (catch Exception e
-          (log/warn e (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. Tarkista konfiguraatio asetukset-tiedostossa ja tietokantatauluissa." paivitystunnus))
-          geometriapaivitykset/paivita-viimeisin-paivitys (db paivitystunnus nil))))
+          (do (log/debug (format "[EPÄONNISTUNUT-GEOMETRIAPAIVITYS] %s" paivitystunnus))
+              (log/warn (format "Geometria-aineiston päivityksessä: %s tapahtui poikkeus. %s Tarkista konfiguraatio asetukset.edn-tiedostossa ja tietokantatauluissa." paivitystunnus (.getMessage e)))
+              (geometriapaivitykset/paivita-viimeisin-paivitys db paivitystunnus nil)))))

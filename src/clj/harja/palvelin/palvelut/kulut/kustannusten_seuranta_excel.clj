@@ -20,7 +20,7 @@
         bud (bigdec bud)]
     (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
       0
-      (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
+      (* 100 (with-precision 4 (/ tot bud))))))
 
 (defn- kokoa-toimenpiteen-alle
   "Kustannus seurannan ui ja tämä excel on rakennettu ajatukselle, että alimmaisen kolmannen tason tehtäviä (osa on tehtäväryhmiä)
