@@ -247,12 +247,12 @@
     (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
+  [db user {:keys [alkupvm loppupvm] :as params}]
   (let [{:keys [otsikot rivit debug urakkatiedot]} (muodosta-taulukko db user db-haku-fn params)]
     [:raportti
-     {:nimi (str "Tehtävämäärät " (:nimi urakkatiedot) (when testiversio? " - TESTIVERSIO"))}
+     {:nimi (str "Tehtävämäärät " (:nimi urakkatiedot))}
      [:taulukko
-      {:otsikko (str "Tehtävämäärät " (:nimi urakkatiedot) " ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
+      {:otsikko (str "Tehtävämäärät " (:nimi urakkatiedot) " ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
        :sheet-nimi (str "Tehtävämäärät " (:nimi urakkatiedot) " " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))}
       otsikot
       rivit]

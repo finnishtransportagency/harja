@@ -665,7 +665,9 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
             (luokat
               "yleinen-pikkuvihje"
               "inline-block"
-              (viesti/+toast-viesti-luokat+ :neutraali)
+              (viesti/+toast-viesti-luokat+ (if (= "varoitus" luokka)
+                                              :varoitus
+                                              :neutraali))
               (or luokka ""))}
       [:div.vihjeen-sisalto
        (ikoni-fn ikoni teksti)]])))
