@@ -70,6 +70,7 @@
     :alihankintabonus "Alihankintabonus"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
+    :muu-bonus "Muu bonus"
     +valitse-tyyppi+))
 
 (defn maksajavalinnan-teksti [avain]
