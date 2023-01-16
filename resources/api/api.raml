@@ -121,6 +121,42 @@ documentation:
                application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+    /sijainnilla:
+        get:
+            is: [ secured ]
+            description: Urakan haku sijainnilla (ja urakkatyyppillä).
+            queryParameters:
+                urakkatyyppi:
+                    description: Urakkatyyppi (hoito, teiden-hoito, paallystys, paikkaus, valaistus, tekniset-laitteet, siltakorjaus)
+                    type: string
+                    required: false
+                    example: hoito
+                x:
+                    description: Sijainnin X-koordinaatti
+                    type: integer
+                    required: true
+                    example: 428699
+                y:
+                    description: Sijainnin Y-koordinaatti
+                    type: integer
+                    required: true
+                    example: 7210782
+            responses:
+                200:
+                    body:
+                        application/json:
+                            example: !include examples/urakoiden-haku-response.json
+                            schema: urakoiden-haku-response
+                400:
+                    body:
+                        application/json:
+                            example: !include examples/virhe-response.json
+                            schema: virhe-response
+                500:
+                    body:
+                        application/json:
+                            example: !include examples/virhe-response.json
+                            schema: virhe-response
   /{id}:
     get:
       is: [secured]
