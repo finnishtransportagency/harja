@@ -181,13 +181,13 @@ SELECT ek.id,
        TRUE                   as bonus,
        ek.kasittelytapa       as kasittelytapa,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
-       CASE
-           WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
-               THEN (SELECT korotus
-                       FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::INTEGER,
-                                                    NULL::SANKTIOLAJI))
-           ELSE 0
-           END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
+       (SELECT korotus
+        from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi, ek.rahasumma,
+                                                 ek.urakka, ek.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS indeksikorjaus,
        ek.lisatieto           AS lisatieto,
        --  Muilla urakkatyypeillä kuin ylläpidon urakoilla ei voi olla bonukseen liitettyä ylläpitokohdetta
        NULL AS yllapitokohde_tr_numero,
