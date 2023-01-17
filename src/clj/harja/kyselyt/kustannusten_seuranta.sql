@@ -422,17 +422,12 @@ UNION ALL
 -- kustannusarvoidut_työt
 SELECT 0                    AS budjetoitu_summa,
        0                    AS budjetoitu_summa_indeksikorjattu,
-       CASE
-           WHEN ek.indeksin_nimi IS NOT NULL
-             THEN SUM((SELECT korotettuna
-                         FROM laske_kuukauden_indeksikorotus(:hoitokauden-alkuvuosi::INTEGER, 9::INTEGER,
-                                                             (SELECT u.indeksi as nimi FROM urakka u WHERE u.id = :urakka)::VARCHAR,
-                                                             coalesce(ek.rahasumma, 0)::NUMERIC,
-                                                             (SELECT indeksilaskennan_perusluku(:urakka::INTEGER))::NUMERIC,
-                                                            -- MH-urakoissa pyöristestään indeksikerroin kolmeen desimaaliin (eli prosentin kymmenykseen).
-                                                             TRUE)))
-           ELSE SUM(ek.rahasumma)
-           END              AS toteutunut_summa,
+       SUM((SELECT korotettuna from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi,
+                                                                        ek.rahasumma, ek.urakka , ek.tyyppi,
+                                                                        CASE
+                                                                            WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                                            ELSE FALSE
+                                                                            END))) AS toteutunut_summa,
        CASE
            WHEN ek.tyyppi = 'lupausbonus' THEN 'lupausbonus'
            ELSE 'bonus' END  AS maksutyyppi,
@@ -445,7 +440,8 @@ SELECT 0                    AS budjetoitu_summa,
        0                    AS jarjestys,
        'bonukset'           AS paaryhma,
        NOW()                AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
-FROM erilliskustannus ek,
+FROM erilliskustannus ek
+     JOIN urakka u ON ek.urakka = u.id,
      sopimus s
 WHERE s.urakka = :urakka
   AND ek.sopimus = s.id
