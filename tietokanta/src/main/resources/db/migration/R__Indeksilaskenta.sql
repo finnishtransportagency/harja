@@ -318,7 +318,7 @@ BEGIN
 
         -- Muille vaihtoehdoille (näitä varmasti suurin osa) ei lasketa indeksikorotusta
         -- Esim Alihankintabonukselle ei ole indeksiä
-        ELSE
+    ELSE
         kerroin := 1;
         RAISE NOTICE 'Ei indeksikorotusta, kerroin % ', kerroin;
     END IF;
