@@ -33,7 +33,7 @@
   {:id          4 :nimi "Oulun urakka"
    :urakoitsija {:nimi "YIT Rakennus Oyj" :id 2}
    :hallintayksikko {:nimi "Pohjois-Pohjanmaa" :id 9}
-   :alkupvm (pvm/->pvm "1.10.2020") :loppupvm (pvm/->pvm "1.10.2025")})
+   :alkupvm (pvm/->pvm "1.10.2020") :loppupvm (pvm/->pvm "1.10.2035")})
 
 (deftest paivystajat
   (let [data (r/atom paivystajadata)]
