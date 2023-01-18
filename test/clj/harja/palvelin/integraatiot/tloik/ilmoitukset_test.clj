@@ -118,15 +118,6 @@
   (poista-ilmoitus 123456789)
 
   (tuo-paallystysilmoitus)
-  ;; FIXME
-  ;; ### haku  paallystys  : x:  443199.0  y:  7377324.0
-  ;; tulos:  ({:nimi Kemin päällystysurakka, :id 37, :tyyppi paallystys})
-  ;; Haku osuu odottamattomasti Kemin päällystysurakkaan, vaikka testi odottaa että kyseisessä sijainnissa
-  ;; ei ole päällysurakkaa käynnissä. Onko Kemin urakkaan tehty muutoksia vai onko jotain muuta häikkää?
-  ;; Tehty muutos tässä branchissä päällystysurakoiden hakuun: Haetaan sekä palvelus, että kokonaisurakka tyyppisiä päällystysurakoita.
-  ;;   -> Ennen haettiin pelkästään palvelusopimuksen piirissä olevia urakoita syystä X. Tämän takia voi löyty nyt Kemin urakka.
-  ;;   Onko tarpeen ylipäänsä hakea 'kokonaisurakka'-sopimustyyppisiä päällystysurakoita millään sijaintihaulla
-  ;;   Voidaanko keskittyä pelkästään palvelusopimus-tyyppisiin päällystysurakoihin?
   (is (= (first (q "select id from urakka where nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';"))
          (first (q "select urakka from ilmoitus where ilmoitusid = 123456789;")))
       "Urakka on asetettu oletuksena hoidon alueurakalle, kun sijainnissa ei ole käynnissä päällystysurakkaa.")
