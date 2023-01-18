@@ -107,9 +107,9 @@
                                     ;; paallystys = paallystys tai paikkaus
                                     ["hoito" "valaistus" "paallystys" "tekniset-laitteet" "siltakorjaus"])]
                        (into [] (flatten urakat))))]
-        (if
+        (if (empty? urakat)
           ;; Jos ei löydy tuloksia, tuplataan hakutoleranssi ja yritään uudestaan
-          (empty? urakat) (recur (* 2 threshold) (inc k))
+          (recur (* 2 threshold) (inc k))
           urakat))
       [])))
 
