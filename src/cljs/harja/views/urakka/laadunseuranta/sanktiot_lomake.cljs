@@ -214,7 +214,7 @@
            (if (not lukutila?)
              {:otsikko "Kulun kohdistus"
               :pakollinen? true
-              :disabled? (when (empty @tiedot-urakka/urakan-toimenpideinstanssit) true)
+              :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
               ::lomake/col-luokka "col-xs-12"
               :nimi :toimenpideinstanssi
               :tyyppi :valinta

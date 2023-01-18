@@ -74,6 +74,7 @@
                                                  (some (fn [paikkaus-kohta]
                                                          (when (= (::paikkaus/id paikkaus-kohta) (::paikkaus/id %))
                                                            (select-keys (first (::paikkaus/tienkohdat paikkaus-kohta)) #{::paikkaus/ajorata ::paikkaus/ajourat
+                                                                                                                         ::paikkaus/kaista
                                                                                                                          ::paikkaus/ajouravalit ::paikkaus/reunat})))
                                                        paikkaukset))]
               (when (and (not (empty? paikkaukset)) @taso-nakyvissa?)

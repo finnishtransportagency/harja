@@ -189,7 +189,6 @@
                                                               :losa (:losa paikkauskohde)
                                                               :yksikko (::paikkaus/yksikko paikkauskohde)})))))
 
-;; TODO: Funktion toteutus näyttää monimutkaiselta. Refaktoroi, kun on aikaa
 (defn- avaa-toteuma-sivupalkkiin
   [e! tyomenetelmat paikkauskohde r]
   (let [_ (if (not (nil? (::paikkaus/sijainti r)))
@@ -200,14 +199,16 @@
                 (js/setTimeout #(kartta-tiedot/keskita-kartta-alueeseen! alue) 200)))
             ;; Muussa tapauksessa poista valittu reitti kartalta (zoomaa kauemmaksi)
             (reset! tiedot/valitut-kohteet-atom #{}))
-        toteumalomake (set/rename-keys r paikkaus/speqcl-avaimet->paikkaus)
-        toteumalomake (set/rename-keys toteumalomake paikkaus/speqcl-avaimet->tierekisteri)
+        toteumalomake (-> r
+                          (set/rename-keys paikkaus/speqcl-avaimet->paikkaus)
+                          (set/rename-keys paikkaus/speqcl-avaimet->tierekisteri))
         toteumalomake (merge toteumalomake
-                        {:ajorata (::paikkaus/ajorata toteumalomake)
-                         :ajouravalit (::paikkaus/ajouravalit toteumalomake)
-                         ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
-                         :ajourat (first (::paikkaus/ajourat toteumalomake))
-                         :reunat (first (::paikkaus/reunat toteumalomake))})
+                             {:ajorata (::paikkaus/ajorata toteumalomake)
+                              :kaista (::paikkaus/kaista toteumalomake)
+                              :ajouravalit (::paikkaus/ajouravalit toteumalomake)
+                              ;; Ajourat laitetaan tietokannassa vectoriin, jota toteumalomake ei tue. Otetaan niistä ensimmäinen
+                              :ajourat (first (::paikkaus/ajourat toteumalomake))
+                              :reunat (first (::paikkaus/reunat toteumalomake))})
         ;; Toteuman tyyppi
         tyyppi (if (urem? (:tyomenetelma toteumalomake) tyomenetelmat)
                  :toteuman-luku
@@ -281,8 +282,8 @@
                 :tasaa :oikea :kokonaisluku? true}
                {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/ajourat
-                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea :fmt #(str/join %)}
+               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista
+                :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
                {:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}]
 
@@ -321,10 +322,10 @@
                  :nimi :suirun-pinta-ala}
                 {:otsikko "kg/m²"
                  :leveys 5
-                 :nimi ::paikkaus/massamenekki}
+                 :nimi ::paikkaus/massamaara}
                 {:otsikko "t"
                  :leveys 5
-                 :nimi ::paikkaus/massamaara}
+                 :nimi ::paikkaus/massamenekki}
                 {:otsikko "Raekoko"
                  :leveys 5
                  :nimi ::paikkaus/raekoko}
@@ -455,8 +456,8 @@
             (when (or urapaikkaus? levittimella-tehty?)
               [:div.basis512.growfill.body-text.riviksi.shrink4.rajaus
                (when (not= 0 arvo-pinta-ala) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-pinta-ala) " m2")])
-               (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " t")])
-               (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m2")])])
+               (when (not= 0 arvo-massamenekki) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamenekki) " t")])
+               (when (not= 0 arvo-massamaara) [:span.body-text.col-mimic (str (fmt/desimaaliluku-opt arvo-massamaara) " kg/m2")])])
             [:div.basis192.nogrow.body-text.shrink2.rajaus
              [yleiset/linkki "Lisää toteuma"
               #(luo-uusi-toteuma-kohteelle
