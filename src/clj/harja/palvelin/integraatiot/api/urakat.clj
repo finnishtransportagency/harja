@@ -83,15 +83,14 @@
 (defn- hae-urakka-sijainnilla*
   "Hakee urakan urakkatyypin perusteella, tai pyrkii hakemaan tulokset kaikilla urakkatyypeillä mikäli urakkatyyppiä
   ei ole määritelty."
-  [db {:keys [x y aloitustoleranssi urakkatyyppi]}]
-
+  [db {:keys [x y aloitustoleranssi maksimitolenranssi urakkatyyppi]}]
   ;; Aloitetaan pistehaku aloitustoleranssilla tai default 50 metrin toleranssilla.
   (loop [threshold (or aloitustoleranssi 50)
          k 1]
-    ;; Palautetaan nil, jos ei löydy urakkaa 500 m toleranssilla tai on yritetty hakea eri hakusäteillä 10 kertaa, niin
+    ;; Jos ei löydy urakkaa maksimitolenranssilla tai on yritetty hakea kasvavalla toleranssilla 10 kertaa, niin
     ;; palautetaan tyhjä tulos.
     (if (and
-          (< threshold 500)
+          (< threshold (or maksimitolenranssi 500))
           (< k 10))
       (let [urakat (if urakkatyyppi
                      (q-urakat/hae-urakka-sijainnilla db {:x x :y y
@@ -104,6 +103,8 @@
                                                                                          :threshold threshold
                                                                                          :urakkatyyppi urakkatyyppi})]
                                             res))
+                                    ;; hoito = hoito tai teiden-hoito
+                                    ;; paallystys = paallystys tai paikkaus
                                     ["hoito" "valaistus" "paallystys" "tekniset-laitteet" "siltakorjaus"])]
                        (into [] (flatten urakat))))]
         (if
@@ -112,7 +113,11 @@
           urakat))
       [])))
 
-(defn hae-urakka-sijainnilla [db parametrit kayttaja]
+(defn hae-urakka-sijainnilla
+  "Palauttaa ne voimassaolevat urakat, jotka osuvat annettuun koordinaattiin ja täyttävät mahdollisesti annetun urakkatyyppi-ehdon.
+   Urakkatyyppi 'hoito' tarkoittaa sekä hoito että teiden-hoito-urakoita (eli siis vanhanmallisia alueurakoita ja MH-urakoita).
+   Jos urakkatyyppiä ei anneta, palautetaan kaiken tyyppiset urakat."
+  [db parametrit kayttaja]
   (parametrivalidointi/tarkista-parametrit parametrit {:x "X-koordinaatti puuttuu"
                                                        :y "Y-koordinaatti puuttuu"})
 
@@ -122,7 +127,9 @@
           y-northing (Double/parseDouble y)
           ;; Aloitetaan pistehaku 50 m aloitustoleranssilla
           ;; Mikäli osumia ei tule, hakutoleranssia kasvatetaan vähitellen maksimitoleranssia kohti
-          aloitustoleranssi 50]
+          aloitustoleranssi 50
+          ;; Pistehaun toleranssia kasvatatetaan maksimitoleranssiin asti
+          maksimitolenranssi 500]
 
       (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
                    (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
@@ -132,6 +139,7 @@
 
       (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
                                                 :aloitustoleranssi aloitustoleranssi
+                                                :maksimitoleranssi maksimitolenranssi
                                                 :urakkatyyppi urakkatyyppi})
             urakat (konv/vector-mappien-alaviiva->rakenne urakat)
             urakat-suodatettu (into []
