@@ -83,35 +83,46 @@
 (defn- hae-urakka-sijainnilla*
   "Hakee urakan urakkatyypin perusteella, tai pyrkii hakemaan tulokset kaikilla urakkatyypeillä mikäli urakkatyyppiä
   ei ole määritelty."
-  [db {:keys [x y threshold urakkatyyppi]}]
+  [db {:keys [x y aloitustoleranssi urakkatyyppi]}]
 
+  ;; Aloitetaan pistehaku aloitustoleranssilla tai default 50 metrin toleranssilla.
+  (loop [threshold (or aloitustoleranssi 50)
+         k 1]
+    ;; Palautetaan nil, jos ei löydy urakkaa 500 m toleranssilla tai on yritetty hakea eri hakusäteillä 10 kertaa, niin
+    ;; palautetaan tyhjä tulos.
+    (if (and
+          (< threshold 500)
+          (< k 10))
+      (let [urakat (if urakkatyyppi
+                     (q-urakat/hae-urakka-sijainnilla db {:x x :y y
+                                                          :threshold threshold
+                                                          :urakkatyyppi urakkatyyppi})
 
-  (if urakkatyyppi
-    (q-urakat/hae-urakka-sijainnilla db {:x x :y y
-                                         :threshold threshold
-                                         :urakkatyyppi urakkatyyppi})
+                     ;; Jos urakkatyyppiä ei ole määritelty, yritetään hakea kaikki urakkatyypit annetulla sijainnilla
+                     (let [urakat (mapv (fn [urakkatyyppi]
+                                          (let [res (q-urakat/hae-urakka-sijainnilla db {:x x :y y
+                                                                                         :threshold threshold
+                                                                                         :urakkatyyppi urakkatyyppi})]
+                                            res))
+                                    ["hoito" "valaistus" "paallystys" "tekniset-laitteet" "siltakorjaus"])]
+                       (into [] (flatten urakat))))]
+        (if
+          ;; Jos ei löydy tuloksia, tuplataan hakutoleranssi ja yritään uudestaan
+          (empty? urakat) (recur (* 2 threshold) (inc k))
+          urakat))
+      [])))
 
-    ;; Jos urakkatyyppiä ei ole määritelty, yritetään hakea kaikki urakkatyypit annetulla sijainnilla
-    (let [urakat (mapv (fn [urakkatyyppi]
-                         (let [res (q-urakat/hae-urakka-sijainnilla db {:x x :y y
-                                                                        :threshold threshold
-                                                                        :urakkatyyppi urakkatyyppi})]
-                           res))
-                   ["hoito" "valaistus" "paallystys" "tekniset-laitteet" "siltakorjaus"])]
-      (into [] (flatten urakat)))))
-
-(defn hae-urakka-sijainnilla [db parametrit {:keys [kayttajanimi] :as kayttaja}]
-  (println "DEBUG: hae-urakka-sijainnilla")
+(defn hae-urakka-sijainnilla [db parametrit kayttaja]
   (parametrivalidointi/tarkista-parametrit parametrit {:x "X-koordinaatti puuttuu"
                                                        :y "Y-koordinaatti puuttuu"})
-  ;; TODO: Kuka saa käyttää rajapintaa? Tarkasta käyttöoikeudet.
 
   (jdbc/with-db-transaction [db db]
     (let [{:keys [x y urakkatyyppi]} parametrit
           x-easting (Double/parseDouble x)
           y-northing (Double/parseDouble y)
-          ;; Haetaan oletuksena 1000 m säteellä
-          haku-threshold 1000]
+          ;; Aloitetaan pistehaku 50 m aloitustoleranssilla
+          ;; Mikäli osumia ei tule, hakutoleranssia kasvatetaan vähitellen maksimitoleranssia kohti
+          aloitustoleranssi 50]
 
       (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
                    (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
@@ -120,7 +131,7 @@
         (validointi/tarkista-urakkatyyppi urakkatyyppi))
 
       (let [urakat (hae-urakka-sijainnilla* db {:x x-easting :y y-northing
-                                                :threshold haku-threshold
+                                                :aloitustoleranssi aloitustoleranssi
                                                 :urakkatyyppi urakkatyyppi})
             urakat (konv/vector-mappien-alaviiva->rakenne urakat)
             urakat-suodatettu (into []
