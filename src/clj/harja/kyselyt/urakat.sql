@@ -750,10 +750,10 @@ WHERE (CASE
                           FROM paallystyspalvelusopimus pps
                          WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
                            AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
-            -- Kommentoitu pois koska ilmoitusten urakan haku sijainnilla menee rikki.
+            -- Kommentoitu toistaiseksi pois koska ilmoitusten urakan haku sijainnilla menee rikki.
             -- TODO Täytyykö pystyä hakemaan sijainnilla myös 'kokonaisurakka' sopimuksen piirissä olevia urakoita?
             --      Riittääkö keskittyminen pelkästään palvelusopimuksen piirissä oleviin päällystysurakoihin,
-            --      vai tehdäänkö erillinen 'sopimustyyppi' parametri, jolla hakua voi suodattaa?
+            --      vai tehdäänkö esim. erillinen 'sopimustyyppi' parametri, jolla tätä hakua voi suodattaa?
              --ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
              --      (st_contains(ua.alue, st_makepoint(:x, :y))))
             END))
