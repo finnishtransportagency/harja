@@ -230,7 +230,7 @@
                                           (assoc :korosta-hennosti true)
                                     
                                           korosta-harmaa?
-                                          (assoc :korosta-harmaa? true)
+                                          (assoc :korosta-harmaa true)
                                     
                                           valkoinen?
                                           (assoc :valkoinen true)

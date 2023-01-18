@@ -156,9 +156,10 @@
                (let [valkoinen? (str/includes? (first rivi) "•")
                      korosta-rivi? (or (str/includes? (first rivi) "yhteensä")
                                        (str/includes? (first rivi) "yht.")
-                                       (str/includes? (first rivi) "Indeksit"))]
+                                       (str/includes? (first rivi) "Indeksit"))
+                     harmaa? (not (or valkoinen? korosta-rivi?))]
 
-                 [{:korosta-harmaa? valkoinen?
+                 [{:korosta-harmaa? harmaa?
                    :valkoinen? valkoinen?
                    :korosta-hennosti? korosta-rivi?
                    :lihavoi? korosta-rivi?
