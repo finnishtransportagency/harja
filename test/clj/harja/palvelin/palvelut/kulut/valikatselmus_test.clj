@@ -141,8 +141,16 @@
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   +kayttaja-jvh+
-                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))]
-    (is (= 1 vastaus) "Summan muokkaus ei onnistunut")
+                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))
+        ;; Ajankohtien millisekunnit hieman heittävät tallennuksen yhteydessä, niin trimmataan niitä hieman
+        odotettu-vastaus (-> vastaus
+                           (update :harja.domain.muokkaustiedot/muokattu #(pvm/aika-iso8601-ilman-millisekunteja %))
+                           (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))
+        muokattava-oikaisu (-> muokattava-oikaisu
+                             (assoc ::valikatselmus/summa 50000M) ;; Summa muuttuu 2000 -> 50000 ja tätä nimen omaan testataan
+                             (update :harja.domain.muokkaustiedot/muokattu #(pvm/aika-iso8601-ilman-millisekunteja %))
+                             (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))]
+    (is (= muokattava-oikaisu odotettu-vastaus) "Summan muokkaus ei onnistunut")
 
     (let [oikaisut-jalkeen (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-tavoitehintojen-oikaisut

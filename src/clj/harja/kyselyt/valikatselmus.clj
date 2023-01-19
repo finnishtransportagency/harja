@@ -33,9 +33,17 @@
   (insert! db ::valikatselmus/tavoitehinnan-oikaisu oikaisu))
 
 (defn paivita-oikaisu [db oikaisu]
-  (update! db ::valikatselmus/tavoitehinnan-oikaisu
-           oikaisu
-           {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))
+  (let [;; Päivitä oikaisu palauttaa vain päivitettyjen rivien määrän
+        _ (update! db ::valikatselmus/tavoitehinnan-oikaisu
+             oikaisu
+             {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)})
+
+        ;; Haetaan id:n perusteella juuri päivitetty oikaisu
+        paivitetty (first
+                     (fetch db ::valikatselmus/tavoitehinnan-oikaisu
+                       (columns ::valikatselmus/tavoitehinnan-oikaisu)
+                       {::valikatselmus/oikaisun-id (::valikatselmus/oikaisun-id oikaisu)}))]
+    paivitetty))
 
 (defn poista-oikaisu [db oikaisu]
   (update! db ::valikatselmus/tavoitehinnan-oikaisu
