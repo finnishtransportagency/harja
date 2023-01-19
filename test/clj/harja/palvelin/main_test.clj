@@ -225,7 +225,8 @@
     :yleiset-ajastukset
     :suolarajoitukset
     :api-sampo
-    :harja-status})
+    :harja-status
+    :info})
 
 (def hidas-ok-status #{:itmf})
 
