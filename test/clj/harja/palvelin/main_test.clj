@@ -94,6 +94,7 @@
 
 (def halutut-komponentit
   #{:metriikka
+    :info
     :db :db-replica
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
