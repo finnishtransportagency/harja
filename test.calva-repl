@@ -1,0 +1,12 @@
+
+lein test harja.palvelin.palvelut.kulut-test
+
+lein test :only harja.palvelin.palvelut.kulut-test/tallenna-kulu-erapaiva-validointi-testi
+
+FAIL in (tallenna-kulu-erapaiva-validointi-testi) (kulut_test.clj:357)
+Odotamme että tulee validointi poikkeus
+expected: (s/includes? (.getMessage e) odotettu-poikkeus)
+  actual: (not (s/includes? "Eräpäivä Thu Dec 15 23:02:04 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä. Urakka id = 35" "Eräpäivä Thu Dec 15 23:00:00 EET 1921 ei ole koontilaskun-kuukauden joulukuu/3-hoitovuosi sisällä"))
+
+Ran 13 tests containing 36 assertions.
+1 failures, 0 errors.
