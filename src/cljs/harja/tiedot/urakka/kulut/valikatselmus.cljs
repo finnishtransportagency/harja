@@ -110,12 +110,17 @@
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                           :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          oikaisu)]
-      (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
-                         oikaisu
-                         {:onnistui ->TallennaOikaisuOnnistui
-                          :onnistui-parametrit [id]
-                          :epaonnistui ->TallennaOikaisuEpaonnistui
-                          :paasta-virhe-lapi? true}))
+      ;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
+      (when (and (:harja.domain.kulut.valikatselmus/otsikko oikaisu)
+              (:harja.domain.kulut.valikatselmus/summa oikaisu)
+              (:harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi oikaisu)
+              (::urakka/id oikaisu))
+        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+          oikaisu
+          {:onnistui ->TallennaOikaisuOnnistui
+           :onnistui-parametrit [id]
+           :epaonnistui ->TallennaOikaisuEpaonnistui
+           :paasta-virhe-lapi? true})))
     app)
 
   TallennaOikaisuOnnistui
