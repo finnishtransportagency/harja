@@ -98,7 +98,8 @@
     ;; Muuttuiko kattohinta?
     (is (= oikaistu-kattohinta-jalkeen oikea-kattohinta))))
 
-(deftest oikaisun-teko-epaonnistuu-alkuvuodesta
+;; Tämä ominaisuus on otettu toistaiseksi pois käytöstä
+#_ (deftest oikaisun-teko-epaonnistuu-alkuvuodesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         virheellinen-vuosi (+ hoitokauden-alkuvuosi 2)
@@ -159,7 +160,8 @@
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut-jalkeen "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
 
-(deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         virheellinen-vuosi (+ 2 hoitokauden-alkuvuosi)
@@ -493,7 +495,8 @@
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))
     (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
-(deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2018
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -662,7 +665,8 @@
                   (catch Exception e e))]
     (is (= "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaussanktio-paatos-test-epaonnistuu-tulevaisuuteen
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest lupaussanktio-paatos-test-epaonnistuu-tulevaisuuteen
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         hoitokauden-alkuvuosi 2021
@@ -718,7 +722,8 @@
                   (catch Exception e e))]
     (is (= (::valikatselmus/tilaajan-maksu vastaus) bonus-maara))))
 
-(deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019
