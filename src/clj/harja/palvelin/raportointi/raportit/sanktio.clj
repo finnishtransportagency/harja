@@ -62,29 +62,49 @@
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
-                                     {:sanktiotyyppi "Liikenneympäristön hoito"
-                                      :sakkoryhma :A
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi #{"Liikenneympäristön hoito" "Muut hoitourakan tehtäväkokonaisuudet"}
+      :sailytettavat-tpkt ["Liikenneympäristön hoito"]
+      :sakkoryhma :A
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
-                                     {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
-                                      :sakkoryhma :A
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi #{"Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
+      :sailytettavat-tpkt ["Soratien hoito"]
+      :sakkoryhma :A
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
+   (yhteiset/luo-rivi-sakkojen-summa "        • Muut" rivit alueet
+     {:poistettavat-tpkt ["Liikenneympäristön hoito"
+                          "Soratien hoito"]
+      :sakkoryhma :A
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
+
    (yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
                                      {:sakkoryhma :B
                                       :talvihoito? false
                                       :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
-                                     {:sanktiotyyppi "Liikenneympäristön hoito"
-                                      :sakkoryhma :B
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi #{"Liikenneympäristön hoito" "Muut hoitourakan tehtäväkokonaisuudet"}
+      :sailytettavat-tpkt ["Liikenneympäristön hoito"]
+      :sakkoryhma :B
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
-                                     {:sanktiotyyppi "Sorateiden hoito ja ylläpito"
-                                      :sakkoryhma :B
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi #{"Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
+      :sailytettavat-tpkt ["Soratien hoito"]
+      :sakkoryhma :B
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
+
+   (yhteiset/luo-rivi-sakkojen-summa "        • Muut" rivit alueet
+     {:poistettavat-tpkt ["Liikenneympäristön hoito"
+                          "Soratien hoito"]
+      :sanktiotyyppi #{"Liikenneympäristön hoito" "Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
+      :sakkoryhma :B
+      :talvihoito? false
+      :yhteensa-sarake? yhteensa-sarake?})
+
    (yhteiset/luo-rivi-sakkojen-summa "Muut tehtäväkokonaisuudet yhteensä" rivit alueet
                                      {:talvihoito? false
                                       :sakkoryhma #{:A :B}
