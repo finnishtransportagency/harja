@@ -646,6 +646,8 @@
                                                         "klikattava ")
                                                       (when (:korosta rivi) "korostettu-rivi ")
                                                       (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
+                                                      (when (:korosta-harmaa rivi) "harmaa-korostettu-rivi ")
+                                                      (when (:valkoinen rivi) "valkoinen-rivi ")
                                                       (when (:lihavoi rivi) "bold ")
                                                       (when (:yhteenveto rivi) "yhteenveto ")
                                                       (when (:yhteenveto-vayla rivi) "yhteenveto-vayla ")

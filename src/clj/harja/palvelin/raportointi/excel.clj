@@ -293,7 +293,7 @@
 
 (def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen] :as optiot}
                                       sarakkeet data] workbook]
   (try
@@ -346,7 +346,9 @@
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
       (when samalle-sheetille?
-        (tee-taulukon-nimiotsikko sheet nolla nimi raportin-tiedot-tyyli))
+        ;; Jos taulukon nimeä ei ole, käytä taulukon otsikkoa
+        (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
+          (tee-taulukon-nimiotsikko sheet nolla rivi-otsikko raportin-tiedot-tyyli)))
 
       ;; Luodaan otsikot saraketyylillä
       (taulukko-otsikkorivi otsikko-rivi sarakkeet sarake-tyyli)
@@ -455,6 +457,8 @@
     (if (= :taulukko e) ;; on optiomappi
       (assoc-in elementti [1 :raportin-tiedot] (:raportin-yleiset-tiedot tunnistetiedot))
       elementti)))
+
+(defmethod muodosta-excel :jakaja [_ _] nil)
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
