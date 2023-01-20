@@ -934,7 +934,7 @@
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024'"))))
 
 (defn hae-pudasjarven-alueurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =

@@ -306,7 +306,7 @@
 (deftest tiemerkintaurakan-aikatauluhaku-toimii
   (let [aikataulu (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :hae-yllapitourakan-aikataulu +kayttaja-jvh+
-                                  {:urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+                                  {:urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
                                    :sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
                                    :vuosi 2017})]
     (is (= (count aikataulu) 2) "Löytyi kaikki tiemerkintäurakalle osoitetut ylläpitokohteet")
@@ -944,7 +944,7 @@
                                   :aikataulurivit []}))))
 
   ;; Leppäjärven suorittavan tiemerkintäurakan aikataulua saapi muokata
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)]
     (is (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -957,7 +957,7 @@
                          :aikataulurivit []}))))
 
 (deftest aikataulun-paivittaminen-vaaraan-urakkaan-kaatuu
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         oulaisten-ohitusramppi-id (hae-yllapitokohteen-id-nimella "Oulaisten ohitusramppi")
         vuosi 2017
@@ -980,7 +980,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
@@ -1036,7 +1036,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             vuosi 2017
@@ -1087,8 +1087,8 @@
           ;; Viestit lähetettiin oikeasta näkökulmasta
           (is (clj-str/includes? (:sisalto muhoksen-vastuuhenkilo) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
           (is (clj-str/includes? (:sisalto muhoksen-urakanvalvoja) "Harja: Urakan 'Muhoksen päällystysurakka' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
-          (is (clj-str/includes? (:sisalto tiemerkinnan-urakanvalvoja) "Harja: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2022' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
-          (is (clj-str/includes? (:sisalto ilmoittaja) "Harja-viesti lähetetty: Urakan 'Oulun tiemerkinnän palvelusopimus 2013-2022' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017")))
+          (is (clj-str/includes? (:sisalto tiemerkinnan-urakanvalvoja) "Harja: Urakan 'Oulun tiemerkinnän palvelusopimus 2017-2024' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017"))
+          (is (clj-str/includes? (:sisalto ilmoittaja) "Harja-viesti lähetetty: Urakan 'Oulun tiemerkinnän palvelusopimus 2017-2024' kohteen 'Leppäjärven ramppi' tiemerkintä on merkitty valmistuneeksi 25.05.2017")))
         ;; Sähköposteista löytyy oleelliset asiat
         (is (every? #(clj-str/includes? (:sisalto %) saate) integraatio-sahkopostit) "Saate löytyy")
         (is (every? #(clj-str/includes? (:sisalto %) "25.05.2017") integraatio-sahkopostit) "Valmistumispvm löytyy")
@@ -1101,7 +1101,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
             vuosi 2017
@@ -1179,7 +1179,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vuosi 2017
@@ -1214,7 +1214,7 @@
                                             :kohteet kohteet})))))
 
 (deftest merkitse-tiemerkintaurakan-kohde-valmiiksi-ilman-fim-yhteytta
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
         vuosi 2017
@@ -1237,7 +1237,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vuosi 2017
@@ -1263,7 +1263,7 @@
     (with-fake-http
       [+testi-fim+ fim-vastaus
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             oulun-ohitusramppi-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
             nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
@@ -1291,7 +1291,7 @@
   (let [fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (with-fake-http
       [+testi-fim+ fim-vastaus]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
             oulaisten-ohitusramppi-id (hae-yllapitokohteen-id-nimella "Oulaisten ohitusramppi")
             vuosi 2017
@@ -1311,7 +1311,7 @@
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         oulaisten-ohitusramppi-id (hae-yllapitokohteen-id-nimella "Oulaisten ohitusramppi")
-        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2017
         viesti-id (str (UUID/randomUUID))]
@@ -1414,7 +1414,7 @@
 
 ;; testataan ns. normaalitapaus, missä ei ole arkipyhiä ja tiemerkintä voidaan aloittaa tiistaina
 (deftest tiemerkinnan-takarajan-laskenta-normaalitapaus
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
@@ -1438,7 +1438,7 @@
     (is (= (:aikataulu-tiemerkinta-takaraja puolangantie-vastauksessa) #inst "2022-03-17T22:00:00.000-00:00") " takaraja laskettu oikein")))
 
 (deftest tiemerkinnan-takarajan-asettaminen-kasin
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         paallystysurakan-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         puolangantie-kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
@@ -1466,7 +1466,7 @@
         urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
         leppajarven-ramppi-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
-        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
         vuosi 2017
         viesti-id (str (UUID/randomUUID))]
@@ -1694,7 +1694,6 @@
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         kohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
-        _ (println "kohde-id " kohde-id)
         alussa-ei-kustannuksia (first (q
                                          (str "SELECT * FROM yllapitokohteen_kustannukset
                                          WHERE yllapitokohde = " kohde-id";")))
@@ -1722,9 +1721,77 @@
 
       (is (= (count (filter #(= (:nimi %) "Tärkeä kohde mt20") vastauksen-kohteet)) 1)))))
 
+(def puolangantie-testidata
+  {:tila :ei-aloitettu, :tr-kaista nil, :tiemerkinta-alkupvm nil, :kohdenumero "L15", :paallystys-loppupvm #inst "2023-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 5000, :kohde-valmispvm nil, :toteutunut-hinta nil, :tiemerkinta-loppupvm nil, :aikataulu-muokattu #inst "2023-01-20T06:26:18.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 2, :yha-kohdenumero 115, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus "A", :tr-alkuosa 2, :urakka "Utajärven päällystysurakka", :sopimuksen-mukaiset-tyot 1000, :yllapitokohteen-voi-poistaa? true, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kaasuindeksi 1000, :kohdeosat (list {:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :yllapitoluokka 8, :id 9, :yllapitokohde-id 25, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}), :bitumi-indeksi 3000, :yllapitokohdetyotyyppi :paallystys, :yllapitoluokka {:nimi "Ei pk-luokkaa", :lyhyt-nimi "-", :numero nil}, :id 25, :paallystysilmoitus-tila nil, :pituus 1000, :tr-alkuetaisyys 0, :vuodet #{2023}, :tr-numero 837, :urakoitsija "Skanska Asfaltti Oy", :paallystys-alkupvm #inst "2023-06-18T21:00:00.000-00:00", :kohde-alkupvm #inst "2023-06-13T21:00:00.000-00:00", :arvonvahennykset nil, :muokattu nil, :paallystysilmoitus-id nil, :yhaid 13375, :keskimaarainen-vuorokausiliikenne nil})
+
+(deftest tallenna-yllapitokohteen-kustannukset-maaramuutokset-kokonaissummana
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
+       kustannukset-ennen-muutosta (first (q
+                                        (str "SELECT * FROM yllapitokohteen_kustannukset
+                                         WHERE yllapitokohde = " kohde-id";")))
+        [ennen-muutosta-id
+         ennen-muutosta-yllapitokohde
+         ennen-muutosta-sopimuksen_mukaiset_tyot
+         ennen-muutosta-arvonvahennykset
+         ennen-muutosta-bitumi_indeksi
+         ennen-muutosta-kaasuindeksi
+         ennen-muutosta-toteutunut_hinta
+         ennen-muutosta-muokkaaja
+         ennen-muutosta-muokattu
+         ennen-muutosta-maaramuutokset] kustannukset-ennen-muutosta
+
+        vastauksen-kohteet (:yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                             :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                                       :vuosi 2023
+                                                                                                       :sopimus-id sopimus-id
+                                                                                                       :kohteet [puolangantie-testidata]}))
+        kohde (first (filter #(= kohde-id (:id %))
+                             vastauksen-kohteet))]
+
+    (let [kustannukset-muutoksen-jalkeen (first (q
+                                                     (str "SELECT * FROM yllapitokohteen_kustannukset
+                                         WHERE yllapitokohde = " kohde-id";")))
+          [muutoksen-jalkeen-id
+           muutoksen-jalkeen-yllapitokohde
+           muutoksen-jalkeen-sopimuksen_mukaiset_tyot
+           muutoksen-jalkeen-arvonvahennykset
+           muutoksen-jalkeen-bitumi_indeksi
+           muutoksen-jalkeen-kaasuindeksi
+           muutoksen-jalkeen-toteutunut_hinta
+           muutoksen-jalkeen-muokkaaja
+           muutoksen-jalkeen-muokattu
+           muutoksen-jalkeen-maaramuutokset] kustannukset-muutoksen-jalkeen]
+
+      (is (= ennen-muutosta-id (first kustannukset-ennen-muutosta)) "ennen-muutosta-rivin-id")
+      (is (= ennen-muutosta-yllapitokohde kohde-id) "ennen-muutosta-kohde-id")
+      (is (= ennen-muutosta-sopimuksen_mukaiset_tyot 400M) "ennen-muutosta-sopimuksentyöt")
+      (is (= ennen-muutosta-arvonvahennykset nil) "ennen-muutosta-arvonvähennykset")
+      (is (= ennen-muutosta-bitumi_indeksi 5000M) "ennen-muutosta-bitumi-indeksi")
+      (is (= ennen-muutosta-kaasuindeksi 0M) "ennen-muutosta-kaasuindeksi")
+      (is (= ennen-muutosta-toteutunut_hinta nil) "ennen-muutosta-toteutunut-hinta")
+      (is (= ennen-muutosta-muokkaaja nil) "ennen-muutosta-muokkaaja")
+      (is (= ennen-muutosta-muokattu nil) "ennen-muutosta-muokattu")
+      (is (= ennen-muutosta-maaramuutokset 1000M) "ennen-muutosta-maaramuutokset")
+
+      (is (= muutoksen-jalkeen-id (first kustannukset-muutoksen-jalkeen)) "muutoksen-jalkeen-rivin-id")
+      (is (= muutoksen-jalkeen-yllapitokohde kohde-id) "muutoksen-jalkeen-kohde-id")
+      (is (= muutoksen-jalkeen-sopimuksen_mukaiset_tyot 1000M) "muutoksen-jalkeen-sopimuksentyöt")
+      (is (= muutoksen-jalkeen-arvonvahennykset nil) "muutoksen-jalkeen-arvonvähennykset")
+      (is (= muutoksen-jalkeen-bitumi_indeksi 3000M) "muutoksen-jalkeen-bitumi-indeksi")
+      (is (= muutoksen-jalkeen-kaasuindeksi 1000M) "muutoksen-jalkeen-kaasuindeksi")
+      (is (= muutoksen-jalkeen-toteutunut_hinta nil) "muutoksen-jalkeen-toteutunut-hinta")
+      (is (= muutoksen-jalkeen-muokkaaja (:id +kayttaja-jvh+)) "muutoksen-jalkeen-muokkaaja")
+      (is (pvm/tanaan? muutoksen-jalkeen-muokattu) "muutoksen-jalkeen-muokattu")
+      (is (= muutoksen-jalkeen-maaramuutokset 5000M) "muutoksen-jalkeen-maaramuutokset")
+
+
+      (is (= (count (filter #(= (:nimi %) "Puolangantie") vastauksen-kohteet)) 1)))))
+
 
 (def odotetut-tiedot-sahkopostilahetykseen
-  {:tiemerkintaurakka-id 12, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "4242523-TES4", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827, :id 27, :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Oulun tiemerkinnän palvelusopimus 2013-2022", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
+  {:tiemerkintaurakka-id 12, :kohde-nimi "Tärkeä kohde mt20", :tiemerkintaurakka-sampo-id "4242523-TES4", :tr-loppuosa 1, :aikataulu-tiemerkinta-loppu #inst "2021-06-22T21:00:00.000-00:00", :paallystysurakka-nimi "Utajärven päällystysurakka", :tr-alkuosa 1, :tr-loppuetaisyys 3827, :id 27, :tr-alkuetaisyys 1066, :tr-numero 20, :tiemerkintaurakka-nimi "Oulun tiemerkinnän palvelusopimus 2017-2024", :paallystysurakka-sampo-id "1337133-TES2", :paallystysurakka-id 7,
    :kaistat "11, 12" :ajoradat "1"
    :paallysteet "AB16, AN14; SMA16, AN7"
    :toimenpiteet "MPK; MPKJ"
