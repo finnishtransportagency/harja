@@ -1,11 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.sanktio
   (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset :as yhteiset]
+            [harja.palvelin.palvelut.urakan-toimenpiteet :as toimenpiteet]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.urakan-toimenpiteet :as toimenpiteet-kyselyt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
@@ -52,67 +51,52 @@
                                        :sakkoryhma #{:A :B}
                                        :yhteensa-sarake? yhteensa-sarake?})])
 
-(defn- raporttirivit-muut-tuotteet [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "Tehtäväkohtaiset sanktiot / MUUT TEHTÄVÄKOKONAISUUDET"}
-   (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" rivit alueet
-                                         {:talvihoito? false
-                                          :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "A-ryhmä (tehtäväkohtainen sanktio)" rivit alueet
-                                     {:sakkoryhma :A
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
-     {:sanktiotyyppi #{"Liikenneympäristön hoito" "Muut hoitourakan tehtäväkokonaisuudet"}
-      :sailytettavat-tpkt ["Liikenneympäristön hoito"]
-      :sakkoryhma :A
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
-     {:sanktiotyyppi #{"Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
-      :sailytettavat-tpkt ["Soratien hoito"]
-      :sakkoryhma :A
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Muut" rivit alueet
-     {:poistettavat-tpkt ["Liikenneympäristön hoito"
-                          "Soratien hoito"]
-      :sakkoryhma :A
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
+(defn- raporttirivit-muut-tuotteet [rivit alueet toimenpide-haku-fn {:keys [yhteensa-sarake?] :as optiot}]
+  (let [toimenpiteet (sort-by #(case (:nimi %)
+                                 "Liikenneympäristön hoito" 1
+                                 "Soratien hoito" 2
+                                 3)
+                       (filter #(not= "Talvihoito" (:nimi %))
+                         (toimenpide-haku-fn)))]
+    (concat
+      [{:otsikko "Tehtäväkohtaiset sanktiot / MUUT TEHTÄVÄKOKONAISUUDET"}
+       (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" rivit alueet
+         {:talvihoito? false
+          :yhteensa-sarake? yhteensa-sarake?})
+       (yhteiset/luo-rivi-sakkojen-summa "A-ryhmä (tehtäväkohtainen sanktio)" rivit alueet
+         {:sakkoryhma :A
+          :talvihoito? false
+          :yhteensa-sarake? yhteensa-sarake?})]
+      ;; A-ryhmän eri toimenpiteiden rivit
+      (map (fn [{:keys [nimi]}]
+             (yhteiset/luo-rivi-sakkojen-summa (str "        • " nimi) rivit alueet
+               {:sanktiotyyppi #{nimi "Muut hoitourakan tehtäväkokonaisuudet"}
+                :sailytettavat-tpkt [nimi]
+                :sakkoryhma :A
+                :talvihoito? false
+                :yhteensa-sarake? yhteensa-sarake?}))
+        toimenpiteet)
+      [(yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
+         {:sakkoryhma :B
+          :talvihoito? false
+          :yhteensa-sarake? yhteensa-sarake?})]
+      (map (fn [{:keys [nimi]}]
+             (yhteiset/luo-rivi-sakkojen-summa (str "        • " nimi) rivit alueet
+               {:sanktiotyyppi #{nimi "Muut hoitourakan tehtäväkokonaisuudet"}
+                :sailytettavat-tpkt [nimi]
+                :sakkoryhma :B
+                :talvihoito? false
+                :yhteensa-sarake? yhteensa-sarake?}))
+        toimenpiteet)
 
-   (yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
-                                     {:sakkoryhma :B
-                                      :talvihoito? false
-                                      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Liikenneympäristön hoito" rivit alueet
-     {:sanktiotyyppi #{"Liikenneympäristön hoito" "Muut hoitourakan tehtäväkokonaisuudet"}
-      :sailytettavat-tpkt ["Liikenneympäristön hoito"]
-      :sakkoryhma :B
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa "        • Sorateiden hoito" rivit alueet
-     {:sanktiotyyppi #{"Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
-      :sailytettavat-tpkt ["Soratien hoito"]
-      :sakkoryhma :B
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
-
-   (yhteiset/luo-rivi-sakkojen-summa "        • Muut" rivit alueet
-     {:poistettavat-tpkt ["Liikenneympäristön hoito"
-                          "Soratien hoito"]
-      :sanktiotyyppi #{"Liikenneympäristön hoito" "Sorateiden hoito ja ylläpito" "Muut hoitourakan tehtäväkokonaisuudet"}
-      :sakkoryhma :B
-      :talvihoito? false
-      :yhteensa-sarake? yhteensa-sarake?})
-
-   (yhteiset/luo-rivi-sakkojen-summa "Muut tehtäväkokonaisuudet yhteensä" rivit alueet
-                                     {:talvihoito? false
-                                      :sakkoryhma #{:A :B}
-                                      :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
-                                      {:talvihoito? false
-                                       :sakkoryhma #{:A :B}
-                                       :yhteensa-sarake? yhteensa-sarake?})])
+      [(yhteiset/luo-rivi-sakkojen-summa "Muut tehtäväkokonaisuudet yhteensä" rivit alueet
+         {:talvihoito? false
+          :sakkoryhma #{:A :B}
+          :yhteensa-sarake? yhteensa-sarake?})
+       (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
+         {:talvihoito? false
+          :sakkoryhma #{:A :B}
+          :yhteensa-sarake? yhteensa-sarake?})])))
 
 (defn- raporttirivit-ryhma-c [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
   [{:otsikko "C-ryhmä"}
@@ -120,10 +104,10 @@
    (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])
 
 
-(defn- raporttirivit [rivit alueet optiot]
+(defn- raporttirivit [rivit alueet toimenpide-haku-fn optiot]
   (into [] (concat
              (raporttirivit-talvihoito rivit alueet optiot)
-             (raporttirivit-muut-tuotteet rivit alueet optiot)
+             (raporttirivit-muut-tuotteet rivit alueet toimenpide-haku-fn optiot)
              (raporttirivit-ryhma-c rivit alueet optiot)
              (yhteiset/raporttirivit-yhteensa rivit alueet optiot))))
 
@@ -141,9 +125,14 @@
                         :else "Koko maa")]
     raportin-nimi))
 (defn suorita [db user parametrit]
-  (let [raportin-rivit-fn (fn [{:keys [naytettavat-alueet sanktiot-kannassa yhteensa-sarake?]}]
+  (let [raportin-rivit-fn (fn [{:keys [naytettavat-alueet sanktiot-kannassa yhteensa-sarake?
+                                       urakat-joista-loytyi-sanktioita]}]
                            (when (> (count naytettavat-alueet) 0)
-                             (raporttirivit sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})))
+                             (raporttirivit sanktiot-kannassa naytettavat-alueet
+                               #(toimenpiteet-kyselyt/hae-mh-urakoiden-toimenpiteet
+                                  db (map :urakka-id
+                                       urakat-joista-loytyi-sanktioita))
+                               {:yhteensa-sarake? yhteensa-sarake?})))
         db-haku-fn hae-sanktiot
         raportin-nimi (jasenna-raportin-nimi db parametrit)]
 

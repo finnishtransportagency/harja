@@ -1,14 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset
   (:require
     [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
-    [jeesql.core :refer [defqueries]]
-    [harja.tyokalut.functor :refer [fmap]]
     [clojure.string :as str]
     [clojure.set :as set]
     [harja.kyselyt.konversio :as konv]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-    [harja.kyselyt.urakat :as urakat-q]
-    [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka-domain]))
 
