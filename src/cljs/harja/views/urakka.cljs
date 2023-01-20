@@ -39,6 +39,7 @@
   (case valilehti
     :yleiset true
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
+                      (not (u-domain/kanavaurakka? urakka))
                       (not= sopimustyyppi :kokonaisurakka)
                       (not= tyyppi :tiemerkinta))
     :toteumat (and (oikeudet/urakat-toteumat id)
@@ -82,7 +83,10 @@
                               (u-domain/vesivaylaurakkatyyppi? tyyppi)
                               (not (u-domain/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
-    :laskutus-kanavat (and (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
+    
+    ; Aina false, voi poistaa kokonaan?
+    :laskutus-kanavat (and (not (urakka/kanavaurakka? urakka))
+                           (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
                            (u-domain/kanavaurakka? urakka)
                            (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
