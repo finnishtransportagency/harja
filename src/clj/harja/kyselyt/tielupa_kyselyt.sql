@@ -72,11 +72,20 @@ WHERE (:hakija-nimi::TEXT IS NULL OR upper(tl."hakija-nimi") ilike upper(:hakija
         AND (SELECT lower(a.nimi) as nimi FROM alueurakka a WHERE a.alueurakkanro = :alueurakkanro) ilike ANY(tl."urakoiden-nimet"))
       )
   -- Tieosoitteen perusteella
-  AND (:tie::INT IS NULL OR :tie = s.tie)
-  AND (:aosa::INT IS NULL OR :aosa::INT <= s.aosa)
-  AND (:aet::INT IS NULL OR (:aosa::INT IS NOT NULL AND :aet <= s.aet))
-  AND (:losa::INT IS NULL OR :losa::INT >= s.losa)
-  AND (:let::INT IS NULL OR (:losa::INT IS NOT NULL AND :let >= s.let))
+  -- Logiikka on rakennettu niin, että annetetut parametrit täsmäävät täysin tai tieosoite jää ikään kuin "väliin".
+  AND (:tie::INT IS NULL OR :tie::INT = s.tie) -- Tien pitää täsmätä
+  AND (:aosa::INT IS NULL OR :aosa::INT <= s.aosa) -- Jos alkuosa on annettu, niin otetaan sama alku osa tai suurempi
+  -- Jos alkuetäisyys on annettu, niin varmista, että alkuosakin on annettu.
+  -- Jos alkuosa on sama, niin alkuetäisyys vaikuttaa.
+  -- Jos alkuosa tulee myöhemmin, niin alkuetäisyydellä ei ole enää merkitystä
+  AND (:aet::INT IS NULL
+       OR (:aosa::INT IS NOT NULL AND :aosa::INT = s.aosa AND s.aet >= :aet::INT)
+       OR (:aosa::INT IS NOT NULL AND s.aosa > :aosa::INT)) -- Alukuetäisyydellä ei merkitystä
+  AND (:losa::INT IS NULL OR :losa::INT >= s.losa) -- Jos loppuosa annettu, ota ne joissa sama tai pienempi loppuosa
+  -- Loppuetäisyys vaikuttaa, mikäli loppuosa on sama. Jos loppuosa on pienempi, ei loppuetäisyydellä ole merkitystä
+  AND (:let::INT IS NULL
+       OR (:losa::INT IS NOT NULL AND :losa::INT = s.losa AND s.let <= :let::INT)
+       OR (:losa::INT IS NULL OR s.losa < :losa::INT))
  GROUP BY tl.id, tl.myontamispvm, tl."paatoksen-diaarinumero"
  ORDER BY tl.myontamispvm DESC, tl."paatoksen-diaarinumero" DESC
  LIMIT 1000;
