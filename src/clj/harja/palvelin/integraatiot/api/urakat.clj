@@ -2,7 +2,7 @@
   "Urakan yleistietojen API-kutsut"
   (:require [com.stuartsierra.component :as component]
             [compojure.core :refer [POST GET]]
-            [harja.kyselyt.kayttajat :as kayttajat-q]
+            [harja.tyokalut.muunnos :as muunnos]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-sisainen-kasittelyvirhevastaus tee-viallinen-kutsu-virhevastaus tee-vastaus]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
@@ -14,7 +14,8 @@
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.apurit :as apurit]
-            [clojure.java.jdbc :as jdbc])
+            [clojure.java.jdbc :as jdbc]
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
   (:use [slingshot.slingshot :only [throw+ try+]]))
 
 (defn hae-tehtavat [db urakka-id]
@@ -123,13 +124,25 @@
 
   (jdbc/with-db-transaction [db db]
     (let [{:keys [x y urakkatyyppi]} parametrit
-          x-easting (Double/parseDouble x)
-          y-northing (Double/parseDouble y)
+          x-easting (try+
+                      (muunnos/str->double x)
+                      (catch NumberFormatException _
+                             (throw+ {:type virheet/+viallinen-kutsu+
+                                      :virheet [{:koodi virheet/+virheellinen-sijainti+
+                                                 :viesti "Virheellinen X-koordinaatti"}]})))
+          y-northing (try+
+                       (muunnos/str->double y)
+                       (catch NumberFormatException _
+                         (throw+ {:type virheet/+viallinen-kutsu+
+                                  :virheet [{:koodi virheet/+virheellinen-sijainti+
+                                             :viesti "Virheellinen Y-koordinaatti"}]})))
           ;; Aloitetaan pistehaku 50 m aloitustoleranssilla
           ;; Mikäli osumia ei tule, hakutoleranssia kasvatetaan vähitellen maksimitoleranssia kohti
           aloitustoleranssi 50
           ;; Pistehaun toleranssia kasvatatetaan maksimitoleranssiin asti
           maksimitolenranssi 500]
+
+      (validointi/tarkista-koordinaattien-jarjestys [x-easting y-northing])
 
       (log/debug (str "Haetaan urakat sijainnilla x: " x ", y:" y
                    (when urakkatyyppi (str " ja urakkatyypillä: " urakkatyyppi))))
