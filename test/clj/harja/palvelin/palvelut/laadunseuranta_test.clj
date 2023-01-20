@@ -574,8 +574,8 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (butlast sanktioraportti-yhteensa-rivi)))
-        sanktioraportti-indeksit-yhteensa (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))
+        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
+        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
 
         laskutusyhteenvedosta-samat-sanktiot (map
                                                #(select-keys % [:sakot_laskutetaan
@@ -643,8 +643,8 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (butlast sanktioraportti-yhteensa-rivi)))
-        sanktioraportti-indeksit-yhteensa (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))
+        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
+        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
 
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
@@ -696,9 +696,8 @@
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
         sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (butlast sanktioraportti-yhteensa-rivi)))
-        sanktioraportti-indeksit-yhteensa (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))
-
+        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
+        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
