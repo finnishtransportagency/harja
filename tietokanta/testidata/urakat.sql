@@ -32,7 +32,7 @@ INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nimi, alkupvm, lopp
           '2017-01-01', '2024-12-31', 'paallystys', 'muho1', (SELECT id
                                                               FROM organisaatio
                                                               WHERE ytunnus = '0651792-4')),
-         ('1337133-TES3', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
+         ('1337133-TES3', 'palvelusopimus' :: sopimustyyppi, (SELECT id
                                                               FROM organisaatio
                                                               WHERE lyhenne = 'UUD'), 'Porvoon päällystysurakka',
           '2019-01-01', '2023-12-31', 'paallystys', 'por1', (SELECT id
