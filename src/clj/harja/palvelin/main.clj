@@ -66,6 +66,7 @@
     [harja.palvelin.palvelut.pohjavesialueet :as pohjavesialueet]
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
+    [harja.palvelin.palvelut.info :as info]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -448,6 +449,9 @@
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
+      :info (component/using
+             (info/->Info)
+             [:http-palvelin :db])
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])

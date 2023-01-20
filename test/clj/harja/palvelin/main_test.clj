@@ -94,6 +94,7 @@
 
 (def halutut-komponentit
   #{:metriikka
+    :info
     :db :db-replica
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
@@ -224,7 +225,8 @@
     :yleiset-ajastukset
     :suolarajoitukset
     :api-sampo
-    :harja-status})
+    :harja-status
+    :info})
 
 (def hidas-ok-status #{:itmf})
 
