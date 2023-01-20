@@ -21,6 +21,7 @@
             [harja.domain.paikkaus :as paikkaus-domain]
 
             [harja.views.urakat :as urakat]
+            [harja.views.info :as info]
             [harja.views.raportit :as raportit]
             [harja.views.tilannekuva.tilannekuva :as tilannekuva]
             [harja.views.ilmoitukset.tieliikenneilmoitukset :as ilmoitukset]
@@ -65,11 +66,12 @@
                                :valitse-fn istunto/aseta-testikayttaja!}
           (concat [nil] @istunto/testikayttajat)]]))))
 
-(defn harja-info []
-  [:a {:class "klikattava"
-       :id "infolinkki"
-       :href "https://finnishtransportagency.github.io/harja/"}
-   [ikonit/ikoni-ja-teksti (ikonit/livicon-info-circle) "INFO"]])
+(defn harja-info [s]
+  [:div {:role "presentation"
+         :class (str "info-nakyma" (when (= s :info) " aktiivinen"))}
+
+   [ikonit/livicon-info-circle]
+   [linkki " INFO" #(nav/vaihda-sivu! :info)]])
 
 (defn- mobiiliselain? []
   (some #(re-matches % (clojure.string/lower-case js/window.navigator.userAgent))
@@ -119,7 +121,7 @@
         (str k/+polku+ "laadunseuranta")]])]
 
    :right
-   [harja-info]
+   [harja-info s]
    [palaute/palaute-linkki]
    [kayttajatiedot istunto/kayttaja]])
 
@@ -207,6 +209,7 @@
       (case sivu
         :urakat [urakat/urakat]
         :raportit [raportit/raportit]
+        :info [info/info]
         :ilmoitukset [ilmoitukset/ilmoitukset]
         :tienpidon-luvat [tieluvat/tieluvat]
         :hallinta [hallinta/hallinta]

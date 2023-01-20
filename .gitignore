@@ -72,3 +72,4 @@ yhdistetty_dc_env
 lsp/
 .java-version
 .calva/
+test.calva-repl

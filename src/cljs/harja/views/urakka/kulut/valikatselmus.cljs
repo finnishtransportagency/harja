@@ -150,6 +150,7 @@
 (defn tavoitehinnan-oikaisut [e! {:keys [urakan-paatokset valittu-hoitokausi tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
   (let [paatoksia? (seq urakan-paatokset)
         hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
+        hoitokauden-oikaisut-atom (atom hoitokauden-oikaisut)
         nykyhetki (pvm/nyt)
         ;; Joskus valittua hoitokautta ei ole asetettu
         valittu-hoitokausi (or
@@ -171,7 +172,7 @@
                                            voi-muokata?
                                            (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
     [:div
-     [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut
+     [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut-atom
       {:voi-muokata? voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
        :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
        :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
