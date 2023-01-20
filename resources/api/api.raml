@@ -1,4 +1,5 @@
 #%RAML 0.8
+# https://github.com/raml-org/raml-spec/blob/master/versions/raml-08/raml-08.md
 title: Harja API
 version: 1.0.57
 baseUri: https://testiapi.vayla.fi/harja/api (testi) & https://api.vayla.fi/harja/api (tuotanto)
@@ -133,12 +134,12 @@ documentation:
                     example: hoito
                 x:
                     description: Sijainnin X-koordinaatti
-                    type: integer
+                    type: number
                     required: true
                     example: 428699
                 y:
                     description: Sijainnin Y-koordinaatti
-                    type: integer
+                    type: number
                     required: true
                     example: 7210782
             responses:
