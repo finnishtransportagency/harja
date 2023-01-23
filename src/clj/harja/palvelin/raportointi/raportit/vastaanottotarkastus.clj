@@ -24,8 +24,6 @@
         {:otsikko "Tunnus" :leveys 5}
         {:otsikko "Nimi" :leveys 10}
         {:otsikko "Tie\u00ADnumero" :leveys 3 :tasaa :oikea}
-        {:otsikko "Ajorata" :leveys 3 :tasaa :oikea}
-        {:otsikko "Kaista" :leveys 3 :tasaa :oikea}
         {:otsikko "Aosa" :leveys 3 :tasaa :oikea}
         {:otsikko "Aet" :leveys 3 :tasaa :oikea}
         {:otsikko "Losa" :leveys 3 :tasaa :oikea}
@@ -53,8 +51,6 @@
              (:tunnus yllapitokohde)
              (:nimi yllapitokohde)
              (:tr-numero yllapitokohde)
-             (:tr-ajorata yllapitokohde)
-             (:tr-kaista yllapitokohde)
              (:tr-alkuosa yllapitokohde)
              (:tr-alkuetaisyys yllapitokohde)
              (:tr-loppuosa yllapitokohde)
@@ -77,8 +73,6 @@
               (:tunnus yllapitokohde)
               (:nimi yllapitokohde)
               (:tr-numero yllapitokohde)
-              (:tr-ajorata yllapitokohde)
-              (:tr-kaista yllapitokohde)
               (:tr-alkuosa yllapitokohde)
               (:tr-alkuetaisyys yllapitokohde)
               (:tr-loppuosa yllapitokohde)
@@ -110,10 +104,6 @@
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
-        {:otsikko "" :leveys 3}
         {:otsikko (str "Sakot ja bonukset"
                        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                          " (muut kuin kohteisiin liittyvät)"))
@@ -122,15 +112,13 @@
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvonväh." :leveys 5 :fmt :raha}
           {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}])
-       [{:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
+       [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
+        {:otsikko "Määrä\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
+        {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
         {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      [(concat
         [nil
-         nil
-         nil
-         nil
-         nil
          nil
          nil
          nil
@@ -143,7 +131,9 @@
         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
           [(reduce + 0 (keep :arvonvahennykset yllapitokohteet))
            (reduce + 0 (keep :sakot-ja-bonukset yllapitokohteet))])
-        [(reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
+        [(reduce + 0 (keep :sopimuksen-mukaiset-tyot yllapitokohteet))
+         (reduce + 0 (keep :maaramuutokset yllapitokohteet))
+         (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
          (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
          (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
             kohdistamattomat-sanktiot-yhteensa
@@ -172,18 +162,25 @@
   (let [raportin-nimi "Vastaanottotarkastus"
         otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
                      ", " raportin-nimi " " vuosi)
-        yllapitokohteet+kustannukset (->> (into []
+        yllapitokohteet+kustannukset (cond->> (into []
                                                 (map #(konv/string->keyword % [:yllapitokohdetyotyyppi]))
                                                 (hae-yllapitokohteet db {:urakka urakka-id
                                                                          :vuosi vuosi}))
-                                          (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
-                                          (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
-                                          (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
-                                          (yllapitokohteet-domain/jarjesta-yllapitokohteet))
+                                              (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? vuosi)
+                                              (ypk-yleiset/liita-yllapitokohteisiin-maaramuutokset db)
+
+                                              true
+                                              (map #(ypk-yleiset/lisaa-yllapitokohteelle-pituus db %))
+
+                                              true
+                                              (map #(assoc % :kokonaishinta (yllapitokohteet-domain/yllapitokohteen-kokonaishinta % vuosi)))
+
+                                              true
+                                              (yllapitokohteet-domain/jarjesta-yllapitokohteet))
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
                                                      :vuosi vuosi})
         urakan-sanktiot (->> (hae-kohteisiin-kuulumattomat-sanktiot db {:urakka urakka-id
-                                                                    :vuosi vuosi})
+                                                                        :vuosi vuosi})
                             (map #(assoc % :maara (- (:maara %)))))]
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}

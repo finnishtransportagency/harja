@@ -14,7 +14,7 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('YHA2 pä
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Muhoksen paikkauksen pääsopimus', '2007-06-01','2012-09-30','5H05229/10', (SELECT id FROM urakka WHERE nimi='Muhoksen paikkausurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Pääsopimus', '2005-10-01','2006-09-30','5H05276/10', (SELECT id FROM urakka WHERE nimi='Tienpäällystysurakka KAS ELY 1 2015'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Porintien pääsopimus', '2007-05-01','2007-08-22','8605228/10', (SELECT id FROM urakka WHERE nimi='Porintien päällystysurakka'));
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022', '2013-01-01','2022-12-31','7H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2013-2022'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024', (SELECT alkupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'),(SELECT loppupvm FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'),'7H05228/10', (SELECT id FROM urakka WHERE nimi='Oulun tiemerkinnän palvelusopimus 2017-2024'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017', '2013-01-01','2017-12-31','7H01264/10', (SELECT id FROM urakka WHERE nimi='Tiemerkintöjen palvelusopimus KAS ELY 2013 - 2017'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun valaistuksen palvelusopimuksen pääsopimus 2013-2018', '2013-01-01','2018-12-31','5A05228/10', (SELECT id FROM urakka WHERE nimi='Oulun valaistuksen palvelusopimus 2013-2050'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Oulun valaistuksen palvelusopimuksen pääsopimus 2015-2020', '2015-01-01','2020-12-31','5A65228/10', (SELECT id FROM urakka WHERE nimi='Tievalaistuksen palvelusopimus 2015-2020'));
@@ -79,7 +79,7 @@ BEGIN
     ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)')),
 
     -- Päällystysurakat
-    ('Utajärven päällystyksen pääsopimus', '2021-01-01','2022-12-31','5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
+    ('Utajärven päällystyksen pääsopimus', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),'5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
 END $$;
 
 -- Aktiivinen oulu

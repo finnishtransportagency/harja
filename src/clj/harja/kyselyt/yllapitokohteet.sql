@@ -223,6 +223,7 @@ SELECT
   ypk.nimi,
   ypk.tunnus,
   ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
@@ -272,7 +273,7 @@ WHERE
   AND (:vain_yha_kohteet IS NOT TRUE OR ypk.yhaid IS NOT NULL)
 GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
-  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
+  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 SELECT
@@ -799,6 +800,7 @@ UPDATE yllapitokohteen_aikataulu
 UPDATE yllapitokohteen_kustannukset
 SET
   sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+  maaramuutokset           = :maaramuutokset,
   arvonvahennykset         = :arvonvahennykset,
   bitumi_indeksi           = :bitumi_indeksi,
   kaasuindeksi             = :kaasuindeksi,
@@ -816,6 +818,7 @@ UPDATE yllapitokohteen_kustannukset
        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
        bitumi_indeksi           = :bitumi_indeksi,
        kaasuindeksi             = :kaasuindeksi,
+       maaramuutokset           = :maaramuutokset,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
   FROM yllapitokohde
@@ -1129,8 +1132,8 @@ INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopim
 VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi);
 
 -- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
+VALUES (:yllapitokohde, 0, 0, 0, 0, 0, 0);
 
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT
