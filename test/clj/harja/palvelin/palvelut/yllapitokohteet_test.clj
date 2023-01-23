@@ -82,7 +82,8 @@
                               :tr-loppuosa 3
                               :tr-loppuetaisyys 2
                               :bitumi_indeksi 123
-                              :kaasuindeksi 123})
+                              :kaasuindeksi 123
+                              :maaramuutokset 123})
 
 (def yllapitokohdeosa-testidata {:nimi "Testiosa123456"
                                  :tr-numero 20

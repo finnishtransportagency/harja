@@ -247,7 +247,7 @@
                                                          :sopimus-id sopimus-id
                                                          :vuosi vuosi
                                                          :vain-yha-kohteet? vain-yha-kohteet?})
-        yllapitokohteet (if (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? vuosi)
+        yllapitokohteet (if (and vuosi (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? vuosi))
                           (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)
                           yllapitokohteet)]
     (vec yllapitokohteet)))
