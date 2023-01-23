@@ -48,7 +48,9 @@
     (when (and (< radius 500)
                (< k 10))
       (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
-                                  (q/hae-urakka-sijainnilla db urakkatyyppi x y radius)))]
+                                  (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                :threshold radius
+                                                                :urakkatyyppi urakkatyyppi})))]
         (cond
           (empty? urakat) (recur (* 2 radius) (inc k))
           (> (count urakat) 1) (recur (* 0.75 radius) (inc k))
@@ -79,7 +81,9 @@
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
   (let [urakka-idt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi))
-                                  (q/hae-urakka-sijainnilla db urakkatyyppi x y 1000)))]
+                                  (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                :threshold 1000
+                                                                :urakkatyyppi urakkatyyppi})))]
     (if (empty? urakka-idt)
       (if (#{"hoito" "teiden-hoito"} urakkatyyppi)
         ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
@@ -87,7 +91,9 @@
 
         ;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
         (let [hoidon-urakkaidt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi ))
-                                              (q/hae-urakka-sijainnilla db "hoito" x y 10)))]
+                                              (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                            :threshold 10
+                                                                            :urakkatyyppi "hoito"})))]
           (if hoidon-urakkaidt
             hoidon-urakkaidt
             ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä

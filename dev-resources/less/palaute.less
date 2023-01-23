@@ -1,4 +1,3 @@
-#infolinkki,
 #palautelinkki {
   color: @sininen4;
 
@@ -12,22 +11,102 @@
   }
 }
 
+/* Info-näkymän avaus painike (oikea ylä) */
+.info-nakyma {
+    cursor: pointer;
+    color: @sininen5;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    line-height: 1.0625rem;
+
+    &.aktiivinen {
+        font-weight: 900;
+    }
+}
+
+/* Video-lista komponentti, oma fonttikoko. Pienempi header on liian pieni */
+.info-lista {
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 20px;
+
+    display: flex;
+    flex-direction: column;
+    list-style: none;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding-top: 10px;
+
+    &:last-child {
+        padding-bottom: 10px;
+    }
+
+    .video-wrap {
+        padding-top: 5px;
+    }
+}
+
+/* Pääotsikon alaviiva */
+.otsikko-viiva {
+    margin-top: 5px;
+    border-top: 0.2em solid #c8c8c8;
+}
+
+/* Nämä tarvitaan, ei käytetä yleisiä typography classeja */
+.info-heading {
+    text-align: left;
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 24px;
+    padding-top: 20px;
+
+    .info-heading-pieni {
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 20px;
+    }
+    
+    .info-heading-pieni.main {
+        padding-bottom: 10px;
+        border-bottom: 0.5em solid #0088ce;
+    }
+}
+
+/* Video linkit */
+.video-otsikko {
+    transition: 0.5s;
+    height: 40px; 
+    cursor: pointer;
+    color: #004D99;
+    width: 100%;
+    transition: 0.1s;
+}
+
+.video-otsikko:hover {
+    color: hwb(204 51% 28%);
+    transition: 0.1s;
+}
+
 .crash-component {
-  background: @oranssi-kevyt;
-  border: 1px dashed @punainen1;
-  padding: 5px;
-  a{
-    color: @punainen1;
-  }
-  span {
-    font-weight: bold;
-  }
-  .crash-details {
-    display: none;
-    color: black;
-    font-size: 10px;
-  }
-  .details-open {
-    display: block;
-  }
+    background: @oranssi-kevyt;
+    border: 1px dashed @punainen1;
+    padding: 5px;
+
+    a {
+        color: @punainen1;
+    }
+
+    span {
+        font-weight: bold;
+    }
+
+    .crash-details {
+        display: none;
+        color: black;
+        font-size: 10px;
+    }
+
+    .details-open {
+        display: block;
+    }
 }

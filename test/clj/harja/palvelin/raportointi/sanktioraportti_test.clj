@@ -47,7 +47,7 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2011 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (last (last vastaus))))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 26488.52))
     (let [otsikko "Sanktiot"
@@ -68,7 +68,7 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 10 1))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (last (last vastaus))))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 71977.05))
     (let [otsikko "Sanktiot"
@@ -92,7 +92,7 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (last (last vastaus))))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 8099.80))
     (let [otsikko "Sanktiot"
@@ -114,7 +114,7 @@
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        nurkkasumma (last (last (last (last (last (last vastaus))))))]
     (is (vector? vastaus))
     (is (=marginaalissa? nurkkasumma 15786.15))
     (let [otsikko "Sanktiot"
