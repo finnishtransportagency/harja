@@ -175,12 +175,12 @@
      :nimi ::hairiotilanne/ammattiliikenne-lkm
      :tyyppi :positiivinen-numero
      :kokonaisluku? true
-     :yksikko-kentalle "h"}
+     :yksikko-kentalle "kpl"}
     {:otsikko "Huviliikenne"
      :nimi ::hairiotilanne/huviliikenne-lkm
      :tyyppi :positiivinen-numero
      :kokonaisluku? true
-     :yksikko-kentalle "h"}))
+     :yksikko-kentalle "kpl"}))
 
 (defn korjauksen-kentat [e! app]
   (lomake/ryhma
