@@ -226,7 +226,6 @@
 (defn voi-tallentaa? [t]
   (boolean
     (and (not (:grid-virheita? t))
-         (empty? (filter :koskematon (::lt/alukset t)))
          (every? #(and (some? (::lt-alus/suunta %))
                        (some? (::lt-alus/laji %)))
                  (remove :poistettu (::lt/alukset t)))
@@ -293,15 +292,36 @@
     (assoc rivi :valittu-suunta :molemmat)))
 
 (defn kasittele-uudet-alukset [tapahtuma alukset]
-  (if-not (id-olemassa? tapahtuma)
-    (map (fn [a]
-           (if-let [suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))]
-             (assoc a ::lt-alus/suunta suunta)
+  (map (fn [a]
+         (let [valittu-suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))
+               tapahtuma-map (map (fn [b]
+                                    (if (= (:id b) (:id a))
+                                      b nil))
+                                  (::lt/alukset tapahtuma))
 
-             a))
-         alukset)
+               kyseinen-tapahtuma (first (remove nil? tapahtuma-map))
+               poistettu? (if (nil? (:poistettu kyseinen-tapahtuma))
+                            false
+                            (:poistettu kyseinen-tapahtuma))
 
-    alukset))
+               klikattu-suunta (::lt-alus/suunta kyseinen-tapahtuma)
+               suunta (if (nil? klikattu-suunta)
+                        valittu-suunta
+                        klikattu-suunta)]
+
+           (if-not (id-olemassa? (::lt-alus/id a))
+             (if (:koskematon a)
+               (-> a
+                   (assoc ::lt-alus/nimi (::lt-alus/nimi kyseinen-tapahtuma))
+                   (assoc ::lt-alus/laji (::lt-alus/laji kyseinen-tapahtuma))
+                   (assoc ::lt-alus/lkm (::lt-alus/lkm kyseinen-tapahtuma))
+                   (assoc ::lt-alus/nippulkm (::lt-alus/nippulkm kyseinen-tapahtuma))
+                   (assoc ::lt-alus/suunta suunta)
+                   (assoc ::lt-alus/matkustajalkm (::lt-alus/matkustajalkm kyseinen-tapahtuma))
+                   (assoc :poistettu poistettu?))
+               a)
+             a)))
+       alukset))
 
 (defn poista-ketjutus [app alus-id]
   (let [poista-idlla (fn [alus-id alukset]
