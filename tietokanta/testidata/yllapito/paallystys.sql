@@ -1040,12 +1040,12 @@ UPDATE yllapitokohteen_aikataulu
    SET merkinta = 'massa', jyrsinta = 'keski'
  WHERE yllapitokohde IN (SELECT id FROM yllapitokohde WHERE nimi IN ('Ouluntie 2', 'Tärkeä kohde mt20 2022'));
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0, 0);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id

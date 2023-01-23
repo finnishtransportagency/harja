@@ -88,56 +88,68 @@
 
 
 (def odotettu-yha-kohteet-2023
-  [:taulukko
-   {:otsikko "YHA-kohteet"
-    :sheet-nimi "YHA-kohteet"
-    :tyhja nil}
-   (list {:leveys 5 :otsikko "Kohde­numero"}
-         {:leveys 5
-          :otsikko "Tunnus"} {:leveys 10
-          :otsikko "Nimi"} {:leveys 3
-          :otsikko "Tie­numero" :tasaa :oikea}
-         {:leveys 3 :otsikko "Ajorata" :tasaa :oikea}
-         {:leveys 3 :otsikko "Kaista" :tasaa :oikea}
-         {:leveys 3 :otsikko "Aosa" :tasaa :oikea}
-         {:leveys 3 :otsikko "Aet" :tasaa :oikea}
-         {:leveys 3 :otsikko "Losa" :tasaa :oikea}
-         {:leveys 3 :otsikko "Let" :tasaa :oikea}
-         {:leveys 3 :otsikko "Pit. (m)" :tasaa :oikea}
-         {:leveys 3 :otsikko "KVL" :tasaa :oikea}
-         {:leveys 3 :otsikko "YP-lk"}
-         {:fmt :raha :leveys 5 :otsikko "Tarjous­hinta"}
-         {:fmt :raha :leveys 5 :otsikko "Määrä­muu­tokset"}
-         {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
-         {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
-         {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   (list (list "L14" nil "Ouluntie 2" 22 nil nil 13 0 13 3888 nil nil nil 0M 0 0M 0M 0M)
-         (list "L15" "A" "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil 400M 20M 4543.95M 0M 4963.95M))])
+  (let [odotettu-sopimuksen-mukaiset-tyot 400M
+        odotettu-maaramuutokset 1000M
+        odotettu-sideaineen-hintamuutokset 5000M
+        odotettu-polttooljyn-hintamuutokset 0M
+        odotettu-yhteensa 6400M]
+    [:taulukko
+     {:otsikko "YHA-kohteet"
+      :sheet-nimi "YHA-kohteet"
+      :tyhja nil}
+     (list {:leveys 5 :otsikko "Kohde­numero"}
+           {:leveys 5
+            :otsikko "Tunnus"} {:leveys 10
+                                :otsikko "Nimi"} {:leveys 3
+                                                  :otsikko "Tie­numero" :tasaa :oikea}
+           {:leveys 3 :otsikko "Ajorata" :tasaa :oikea}
+           {:leveys 3 :otsikko "Kaista" :tasaa :oikea}
+           {:leveys 3 :otsikko "Aosa" :tasaa :oikea}
+           {:leveys 3 :otsikko "Aet" :tasaa :oikea}
+           {:leveys 3 :otsikko "Losa" :tasaa :oikea}
+           {:leveys 3 :otsikko "Let" :tasaa :oikea}
+           {:leveys 3 :otsikko "Pit. (m)" :tasaa :oikea}
+           {:leveys 3 :otsikko "KVL" :tasaa :oikea}
+           {:leveys 3 :otsikko "YP-lk"}
+           {:fmt :raha :leveys 5 :otsikko "Tarjous­hinta"}
+           {:fmt :raha :leveys 5 :otsikko "Määrä­muu­tokset"}
+           {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
+           {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
+           {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
+     (list (list "L14" nil "Ouluntie 2" 22 nil nil 13 0 13 3888 nil nil nil 0M 0M 0M 0M 0M)
+           (list "L15" "A" "Puolangantie" 837 nil nil 2 0 2 1000 1000 nil nil
+                 odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset odotettu-yhteensa))]))
 
 (def odotettu-yhteenveto-2023
-  [:taulukko
-   {:otsikko "Yhteenveto"
-    :sheet-nimi "Ylläpitokohteet yhteensä"
-    :tyhja nil}
-   (list {:leveys 5 :otsikko ""}
-         {:leveys 5 :otsikko ""}
-         {:leveys 10 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""}
-         {:leveys 3 :otsikko ""} {:fmt :raha
-                                  :leveys 10
-                                  :otsikko "Sakot ja bonukset"}
-         {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
-         {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
-         {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
-         {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-   [(list nil nil nil nil nil nil nil nil nil nil nil nil 0 0 4543.95M 0M 4963.95M)]])
+  (let [odotettu-sopimuksen-mukaiset-tyot 400M
+        odotettu-maaramuutokset 1000M
+        odotettu-sideaineen-hintamuutokset 5000M
+        odotettu-polttooljyn-hintamuutokset 0M
+        odotettu-yhteensa 6400M]
+    [:taulukko
+    {:otsikko "Yhteenveto"
+     :sheet-nimi "Ylläpitokohteet yhteensä"
+     :tyhja nil}
+    (list {:leveys 5 :otsikko ""}
+          {:leveys 5 :otsikko ""}
+          {:leveys 10 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""}
+          {:leveys 3 :otsikko ""} {:fmt :raha
+                                   :leveys 10
+                                   :otsikko "Sakot ja bonukset"}
+          {:fmt :raha :leveys 10 :otsikko "Muut kustannukset"}
+          {:fmt :raha :leveys 10 :otsikko "Tarjoushinta"}
+          {:fmt :raha :leveys 10 :otsikko "Määrämuutokset"}
+          {:fmt :raha :leveys 5 :otsikko "Side­aineen hinta­muutok­set"}
+          {:fmt :raha :leveys 5 :otsikko "Neste­kaasun ja kevyen poltto­öljyn hinta­muutok­set"}
+          {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
+    [(list nil nil nil nil nil nil nil nil nil nil nil nil 0 0
+           odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset odotettu-sideaineen-hintamuutokset odotettu-polttooljyn-hintamuutokset odotettu-yhteensa)]]))
 
 (def odotettu-aikataulu-2023
   [:aikajana

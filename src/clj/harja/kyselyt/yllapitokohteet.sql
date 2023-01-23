@@ -1131,8 +1131,8 @@ INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopim
 VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi);
 
 -- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
+VALUES (:yllapitokohde, 0, 0, 0, 0, 0, 0);
 
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT
