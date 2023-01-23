@@ -230,6 +230,7 @@
     {:otsikko "Uusi häiriötilanne"
      :voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))
      :validoi-alussa? true
+     :tarkkaile-ulkopuolisia-muutoksia? true
      :muokkaa! #(e! (tiedot/->AsetaHairiotilanteenTiedot %))
      :footer-fn (fn [hairiotilanne]
                   (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in valinnat [:urakka :id]))]
@@ -283,7 +284,11 @@
           :tyyppi :valinta
           :uusi-rivi? true
           :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "Ei kohdetta")
-          :valinnat (into [nil] kohteet)})
+          :valinnat (into [nil] kohteet)
+          :aseta (fn [rivi arvo]
+                   (-> rivi
+                     (assoc ::hairiotilanne/kohde arvo) ;; Aseta saatu arvo tähän input elementtiin
+                     (assoc ::hairiotilanne/kohteenosa nil)))}) ;; Nollaa kohde osa
        (when (::hairiotilanne/kohde valittu-hairiotilanne)
          {:otsikko "Kohteen osa"
           :nimi ::hairiotilanne/kohteenosa
