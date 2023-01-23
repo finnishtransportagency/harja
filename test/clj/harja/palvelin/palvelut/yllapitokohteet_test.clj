@@ -109,12 +109,13 @@
   (let [kohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :urakan-yllapitokohteet +kayttaja-jvh+
                                 {:urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-                                 :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)})
+                                 :sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
+                                 :vuosi 2017})
         kohteiden-lkm (ffirst (q
                                 (str "SELECT COUNT(*)
                                       FROM yllapitokohde
                                       WHERE sopimus IN (SELECT id FROM sopimus WHERE urakka = " (hae-urakan-id-nimella "Muhoksen päällystysurakka") ")
-                                      AND poistettu IS NOT TRUE;")))
+                                      AND poistettu IS NOT TRUE AND 2017 = ANY(vuodet);")))
         leppajarven-ramppi (kohde-nimella kohteet "Leppäjärven ramppi")]
     (is (= (count kohteet) kohteiden-lkm) "Päällystyskohteiden määrä")
     (is (== (:maaramuutokset leppajarven-ramppi) 205)
