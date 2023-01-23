@@ -818,6 +818,7 @@ UPDATE yllapitokohteen_kustannukset
        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
        bitumi_indeksi           = :bitumi_indeksi,
        kaasuindeksi             = :kaasuindeksi,
+       maaramuutokset           = :maaramuutokset,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
   FROM yllapitokohde

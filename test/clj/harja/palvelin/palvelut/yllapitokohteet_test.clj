@@ -1709,7 +1709,7 @@
                                                      (str "SELECT * FROM yllapitokohteen_kustannukset
                                          WHERE yllapitokohde = " kohde-id";")))]
 
-      (is (= alussa-ei-kustannuksia [(first alussa-ei-kustannuksia) kohde-id 0M 0M 0M 0M nil nil nil]))
+      (is (= alussa-ei-kustannuksia [(first alussa-ei-kustannuksia) kohde-id 0M 0M 0M 0M nil nil nil 0M]))
 
       ;; take 8, koska emme tässä assertoi muokkausajanhetkeä
       (is (= (take 8 kustannukset-tallennuksen-jalkeen) [(first alussa-ei-kustannuksia) kohde-id 12M 34M 56M 78M nil (:id +kayttaja-jvh+)]))
@@ -1825,10 +1825,7 @@
                 nil
                 "Ouluntie 2"
                 0M
-                [:varillinen-teksti
-                 {:arvo 0
-                  :fmt :raha
-                  :tyyli :disabled}]
+                0M
                 0M
                 0M
                 [:kaava
@@ -1841,11 +1838,8 @@
                 "A"
                 "Puolangantie"
                 400M
-                [:varillinen-teksti
-                 {:arvo 20M
-                  :fmt :raha
-                  :tyyli :disabled}]
-                4543.95M
+                1000M
+                5000M
                 0M
                 [:kaava
                  {:alkusarake "E"
@@ -1899,10 +1893,7 @@
             nil
             "Leppäjärven ramppi"
             400M
-            [:varillinen-teksti
-             {:arvo 205M
-              :fmt :raha
-              :tyyli :disabled}]
+            205M
             100M
             2000M
             4543.95M
@@ -1917,10 +1908,7 @@
             nil
             "Oulun ohitusramppi"
             9000M
-            [:varillinen-teksti
-             {:arvo 0
-              :fmt :raha
-              :tyyli :disabled}]
+            0
             200M
             nil
             565M
@@ -1935,10 +1923,7 @@
             nil
             "Oulaisten ohitusramppi"
             500M
-            [:varillinen-teksti
-             {:arvo 0
-              :fmt :raha
-              :tyyli :disabled}]
+            0
             3457M
             -3000M
             5M
@@ -1953,10 +1938,7 @@
             nil
             "Kuusamontien testi"
             500M
-            [:varillinen-teksti
-             {:arvo 0
-              :fmt :raha
-              :tyyli :disabled}]
+            0
             3457M
             nil
             5M
@@ -2027,8 +2009,10 @@
                :sopimuksen_mukaiset_tyot 1
                :bitumi_indeksi 2
                :kaasuindeksi 3
+               :maaramuutokset 4
                :muokkaaja user-id}
         _ (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db kohde)
         kohteen-kustannukset-jalkeen (hae-yllapitokohteen-kustannukset yhaid)]
-    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil]) "kustannukset ennen tallennusta")
-    (is (= (butlast kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset ennen tallennuksen jälkeen")))
+    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil nil]) "kustannukset ennen tallennusta")
+    (is (= (take 8 kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset ennen tallennuksen jälkeen")
+    (is (= (last kohteen-kustannukset-jalkeen) 4M) "määrämuutokset ennen tallennuksen jälkeen")))
