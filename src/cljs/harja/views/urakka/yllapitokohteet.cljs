@@ -840,7 +840,8 @@
               (:nakyma paallystyksen-tarkka-aikataulu)
               (:voi-muokata-paallystys? paallystyksen-tarkka-aikataulu)
               (:voi-muokata-tiemerkinta? paallystyksen-tarkka-aikataulu)])
-           (when (= kohdetyyppi :paallystys)
+           (when (and (= kohdetyyppi :paallystys)
+                      (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? vuosi))
              [maaramuutokset {:yllapitokohde-id (:id rivi)
                               :urakka-id (:id urakka)
                               :yllapitokohteet-atom kohteet-atom}])])))))
@@ -993,12 +994,7 @@
       (komp/piirretty (fn [] (grid/validoi-grid g)))
       (fn [urakka kohteet-atom {:keys [yha-sidottu? piilota-tallennus? valittu-vuosi] :as optiot}]
         (let [paallystys? (= (:kohdetyyppi optiot) :paallystys)
-              nayta-ajorata-ja-kaista? (or (not yha-sidottu?)
-                                           ;; YHA-kohteille näytetään ajorata ja kaista vain siinä tapauksessa, että
-                                           ;; ainakin yhdellä kohteella ne on annettu
-                                           ;; Näitä ei voi muokata itse, joten turha näyttää aina tyhjiä sarakkeita.
-                                           (and yha-sidottu?
-                                                (some #(or (:tr-ajorata %) (:tr-kaista %)) @kohteet-atom)))
+              nayta-ajorata-ja-kaista? false ;; tehty uudistus, että pääkohteiden osalta ajorataa ja kaistaa ei enää anneta
               paallystysilmoitusta-ei-ole-lukittu? #(not= :lukittu (:paallystysilmoitus-tila %))
               validointi {:paakohde {:tr-osoite [{:fn paakohteen-validointi
                                                   :sarakkeet {:tr-numero :tr-numero
@@ -1076,13 +1072,18 @@
                        {:otsikko "Tar\u00ADjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
                         :fmt fmt/euro-opt :tyyppi :numero :leveys tarjoushinta-leveys :tasaa :oikea})
                      (when paallystys?
-                       {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
-                        :nimi :maaramuutokset :muokattava? (constantly false)
-                        :tyyppi :komponentti :leveys maaramuutokset-leveys :tasaa :oikea
-                        :komponentti (fn [rivi]
-                                       [:span {:class (when (:maaramuutokset-ennustettu? rivi)
-                                                        "grid-solu-ennustettu")}
-                                        (fmt/euro-opt (:maaramuutokset rivi))])})
+                       (if (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? valittu-vuosi)
+                         {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset"
+                          :nimi :maaramuutokset :muokattava? (constantly false)
+                          :tyyppi :komponentti :leveys maaramuutokset-leveys :tasaa :oikea
+                          :komponentti (fn [rivi]
+                                         [:span {:class (when (:maaramuutokset-ennustettu? rivi)
+                                                          "grid-solu-ennustettu")}
+                                          (fmt/euro-opt (:maaramuutokset rivi))])}
+                         ;; 1.1.2023 alkaen määrämuutoksia käsitellään yhtenä numerona eikä eriteltynä
+                         {:otsikko "Mää\u00ADrä\u00ADmuu\u00ADtok\u00ADset" :nimi :maaramuutokset
+                          :fmt fmt/euro-opt :tyyppi :numero :leveys maaramuutokset-leveys
+                          :tasaa :oikea}))
                      (when (= (:kohdetyyppi optiot) :paikkaus)
                        {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta
                         :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys
@@ -1174,18 +1175,13 @@
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
                     " (muut kuin kohteisiin liittyvät)")) :nimi :kohdistamattomat-sanktiot :tyyppi :numero :leveys toteutunut-hinta-leveys
        :fmt fmt/euro-opt :tasaa :oikea}
-      (when (= (:kohdetyyppi optiot) :paallystys)
-        {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
-         :fmt fmt/euro-opt :tyyppi :numero
-         :leveys tarjoushinta-leveys :tasaa :oikea})
-      (when (= (:kohdetyyppi optiot) :paallystys)
-        {:otsikko "Muutok\u00ADset" :nimi :maaramuutokset :fmt fmt/euro-opt :tyyppi :numero
-         :leveys maaramuutokset-leveys :tasaa :oikea})
-      (when (= (:kohdetyyppi optiot) :paikkaus)
-        {:otsikko "Toteutunut hinta" :nimi :toteutunut-hinta :fmt fmt/euro-opt :tyyppi :numero
-         :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko "Muut kustan\u00ADnukset" :nimi :muut-hinta :fmt fmt/euro-opt :tyyppi :numero
        :leveys muut-leveys :tasaa :oikea}
+      {:otsikko "Tarjous\u00ADhinta" :nimi :sopimuksen-mukaiset-tyot
+       :fmt fmt/euro-opt :tyyppi :numero
+       :leveys tarjoushinta-leveys :tasaa :oikea}
+      {:otsikko "Määrä\u00ADmuutok\u00ADset" :nimi :maaramuutokset :fmt fmt/euro-opt :tyyppi :numero
+       :leveys maaramuutokset-leveys :tasaa :oikea}
       (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
         {:otsikko "Arvon\u00ADmuutokset." :nimi :arvonvahennykset :fmt fmt/euro-opt :tyyppi :numero
          :leveys arvonvahennykset-leveys :tasaa :oikea})
