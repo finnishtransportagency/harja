@@ -166,7 +166,7 @@
       [+testi-fim+ fim-vastaus
        #".*api\/urakat.*" :allow
        {:url sahkoposti-lahetys-url :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
-      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+      (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             kohde-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vastaus (future (api-tyokalut/post-kutsu [(str "/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id "/aikataulu-tiemerkinta")]
                               kayttaja-tiemerkinta portti
@@ -229,7 +229,7 @@
       (is (= (get aikataulutiedot 4) (get vanhat-aikataulutiedot 4))))))
 
 (deftest aikataulun-kirjaaminen-tiemerkintaurakan-kohteelle-toimii
-  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
         vanhat-aikataulutiedot (first (q (str "SELECT paallystys_alku, paallystys_loppu,
                                                  valmis_tiemerkintaan, tiemerkinta_alku,
@@ -265,7 +265,7 @@
     (is (= 403 (:status vastaus)))))
 
 (deftest aikataulun-kirjaaminen-tiemerkintaan-ei-toimi-ilman-oikeuksia
-  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          "LX123456789" portti
@@ -284,7 +284,7 @@
     (is (str/includes? (:body vastaus) "mutta urakan tyyppi on"))))
 
 (deftest paallystyksen-aikataulun-kirjaus-ei-onnistu-tiemerkintaurakalle
-  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-muhoksen-yllapitokohde-ilman-paallystysilmoitusta)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-paallystys"]
                                          kayttaja-tiemerkinta portti
@@ -316,7 +316,7 @@
     (is (str/includes? (:body vastaus) "Päällystystä ei voi merkitä valmiiksi, aloitus puuttuu."))))
 
 (deftest tiemerkinnan-viallisen-aikataulun-kirjaus-ei-onnistu-tiemerkinnan-valmispvm-vaarin
-  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
@@ -335,7 +335,7 @@
     (is (str/includes? (:body vastaus) "Kun annetaan päällystyksen aloitusaika, anna myös päällystyksen valmistumisen aika tai aika-arvio"))))
 
 (deftest aikataulun-kirjaus-vaatii-tiemerkinta-valmis-jos-tiemerkinta-aloitettu-annettu
-  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka)
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/yllapitokohteet/" kohde "/aikataulu-tiemerkinta"]
                                          kayttaja-tiemerkinta portti
@@ -355,7 +355,7 @@
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-paallystyskayttajana
   ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
                                         kayttaja-paallystys portti
@@ -364,7 +364,7 @@
 
 (deftest yllapitokohteen-paivitys-tiemerkintaurakkaan-ei-onnistu-tiemerkintakayttajana
   ;; Ylläpitokohteen päivitys voidaan tehdä vain päällystysurakkaan
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/yllapitokohteet/" kohde-id]
                                         kayttaja-tiemerkinta portti
@@ -553,7 +553,7 @@
     (is (= (count tarkastukset-ennen-kirjausta) (count tarkastukset-kirjauksen-jalkeen)))))
 
 (deftest tiemerkintatoteuman-kirjaaminen-kohteelle-toimii
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         kohde-id (hae-yllapitokohde-jonka-tiemerkintaurakka-suorittaa urakka-id)
         ulkoinen-id 666777
         hae-toteumat #(q-map "SELECT * FROM tiemerkinnan_yksikkohintainen_toteuma WHERE yllapitokohde = " kohde-id)
