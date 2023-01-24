@@ -224,3 +224,112 @@ BEGIN
     RETURN paluurivi;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Palautetaan summa, korotus, summa+korotus riippuen erilliskustannuksen tyypistä.
+-- Bonuksille on omat laskennat ja 'muu' tyyppiselle erilliskustannukselle omansa.
+-- Jos indeksin nimeä ei ole annettu, ei indeksiä lasketa
+CREATE OR REPLACE FUNCTION erilliskustannuksen_indeksilaskenta(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER,
+                                                    er_tyyppi erilliskustannustyyppi, pyorista_kerroin BOOLEAN)
+    RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+    urakan_alkuvuosi INTEGER;
+    urakkatyyppi TEXT;
+    hoitokauden_alkuvuosi_vuosi INTEGER;
+    pvm_kuukausi INTEGER;
+    pvm_vuosi INTEGER;
+    hoitokauden_loppuvuosi_vuosi INTEGER;
+    korotus NUMERIC;
+    paluurivi kuukauden_indeksikorotus_rivi;
+    vertailuluku NUMERIC;
+    perusluku NUMERIC;
+    kerroin NUMERIC;
+BEGIN
+    SELECT tyyppi FROM urakka WHERE id = urakka_id INTO urakkatyyppi;
+    SELECT EXTRACT(MONTH FROM pvm) INTO pvm_kuukausi;
+    SELECT EXTRACT(YEAR FROM pvm) INTO pvm_vuosi;
+    perusluku := indeksilaskennan_perusluku(urakka_id);
+    RAISE NOTICE 'perusluku: %',perusluku;
+
+    SELECT
+        CASE
+            WHEN pvm_kuukausi BETWEEN 1 AND 9 THEN (pvm_vuosi - 1)
+            ELSE pvm_vuosi
+            END into hoitokauden_alkuvuosi_vuosi;
+    RAISE NOTICE 'pvm_kuukausi: %, pvm_vuosi: %', pvm_kuukausi, pvm_vuosi;
+    hoitokauden_loppuvuosi_vuosi := hoitokauden_alkuvuosi_vuosi + 1;
+
+    SELECT EXTRACT(YEAR FROM alkupvm) FROM urakka WHERE id = urakka_id into urakan_alkuvuosi;
+    RAISE NOTICE 'Urakan alkuvuosi %, Hoitokauden alkuvuosi: %, Hoitokauden loppuvuosi: %, Erilliskustannustyyppi: %',
+        urakan_alkuvuosi, hoitokauden_alkuvuosi_vuosi, hoitokauden_loppuvuosi_vuosi, er_tyyppi;
+
+    -- Jos käyttäjä on käsin määrännyt ettei indeksiä sovelleta, korotus on 0
+    IF indeksinimi IS NULL THEN
+        korotus := 0;
+
+
+        -- Asiakastyytyväisyysbonus
+        -- Alueurakat vuosilta 2017 ja 2018
+        -- HJU eli teiden-hoito, mutta vuosilta < 2019
+        -- Indeksi tulee -> Loka-syyskuun pisteluvun ka.
+    ELSEIF er_tyyppi = 'asiakastyytyvaisyysbonus'
+            AND ((urakkatyyppi = 'hoito' AND urakan_alkuvuosi = 2017 OR urakan_alkuvuosi = 2018)
+            OR
+             (urakkatyyppi = 'teiden-hoito' AND urakan_alkuvuosi = 2018))
+    THEN
+        -- Pistelukujen keskiarvo lokakuusta syyskuuhun, mikäli kaikilta 12 kuukaudelta arvo löytyy
+        SELECT AVG(arvo) FROM indeksi WHERE nimi = indeksinimi
+                                        AND (vuosi = hoitokauden_alkuvuosi_vuosi AND kuukausi IN (10,11,12)
+                OR vuosi = hoitokauden_loppuvuosi_vuosi AND kuukausi IN (1,2,3,4,5,6,7,8,9))
+        HAVING count(arvo) = 12
+        INTO vertailuluku;
+        RAISE NOTICE 'Asiakastyytyväisyysbonus - Loka-syyskuun pistelukujen ka. (MAKU 2010=100 ) Teiden ylläpidon erillisindeksi: %', vertailuluku;
+
+
+        -- Asiakastyytyväisyysbonus
+        -- MHU vuosilta 2019 ja 2020
+        -- Indeksi tulee -> Urakkavuotta edeltävän syyskuun indeksi
+    ELSEIF er_tyyppi = 'asiakastyytyvaisyysbonus'
+            AND urakkatyyppi = 'teiden-hoito'
+            AND (urakan_alkuvuosi = 2019 OR urakan_alkuvuosi = 2020)
+    THEN
+        -- Urakkavuotta edeltävän syyskuun indeksi
+        SELECT arvo FROM indeksi WHERE nimi = indeksinimi AND (vuosi = hoitokauden_alkuvuosi_vuosi AND kuukausi = 9)
+        INTO vertailuluku;
+        RAISE NOTICE 'Asiakastyytyväisyysbonus - urakkaa edeltävän syyskuun indeksi: %', vertailuluku;
+
+
+        -- Lupausbonus - Käytetään urakkavuotta edeltävän syyskuun indeksiä, kun on MHU urakka ja alkuvuosi joko 2019 tai 2020
+    ELSEIF er_tyyppi = 'lupausbonus'
+        AND urakkatyyppi = 'teiden-hoito'
+        AND (urakan_alkuvuosi = 2019 OR urakan_alkuvuosi = 2020)
+    THEN
+        -- Urakkavuotta edeltävän syyskuun indeksi
+        SELECT arvo FROM indeksi WHERE nimi = indeksinimi AND (vuosi = hoitokauden_alkuvuosi_vuosi AND kuukausi = 9)
+        INTO vertailuluku;
+        RAISE NOTICE 'Lupausbonus - urakkaa edeltävän syyskuun indeksi: %', vertailuluku;
+
+
+        -- Muu tyyppiselle erilliskustannukselle käytetään kuukauden indeksikorotuksesta tuttua kaavaa
+    ELSEIF er_tyyppi = 'muu'
+        THEN
+            SELECT arvo FROM indeksi WHERE nimi = indeksinimi
+              AND vuosi = pvm_vuosi AND kuukausi = pvm_kuukausi INTO vertailuluku;
+
+
+        -- Muille vaihtoehdoille (näitä varmasti suurin osa) ei lasketa indeksikorotusta
+        -- Esim Alihankintabonukselle ei ole indeksiä
+    ELSE
+        kerroin := 1;
+        RAISE NOTICE 'Ei indeksikorotusta, kerroin % ', kerroin;
+    END IF;
+
+    kerroin := CASE WHEN vertailuluku IS NOT NULL THEN (vertailuluku / perusluku) ELSE 1 END;
+    -- MHU urakoille pyöristetään kerroin aina kolmeen desimaaliin.
+    IF pyorista_kerroin THEN
+        kerroin := round(kerroin, 3);
+    END IF;
+    korotus := (summa * kerroin) - summa;
+    paluurivi := (summa, summa * kerroin, korotus);
+    RETURN paluurivi;
+END;
+$$ LANGUAGE plpgsql;

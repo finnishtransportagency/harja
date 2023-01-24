@@ -397,24 +397,37 @@ SELECT EXISTS(
 
 -- name: listaa-urakan-hoitokauden-erilliskustannukset
 -- Listaa urakan erilliskustannukset
-SELECT
-  id,
-  tyyppi,
-  urakka,
-  sopimus,
-  toimenpideinstanssi,
-  pvm,
-  rahasumma,
-  indeksin_nimi,
-  lisatieto,
-  luotu,
-  luoja,
-  kuukauden_indeksikorotus(pvm, indeksin_nimi, rahasumma, urakka)                          AS indeksikorjattuna,
-  (SELECT korotettuna
-   FROM laske_hoitokauden_asiakastyytyvaisyysbonus(urakka, pvm, indeksin_nimi, rahasumma)) AS "bonus-indeksikorjattuna"
-FROM erilliskustannus
-WHERE urakka = :urakka
-      AND pvm >= :alkupvm AND pvm <= :loppupvm AND poistettu IS NOT TRUE;
+SELECT e.id,
+       e.tyyppi,
+       e.urakka,
+       e.sopimus,
+       e.toimenpideinstanssi,
+       e.pvm,
+       e.rahasumma,
+       e.indeksin_nimi,
+       e.lisatieto,
+       e.luotu,
+       e.luoja,
+       (SELECT korotettuna
+        from erilliskustannuksen_indeksilaskenta(e.pvm, e.indeksin_nimi, e.rahasumma,
+                                                 e.urakka, e.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS indeksikorjattuna,
+       (SELECT korotettuna
+        from erilliskustannuksen_indeksilaskenta(e.pvm, e.indeksin_nimi, e.rahasumma,
+                                                 e.urakka, e.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS "bonus-indeksikorjattuna"
+FROM erilliskustannus e
+         JOIN urakka u ON e.urakka = u.id
+WHERE e.urakka = :urakka
+  AND e.pvm >= :alkupvm
+  AND e.pvm <= :loppupvm
+  AND e.poistettu IS NOT TRUE;
 
 -- name: listaa-urakan-maarien-toteumat
 -- Ryhmittele ja summaa tiedot toimenpidekoodin eli tehtävän perusteella. Suunnitellut toteumat

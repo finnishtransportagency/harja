@@ -799,7 +799,7 @@ BEGIN
             -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
             -- Hoitokauden päättämiseen liittyviä kuluja ei tallenneta erilliskustannus tauluun, ne kirjataan kuluina ja tallennetaan kulu ja kulu_kohdistus-tauluun
             IF (t.tuotekoodi = '23150') THEN
-                FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi
+                FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
                                                  FROM erilliskustannus ek
                                                  WHERE ek.sopimus = sopimus_id
                                                    AND ek.toimenpideinstanssi = t.tpi
@@ -810,6 +810,9 @@ BEGIN
 
                         RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS Tyyppi = % ', erilliskustannus_rivi.tyyppi;
 
+                        -- Alihankintabonukselle ei tule indeksikorotusta, joten tämä saa jäädä näin.
+                        -- Kun on aikaa, niin tämän voisi laittaa käyttämään erilliskustannuksen_indeksilaskentaa, vaikka korotusta ei tulisikaan
+                        -- Mutta se olisi yhdenmukaisempaa
                         IF erilliskustannus_rivi.tyyppi = 'alihankintabonus' THEN
                             -- Bonus :: alihankintabonus
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -828,10 +831,13 @@ BEGIN
                         ELSEIF erilliskustannus_rivi.tyyppi = 'lupausbonus' THEN
                             -- Bonus :: lupausbonus
                             SELECT *
-                                FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                    erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
-                                INTO lupaus_bon_rivi;
+                            FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                     erilliskustannus_rivi.indeksin_nimi,
+                                                                     erilliskustannus_rivi.rahasumma,
+                                                                     erilliskustannus_rivi.urakka,
+                                                                     erilliskustannus_rivi.tyyppi,
+                                                                     pyorista_kerroin)
+                            INTO lupaus_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
@@ -849,9 +855,12 @@ BEGIN
                             -- Asiakastyytyväisyysbonus
                         ELSEIF erilliskustannus_rivi.tyyppi = 'asiakastyytyvaisyysbonus' THEN
                             SELECT *
-                                FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                    erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
+                                FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                         erilliskustannus_rivi.indeksin_nimi,
+                                                                         erilliskustannus_rivi.rahasumma,
+                                                                         erilliskustannus_rivi.urakka,
+                                                                         erilliskustannus_rivi.tyyppi,
+                                                                         pyorista_kerroin)
                                 INTO asiakas_tyyt_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -870,9 +879,12 @@ BEGIN
                             -- Muu bonus
                         ELSEIF erilliskustannus_rivi.tyyppi = 'muu-bonus' THEN
                             SELECT *
-                              FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                  erilliskustannus_rivi.indeksin_nimi,
-                                                                  erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
+                              FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                       erilliskustannus_rivi.indeksin_nimi,
+                                                                       erilliskustannus_rivi.rahasumma,
+                                                                       erilliskustannus_rivi.urakka,
+                                                                       erilliskustannus_rivi.tyyppi,
+                                                                       pyorista_kerroin)
                               INTO muu_bonus_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
