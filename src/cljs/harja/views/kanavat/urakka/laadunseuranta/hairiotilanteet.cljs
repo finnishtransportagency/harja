@@ -128,38 +128,43 @@
                   (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
                            (nil? (:jarjestysnumero materiaalin-kirjaus)))
                     [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
-                    [(:jarjestysnumero materiaalin-kirjaus) nil]))]
-    [grid/muokkaus-grid
-     {:voi-muokata? voi-muokata?
-      :voi-lisata? false
-      :voi-poistaa? (constantly voi-muokata?)
-      :voi-kumota? false
-      :virheet virhe-atom
-      :piilota-toiminnot? false
-      :tyhja "Ei varaosia"
-      :otsikko "Varaosat"
-      :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
-     [{:otsikko "Varaosa"
-       :nimi :varaosa
-       :leveys 3
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]
-       :tyyppi :valinta
-       :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
-       :valinnat materiaalit}
-      {:otsikko "Käytettävä määrä"
-       :nimi :maara
-       :leveys 3
-       :validoi [[:ei-tyhja "Tieto puuttuu"]]
-       :tyyppi :positiivinen-numero
-       :kokonaisluku? true}
-      {:otsikko "Yksikkö"
-       :nimi :yksikko
-       :leveys 1
-       :muokattava? (constantly false)}]
-     (r/wrap
-       (zipmap (range)
-               (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
-       #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]))
+                    [(:jarjestysnumero materiaalin-kirjaus) nil]))
+        varaosat-atom (r/wrap
+                        (zipmap (range)
+                          (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
+                        #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]
+    ;; Estä taulukon näyttäminen, mikäli varaosia ei ole lisättäväksi. Mahdollisesti parempi teksit olisi kehoitus
+    ;; käydä lisäämässä materiaaleja jotenkin hienovaraisesti
+    (if (empty? materiaalit)
+      [:p "Ei varaosia lisättäväksi. Lisää niitä materiaalit välilehdeltä."]
+      [grid/muokkaus-grid
+       {:voi-muokata? voi-muokata?
+        :voi-lisata? false
+        :voi-poistaa? (constantly voi-muokata?)
+        :voi-kumota? false
+        :virheet virhe-atom
+        :piilota-toiminnot? false
+        :tyhja "Ei varaosia"
+        :otsikko "Varaosat"
+        :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
+       [{:otsikko "Varaosa"
+         :nimi :varaosa
+         :leveys 3
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :valinta
+         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+         :valinnat materiaalit}
+        {:otsikko "Käytettävä määrä"
+         :nimi :maara
+         :leveys 3
+         :validoi [[:ei-tyhja "Tieto puuttuu"]]
+         :tyyppi :positiivinen-numero
+         :kokonaisluku? true}
+        {:otsikko "Yksikkö"
+         :nimi :yksikko
+         :leveys 1
+         :muokattava? (constantly false)}]
+       varaosat-atom])))
 
 (defn odottavan-liikenteen-kentat []
   (lomake/ryhma
@@ -214,13 +219,15 @@
      :palstoja 2
      :komponentti (fn [_]
                     [varaosataulukko e! app])}
-    {:nimi :lisaa-varaosa
-     :tyyppi :komponentti
-     :uusi-rivi? true
-     :komponentti (fn [_]
-                    [napit/uusi "Lisää varaosa"
-                     #(e! (tiedot/->LisaaMateriaali))
-                     {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])}))
+    ;; Estetään Lisää Varaosanapin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. Myöhemmin nimi varaosa -> materiaalit
+    (when (not (empty? (:materiaalit app)))
+      {:nimi :lisaa-varaosa
+       :tyyppi :komponentti
+       :uusi-rivi? true
+       :komponentti (fn [_]
+                      [napit/uusi "Lisää varaosa"
+                       #(e! (tiedot/->LisaaMateriaali))
+                       {:disabled (not (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))}])})))
 
 (defn hairiolomake [e! {:keys [valittu-hairiotilanne valinnat tallennus-kaynnissa?] :as app} kohteet]
   [:div
@@ -283,7 +290,8 @@
           :tyyppi :valinta
           :uusi-rivi? true
           :valinta-nayta #(or (kohde/fmt-kohteen-nimi %) "Ei kohdetta")
-          :valinnat (into [nil] kohteet)})
+          :valinnat (into [nil] kohteet)
+          :pakollinen? true})
        (when (::hairiotilanne/kohde valittu-hairiotilanne)
          {:otsikko "Kohteen osa"
           :nimi ::hairiotilanne/kohteenosa
