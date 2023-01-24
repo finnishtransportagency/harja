@@ -572,7 +572,7 @@
                               {:keys [id kohdenumero nimi tunnus
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                      yllapitoluokka sopimuksen-mukaiset-tyot
+                                      yllapitoluokka sopimuksen-mukaiset-tyot maaramuutokset
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
                                       toteutunut-hinta
                                       keskimaarainen-vuorokausiliikenne]
@@ -599,6 +599,7 @@
       (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde            id
                                                     :urakka                   urakka-id
                                                     :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                    :maaramuutokset           maaramuutokset
                                                     :arvonvahennykset         arvonvahennykset
                                                     :bitumi_indeksi           bitumi-indeksi
                                                     :kaasuindeksi             kaasuindeksi

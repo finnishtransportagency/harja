@@ -17,6 +17,7 @@ SELECT
   ypk.yllapitoluokka                    AS "yplk",
   sum(-s.maara)                         AS "sakot-ja-bonukset",
   ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset                    AS "maaramuutokset",
   ypkk.arvonvahennykset                  AS "arvonvahennykset",
   ypkk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
@@ -28,7 +29,7 @@ FROM yllapitokohde ypk
 WHERE ypk.urakka = :urakka
       AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta;
+GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta;
 
 -- name: hae-muut-kustannukset
 SELECT

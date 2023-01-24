@@ -46,10 +46,7 @@
         _ (validoi-excelin-otsikot otsikot)
         rivit (remove #(let [sarake-a-sisalto (first %)]
                          ;; Poistetaan rivi kokonaan, mikäli yhaid on nil. Poistaa myös yhteensä-rivin
-                         (or (nil? sarake-a-sisalto)
-                             (and sarake-a-sisalto
-                                  ;; Määrämuutosten ohjerivi on poistettava
-                                  (str/starts-with? sarake-a-sisalto "Määrämuutokset"))))
+                         (nil? sarake-a-sisalto))
                       (rest otsikot-ja-rivit))
         kohteet (into []
                       (keep
@@ -71,6 +68,7 @@
                                                                           :sopimuksen_mukaiset_tyot (:sopimuksen-mukaiset-tyot p)
                                                                           :bitumi_indeksi (:bitumi-indeksi p)
                                                                           :kaasuindeksi (:kaasuindeksi p)
+                                                                          :maaramuutokset (:maaramuutokset p)
                                                                           :muokkaaja (:id user)}))))
 
 (defn- excelin-rivi
@@ -80,10 +78,7 @@
   (let [yhteiset-arvot-alku [yhaid
                              kohdenumero tunnus nimi
                              sopimuksen-mukaiset-tyot ;; = Tarjoushinta
-                             ;; Määrämuutosten muokkaus ei mahdollinen, koska syötetään erillisessä taulukossa Harjassa rakenteellisesti
-                             [:varillinen-teksti {:arvo maaramuutokset
-                                                  :fmt :raha
-                                                  :tyyli :disabled}]]
+                             maaramuutokset]
         loppusarake (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                       "H"
                       "J")
@@ -149,8 +144,6 @@
       tyhjat-rivit
       yhteenvetorivi)))
 
-(def maaramuutoksien-ohje "Määrämuutokset kirjataan Harjassa kohdekohtaisesti omaan taulukkoonsa.")
-
 (defn vie-paallystyskohteet-exceliin
   [db workbook user {:keys [urakka-id vuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
@@ -169,11 +162,7 @@
                              {:teksti "Kustannukset (€)"
                               :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                                             5
-                                            7)}]
-                :rivi-jalkeen [{:teksti maaramuutoksien-ohje
-                                :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                                              9
-                                              11)}]}
+                                            7)}]}
         taulukot [[:taulukko optiot sarakkeet
                    rivit]]
         tiedostonimi (str (:nimi urakka) "-Päällystyskohteet-" vuosi)
