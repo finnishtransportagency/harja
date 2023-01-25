@@ -40,7 +40,7 @@
 (defn testidata-uusiksi!
   "Poistaa raporttiin liittyvän datan urakasta ja luo uuden (vuodesta 2010 eteenpäin)."
   []
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
         tiemerkinnan-tpi (:id (first (q-map "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))]
 
@@ -238,7 +238,7 @@
 
 (deftest raportin-suoritus-urakalle-toimii
   (testidata-uusiksi!)
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                 muut-tyot arvonmuutokset indeksit
                 sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
@@ -262,7 +262,7 @@
 
 (deftest raportin-suoritus-urakalle-toimii
   (testidata-uusiksi!)
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                 muut-tyot arvonmuutokset indeksit
                 sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
@@ -286,7 +286,7 @@
 
 (deftest kok-hint-tyot-lasketaan-vain-kuukausivalille
   (testidata-uusiksi!)
-  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+  (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
         {:keys [kokonaishintaiset-tyot yksikkohintaiset-toteumat
                 muut-tyot sakot bonukset yksikkohintaiset-suunnitellut-tyot toteumat-yhteensa kokonaisia-kuukausia-aikavalina?]
          :as raportin-tiedot}

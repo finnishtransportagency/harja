@@ -58,7 +58,9 @@
   ja hoitopäättyy 30.09.2021 niin hoitokausi ei ole vielä menneisyydessä. Tehdään tulkinta tässä vaiheessa niin, että
   käyttäjille jää n. 3kk aikaa tehdä välikatselmukset ja sen jälkeen se lukitaan."
   [hoitokausi nykyhetki urakan-alkuvuosi]
-  (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
+  ;; Niin moni urakka ei ole tehnyt välikatselmusta, että otetaan tarkistus hetkeksi pois käytöstä
+  false
+  #_ (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
         nykyvuosi (pvm/vuosi nykyhetki)
         vanha-mhu? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)]
     (cond
@@ -572,8 +574,7 @@
                          (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                          (or
                            poikkeusvuosi?
-                           ;; Niin moni urakka ei ole tehnyt välikatselmusta, että otetaan tarkistus hetkeksi pois käytöstä
-                           #_ (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))
+                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))
                            )))]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.

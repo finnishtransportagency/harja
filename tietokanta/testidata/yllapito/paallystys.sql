@@ -25,7 +25,7 @@ VALUES
       20, 1, 0, 3, 0, 1, 11, (SELECT id
                              FROM urakka
                              WHERE nimi =
-                                   'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                                   'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2017}', 500, FALSE),
   (8, (SELECT id
        FROM urakka
@@ -41,7 +41,7 @@ VALUES
       20, 4, 334, 10, 10, 0, 11, (SELECT id
                                  FROM urakka
                                  WHERE nimi =
-                                       'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                                       'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2017}', 605, FALSE),
   (9, (SELECT id
        FROM urakka
@@ -57,7 +57,7 @@ VALUES
       20, 12, 1, 19, 2, null, null, (SELECT id
                                FROM urakka
                                WHERE nimi =
-                                     'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                                     'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2020}', 605, FALSE),
   (10, (SELECT id
         FROM urakka
@@ -212,7 +212,7 @@ VALUES
       20, 1, 0, 3, 0, (SELECT id
                        FROM urakka
                        WHERE nimi =
-                             'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                             'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2018}', 500, FALSE),
   (8, (SELECT id
        FROM urakka
@@ -227,7 +227,7 @@ VALUES
       20, 4, 334, 10, 10, (SELECT id
                            FROM urakka
                            WHERE nimi =
-                                 'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                                 'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2018}', 605, FALSE),
   (9, (SELECT id
        FROM urakka
@@ -242,7 +242,7 @@ VALUES
       20, 12, 1, 19, 2, (SELECT id
                          FROM urakka
                          WHERE nimi =
-                               'Oulun tiemerkinnän palvelusopimus 2013-2022'),
+                               'Oulun tiemerkinnän palvelusopimus 2017-2024'),
    '{2018}', 605, FALSE),
   (10, (SELECT id
         FROM urakka
@@ -886,7 +886,7 @@ VALUES
    115, 'L15', 'Puolangantie', 'paallyste' :: yllapitokohdetyyppi,
    'paallystys' ::yllapitokohdetyotyyppi, 13375,
    NULL,
-   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022'), (SELECT ARRAY[date_part('year', now())]), FALSE, 'A'),
+   837, 2, 0, 2, 1000, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2023}', FALSE, 'A'),
   ((SELECT id
     FROM urakka
     WHERE nimi = 'Utajärven päällystysurakka'),
@@ -898,7 +898,7 @@ VALUES
     114, 'L14', 'Ouluntie 2', 'paallyste' :: yllapitokohdetyyppi,
     'paallystys' ::yllapitokohdetyotyyppi, 13374,
     NULL,
-    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2013-2022') , (SELECT ARRAY[date_part('year', now())]), FALSE, NULL),
+    22, 13, 0, 13, 3888, NULL, NULL, (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024') , (SELECT ARRAY[date_part('year', now())]), FALSE, NULL),
   -- Päällystyskohteet 2021 (pot2)
   ((SELECT id
       FROM urakka
@@ -914,7 +914,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2021}', FALSE, NULL),
+                                             'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2021}', FALSE, NULL),
   ((SELECT id
       FROM urakka
      WHERE nimi = 'Utajärven päällystysurakka'),
@@ -953,7 +953,7 @@ VALUES
    20, 1, 1066, 1, 3827, NULL, NULL, (SELECT id
                                         FROM urakka
                                        WHERE nimi =
-                                             'Oulun tiemerkinnän palvelusopimus 2013-2022'), '{2022}', FALSE, 'B');
+                                             'Oulun tiemerkinnän palvelusopimus 2017-2024'), '{2022}', FALSE, 'B');
 
 INSERT INTO yllapitokohteen_aikataulu
 (yllapitokohde, kohde_alku, paallystys_alku, paallystys_loppu, tiemerkinta_alku, tiemerkinta_loppu,
@@ -1040,12 +1040,12 @@ UPDATE yllapitokohteen_aikataulu
    SET merkinta = 'massa', jyrsinta = 'keski'
  WHERE yllapitokohde IN (SELECT id FROM yllapitokohde WHERE nimi IN ('Ouluntie 2', 'Tärkeä kohde mt20 2022'));
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0, 0);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
@@ -1114,10 +1114,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, 100, 4543.95, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 100, 4543.95, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200, 10, 4543.95, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, maaramuutokset, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, NULL, 100, 4543.95, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 1000, NULL, 5000, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200,  NULL, 10, 4543.95, 0);
 
 INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
 VALUES (1, (SELECT id

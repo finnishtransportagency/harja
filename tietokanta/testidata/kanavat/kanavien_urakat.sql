@@ -6,7 +6,7 @@ INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsi
 VALUES
    ('Saimaan kanava',
     'MAKU 2005 kunnossapidon osaindeksi',
-    '2016-01-01', '2024-12-31',
+    '2016-01-01', '2026-12-31',
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Kanavat ja avattavat sillat'),
@@ -28,7 +28,7 @@ VALUES ('Saimaan huollon pääsopimus',
          FROM urakka
          WHERE nimi = 'Saimaan kanava'),
         NULL,
-        (select alkupvm FROM urakka where nimi = 'Saimaan kanava') , (select loppupvm FROM urakka where nimi = 'Saimaan kanava'), TRUE, NOW());
+        '2016-01-01', '2026-12-31', TRUE, NOW());
 
 INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Saimaan huollon lisäsopimus',
@@ -38,7 +38,7 @@ VALUES ('Saimaan huollon lisäsopimus',
         (SELECT id
          FROM sopimus
          WHERE nimi = 'Saimaan huollon pääsopimus'),
-        '2016-01-01', '2019-12-31', TRUE, NOW());
+        '2016-01-01', '2026-12-31', TRUE, NOW());
 
 INSERT INTO hanke (nimi, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Joensuun huolto- ja kunnossapito', '2016-07-07', '2021-05-05', TRUE, NOW());
@@ -47,7 +47,7 @@ INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsi
 VALUES
   ('Joensuun kanava',
     'MAKU 2005 kunnossapidon osaindeksi',
-    '2016-01-01', '2019-12-31',
+    '2022-01-01', '2026-12-31',
     (SELECT id
      FROM organisaatio
      WHERE nimi = 'Kanavat ja avattavat sillat'),
@@ -69,7 +69,7 @@ VALUES ('Joensuun huollon pääsopimus',
          FROM urakka
          WHERE nimi = 'Joensuun kanava'),
         NULL,
-        '2016-01-01', '2019-12-31', TRUE, NOW());
+        '2022-01-01', '2026-12-31', TRUE, NOW());
 
 INSERT INTO sopimus (nimi, urakka, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
 VALUES ('Joensuun huollon lisäsopimus',
@@ -79,4 +79,4 @@ VALUES ('Joensuun huollon lisäsopimus',
         (SELECT id
          FROM sopimus
          WHERE nimi = 'Joensuun huollon pääsopimus'),
-        '2016-01-01', '2019-12-31', TRUE, NOW());
+        '2022-01-01', '2026-12-31', TRUE, NOW());
