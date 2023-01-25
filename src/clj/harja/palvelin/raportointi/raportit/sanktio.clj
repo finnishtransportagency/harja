@@ -99,9 +99,19 @@
           :yhteensa-sarake? yhteensa-sarake?})])))
 
 (defn- raporttirivit-ryhma-c [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko "C-ryhmä"}
-   (yhteiset/luo-rivi-sakkojen-summa "C-ryhmä yhteensä" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])
+  (let [c-ryhman-rivit (filter #(= :C (:sakkoryhma %)) rivit)
+        c-ryhman-tyypit (keys (group-by #(:sanktiotyyppi_nimi %) c-ryhman-rivit))]
+    (concat
+      [{:otsikko "C-ryhmä"}]
+      (map
+        (fn [nimi]
+          (yhteiset/luo-rivi-sakkojen-summa nimi c-ryhman-rivit alueet
+            {:sanktiotyyppi #{nimi}
+             :sakkoryhma :C
+             :yhteensa-sarake? yhteensa-sarake?}))
+        c-ryhman-tyypit)
+      [(yhteiset/luo-rivi-sakkojen-summa "C-ryhmä yhteensä" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
+       (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])))
 
 
 (defn- raporttirivit [rivit alueet toimenpide-haku-fn optiot]
