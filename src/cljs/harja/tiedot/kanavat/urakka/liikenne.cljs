@@ -547,7 +547,7 @@
                                                                                             (assoc ::m/poistettu? true)
                                                                                             (assoc ::lt-alus/suunta :ylos))))]
                        ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
-                       (sort-by :id uudet-alukset))
+                       (reverse (sort-by ::lt-alus/id uudet-alukset)))
                      ))))
 
   PoistaKetjutus
