@@ -22,6 +22,7 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as kanavaurakka]
             [harja.tiedot.kanavat.urakka.liikenne :as tiedot]
             [harja.views.urakka.valinnat :as suodattimet]
+            [harja.ui.grid.protokollat :as grid-protokollat]
 
             [harja.domain.kayttaja :as kayttaja]
             [harja.domain.oikeudet :as oikeudet]
@@ -102,67 +103,93 @@
       {:ikoni (ikonit/livicon-arrow-bottom)
        :disabled (empty? kuitattavat)}]]))
 
-(defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app}]
-  [grid/muokkaus-grid
-   {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
-    :virheet-dataan? true
-    :toimintonappi-fn (fn [alus muokkaa!]
-                        (when (tiedot/ketjutuksen-voi-siirtaa-tapahtumasta? app alus)
-                          [:span.klikattava {:on-click
-                                             #(do (.preventDefault %)
-                                                  (e! (tiedot/->SiirraTapahtumasta alus))
-                                                  (muokkaa! (constantly nil)))}
-                           (ikonit/livicon-arrow-top)]))}
-   [{:otsikko "Suunta"
-     :tyyppi :komponentti
-     :tasaa :keskita
-     :komponentti (fn [rivi]
-                    (let [suunta (::lt-alus/suunta rivi)
-                          valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)]
-                      [napit/yleinen-toissijainen
-                       (lt/suunta->str suunta)
-                       #(e! (tiedot/->VaihdaSuuntaa rivi))
-                       {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
-                                     (= :alas suunta) (ikonit/livicon-arrow-down)
-                                     :else (ikonit/livicon-question))
-                        :luokka "nappi-grid"
-                        :disabled (some? (#{:ylos :alas} valittu-suunta))}]))
-     :leveys 1}
-    {:otsikko "Nimi"
-     :tyyppi :string
-     :nimi ::lt-alus/nimi
-     :leveys 1}
-    {:otsikko "Aluslaji"
-     :tyyppi :valinta
-     :nimi ::lt-alus/laji
-     :validoi [[:ei-tyhja "Valitse aluslaji"]]
-     :valinnat lt-alus/aluslajit
-     :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")
-     :leveys 1}
-    {:otsikko "Alusten lkm"
-     :nimi ::lt-alus/lkm
-     :oletusarvo 1
-     :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
-     :tyyppi :positiivinen-numero
-     :leveys 1}
-    {:otsikko "Matkustajia"
-     :nimi ::lt-alus/matkustajalkm
-     :tyyppi :positiivinen-numero
-     :leveys 1}
-    {:otsikko "Nippuluku"
-     :nimi ::lt-alus/nippulkm
-     :tyyppi :positiivinen-numero
-     :leveys 1}]
-   (r/wrap
-     (zipmap (range) (::lt/alukset valittu-liikennetapahtuma))
-     #(e! (tiedot/->MuokkaaAluksia (vals %) (tiedot/grid-virheita? %))))])
+(defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app} alukset-atom]
+
+  (let [uusi-id (if (empty? (keys @alukset-atom))
+                  0
+                  (inc (apply max (keys @alukset-atom))))]
+
+    [:div [harja.ui.debug/debug @alukset-atom]
+     [grid/muokkaus-grid
+      {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
+       :virheet-dataan? true
+       :voi-kumota? false
+       :voi-lisata? false
+       :custom-toiminto {:teksti "Lisää rivi"
+                         :toiminto #(let [tyhja-rivi {:id uusi-id}
+                                          _ (swap! alukset-atom assoc uusi-id tyhja-rivi)
+                                          alukset (vals @alukset-atom)]
+                                      (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi))))
+                         :opts {:ikoni (ikonit/livicon-plus)
+                                :luokka "nappi-toissijainen"}}
+
+       :on-rivi-blur (fn [rivi rivinro]
+                       (let [_ (swap! alukset-atom assoc rivinro rivi)
+                             alukset (vals @alukset-atom)]
+                         (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? rivi)))))
+
+       :toimintonappi-fn (fn [alus]
+                           [napit/poista nil
+                            #(do (let [_ (swap! alukset-atom dissoc alus)
+                                       tyhja-rivi {:id uusi-id}
+                                       alukset (vals @alukset-atom)]
+                                   (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi)))
+                                   (e! (tiedot/->SiirraTapahtumasta alus))))
+
+                            {:teksti-nappi? true
+                             :vayla-tyyli? true
+                             :ikoni (ikonit/action-delete)}])}
+
+      [{:otsikko "Suunta"
+        :tyyppi :komponentti
+        :tasaa :keskita
+        :komponentti (fn [rivi]
+                       (let [suunta (::lt-alus/suunta rivi)
+                             valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)]
+                         [napit/yleinen-toissijainen
+                          (lt/suunta->str suunta)
+                          #(e! (tiedot/->VaihdaSuuntaa rivi))
+                          {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
+                                        (= :alas suunta) (ikonit/livicon-arrow-down)
+                                        :else (ikonit/livicon-question))
+                           :luokka "nappi-grid"
+                           :disabled (some? (#{:ylos :alas} valittu-suunta))}]))
+        :leveys 1}
+       {:otsikko "Nimi"
+        :tyyppi :string
+        :nimi ::lt-alus/nimi
+        :leveys 1}
+       {:otsikko "Aluslaji"
+        :tyyppi :valinta
+        :nimi ::lt-alus/laji
+        :validoi [[:ei-tyhja "Valitse aluslaji"]]
+        :valinnat lt-alus/aluslajit
+        :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")
+        :leveys 1}
+       {:otsikko "Alusten lkm"
+        :nimi ::lt-alus/lkm
+        :oletusarvo 1
+        :validoi [[:ei-tyhja "Syötä kappalemäärä"]]
+        :tyyppi :positiivinen-numero
+        :leveys 1}
+       {:otsikko "Matkustajia"
+        :nimi ::lt-alus/matkustajalkm
+        :tyyppi :positiivinen-numero
+        :leveys 1}
+       {:otsikko "Nippuluku"
+        :nimi ::lt-alus/nippulkm
+        :tyyppi :positiivinen-numero
+        :leveys 1}]
+      alukset-atom]]))
 
 (defn liikennetapahtumalomake [e! {:keys [valittu-liikennetapahtuma
                                           tallennus-kaynnissa?
                                           edellisten-haku-kaynnissa?
                                           edelliset] :as app}
                                kohteet]
-  (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))]
+  (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))
+       alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))]
+    
     [:div
      [debug app]
      [napit/takaisin "Takaisin tapahtumaluetteloon" #(e! (tiedot/->ValitseTapahtuma nil))]
@@ -318,7 +345,7 @@
             :tyyppi :komponentti
             :palstoja 3
             :nimi :muokattavat-tapahtumat
-            :komponentti (fn [_] [liikenne-muokkausgrid e! app])})
+            :komponentti (fn [_] [liikenne-muokkausgrid e! app alukset-atom])})
          (when (tiedot/nayta-lisatiedot? app)
            {:otsikko "Lisätietoja"
             :tyyppi :text

@@ -193,9 +193,7 @@
                                                    "harja.domain.muokkaustiedot"}
                                                   (namespace %)))
                                        (select-keys alus))))
-                              (remove #(and (:poistettu %)
-                                            (not (id-olemassa? (::lt-alus/id %))))
-                                      alukset))))
+                              alukset)))
       (update ::lt/toiminnot
               (fn [toiminnot] (map (fn [toiminto]
                                      (->
@@ -291,37 +289,22 @@
     (assoc rivi :valittu-suunta nil)
     (assoc rivi :valittu-suunta :molemmat)))
 
-(defn kasittele-uudet-alukset [tapahtuma alukset]
+(defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))
                tapahtuma-map (map (fn [b]
-                                    (if (= (:id b) (:id a))
+                                    (if (sama-alusrivi? a b)
                                       b nil))
                                   (::lt/alukset tapahtuma))
 
                kyseinen-tapahtuma (first (remove nil? tapahtuma-map))
-               poistettu? (if (nil? (:poistettu kyseinen-tapahtuma))
-                            false
-                            (:poistettu kyseinen-tapahtuma))
-
                klikattu-suunta (::lt-alus/suunta kyseinen-tapahtuma)
                suunta (if (nil? klikattu-suunta)
                         valittu-suunta
                         klikattu-suunta)]
 
-           (if-not (id-olemassa? (::lt-alus/id a))
-             (if (:koskematon a)
-               (-> a
-                   (assoc ::lt-alus/nimi (::lt-alus/nimi kyseinen-tapahtuma))
-                   (assoc ::lt-alus/laji (::lt-alus/laji kyseinen-tapahtuma))
-                   (assoc ::lt-alus/lkm (::lt-alus/lkm kyseinen-tapahtuma))
-                   (assoc ::lt-alus/nippulkm (::lt-alus/nippulkm kyseinen-tapahtuma))
-                   (assoc ::lt-alus/suunta suunta)
-                   (assoc ::lt-alus/matkustajalkm (::lt-alus/matkustajalkm kyseinen-tapahtuma))
-                   (assoc :poistettu poistettu?))
-               a)
-             a)))
-       alukset))
+           (-> a
+               (assoc ::lt-alus/suunta suunta)))) alukset))
 
 (defn poista-ketjutus [app alus-id]
   (let [poista-idlla (fn [alus-id alukset]
@@ -487,17 +470,16 @@
 
   MuokkaaAluksia
   (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
-    (if tapahtuma
+      (if tapahtuma
       (-> app
-          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-uudet-alukset tapahtuma alukset))
+          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
           (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
-
       app))
 
   VaihdaSuuntaa
   (process-event [{alus :alus} app]
     (let [uusi (if (= :ylos (::lt-alus/suunta alus))
-                 (assoc alus ::lt-alus/suunta :alas)
+                 (-> alus (assoc ::lt-alus/suunta :alas) )
                  (assoc alus ::lt-alus/suunta :ylos))]
       (update app :valittu-liikennetapahtuma
               (fn [t]
@@ -524,7 +506,6 @@
                       {:onnistui ->TapahtumaTallennettu
                        :epaonnistui ->TapahtumaEiTallennettu})
             (assoc :tallennus-kaynnissa? true)))
-
       app))
 
   TapahtumaTallennettu
@@ -559,7 +540,15 @@
         (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
         (update-in [:valittu-liikennetapahtuma ::lt/alukset]
                    (fn [alukset]
-                     (into [] (disj (into #{} alukset) alus))))))
+                     (let [;; Peak human evolution
+                           ;; Eli poistetaan ja lisätään alus jossa poistettu true, niin tämä poistuu myös kannasta kun tallennetaan
+                           uudet-alukset (into [] (merge (disj (into #{} alukset) alus) (-> alus
+                                                                                            (assoc :poistettu true)
+                                                                                            (assoc ::m/poistettu? true)
+                                                                                            (assoc ::lt-alus/suunta :ylos))))]
+                       ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
+                       (sort-by :id uudet-alukset))
+                     ))))
 
   PoistaKetjutus
   (process-event [{a :alus} {:keys [ketjutuksen-poistot] :as app}]
