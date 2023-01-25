@@ -337,26 +337,26 @@ INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide,
 INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'muu'::yllapitokohteen_aikataulu_toimenpide, 'Siirretään iso kivi pois alta', '2018-05-22', '2018-05-22', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 INSERT INTO yllapitokohteen_tarkka_aikataulu (yllapitokohde, urakka, toimenpide, kuvaus, alku, loppu, luoja, luotu) VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka'), 'rp_tyot'::yllapitokohteen_aikataulu_toimenpide, NULL, '2018-05-22', '2018-05-25', (SELECT id FROM kayttaja WHERE kayttajanimi = 'jvh'), NOW());
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi 2018'), 400, 100, 4543.95, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Leppäjärven ramppi 2018'), 400, 100, 4543.95, 0, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), 9000, 200, 565, 100);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulun ohitusramppi 2018'), 9000, 200, 565, 100, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Nakkilan ramppi 2018'), 500, 3457, 5, 6);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Nakkilan ramppi 2018'), 500, 3457, 5, 6, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), 500, 3457, 5, 6);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Oulaisten ohitusramppi 2018'), 500, 3457, 5, 6, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi 2018'), 500, 3457, 5, 6);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Kuusamontien testi 2018'), 500, 3457, 5, 6, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ei YHA-kohde 2018'), 500, 3457, 5, 6);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ei YHA-kohde 2018'), 500, 3457, 5, 6, 0, 0);
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN 2018'), 500, 3457, 5, 6);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'POISTETTU KOHDE EI SAA NÄKYÄ MISSÄÄN 2018'), 500, 3457, 5, 6, 0, 0);
 
 
 -- Testidatan kohdeosilla on hardkoodattu id, jotta päällystysilmoituksen ilmoitustiedoissa viitataan
@@ -1040,12 +1040,12 @@ UPDATE yllapitokohteen_aikataulu
    SET merkinta = 'massa', jyrsinta = 'keski'
  WHERE yllapitokohde IN (SELECT id FROM yllapitokohde WHERE nimi IN ('Ouluntie 2', 'Tärkeä kohde mt20 2022'));
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20'), 0, 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Aloittamaton kohde mt20'), 0, 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = '0-ajoratainen testikohde mt20'), 0, 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2'), 0, 0, 0, 0, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Tärkeä kohde mt20 2022'), 0, 0, 0, 0, 0, 0);
 
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti, yllapitoluokka, keskimaarainen_vuorokausiliikenne, poistettu, yhaid)
 VALUES ((SELECT id
@@ -1114,10 +1114,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, maaramuutokset, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, NULL, 100, 4543.95, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 1000, NULL, 5000, 0),
-       ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200,  NULL, 10, 4543.95, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, maaramuutokset, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maku_paallysteet)
+VALUES ((SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie'), 400, NULL, 100, 4543.95, 0, 0),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Puolangantie'), 400, 1000, NULL, 5000, 0, 1000),
+       ((SELECT id FROM yllapitokohde WHERE nimi = 'Kirkkotie'), 200,  NULL, 10, 4543.95, 0, 0);
 
 INSERT INTO paallystysilmoitus (versio, paallystyskohde, tila, takuupvm, ilmoitustiedot, paatos_tekninen_osa, perustelu_tekninen_osa, kasittelyaika_tekninen_osa)
 VALUES (1, (SELECT id

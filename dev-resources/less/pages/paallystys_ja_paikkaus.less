@@ -35,6 +35,10 @@
     button {
         font-size: @fontin-koko-taulukko-pienempi;
     }
+  // yhteenvetoriville ei haluta tyhjää checkboksia
+  tr.yhteenveto > td .boolean {
+    display: none;
+  }
 }
 .aikataulu-valinnat {
     background-color: @gray240;
@@ -287,4 +291,13 @@
 }
 .paallystyskustannusten-toiminnot {
     float: right;
+}
+.raaka-aineindeksit {
+  margin: @valistys-16 0;
+  .indeksitietosailio {
+    .tietokentta {
+      width: 200px;
+      margin-right: @valistys-64;
+    }
+  }
 }

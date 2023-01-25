@@ -501,12 +501,12 @@
                 (tr-domain/jarjesta-tiet yllapitokohdeosat)))))))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
-                               {:keys [kohdenumero nimi
+                               {:keys [kohdenumero nimi yotyo
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                        yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
-                                       kaasuindeksi toteutunut-hinta
+                                       kaasuindeksi toteutunut-hinta maaramuutokset maku-paallysteet
                                        poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
@@ -515,6 +515,7 @@
                                         :sopimus sopimus-id
                                         :kohdenumero kohdenumero
                                         :nimi nimi
+                                        :yotyo yotyo
                                         :tr_numero tr-numero
                                         :tr_alkuosa tr-alkuosa
                                         :tr_alkuetaisyys tr-alkuetaisyys
@@ -536,7 +537,9 @@
                                                   :arvonvahennykset arvonvahennykset
                                                   :bitumi_indeksi bitumi-indeksi
                                                   :kaasuindeksi kaasuindeksi
-                                                  :toteutunut_hinta toteutunut-hinta})
+                                                  :toteutunut_hinta toteutunut-hinta
+                                                  :maaramuutokset maaramuutokset
+                                                  :maku_paallysteet maku-paallysteet})
       (:id kohde))))
 
 (defmulti poista-yllapitokohde
@@ -569,19 +572,20 @@
     (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
-                              {:keys [id kohdenumero nimi tunnus
+                              {:keys [id kohdenumero nimi tunnus yotyo
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                       yllapitoluokka sopimuksen-mukaiset-tyot maaramuutokset
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
-                                      toteutunut-hinta
+                                      toteutunut-hinta maku-paallysteet
                                       keskimaarainen-vuorokausiliikenne]
                                :as kohde}]
-  (do (log/debug "Päivitetään ylläpitokohde " tr-numero)
+  (do (log/debug "Päivitetään ylläpitokohde " id " yötyö" yotyo)
       (q/paivita-yllapitokohde<! db
                                  {:kohdenumero                       kohdenumero
                                   :nimi                              nimi
                                   :tunnus                            tunnus
+                                  :yotyo                             yotyo
                                   :tr_numero                         tr-numero
                                   :tr_alkuosa                        tr-alkuosa
                                   :tr_alkuetaisyys                   tr-alkuetaisyys
@@ -600,6 +604,7 @@
                                                     :urakka                   urakka-id
                                                     :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
                                                     :maaramuutokset           maaramuutokset
+                                                    :maku_paallysteet         maku-paallysteet
                                                     :arvonvahennykset         arvonvahennykset
                                                     :bitumi_indeksi           bitumi-indeksi
                                                     :kaasuindeksi             kaasuindeksi

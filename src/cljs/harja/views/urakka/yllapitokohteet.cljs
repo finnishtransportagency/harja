@@ -46,7 +46,9 @@
 ;; Ylläpitokohteiden sarakkeiden leveydet
 (def haitari-leveys 5)
 (def id-leveys 6)
+(def yhaid-leveys 6)
 (def tunnus-leveys 6)
+(def yotyo-leveys 6)
 (def kvl-leveys 5)
 (def pk-luokka-leveys-aikataulu 3)
 (def pk-luokka-leveys 7)
@@ -61,6 +63,7 @@
 (def muut-leveys 10)
 (def bitumi-indeksi-leveys 10)
 (def kaasuindeksi-leveys 10)
+(def maku-paallysteet-leveys 10)
 (def yhteensa-leveys 10)
 
 ;; Ylläpitokohdeosien sarakkeiden leveydet
@@ -1048,16 +1051,18 @@
                      {:otsikko "Koh\u00ADde\u00ADnro" :nimi :kohdenumero
                       :tyyppi :komponentti :leveys id-leveys :muokattava? paallystysilmoitusta-ei-ole-lukittu?
                       :komponentti rivin-kohdenumero-ja-kello}
-                      {:otsikko "Tun\u00ADnus" :nimi :tunnus
-                       :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
+                     {:otsikko "Tun\u00ADnus" :nimi :tunnus
+                      :tyyppi :string :leveys tunnus-leveys :pituus-max 1 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
                      {:otsikko "Nimi" :nimi :nimi
-                      :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
+                      :tyyppi :string :leveys kohde-leveys
                       :pituus-max 30 :muokattava? paallystysilmoitusta-ei-ole-lukittu?}
                      {:otsikko (if paallystys? "YHA-id" "HARJA-id")
                       :nimi (if paallystys? :yhaid :id)
                       :tasaa :oikea
-                      :tyyppi :string :leveys (if nayta-ajorata-ja-kaista? kohde-leveys (* tr-leveys 4))
-                      :pituus-max 30 :muokattava? (constantly false)}]
+                      :tyyppi :string :leveys yhaid-leveys
+                      :pituus-max 30 :muokattava? (constantly false)}
+                     {:otsikko "Yö\u00ADtyö" :nimi :yotyo :leveys yotyo-leveys
+                      :tyyppi :checkbox :vayla-tyyli? true}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
                       [nil ;; kohteen nimi siirretty pois tästä, jotta yha-id saadaan väliin
@@ -1107,6 +1112,8 @@
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                      {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
+                     {:otsikko "MAKU-päällysteet" :nimi :maku-paallysteet :fmt fmt/euro-opt
+                      :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
                      {:otsikko "Kokonais\u00ADhinta"
                       :muokattava? (constantly false)
                       :nimi :kokonaishinta :fmt fmt/euro-opt :tyyppi :komponentti :leveys yhteensa-leveys
@@ -1129,6 +1136,7 @@
                 sakot-ja-bonukset-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
                 bitumi-indeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
+                maku-paallysteet-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :maku-paallysteet kohteet)
                 ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
                 kohdistamattomat-sanktiot-yhteensa (let [arvo (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
                                                      (if (> (Math/abs arvo) 0)
@@ -1142,6 +1150,7 @@
                                     :arvonvahennykset arvonvahennykset-yhteensa
                                     :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
                                     :bitumi-indeksi bitumi-indeksi-yhteensa
+                                    :maku-paallysteet maku-paallysteet-yhteensa
                                     :kaasuindeksi kaasuindeksi-yhteensa}
                                    (:valittu-vuosi optiot))
                                  (or muut-yhteensa 0)
@@ -1154,6 +1163,7 @@
               :sakot-ja-bonukset sakot-ja-bonukset-yhteensa
               :bitumi-indeksi bitumi-indeksi-yhteensa
               :kaasuindeksi kaasuindeksi-yhteensa
+              :maku-paallysteet maku-paallysteet-yhteensa
               :muut-hinta muut-yhteensa
               :kokonaishinta kokonaishinta
               :kohdistamattomat-sanktiot kohdistamattomat-sanktiot-yhteensa}]))]
@@ -1176,6 +1186,10 @@
       {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys pk-luokka-leveys}
+      (when (and (:toteutunut-hinta (first @yhteensa))
+                 (pos? (:toteutunut-hinta (first @yhteensa))))
+        {:otsikko "Toteu\u00ADtunut hinta" :nimi :toteutunut-hinta
+         :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys :tasaa :oikea})
       {:otsikko (str
                   "Sakot ja bonukset"
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
@@ -1199,6 +1213,8 @@
        :leveys bitumi-indeksi-leveys :tasaa :oikea}
       {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea}
+      {:otsikko "MAKU-päällys\u00ADteet" :nimi :maku-paallysteet :fmt fmt/euro-opt :tyyppi :numero
+       :leveys maku-paallysteet-leveys :tasaa :oikea}
       {:otsikko "Kokonais\u00ADhinta" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
