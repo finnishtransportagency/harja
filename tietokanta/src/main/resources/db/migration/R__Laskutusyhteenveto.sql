@@ -487,7 +487,7 @@ BEGIN
       IF eki.tyyppi = 'asiakastyytyvaisyysbonus' THEN
         -- Bonus
 	SELECT *
-          FROM laske_hoitokauden_asiakastyytyvaisyysbonus(ur, eki.pvm, ind, eki.rahasumma)
+          FROM erilliskustannuksen_indeksilaskenta(eki.pvm, eki.indeksin_nimi, eki.rahasumma, ur, eki.tyyppi, FALSE)
           INTO bonukset_rivi;
         IF eki.pvm < aikavali_alkupvm THEN
           bonukset_laskutettu :=  bonukset_laskutettu + COALESCE(bonukset_rivi.summa, 0.0);
@@ -499,11 +499,9 @@ BEGIN
           bonukset_laskutetaan_ind_korotus :=  bonukset_laskutetaan_ind_korotus + bonukset_rivi.korotus;
         END IF;
       ELSE
-        -- Muu erilliskustannus kuin bonus
+        -- Muu erilliskustannus kuin bonus - Indeksilaskennan yhtenäistämisen jälkeen näyttää hassulta, mutta lukujen erottamisen vuoksi on tarpeen
         SELECT *
-          FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM eki.pvm) :: INTEGER),
-                                              (SELECT EXTRACT(MONTH FROM eki.pvm) :: INTEGER),
-                                              eki.indeksin_nimi, eki.rahasumma, perusluku)
+          FROM erilliskustannuksen_indeksilaskenta(eki.pvm, eki.indeksin_nimi, eki.rahasumma, ur, eki.tyyppi, FALSE)
           INTO erilliskustannukset_rivi;
         IF eki.pvm < aikavali_alkupvm THEN
           erilliskustannukset_laskutettu :=  erilliskustannukset_laskutettu + COALESCE(erilliskustannukset_rivi.summa, 0.0);
