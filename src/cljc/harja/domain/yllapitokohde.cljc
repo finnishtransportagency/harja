@@ -1316,3 +1316,9 @@ yllapitoluokkanimi->numero
    :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
    :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
    :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})
+
+(defn eritellyt-maaramuutokset-kaytossa?
+  "Kertoo onko annettuna vuonna määrämuutosten erittely käytössä."
+  ;; Eritellyt määrämuutokset poistuvat käytöstä 1.1.2023 alkaen uusissa urakoissa. Tuetaan erittelyä vanhoissa.
+  [vuosi]
+  (boolean (< vuosi 2023)))
