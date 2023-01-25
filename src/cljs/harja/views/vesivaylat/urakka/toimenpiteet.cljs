@@ -41,7 +41,6 @@
        :kanavien-lisatyot
        (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
                   (not (urakka-domain/kanavaurakka? ur))
-                  (urakka-domain/kanavaurakka? ur)
                   (oikeudet/urakat-kanavat-lisatyot id))
          [lisatyot/lisatyot])
 
