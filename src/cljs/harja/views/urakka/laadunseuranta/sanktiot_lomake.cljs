@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
@@ -16,6 +17,13 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]))
+
+(defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                              #(clojure.string/includes? (clojure.string/lower-case (:tpi_nimi %)) "talvi")
+                                              toimenpideinstanssit)
+    toimenpideinstanssit))
 
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata?]
@@ -39,7 +47,9 @@
         mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
         ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
         ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit]
+        kaikki-sanktiotyypit @tiedot/sanktiotyypit
+        ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
+        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))]
 
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
@@ -220,7 +230,7 @@
               :tyyppi :valinta
               :valinta-arvo :tpi_id
               :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-              :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+              :valinnat mahdolliset-kulun-kohdistukset
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
