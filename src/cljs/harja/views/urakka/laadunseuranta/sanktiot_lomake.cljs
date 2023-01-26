@@ -21,7 +21,7 @@
 (defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
   (case sanktion-tyyppi
     "Muut hoitourakan tehtäväkokonaisuudet" (remove
-                                              #(clojure.string/includes? (clojure.string/lower-case (:tpi_nimi %)) "talvi")
+                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
                                               toimenpideinstanssit)
     toimenpideinstanssit))
 
