@@ -293,19 +293,18 @@
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))
-               tapahtuma-map (map (fn [b]
+               tapahtumat (keep (fn [b]
                                     (if (sama-alusrivi? a b)
                                       b nil))
                                   (::lt/alukset tapahtuma))
 
-               kyseinen-tapahtuma (first (remove nil? tapahtuma-map))
-               klikattu-suunta (::lt-alus/suunta kyseinen-tapahtuma)
+               klikattu-suunta (::lt-alus/suunta (first tapahtumat))
                suunta (if (nil? klikattu-suunta)
                         valittu-suunta
                         klikattu-suunta)]
 
-           (-> a
-               (assoc ::lt-alus/suunta suunta)))) alukset))
+           (assoc a ::lt-alus/suunta suunta)))
+       alukset))
 
 (defn poista-ketjutus [app alus-id]
   (let [poista-idlla (fn [alus-id alukset]
