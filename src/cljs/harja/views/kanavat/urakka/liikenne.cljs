@@ -103,7 +103,7 @@
       {:ikoni (ikonit/livicon-arrow-bottom)
        :disabled (empty? kuitattavat)}]]))
 
-(defn liikenne-muokkausgrid [e! {:keys [valittu-liikennetapahtuma] :as app} alukset-atom]
+(defn liikenne-muokkausgrid [e! valittu-liikennetapahtuma alukset-atom]
 
   (let [uusi-id (if (empty? (keys @alukset-atom))
                   0
@@ -344,7 +344,7 @@
             :tyyppi :komponentti
             :palstoja 3
             :nimi :muokattavat-tapahtumat
-            :komponentti (fn [_] [liikenne-muokkausgrid e! app alukset-atom])})
+            :komponentti (fn [_] [liikenne-muokkausgrid e! valittu-liikennetapahtuma alukset-atom])})
          (when (tiedot/nayta-lisatiedot? app)
            {:otsikko "Lisätietoja"
             :tyyppi :text
