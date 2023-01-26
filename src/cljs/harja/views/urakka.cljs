@@ -27,7 +27,6 @@
             [harja.views.kanavat.urakka.liikenne :as liikenne]
             [harja.views.kanavat.urakka.laskutus :as laskutus-kanavat]
             [harja.tiedot.navigaatio :as nav]
-            [harja.domain.urakka :as u-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.urakka :as urakka])
@@ -39,20 +38,21 @@
   (case valilehti
     :yleiset true
     :suunnittelu (and (oikeudet/urakat-suunnittelu id)
+                      (not (urakka/kanavaurakka? urakka))
                       (not= sopimustyyppi :kokonaisurakka)
                       (not= tyyppi :tiemerkinta))
     :toteumat (and (oikeudet/urakat-toteumat id)
                    (not= sopimustyyppi :kokonaisurakka)
-                   (not (u-domain/vesivaylaurakkatyyppi? tyyppi))
+                   (not (urakka/vesivaylaurakkatyyppi? tyyppi))
                    (not= tyyppi :tiemerkinta))
     :toimenpiteet (and (oikeudet/urakat-vesivaylatoimenpiteet id)
-                       (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                       (urakka/vesivaylaurakkatyyppi? tyyppi)
                        (istunto/ominaisuus-kaytossa? :vesivayla))
     :vv-materiaalit (and
                       (oikeudet/urakat-vesivayla-materiaalit id)
-                      (u-domain/vesivaylaurakkatyyppi? tyyppi))
+                      (urakka/vesivaylaurakkatyyppi? tyyppi))
     :liikenne (and (oikeudet/urakat-kanavat-liikenne id)
-                   (u-domain/kanavaurakka? urakka))
+                   (urakka/kanavaurakka? urakka))
     :toteutus (and (oikeudet/urakat-toteutus id)
                    (not= sopimustyyppi :kokonaisurakka)
                    (= tyyppi :tiemerkinta))
@@ -67,9 +67,9 @@
                                    (= tyyppi :paallystys))
     :laadunseuranta (or
                       (and (oikeudet/urakat-laadunseuranta id)
-                           (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
+                           (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
                       (and (oikeudet/urakat-laadunseuranta id)
-                           (u-domain/vesivaylaurakkatyyppi? tyyppi)
+                           (urakka/vesivaylaurakkatyyppi? tyyppi)
                            (istunto/ominaisuus-kaytossa? :vesivayla)))
     :valitavoitteet (and (oikeudet/urakat-valitavoitteet id)
                          (not (urakka/kanavaurakka? urakka)))
@@ -77,13 +77,15 @@
     :laskutus (and (oikeudet/urakat-laskutus id)
                    (not= tyyppi :paallystys)
                    (not= tyyppi :tiemerkinta)
-                   (not (u-domain/vesivaylaurakkatyyppi? tyyppi)))
+                   (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
     :laskutus-vesivaylat (and (oikeudet/urakat-laskutus-vesivaylalaskutusyhteenveto id)
-                              (u-domain/vesivaylaurakkatyyppi? tyyppi)
-                              (not (u-domain/kanavaurakka? urakka))
+                              (urakka/vesivaylaurakkatyyppi? tyyppi)
+                              (not (urakka/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
-    :laskutus-kanavat (and (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
-                           (u-domain/kanavaurakka? urakka)
+    
+    ; Aina false, voi poistaa kokonaan? VHAR-7132
+    :laskutus-kanavat (and (not (urakka/kanavaurakka? urakka))
+                           (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
                            (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))

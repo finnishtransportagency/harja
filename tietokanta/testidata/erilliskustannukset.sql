@@ -22,3 +22,24 @@ VALUES ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHE
    (SELECT id FROM urakka WHERE nimi='Rentoselän urakka'),
    (SELECT id FROM toimenpideinstanssi WHERE nimi='Kauppamerenkulun kustannukset TP' AND urakka = (SELECT id FROM urakka WHERE nimi='Rentoselän urakka')),
    '2017-01-19', 10000, 'MAKU 2005', 'Muun erilliskustannuksen lisätieto Rentoselkä', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
+
+-- Tampereen alueurakalle erilliskustannus, jotta voi varmistaa indeksin toimivuuden
+DO $$
+    DECLARE
+        urakkaid INTEGER;
+        sopimusid INTEGER;
+        kayttajaid INTEGER;
+        talvihoitotpi INTEGER;
+
+    BEGIN
+        urakkaid = (SELECT id FROM urakka where nimi = 'Tampereen alueurakka 2017-2022');
+        kayttajaid = (SELECT id FROM kayttaja where kayttajanimi = 'yit_uuvh');
+        sopimusid = (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null);
+        talvihoitotpi = (select id from toimenpideinstanssi where nimi = 'Tampere Talvihoito TP 2014-2019'); -- HOX. Toimenpideinstanssin nimi on päin honkia, mutta urakka on oikein
+
+
+        INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,rahasumma,indeksin_nimi,lisatieto,luotu,luoja) VALUES
+       ('asiakastyytyvaisyysbonus', sopimusid, urakkaid, talvihoitotpi, '2017-10-15', 10000, 'MAKU 2010',
+        'Asiakkaat erittäin tyytyväisiä, tyytyväisyysindeksi 0,92.', '2017-10-28', kayttajaid);
+    END
+$$ LANGUAGE plpgsql;
