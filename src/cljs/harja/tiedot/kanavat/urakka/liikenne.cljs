@@ -224,6 +224,7 @@
 (defn voi-tallentaa? [t]
   (boolean
     (and (not (:grid-virheita? t))
+         (empty? (filter :koskematon (::lt/alukset t)))
          (every? #(and (some? (::lt-alus/suunta %))
                        (some? (::lt-alus/laji %)))
                  (remove :poistettu (::lt/alukset t)))
