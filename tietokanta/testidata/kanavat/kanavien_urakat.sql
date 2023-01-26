@@ -4,7 +4,7 @@ VALUES ('Saimaan huolto- ja kunnossapito', '2016-07-07', '2021-05-05', TRUE, NOW
 INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsija,
                     hanke, tyyppi, harjassa_luotu, luotu, luoja, urakkanro, sampoid)
 VALUES
-   ('Saimaan kanava',
+  ('Saimaan kanava',
     'MAKU 2005 kunnossapidon osaindeksi',
     '2016-01-01', '2026-12-31',
     (SELECT id

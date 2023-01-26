@@ -471,15 +471,15 @@
   MuokkaaAluksia
   (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
       (if tapahtuma
-      (-> app
-          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
-          (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
-      app))
+        (-> app
+            (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
+            (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
+        app))
 
   VaihdaSuuntaa
   (process-event [{alus :alus} app]
     (let [uusi (if (= :ylos (::lt-alus/suunta alus))
-                 (-> alus (assoc ::lt-alus/suunta :alas) )
+                 (assoc alus ::lt-alus/suunta :alas)
                  (assoc alus ::lt-alus/suunta :ylos))]
       (update app :valittu-liikennetapahtuma
               (fn [t]
@@ -541,14 +541,15 @@
         (update-in [:valittu-liikennetapahtuma ::lt/alukset]
                    (fn [alukset]
                      (let [;; Peak human evolution
-                           ;; Eli poistetaan ja lisätään alus jossa poistettu true, niin tämä poistuu myös kannasta kun tallennetaan
+                           ;; Eli kun poistetaan rivi annetaan sille poistettu true, niin tämä merkataan poistetuksi myös kannasta kun tallennetaan
+                           ;; Jos uusi rivi poistetaan, kantaan ei tehdä muutoksia 
                            uudet-alukset (into [] (merge (disj (into #{} alukset) alus) (-> alus
+                                                                                            ;; Poistetun lisäksi virheiden ehkäisyn takia laji pois ja suunta ylös
                                                                                             (assoc :poistettu true)
-                                                                                            (assoc ::m/poistettu? true)
+                                                                                            (dissoc ::lt-alus/laji)
                                                                                             (assoc ::lt-alus/suunta :ylos))))]
                        ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
-                       (reverse (sort-by ::lt-alus/id uudet-alukset)))
-                     ))))
+                       (sort-by :id uudet-alukset))))))
 
   PoistaKetjutus
   (process-event [{a :alus} {:keys [ketjutuksen-poistot] :as app}]
