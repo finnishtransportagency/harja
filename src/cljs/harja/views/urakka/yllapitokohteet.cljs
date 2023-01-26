@@ -732,6 +732,11 @@
        (when (some :jarjestelman-lisaama @maaramuutokset)
          [vihje "Ulkoisen järjestelmän kirjaamia määrämuutoksia ei voi muokata Harjassa."])])))
 
+(defn- maaramuutosten-2023-muutoksesta-vinkki []
+  [:span
+   [:h6 "Määrämuutokset"]
+   [yleiset/vihje "Vuodesta 2023 alkaen määrämuutoksista ei syötetä Harjaan enää muuta kuin kohdekohtaiset summat. Summan voi syöttää suoraan yläpuolella olevalle kohderiville tai tuoda kustannukset Excel-tiedoston avulla."]])
+
 (defn kohteen-vetolaatikko [{:keys [urakka sopimus-id kohteet-atom rivi dissoc-cols
                                     kohteen-rivi-validointi kohteen-taulukko-validointi
                                     muut-kohteen-rivi-validointi muut-kohteen-taulukko-validointi
@@ -840,11 +845,12 @@
               (:nakyma paallystyksen-tarkka-aikataulu)
               (:voi-muokata-paallystys? paallystyksen-tarkka-aikataulu)
               (:voi-muokata-tiemerkinta? paallystyksen-tarkka-aikataulu)])
-           (when (and (= kohdetyyppi :paallystys)
-                      (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? vuosi))
+           (if (and (= kohdetyyppi :paallystys)
+                    (yllapitokohteet-domain/eritellyt-maaramuutokset-kaytossa? vuosi))
              [maaramuutokset {:yllapitokohde-id (:id rivi)
                               :urakka-id (:id urakka)
-                              :yllapitokohteet-atom kohteet-atom}])])))))
+                              :yllapitokohteet-atom kohteet-atom}]
+             [maaramuutosten-2023-muutoksesta-vinkki])])))))
 
 
 (defn vasta-muokatut-vinkki []

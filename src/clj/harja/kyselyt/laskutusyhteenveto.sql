@@ -12,13 +12,10 @@ SELECT * FROM mhu_laskutusyhteenveto_teiden_hoito(
                   :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
                   :urakka::INTEGER);
 
--- name: laske-asiakastyytyvaisyysbonus
--- Laskee hoitourakoissa käytettävän asiakastyytyväisyysbonuksen indeksitarkistuksen
-SELECT * FROM laske_hoitokauden_asiakastyytyvaisyysbonus(
-    :urakka_id,
-    :maksupvm::DATE,
-    :indeksinimi,
-    :summa);
+-- name: laske-erilliskustannuksen-indeksi
+SELECT * FROM erilliskustannuksen_indeksilaskenta(:pvm::DATE, :indeksinimi, :summa,
+                                       :urakka_id, :tyyppi::erilliskustannustyyppi,
+                                       :pyorista);
 
 -- name: poista-muistetut-laskutusyhteenvedot!
 -- Poistaa muistetut laskutusyhteenvedot annetulle aikavälille.

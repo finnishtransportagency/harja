@@ -129,10 +129,14 @@
         hallintayksikon-tiedot (if (not (nil? (:hallintayksikko-id parametrit)))
                                  (first (organisaatiot-kyselyt/hae-organisaatio db (:hallintayksikko-id parametrit)))
                                  nil)
+        raportin-tyyppi (if (nil? (:kasittelija parametrit))
+                              :html
+                              (:kasittelija parametrit))
         raportin-nimi (cond
-                        urakan-tiedot (:nimi urakan-tiedot)
-                        hallintayksikon-tiedot (:nimi hallintayksikon-tiedot)
-                        :else "Koko maa")]
+                        (and (= :html raportin-tyyppi) urakan-tiedot) (:nimi urakan-tiedot)
+                        (and (= :html raportin-tyyppi) hallintayksikon-tiedot) (:nimi hallintayksikon-tiedot)
+                        (and (= :html raportin-tyyppi) (nil? hallintayksikon-tiedot) (nil? urakan-tiedot)) "Koko maa"
+                        :else "Sanktiot, bonukset ja arvonvähennykset")]
     raportin-nimi))
 (defn suorita [db user parametrit]
   (let [raportin-rivit-fn (fn [{:keys [naytettavat-alueet sanktiot-kannassa yhteensa-sarake?
