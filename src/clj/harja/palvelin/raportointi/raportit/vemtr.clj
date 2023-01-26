@@ -26,9 +26,10 @@
                          groupit) ]
     yhteenlasketut))
 
-(defn hae-tm-combo [db params]
+(defn hae-tm-combo [db {:keys [vain-mhut?] :as params}]
   (let [mhut (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)
-        yht (vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla db params)
+        yht (when-not vain-mhut?
+              (vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla db params))
         paluuarvo (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys)
                            (yhdistele-toimenpiteet-ja-tehtavat mhut yht))]
     paluuarvo))
