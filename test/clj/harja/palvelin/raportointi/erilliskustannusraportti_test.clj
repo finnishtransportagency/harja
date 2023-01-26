@@ -82,7 +82,7 @@
                         "Oulu Talvihoito TP 2014-2019"
                         "As.tyyt.­bonus"
                         1000M
-                        5.9067688378033000M]
+                        0M]
                        ["01.08.2015"
                         "2H16339/01"
                         "Oulu Talvihoito TP 2014-2019"
@@ -112,7 +112,7 @@
                          ""
                          ""
                          4000M
-                         30.81098339719026360000M))]]))))
+                         24.90421455938696360000M))]]))))
 
 (deftest raportin-suoritus-mhu-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -153,7 +153,7 @@
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Lupaus­bonus"
                         500M
-                        56.18231046931407942000M]
+                        40.500M]
                        ["15.03.2020"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
@@ -171,7 +171,7 @@
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Lupaus­bonus"
                         1000M
-                        90.55354993983152828000M]
+                        81.000M]
                        ["15.10.2019"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
@@ -183,13 +183,13 @@
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "As.tyyt.­bonus"
                         1000M
-                        124.02226233453670277000M]
+                        81.000M]
                        ("Yhteensä"
                          ""
                          ""
                          ""
                          5000M
-                         270.75812274368231047000M))]]))))
+                         202.500M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -241,7 +241,7 @@
                 "Kajaani Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                5.9067688378033000M]
+                0M]
                ["Kajaanin alueurakka 2014-2019"
                 "01.08.2015"
                 "7A26339/05"
@@ -283,7 +283,7 @@
                 "Oulu Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                5.9067688378033000M]
+                0M]
                ["Oulun alueurakka 2014-2019"
                 "01.08.2015"
                 "2H16339/01"
@@ -318,7 +318,7 @@
                  ""
                  ""
                  8000M
-                 61.62196679438052720000M))]]))))
+                 49.80842911877392720000M))]]))))
 
 (deftest raportin-suoritus-koko-maalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -369,7 +369,7 @@
                 "Espoo Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                5.9067688378033000M]
+                0M]
                ["Espoon alueurakka 2014-2019"
                 "01.08.2015"
                 "7eS6339/05"
@@ -411,7 +411,7 @@
                 "Vantaa Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                -118.24797089280716457000M]
+                0M]
                ["Vantaan alueurakka 2009-2019"
                 "01.08.2015"
                 "00LZM-0033600"
@@ -453,7 +453,7 @@
                 "Kajaani Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                5.9067688378033000M]
+                0M]
                ["Kajaanin alueurakka 2014-2019"
                 "01.08.2015"
                 "7A26339/05"
@@ -495,7 +495,7 @@
                 "Oulu Talvihoito TP 2014-2019"
                 "As.tyyt.­bonus"
                 1000M
-                5.9067688378033000M]
+                0M]
                ["Oulun alueurakka 2014-2019"
                 "01.08.2015"
                 "2H16339/01"
@@ -530,7 +530,7 @@
                  ""
                  ""
                  16000M
-                 -250.83601146530018569000M))]]))))
+                 -150.30834708590292112000M))]]))))
 
 (deftest erilliskustannusten-tyypit
   (is (= (ek-raportti/erilliskustannuksen-nimi "alihankintabonus") "Alihankinta\u00ADbonus"))
