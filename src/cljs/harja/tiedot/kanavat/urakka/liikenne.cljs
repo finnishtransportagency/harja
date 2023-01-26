@@ -193,9 +193,7 @@
                                                    "harja.domain.muokkaustiedot"}
                                                   (namespace %)))
                                        (select-keys alus))))
-                              (remove #(and (:poistettu %)
-                                            (not (id-olemassa? (::lt-alus/id %))))
-                                      alukset))))
+                              alukset)))
       (update ::lt/toiminnot
               (fn [toiminnot] (map (fn [toiminto]
                                      (->
@@ -292,16 +290,21 @@
     (assoc rivi :valittu-suunta nil)
     (assoc rivi :valittu-suunta :molemmat)))
 
-(defn kasittele-uudet-alukset [tapahtuma alukset]
-  (if-not (id-olemassa? tapahtuma)
-    (map (fn [a]
-           (if-let [suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))]
-             (assoc a ::lt-alus/suunta suunta)
+(defn kasittele-suunta-alukselle [tapahtuma alukset]
+  (map (fn [a]
+         (let [valittu-suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))
+               tapahtumat (keep (fn [b]
+                                    (if (sama-alusrivi? a b)
+                                      b nil))
+                                  (::lt/alukset tapahtuma))
 
-             a))
-         alukset)
+               klikattu-suunta (::lt-alus/suunta (first tapahtumat))
+               suunta (if (nil? klikattu-suunta)
+                        valittu-suunta
+                        klikattu-suunta)]
 
-    alukset))
+           (assoc a ::lt-alus/suunta suunta)))
+       alukset))
 
 (defn poista-ketjutus [app alus-id]
   (let [poista-idlla (fn [alus-id alukset]
@@ -467,12 +470,11 @@
 
   MuokkaaAluksia
   (process-event [{alukset :alukset v :virheita?} {tapahtuma :valittu-liikennetapahtuma :as app}]
-    (if tapahtuma
-      (-> app
-          (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-uudet-alukset tapahtuma alukset))
-          (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
-
-      app))
+      (if tapahtuma
+        (-> app
+            (assoc-in [:valittu-liikennetapahtuma ::lt/alukset] (kasittele-suunta-alukselle tapahtuma alukset))
+            (assoc-in [:valittu-liikennetapahtuma :grid-virheita?] v))
+        app))
 
   VaihdaSuuntaa
   (process-event [{alus :alus} app]
@@ -504,7 +506,6 @@
                       {:onnistui ->TapahtumaTallennettu
                        :epaonnistui ->TapahtumaEiTallennettu})
             (assoc :tallennus-kaynnissa? true)))
-
       app))
 
   TapahtumaTallennettu
@@ -539,7 +540,16 @@
         (update :siirretyt-alukset (fn [s] (disj s (::lt-alus/id alus))))
         (update-in [:valittu-liikennetapahtuma ::lt/alukset]
                    (fn [alukset]
-                     (into [] (disj (into #{} alukset) alus))))))
+                     (let [;; Peak human evolution
+                           ;; Eli kun poistetaan rivi annetaan sille poistettu true, niin tämä merkataan poistetuksi myös kannasta kun tallennetaan
+                           ;; Jos uusi rivi poistetaan, kantaan ei tehdä muutoksia 
+                           uudet-alukset (into [] (merge (disj (into #{} alukset) alus) (-> alus
+                                                                                            ;; Poistetun lisäksi virheiden ehkäisyn takia laji pois ja suunta ylös
+                                                                                            (assoc :poistettu true)
+                                                                                            (dissoc ::lt-alus/laji)
+                                                                                            (assoc ::lt-alus/suunta :ylos))))]
+                       ;; Palautetaan alukset sortattuna niin eivät mene sekaisin rivejä poistaessa 
+                       (sort-by :id uudet-alukset))))))
 
   PoistaKetjutus
   (process-event [{a :alus} {:keys [ketjutuksen-poistot] :as app}]

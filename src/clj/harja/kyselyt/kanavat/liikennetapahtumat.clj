@@ -318,8 +318,6 @@
   (let [olemassa? (id-olemassa? (::lt-alus/id alus))
         alus (assoc alus ::lt-alus/liikennetapahtuma-id (::lt/id tapahtuma))]
 
-
-
     (if (and olemassa? (::m/poistettu? alus))
       (poista-alus! db user alus tapahtuma)
 
@@ -335,15 +333,18 @@
           ;; Palauta luotu alus
           alus)
 
-        (specql/insert! db
-                        ::lt-alus/liikennetapahtuman-alus
-                        (merge
-                          {::m/luoja-id (:id user)}
-                          (->
+        ;; Jos alus rivi poistettiin eikä sitä ikinä tallennettu ollenkaan (uusi rivi poistettiin), älä inserttaa sitä tietokantaan
+        ;; Me ei tätä tietoa tarvita
+        (when-not (::m/poistettu? alus)
+          (specql/insert! db
+                          ::lt-alus/liikennetapahtuman-alus
+                          (merge
+                           {::m/luoja-id (:id user)}
+                           (->
                             (->> (keys alus)
                                  (filter #(= (namespace %) "harja.domain.kanavat.lt-alus"))
                                  (select-keys alus))
-                            (dissoc ::lt-alus/id))))))))
+                            (dissoc ::lt-alus/id)))))))))
 
 (defn- osa-kuuluu-tapahtumaan? [db osa tapahtuma]
   (some?
