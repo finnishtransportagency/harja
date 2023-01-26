@@ -947,6 +947,24 @@
       [yleiset/tooltip {} :% "Kohdetta muokattu viimeisen viikon sisään"]
       [:span.harja-icon-action-set-time]])])
 
+
+
+(defn taulukon-ryhmittely-header
+  "Ryhmittelee sarakkeet siten, että hintamuutokset eriteltyjä."
+  [listaus]
+  ;; Tässä ei oikein päästä kovakoodauksesta eroon, ainakaan kovin helposti
+  ;; Joten ei muuta kuin speksi käteen ja tarkkana, jos muutat näitä
+  [{:teksti "" :sarakkeita (case listaus
+                             :yha-kohteet
+                             15
+
+                             :muut-kohteet 14
+
+                             :yhteensa 16)
+    :luokka "paallystys-tausta"}
+   {:teksti "Hintamuutokset" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
+   {:teksti "" :sarakkeita 2 :luokka "paallystys-tausta"}])
+
 (defn yllapitokohteet
   "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
 
@@ -1022,6 +1040,9 @@
            [grid/grid
             {:otsikko [:span (:otsikko optiot)
                        [vasta-muokatut-vinkki]]
+             :rivi-ennen (taulukon-ryhmittely-header (if paallystys?
+                                                       :yha-kohteet
+                                                       :muut-kohteet))
              :ohjaus g
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
              :vetolaatikot (alikohteiden-vetolaatikot urakka
@@ -1107,12 +1128,13 @@
                        {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
                         :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
                         :muokattava? (constantly false)})
-                     {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :nimi :bitumi-indeksi
-                      :fmt fmt/euro-opt
+                     {:otsikko "Side\u00ADaineet" :nimi :bitumi-indeksi
+                      :fmt fmt/euro-opt :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
-                     {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt
+                     {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :nimi :kaasuindeksi :fmt fmt/euro-opt :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
                      {:otsikko "MAKU-päällysteet" :nimi :maku-paallysteet :fmt fmt/euro-opt
+                      :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
                      {:otsikko "Kokonais\u00ADhinta"
                       :muokattava? (constantly false)
@@ -1171,25 +1193,21 @@
     [grid/grid
      {:nayta-toimintosarake? true
       :otsikko "Yhteensä"
+      :rivi-ennen (taulukon-ryhmittely-header :yhteensa)
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
       {:otsikko "" :nimi :tunnus :tyyppi :string :leveys tunnus-leveys}
       {:otsikko "" :nimi :nimi :tyyppi :string :leveys kohde-leveys}
       {:otsikko "" :nimi :tr-numero :tyyppi :string :leveys tr-leveys}
-      {:otsikko "" :nimi :tr-ajorata :tyyppi :string :leveys tr-leveys}
-      {:otsikko "" :nimi :tr-kaista :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-alkuosa :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-alkuetaisyys :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuosa :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :tr-loppuetaisyys :tyyppi :string :leveys tr-leveys}
-      {:otsikko "" :nimi :pit :tyyppi :string :leveys tr-leveys}
       {:otsikko "" :nimi :keskimaarainen-vuorokausiliikenne :tyyppi :string :leveys kvl-leveys}
       {:otsikko "" :nimi :yllapitoluokka :tyyppi :string :leveys pk-luokka-leveys}
-      (when (and (:toteutunut-hinta (first @yhteensa))
-                 (pos? (:toteutunut-hinta (first @yhteensa))))
-        {:otsikko "Toteu\u00ADtunut hinta" :nimi :toteutunut-hinta
-         :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys :tasaa :oikea})
+      {:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
+       :fmt fmt/euro-opt :tyyppi :numero :leveys toteutunut-hinta-leveys :tasaa :oikea}
       {:otsikko (str
                   "Sakot ja bonukset"
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot))
@@ -1209,12 +1227,12 @@
         {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
          :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
          :muokattava? (constantly false)})
-      {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
-       :leveys bitumi-indeksi-leveys :tasaa :oikea}
-      {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
-       :leveys kaasuindeksi-leveys :tasaa :oikea}
+      {:otsikko "Side\u00ADaineet" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
+       :leveys bitumi-indeksi-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
+      {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
+       :leveys kaasuindeksi-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "MAKU-päällys\u00ADteet" :nimi :maku-paallysteet :fmt fmt/euro-opt :tyyppi :numero
-       :leveys maku-paallysteet-leveys :tasaa :oikea}
+       :leveys maku-paallysteet-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "Kokonais\u00ADhinta" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea
        :komponentti
