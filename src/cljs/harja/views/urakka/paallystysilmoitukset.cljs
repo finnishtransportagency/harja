@@ -40,8 +40,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 ;;;; PAALLYSTYSILMOITUKSET "PÄÄNÄKYMÄ" ;;;;;;;;
-
-
 (defn- tayta-takuupvm [lahtorivi tama-rivi]
   ;; jos kohteella ei vielä ole POT:ia, ei kopioida takuupvm:ääkään
   (if (:id tama-rivi)
@@ -188,7 +186,7 @@
         :piilota-muokkaus? (when paikkauskohteet? true)     ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
         :piilota-toiminnot? true
         :data-cy "paallystysilmoitukset-grid"}
-       [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :numero :leveys 14}
+       [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :string :leveys 14}
         {:otsikko "Tunnus" :nimi :tunnus :muokattava? (constantly false) :tyyppi :string :leveys 14}
         {:otsikko "Nimi" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 50}
         ;; Paikkauskohteta ei haeta YHA:sta eikä niillä ole YHA-id:tä, joten näytetään Harja-ID
