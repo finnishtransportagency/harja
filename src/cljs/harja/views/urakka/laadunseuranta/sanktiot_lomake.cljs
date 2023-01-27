@@ -355,6 +355,7 @@
                                                 #(swap! tiedot/valittu-sanktio
                                                    (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
                              :uusi-liite-teksti "Lisää liite"
+                             :nayta-koko? true
                              :salli-poistaa-lisatty-liite? true
                              :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
                                                          (fn [] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
@@ -372,6 +373,20 @@
                                                       (filter (fn [liite]
                                                                 (not= (:id liite) liite-id))
                                                         liitteet))))}))}])})
+         (when lukutila?
+           {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
+            :tyyppi :komponentti
+            ::lomake/col-luokka "col-xs-12"
+            :komponentti (fn [_]
+                           [:div
+                            (if (and (get-in @muokattu [:laatupoikkeama :liitteet])
+                                  (not (empty? (get-in @muokattu [:laatupoikkeama :liitteet]))) )
+                              (doall
+                                (for [l (get-in @muokattu [:laatupoikkeama :liitteet])]
+                                  ^{:key l}
+                                  [liitteet/liitetiedosto l {:salli-poisto? false
+                                                             :nayta-koko? true}]))
+                              "Ei liitettä")])})
 
          (when lukutila?
            {:otsikko "Kirjaaja" :nimi :tekijanimi
