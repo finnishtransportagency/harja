@@ -74,6 +74,21 @@
                                    (poista-fn (:id liite)))}))}
    (ikonit/livicon-trash)])
 
+(defn- sievenna-liitteen-koko
+  "Köykäinen lukujen sievennys. Liitteen maksimikoko on 32MB, joten suurempia lukuja ei tarvitse käsitellä."
+  [koko]
+  (let [koko-str (str koko)
+        koko-lyhenne (case (count koko-str)
+                       8 (str (subs koko-str 0 2) "mb")
+                       7 (str (subs koko-str 0 1) "mb")
+                       6 (str "0." (subs koko-str 0 1) "mb")
+                       5 (str (subs koko-str 0 2) "kt")
+                       4 (str (subs koko-str 0 1) "kt")
+                       3 (str "0." (subs koko-str 0 1) "kt")
+                       "" ; default - ei näyetä kokoa jos ei osu raameihin
+                       )]
+    koko-lyhenne))
+
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen.
 
