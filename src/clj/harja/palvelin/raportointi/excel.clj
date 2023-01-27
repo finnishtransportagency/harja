@@ -467,6 +467,9 @@
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     tiedoston-nimi))
 
+(defmethod muodosta-solu :boolean [[_ {:keys [arvo]}]]
+  (if arvo "Kyllä" "Ei"))
+
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)
   nil)

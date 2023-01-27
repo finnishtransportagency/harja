@@ -325,6 +325,9 @@
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
 
+(defmethod muodosta-html :boolean [[_ arvo]]
+  (if arvo "Kyllä" "Ei"))
+
 (defmethod muodosta-html :default [elementti]
   (log "HTML-raportti ei tue elementtiä: " elementti)
   nil)

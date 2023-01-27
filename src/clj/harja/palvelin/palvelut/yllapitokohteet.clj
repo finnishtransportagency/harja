@@ -83,23 +83,43 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
+
+(defn- pura-tarkat-aikataulut [rivit]
+  (konv/sarakkeet-vektoriin
+    rivit
+    {:tarkkaaikataulu :tarkka-aikataulu}))
+
+(defn muotoile-tarkat-aikataulut [rivit]
+  (map (fn [rivi]
+         (assoc rivi :tarkka-aikataulu
+                     (map (fn [tarkka-aikataulu]
+                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                          (:tarkka-aikataulu rivi))))
+       rivit))
+
+(defn- liita-tarkka-aikataulu [rivit]
+  (-> rivit
+      pura-tarkat-aikataulut
+      muotoile-tarkat-aikataulut))
+
+(defn- lisaa-pituus-ja-kohdeosat [db rivit]
+  (let [rivit-pituuksin (map #(yy/lisaa-yllapitokohteelle-pituus db %) rivit)
+        rivit-alikohtein (q/liita-kohdeosat-kohteisiin db rivit-pituuksin :id)]
+    rivit-alikohtein))
+
+(defn- taydenna-aikataulutiedot [db rivit]
+  (->> rivit
+       liita-tarkka-aikataulu
+       (lisaa-pituus-ja-kohdeosat db)))
+
 (defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
   (let [aikataulu (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
                        (map konv/alaviiva->rakenne)
                        (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
                                        (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
-                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))
-        aikataulu (konv/sarakkeet-vektoriin
-                    aikataulu
-                    {:tarkkaaikataulu :tarkka-aikataulu})
-        aikataulu (map (fn [rivi]
-                         (assoc rivi :tarkka-aikataulu
-                                     (map (fn [tarkka-aikataulu]
-                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:tarkka-aikataulu rivi))))
-                       aikataulu)
-        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)]
-    aikataulu))
+                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))]
+    (taydenna-aikataulutiedot db aikataulu)))
+
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
@@ -108,20 +128,8 @@
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
                         (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                                               :vuosi vuosi}))
-        aikataulu (konv/sarakkeet-vektoriin
-                    aikataulu
-                    {:tarkkaaikataulu :tarkka-aikataulu})
-        aikataulu (map (fn [rivi]
-                         (assoc rivi :tarkka-aikataulu
-                                     (map (fn [tarkka-aikataulu]
-                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:tarkka-aikataulu rivi))))
-                       aikataulu)
-        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)
-        ;; Liitetään kohdeosat, koska Tiemerkintäurakan aikataulusta halutaan nähdä ne (VHAR-1131)
-        aikataulu (q/liita-kohdeosat-kohteisiin db aikataulu :id)]
-    aikataulu))
+                                                               :vuosi vuosi}))]
+    (taydenna-aikataulutiedot db aikataulu)))
 
 (defn- lisaa-yllapitokohteille-valitavoitteet
   "Lisää ylläpitokohteille välitavoitteet, mikäli käyttäjällä on oikeus nähdä urakan välitavoitteet"

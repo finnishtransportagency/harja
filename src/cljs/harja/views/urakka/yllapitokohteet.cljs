@@ -1082,7 +1082,7 @@
                       :tasaa :oikea
                       :tyyppi :string :leveys yhaid-leveys
                       :pituus-max 30 :muokattava? (constantly false)}
-                     {:otsikko "Yö\u00ADtyö" :nimi :yotyo :leveys yotyo-leveys
+                     {:otsikko "Yö\u00ADtyö" :nimi :yotyo :tasaa :oikea :leveys yotyo-leveys
                       :tyyppi :checkbox :vayla-tyyli? true}]
                     (tierekisteriosoite-sarakkeet
                       tr-leveys
