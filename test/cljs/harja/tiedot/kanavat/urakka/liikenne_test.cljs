@@ -299,12 +299,12 @@
          (tiedot/aseta-suunta {} {::kohde/kohteenosat [{::osa/tyyppi :silta}]}))))
 
 (deftest uusien-alusten-kasittely
-  (is (= [{:foo :bar}]
-         (tiedot/kasittele-uudet-alukset {::lt/id -1} [{:foo :bar}])))
+  (is (= [{:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}]
+         (tiedot/kasittele-suunta-alukselle {::lt/id -1} [{:foo :bar}])))
 
-  (is (= [{:foo :bar}
-          {:foo :bar}]
-         (tiedot/kasittele-uudet-alukset {::lt/id 1
+  (is (= [{:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}
+          {:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}]
+         (tiedot/kasittele-suunta-alukselle {::lt/id 1
                                           :valittu-suunta :molemmat}
                                          [{:foo :bar}
                                           {:foo :bar}])))
@@ -313,7 +313,7 @@
            ::lt-alus/suunta :ylos}
           {:foo :bar
            ::lt-alus/suunta :ylos}]
-         (tiedot/kasittele-uudet-alukset {::lt/id 1
+         (tiedot/kasittele-suunta-alukselle {::lt/id 1
                                           :valittu-suunta :ylos}
                                          [{:foo :bar}
                                           {:foo :bar}])))
@@ -321,7 +321,7 @@
            ::lt-alus/suunta :alas}
           {:foo :bar
            ::lt-alus/suunta :alas}]
-         (tiedot/kasittele-uudet-alukset {::lt/id 1
+         (tiedot/kasittele-suunta-alukselle {::lt/id 1
                                           :valittu-suunta :alas}
                                          [{:foo :bar}
                                           {:foo :bar}]))))
@@ -662,7 +662,7 @@
          (e! (tiedot/->TapahtumaaMuokattu {:foo :bar})))))
 
 (deftest alusten-muokkaus
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar}]
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:foo :bar, :harja.domain.kanavat.lt-alus/suunta nil}]
                                       :grid-virheita? false}}
          (e! (tiedot/->MuokkaaAluksia [{:foo :bar}] false)
              {:valittu-liikennetapahtuma {}})))
@@ -749,12 +749,11 @@
              {:valittu-liikennetapahtuma {::lt/alukset []}}))))
 
 (deftest siirra-tapahtumasta
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 2}]}
-          :siirretyt-alukset #{2}}
-         (e! (tiedot/->SiirraTapahtumasta {::lt-alus/id 1})
-             {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1}
-                                                        {::lt-alus/id 2}]}
-              :siirretyt-alukset #{1 2}}))))
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 2, :poistettu true, :harja.domain.kanavat.lt-alus/suunta :ylos}]}
+          :siirretyt-alukset #{}}
+         (e! (tiedot/->SiirraTapahtumasta {::lt-alus/id 2})
+             {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 2}]}
+              :siirretyt-alukset #{2}}))))
 
 (deftest poista-ketjutus
   (vaadi-async-kutsut
