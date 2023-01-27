@@ -330,8 +330,9 @@
    poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi.
    palautetut-liitteet                 Kokoelma liitteitä, jotka on tallennettu local storageen ja tulisi sen takia
                                        näkyä käyttäjälle.
-   latausta-ennen-fn                   Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
-   latausta-jalkeen-fn                 Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi."
+   latausta-ennen-fn                   Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
+   latausta-jalkeen-fn                 Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi.
+   nayta-koko?                         Jos true, lisää nimen perään koon."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
