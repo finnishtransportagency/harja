@@ -1833,7 +1833,7 @@
               :paallysteet nil)] tiedot)
         "Sähköpostilähetyksen tiedot OK, eli eivät sisällä poistettujen alikohteiden tietoja.")))
 
-(def excel-rivit-utajarvi-2022
+(def excel-rivit-utajarvi-2023
   (list {:lihavoi? false
          :rivi [13374
                 "L14"
@@ -1847,7 +1847,7 @@
                 [:kaava
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
-                  :loppusarake "H"}]]}
+                  :loppusarake "I"}]]}
         {:lihavoi? false
          :rivi [13375
                 "L15"
@@ -1861,13 +1861,17 @@
                 [:kaava
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
-                  :loppusarake "H"}]]}
-        [nil nil nil nil nil nil nil nil nil]
-        [nil nil nil nil nil nil nil nil nil]
+                  :loppusarake "I"}]]}
+        [nil nil nil nil nil nil nil nil nil nil]
+        [nil nil nil nil nil nil nil nil nil nil]
         [nil
          nil
          nil
          "Yhteensä:"
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
@@ -1900,7 +1904,7 @@
                                                :sopimus-id sopimus-id
                                                :vuosi vuosi}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
-    (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
+    (is (= excel-rivit-utajarvi-2023 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
 
 (def excel-rivit-muhos-2017
   (list
@@ -1919,7 +1923,7 @@
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [54523243
             "308a"
@@ -1935,7 +1939,7 @@
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [456896958
             "310"
@@ -1951,7 +1955,7 @@
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [456896959
             "666"
@@ -1967,11 +1971,15 @@
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
-    [nil nil nil nil nil nil nil nil nil nil nil]
-    [nil nil nil nil nil nil nil nil nil nil nil]
+              :loppusarake "K"}]]}
+    [nil nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil nil nil nil]
     [nil nil nil
      "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
