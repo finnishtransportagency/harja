@@ -25,7 +25,6 @@
             [harja.views.vesivaylat.urakka.toimenpiteet :as toimenpiteet]
             [harja.views.vesivaylat.urakka.materiaalit :as vv-materiaalit]
             [harja.views.kanavat.urakka.liikenne :as liikenne]
-            [harja.views.kanavat.urakka.laskutus :as laskutus-kanavat]
             [harja.tiedot.navigaatio :as nav]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
@@ -83,10 +82,6 @@
                               (not (urakka/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
     
-    ; Aina false, voi poistaa kokonaan? VHAR-7132
-    :laskutus-kanavat (and (not (urakka/kanavaurakka? urakka))
-                           (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
-                           (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
@@ -219,12 +214,6 @@
        (when (valilehti-mahdollinen? :laskutus-vesivaylat ur)
          ^{:key "laskutus"}
          [laskutus-vesivaylat/laskutus])
-
-       "Laskutus"
-       :laskutus-kanavat
-       (when (valilehti-mahdollinen? :laskutus-kanavat ur)
-         ^{:key "laskutus"}
-         [laskutus-kanavat/laskutus])
 
        "Kustannukset"
        :tiemerkinnan-kustannukset
