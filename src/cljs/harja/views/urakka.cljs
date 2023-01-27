@@ -83,10 +83,6 @@
                               (not (urakka/kanavaurakka? urakka))
                               (istunto/ominaisuus-kaytossa? :vesivayla))
     
-    ; Aina false, voi poistaa kokonaan? VHAR-7132
-    :laskutus-kanavat (and (not (urakka/kanavaurakka? urakka))
-                           (oikeudet/urakat-laskutus-kanavalaskutusyhteenveto id)
-                           (istunto/ominaisuus-kaytossa? :vesivayla))
     :tiemerkinnan-kustannukset (and (oikeudet/urakat-kustannukset id)
                                     (= tyyppi :tiemerkinta))
 
