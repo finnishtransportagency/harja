@@ -105,6 +105,9 @@
 (defmethod muodosta-solu :arvo [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
 
+(defmethod muodosta-solu :boolean [[_ {:keys [arvo]}] solun-tyyli]
+  [(if arvo "Kyllä" "Ei") solun-tyyli])
+
 (defmethod muodosta-solu :liitteet [[_ liitteet] solun-tyyli]
   [(count liitteet) solun-tyyli])
 
@@ -180,11 +183,31 @@
 (defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
 
-(defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet sarake-tyyli]
+(defn- font-otsikko
+  ([] (font-otsikko 14))
+  ([font-koko]
+   {:color :black
+    :size font-koko
+    :name "Arial"
+    :bold true}))
+
+(defn- luo-saraketyyli
+  [workbook lista-tyyli? taustavari]
+  (excel/create-cell-style! workbook (if lista-tyyli?
+                                       {:border-bottom :thin
+                                        :border-top :thin
+                                        :border-left :thin
+                                        :border-right :thin
+                                        :font (font-otsikko 14)}
+                                       {:background (or taustavari :grey_25_percent)
+                                        :font {:color :black}})))
+
+(defn- taulukko-otsikkorivi [otsikko-rivi sarakkeet workbook lista-tyyli?]
   (dorun
     (map-indexed
-      (fn [sarake-nro {:keys [otsikko] :as sarake}]
-        (let [cell (.createCell otsikko-rivi sarake-nro)]
+      (fn [sarake-nro {:keys [otsikko taustavari] :as sarake}]
+        (let [cell (.createCell otsikko-rivi sarake-nro)
+              sarake-tyyli (luo-saraketyyli workbook lista-tyyli? taustavari)]
           (excel/set-cell! cell (ilman-soft-hyphenia otsikko))
           (excel/set-cell-style! cell sarake-tyyli)))
       sarakkeet)))
@@ -257,15 +280,6 @@
                            :oikea HorizontalAlignment/RIGHT
                            HorizontalAlignment/LEFT)))
 
-
-(defn- font-otsikko
-  ([] (font-otsikko 14))
-  ([font-koko]
-   {:color :black
-    :size font-koko
-    :name "Arial"
-    :bold true}))
-
 (defn- luo-rivi-ennen-tyyli
   [workbook lista-tyyli? taustavari]
   (excel/create-cell-style! workbook (if lista-tyyli?
@@ -302,18 +316,6 @@
               (+ sarake-nro sarakkeita)))
           0 rivi-maaritys))
 
-
-(defn- luo-saraketyyli
-  [workbook lista-tyyli? rivi-ennen?]
-  (excel/create-cell-style! workbook (if lista-tyyli?
-                                       {:border-bottom :thin
-                                        :border-top :thin
-                                        :border-left :thin
-                                        :border-right :thin
-                                        :font (font-otsikko (if rivi-ennen? 18 14))}
-                                       {:background :grey_25_percent
-                                        :font {:color :black}})))
-
 (def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
@@ -332,7 +334,6 @@
           ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
           _ (when (:varjele-sheet-muokkauksilta? optiot)
               (.enableLocking sheet))
-          sarake-tyyli (luo-saraketyyli workbook lista-tyyli? false)
           raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font (font-otsikko)})
           ;; Ei tehdä uutta otsikkoriviä, jos taulukko tulee samalle sheetille.
           tee-raporttitiedot-rivi? (= nolla 0) 
@@ -374,8 +375,7 @@
         (let [rivi-otsikko (if (nil? nimi) otsikko nimi)]
           (tee-taulukon-nimiotsikko sheet nolla rivi-otsikko raportin-tiedot-tyyli)))
 
-      ;; Luodaan otsikot saraketyylillä
-      (taulukko-otsikkorivi otsikko-rivi sarakkeet sarake-tyyli)
+      (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
 
       (dorun
        (map-indexed
@@ -492,9 +492,6 @@
     (doseq [elementti (remove nil? sisalto)]
       (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     tiedoston-nimi))
-
-(defmethod muodosta-solu :boolean [[_ {:keys [arvo]}]]
-  (if arvo "Kyllä" "Ei"))
 
 (defmethod muodosta-excel :default [elementti workbook]
   (log/debug "Excel ei tue elementtiä: " elementti)

@@ -100,6 +100,9 @@
                     [arvonvahennykset sakot-ja-bonukset])
                   yhteiset-arvot-loppu))))
 
+(def taustavari-normaali :grey_25_percent)
+(def taustavari-hintamuutokset :grey_40_percent)
+
 (defn- excelin-sarakkeet [vuosi]
   (let [yhteiset-sarakkeet-alku [{:otsikko "Kohde-ID" :tasaa :oikea :fmt :kokonaisluku}
                                  {:otsikko "Kohdenro" :tasaa :oikea}
@@ -107,9 +110,9 @@
                                  {:otsikko "Nimi"}
                                  {:otsikko "Tarjoushinta"  :fmt :raha :voi-muokata? true}
                                  {:otsikko "Määrämuutokset" :fmt :raha}]
-        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineet" :fmt :raha :voi-muokata? true}
-                                  {:otsikko "Nestekaasu ja kevyt polttoöljy" :fmt :raha :voi-muokata? true}
-                                  {:otsikko "MAKU-päällysteet" :fmt :raha :voi-muokata? true}
+        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
+                                  {:otsikko "Nestekaasu ja kevyt polttoöljy" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
+                                  {:otsikko "MAKU-päällysteet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
                                   {:otsikko "Kokonaishinta" :fmt :raha}]]
     (into []
           (concat yhteiset-sarakkeet-alku
@@ -150,9 +153,6 @@
         kohderivit)
       tyhjat-rivit
       yhteenvetorivi)))
-
-(def taustavari-normaali :grey_25_percent)
-(def taustavari-hintamuutokset :grey_40_percent)
 
 (defn vie-paallystyskohteet-exceliin
   [db workbook user {:keys [urakka-id vuosi] :as tiedot}]
