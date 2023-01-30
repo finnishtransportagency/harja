@@ -51,11 +51,18 @@
     rivit))
 
 (defn muistutusten-maara
-  ([rivit] (muistutusten-maara rivit {}))
-  ([rivit suodattimet]
-   [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
-                      :yksikko " kpl"
-                      :fmt :numero}]))
+  ([rivit] (muistutusten-maara rivit {} false))
+  ([rivit suodattimet] (muistutusten-maara rivit suodattimet false))
+  ([rivit suodattimet yhteensa-sarake?]
+   (if yhteensa-sarake?
+     [:arvo-ja-yksikko-korostettu {:arvo (count (suodata-muistutukset rivit suodattimet))
+                                   :yksikko " kpl"
+                                   :fmt :numero
+                                   ;:sarakkeen-luokka ""
+                                   :korosta-hennosti? true}]
+     [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
+                                           :yksikko " kpl"
+                                           :fmt :numero}])))
 
 
 (defn sakkojen-summa
@@ -83,7 +90,11 @@
                                             (sakkojen-summa rivit (merge optiot alue)))
                                           alueet))]
      (if yhteensa-sarake?
-       (conj rivi (sakkojen-summa rivit optiot))
+       (conj rivi
+         [:arvo-ja-yksikko-korostettu {:arvo (sakkojen-summa rivit optiot)
+                                       :yksikko " €"
+                                       :fmt :numero
+                                       :korosta-hennosti? true}])
        rivi))))
 
 (defn luo-rivi-muistutusten-maara
@@ -94,7 +105,7 @@
                                             (muistutusten-maara rivit (merge optiot alue)))
                                           alueet))]
      (if yhteensa-sarake?
-       (conj rivi (muistutusten-maara rivit optiot))
+       (conj rivi (muistutusten-maara rivit optiot yhteensa-sarake?))
        rivi))))
 
 (defn luo-rivi-indeksien-summa
