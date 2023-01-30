@@ -33,6 +33,12 @@
     "Muut hoitourakan tehtäväkokonaisuudet" (remove
                                               #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
                                               toimenpideinstanssit)
+    "Talvihoito, päätiet" (filter
+                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                            toimenpideinstanssit)
+    "Talvihoito, muut tiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
     toimenpideinstanssit))
 
 (defn sanktio-lomake
@@ -59,8 +65,8 @@
         ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
         kaikki-sanktiotyypit @tiedot/sanktiotyypit
         ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
+        ;; Ja jos tyyppinä on talvihoito, niin muut kuin talvihoito toimenpiteet poistetaan myös
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))]
-
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
