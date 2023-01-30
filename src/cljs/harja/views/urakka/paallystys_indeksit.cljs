@@ -49,9 +49,9 @@
            :tyyppi :valinta :muokattava? (constantly false)}
 
           {:otsikko "Lähtö\u00ADtason vuosi" :nimi :lahtotason-vuosi :tyyppi :positiivinen-numero
-           :leveys 1
+           :leveys 1 :kokonaisluku? true
            :validoi [[:rajattu-numero-tai-tyhja 2000 2030 "Anna vuosiluku väliltä 2000-2030"]]}
           {:otsikko "Lähtö\u00ADtason kk" :nimi :lahtotason-kuukausi :tyyppi :positiivinen-numero
-           :leveys 1
+           :leveys 1 :kokonaisluku? true
            :validoi [[:rajattu-numero-tai-tyhja 1 12 "Anna kuukausi"]]}]
          @urakka/paallystysurakan-indeksitiedot]))))
