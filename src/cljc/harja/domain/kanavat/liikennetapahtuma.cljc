@@ -116,16 +116,24 @@
        (when (= :itse (::toiminto/palvelumuoto toiminto))
          (str " (" (::toiminto/lkm toiminto) " kpl)"))))
 
-(def suunta*
-  ^{:private true}
-  {:ylos "Ylös"
-   :alas "Alas"})
+(def suunnat-atom (atom
+                   {:ylos "Ylös"
+                    :alas "Alas"}))
 
-(defn suunta->str [suunta]
-  (suunta*
-    suunta))
+(def palvelu-atom (atom {:arvo nil}))
+(def toimenpide-atom (atom {:arvo nil}))
 
-(def suunta-vaihtoehdot (keys suunta*))
+(defn paivita-suunnat-atom! []
+  ;; Jos toimenpide on tyhjennys, lisää "ei aluslajia" vaihtoehto
+  (if (= (:arvo @toimenpide-atom) :tyhjennys)
+    (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+    (swap! lt-alus/aluslajit* dissoc :EI))
+  
+  ;; Jos toimenpide on tyhjennys tai palvelumuoto itsepalvelu, lisätään "ei määritelty" suunta alukselle
+  (if (or (= (:arvo @palvelu-atom) :itse)
+          (= (:arvo @toimenpide-atom) :tyhjennys))
+    (swap! suunnat-atom assoc :ei-suuntaa "Ei määritelty")
+    (swap! suunnat-atom dissoc :ei-suuntaa)))
 
 (s/def ::alukset (s/coll-of ::lt-alus/liikennetapahtuman-alus))
 (s/def ::toiminnot (s/coll-of ::toiminto/liikennetapahtuman-toiminto))
