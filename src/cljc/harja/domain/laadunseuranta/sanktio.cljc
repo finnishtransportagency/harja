@@ -279,8 +279,9 @@
 (defn- arvonvahennys? [rivi]
   (= :arvonvahennyssanktio (:laji rivi)))
 
-(defn- muistutus? [rivi]
+(defn muistutus? [rivi]
   (or
+    (= :vesivayla_muistutus (:laji rivi))
     (= :muistutus (:laji rivi))
     (= :yllapidon_muistutus (:laji rivi))))
 
