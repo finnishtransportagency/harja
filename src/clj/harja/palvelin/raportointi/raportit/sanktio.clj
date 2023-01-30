@@ -133,12 +133,37 @@
          {:sakkoryhma #{:talvisuolan_ylitys :pohjavesisuolan_ylitys}
           :yhteensa-sarake? yhteensa-sarake?})])))
 
+(defn- raporttirivit-henkilosto [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (let [vaihtosanktio-rivit (filter #(= :vaihtosanktio (:sakkoryhma %)) rivit)
+        testikeskiarvo-rivit (filter #(= :testikeskiarvo-sanktio (:sakkoryhma %)) rivit)
+        tenttikeskiarvo-rivit (filter #(= :tenttikeskiarvo-sanktio (:sakkoryhma %)) rivit)]
+    (concat
+      [{:otsikko "Henkilöstöön liittyvät sanktiot"}]
+      [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden vaihtaminen" vaihtosanktio-rivit alueet
+         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+          :sakkoryhma :vaihtosanktio
+          :yhteensa-sarake? yhteensa-sarake?})]
+      [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden tenttipistemäärän alentuminen" tenttikeskiarvo-rivit alueet
+         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+          :sakkoryhma :tenttikeskiarvo-sanktio
+          :yhteensa-sarake? yhteensa-sarake?})]
+      [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden testipistemäärän alentuminen" testikeskiarvo-rivit alueet
+         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+          :sakkoryhma :testikeskiarvo-sanktio
+          :yhteensa-sarake? yhteensa-sarake?})]
+      [(yhteiset/luo-rivi-sakkojen-summa "Henkilöstöön liittyvät sanktiot yhteensä" rivit alueet
+         {:sakkoryhma #{:vaihtosanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio}
+          :yhteensa-sarake? yhteensa-sarake?})
+       (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
+         {:sakkoryhma #{:vaihtosanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio}
+          :yhteensa-sarake? yhteensa-sarake?})])))
 (defn- raporttirivit [rivit alueet toimenpide-haku-fn optiot]
   (into [] (concat
              (raporttirivit-talvihoito rivit alueet optiot)
              (raporttirivit-muut-tuotteet rivit alueet toimenpide-haku-fn optiot)
              (raporttirivit-ryhma-c rivit alueet optiot)
              (raporttirivit-suolasakot rivit alueet optiot)
+             (raporttirivit-henkilosto rivit alueet optiot)
              (yhteiset/raporttirivit-yhteensa rivit alueet optiot))))
 
 
