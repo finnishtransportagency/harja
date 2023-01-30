@@ -37,15 +37,15 @@
   (is (= (fmt/euro "5") "5,00 €"))
   (is (= (fmt/euro 5) "5,00 €"))
 
-  (is (= " °C" (fmt/lampotila nil)))
-  (is (= " °C" (fmt/lampotila "asd")))
-  (is (= " °C" (fmt/lampotila "")))
+  (is (= "°C" (fmt/lampotila nil)))
+  (is (= "°C" (fmt/lampotila "asd")))
+  (is (= "°C" (fmt/lampotila "")))
   (is (= (fmt/lampotila "5") "5,0\u00A0°C"))
   (is (= (fmt/lampotila 5) "5,0\u00A0°C"))
 
-  (is (= " %" (fmt/prosentti nil)))
-  (is (= " %" (fmt/prosentti "asd")))
-  (is (= " %" (fmt/prosentti "")))
+  (is (= "%" (fmt/prosentti nil)))
+  (is (= "%" (fmt/prosentti "asd")))
+  (is (= "%" (fmt/prosentti "")))
   (is (= (fmt/prosentti "5") "5,0\u00A0%"))
   (is (= (fmt/prosentti 5) "5,0\u00A0%"))
 
@@ -66,13 +66,13 @@
   (is (= (fmt/euro-opt 5) "5,00 €"))
 
   (is (= (fmt/lampotila-opt nil) ""))
-  (is (= " °C" (fmt/lampotila-opt "asd")))
+  (is (= "°C" (fmt/lampotila-opt "asd")))
   (is (= (fmt/lampotila-opt "") ""))
   (is (= (fmt/lampotila-opt "5") "5,0\u00A0°C"))
   (is (= (fmt/lampotila-opt 5) "5,0\u00A0°C"))
 
   (is (= (fmt/prosentti-opt nil) ""))
-  (is (= " %"  (fmt/prosentti-opt "asd")))
+  (is (= "%"  (fmt/prosentti-opt "asd")))
   (is (= (fmt/prosentti-opt "") ""))
   (is (= (fmt/prosentti-opt "5") "5,0\u00A0%"))
   (is (= (fmt/prosentti-opt 5) "5,0\u00A0%"))
