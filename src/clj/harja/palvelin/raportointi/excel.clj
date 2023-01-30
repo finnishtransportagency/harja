@@ -257,20 +257,6 @@
                            :oikea HorizontalAlignment/RIGHT
                            HorizontalAlignment/LEFT)))
 
-(defn- luo-rivi-ennen-tai-jalkeen
-  "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
-  [rivi-maaritys riviolio rivi-nro tyyli sheet]
-  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita]}]
-            (let [solu (.createCell riviolio sarake-nro)]
-              (excel/set-cell! solu teksti)
-              (excel/set-cell-style! solu tyyli)
-              (tasaa-solu solu tasaa)
-              (when (> sarakkeita 1)
-                (.addMergedRegion sheet (CellRangeAddress. rivi-nro rivi-nro
-                                                           sarake-nro
-                                                           (+ sarake-nro sarakkeita -1))))
-              (+ sarake-nro sarakkeita)))
-          0 rivi-maaritys))
 
 (defn- font-otsikko
   ([] (font-otsikko 14))
@@ -279,6 +265,43 @@
     :size font-koko
     :name "Arial"
     :bold true}))
+
+(defn- luo-rivi-ennen-tyyli
+  [workbook lista-tyyli? taustavari]
+  (excel/create-cell-style! workbook (if lista-tyyli?
+                                       {:border-bottom :thin
+                                        :border-top :thin
+                                        :border-left :thin
+                                        :border-right :thin
+                                        :font (font-otsikko 18)}
+                                       {:background (or taustavari :grey_25_percent)
+                                        :font {:color :black}})))
+
+(defn luo-rivi-jalkeen-tyyli [workbook]
+  (excel/create-cell-style! workbook {:font (font-leipateksti)}))
+
+(defn- luo-rivi-ennen-tai-jalkeen
+  "Luo rivin joko ennen tai jälkeen varsinaisen taulukon."
+  [rivi-maaritys riviolio rivi-nro sheet workbook lista-tyyli? rivi-ennen?]
+  (reduce (fn [sarake-nro {:keys [teksti tasaa sarakkeita taustavari]}]
+            (let [sarakeryhman-tyyli (cond
+
+                                       rivi-ennen?
+                                       (luo-rivi-ennen-tyyli workbook lista-tyyli? taustavari)
+
+                                       (not rivi-ennen?)
+                                       (luo-rivi-jalkeen-tyyli workbook))
+                  solu (.createCell riviolio sarake-nro)]
+              (excel/set-cell! solu teksti)
+              (excel/set-cell-style! solu sarakeryhman-tyyli)
+              (tasaa-solu solu tasaa)
+              (when (> sarakkeita 1)
+                (.addMergedRegion sheet (CellRangeAddress. rivi-nro rivi-nro
+                                                           sarake-nro
+                                                           (+ sarake-nro sarakkeita -1))))
+              (+ sarake-nro sarakkeita)))
+          0 rivi-maaritys))
+
 
 (defn- luo-saraketyyli
   [workbook lista-tyyli? rivi-ennen?]
@@ -310,7 +333,6 @@
           _ (when (:varjele-sheet-muokkauksilta? optiot)
               (.enableLocking sheet))
           sarake-tyyli (luo-saraketyyli workbook lista-tyyli? false)
-          rivi-ennen-sarake-tyyli (luo-saraketyyli workbook lista-tyyli? true)
           raportin-tiedot-tyyli (excel/create-cell-style! workbook {:font (font-otsikko)})
           ;; Ei tehdä uutta otsikkoriviä, jos taulukko tulee samalle sheetille.
           tee-raporttitiedot-rivi? (= nolla 0) 
@@ -341,8 +363,10 @@
         (luo-rivi-ennen-tai-jalkeen rivi-ennen
                                     rivi-ennen-rivi
                                     rivi-ennen-nro
-                                    rivi-ennen-sarake-tyyli
-                                    sheet))
+                                    sheet
+                                    workbook
+                                    lista-tyyli?
+                                    true))
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja. 
       (when samalle-sheetille?
@@ -446,8 +470,10 @@
         (luo-rivi-ennen-tai-jalkeen rivi-jalkeen
                                     rivi-jalkeen-rivi
                                     rivi-jalkeen-nro
-                                    (excel/create-cell-style! workbook {:font (font-leipateksti)})
-                                    sheet)))
+                                    sheet
+                                    workbook
+                                    false
+                                    false)))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 

@@ -951,16 +951,18 @@
 
 (defn taulukon-ryhmittely-header
   "Ryhmittelee sarakkeet siten, että hintamuutokset eriteltyjä."
-  [listaus]
+  [listaus piilota-arvonmuutos-ja-sanktiot?]
   ;; Tässä ei oikein päästä kovakoodauksesta eroon, ainakaan kovin helposti
   ;; Joten ei muuta kuin speksi käteen ja tarkkana, jos muutat näitä
   [{:teksti "" :sarakkeita (case listaus
                              :yha-kohteet
-                             15
+                             (if piilota-arvonmuutos-ja-sanktiot? 15 17)
 
-                             :muut-kohteet 14
+                             :muut-kohteet
+                             (if piilota-arvonmuutos-ja-sanktiot? 14 16)
 
-                             :yhteensa 16)
+                             :yhteensa
+                             (if piilota-arvonmuutos-ja-sanktiot? 16 18))
     :luokka "paallystys-tausta"}
    {:teksti "Hintamuutokset" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
    {:teksti "" :sarakkeita 2 :luokka "paallystys-tausta"}])
@@ -1042,7 +1044,8 @@
                        [vasta-muokatut-vinkki]]
              :rivi-ennen (taulukon-ryhmittely-header (if paallystys?
                                                        :yha-kohteet
-                                                       :muut-kohteet))
+                                                       :muut-kohteet)
+                                                     (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? valittu-vuosi))
              :ohjaus g
              :tyhja (if (nil? @kohteet-atom) [ajax-loader "Haetaan kohteita..."] "Ei kohteita")
              :vetolaatikot (alikohteiden-vetolaatikot urakka
@@ -1193,7 +1196,7 @@
     [grid/grid
      {:nayta-toimintosarake? true
       :otsikko "Yhteensä"
-      :rivi-ennen (taulukon-ryhmittely-header :yhteensa)
+      :rivi-ennen (taulukon-ryhmittely-header :yhteensa (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot)))
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}
      [{:otsikko "" :nimi :tyhja :tyyppi :string :leveys haitari-leveys}
       {:otsikko "" :nimi :kohdenumero :tyyppi :string :leveys id-leveys}
