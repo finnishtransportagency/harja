@@ -157,6 +157,17 @@
        (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
          {:sakkoryhma #{:vaihtosanktio :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio}
           :yhteensa-sarake? yhteensa-sarake?})])))
+
+(defn- raporttirivit-lupaus [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (concat
+    [{:otsikko "Lupaussanktiot"}]
+    [(yhteiset/luo-rivi-sakkojen-summa "Lupaussanktiot yht." rivit alueet
+       {:sakkoryhma #{:lupaussanktio}
+        :yhteensa-sarake? yhteensa-sarake?})
+     (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
+       {:sakkoryhma #{:lupaussanktio}
+        :yhteensa-sarake? yhteensa-sarake?})]))
+
 (defn- raporttirivit [rivit alueet toimenpide-haku-fn optiot]
   (into [] (concat
              (raporttirivit-talvihoito rivit alueet optiot)
@@ -164,6 +175,7 @@
              (raporttirivit-ryhma-c rivit alueet optiot)
              (raporttirivit-suolasakot rivit alueet optiot)
              (raporttirivit-henkilosto rivit alueet optiot)
+             (raporttirivit-lupaus rivit alueet optiot)
              (yhteiset/raporttirivit-yhteensa rivit alueet optiot))))
 
 
