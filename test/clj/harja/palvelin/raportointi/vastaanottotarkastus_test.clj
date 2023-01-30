@@ -116,8 +116,8 @@
            {:fmt :raha :leveys 5 :otsikko "Neste­kaasu ja kevyt poltto­öljy"}
            {:fmt :raha :leveys 5 :otsikko "MAKU-päällysteet"}
            {:fmt :raha :leveys 5 :otsikko "Kokonais­hinta"})
-     (list (list "L14" nil "Ouluntie 2" [:boolean {:arvo false}] 22 13 0 13 3888 nil nil nil 0M 0M 0M 0M 0M 0M)
-           (list "L15" "A" "Puolangantie" [:boolean {:arvo false}] 837 2 0 2 1000 1000 nil nil
+     (list (list "L14" nil "Ouluntie 2" [:boolean {:arvo nil}] 22 13 0 13 3888 nil nil nil 0M 0M 0M 0M 0M 0M)
+           (list "L15" "A" "Puolangantie" [:boolean {:arvo true}] 837 2 0 2 1000 1000 nil nil
                  odotettu-sopimuksen-mukaiset-tyot odotettu-maaramuutokset odotettu-sideaineen-hintamuutokset
                  odotettu-polttooljyn-hintamuutokset odotettu-maku-paallysteet odotettu-yhteensa))]))
 
