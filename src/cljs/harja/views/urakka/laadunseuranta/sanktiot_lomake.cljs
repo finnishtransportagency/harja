@@ -18,6 +18,16 @@
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]))
 
+(defn- toimenpide-valikon-nimi
+  "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
+  Muistutukselle ei näytetä Kulun kohdistus -valikkoa, jos muistutuksen tyyppinä on jotain Talvihoitoon liittyvää. Mutta
+  jos muistutuksen tyyppinä on 'Muut hoitourakan tehtäväkokonaisuudet', niin Kulun kohdistus valikko, joka on pohjimmiltaan toimenpideinstanssivalikko
+  pitää näyttää. Muistukselle ei toki kulua tule, mutta se pitää kohdistaa johonkin toimenpiteeseen."
+  [sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" "Toimenpide"
+    "Kulun kohdistus"))
+
 (defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
   (case sanktion-tyyppi
     "Muut hoitourakan tehtäväkokonaisuudet" (remove
@@ -220,9 +230,15 @@
           :tyyppi :text :koko [80 :auto]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-         (when (sanktio-domain/muu-kuin-muistutus? @muokattu)
+         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
+         (when (or
+                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
+                 (and (sanktio-domain/muistutus? @muokattu)
+                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                                "Liikenneympäristön hoito"
+                                "Sorateiden hoito ja ylläpito"} (get-in @muokattu [:tyyppi :nimi]))))
            (if (not lukutila?)
-             {:otsikko "Kulun kohdistus"
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi]))
               :pakollinen? true
               :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
               ::lomake/col-luokka "col-xs-12"
@@ -234,7 +250,7 @@
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko "Kulun kohdistus" :tyyppi :teksti :nimi :toimenpideinstanssi
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) :tyyppi :teksti :nimi :toimenpideinstanssi
               ::lomake/col-luokka "col-xs-12"
               :hae (fn [{:keys [toimenpideinstanssi]}]
                      (some
