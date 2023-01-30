@@ -23,6 +23,7 @@
        [{:otsikko "Kohde\u00ADnumero" :leveys 5}
         {:otsikko "Tunnus" :leveys 5}
         {:otsikko "Nimi" :leveys 10}
+        {:otsikko "Yö\u00ADtyö" :leveys 3 :fmt :boolean}
         {:otsikko "Tie\u00ADnumero" :leveys 3 :tasaa :oikea}
         {:otsikko "Aosa" :leveys 3 :tasaa :oikea}
         {:otsikko "Aet" :leveys 3 :tasaa :oikea}
@@ -39,8 +40,9 @@
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
           {:otsikko "Sakko\u00AD/bonus" :leveys 5 :fmt :raha}])
-       [{:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
-        {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
+       [{:otsikko "Side\u00ADaineet" :leveys 5 :fmt :raha}
+        {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
+        {:otsikko "MAKU-päällysteet" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      (map
        (fn [yllapitokohde]
@@ -48,23 +50,25 @@
            :yha
            (concat
              [(:kohdenumero yllapitokohde)
-             (:tunnus yllapitokohde)
-             (:nimi yllapitokohde)
-             (:tr-numero yllapitokohde)
-             (:tr-alkuosa yllapitokohde)
-             (:tr-alkuetaisyys yllapitokohde)
-             (:tr-loppuosa yllapitokohde)
-             (:tr-loppuetaisyys yllapitokohde)
-             (:pituus yllapitokohde)
-             (:kvl yllapitokohde)
-             (:yplk yllapitokohde)
-             (:sopimuksen-mukaiset-tyot yllapitokohde)
-             (:maaramuutokset yllapitokohde)]
+              (:tunnus yllapitokohde)
+              (:nimi yllapitokohde)
+              [:boolean {:arvo (:yotyo yllapitokohde)}]
+              (:tr-numero yllapitokohde)
+              (:tr-alkuosa yllapitokohde)
+              (:tr-alkuetaisyys yllapitokohde)
+              (:tr-loppuosa yllapitokohde)
+              (:tr-loppuetaisyys yllapitokohde)
+              (:pituus yllapitokohde)
+              (:kvl yllapitokohde)
+              (:yplk yllapitokohde)
+              (:sopimuksen-mukaiset-tyot yllapitokohde)
+              (:maaramuutokset yllapitokohde)]
              (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                [(:arvonvahennykset yllapitokohde)
                 (:sakot-ja-bonukset yllapitokohde)])
              [(:bitumi-indeksi yllapitokohde)
               (:kaasuindeksi yllapitokohde)
+              (:maku-paallysteet yllapitokohde)
               (:kokonaishinta yllapitokohde)])
 
            :paikkaus
@@ -72,6 +76,7 @@
              [(:kohdenumero yllapitokohde)
               (:tunnus yllapitokohde)
               (:nimi yllapitokohde)
+              [:boolean {:arvo (:yotyo yllapitokohde)}]
               (:tr-numero yllapitokohde)
               (:tr-alkuosa yllapitokohde)
               (:tr-alkuetaisyys yllapitokohde)
@@ -86,6 +91,7 @@
                 (:sakot-ja-bonukset yllapitokohde)])
              [(:bitumi-indeksi yllapitokohde)
               (:kaasuindeksi yllapitokohde)
+              (:maku-paallysteet yllapitokohde)
               (:kokonaishinta yllapitokohde)])))
        yllapitokohteet)]))
 
@@ -98,24 +104,26 @@
      (concat
        [{:otsikko "" :leveys 5}
         {:otsikko "" :leveys 5}
-        {:otsikko "" :leveys 10}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
         {:otsikko "" :leveys 3}
+        {:otsikko "Toteu\u00ADtunut hinta (muut kohteet)" :nimi :toteutunut-hinta
+         :fmt :raha :leveys 5}
         {:otsikko (str "Sakot ja bonukset"
                        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                          " (muut kuin kohteisiin liittyvät)"))
-         :leveys 10 :fmt :raha}
-        {:otsikko "Muut kustannukset" :leveys 10 :fmt :raha}]
+         :leveys 5 :fmt :raha}
+        {:otsikko "Muut kustannukset" :leveys 5 :fmt :raha}]
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvonväh." :leveys 5 :fmt :raha}
           {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}])
        [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
         {:otsikko "Määrä\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
-        {:otsikko "Side\u00ADaineen hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
-        {:otsikko "Neste\u00ADkaasun ja kevyen poltto\u00ADöljyn hinta\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
+        {:otsikko "Side\u00ADaineet" :leveys 5 :fmt :raha}
+        {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
+        {:otsikko "MAKU-päällysteet" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      [(concat
         [nil
@@ -125,7 +133,7 @@
          nil
          nil
          nil
-         nil
+         (reduce + 0 (keep :toteutunut-hinta yllapitokohteet))
          kohdistamattomat-sanktiot-yhteensa
          muut-kustannukset-yhteensa]
         (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
@@ -135,6 +143,7 @@
          (reduce + 0 (keep :maaramuutokset yllapitokohteet))
          (reduce + 0 (keep :bitumi-indeksi yllapitokohteet))
          (reduce + 0 (keep :kaasuindeksi yllapitokohteet))
+         (reduce + 0 (keep :maku-paallysteet yllapitokohteet))
          (+ (reduce + 0 (keep :kokonaishinta yllapitokohteet))
             kohdistamattomat-sanktiot-yhteensa
             muut-kustannukset-yhteensa)])]]))

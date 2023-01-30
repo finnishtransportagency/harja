@@ -418,8 +418,8 @@
          :vetolaatikot (into {} (map (juxt :tpk_id (fn [rivi] [yksiloidyt-tehtavat rivi tiedot/yks-hint-tehtavien-summat]))
                                      @tiedot/yks-hint-tyot-tehtavittain))}
         [{:tyyppi :vetolaatikon-tila :leveys 5}
-         {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :numero :leveys 25}
-         {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :numero :leveys 10}
+         {:otsikko "Tehtävä" :nimi :nimi :muokattava? (constantly false) :tyyppi :string :leveys 25}
+         {:otsikko "Yksikkö" :nimi :yksikko :muokattava? (constantly false) :tyyppi :string :leveys 10}
          {:otsikko "Yksikkö\u00ADhinta" :nimi :yksikkohinta :muokattava? (constantly false) :tyyppi :numero :leveys 10 :tasaa :oikea :fmt fmt/euro-opt}
          {:otsikko "Suunni\u00ADteltu määrä" :nimi :hoitokauden-suunniteltu-maara :muokattava? (constantly false) :tyyppi :numero :leveys 10
           :fmt #(fmt/pyorista-ehka-kolmeen %) :tasaa :oikea}

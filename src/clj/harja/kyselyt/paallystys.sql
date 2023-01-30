@@ -69,8 +69,10 @@ SELECT
   ypk.kohdenumero,
   ypk.vuodet,
   ypkk.sopimuksen_mukaiset_tyot AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi           AS "bitumi-indeksi",
+  ypkk.maku_paallysteet         AS "maku-paallysteet",
   ypkk.kaasuindeksi,
   sum(-s.maara)                 AS "sakot-ja-bonukset", -- käännetään toisin päin jotta summaus toimii oikein
   ypk.yllapitokohdetyyppi,
@@ -132,7 +134,7 @@ FROM yllapitokohde ypk
 WHERE ypk.id = :paallystyskohde
       AND ypk.poistettu IS NOT TRUE
 GROUP BY pi.id, ypk.id, ypko.id, ypka.kohde_alku, ypka.kohde_valmis, ypka.paallystys_loppu,
-  ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,
+  ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.maku_paallysteet,
   u.id, p.takuuaika, ypka.paallystys_alku, ypka.paallystys_loppu, p.id;
 
 -- name: hae-kohdeosan-pot2-paallystekerrokset

@@ -478,8 +478,7 @@
                {:otsikko "Kuukausi" :nimi "kk" :hae #(if (= -1 (:kuukausi %))
                                                        "urakan alkaessa"
                                                        (pvm/kuukauden-nimi (:kuukausi %)))
-                :muokattava? (constantly false)
-                :tyyppi :numero :leveys 25}
+                :muokattava? (constantly false) :leveys 25}
                {:otsikko "Summa"
                 :nimi :summa
                 :tasaa :oikea

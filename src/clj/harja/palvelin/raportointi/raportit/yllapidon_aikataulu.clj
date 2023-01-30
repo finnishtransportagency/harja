@@ -2,6 +2,7 @@
   (:require 
    [clojure.set :as set]
    [clojure.string :as string]
+   [harja.kyselyt.urakat :as urakat-q]
    [harja.ui.aikajana :as aj]
    [harja.pvm :as pvm]
    [harja.palvelin.palvelut.yllapitokohteet :as yllapitokohteet]
@@ -162,8 +163,12 @@
                         nayta-valitavoitteet? :nayta-valitavoitteet?
                         alikohderaportti? :alikohderaportti?
                         kasittelija :kasittelija
+                        urakka-id :urakka-id
                         vuosi :vuosi :as parametrit}]
-  (let [parametrit (parametrit-urakan-tiedoilla db parametrit)
+  (let [raportin-nimi "Ylläpidon aikataulu"
+        otsikko (str (:nimi (first (urakat-q/hae-urakka db urakka-id)))
+                     ", " raportin-nimi " " vuosi)
+        parametrit (parametrit-urakan-tiedoilla db parametrit)
         aikataulu (yllapitokohteet/hae-urakan-aikataulu db user parametrit)
         aikataulu (into [] (comp 
                              (map kaista-ja-ajoratatiedot)
@@ -184,8 +189,7 @@
                              (filter #(not (empty? (::aj/ajat %)))))
         sarakkeet (filter some? 
                     (kohdeluettelo-sarakkeet (:tyyppi parametrit) kasittelija alikohderaportti?))]
-    [:raportti {:nimi (str "Ylläpidon aikataulu" (when vuosi
-                                                   (str " vuonna " vuosi)))
+    [:raportti {:nimi otsikko
                 :orientaatio :landscape}
      [:aikajana {}
       ;; Välitavoitteita ei piirretä PDF-raporttiin, koska tod.näk. niitä ei siinä haluta nähdä.
