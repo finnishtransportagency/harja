@@ -113,12 +113,32 @@
       [(yhteiset/luo-rivi-sakkojen-summa "C-ryhmä yhteensä" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
        (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])))
 
+(defn- raporttirivit-suolasakot [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (let [pohjavesiylitys-rivit (filter #(= :pohjavesisuolan_ylitys (:sakkoryhma %)) rivit)
+        talvisuolaylitys-rivit (filter #(= :talvisuolan_ylitys (:sakkoryhma %)) rivit)]
+    (concat
+      [{:otsikko "Suolasakot"}]
+      [(yhteiset/luo-rivi-sakkojen-summa "Pohjavesialueiden suolankäytön ylitys" pohjavesiylitys-rivit alueet
+         {:sanktiotyyppi #{"Suolasakko"}
+          :sakkoryhma :pohjavesisuolan_ylitys
+          :yhteensa-sarake? yhteensa-sarake?})]
+      [(yhteiset/luo-rivi-sakkojen-summa "Talvisuolan kokonaiskäytön ylitys" talvisuolaylitys-rivit alueet
+         {:sanktiotyyppi #{"Suolasakko"}
+          :sakkoryhma :talvisuolan_ylitys
+          :yhteensa-sarake? yhteensa-sarake?})]
+      [(yhteiset/luo-rivi-sakkojen-summa "Suolasakot yhteensä" rivit alueet
+         {:sakkoryhma #{:talvisuolan_ylitys :pohjavesisuolan_ylitys}
+          :yhteensa-sarake? yhteensa-sarake?})
+       (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
+         {:sakkoryhma #{:talvisuolan_ylitys :pohjavesisuolan_ylitys}
+          :yhteensa-sarake? yhteensa-sarake?})])))
 
 (defn- raporttirivit [rivit alueet toimenpide-haku-fn optiot]
   (into [] (concat
              (raporttirivit-talvihoito rivit alueet optiot)
              (raporttirivit-muut-tuotteet rivit alueet toimenpide-haku-fn optiot)
              (raporttirivit-ryhma-c rivit alueet optiot)
+             (raporttirivit-suolasakot rivit alueet optiot)
              (yhteiset/raporttirivit-yhteensa rivit alueet optiot))))
 
 
