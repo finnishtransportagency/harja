@@ -105,9 +105,16 @@
 
 (defn liikenne-muokkausgrid [e! valittu-liikennetapahtuma alukset-atom]
 
-  (let [uusi-id (if (empty? (keys @alukset-atom))
+  (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
+        uusi-id (if (empty? (keys @alukset-atom))
                   0
-                  (inc (apply max (keys @alukset-atom))))]
+                  (inc (apply max (keys @alukset-atom))))
+        
+        ;; Asettaa "Ei aluslajia" ylimmäksi 
+        lajit (mapv (fn [a] a) (keys @lt-alus/aluslajit*))
+        lajit-sortattu (into (sorted-map)
+                        (map (fn [[k v]] [k (vec (sort v))]))
+                        {:sorted lajit})]
 
     [grid/muokkaus-grid
      {:tyhja "Lisää tapahtumia oikeasta yläkulmasta"
@@ -115,7 +122,7 @@
       :voi-kumota? false
       :voi-lisata? false
       :custom-toiminto {:teksti "Lisää rivi"
-                        :toiminto #(let [tyhja-rivi {:id uusi-id}
+                        :toiminto #(let [tyhja-rivi {:id uusi-id ::lt-alus/laji :EI ::lt-alus/lkm 1}
                                          _ (swap! alukset-atom assoc uusi-id tyhja-rivi)
                                          alukset (vals @alukset-atom)]
                                      (e! (tiedot/->MuokkaaAluksia alukset (tiedot/grid-virheita? tyhja-rivi))))
@@ -146,13 +153,14 @@
                       (let [suunta (::lt-alus/suunta rivi)
                             valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)]
                         [napit/yleinen-toissijainen
-                         (lt/suunta->str suunta)
-                         #(e! (tiedot/->VaihdaSuuntaa rivi))
+                         (suunta->str suunta)
+                         #(e! (tiedot/->VaihdaSuuntaa rivi suunta))
                          {:ikoni (cond (= :ylos suunta) (ikonit/livicon-arrow-up)
                                        (= :alas suunta) (ikonit/livicon-arrow-down)
+                                       (= :ei-suuntaa suunta) (ikonit/livicon-minus)
                                        :else (ikonit/livicon-question))
                           :luokka "nappi-grid"
-                          :disabled (some? (#{:ylos :alas} valittu-suunta))}]))
+                          :disabled (some? (#{:ylos :alas :ei-suuntaa} valittu-suunta))}]))
        :leveys 1}
       {:otsikko "Nimi"
        :tyyppi :string
@@ -161,8 +169,15 @@
       {:otsikko "Aluslaji"
        :tyyppi :valinta
        :nimi ::lt-alus/laji
-       :validoi [[:ei-tyhja "Valitse aluslaji"]]
-       :valinnat lt-alus/aluslajit
+       :validoi [#(when
+                   (or (and (not= (:arvo @lt/toimenpide-atom) :tyhjennys)
+                            (or (nil? %) (= % :EI)))
+                       (nil? %))
+                    "Valitse aluslaji")]
+
+       ;:validoi [[:ei-tyhja "Valitse aluslaji"]]
+       :valinnat (:sorted lajit-sortattu)
+
        :valinta-nayta #(or (lt-alus/aluslaji->koko-str %) "- Valitse -")
        :leveys 1}
       {:otsikko "Alusten lkm"
@@ -186,8 +201,15 @@
                                           edellisten-haku-kaynnissa?
                                           edelliset] :as app}
                                kohteet]
-  (let [uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))
-       alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))]
+  (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))
+        suunta-vaihtoehdot (keys @lt/suunnat-atom)
+        uusi-tapahtuma? (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))
+        alukset-atom (atom (zipmap (range) (::lt/alukset valittu-liikennetapahtuma)))
+        toimenpide (::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))
+        palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot valittu-liikennetapahtuma)))
+        _ (swap! lt/toimenpide-atom assoc :arvo toimenpide)
+        _ (swap! lt/palvelu-atom assoc :arvo palvelumuoto)
+        _ (lt/paivita-suunnat-ja-toimenpide!)]
     
     [:div
      [debug app]
@@ -283,6 +305,8 @@
                :vaihtoehto-nayta lt/toimenpide->str
                :hae (constantly (::toiminto/toimenpide osa))
                :aseta (fn [rivi arvo]
+                        (swap! lt/toimenpide-atom assoc :arvo arvo)
+                        (lt/paivita-suunnat-ja-toimenpide!)
                         (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo)))}
               (when (tiedot/nayta-palvelumuoto? osa)
                 {:otsikko "Palvelumuoto"
@@ -293,7 +317,9 @@
                  :valinta-nayta #(if % (lt/palvelumuoto->str %) " - Valitse -")
                  :hae (constantly (::toiminto/palvelumuoto osa))
                  :aseta (fn [rivi arvo]
-                          (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
+                            (swap! lt/palvelu-atom assoc :arvo arvo)
+                            (lt/paivita-suunnat-ja-toimenpide!)
+                            (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
               (when (tiedot/nayta-itsepalvelut? osa)
                 {:otsikko "Itsepalveluiden lukumäärä"
                  :nimi (str i "-lkm")
@@ -326,7 +352,7 @@
                       [{:otsikko "Suunta"
                         :nimi :valittu-suunta
                         :tyyppi :radio-group
-                        :vaihtoehdot lt/suunta-vaihtoehdot
+                        :vaihtoehdot suunta-vaihtoehdot
                         :vaihtoehto-nayta (partial tiedot/suuntavalinta-str edelliset)
                         :aseta (fn [rivi arvo]
                                  (:valittu-liikennetapahtuma (e! (tiedot/->AsetaSuunnat arvo))))}]))))]
@@ -334,7 +360,7 @@
           (for* [[suunta tiedot] (dissoc edelliset :tama)]
             (when (tiedot/nayta-suunnan-ketjutukset? app suunta tiedot)
               (lomake/rivi
-                {:otsikko (str "Saapuva liikenne - Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (lt/suunta->str suunta)) ")")
+                {:otsikko (str "Saapuva liikenne - Kohteelta " (::kohde/nimi tiedot) " (suuntana " (str/lower-case (suunta->str suunta)) ")")
                  :tyyppi :komponentti
                  :palstoja 3
                  :nimi :edelliset-alukset
@@ -352,7 +378,9 @@
       valittu-liikennetapahtuma]]))
 
 (defn valinnat [e! {{:keys [kayttajan-urakat]} :valinnat :as app} kohteet]
-  (let [atomi (partial tiedot/valinta-wrap e! app)]
+  (let [atomi (partial tiedot/valinta-wrap e! app)
+        suunta-vaihtoehdot (keys @lt/suunnat-atom)
+        suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
     [valinnat/urakkavalinnat
      {}
      ^{:key "valinnat"}
@@ -397,14 +425,13 @@
                          :palstoja 2
                          :vaihtoehdot lt-alus/aluslajit
                          :vaihtoehto-nayta lt-alus/aluslaji->laji-str}
-         :arvo-atom (atomi ::lt-alus/aluslajit)}]
-       ]
+         :arvo-atom (atomi ::lt-alus/aluslajit)}]]
       [:div
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Suunta"
          :kentta-params {:tyyppi :valinta
-                         :valinnat (into [nil] lt/suunta-vaihtoehdot)
-                         :valinta-nayta #(or (lt/suunta->str %) "Molemmat")}
+                         :valinnat (into [nil] suunta-vaihtoehdot)
+                         :valinta-nayta #(or (suunta->str %) "Kaikki")}
          :arvo-atom (atomi ::lt-alus/suunta)}]
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Uittoniput"
@@ -423,6 +450,7 @@
        #(e! (tiedot/->ValitseTapahtuma (tiedot/uusi-tapahtuma)))]]]))
 
 (def liikennetapahtumat-sarakkeet
+  (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
   [{:otsikko "Aika"
     :leveys 3
     :nimi ::lt/aika
@@ -447,7 +475,7 @@
    {:otsikko "Suun\u00ADta"
     :leveys 2
     :nimi ::lt-alus/suunta
-    :fmt lt/suunta->str}
+    :fmt suunta->str}
    {:otsikko "Alus"
     :leveys 3
     :nimi ::lt-alus/nimi}
@@ -476,7 +504,7 @@
    {:otsikko "Kuit\u00ADtaaja"
     :leveys 3
     :nimi ::lt/kuittaaja
-    :fmt kayttaja/kayttaja->str}])
+    :fmt kayttaja/kayttaja->str}]))
 
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
