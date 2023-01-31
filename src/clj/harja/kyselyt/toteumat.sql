@@ -465,8 +465,13 @@ FROM osa_toteumat ot
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
          JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false AND
-                                    -- salli euroyksikköisistä toteuman kirjaaminen ainoastaan liikenneympäristön hoidon äkillisiin hoitotöihin ja vahinkojen korjauksiin
-                                    (tk.suunnitteluyksikko != 'euroa' AND tk.yksiloiva_tunniste NOT IN ('63a2585b-5597-43ea-945c-1b25b16a06e2', '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'))
+                                    -- salli euroyksikköisistä toteuman kirjaaminen ainoastaan äkillisiin hoitotöihin ja vahinkojen korjauksiin
+                                    (tk.suunnitteluyksikko != 'euroa' AND tk.yksiloiva_tunniste NOT IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
+                                                                                                        '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
+                                                                                                        'd373c08b-32eb-4ac2-b817-04106b862fb1',
+                                                                                                        '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                                                                                        '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                                                                                        'b3a7a210-4ba6-4555-905c-fef7308dc5ec'))
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -485,8 +490,13 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
          JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false AND
-                                    -- salli euroyksikköisistä toteuman kirjaaminen ainoastaan liikenneympäristön hoidon äkillisiin hoitotöihin ja vahinkojen korjauksiin
-                                    (tk.suunnitteluyksikko != 'euroa' AND tk.yksiloiva_tunniste NOT IN ('63a2585b-5597-43ea-945c-1b25b16a06e2', '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974'))
+                                    -- salli euroyksikköisistä toteuman kirjaaminen ainoastaan äkillisiin hoitotöihin ja vahinkojen korjauksiin
+                                    (tk.suunnitteluyksikko != 'euroa' AND tk.yksiloiva_tunniste NOT IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
+                                                                                                        '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
+                                                                                                        'd373c08b-32eb-4ac2-b817-04106b862fb1',
+                                                                                                        '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                                                                                        '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                                                                                        'b3a7a210-4ba6-4555-905c-fef7308dc5ec'))
 JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
