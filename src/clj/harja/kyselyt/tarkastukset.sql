@@ -43,6 +43,7 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                      AS tekija,
+  o.nimi                   AS organisaatio,
   (SELECT array_agg(nimi)
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
@@ -160,6 +161,7 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                                                        AS tekija,
+  o.nimi                   AS organisaatio,
   t.aika,
   t.tarkastaja,
   t.havainnot,
