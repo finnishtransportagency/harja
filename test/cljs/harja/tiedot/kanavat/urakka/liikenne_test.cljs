@@ -680,7 +680,7 @@
              {:valittu-liikennetapahtuma nil}))))
 
 (deftest suunnan-vaihto
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ei-suuntaa}
                                                     {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
          (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :alas} :alas)
              {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :alas}
