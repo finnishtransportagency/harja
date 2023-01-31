@@ -10,12 +10,12 @@
 (s/def ::urakka-id nat-int?)
 (s/def ::id int?)
 (s/def ::urakka nat-int?)
-(s/def ::lahtotason-vuosi (s/int-in 1970 2050))
-(s/def ::lahtotason-kuukausi (s/int-in 1 13))
+(s/def ::lahtotason-vuosi (s/nilable (s/int-in 1970 2050)))
+(s/def ::lahtotason-kuukausi (s/nilable (s/int-in 1 13)))
 
 (s/def ::indeksinimi string?)
 (s/def ::arvo (s/nilable number?)) ; Arvo voi olla NULL (ei vielä tiedossa)
-(s/def ::raakaaine string?)
+(s/def ::raakaaine (s/nilable string?)) ;; Raaka-aine voi olla NULL
 (s/def ::urakkatyyppi ::urakka/urakkatyyppi-kw)
 
 (s/def ::indeksi

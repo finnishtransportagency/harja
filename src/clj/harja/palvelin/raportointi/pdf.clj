@@ -435,6 +435,7 @@
         [:fo:block
             (fo/checkbox koko vaihtoehto)
             " " otsikko]])]]])
+
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
@@ -490,6 +491,9 @@
 
                                         :content-height (str (+ 5 (count rivit)) "cm")}
            aikajana]]))]))
+
+(defmethod muodosta-pdf :boolean [[_ {:keys [arvo]}]]
+  (if arvo "Kyllä" "Ei"))
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)
