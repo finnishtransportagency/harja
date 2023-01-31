@@ -224,6 +224,7 @@ SELECT
   ypk.tunnus,
   ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
   ypkk.maaramuutokset,
+  ypkk.maku_paallysteet                  AS "maku-paallysteet",
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
@@ -243,6 +244,7 @@ SELECT
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
   ypk.vuodet,
+  ypk.yotyo,
   ypka.kohde_alku                       AS "kohde-alkupvm",
   ypka.paallystys_alku                  AS "paallystys-alkupvm",
   ypka.paallystys_loppu                 AS "paallystys-loppupvm",
@@ -273,7 +275,7 @@ WHERE
   AND (:vain_yha_kohteet IS NOT TRUE OR ypk.yhaid IS NOT NULL)
 GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
-  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
+  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.maku_paallysteet, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 SELECT
@@ -444,7 +446,7 @@ SELECT p."paikkauskohde-id"                 AS "yllapitokohde-id",
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
-INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yotyo,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, yllapitokohdetyyppi, yllapitokohdetyotyyppi, vuodet)
@@ -452,6 +454,7 @@ VALUES (:urakka,
   :sopimus,
   :kohdenumero,
   :nimi,
+  :yotyo,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -472,6 +475,7 @@ SET
   kohdenumero                       = :kohdenumero,
   nimi                              = :nimi,
   tunnus                            = :tunnus,
+  yotyo                             = :yotyo,
   tr_numero                         = :tr_numero,
   tr_alkuosa                        = :tr_alkuosa,
   tr_alkuetaisyys                   = :tr_alkuetaisyys,
@@ -801,6 +805,7 @@ UPDATE yllapitokohteen_kustannukset
 SET
   sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
   maaramuutokset           = :maaramuutokset,
+  maku_paallysteet         = :maku_paallysteet,
   arvonvahennykset         = :arvonvahennykset,
   bitumi_indeksi           = :bitumi_indeksi,
   kaasuindeksi             = :kaasuindeksi,
@@ -819,6 +824,7 @@ UPDATE yllapitokohteen_kustannukset
        bitumi_indeksi           = :bitumi_indeksi,
        kaasuindeksi             = :kaasuindeksi,
        maaramuutokset           = :maaramuutokset,
+       maku_paallysteet         = :maku_paallysteet,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
   FROM yllapitokohde
@@ -1007,9 +1013,11 @@ SELECT
   kohdenumero,
   ypk.nimi,
   ypkk.sopimuksen_mukaiset_tyot,
+  ypkk.maaramuutokset,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi,
   ypkk.kaasuindeksi,
+  ypkk.maku_paallysteet,
   ypk.poistettu,
   ypka.kohde_alku            AS "aikataulu_kohde_alku",
   ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
@@ -1128,8 +1136,8 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
 
 -- name: luo-yllapitokohteelle-kustannukset<!
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi, :maaramuutokset, :maku_paallysteet);
 
 -- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)

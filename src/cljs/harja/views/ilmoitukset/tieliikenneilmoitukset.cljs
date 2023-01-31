@@ -277,7 +277,7 @@
          :leveys 2}
         {:otsikko "Sijainti" :nimi :tierekisteri
          :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-         :tyyppi :pvm-aika
+         :tyyppi :string
          :leveys 5}
 
         {:otsikko "Selitteet" :nimi :selitteet

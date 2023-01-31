@@ -1239,7 +1239,8 @@ yllapitoluokkanimi->numero
     (> vuosi vuosi-jonka-jalkeen-piilotetaan-arvonmuutos-ja-sanktio)))
 
 (defn yllapitokohteen-kokonaishinta [{:keys [sopimuksen-mukaiset-tyot maaramuutokset toteutunut-hinta
-                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset]} vuosi]
+                                             bitumi-indeksi arvonvahennykset kaasuindeksi sakot-ja-bonukset
+                                             maku-paallysteet]} vuosi]
   (reduce + 0 (remove nil? [sopimuksen-mukaiset-tyot        ;; Sama kuin kohteen tarjoushinta
                             maaramuutokset                  ;; Kohteen määrämuutokset summattuna valmiiksi yhteen
                             (when-not (piilota-arvonmuutos-ja-sanktio? vuosi) arvonvahennykset) ;; Sama kuin arvonmuutokset
@@ -1247,6 +1248,7 @@ yllapitoluokkanimi->numero
                             ;; HUOM. sillä oletuksella, että sakot ovat miinusta ja bonukset plussaa.
                             bitumi-indeksi
                             kaasuindeksi
+                            maku-paallysteet
                             toteutunut-hinta                ;; Kohteen toteutunut hinta (vain paikkauskohteilla)
                             ])))
 
@@ -1315,6 +1317,7 @@ yllapitoluokkanimi->numero
    :sakot-ja-bonukset (laske-sarakkeen-summa :sakot-ja-bonukset kohteet)
    :bitumi-indeksi (laske-sarakkeen-summa :bitumi-indeksi kohteet)
    :kaasuindeksi (laske-sarakkeen-summa :kaasuindeksi kohteet)
+   :maku-paallysteet (laske-sarakkeen-summa :maku-paallysteet kohteet)
    :kokonaishinta (laske-sarakkeen-summa :kokonaishinta kohteet)})
 
 (defn eritellyt-maaramuutokset-kaytossa?

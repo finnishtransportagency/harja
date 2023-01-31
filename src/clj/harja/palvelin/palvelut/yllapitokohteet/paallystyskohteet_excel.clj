@@ -17,16 +17,17 @@
 (defn- validoi-excelin-otsikot
   "Vaadi oikeat otsikkotiedot määrämuotoisessa Excelissä"
   [[yhaid kohdenumero tunnus nimi
-                                 sopimuksen-mukaiset-tyot maaramuutokset
-                                 bitumi-indeksi kaasuindeksi kokonaishinta] ]
+    sopimuksen-mukaiset-tyot maaramuutokset
+    bitumi-indeksi kaasuindeksi maku-paallysteet kokonaishinta] ]
   (assert (= yhaid "Kohde-ID") "YHA ID:n otsikko oikein")
   (assert (= kohdenumero "Kohdenro") "Kohdenro otsikko oikein")
   (assert (= tunnus "Tunnus") "Tunnus otsikko oikein")
   (assert (= nimi "Nimi") "Nimi otsikko oikein")
   (assert (= sopimuksen-mukaiset-tyot "Tarjoushinta") "Tarjoushinta otsikko oikein")
   (assert (= maaramuutokset "Määrämuutokset") "Määrämuutokset otsikko oikein")
-  (assert (= bitumi-indeksi "Sideaineen hintamuutokset") "Sideaineen hintamuutokset otsikko oikein")
-  (assert (= kaasuindeksi "Nestekaasun ja kevyen polttoöljyn hintamuutokset") "Nestekaasun ja kevyen polttoöljyn hintamuutokset otsikko oikein")
+  (assert (= bitumi-indeksi "Sideaineet") "Sideaineen hintamuutokset otsikko oikein")
+  (assert (= kaasuindeksi "Nestekaasu ja kevyt polttoöljy") "Nestekaasun ja kevyen polttoöljyn hintamuutokset otsikko oikein")
+  (assert (= maku-paallysteet "MAKU-päällysteet") "MAKU-päällysteet otsikko oikein")
   (assert (= kokonaishinta "Kokonaishinta") "Kokonaishinta otsikko oikein"))
 
 (defn parsi-paallystyskohteet [workbook]
@@ -55,7 +56,8 @@
                            :sopimuksen-mukaiset-tyot (nth rivi 4)
                            :maaramuutokset (nth rivi 5)
                            :bitumi-indeksi (nth rivi 6)
-                           :kaasuindeksi (nth rivi 7)})
+                           :kaasuindeksi (nth rivi 7)
+                           :maku-paallysteet (nth rivi 8)})
                         rivit))]
     kohteet))
 
@@ -69,30 +71,37 @@
                                                                           :bitumi_indeksi (:bitumi-indeksi p)
                                                                           :kaasuindeksi (:kaasuindeksi p)
                                                                           :maaramuutokset (:maaramuutokset p)
+                                                                          :maku_paallysteet (:maku-paallysteet p)
                                                                           :muokkaaja (:id user)}))))
 
 (defn- excelin-rivi
   [{:keys [yhaid kohdenumero tunnus nimi
            sopimuksen-mukaiset-tyot maaramuutokset arvonvahennykset
-           sakot-ja-bonukset bitumi-indeksi kaasuindeksi kokonaishinta]} vuosi]
+           sakot-ja-bonukset bitumi-indeksi kaasuindeksi maku-paallysteet kokonaishinta]} vuosi]
   (let [yhteiset-arvot-alku [yhaid
                              kohdenumero tunnus nimi
                              sopimuksen-mukaiset-tyot ;; = Tarjoushinta
                              maaramuutokset]
-        loppusarake (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                      "H"
-                      "J")
+        eka-kustannussarake "E"
+        maku-sarakkeen-kirjain (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                 "I"
+                                 "K")
+        viim-kustannussarake maku-sarakkeen-kirjain
         yhteiset-arvot-loppu [bitumi-indeksi ;; = Sideaineen hintamuutokset
                               kaasuindeksi ;; = Nestekaasun ja kevyen polttoöljyn hintamuutokset
+                              maku-paallysteet
                               ;; kokonaishinta lasketaan muista sarakkeista, älä siis salli muokkausta
                               [:kaava {:kaava :summaa-vieressaolevat
-                                       :alkusarake "E"
-                                       :loppusarake loppusarake}]]]
+                                       :alkusarake eka-kustannussarake
+                                       :loppusarake viim-kustannussarake}]]]
     (into []
           (concat yhteiset-arvot-alku
                   (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
                     [arvonvahennykset sakot-ja-bonukset])
                   yhteiset-arvot-loppu))))
+
+(def taustavari-normaali :grey_25_percent)
+(def taustavari-hintamuutokset :grey_40_percent)
 
 (defn- excelin-sarakkeet [vuosi]
   (let [yhteiset-sarakkeet-alku [{:otsikko "Kohde-ID" :tasaa :oikea :fmt :kokonaisluku}
@@ -101,8 +110,9 @@
                                  {:otsikko "Nimi"}
                                  {:otsikko "Tarjoushinta"  :fmt :raha :voi-muokata? true}
                                  {:otsikko "Määrämuutokset" :fmt :raha}]
-        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineen hintamuutokset" :fmt :raha :voi-muokata? true}
-                                  {:otsikko "Nestekaasun ja kevyen polttoöljyn hintamuutokset" :fmt :raha :voi-muokata? true}
+        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
+                                  {:otsikko "Nestekaasu ja kevyt polttoöljy" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
+                                  {:otsikko "MAKU-päällysteet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
                                   {:otsikko "Kokonaishinta" :fmt :raha}]]
     (into []
           (concat yhteiset-sarakkeet-alku
@@ -123,8 +133,8 @@
         tyhjat-rivit (for [i (range 0 2)]
                        (into []
                              (repeat (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                                       9
-                                       11)
+                                       10
+                                       12)
                                      nil)))
         eka-rivi-jossa-kustannuksia 5
         yhteenvetorivi [(into []
@@ -132,8 +142,8 @@
                                 [nil nil nil "Yhteensä:"]
                                 (into []
                                       (repeat (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                                                5
-                                                7)
+                                                6
+                                                8)
                                               [:kaava {:kaava :summaa-yllaolevat
                                                        :alkurivi eka-rivi-jossa-kustannuksia
                                                        :loppurivi (+ (count kohderivit)
@@ -158,11 +168,15 @@
                 :sheet-nimi "HARJAAN"
                 :varjele-sheet-muokkauksilta? true
                 :tyhja (if (empty? kohteet) "Ei päällystyskohteita.")
-                :rivi-ennen [{:teksti "" :sarakkeita 4}
-                             {:teksti "Kustannukset (€)"
-                              :sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
-                                            5
-                                            7)}]}
+                :rivi-ennen [{:sarakkeita (if (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
+                                            6
+                                            8)
+                              :taustavari taustavari-normaali}
+                             {:sarakkeita 1 :taustavari taustavari-hintamuutokset}
+                             {:teksti "Hintamuutokset" :taustavari taustavari-hintamuutokset :sarakkeita 1}
+                             {:sarakkeita 1 :taustavari taustavari-hintamuutokset}
+                             {:taustavari taustavari-normaali
+                              :sarakkeita 1}]}
         taulukot [[:taulukko optiot sarakkeet
                    rivit]]
         tiedostonimi (str (:nimi urakka) "-Päällystyskohteet-" vuosi)

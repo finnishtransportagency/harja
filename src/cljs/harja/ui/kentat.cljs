@@ -507,7 +507,7 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
+  [{:keys [input-id lukutila? disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
@@ -515,7 +515,7 @@
     [:div
      [:input.vayla-checkbox
       {:id input-id
-       :class "check"
+       :class (y/luokat "check" (when lukutila? "lukutila"))
        :type "checkbox"
        :disabled disabled?
        :checked arvo
@@ -687,6 +687,7 @@
                     :input-id (str "harja-checkbox" (gensym))
                     :teksti teksti
                     :disabled? true
+                    :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka]}]
