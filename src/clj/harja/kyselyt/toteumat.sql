@@ -464,7 +464,7 @@ FROM osa_toteumat ot
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
-         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false
+         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false and tk.suunnitteluyksikko != 'euroa'
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -482,7 +482,7 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        tk.suunnitteluyksikko    AS yk,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false
+         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false and tk.suunnitteluyksikko != 'euroa'
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
          JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
@@ -587,19 +587,21 @@ SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
 SELECT tk.id AS id,
        tk.nimi AS tehtava,
        tk.suunnitteluyksikko AS yksikko
-FROM toimenpidekoodi tk,
-     tehtavaryhma tr
-     JOIN tehtavaryhma valitaso ON tr.emo = valitaso.id
-     JOIN tehtavaryhma ylataso ON valitaso.emo = ylataso.id,
-     urakka u
+FROM toimenpidekoodi tk
+         JOIN urakka u ON :urakka = u.id
+         JOIN tehtavaryhma tr ON tk.tehtavaryhma = tr.id and tr.tyyppi = 'alataso' AND
+                                 (:otsikko::TEXT IS NULL OR tr.otsikko = :otsikko::TEXT)
 WHERE tk.tehtavaryhma = tr.id
   AND tk.taso = 4
   AND tk.aluetieto = false
-  AND (:tehtavaryhma::INTEGER IS NULL OR ylataso.id = :tehtavaryhma)
-  AND u.id = :urakka
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
-  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
-
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  AND tk.poistettu IS NOT TRUE
+  -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+  AND tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa'
+  -- rajataan pois alue- eli hoitoluokkatiedot
+  AND tk.aluetieto IS NOT TRUE
+ORDER BY tk.jarjestys;
 
 -- name: tallenna-erilliskustannukselle-liitteet<!
 -- Lisää liitteet
