@@ -465,6 +465,7 @@
   (process-event [{t :tapahtuma} app]
     (lt/paivita-suunnat-ja-toimenpide!)
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+    (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (-> app
         (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
                                             (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
@@ -560,8 +561,9 @@
 
   TapahtumaTallennettu
   (process-event [{t :tulos} app]
-    ;; Lisää "ei aluslajia" kun tullaan tapahtumat näkymään, muuten sitä ei näy filttereissä
+    ;; Lisää "ei aluslajia" ja "ei määritelty" tapahtumat näkymään, muuten sitä ei näy filttereissä
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+    (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
         (assoc :tallennus-kaynnissa? false)

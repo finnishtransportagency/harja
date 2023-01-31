@@ -118,7 +118,8 @@
 
 (def suunnat-atom (atom
                    {:ylos "Ylös"
-                    :alas "Alas"}))
+                    :alas "Alas"
+                    :ei-suuntaa "Ei määritelty"}))
 
 (def palvelu-atom (atom {:arvo nil}))
 (def toimenpide-atom (atom {:arvo nil}))
