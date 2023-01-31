@@ -173,7 +173,7 @@
                    (or (and (not= (:arvo @lt/toimenpide-atom) :tyhjennys)
                             (or (nil? %) (= % :EI)))
                        (nil? %))
-                    "Valutse aluslaji")]
+                    "Valitse aluslaji")]
 
        ;:validoi [[:ei-tyhja "Valitse aluslaji"]]
        :valinnat (:sorted lajit-sortattu)
