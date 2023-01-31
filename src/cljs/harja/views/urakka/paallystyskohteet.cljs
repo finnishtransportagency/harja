@@ -34,22 +34,25 @@
 
 (defn- materiaalin-indeksisidontarivi
   [{:keys [indeksi lahtotason-vuosi lahtotason-kuukausi]}]
-  [:div
-   [:span.tietokentta (paallystys-indeksit/raaka-aine-nimi (:raakaaine indeksi)) ": "]
-   [:span.tietoarvo
-    (str
-      (:indeksinimi indeksi)
-      (when (:arvo indeksi)
-        (str " (lähtötaso "
-             lahtotason-vuosi "/" lahtotason-kuukausi
-             ": "
-             (:arvo indeksi) " €/t)")))]])
+  (let [raaka-aineen-nimi (if (nil? (:raakaaine indeksi))
+                            "Kustannustasomuutokset"
+                            (paallystys-indeksit/raaka-aine-nimi (:raakaaine indeksi)))]
+    [:div.indeksitietosailio
+     [:span.tietokentta (str raaka-aineen-nimi ": ")]
+     [:span.tietoarvo
+      (str
+        (:indeksinimi indeksi)
+        (when (:arvo indeksi)
+          (str " (lähtötaso "
+               lahtotason-vuosi "/" lahtotason-kuukausi
+               ": "
+               (:arvo indeksi) " €/t)")))]]))
 
 (defn indeksitiedot
   []
   (let [indeksitiedot @urakka/paallystysurakan-indeksitiedot]
     (when-not (empty? indeksitiedot)
-      [:span
+      [:div.raaka-aineindeksit
        [:h6 "Urakassa raaka-aineiden hinnat sidottu seuraaviin indekseihin"]
        (for [idx indeksitiedot]
          ^{:key (:id idx)}

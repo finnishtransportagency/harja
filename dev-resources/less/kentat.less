@@ -4,3 +4,14 @@
 input.veda-oikealle {
   text-align: right;
 }
+.boolean {
+  input.vayla-checkbox.lukutila {
+    + label:before {
+      border: 1px solid @harmaa-vaalea;
+    }
+    &:checked + label:before {
+      color: @harmaa-tumma;
+      background: #fff;
+    }
+  }
+}

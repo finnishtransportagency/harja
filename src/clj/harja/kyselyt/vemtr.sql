@@ -10,17 +10,19 @@ with urakat as (select id, hallintayksikko
                          rtm.hallintayksikko_id as "hallintayksikko",
                          sum(rtm.materiaalimaara) as "materiaalimaara"
                     from raportti_toteuma_maarat rtm
+                    left join urakka u on rtm.urakka_id = u.id
                    where (:hallintayksikko::integer is null or rtm.hallintayksikko_id = :hallintayksikko::integer)
                      and (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+                     and u.tyyppi='hoito'
                    group by rtm.hallintayksikko_id, rtm.toimenpidekoodi),
      tyot as (select sum(yt.maara) as "maara", yt.tehtava as "tehtava", yt.urakka as "urakka"
               from yksikkohintainen_tyo yt
               where yt.urakka in (select id from urakat)
                 and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
               group by yt.urakka, yt.tehtava)
-select SUM(toteumat.maara)           as toteuma,
+select (SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko)           as toteuma,
        SUM(tyot.maara)               as suunniteltu,
-       SUM(toteumat.materiaalimaara) as "toteutunut-materiaalimaara",
+       (SELECT materiaalimaara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko) as "toteutunut-materiaalimaara",
        o.id                          as hallintayksikko,
        o.elynumero                   as elynumero,
        tehtava.nimi                  as nimi,
@@ -45,8 +47,7 @@ from toimenpideinstanssi tpi
        join toimenpidekoodi tehtava on tehtava.emo = tpi.toimenpide AND tehtava.yksikko NOT ILIKE 'euro%' AND tehtava."raportoi-tehtava?" = TRUE
        left join tyot on tyot.tehtava = tehtava.id and tyot.urakka = u.id
        join organisaatio o on o.id = u.hallintayksikko
-       left join toteumat on toteumat.toimenpidekoodi = tehtava.id and toteumat.hallintayksikko = u.hallintayksikko
 where tpi.urakka in (select id from urakat)
-group by o.nimi, o.id, o.elynumero, emo.nimi, tehtava.nimi, tehtava.suunnitteluyksikko, tehtava.yksikko, tehtava.jarjestys, emo.koodi
-having coalesce(SUM(toteumat.maara), SUM(tyot.maara)) >= 0
+group by o.nimi, o.id, o.elynumero, emo.nimi, tehtava.nimi, tehtava.id, tehtava.suunnitteluyksikko, tehtava.yksikko, tehtava.jarjestys, emo.koodi
+having coalesce((SELECT maara FROM toteumat t WHERE t.toimenpidekoodi = tehtava.id AND t.hallintayksikko = :hallintayksikko), SUM(tyot.maara)) >= 0
 order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tehtava.jarjestys ASC;

@@ -1711,7 +1711,7 @@
                                                      (str "SELECT * FROM yllapitokohteen_kustannukset
                                          WHERE yllapitokohde = " kohde-id";")))]
 
-      (is (= alussa-ei-kustannuksia [(first alussa-ei-kustannuksia) kohde-id 0M 0M 0M 0M nil nil nil 0M]))
+      (is (= alussa-ei-kustannuksia [(first alussa-ei-kustannuksia) kohde-id 0M 0M 0M 0M nil nil nil 0M 0M]))
 
       ;; take 8, koska emme tässä assertoi muokkausajanhetkeä
       (is (= (take 8 kustannukset-tallennuksen-jalkeen) [(first alussa-ei-kustannuksia) kohde-id 12M 34M 56M 78M nil (:id +kayttaja-jvh+)]))
@@ -1724,12 +1724,16 @@
       (is (= (count (filter #(= (:nimi %) "Tärkeä kohde mt20") vastauksen-kohteet)) 1)))))
 
 (def puolangantie-testidata
-  {:tila :ei-aloitettu, :tr-kaista nil, :tiemerkinta-alkupvm nil, :kohdenumero "L15", :paallystys-loppupvm #inst "2023-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 5000, :kohde-valmispvm nil, :toteutunut-hinta nil, :tiemerkinta-loppupvm nil, :aikataulu-muokattu #inst "2023-01-20T06:26:18.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 2, :yha-kohdenumero 115, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus "A", :tr-alkuosa 2, :urakka "Utajärven päällystysurakka", :sopimuksen-mukaiset-tyot 1000, :yllapitokohteen-voi-poistaa? true, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kaasuindeksi 1000, :kohdeosat (list {:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :yllapitoluokka 8, :id 9, :yllapitokohde-id 25, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}), :bitumi-indeksi 3000, :yllapitokohdetyotyyppi :paallystys, :yllapitoluokka {:nimi "Ei pk-luokkaa", :lyhyt-nimi "-", :numero nil}, :id 25, :paallystysilmoitus-tila nil, :pituus 1000, :tr-alkuetaisyys 0, :vuodet #{2023}, :tr-numero 837, :urakoitsija "Skanska Asfaltti Oy", :paallystys-alkupvm #inst "2023-06-18T21:00:00.000-00:00", :kohde-alkupvm #inst "2023-06-13T21:00:00.000-00:00", :arvonvahennykset nil, :muokattu nil, :paallystysilmoitus-id nil, :yhaid 13375, :keskimaarainen-vuorokausiliikenne nil})
+  {:tila :ei-aloitettu, :tr-kaista nil, :tiemerkinta-alkupvm nil, :kohdenumero "L15", :paallystys-loppupvm #inst "2023-06-20T21:00:00.000-00:00", :tr-ajorata nil, :urakka-id 7, :maaramuutokset 5000, :yotyo false
+   :maku-paallysteet 2000M, :kohde-valmispvm nil, :toteutunut-hinta nil, :tiemerkinta-loppupvm nil, :aikataulu-muokattu #inst "2023-01-20T06:26:18.000-00:00", :sakot-ja-bonukset nil, :tr-loppuosa 2, :yha-kohdenumero 115, :yllapitokohdetyyppi :paallyste, :nykyinen-paallyste nil, :tunnus "A", :tr-alkuosa 2, :urakka "Utajärven päällystysurakka", :sopimuksen-mukaiset-tyot 1000, :yllapitokohteen-voi-poistaa? true, :tr-loppuetaisyys 1000, :nimi "Puolangantie", :kaasuindeksi 1000, :kohdeosat (list {:tr-kaista 11, :sijainti {:type :multiline, :lines [{:type :line, :points [[473846.98 7182870.803] [473960.292 7182931.312] [474183.474 7183050.716] [474330.801 7183128.039] [474404.246 7183166.586] [474452.892 7183194.074] [474453.6 7183194.541] [474489.012 7183219.83] [474518.267 7183248.087] [474546.19 7183280.333] [474567.13 7183306.317] [474574.948 7183316.489] [474650.223 7183414.291] [474660.147240582 7183426.73039112]]}]}, :tr-ajorata 0, :massamaara nil, :tr-loppuosa 2, :tr-alkuosa 2, :tr-loppuetaisyys 1000, :nimi "Puolangantien kohdeosa", :raekoko nil, :tyomenetelma nil, :paallystetyyppi nil, :yllapitoluokka 8, :id 9, :yllapitokohde-id 25, :tr-alkuetaisyys 0, :tr-numero 837, :toimenpide nil}), :bitumi-indeksi 3000, :yllapitokohdetyotyyppi :paallystys, :yllapitoluokka {:nimi "Ei pk-luokkaa", :lyhyt-nimi "-", :numero nil}, :id 25, :paallystysilmoitus-tila nil, :pituus 1000, :tr-alkuetaisyys 0, :vuodet #{2023}, :tr-numero 837, :urakoitsija "Skanska Asfaltti Oy", :paallystys-alkupvm #inst "2023-06-18T21:00:00.000-00:00", :kohde-alkupvm #inst "2023-06-13T21:00:00.000-00:00", :arvonvahennykset nil, :muokattu nil, :paallystysilmoitus-id nil, :yhaid 13375, :keskimaarainen-vuorokausiliikenne nil})
 
 (deftest tallenna-yllapitokohteen-kustannukset-maaramuutokset-kokonaissummana
   (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
         sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
         kohde-id (hae-yllapitokohteen-id-nimella "Puolangantie")
+        ennen-muutosta-yotyo (ffirst (q
+                                       (str "SELECT yotyo FROM yllapitokohde
+                                         WHERE id = " kohde-id";")))
        kustannukset-ennen-muutosta (first (q
                                         (str "SELECT * FROM yllapitokohteen_kustannukset
                                          WHERE yllapitokohde = " kohde-id";")))
@@ -1742,7 +1746,8 @@
          ennen-muutosta-toteutunut_hinta
          ennen-muutosta-muokkaaja
          ennen-muutosta-muokattu
-         ennen-muutosta-maaramuutokset] kustannukset-ennen-muutosta
+         ennen-muutosta-maaramuutokset
+         ennen-muutosta-maku_paallysteet] kustannukset-ennen-muutosta
 
         vastauksen-kohteet (:yllapitokohteet (kutsu-palvelua (:http-palvelin jarjestelma)
                                                              :tallenna-yllapitokohteet +kayttaja-jvh+ {:urakka-id urakka-id
@@ -1764,8 +1769,13 @@
            muutoksen-jalkeen-toteutunut_hinta
            muutoksen-jalkeen-muokkaaja
            muutoksen-jalkeen-muokattu
-           muutoksen-jalkeen-maaramuutokset] kustannukset-muutoksen-jalkeen]
+           muutoksen-jalkeen-maaramuutokset
+           muutoksen-jalkeen-maku_paallysteet] kustannukset-muutoksen-jalkeen
+          muutoksen-jalkeen-yotyo (ffirst (q
+                                            (str "SELECT yotyo FROM yllapitokohde
+                                         WHERE id = " kohde-id";")))]
 
+      (is (true? ennen-muutosta-yotyo) "Ensin olis tarjolla yöhommia")
       (is (= ennen-muutosta-id (first kustannukset-ennen-muutosta)) "ennen-muutosta-rivin-id")
       (is (= ennen-muutosta-yllapitokohde kohde-id) "ennen-muutosta-kohde-id")
       (is (= ennen-muutosta-sopimuksen_mukaiset_tyot 400M) "ennen-muutosta-sopimuksentyöt")
@@ -1776,7 +1786,9 @@
       (is (= ennen-muutosta-muokkaaja nil) "ennen-muutosta-muokkaaja")
       (is (= ennen-muutosta-muokattu nil) "ennen-muutosta-muokattu")
       (is (= ennen-muutosta-maaramuutokset 1000M) "ennen-muutosta-maaramuutokset")
+      (is (= ennen-muutosta-maku_paallysteet 1000M) "ennen-muutosta-maku-paallysteet")
 
+      (is (false? muutoksen-jalkeen-yotyo) "Alkoi ramasta niin perutaan sittenkin ne yöhommat... ")
       (is (= muutoksen-jalkeen-id (first kustannukset-muutoksen-jalkeen)) "muutoksen-jalkeen-rivin-id")
       (is (= muutoksen-jalkeen-yllapitokohde kohde-id) "muutoksen-jalkeen-kohde-id")
       (is (= muutoksen-jalkeen-sopimuksen_mukaiset_tyot 1000M) "muutoksen-jalkeen-sopimuksentyöt")
@@ -1787,6 +1799,7 @@
       (is (= muutoksen-jalkeen-muokkaaja (:id +kayttaja-jvh+)) "muutoksen-jalkeen-muokkaaja")
       (is (pvm/tanaan? muutoksen-jalkeen-muokattu) "muutoksen-jalkeen-muokattu")
       (is (= muutoksen-jalkeen-maaramuutokset 5000M) "muutoksen-jalkeen-maaramuutokset")
+      (is (= muutoksen-jalkeen-maku_paallysteet 2000M) "muutoksen-jalkeen-maku_paallysteet")
 
 
       (is (= (count (filter #(= (:nimi %) "Puolangantie") vastauksen-kohteet)) 1)))))
@@ -1820,7 +1833,7 @@
               :paallysteet nil)] tiedot)
         "Sähköpostilähetyksen tiedot OK, eli eivät sisällä poistettujen alikohteiden tietoja.")))
 
-(def excel-rivit-utajarvi-2022
+(def excel-rivit-utajarvi-2023
   (list {:lihavoi? false
          :rivi [13374
                 "L14"
@@ -1830,10 +1843,11 @@
                 0M
                 0M
                 0M
+                0M
                 [:kaava
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
-                  :loppusarake "H"}]]}
+                  :loppusarake "I"}]]}
         {:lihavoi? false
          :rivi [13375
                 "L15"
@@ -1843,16 +1857,21 @@
                 1000M
                 5000M
                 0M
+                1000M
                 [:kaava
                  {:alkusarake "E"
                   :kaava :summaa-vieressaolevat
-                  :loppusarake "H"}]]}
-        [nil nil nil nil nil nil nil nil nil]
-        [nil nil nil nil nil nil nil nil nil]
+                  :loppusarake "I"}]]}
+        [nil nil nil nil nil nil nil nil nil nil]
+        [nil nil nil nil nil nil nil nil nil nil]
         [nil
          nil
          nil
          "Yhteensä:"
+         [:kaava
+          {:alkurivi 5
+           :kaava :summaa-yllaolevat
+           :loppurivi 6}]
          [:kaava
           {:alkurivi 5
            :kaava :summaa-yllaolevat
@@ -1885,7 +1904,7 @@
                                                :sopimus-id sopimus-id
                                                :vuosi vuosi}))
         excelin-kohderivit (paallystyskohteet-excel/muodosta-excelrivit kohteet vuosi)]
-    (is (= excel-rivit-utajarvi-2022 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
+    (is (= excel-rivit-utajarvi-2023 excelin-kohderivit) "Päällystyskohteiden kustannusten excelrivien muodostus")))
 
 (def excel-rivit-muhos-2017
   (list
@@ -1900,10 +1919,11 @@
             2000M
             4543.95M
             0M
+            nil
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [54523243
             "308a"
@@ -1915,10 +1935,11 @@
             nil
             565M
             100M
+            nil
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [456896958
             "310"
@@ -1930,10 +1951,11 @@
             -3000M
             5M
             6M
+            nil
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
+              :loppusarake "K"}]]}
     {:lihavoi? false
      :rivi [456896959
             "666"
@@ -1945,14 +1967,19 @@
             nil
             5M
             6M
+            nil
             [:kaava
              {:alkusarake "E"
               :kaava :summaa-vieressaolevat
-              :loppusarake "J"}]]}
-    [nil nil nil nil nil nil nil nil nil nil nil]
-    [nil nil nil nil nil nil nil nil nil nil nil]
+              :loppusarake "K"}]]}
+    [nil nil nil nil nil nil nil nil nil nil nil nil]
+    [nil nil nil nil nil nil nil nil nil nil nil nil]
     [nil nil nil
      "Yhteensä:"
+     [:kaava
+      {:alkurivi 5
+       :kaava :summaa-yllaolevat
+       :loppurivi 8}]
      [:kaava
       {:alkurivi 5
        :kaava :summaa-yllaolevat
@@ -2012,9 +2039,11 @@
                :bitumi_indeksi 2
                :kaasuindeksi 3
                :maaramuutokset 4
+               :maku_paallysteet 5
                :muokkaaja user-id}
         _ (yllapitokohteet-q/tallenna-yllapitokohteen-kustannukset-yhaid! db kohde)
         kohteen-kustannukset-jalkeen (hae-yllapitokohteen-kustannukset yhaid)]
-    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil nil]) "kustannukset ennen tallennusta")
-    (is (= (take 8 kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset ennen tallennuksen jälkeen")
-    (is (= (last kohteen-kustannukset-jalkeen) 4M) "määrämuutokset ennen tallennuksen jälkeen")))
+    (is (= (butlast kohteen-kustannukset-ennen) [15 27 0M 0M 0M 0M toteutunut-hinta nil nil 0M]) "kustannukset ennen tallennusta")
+    (is (= (take 8 kohteen-kustannukset-jalkeen) [15 27 1M 0M 2M 3M toteutunut-hinta user-id]) "kustannukset tallennuksen jälkeen")
+    (is (= (nth kohteen-kustannukset-jalkeen 9) 4M) "määrämuutokset tallennuksen jälkeen")
+    (is (= (nth kohteen-kustannukset-jalkeen 10) 5M) "maku päällysteet tallennuksen jälkeen")))
