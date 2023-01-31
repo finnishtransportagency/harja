@@ -209,7 +209,7 @@
         palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot valittu-liikennetapahtuma)))
         _ (swap! lt/toimenpide-atom assoc :arvo toimenpide)
         _ (swap! lt/palvelu-atom assoc :arvo palvelumuoto)
-        _ (lt/paivita-suunnat-atom!)]
+        _ (lt/paivita-suunnat-ja-toimenpide!)]
     
     [:div
      [debug app]
@@ -306,7 +306,7 @@
                :hae (constantly (::toiminto/toimenpide osa))
                :aseta (fn [rivi arvo]
                         (swap! lt/toimenpide-atom assoc :arvo arvo)
-                        (lt/paivita-suunnat-atom!)
+                        (lt/paivita-suunnat-ja-toimenpide!)
                         (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/toimenpide arvo)))}
               (when (tiedot/nayta-palvelumuoto? osa)
                 {:otsikko "Palvelumuoto"
@@ -318,7 +318,7 @@
                  :hae (constantly (::toiminto/palvelumuoto osa))
                  :aseta (fn [rivi arvo]
                             (swap! lt/palvelu-atom assoc :arvo arvo)
-                            (lt/paivita-suunnat-atom!)
+                            (lt/paivita-suunnat-ja-toimenpide!)
                             (tiedot/paivita-toiminnon-tiedot rivi (assoc osa ::toiminto/palvelumuoto arvo)))})
               (when (tiedot/nayta-itsepalvelut? osa)
                 {:otsikko "Itsepalveluiden lukumäärä"

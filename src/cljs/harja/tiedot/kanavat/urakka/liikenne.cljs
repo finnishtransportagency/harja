@@ -267,10 +267,11 @@
   ;; jos käyttäjä vaihtaa toimenpidettä tai palvelumuotoa toiseen, korvaa suunnattomat alukset.
   (let [korvaa-suunnattomat-alukset (map (fn [alus]
                                            ;; Silloin kun suunnat-atomilla ei ole :ei-suuntaa avainta, 
-                                           ;; tarkoittaa että toimenpide ei ole tyhjennys eikä palvelutyyppi ole itsepalvelu => korvataan suunnattomat alukset.
+                                           ;; tarkoittaa että toimenpide ei ole tyhjennys eikä palvelutyyppi ole itsepalvelu => korvataan suunnattomat alukset
+                                           ;; Vaihdetaan arvo nilliksi niin käyttäjä huomaa korjata suunnan 
                                            (if (and (= (::lt-alus/suunta alus) :ei-suuntaa) 
                                                     (not (:ei-suuntaa @lt/suunnat-atom)))
-                                             (assoc alus ::lt-alus/suunta :ylos)
+                                             (assoc alus ::lt-alus/suunta nil)
                                              alus))
                                          (::lt/alukset tapahtuma))]
     (-> tapahtuma
@@ -462,7 +463,7 @@
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
-    (lt/paivita-suunnat-atom!)
+    (lt/paivita-suunnat-ja-toimenpide!)
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (-> app
         (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
@@ -559,6 +560,8 @@
 
   TapahtumaTallennettu
   (process-event [{t :tulos} app]
+    ;; Lisää "ei aluslajia" kun tullaan tapahtumat näkymään, muuten sitä ei näy filttereissä
+    (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
     (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
         (assoc :tallennus-kaynnissa? false)

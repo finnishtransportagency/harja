@@ -123,7 +123,7 @@
 (def palvelu-atom (atom {:arvo nil}))
 (def toimenpide-atom (atom {:arvo nil}))
 
-(defn paivita-suunnat-atom! []
+(defn paivita-suunnat-ja-toimenpide! []
   ;; Jos toimenpide on tyhjennys, lisää "ei aluslajia" vaihtoehto
   (if (= (:arvo @toimenpide-atom) :tyhjennys)
     (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
