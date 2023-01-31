@@ -1,19 +1,30 @@
 -- name: hae-erilliskustannukset
 -- Hakee erilliskustannukset aikavälillä
-SELECT
-  e.id,
-  e.tyyppi,
-  e.urakka as urakka_id,
-  e.sopimus as sopimus_id,
-  e.toimenpideinstanssi,
-  e.pvm,
-  e.rahasumma,
-  e.indeksin_nimi,
-  e.lisatieto,
-  e.luotu,
-  e.luoja,
-  kuukauden_indeksikorotus(e.pvm, e.indeksin_nimi, e.rahasumma, e.urakka) AS indeksikorjattuna,
-  (SELECT korotus FROM laske_hoitokauden_asiakastyytyvaisyysbonus(e.urakka, e.pvm, e.indeksin_nimi, e.rahasumma)) AS bonusindeksikorotus,
+SELECT e.id,
+       e.tyyppi,
+       e.urakka                                            as urakka_id,
+       e.sopimus                                           as sopimus_id,
+       e.toimenpideinstanssi,
+       e.pvm,
+       e.rahasumma,
+       e.indeksin_nimi,
+       e.lisatieto,
+       e.luotu,
+       e.luoja,
+       (SELECT korotettuna
+        from erilliskustannuksen_indeksilaskenta(e.pvm, e.indeksin_nimi, e.rahasumma,
+                                                 e.urakka, e.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS indeksikorjattuna,
+       (SELECT korotus
+        from erilliskustannuksen_indeksilaskenta(e.pvm, e.indeksin_nimi, e.rahasumma,
+                                                 e.urakka, e.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS bonusindeksikorotus,
   hy.nimi as hallintayksikko_nimi,
   hy.id as hallintayksikko_id,
   s.sampoid as sopimus_sampoid,

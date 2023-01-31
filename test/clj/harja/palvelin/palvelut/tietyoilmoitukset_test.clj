@@ -173,7 +173,7 @@
     [+testi-fim+ (slurp (io/resource "xsd/fim/esimerkit/hae-muhoksen-paallystysurakan-kayttajat.xml"))]
     (let [yllapitokohde-id (hae-yllapitokohde-leppajarven-ramppi-jolla-paallystysilmoitus)
           paallystysurakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-          tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2013-2022")
+          tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
           vastaus-paallystysurakka (kutsu-palvelua (:http-palvelin jarjestelma)
                                                    :hae-yllapitokohteen-tiedot-tietyoilmoitukselle
                                                    +kayttaja-jvh+

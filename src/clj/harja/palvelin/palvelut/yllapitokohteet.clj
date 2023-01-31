@@ -83,23 +83,43 @@
 (defn- hae-urakkatyyppi [db urakka-id]
   (keyword (:tyyppi (first (q/hae-urakan-tyyppi db {:urakka urakka-id})))))
 
+
+(defn- pura-tarkat-aikataulut [rivit]
+  (konv/sarakkeet-vektoriin
+    rivit
+    {:tarkkaaikataulu :tarkka-aikataulu}))
+
+(defn muotoile-tarkat-aikataulut [rivit]
+  (map (fn [rivi]
+         (assoc rivi :tarkka-aikataulu
+                     (map (fn [tarkka-aikataulu]
+                            (konv/string->keyword tarkka-aikataulu :toimenpide))
+                          (:tarkka-aikataulu rivi))))
+       rivit))
+
+(defn- liita-tarkka-aikataulu [rivit]
+  (-> rivit
+      pura-tarkat-aikataulut
+      muotoile-tarkat-aikataulut))
+
+(defn- lisaa-pituus-ja-kohdeosat [db rivit]
+  (let [rivit-pituuksin (map #(yy/lisaa-yllapitokohteelle-pituus db %) rivit)
+        rivit-alikohtein (q/liita-kohdeosat-kohteisiin db rivit-pituuksin :id)]
+    rivit-alikohtein))
+
+(defn- taydenna-aikataulutiedot [db rivit]
+  (->> rivit
+       liita-tarkka-aikataulu
+       (lisaa-pituus-ja-kohdeosat db)))
+
 (defn- hae-paallystysurakan-aikataulu [{:keys [db urakka-id sopimus-id vuosi]}]
   (let [aikataulu (->> (q/hae-paallystysurakan-aikataulu db {:urakka urakka-id :sopimus sopimus-id :vuosi vuosi})
                        (map konv/alaviiva->rakenne)
                        (mapv #(assoc % :tiemerkintaurakan-voi-vaihtaa?
                                        (yy/yllapitokohteen-suorittavan-tiemerkintaurakan-voi-vaihtaa?
-                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))
-        aikataulu (konv/sarakkeet-vektoriin
-                    aikataulu
-                    {:tarkkaaikataulu :tarkka-aikataulu})
-        aikataulu (map (fn [rivi]
-                         (assoc rivi :tarkka-aikataulu
-                                     (map (fn [tarkka-aikataulu]
-                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:tarkka-aikataulu rivi))))
-                       aikataulu)
-        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)]
-    aikataulu))
+                                         db (:id %) (:suorittava-tiemerkintaurakka %)))))]
+    (taydenna-aikataulutiedot db aikataulu)))
+
 
 (defn- hae-tiemerkintaurakan-aikataulu [db urakka-id vuosi]
   (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
@@ -108,20 +128,8 @@
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
                         (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
-                                                               :vuosi vuosi}))
-        aikataulu (konv/sarakkeet-vektoriin
-                    aikataulu
-                    {:tarkkaaikataulu :tarkka-aikataulu})
-        aikataulu (map (fn [rivi]
-                         (assoc rivi :tarkka-aikataulu
-                                     (map (fn [tarkka-aikataulu]
-                                            (konv/string->keyword tarkka-aikataulu :toimenpide))
-                                          (:tarkka-aikataulu rivi))))
-                       aikataulu)
-        aikataulu (map #(yy/lisaa-yllapitokohteelle-pituus db %) aikataulu)
-        ;; Liitetään kohdeosat, koska Tiemerkintäurakan aikataulusta halutaan nähdä ne (VHAR-1131)
-        aikataulu (q/liita-kohdeosat-kohteisiin db aikataulu :id)]
-    aikataulu))
+                                                               :vuosi vuosi}))]
+    (taydenna-aikataulutiedot db aikataulu)))
 
 (defn- lisaa-yllapitokohteille-valitavoitteet
   "Lisää ylläpitokohteille välitavoitteet, mikäli käyttäjällä on oikeus nähdä urakan välitavoitteet"
@@ -501,12 +509,12 @@
                 (tr-domain/jarjesta-tiet yllapitokohdeosat)))))))))
 
 (defn- luo-uusi-yllapitokohde [db user urakka-id sopimus-id vuosi
-                               {:keys [kohdenumero nimi
+                               {:keys [kohdenumero nimi yotyo
                                        tr-numero tr-alkuosa tr-alkuetaisyys
                                        tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
                                        yllapitoluokka yllapitokohdetyyppi yllapitokohdetyotyyppi
                                        sopimuksen-mukaiset-tyot arvonvahennykset bitumi-indeksi
-                                       kaasuindeksi toteutunut-hinta
+                                       kaasuindeksi toteutunut-hinta maaramuutokset maku-paallysteet
                                        poistettu keskimaarainen-vuorokausiliikenne]}]
   (log/debug "Luodaan uusi ylläpitokohde tyyppiä " yllapitokohdetyotyyppi)
   (when-not poistettu
@@ -515,6 +523,7 @@
                                         :sopimus sopimus-id
                                         :kohdenumero kohdenumero
                                         :nimi nimi
+                                        :yotyo yotyo
                                         :tr_numero tr-numero
                                         :tr_alkuosa tr-alkuosa
                                         :tr_alkuetaisyys tr-alkuetaisyys
@@ -536,7 +545,9 @@
                                                   :arvonvahennykset arvonvahennykset
                                                   :bitumi_indeksi bitumi-indeksi
                                                   :kaasuindeksi kaasuindeksi
-                                                  :toteutunut_hinta toteutunut-hinta})
+                                                  :toteutunut_hinta toteutunut-hinta
+                                                  :maaramuutokset maaramuutokset
+                                                  :maku_paallysteet maku-paallysteet})
       (:id kohde))))
 
 (defmulti poista-yllapitokohde
@@ -569,19 +580,20 @@
     (q/merkitse-yllapitokohteen-kohdeosat-poistetuiksi! db {:yllapitokohdeid id :urakka urakka-id})))
 
 (defn- paivita-yllapitokohde [db user urakka-id sopimus-id
-                              {:keys [id kohdenumero nimi tunnus
+                              {:keys [id kohdenumero nimi tunnus yotyo
                                       tr-numero tr-alkuosa tr-alkuetaisyys
                                       tr-loppuosa tr-loppuetaisyys tr-ajorata tr-kaista
-                                      yllapitoluokka sopimuksen-mukaiset-tyot
+                                      yllapitoluokka sopimuksen-mukaiset-tyot maaramuutokset
                                       arvonvahennykset bitumi-indeksi kaasuindeksi
-                                      toteutunut-hinta
+                                      toteutunut-hinta maku-paallysteet
                                       keskimaarainen-vuorokausiliikenne]
                                :as kohde}]
-  (do (log/debug "Päivitetään ylläpitokohde " tr-numero)
+  (do (log/debug "Päivitetään ylläpitokohde " id " yötyö" yotyo)
       (q/paivita-yllapitokohde<! db
                                  {:kohdenumero                       kohdenumero
                                   :nimi                              nimi
                                   :tunnus                            tunnus
+                                  :yotyo                             yotyo
                                   :tr_numero                         tr-numero
                                   :tr_alkuosa                        tr-alkuosa
                                   :tr_alkuetaisyys                   tr-alkuetaisyys
@@ -599,6 +611,8 @@
       (q/tallenna-yllapitokohteen-kustannukset! db {:yllapitokohde            id
                                                     :urakka                   urakka-id
                                                     :sopimuksen_mukaiset_tyot sopimuksen-mukaiset-tyot
+                                                    :maaramuutokset           maaramuutokset
+                                                    :maku_paallysteet         maku-paallysteet
                                                     :arvonvahennykset         arvonvahennykset
                                                     :bitumi_indeksi           bitumi-indeksi
                                                     :kaasuindeksi             kaasuindeksi

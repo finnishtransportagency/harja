@@ -123,11 +123,13 @@
        :valitse-oletus? true
        :valinta-arvo :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+       ;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
        :valinnat (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                    (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
                    @tiedot-urakka/urakan-toimenpideinstanssit)
        ::lomake/col-luokka "col-xs-12"
-       :disabled? true}
+       ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
+       :disabled? (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"

@@ -5,6 +5,7 @@ SELECT
   ypk.kohdenumero,
   ypk.tunnus,
   ypk.nimi,
+  ypk.yotyo,
   ypk.yllapitokohdetyotyyppi,
   ypk.tr_numero                         AS "tr-numero",
   ypk.tr_ajorata                        AS "tr-ajorata",
@@ -17,10 +18,12 @@ SELECT
   ypk.yllapitoluokka                    AS "yplk",
   sum(-s.maara)                         AS "sakot-ja-bonukset",
   ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset                    AS "maaramuutokset",
   ypkk.arvonvahennykset                  AS "arvonvahennykset",
   ypkk.toteutunut_hinta                  AS "toteutunut-hinta",
   ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
-  ypkk.kaasuindeksi
+  ypkk.kaasuindeksi,
+  ypkk.maku_paallysteet                  AS "maku-paallysteet"
 FROM yllapitokohde ypk
   LEFT JOIN laatupoikkeama lp ON (lp.yllapitokohde = ypk.id AND lp.urakka = ypk.urakka AND lp.poistettu IS NOT TRUE)
   LEFT JOIN sanktio s ON s.laatupoikkeama = lp.id AND s.poistettu IS NOT TRUE
@@ -28,7 +31,7 @@ FROM yllapitokohde ypk
 WHERE ypk.urakka = :urakka
       AND ypk.vuodet @> ARRAY [:vuosi] :: INT []
       AND ypk.poistettu IS NOT TRUE
-GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta;
+GROUP BY ypk.id, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi,  ypkk.toteutunut_hinta, ypkk.maku_paallysteet;
 
 -- name: hae-muut-kustannukset
 SELECT

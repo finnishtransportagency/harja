@@ -90,7 +90,8 @@
    ;; testidatasta huomoita: myös lapissa ivalon mhu-testiurakka
    ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
-    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                 {:tyyppi "checkbox" :konteksti nil, :pakollinen false :nimi "Vain MHUt ja HJU:t"}]
     :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita

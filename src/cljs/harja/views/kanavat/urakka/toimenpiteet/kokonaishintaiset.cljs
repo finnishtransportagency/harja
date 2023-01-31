@@ -15,6 +15,7 @@
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni tietoja]]
             [harja.ui.debug :refer [debug]]
             [harja.ui.valinnat :as valinnat]
+            [harja.domain.urakka :as urakka-domain]
             [harja.domain.kanavat.kanavan-toimenpide :as kanavan-toimenpide]
             [harja.domain.vesivaylat.materiaali :as materiaali]
             [harja.views.kanavat.urakka.toimenpiteet :as toimenpiteet-view]
@@ -47,12 +48,15 @@
           (if (empty? nimi) "Kaikki" nimi))]]
      ^{:key "toiminnot"}
      [valinnat/urakkatoiminnot {:urakka urakka-map :sticky? true}
-      ^{:key "uusi-nappi"}
-      [napit/yleinen-ensisijainen
-       "Siirrä valitut muutos- ja lisätöihin"
-       (fn [_]
-         (e! (tiedot/->SiirraValitut)))
-       {:disabled (zero? (count (:valitut-toimenpide-idt app)))}]
+      
+      ; Piilotetaan nappi kanavaurakoilta
+      (when (not (urakka-domain/kanavaurakka? urakka-map))
+        ^{:key "uusi-nappi"}
+        [napit/yleinen-ensisijainen
+         "Siirrä valitut muutos- ja lisätöihin"
+         (fn [_]
+           (e! (tiedot/->SiirraValitut)))
+         {:disabled (zero? (count (:valitut-toimenpide-idt app)))}])
       [napit/uusi
        "Uusi toimenpide"
        (fn [_]

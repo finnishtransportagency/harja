@@ -265,14 +265,14 @@
                          :vuosi @u/valittu-urakan-vuosi})] 
        [upotettu-raportti/raportin-vientimuodot 
         (assoc parametrit 
-          :otsikko "Lataa PDF"
+          :otsikko "PDF"
           :kasittelija :pdf)
         (assoc parametrit
-          :otsikko "Lataa Excel"
+          :otsikko "Excel"
           :kasittelija :excel)
         (-> parametrit 
           (assoc       
-            :otsikko "Lataa alikohteiden Excel"
+            :otsikko "Alikohteiden Excel"
             :kasittelija :excel)
           (assoc-in [:parametrit :alikohderaportti?] true))])]))
 

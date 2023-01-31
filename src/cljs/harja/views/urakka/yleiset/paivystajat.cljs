@@ -57,6 +57,8 @@
 (defn paivystajalista
   [ur paivystajat tallenna!]
   (let [varoita-paivystyksen-puuttumisesta? (and
+                                              ;; Ennen kuin päivystäjät on haettu, tämä on nil. Älä näytä silloin varoitusta
+                                              (not (nil? paivystajat))
                                               (urakka-tiedot/urakka-kaynnissa? ur)
                                               (not-any? #(paivystys-voimassa? %) paivystajat))]
     [:div
