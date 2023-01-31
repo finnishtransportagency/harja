@@ -40,7 +40,7 @@
      [{:otsikko "Suorittaja" :nimi :suorittaja :hae (comp :nimi :suorittaja) :leveys 2}
       {:otsikko "Alkanut" :nimi :alkanut :leveys 1 :fmt pvm/aika}
       {:otsikko "Päättynyt" :nimi :paattynyt :leveys 1 :fmt pvm/aika}
-      {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 1 :tasaa :oikea
+      {:otsikko "Määrä" :tyyppi :string :nimi :maara :leveys 1 :tasaa :oikea
        :hae     (fn [{:keys [tehtava]}]
                   (->> (fmt/desimaaliluku-opt (:maara tehtava) 1)
                        (fmt/yksikolla (:yksikko tehtava))))}
@@ -90,7 +90,7 @@
       [{:nimi :tarkemmat-tiedot :tyyppi :vetolaatikon-tila :leveys 1}
        {:otsikko "Pvm" :tyyppi :pvm :fmt pvm/pvm :nimi :pvm :leveys 3}
        {:otsikko "Tehtävä" :tyyppi :string :nimi :nimi :leveys 4}
-       {:otsikko "Määrä" :tyyppi :numero :nimi :maara :leveys 2 :tasaa :oikea
+       {:otsikko "Määrä" :tyyppi :string :nimi :maara :leveys 2 :tasaa :oikea
         :hae     (fn [rivi] (->> (fmt/desimaaliluku-opt (:maara rivi) 2) (fmt/yksikolla (:yksikko rivi))))}
        {:otsikko "Lähde" :nimi :lahde :hae #(if (:jarjestelmanlisaama %) "Urak. järj." "Harja") :tyyppi :string :leveys 3}]
       toteumat]]))

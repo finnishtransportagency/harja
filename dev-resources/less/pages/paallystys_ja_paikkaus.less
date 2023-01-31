@@ -35,6 +35,10 @@
     button {
         font-size: @fontin-koko-taulukko-pienempi;
     }
+  // yhteenvetoriville ei haluta tyhjää checkboksia
+  tr.yhteenveto > td .boolean {
+    display: none;
+  }
 }
 .aikataulu-valinnat {
     background-color: @gray240;
@@ -199,12 +203,18 @@
     .tiemerkinta-tausta {
         background-color: @lemon-light;
     }
-    .paallystys-tausta {
-        background-color: @white-dark;
-    }
-    .paallystys-tausta-tumma {
-        background-color: @white-darker;
-    }
+}
+.paallystys-tausta {
+  background-color: @white-dark;
+}
+.paallystys-tausta-tumma {
+  background-color: @white-darker;
+}
+// Liittyvät taulukon sarakkeiden ryhmittelyotsikoihin
+div.yllapitokohteet {
+  thead > tr:first-child > th {
+    text-align: center;
+  }
 }
 .tuoreusvihje {
     display: flex;
@@ -287,4 +297,13 @@
 }
 .paallystyskustannusten-toiminnot {
     float: right;
+}
+.raaka-aineindeksit {
+  margin: @valistys-16 0;
+  .indeksitietosailio {
+    .tietokentta {
+      width: 200px;
+      margin-right: @valistys-64;
+    }
+  }
 }

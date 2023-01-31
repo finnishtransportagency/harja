@@ -26,8 +26,8 @@
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:minInclusive value="1" />
+                                    <xs:restriction base="xs:string">
+                                        <xs:maxLength value="10" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -52,7 +52,7 @@
                             <xs:element name="sampohankenimi" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan hankkeen nimi Väylän Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan hankkeen nimi Väyläviraston Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -64,7 +64,7 @@
                             <xs:element name="sampohankeid" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan hankkeen tunniste Väylän Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan hankkeen tunniste Väyläviraston Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -125,7 +125,7 @@
                             <xs:element name="sampourakkanimi" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan urakan nimi Väylän Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan urakan nimi Väyläviraston Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -137,7 +137,7 @@
                             <xs:element name="sampourakkaid" minOccurs="1" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Poikkeamailmoitusta koskevan urakan tunniste Väylän Sampo-järjestelmässä.
+                                        Poikkeamailmoitusta koskevan urakan tunniste Väyläviraston Sampo-järjestelmässä.
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
@@ -146,10 +146,17 @@
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
+                            <xs:element name="urakanarvpaattymispvm" type="xs:date" minOccurs="0" maxOccurs="1">
+                                <xs:annotation>
+                                    <xs:documentation>
+                                        Urakan arvioitu päättymisajankohta.
+                                    </xs:documentation>
+                                </xs:annotation>
+                            </xs:element>
                             <xs:element name="urakanpaattymispvm" type="xs:date" minOccurs="0" maxOccurs="1">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Urakan päättymisajankohta.
+                                        Urakan päättymispäivä.
                                     </xs:documentation>
                                 </xs:annotation>
                             </xs:element>
@@ -269,64 +276,15 @@
                                     </xs:documentation>
                                 </xs:annotation>
                             </xs:element>
-                            <xs:element name="poikkeamalaji" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        1 = Matkustajajunaliikenne
-                                        2 = Tavarajunaliikenne
-                                        4 = Muu junaliikenne
-                                        8 = Ratatyö
-                                        16 = Vaihtotyö
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
                             <xs:element name="junanumero" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
                                         Junanumero
-
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 1,2,4
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
                                         <xs:minInclusive value="0" />
-                                    </xs:restriction>
-                                </xs:simpleType>
-                            </xs:element>
-                            <xs:element name="vaihtotyonvastuuyksikko" minOccurs="0">
-                                <xs:annotation>
-                                    <xs:documentation>
-                                        Vaihtotyön vastuuyksikkö
-
-                                        1 = Rautatielogistiikka
-                                        2 = Matkustajaliikenne
-                                        4 = Junaliikennöinti
-                                        8 = Kunnossapito
-                                        16 = Infrarakentaminen
-                                        32 = Ulkopuolinen
-                                        vaihtotyö
-
-                                        Tämä kenttä on käytössä, jos poikkeamalaji-kentällä on jokin seuraavista arvoista: 16
-                                    </xs:documentation>
-                                </xs:annotation>
-                                <xs:simpleType>
-                                    <xs:restriction base="xs:int">
-                                        <xs:enumeration value="1" />
-                                        <xs:enumeration value="2" />
-                                        <xs:enumeration value="4" />
-                                        <xs:enumeration value="8" />
-                                        <xs:enumeration value="16" />
-                                        <xs:enumeration value="32" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -437,7 +395,7 @@
                             <xs:element name="kuvaus">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Vapaamuotoinen kuvaus
+                                        Tapahtuman kuvaus
 
                                         Tämä kenttä on käytössä, jos syy-kentän arvo on 8
                                     </xs:documentation>
@@ -461,12 +419,14 @@
 
                                         1 = Tapahtui liikennepaikalla
                                         2 = Tapahtui liikennepaikkojen välillä
+                                        3 = Tapahtui muualla kuin liikennepaikalla tai liikennepaikkavälillä
                                     </xs:documentation>
                                 </xs:annotation>
                                 <xs:simpleType>
                                     <xs:restriction base="xs:int">
                                         <xs:enumeration value="1" />
                                         <xs:enumeration value="2" />
+                                        <xs:enumeration value="3" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
@@ -634,7 +594,7 @@
                             <xs:element name="arviosyista" minOccurs="0">
                                 <xs:annotation>
                                     <xs:documentation>
-                                        Oma arvio tapahtumaan johtaneista syistä
+                                        Arvio tapahtumaan johtaneista syistä
 
                                         Kirjataan mahdollisimman tarkasti, mikä aiheutti onnettomuuden tai vaaratilanteen ja miksi se tapahtui.
                                         Kirjauksessa tulee käydä esille mitkä koneet, laitteet tai materiaalit ovat liittyneet tapahtumaan tai sen syntyyn, ovatko ympäristö, organisaation toiminta- ja
@@ -943,7 +903,8 @@
                                         <xs:enumeration value="Avoin" />
                                         <xs:enumeration value="Käsitelty" />
                                         <xs:enumeration value="Täydennetty" />
-                                        <xs:enumeration value="Suljettu" />
+                                        <xs:enumeration value="Suljettu"/>
+                                        <xs:enumeration value="Arkistoitu" />
                                     </xs:restriction>
                                 </xs:simpleType>
                             </xs:element>
