@@ -21,11 +21,13 @@
 (defn- toimenpide-valikon-nimi
   "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
   Muistutukselle ei näytetä Kulun kohdistus -valikkoa, jos muistutuksen tyyppinä on jotain Talvihoitoon liittyvää. Mutta
-  jos muistutuksen tyyppinä on 'Muut hoitourakan tehtäväkokonaisuudet', niin Kulun kohdistus valikko, joka on pohjimmiltaan toimenpideinstanssivalikko
+  jos muistutuksen tyyppinä on 'Muut hoitourakan tehtäväkokonaisuudet' tai 'Hallinnolliset laiminlyönnit',
+  niin Kulun kohdistus valikko, joka on pohjimmiltaan toimenpideinstanssivalikko
   pitää näyttää. Muistukselle ei toki kulua tule, mutta se pitää kohdistaa johonkin toimenpiteeseen."
   [sanktion-tyyppi]
   (case sanktion-tyyppi
     "Muut hoitourakan tehtäväkokonaisuudet" "Toimenpide"
+    "Hallinnolliset laiminlyönnit" "Toimenpide"
     "Kulun kohdistus"))
 
 (defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
@@ -242,7 +244,8 @@
                  (and (sanktio-domain/muistutus? @muokattu)
                    (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
                                 "Liikenneympäristön hoito"
-                                "Sorateiden hoito ja ylläpito"} (get-in @muokattu [:tyyppi :nimi]))))
+                                "Sorateiden hoito ja ylläpito"
+                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
            (if (not lukutila?)
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi]))
               :pakollinen? true

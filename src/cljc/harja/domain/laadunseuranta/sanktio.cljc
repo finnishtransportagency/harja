@@ -42,7 +42,9 @@
                             ;; Figma: Sanktiolajien, -tyyppien ja toimenpiteiden valinnat (Uusi, lisätään urakoille 2021)
                             ;; 17, "Muut hoitourakan tehtäväkokonaisuudet" mukana urakoissa, joiden alkuvuosi on 2021 tai suurempi
                             (when (>= (pvm/vuosi urakan-alkupvm) 2021)
-                              [17])))
+                              [17])
+                            ;; Muistutuksille lisätään vielä Hallinnolliset laiminlyönnit
+                            [10]))
                      :A (vec (concat
                                [;; Muu tuote, poistettu kaikilta urakoilta. Tietokannassa merkitty poistetuksi.
                                 #_1
