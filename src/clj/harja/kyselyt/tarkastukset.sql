@@ -13,7 +13,11 @@ SELECT
   t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
-  t.tyyppi,
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan-laadunvalvonta' ::TARKASTUSTYYPPI
+      END                  AS tyyppi,
   t.nayta_urakoitsijalle   AS "nayta-urakoitsijalle",
   (SELECT normalisoi_talvihoitoluokka(thm.talvihoitoluokka::INTEGER, t.aika)) AS talvihoitomittaus_hoitoluokka,
   thm.lumimaara            AS talvihoitomittaus_lumimaara,
@@ -155,7 +159,11 @@ WHERE t.urakka = :urakka
 -- Hakee pisteessä löytyneet tarkastukset karttaa klikattaessa
 SELECT
   t.id,
-  t.tyyppi,
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+          THEN t.tyyppi
+      ELSE 'tilaajan-laadunvalvonta' ::tarkastustyyppi
+      END                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
