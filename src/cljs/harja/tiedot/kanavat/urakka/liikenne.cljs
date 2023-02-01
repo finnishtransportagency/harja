@@ -83,7 +83,7 @@
 (defrecord EdellisetTiedotEiHaettu [virhe])
 (defrecord TapahtumaaMuokattu [tapahtuma])
 (defrecord MuokkaaAluksia [alukset virheita?])
-(defrecord VaihdaSuuntaa [alus])
+(defrecord VaihdaSuuntaa [alus suunta])
 (defrecord AsetaSuunnat [suunta])
 (defrecord TallennaLiikennetapahtuma [tapahtuma])
 (defrecord TapahtumaTallennettu [tulos])
@@ -222,16 +222,30 @@
               ::lt/sopimus)))
 
 (defn voi-tallentaa? [t]
-  (boolean
-    (and (not (:grid-virheita? t))
-         (empty? (filter :koskematon (::lt/alukset t)))
-         (every? #(and (some? (::lt-alus/suunta %))
-                       (some? (::lt-alus/laji %)))
-                 (remove :poistettu (::lt/alukset t)))
-         (or
-           (not-empty (remove :poistettu (::lt/alukset t)))
+  (let [alukset (remove :poistettu (::lt/alukset t))]
+    (boolean
+     (and (not (:grid-virheita? t))
+          (every? #(some? (::lt-alus/lkm %))
+                  alukset)
+
+         ; Jos toimenpide ei ole tyhjennys niin alus laji ei saa olla "Ei alusta" eikä nil
+          (every? #(if
+                    (not= (:arvo @lt/toimenpide-atom) :tyhjennys)
+                     (and (not= (::lt-alus/laji %) :EI)
+                          (not (nil? (::lt-alus/laji %))))
+                     true)
+                  alukset)
+
+          (empty? (filter :koskematon (::lt/alukset t)))
+
+          (every? #(and (some? (::lt-alus/suunta %))
+                        (or (some? (::lt-alus/laji %))
+                            (= (:arvo @lt/toimenpide-atom) :tyhjennys)))
+                  alukset)
+          (or
+           (not-empty alukset)
            (every? #(or (= :itse (::toiminto/palvelumuoto %))
-                        (= :ei-avausta (::toiminto/toimenpide %))) (::lt/toiminnot t))))))
+                        (= :ei-avausta (::toiminto/toimenpide %))) (::lt/toiminnot t)))))))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
@@ -248,15 +262,29 @@
          (:id b)))))
 
 (defn paivita-toiminnon-tiedot [tapahtuma toiminto]
-  (assoc
-    tapahtuma
-    ::lt/toiminnot
-    (mapcat val
-            (assoc
-              (group-by ::toiminto/kohteenosa-id (::lt/toiminnot tapahtuma))
-              ;; Etsi palvelumuoto kohteenosan id:llä, ja korvaa/luo arvo
-              (::toiminto/kohteenosa-id toiminto)
-              [toiminto]))))
+  
+  ;; Koska itsepalvelulla ja Tyhjennys toimenpiteellä halutaan suunta "ei määritelty",
+  ;; jos käyttäjä vaihtaa toimenpidettä tai palvelumuotoa toiseen, korvaa suunnattomat alukset.
+  (let [korvaa-suunnattomat-alukset (map (fn [alus]
+                                           ;; Silloin kun suunnat-atomilla ei ole :ei-suuntaa avainta, 
+                                           ;; tarkoittaa että toimenpide ei ole tyhjennys eikä palvelutyyppi ole itsepalvelu => korvataan suunnattomat alukset
+                                           ;; Vaihdetaan arvo nilliksi niin käyttäjä huomaa korjata suunnan 
+                                           (if (and (= (::lt-alus/suunta alus) :ei-suuntaa) 
+                                                    (not (:ei-suuntaa @lt/suunnat-atom)))
+                                             (assoc alus ::lt-alus/suunta nil)
+                                             alus))
+                                         (::lt/alukset tapahtuma))]
+    (-> tapahtuma
+        (assoc ::lt/toiminnot
+               (mapcat val
+                       (assoc
+                        (group-by ::toiminto/kohteenosa-id (::lt/toiminnot tapahtuma))
+                        ;; Etsi palvelumuoto kohteenosan id:llä, ja korvaa/luo arvo
+                        (::toiminto/kohteenosa-id toiminto)
+                        [toiminto])))
+
+        ;; Korvaa suunnattomat alukset mikäli tarve
+        (assoc ::lt/alukset korvaa-suunnattomat-alukset))))
 
 (defn kohteenosatiedot-toimintoihin
   "Ottaa tapahtuman ja kohteen, ja yhdistää tapahtuman toimintoihin kohteen kohteenosien tiedot.
@@ -292,15 +320,23 @@
 
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
-         (let [valittu-suunta (#{:ylos :alas} (:valittu-suunta tapahtuma))
+         (let [valittu-suunta (#{:ylos :alas :ei-suuntaa} (:valittu-suunta tapahtuma))
+               
+               ;; Jos valittu-suunta on ei-suuntaa mutta sitä ei toimenpide tai palvelumuoto salli, vaihda suunta
+               vaihdettu-suunta (if (and (not (:ei-suuntaa @lt/suunnat-atom))
+                                         (= valittu-suunta :ei-suuntaa))
+                                  :ylos
+                                  valittu-suunta)
+               
                tapahtumat (keep (fn [b]
                                     (if (sama-alusrivi? a b)
                                       b nil))
                                   (::lt/alukset tapahtuma))
 
                klikattu-suunta (::lt-alus/suunta (first tapahtumat))
+               
                suunta (if (nil? klikattu-suunta)
-                        valittu-suunta
+                        vaihdettu-suunta
                         klikattu-suunta)]
 
            (assoc a ::lt-alus/suunta suunta)))
@@ -313,6 +349,9 @@
         (update-in
           [:edelliset :ylos :edelliset-alukset]
           (partial poista-idlla alus-id))
+        (update-in
+         [:edelliset :ei-suuntaa :edelliset-alukset]
+         (partial poista-idlla alus-id))
         (update-in
           [:edelliset :alas :edelliset-alukset]
           (partial poista-idlla alus-id)))))
@@ -327,9 +366,10 @@
          (= (::toiminto/palvelumuoto osa) :itse))))
 
 (defn suuntavalinta-str [edelliset suunta]
-  (str (lt/suunta->str suunta)
-       (when (suunta edelliset)
-         (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta"))))
+  (let [suunta->str (fn [suunta] (@lt/suunnat-atom suunta))]
+    (str (suunta->str suunta)
+         (when (suunta edelliset)
+           (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
@@ -419,10 +459,13 @@
   (process-event [_ app]
     (viesti/nayta! "Liikennetapahtumien haku epäonnistui! " :danger)
     (assoc app :liikennetapahtumien-haku-kaynnissa? false
-               :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
+           :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false))
 
   ValitseTapahtuma
   (process-event [{t :tapahtuma} app]
+    (lt/paivita-suunnat-ja-toimenpide!)
+    (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+    (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (-> app
         (assoc :valittu-liikennetapahtuma (when-let [tapahtuma (if (::lt/id t) (koko-tapahtuma t app) t)]
                                             (kohteenosatiedot-toimintoihin tapahtuma (::lt/kohde tapahtuma))))
@@ -448,6 +491,7 @@
         (assoc-in [:valittu-liikennetapahtuma ::lt/vesipinta-ylaraja] (get-in t [:edellinen ::lt/vesipinta-ylaraja]))
         (assoc-in [:edelliset :ylos] (:ylos t))
         (assoc-in [:edelliset :alas] (:alas t))
+        (assoc-in [:edelliset :ei-suuntaa] (:ei-suuntaa t))
         (assoc :edellisten-haku-kaynnissa? false)))
 
   EdellisetTiedotEiHaettu
@@ -477,10 +521,17 @@
         app))
 
   VaihdaSuuntaa
-  (process-event [{alus :alus} app]
-    (let [uusi (if (= :ylos (::lt-alus/suunta alus))
-                 (assoc alus ::lt-alus/suunta :alas)
-                 (assoc alus ::lt-alus/suunta :ylos))]
+  (process-event [{alus :alus suunta :suunta} app]
+    (let [uusi-suunta (if (:ei-suuntaa @lt/suunnat-atom)
+                        (cond (= :ylos suunta) :alas
+                              (= :alas suunta) :ei-suuntaa
+                              (= :ei-suuntaa suunta) :ylos
+                              :else :ylos)
+                        (cond (= :ylos suunta) :alas
+                              (= :alas suunta) :ylos
+                              :else :ylos))
+
+          uusi (assoc alus ::lt-alus/suunta uusi-suunta)]
       (update app :valittu-liikennetapahtuma
               (fn [t]
                 (update t ::lt/alukset
@@ -510,6 +561,9 @@
 
   TapahtumaTallennettu
   (process-event [{t :tulos} app]
+    ;; Lisää "ei aluslajia" ja "ei määritelty" tapahtumat näkymään, muuten sitä ei näy filttereissä
+    (swap! lt-alus/aluslajit* assoc :EI [lt-alus/lajittamaton-alus])
+    (swap! lt/suunnat-atom assoc :ei-suuntaa "Ei määritelty")
     (when (modal/nakyvissa?) (modal/piilota!))
     (-> app
         (assoc :tallennus-kaynnissa? false)

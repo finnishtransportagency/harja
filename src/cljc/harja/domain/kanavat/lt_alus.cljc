@@ -38,24 +38,31 @@
 
 (def metatiedot m/muokkauskentat)
 
-(def aluslajit*
-  {:HIN ["HIN" "Hinaaja"]
-   :HUV ["HUV" "Huvivene"]
-   :LAU ["LAU" "Lautta"]
-   :MAT ["MAT" "Matkustajalaiva"]
-   :PRO ["PRO" "Proomu"]
-   :RAH ["RAH" "Rahtilaiva"]
-   :SEK ["SEK" "Sekalainen"]
-   :ÖLJ ["ÖLJ" "Öljylaiva"]})
+(def lajittamaton-alus "Ei aluslajia")
 
-(def aluslajit (keys aluslajit*))
+(def aluslajit* (atom
+                  {:HIN ["HIN" "Hinaaja"]
+                   :HUV ["HUV" "Huvivene"]
+                   :LAU ["LAU" "Lautta"]
+                   :MAT ["MAT" "Matkustajalaiva"]
+                   :PRO ["PRO" "Proomu"]
+                   :RAH ["RAH" "Rahtilaiva"]
+                   :SEK ["SEK" "Sekalainen"]
+                   :ÖLJ ["ÖLJ" "Öljylaiva"] 
+                   :EI [lajittamaton-alus]}))
+
+(def aluslajit (keys @aluslajit*))
 
 (defn aluslaji->koko-str [laji]
-  (when-let [laji (aluslajit* laji)]
-    (str (first laji) " - " (second laji))))
+  (when-let [laji (@aluslajit* laji)]
+    ;; Jos aluslaji on lajittelematon, näytä pelkästään "ei aluslajia"
+    (if (= (first laji) lajittamaton-alus)
+      (str (first laji))
+      (str (first laji) " - " (second laji)))
+    ))
 
 (defn aluslaji->laji-str [laji]
-  (first (aluslajit* laji)))
+  (first (@aluslajit* laji)))
 
 (defn suodata-alukset-nimen-alulla [alukset nimi]
   (filter #(str/starts-with?
