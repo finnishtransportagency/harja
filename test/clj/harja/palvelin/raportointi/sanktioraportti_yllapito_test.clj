@@ -44,7 +44,7 @@
   [:arvo-ja-yksikko-korostettu {:arvo arvo :yksikko " kpl" :fmt :numero :korosta-hennosti? true}])
 
 (defn summa-yhteenveto-solu [arvo]
-  [:arvo-ja-yksikko-korostettu {:arvo arvo :yksikko " €" :fmt :numero :korosta-hennosti? true}])
+  [:arvo-ja-yksikko-korostettu {:arvo arvo :fmt :raha :korosta-hennosti? true}])
 
 (deftest raportin-suoritus-urakalle-toimii
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
