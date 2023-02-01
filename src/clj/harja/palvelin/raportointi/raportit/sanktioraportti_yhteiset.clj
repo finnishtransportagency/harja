@@ -16,7 +16,8 @@
 (defn- rivi-kuuluu-tpkhn? [{:keys [toimenpidekoodi_taso2]} tpkt]
   ((into #{} (map str/lower-case) tpkt) (str/lower-case toimenpidekoodi_taso2)))
 
-(defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito? sanktiotyyppi
+(defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito?
+                                    sanktiotyyppi_koodi sailytettavat-toimenpidekoodit
                                     poistettavat-tpkt sailytettavat-tpkt]}]
   (filter
     (fn [rivi]
@@ -27,17 +28,19 @@
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
-        (or (nil? sanktiotyyppi)
-          (nil? (:sanktiotyyppi_nimi rivi))
-          (if (set? sanktiotyyppi)
-            ((into #{} (map str/lower-case sanktiotyyppi)) (str/lower-case (:sanktiotyyppi_nimi rivi)))
-            (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi))))
+        (or (nil? sanktiotyyppi_koodi)
+          (nil? (:sanktiotyyppi_koodi rivi))
+          (if (set? sanktiotyyppi_koodi)
+            (contains? sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))
+            (= sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))
         (or (nil? poistettavat-tpkt)
           (and (:toimenpidekoodi_taso2 rivi)
             (not (rivi-kuuluu-tpkhn? rivi poistettavat-tpkt))))
         (or (nil? sailytettavat-tpkt)
-          (rivi-kuuluu-tpkhn? rivi sailytettavat-tpkt))))
+          (rivi-kuuluu-tpkhn? rivi sailytettavat-tpkt))
+        (or (nil? sailytettavat-toimenpidekoodit)
+          (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
 
 (defn- suodata-muistutukset [rivit {:keys [urakka-id hallintayksikko-id talvihoito?] :as suodattimet}]
@@ -192,7 +195,7 @@
                                      urakka-id hallintayksikko-id
                                      urakkatyyppi db-haku-fn
                                      raportin-nimi raportin-rivit-fn
-                                     info-teksti]}]
+                                     info-teksti sanktiotyypit]}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
