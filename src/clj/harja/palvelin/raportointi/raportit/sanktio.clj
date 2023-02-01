@@ -4,6 +4,7 @@
             [harja.palvelin.palvelut.urakan-toimenpiteet :as toimenpiteet]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.sanktiot :as sanktiot-kyselyt]
             [harja.kyselyt.urakan-toimenpiteet :as toimenpiteet-kyselyt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
@@ -19,44 +20,50 @@
                                       :yhteensa-sarake? yhteensa-sarake?})
    ; Content kopioitu figmasta, tyhjän välin voisi formatoida html mutta näin ehkä helpompi?
    (yhteiset/luo-rivi-sakkojen-summa "        • Päätiet" rivit alueet
-                                     {:sanktiotyyppi "Talvihoito, päätiet"
-                                      :sakkoryhma :A
-                                      :talvihoito? true
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi_koodi 13 ;"Talvihoito, päätiet"
+      :sakkoryhma :A
+      :talvihoito? true
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Muut tiet" rivit alueet
-                                     {:sanktiotyyppi "Talvihoito, muut tiet"
-                                      :sakkoryhma :A
-                                      :talvihoito? true
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi_koodi 14 ;"Talvihoito, muut tiet"
+      :sakkoryhma :A
+      :talvihoito? true
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "B-ryhmä (vakava laiminlyönti)" rivit alueet
-                                     {:sakkoryhma :B
-                                      :talvihoito? true
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sakkoryhma :B
+      :talvihoito? true
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Päätiet" rivit alueet
-                                     {:sanktiotyyppi "Talvihoito, päätiet"
-                                      :sakkoryhma :B
-                                      :talvihoito? true
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi_koodi 13 ;"Talvihoito, päätiet"
+      :sakkoryhma :B
+      :talvihoito? true
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "        • Muut tiet" rivit alueet
-                                     {:sanktiotyyppi "Talvihoito, muut tiet"
-                                      :sakkoryhma :B
-                                      :talvihoito? true
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:sanktiotyyppi_koodi 14 ;"Talvihoito, muut tiet"
+      :sakkoryhma :B
+      :talvihoito? true
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-sakkojen-summa "Talvihoito yhteensä" rivit alueet
-                                     {:talvihoito? true
-                                      :sakkoryhma #{:A :B}
-                                      :yhteensa-sarake? yhteensa-sarake?})
+     {:talvihoito? true
+      :sakkoryhma #{:A :B}
+      :yhteensa-sarake? yhteensa-sarake?})
    (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet
-                                      {:talvihoito? true
-                                       :sakkoryhma #{:A :B}
-                                       :yhteensa-sarake? yhteensa-sarake?})])
+     {:talvihoito? true
+      :sakkoryhma #{:A :B}
+      :yhteensa-sarake? yhteensa-sarake?})])
 
 (defn- raporttirivit-muut-tuotteet [rivit alueet toimenpide-haku-fn {:keys [yhteensa-sarake?] :as optiot}]
-  (let [loput-toimenpiteet (filter #(and
+  (let [toimenpiteet (toimenpide-haku-fn)
+        loput-toimenpiteet (filter #(and
                                 (not= "Talvihoito" (:nimi %))
                                 (not= "Liikenneympäristön hoito" (:nimi %))
                                 (not= "Soratien hoito" (:nimi %)))
-                       (toimenpide-haku-fn))]
+                             toimenpiteet)
+        loput-toimenpidekoodit (filter #(and
+                                             (not= "23100" (:koodi %)) ;Talvihoito
+                                             (not= "23110" (:koodi %)) ;"Liikenneympäristön hoito"
+                                             (not= "23120" (:koodi %))) ;"Soratien hoito" 23120
+                                    toimenpiteet)]
     (concat
       [{:otsikko "Tehtäväkohtaiset sanktiot / MUUT TEHTÄVÄKOKONAISUUDET"}
        (yhteiset/luo-rivi-muistutusten-maara "Muistutukset" rivit alueet
@@ -69,22 +76,22 @@
       ;; A-ryhmän eri toimenpiteiden rivit
       ;"Liikenneympäristön hoito"
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-         {:sanktiotyyppi #{"Muut hoitourakan tehtäväkokonaisuudet" "Liikenneympäristön hoito"}
-          :sailytettavat-tpkt ["Liikenneympäristön hoito"]
+         {:sanktiotyyppi_koodi #{17 15} ;"Muut hoitourakan tehtäväkokonaisuudet" "Liikenneympäristön hoito"
+          :sailytettavat-toimenpidekoodit #{"23110"} ;"Liikenneympäristön hoito"
           :sakkoryhma :A
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
       ;"Soratien hoito"
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-         {:sanktiotyyppi #{"Muut hoitourakan tehtäväkokonaisuudet" "Soratien hoito"}
-          :sailytettavat-tpkt ["Soratien hoito"]
+         {:sanktiotyyppi_koodi #{17 16} ;"Muut hoitourakan tehtäväkokonaisuudet" "Soratien hoito"
+          :sailytettavat-toimenpidekoodit #{"23120"}
           :sakkoryhma :A
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
       ;; Yhdistä loput toimenpiteet "Muut" rivin alle
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Muut") rivit alueet
-         {:sanktiotyyppi (set (concat ["Muut hoitourakan tehtäväkokonaisuudet"] (map :nimi loput-toimenpiteet)))
-          :sailytettavat-tpkt (map :nimi loput-toimenpiteet)
+         {:sanktiotyyppi_koodi 17 ;" 17 Muut hoitourakan tehtäväkokonaisuudet"
+          :sailytettavat-toimenpidekoodit (into #{} (mapv #(str (:koodi %)) loput-toimenpidekoodit))
           :sakkoryhma :A
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
@@ -93,22 +100,22 @@
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-         {:sanktiotyyppi #{"Muut hoitourakan tehtäväkokonaisuudet" "Liikenneympäristön hoito"}
-          :sailytettavat-tpkt ["Liikenneympäristön hoito"]
+         {:sanktiotyyppi_koodi #{17 15} ;"Muut hoitourakan tehtäväkokonaisuudet" "Liikenneympäristön hoito"
+          :sailytettavat-toimenpidekoodit [23110]           ;"Liikenneympäristön hoito"
           :sakkoryhma :B
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
       ;"Soratien hoito"
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-         {:sanktiotyyppi #{"Muut hoitourakan tehtäväkokonaisuudet" "Soratien hoito"}
-          :sailytettavat-tpkt ["Soratien hoito" "Muut hoitourakan tehtäväkokonaisuudet"]
+         {:sanktiotyyppi_koodi #{17 16} ;"Muut hoitourakan tehtäväkokonaisuudet" "Soratien hoito"
+          :sailytettavat-toimenpidekoodit [23120] ;"Soratien hoito"
           :sakkoryhma :B
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
       ;; Yhdistä loput toimenpiteet "Muut" rivin alle
       [(yhteiset/luo-rivi-sakkojen-summa (str "        • Muut") rivit alueet
-         {:sanktiotyyppi (set (concat ["Muut hoitourakan tehtäväkokonaisuudet"] (map :nimi loput-toimenpiteet)))
-          :sailytettavat-tpkt (map :nimi loput-toimenpiteet)
+         {:sanktiotyyppi_koodi 17 ;" 17 Muut hoitourakan tehtäväkokonaisuudet"
+          :sailytettavat-toimenpidekoodit (into #{} (mapv #(str (:koodi %)) loput-toimenpidekoodit))
           :sakkoryhma :B
           :talvihoito? false
           :yhteensa-sarake? yhteensa-sarake?})]
@@ -124,16 +131,16 @@
 
 (defn- raporttirivit-ryhma-c [rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
   (let [c-ryhman-rivit (filter #(= :C (:sakkoryhma %)) rivit)
-        c-ryhman-tyypit (keys (group-by #(:sanktiotyyppi_nimi %) c-ryhman-rivit))]
+        c-ryhman-ryhmat (keys (group-by (juxt :sanktiotyyppi_nimi :sanktiotyyppi_koodi) c-ryhman-rivit))]
     (concat
       [{:otsikko "C-ryhmä"}]
-      (map
-        (fn [nimi]
-          (yhteiset/luo-rivi-sakkojen-summa nimi c-ryhman-rivit alueet
-            {:sanktiotyyppi #{nimi}
+       (map
+        (fn [r]
+          (yhteiset/luo-rivi-sakkojen-summa (first r) c-ryhman-rivit alueet
+            {:sanktiotyyppi_koodi (second r)
              :sakkoryhma :C
              :yhteensa-sarake? yhteensa-sarake?}))
-        c-ryhman-tyypit)
+        c-ryhman-ryhmat)
       [(yhteiset/luo-rivi-sakkojen-summa "C-ryhmä yhteensä" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})
        (yhteiset/luo-rivi-indeksien-summa "Indeksit" rivit alueet {:sakkoryhma :C :yhteensa-sarake? yhteensa-sarake?})])))
 
@@ -143,11 +150,11 @@
     (concat
       [{:otsikko "Suolasakot"}]
       [(yhteiset/luo-rivi-sakkojen-summa "Pohjavesialueiden suolankäytön ylitys" pohjavesiylitys-rivit alueet
-         {:sanktiotyyppi #{"Suolasakko"}
+         {:sanktiotyyppi_koodi 7 ; Suolasakko
           :sakkoryhma :pohjavesisuolan_ylitys
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa "Talvisuolan kokonaiskäytön ylitys" talvisuolaylitys-rivit alueet
-         {:sanktiotyyppi #{"Suolasakko"}
+         {:sanktiotyyppi_koodi 7 ; Suolasakko
           :sakkoryhma :talvisuolan_ylitys
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa "Suolasakot yhteensä" rivit alueet
@@ -164,15 +171,15 @@
     (concat
       [{:otsikko "Henkilöstöön liittyvät sanktiot"}]
       [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden vaihtaminen" vaihtosanktio-rivit alueet
-         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+         {:sanktiotyyppi_koodi 0 ;"Ei tarvita sanktiotyyppiä"
           :sakkoryhma :vaihtosanktio
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden tenttipistemäärän alentuminen" tenttikeskiarvo-rivit alueet
-         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+         {:sanktiotyyppi_koodi 0 ;"Ei tarvita sanktiotyyppiä"
           :sakkoryhma :tenttikeskiarvo-sanktio
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa "Vastuuhenkilöiden testipistemäärän alentuminen" testikeskiarvo-rivit alueet
-         {:sanktiotyyppi #{"Ei tarvita sanktiotyyppiä"}
+         {:sanktiotyyppi_koodi 0 ;"Ei tarvita sanktiotyyppiä"
           :sakkoryhma :testikeskiarvo-sanktio
           :yhteensa-sarake? yhteensa-sarake?})]
       [(yhteiset/luo-rivi-sakkojen-summa "Henkilöstöön liittyvät sanktiot yhteensä" rivit alueet
@@ -228,9 +235,11 @@
                                   db (map :urakka-id
                                        urakat-joista-loytyi-sanktioita))
                                {:yhteensa-sarake? yhteensa-sarake?})))
-        db-haku-fn hae-sanktiot
-        raportin-nimi (jasenna-raportin-nimi db parametrit)]
+          db-haku-fn hae-sanktiot
+        raportin-nimi (jasenna-raportin-nimi db parametrit)
+        sanktiotyypit (sanktiot-kyselyt/hae-sanktiotyypit db)]
 
     (yhteiset/suorita-runko db user (merge parametrit {:raportin-rivit-fn raportin-rivit-fn
                                                        :db-haku-fn db-haku-fn
-                                                       :raportin-nimi raportin-nimi}))))
+                                                       :raportin-nimi raportin-nimi
+                                                       :sanktiotyypit sanktiotyypit}))))
