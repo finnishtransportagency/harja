@@ -41,6 +41,12 @@
     "Talvihoito, muut tiet" (filter
                               #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
                               toimenpideinstanssit)
+    "Sorateiden hoito ja ylläpito" (filter
+                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                     toimenpideinstanssit)
+    "Liikenneympäristön hoito" (filter
+                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                     toimenpideinstanssit)
     toimenpideinstanssit))
 
 (defn sanktio-lomake
