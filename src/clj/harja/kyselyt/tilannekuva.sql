@@ -170,8 +170,17 @@ FROM tarkastus t
 WHERE sijainti IS NOT NULL AND
       ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
-      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax)) AND
-t.tyyppi :: TEXT IN (:tyypit) AND
+      ST_Intersects(t.envelope, ST_MakeEnvelope(:xmin, :ymin, :xmax, :ymax))
+
+  AND (CASE
+          -- Erikoistapaus: Jos on valittu tilannekuvasta Tilaajan laadunvalvonta tyyppinen suodatin, niin
+          -- haetaan vain tarkastukset, jotka _eivät_ ole urakoitsijan tekemiä tai mikä tahansa muun tyyppinen (esim. tiestö)
+           WHEN 'tilaajan-laadunvalvonta' IN (:tyypit)
+               THEN o.tyyppi != 'urakoitsija' OR t.tyyppi::TEXT IN (:tyypit)
+          -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
+          -- tekemiä eri tyyppisiä tarkastuksia
+           ELSE o.tyyppi = 'urakoitsija' AND t.tyyppi::TEXT IN (:tyypit)
+    END) AND
 (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
 AND (t.yllapitokohde IS NULL
@@ -225,8 +234,18 @@ FROM tarkastus t
 WHERE sijainti IS NOT NULL AND
       ((t.urakka IN (:urakat) AND u.urakkanro IS NOT NULL) OR t.urakka IS NULL) AND
       (t.aika BETWEEN :alku AND :loppu) AND
-      ST_Distance84(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi AND
-t.tyyppi :: TEXT IN (:tyypit) AND
+      ST_Distance84(t.sijainti, ST_MakePoint(:x, :y)) < :toleranssi
+
+  AND (CASE
+    -- Erikoistapaus: Jos on valittu tilannekuvasta Tilaajan laadunvalvonta tyyppinen suodatin, niin
+    -- haetaan vain tarkastukset, jotka _eivät_ ole urakoitsijan tekemiä tai mikä tahansa muun tyyppinen (esim. tiestö)
+           WHEN 'tilaajan-laadunvalvonta' IN (:tyypit)
+               THEN o.tyyppi != 'urakoitsija' OR t.tyyppi::TEXT IN (:tyypit)
+    -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
+    -- tekemiä eri tyyppisiä tarkastuksia
+           ELSE o.tyyppi = 'urakoitsija' AND t.tyyppi::TEXT IN (:tyypit)
+    END) AND
+
 (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
 AND (t.yllapitokohde IS NULL
