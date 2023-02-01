@@ -166,8 +166,8 @@
 
 (deftest voiko-tallentaa?
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                     ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/suunta :ylos
+                                     ::lt/alukset [{::lt-alus/suunta :ylos
+                                                    ::lt-alus/lkm 1
                                                     ::lt-alus/laji :HUV}]})))
   (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset []
@@ -178,20 +178,16 @@
                                      ::lt/toiminnot [{::toiminto/palvelumuoto :itse}
                                                      {::toiminto/palvelumuoto :kauko}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                     ::lt/alukset [{:koskematon false
-                                                    ::lt-alus/suunta :ylos}]})))
+                                     ::lt/alukset [{::lt-alus/suunta :ylos}]})))
 
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? true
-                                      ::lt/alukset [{:koskematon false
-                                                     ::lt-alus/suunta :ylos
+                                      ::lt/alukset [{::lt-alus/suunta :ylos
                                                      ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                      ::lt/alukset [{:koskematon true
-                                                     ::lt-alus/suunta :ylos
+                                      ::lt/alukset [{::lt-alus/suunta :ylos
                                                      ::lt-alus/laji :HUV}]})))
   (is (false? (tiedot/voi-tallentaa? {:grid-virheita? false
-                                      ::lt/alukset [{:koskematon false
-                                                     ::lt-alus/laji :HUV}]}))))
+                                      ::lt/alukset [{::lt-alus/laji :HUV}]}))))
 
 
 (deftest sama-alus?
@@ -207,7 +203,7 @@
 (deftest osatietojen-paivittaminen
   (is (= {::lt/toiminnot [{::toiminto/kohteenosa-id 1
                       ::toiminto/palvelumuoto :kauko}
-                     {::toiminto/kohteenosa-id 2}]}
+                     {::toiminto/kohteenosa-id 2}], ::lt/alukset ()}
          (tiedot/paivita-toiminnon-tiedot
            {::lt/toiminnot [{::toiminto/kohteenosa-id 1}
                        {::toiminto/kohteenosa-id 2}]}
@@ -330,17 +326,27 @@
   (let [app {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                           {::lt-alus/id 2}
                                           {::lt-alus/id 3}]}
-                         :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}]
+                         :alas {:edelliset-alukset [{::lt-alus/id 4}]}
+                         :ei-suuntaa {:edelliset-alukset [{::lt-alus/id 5}]}}}]
     (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                          {::lt-alus/id 2}
                                          {::lt-alus/id 3}]}
-                        :alas {:edelliset-alukset []}}}
+                        :alas {:edelliset-alukset []}
+                        :ei-suuntaa {:edelliset-alukset [{::lt-alus/id 5}]}}}
            (tiedot/poista-ketjutus app 4)))
 
     (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
                                          {::lt-alus/id 2}]}
-                        :alas {:edelliset-alukset [{::lt-alus/id 4}]}}}
-           (tiedot/poista-ketjutus app 3)))))
+                        :alas {:edelliset-alukset [{::lt-alus/id 4}]}
+                        :ei-suuntaa {:edelliset-alukset [{::lt-alus/id 5}]}}}
+           (tiedot/poista-ketjutus app 3)))
+    
+    (is (= {:edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
+                                                   {::lt-alus/id 2}
+                                                   {::lt-alus/id 3}]}
+                        :alas {:edelliset-alukset [{::lt-alus/id 4}]}
+                        :ei-suuntaa {:edelliset-alukset ()}}}
+           (tiedot/poista-ketjutus app 5)))))
 
 (deftest nayta-palvelumuoto
   (is (true? (tiedot/nayta-palvelumuoto? {})))
@@ -620,14 +626,16 @@
   (is (= {:edelliset {:tama {::lt/vesipinta-alaraja 1
                              ::lt/vesipinta-ylaraja 2}
                       :ylos {:foo :bar}
-                      :alas {:baz :baz}}
+                      :alas {:baz :baz}
+                      :ei-suuntaa {:baz :baz}}
           :edellisten-haku-kaynnissa? false
           :valittu-liikennetapahtuma {::lt/vesipinta-alaraja 1
                                       ::lt/vesipinta-ylaraja 2}}
          (e! (tiedot/->EdellisetTiedotHaettu {:edellinen {::lt/vesipinta-alaraja 1
                                                           ::lt/vesipinta-ylaraja 2}
                                               :ylos {:foo :bar}
-                                              :alas {:baz :baz}})))))
+                                              :alas {:baz :baz}
+                                              :ei-suuntaa {:baz :baz}})))))
 
 (deftest edelliset-ei-haettu
   (is (= {:edellisten-haku-kaynnissa? false}
@@ -672,26 +680,22 @@
              {:valittu-liikennetapahtuma nil}))))
 
 (deftest suunnan-vaihto
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
+  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ei-suuntaa}
                                                     {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
-         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :alas})
+         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :alas} :alas)
              {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :alas}
                                                         {::lt-alus/id 2 ::lt-alus/suunta :alas}]}})))
+  
   (is (= {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :alas}
                                                     {::lt-alus/id 2 ::lt-alus/suunta :alas}]}}
-         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :ylos})
+         (e! (tiedot/->VaihdaSuuntaa {::lt-alus/id 1 ::lt-alus/suunta :ylos} :ylos)
              {:valittu-liikennetapahtuma {::lt/alukset [{::lt-alus/id 1 ::lt-alus/suunta :ylos}
                                                         {::lt-alus/id 2 ::lt-alus/suunta :alas}]}})))
 
   (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
                                                     {:id -2 ::lt-alus/suunta :alas}]}}
-         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :alas})
-             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
-                                                        {:id -2 ::lt-alus/suunta :alas}]}})))
-  (is (= {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :alas}
-                                                    {:id -2 ::lt-alus/suunta :alas}]}}
-         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :ylos})
-             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ylos}
+         (e! (tiedot/->VaihdaSuuntaa {:id -1 ::lt-alus/suunta :ei-suuntaa} :ei-suuntaa)
+             {:valittu-liikennetapahtuma {::lt/alukset [{:id -1 ::lt-alus/suunta :ei-suuntaa}
                                                         {:id -2 ::lt-alus/suunta :alas}]}}))))
 
 (deftest tallennus
@@ -771,7 +775,8 @@
 (deftest ketjutus-poistettu
   (is (= {:ketjutuksen-poistot #{}
           :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 2}]}
-                      :alas {:edelliset-alukset []}}}
+                      :alas {:edelliset-alukset []}
+                      :ei-suuntaa {:edelliset-alukset ()}}}
          (e! (tiedot/->KetjutusPoistettu {} 1)
              {:ketjutuksen-poistot #{1}
               :edelliset {:ylos {:edelliset-alukset [{::lt-alus/id 1}
