@@ -95,8 +95,7 @@
      (if yhteensa-sarake?
        (conj rivi
          [:arvo-ja-yksikko-korostettu {:arvo (sakkojen-summa rivit optiot)
-                                       :yksikko " €"
-                                       :fmt :numero
+                                       :fmt :raha
                                        :korosta-hennosti? true}])
        rivi))))
 
