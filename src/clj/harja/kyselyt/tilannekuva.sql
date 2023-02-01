@@ -180,8 +180,9 @@ WHERE sijainti IS NOT NULL AND
           -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
           -- tekemiä eri tyyppisiä tarkastuksia
            ELSE o.tyyppi = 'urakoitsija' AND t.tyyppi::TEXT IN (:tyypit)
-    END) AND
-(t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+    END)
+
+AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
 AND (t.yllapitokohde IS NULL
 OR
@@ -244,9 +245,9 @@ WHERE sijainti IS NOT NULL AND
     -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
     -- tekemiä eri tyyppisiä tarkastuksia
            ELSE o.tyyppi = 'urakoitsija' AND t.tyyppi::TEXT IN (:tyypit)
-    END) AND
+    END)
 
-(t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
+AND (t.nayta_urakoitsijalle IS TRUE OR :kayttaja_on_urakoitsija IS FALSE)
 -- Ei kuulu poistettuun ylläpitokohteeseen
 AND (t.yllapitokohde IS NULL
 OR
