@@ -129,7 +129,7 @@ SELECT
   CASE
       WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
           THEN t.tyyppi
-      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
+      ELSE 'tilaajan-laadunvalvonta' ::tarkastustyyppi
       END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -187,7 +187,7 @@ SELECT
   CASE
       WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
           THEN t.tyyppi
-      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
+      ELSE 'tilaajan-laadunvalvonta' ::tarkastustyyppi
       END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
