@@ -61,7 +61,6 @@
      [:arvo-ja-yksikko-korostettu {:arvo (count (suodata-muistutukset rivit suodattimet))
                                    :yksikko " kpl"
                                    :fmt :numero
-                                   ;:sarakkeen-luokka ""
                                    :korosta-hennosti? true}]
      [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
                                            :yksikko " kpl"

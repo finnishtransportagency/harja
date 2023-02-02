@@ -54,11 +54,6 @@
 
 (defn- raporttirivit-muut-tuotteet [rivit alueet toimenpide-haku-fn {:keys [yhteensa-sarake?] :as optiot}]
   (let [toimenpiteet (toimenpide-haku-fn)
-        loput-toimenpiteet (filter #(and
-                                (not= "Talvihoito" (:nimi %))
-                                (not= "Liikenneympäristön hoito" (:nimi %))
-                                (not= "Soratien hoito" (:nimi %)))
-                             toimenpiteet)
         loput-toimenpidekoodit (filter #(and
                                              (not= "23100" (:koodi %)) ;Talvihoito
                                              (not= "23110" (:koodi %)) ;"Liikenneympäristön hoito"
