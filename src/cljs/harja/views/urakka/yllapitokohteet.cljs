@@ -1131,12 +1131,12 @@
                        {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
                         :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
                         :muokattava? (constantly false)})
-                     {:otsikko "Side\u00ADaineet" :nimi :bitumi-indeksi
+                     {:otsikko "Bitu\u00ADmi-indek\u00ADsi" :nimi :bitumi-indeksi
                       :fmt fmt/euro-opt :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys bitumi-indeksi-leveys :tasaa :oikea}
                      {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :nimi :kaasuindeksi :fmt fmt/euro-opt :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
-                     {:otsikko "MAKU-päällysteet" :nimi :maku-paallysteet :fmt fmt/euro-opt
+                     {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :nimi :maku-paallysteet :fmt fmt/euro-opt
                       :otsikkorivi-luokka "paallystys-tausta-tumma"
                       :tyyppi :numero :leveys kaasuindeksi-leveys :tasaa :oikea}
                      {:otsikko "Kokonais\u00ADhinta"
@@ -1162,11 +1162,7 @@
                 bitumi-indeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :bitumi-indeksi kohteet)
                 kaasuindeksi-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :kaasuindeksi kohteet)
                 maku-paallysteet-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :maku-paallysteet kohteet)
-                ;; käännetään kohdistamattomat sanktiot miinusmerkkiseksi jotta summaus toimii oikein
-                kohdistamattomat-sanktiot-yhteensa (let [arvo (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)]
-                                                     (if (> (Math/abs arvo) 0)
-                                                       (- arvo)
-                                                       arvo))
+                kohdistamattomat-sanktiot-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :summa @muut-kustannukset/kohdistamattomien-sanktioiden-tiedot)
                 muut-yhteensa (yllapitokohteet-domain/laske-sarakkeen-summa :hinta @muut-kustannukset/muiden-kustannusten-tiedot)
                 kokonaishinta (+ (yllapitokohteet-domain/yllapitokohteen-kokonaishinta
                                    {:sopimuksen-mukaiset-tyot sopimuksen-mukaiset-tyot-yhteensa
@@ -1230,11 +1226,11 @@
         {:otsikko "Sak\u00ADko/bo\u00ADnus" :nimi :sakot-ja-bonukset :fmt fmt/euro-opt
          :tyyppi :numero :leveys arvonvahennykset-leveys :tasaa :oikea
          :muokattava? (constantly false)})
-      {:otsikko "Side\u00ADaineet" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
+      {:otsikko "Bitu\u00ADmi-indek\u00ADsi" :nimi :bitumi-indeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys bitumi-indeksi-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :nimi :kaasuindeksi :fmt fmt/euro-opt :tyyppi :numero
        :leveys kaasuindeksi-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
-      {:otsikko "MAKU-päällys\u00ADteet" :nimi :maku-paallysteet :fmt fmt/euro-opt :tyyppi :numero
+      {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :nimi :maku-paallysteet :fmt fmt/euro-opt :tyyppi :numero
        :leveys maku-paallysteet-leveys :tasaa :oikea :otsikkorivi-luokka "paallystys-tausta-tumma"}
       {:otsikko "Kokonais\u00ADhinta" :nimi :kokonaishinta
        :tyyppi :komponentti :leveys yhteensa-leveys :tasaa :oikea

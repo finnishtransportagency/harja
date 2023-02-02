@@ -131,6 +131,7 @@ SELECT
   ypk.kohdenumero                     AS yllapitokohde_numero,
   ypk.nimi                            AS yllapitokohde_nimi,
   ypk.id                              AS yllapitokohde_id,
+  ypk.yhaid                           AS yllapitokohde_yhaid,
 
   t.nimi                              AS tyyppi_nimi,
   t.id                                AS tyyppi_id,
@@ -198,7 +199,8 @@ SELECT ek.id,
        NULL AS yllapitokohde_tr_loppuetaisyys,
        NULL AS yllapitokohde_numero,
        NULL AS yllapitokohde_nimi,
-       NULL AS yllapitokohde_id
+       NULL AS yllapitokohde_id,
+       NULL AS yllapitokohde_yhaid
   FROM erilliskustannus ek
       JOIN urakka u ON ek.urakka = u.id
  WHERE ek.urakka = :urakka
@@ -246,7 +248,8 @@ SELECT s.id,
        ypk.tr_loppuetaisyys                AS yllapitokohde_tr_loppuetaisyys,
        ypk.kohdenumero                     AS yllapitokohde_numero,
        ypk.nimi                            AS yllapitokohde_nimi,
-       ypk.id                              AS yllapitokohde_id
+       ypk.id                              AS yllapitokohde_id,
+       ypk.yhaid                           AS yllapitokohde_yhaid
   FROM sanktio s
            JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
            LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id

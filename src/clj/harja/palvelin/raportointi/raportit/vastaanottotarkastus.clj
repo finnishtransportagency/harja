@@ -40,9 +40,9 @@
        (when-not (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? vuosi)
          [{:otsikko "Arvon muu\u00ADtok\u00ADset" :leveys 5 :fmt :raha}
           {:otsikko "Sakko\u00AD/bonus" :leveys 5 :fmt :raha}])
-       [{:otsikko "Side\u00ADaineet" :leveys 5 :fmt :raha}
+       [{:otsikko "Bitu\u00ADmi-indek\u00ADsi" :leveys 5 :fmt :raha}
         {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
-        {:otsikko "MAKU-päällysteet" :leveys 5 :fmt :raha}
+        {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      (map
        (fn [yllapitokohde]
@@ -121,9 +121,9 @@
           {:otsikko "Sakko/bonus" :leveys 5 :fmt :raha}])
        [{:otsikko "Tarjous\u00ADhinta" :leveys 5 :fmt :raha}
         {:otsikko "Määrä\u00ADmuutok\u00ADset" :leveys 5 :fmt :raha}
-        {:otsikko "Side\u00ADaineet" :leveys 5 :fmt :raha}
+        {:otsikko "Bitu\u00ADmi-indek\u00ADsi" :leveys 5 :fmt :raha}
         {:otsikko "Neste\u00ADkaasu ja kevyt poltto\u00ADöljy" :leveys 5 :fmt :raha}
-        {:otsikko "MAKU-päällysteet" :leveys 5 :fmt :raha}
+        {:otsikko "MAKU-pääl\u00ADlys\u00ADteet" :leveys 5 :fmt :raha}
         {:otsikko "Kokonais\u00ADhinta" :leveys 5 :fmt :raha}])
      [(concat
         [nil
@@ -158,13 +158,15 @@
       {:otsikko "Summa" :leveys 10 :fmt :raha}]
      (map
        (fn [kustannus]
-         (-> [(:pvm kustannus)
-              (or (:selite kustannus)
-                  (case (:sakkoryhma kustannus)
-                    "yllapidon_sakko" "Sakko"
-                    "yllapidon_bonus" "Bonus"))
-              (or (:hinta kustannus)
-                  (:maara kustannus))]))
+         (let [kohdetiedot (when-not (:selite kustannus)
+                             (yllapitokohteet-domain/fmt-kohteen-nimi-ja-yhaid-opt kustannus))]
+           (-> [(:pvm kustannus)
+                (or (:selite kustannus)
+                    (case (:sakkoryhma kustannus)
+                      "yllapidon_sakko" (str "Sakko" kohdetiedot)
+                      "yllapidon_bonus" (str "Bonus" kohdetiedot)))
+                (or (:hinta kustannus)
+                    (:maara kustannus))])))
        (apply conj muut-kustannukset urakan-sanktiot))]))
 
 (defn suorita [db user {:keys [urakka-id vuosi] :as tiedot}]
@@ -188,9 +190,11 @@
                                               (yllapitokohteet-domain/jarjesta-yllapitokohteet))
         muut-kustannukset (hae-muut-kustannukset db {:urakka urakka-id
                                                      :vuosi vuosi})
-        urakan-sanktiot (->> (hae-kohteisiin-kuulumattomat-sanktiot db {:urakka urakka-id
-                                                                        :vuosi vuosi})
-                            (map #(assoc % :maara (- (:maara %)))))]
+        urakan-sanktiot (->>
+                          (map konv/alaviiva->rakenne
+                               (hae-yllapitourakan-sanktiot db {:urakka urakka-id
+                                                            :vuosi vuosi}))
+                             (map #(assoc % :maara (- (:maara %)))))]
     [:raportti {:orientaatio :landscape
                 :nimi otsikko}
      (yllapitokohteet-taulukko (filter :yhaid yllapitokohteet+kustannukset) :yha vuosi)
