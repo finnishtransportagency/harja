@@ -530,7 +530,7 @@
 (def maarapaivan-ylitys-sanktiotyyppi (first (q-map "SELECT id, toimenpidekoodi, nimi, koodi FROM sanktiotyyppi WHERE nimi = 'Määräpäivän ylitys'")))
 
 (def odotettu-urakan-jalkeinen-sanktio
-  [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil}
+  [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
     :suorasanktio false, :laji :C, :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
