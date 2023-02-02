@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
   (:require [reagent.core :refer [atom] :as r]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
 
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
@@ -16,6 +17,37 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]))
+
+(defn- toimenpide-valikon-nimi
+  "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
+  Muistutukselle ei näytetä Kulun kohdistus -valikkoa, jos muistutuksen tyyppinä on jotain Talvihoitoon liittyvää. Mutta
+  jos muistutuksen tyyppinä on 'Muut hoitourakan tehtäväkokonaisuudet' tai 'Hallinnolliset laiminlyönnit',
+  niin Kulun kohdistus valikko, joka on pohjimmiltaan toimenpideinstanssivalikko
+  pitää näyttää. Muistukselle ei toki kulua tule, mutta se pitää kohdistaa johonkin toimenpiteeseen."
+  [sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" "Toimenpide"
+    "Hallinnolliset laiminlyönnit" "Toimenpide"
+    "Kulun kohdistus"))
+
+(defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                              toimenpideinstanssit)
+    "Talvihoito, päätiet" (filter
+                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                            toimenpideinstanssit)
+    "Talvihoito, muut tiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
+    "Sorateiden hoito ja ylläpito" (filter
+                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                     toimenpideinstanssit)
+    "Liikenneympäristön hoito" (filter
+                                     #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                     toimenpideinstanssit)
+    toimenpideinstanssit))
 
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata?]
@@ -39,8 +71,10 @@
         mahdolliset-sanktiolajit @tiedot-urakka/valitun-urakan-sanktiolajit
         ;; Kaikkien sanktiotyyppien tiedot, i.e. [{:koodi 1 nimi "foo" toimenpidekoodi 24 ...} ...]
         ;; Näitä ei ole paljon ja ne muuttuvat harvoin, joten haetaan kaikki tyypit.
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit]
-
+        kaikki-sanktiotyypit @tiedot/sanktiotyypit
+        ;; Kulun kohdistus valikosta poistetaan Talvihoito tyyppiset toimenpideinstanssit, jos Tyyppinä on "Muut hoitourakan tehtäväkokonaisuudet"
+        ;; Ja jos tyyppinä on talvihoito, niin muut kuin talvihoito toimenpiteet poistetaan myös
+        mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit (get-in @muokattu [:tyyppi :nimi]))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit) (seq kaikki-sanktiotyypit)
@@ -210,9 +244,16 @@
           :tyyppi :text :koko [80 :auto]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
 
-         (when (sanktio-domain/muu-kuin-muistutus? @muokattu)
+         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
+         (when (or
+                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
+                 (and (sanktio-domain/muistutus? @muokattu)
+                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                                "Liikenneympäristön hoito"
+                                "Sorateiden hoito ja ylläpito"
+                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
            (if (not lukutila?)
-             {:otsikko "Kulun kohdistus"
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi]))
               :pakollinen? true
               :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
               ::lomake/col-luokka "col-xs-12"
@@ -220,11 +261,11 @@
               :tyyppi :valinta
               :valinta-arvo :tpi_id
               :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-              :valinnat @tiedot-urakka/urakan-toimenpideinstanssit
+              :valinnat mahdolliset-kulun-kohdistukset
               :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko "Kulun kohdistus" :tyyppi :teksti :nimi :toimenpideinstanssi
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) :tyyppi :teksti :nimi :toimenpideinstanssi
               ::lomake/col-luokka "col-xs-12"
               :hae (fn [{:keys [toimenpideinstanssi]}]
                      (some
