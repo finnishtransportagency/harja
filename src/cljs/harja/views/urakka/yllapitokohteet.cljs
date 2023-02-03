@@ -109,7 +109,7 @@
              :muokattava? (or (:muokattava? tie) true-fn)}
             (when ajorata
               {:otsikko "Ajo\u00ADrata" :alasveto-luokka "kavenna-jos-kapea"
-               :nimi (:nimi ajorata)
+               :nimi (:nimi ajorata) :tasaa :oikea
                :muokattava? (or (:muokattava? ajorata) true-fn)
                :kentta-arity-3? (:arity-3? ajorata)
                :tyyppi :valinta
@@ -123,7 +123,7 @@
               {:otsikko "Kais\u00ADta" :alasveto-luokka "kavenna-jos-kapea"
                :muokattava? (or (:muokattava? kaista) true-fn)
                :kentta-arity-3? (:arity-3? kaista)
-               :nimi (:nimi kaista)
+               :nimi (:nimi kaista) :tasaa :oikea
                :tyyppi :valinta
                :valinta-arvo :koodi
                :fmt kaista-fmt-fn
