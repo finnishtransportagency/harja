@@ -25,8 +25,8 @@
   (assert (= nimi "Nimi") "Nimi otsikko oikein")
   (assert (= sopimuksen-mukaiset-tyot "Tarjoushinta") "Tarjoushinta otsikko oikein")
   (assert (= maaramuutokset "Määrämuutokset") "Määrämuutokset otsikko oikein")
-  (assert (= bitumi-indeksi "Sideaineet") "Sideaineen hintamuutokset otsikko oikein")
-  (assert (= kaasuindeksi "Nestekaasu ja kevyt polttoöljy") "Nestekaasun ja kevyen polttoöljyn hintamuutokset otsikko oikein")
+  (assert (= bitumi-indeksi "Bitumi-indeksi") "Bitumi-indeksin otsikko oikein")
+  (assert (= kaasuindeksi "Nestekaasu ja kevyt polttoöljy") "Nestekaasun ja kevyen polttoöljyn otsikko oikein")
   (assert (= maku-paallysteet "MAKU-päällysteet") "MAKU-päällysteet otsikko oikein")
   (assert (= kokonaishinta "Kokonaishinta") "Kokonaishinta otsikko oikein"))
 
@@ -110,7 +110,7 @@
                                  {:otsikko "Nimi"}
                                  {:otsikko "Tarjoushinta"  :fmt :raha :voi-muokata? true}
                                  {:otsikko "Määrämuutokset" :fmt :raha}]
-        yhteiset-sarakkeet-loppu [{:otsikko "Sideaineet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
+        yhteiset-sarakkeet-loppu [{:otsikko "Bitumi-indeksi" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
                                   {:otsikko "Nestekaasu ja kevyt polttoöljy" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
                                   {:otsikko "MAKU-päällysteet" :fmt :raha :voi-muokata? true :taustavari taustavari-hintamuutokset}
                                   {:otsikko "Kokonaishinta" :fmt :raha}]]
