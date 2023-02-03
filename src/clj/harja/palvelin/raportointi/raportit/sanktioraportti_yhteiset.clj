@@ -1,14 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset
   (:require
     [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
-    [jeesql.core :refer [defqueries]]
-    [harja.tyokalut.functor :refer [fmap]]
     [clojure.string :as str]
     [clojure.set :as set]
     [harja.kyselyt.konversio :as konv]
     [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
-    [harja.kyselyt.urakat :as urakat-q]
-    [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
     [harja.pvm :as pvm]
     [harja.domain.urakka :as urakka-domain]))
 
@@ -17,7 +13,12 @@
     (= (str/lower-case (:toimenpidekoodi_taso2 rivi)) "talvihoito")
     false))
 
-(defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito? sanktiotyyppi] :as suodattimet}]
+(defn- rivi-kuuluu-tpkhn? [{:keys [toimenpidekoodi_taso2]} tpkt]
+  ((into #{} (map str/lower-case) tpkt) (str/lower-case toimenpidekoodi_taso2)))
+
+(defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito?
+                                    sanktiotyyppi_koodi sailytettavat-toimenpidekoodit
+                                    poistettavat-tpkt sailytettavat-tpkt]}]
   (filter
     (fn [rivi]
       (and
@@ -27,8 +28,19 @@
                                 (= sakkoryhma (:sakkoryhma rivi))))
         (or (nil? urakka-id) (= urakka-id (:urakka-id rivi)))
         (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id rivi)))
-        (or (nil? sanktiotyyppi) (nil? (:sanktiotyyppi_nimi rivi)) (str/includes? (str/lower-case (:sanktiotyyppi_nimi rivi)) (str/lower-case sanktiotyyppi)))
-        (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))))
+        (or (nil? sanktiotyyppi_koodi)
+          (nil? (:sanktiotyyppi_koodi rivi))
+          (if (set? sanktiotyyppi_koodi)
+            (contains? sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))
+            (= sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))))
+        (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))
+        (or (nil? poistettavat-tpkt)
+          (and (:toimenpidekoodi_taso2 rivi)
+            (not (rivi-kuuluu-tpkhn? rivi poistettavat-tpkt))))
+        (or (nil? sailytettavat-tpkt)
+          (rivi-kuuluu-tpkhn? rivi sailytettavat-tpkt))
+        (or (nil? sailytettavat-toimenpidekoodit)
+          (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
 
 (defn- suodata-muistutukset [rivit {:keys [urakka-id hallintayksikko-id talvihoito?] :as suodattimet}]
@@ -42,11 +54,17 @@
     rivit))
 
 (defn muistutusten-maara
-  ([rivit] (muistutusten-maara rivit {}))
-  ([rivit suodattimet]
-   [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
-                      :yksikko " kpl"
-                      :fmt :numero}]))
+  ([rivit] (muistutusten-maara rivit {} false))
+  ([rivit suodattimet] (muistutusten-maara rivit suodattimet false))
+  ([rivit suodattimet yhteensa-sarake?]
+   (if yhteensa-sarake?
+     [:arvo-ja-yksikko-korostettu {:arvo (count (suodata-muistutukset rivit suodattimet))
+                                   :yksikko " kpl"
+                                   :fmt :numero
+                                   :korosta-hennosti? true}]
+     [:arvo-ja-yksikko {:arvo (count (suodata-muistutukset rivit suodattimet))
+                                           :yksikko " kpl"
+                                           :fmt :numero}])))
 
 
 (defn sakkojen-summa
@@ -74,7 +92,10 @@
                                             (sakkojen-summa rivit (merge optiot alue)))
                                           alueet))]
      (if yhteensa-sarake?
-       (conj rivi (sakkojen-summa rivit optiot))
+       (conj rivi
+         [:arvo-ja-yksikko-korostettu {:arvo (sakkojen-summa rivit optiot)
+                                       :fmt :raha
+                                       :korosta-hennosti? true}])
        rivi))))
 
 (defn luo-rivi-muistutusten-maara
@@ -85,7 +106,7 @@
                                             (muistutusten-maara rivit (merge optiot alue)))
                                           alueet))]
      (if yhteensa-sarake?
-       (conj rivi (muistutusten-maara rivit optiot))
+       (conj rivi (muistutusten-maara rivit optiot yhteensa-sarake?))
        rivi))))
 
 (defn luo-rivi-indeksien-summa
@@ -172,7 +193,7 @@
                                      urakka-id hallintayksikko-id
                                      urakkatyyppi db-haku-fn
                                      raportin-nimi raportin-rivit-fn
-                                     info-teksti]}]
+                                     info-teksti sanktiotyypit]}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)

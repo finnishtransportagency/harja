@@ -1325,3 +1325,12 @@ yllapitoluokkanimi->numero
   ;; Eritellyt määrämuutokset poistuvat käytöstä 1.1.2023 alkaen uusissa urakoissa. Tuetaan erittelyä vanhoissa.
   [vuosi]
   (boolean (< vuosi 2023)))
+
+(defn fmt-kohteen-nimi-ja-yhaid-opt
+  "Lisää ylläpitokohteen merkijonoesitykseen nimen ja yhaid:n, jos kohde olemassa (yhaid on)"
+  [ypk]
+  ;; huom: olettaa tietojen olevan mapissa avaimenssa :yllapitokohde
+  (when-let [yhaid (-> ypk :yllapitokohde :yhaid)]
+    (str ": "
+         (-> ypk :yllapitokohde :nimi)
+         (str " (yhaid: " yhaid ")"))))

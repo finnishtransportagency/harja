@@ -45,16 +45,19 @@ WHERE yt.urakka = :urakka
       AND yt.poistettu IS NOT TRUE
 ORDER BY yt.pvm DESC;
 
--- name: hae-kohteisiin-kuulumattomat-sanktiot
+-- name: hae-yllapitourakan-sanktiot
 SELECT
   s.maara,
   s.sakkoryhma,
-  lp.aika AS "pvm"
+  lp.aika AS "pvm",
+  ypk.nimi AS yllapitokohde_nimi,
+  ypk.yhaid AS yllapitokohde_yhaid
 FROM sanktio s
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  LEFT JOIN yllapitokohde ypk ON ypk.id = lp.yllapitokohde
 WHERE s.laatupoikkeama IN (SELECT id
                            FROM laatupoikkeama lp
-                           WHERE lp.urakka = :urakka AND lp.yllapitokohde IS NULL)
+                           WHERE lp.urakka = :urakka)
       AND (s.sakkoryhma = 'yllapidon_sakko' OR s.sakkoryhma = 'yllapidon_bonus')
       AND (SELECT EXTRACT(YEAR FROM lp.aika)) = :vuosi
       AND s.poistettu IS NOT TRUE
