@@ -348,7 +348,9 @@
     (let [tarkastus (kutsu-karttakuvapalvelua
                       (:http-palvelin jarjestelma)
                       :tilannekuva-tarkastukset +kayttaja-jvh+
-                      {:ilmoitukset {}, :urakat #{4}, :tarkastukset #{7 6 9 8}, :alku #inst "2015-12-31T22:00:00.000-00:00", :nykytilanne? false, :loppu #inst "2016-12-31T21:59:59.000-00:00"}
+                      {:ilmoitukset {}, :urakat #{4},
+                       :tarkastukset (map :id [tk/tarkastus-talvihoito tk/tarkastus-soratie tk/tilaajan-laadunvalvonta tk/tarkastus-tiesto tk/tarkastus-laatu]),
+                       :alku #inst "2015-12-31T22:00:00.000-00:00", :nykytilanne? false, :loppu #inst "2016-12-31T21:59:59.000-00:00"}
                       [436352 7216512] nil)]
       (is (paneeli/skeeman-luonti-onnistuu-kaikille? :tarkastus tarkastus))
       (is (not (paneeli/skeeman-luonti-onnistuu-kaikille? :toteuma tarkastus))))

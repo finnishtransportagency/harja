@@ -57,7 +57,7 @@
         tarkastuksia-ennen-tie2 (count (hae-tarkastukset 2))
         tarkastus-id (atom nil)]
 
-    (testing "Soratietarkastuksen tallennus"
+    (testing "Soratietarkastuksen tallennus (tilaaja)"
       (let [vastaus (kutsu-http-palvelua :tallenna-tarkastus +kayttaja-jvh+
                                          {:urakka-id urakka-id
                                           :tarkastus soratietarkastus})
@@ -70,8 +70,8 @@
 
         (let [listaus-tie1 (hae-tarkastukset 1)]
           (is (= (count listaus-tie1) (inc tarkastuksia-ennen-tie1)))
-          (is (= :soratie
-                 (:tyyppi (first (filter #(= (:id %) id) listaus-tie1))))))
+          (is (= (keyword "tilaajan laadunvalvonta")
+                (:tyyppi (first (filter #(= (:id %) id) listaus-tie1))))))
 
 
         ;; tie 2 tarkastusmäärä ei ole kasvanut
@@ -114,7 +114,7 @@
     (let [tarkastus (first vastaus)]
       (is (= #{:ok? :jarjestelma :havainnot :laadunalitus
                :vakiohavainnot :aika :soratiemittaus
-               :tr :tekija :id :tyyppi :tarkastaja
+               :tr :tekija :organisaatio :id :tyyppi :tarkastaja
                :talvihoitomittaus :yllapitokohde
                :nayta-urakoitsijalle :liitteet}
              (into #{} (keys tarkastus)))))))
@@ -252,7 +252,7 @@
     (let [tarkastus (first vastaus)]
       (is (= #{:ok? :jarjestelma :havainnot :laadunalitus
                :vakiohavainnot :aika
-               :tr :tekija :id :tyyppi :tarkastaja
+               :tr :tekija :organisaatio :id :tyyppi :tarkastaja
                :yllapitokohde
                :nayta-urakoitsijalle :liitteet}
              (into #{} (keys tarkastus)))))))
