@@ -28,7 +28,7 @@
    :katselmus "Katselmus"
    :vastaanotto "Vastaanottotarkastus"
    :takuu "Takuutarkastus"
-   :tilaajan-laadunvalvonta "Tilaajan laadunvalvonta"})
+   (keyword "tilaajan laadunvalvonta") "Tilaajan laadunvalvonta"})
 
 (defn formatoi-talvihoitomittaukset
   [thm]

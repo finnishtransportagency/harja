@@ -129,7 +129,7 @@ SELECT
   CASE
       WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
           THEN t.tyyppi
-      ELSE 'tilaajan-laadunvalvonta' ::tarkastustyyppi
+      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
       END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -175,7 +175,7 @@ WHERE sijainti IS NOT NULL AND
   AND (CASE
           -- Erikoistapaus: Jos on valittu tilannekuvasta Tilaajan laadunvalvonta tyyppinen suodatin, niin
           -- haetaan vain tarkastukset, jotka _eivät_ ole urakoitsijan tekemiä tai mikä tahansa muun tyyppinen (esim. tiestö)
-           WHEN 'tilaajan-laadunvalvonta' IN (:tyypit)
+           WHEN 'tilaajan laadunvalvonta' IN (:tyypit)
                THEN o.tyyppi != 'urakoitsija' OR t.tyyppi::TEXT IN (:tyypit)
           -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
           -- tekemiä eri tyyppisiä tarkastuksia
@@ -197,7 +197,7 @@ SELECT
   CASE
       WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
           THEN t.tyyppi
-      ELSE 'tilaajan-laadunvalvonta' ::tarkastustyyppi
+      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
       END                                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
@@ -240,7 +240,7 @@ WHERE sijainti IS NOT NULL AND
   AND (CASE
     -- Erikoistapaus: Jos on valittu tilannekuvasta Tilaajan laadunvalvonta tyyppinen suodatin, niin
     -- haetaan vain tarkastukset, jotka _eivät_ ole urakoitsijan tekemiä tai mikä tahansa muun tyyppinen (esim. tiestö)
-           WHEN 'tilaajan-laadunvalvonta' IN (:tyypit)
+           WHEN 'tilaajan laadunvalvonta' IN (:tyypit)
                THEN o.tyyppi != 'urakoitsija' OR t.tyyppi::TEXT IN (:tyypit)
     -- Jos tilaajan laadunvalvontaa ei ole lainkaan valittuna suodattimista, voidaan keskittyä hakemaan vain urakoitsijan
     -- tekemiä eri tyyppisiä tarkastuksia
