@@ -1129,17 +1129,17 @@ WHERE nimi = 'Hoitovuoden päättäminen'
 -- Lisätyöt
 
 UPDATE toimenpidekoodi
-SET yksiloiva_tunniste = 'e32341fc775a490a8eabc98b8849f968'
+SET yksiloiva_tunniste = 'e32341fc-775a-490a-8eab-c98b8849f968'
 WHERE nimi = 'Lisätyö (talvihoito)'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
 
 UPDATE toimenpidekoodi
-SET yksiloiva_tunniste = '0c466f20620d407d87b03cbb41e8342e'
+SET yksiloiva_tunniste = '0c466f20-620d-407d-87b0-3cbb41e8342e'
 WHERE nimi = 'Lisätyö (l.ymp.hoito)'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
 
 UPDATE toimenpidekoodi
-SET yksiloiva_tunniste = 'c058933e58d3414d99d1352929aa8cf9'
+SET yksiloiva_tunniste = 'c058933e-58d3-414d-99d1-352929aa8cf9'
 WHERE nimi = 'Lisätyö (sorateiden hoito)'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
 
