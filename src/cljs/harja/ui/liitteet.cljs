@@ -74,25 +74,44 @@
                                    (poista-fn (:id liite)))}))}
    (ikonit/livicon-trash)])
 
+(defn- sievenna-liitteen-koko
+  "Köykäinen lukujen sievennys. Liitteen maksimikoko on 32MB, joten suurempia lukuja ei tarvitse käsitellä."
+  [koko]
+  (let [koko-str (str koko)
+        koko-lyhenne (case (count koko-str)
+                       8 (str (subs koko-str 0 2) "mb")
+                       7 (str (subs koko-str 0 1) "mb")
+                       6 (str "0." (subs koko-str 0 1) "mb")
+                       5 (str (subs koko-str 0 2) "kt")
+                       4 (str (subs koko-str 0 1) "kt")
+                       3 (str "0." (subs koko-str 0 1) "kt")
+                       "" ; default - ei näyetä kokoa jos ei osu raameihin
+                       )]
+    koko-lyhenne))
+
 (defn liitetiedosto
   "Näyttää liitteen pikkukuvan ja nimen.
 
   Optiot:
   salli-poisto?                      Piirtää roskakorin liitteen nimen viereen
-  poista-liite-fn                    Funktio, jota kutsutaan roskakorista"
+  poista-liite-fn                    Funktio, jota kutsutaan roskakorista
+  nayta-koko?                        Jos true, lisää nimen perään koon"
   ([tiedosto] (liitetiedosto tiedosto {}))
-  ([tiedosto {:keys [salli-poisto? poista-liite-fn] :as optiot}]
-   (let [nimi (:nimi tiedosto)]
+  ([tiedosto {:keys [salli-poisto? poista-liite-fn nayta-koko?] :as optiot}]
+   (let [nimi (:nimi tiedosto)
+         koko (:koko tiedosto)]
      [:div.liite
       (if (naytettava-liite? tiedosto)
         [:span
          [:img.pikkukuva.klikattava {:src (k/pikkukuva-url (:id tiedosto))
                                      :on-click #(nayta-liite-modalissa tiedosto)}]
-         [:span.liite-nimi nimi]
+         [:span.liite-nimi (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
          (when salli-poisto?
            [liitteen-poisto tiedosto poista-liite-fn])]
         [:span
-         [:a.liite-linkki {:target "_blank" :href (k/liite-url (:id tiedosto))} nimi]
+         [:a.liite-linkki
+          {:target "_blank" :href (k/liite-url (:id tiedosto))}
+          (str nimi (when nayta-koko? (str " (" (sievenna-liitteen-koko koko) ") ")))]
          (when salli-poisto?
            [liitteen-poisto tiedosto poista-liite-fn])])])))
 
@@ -315,13 +334,14 @@
    poista-lisatty-liite-fn             Funktio, jota kutsutaan, kun juuri lisätty liite vahvistetaan poistettavaksi.
    palautetut-liitteet                 Kokoelma liitteitä, jotka on tallennettu local storageen ja tulisi sen takia
                                        näkyä käyttäjälle.
-   latausta-ennen-fn                   Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
-   latausta-jalkeen-fn                 Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi."
+   latausta-ennen-fn                   Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
+   latausta-jalkeen-fn                 Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi.
+   nayta-koko?                         Jos true, lisää nimen perään koon."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
                                           poista-lisatty-liite-fn palautetut-liitteet latauksen-seuranta-atom
-                                          latausta-ennen-fn latausta-jalkeen-fn]}]
+                                          latausta-ennen-fn latausta-jalkeen-fn nayta-koko?]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -331,10 +351,12 @@
          [liitelinkki liite (lyhenna-pitkan-liitteen-nimi (:nimi liite))
           {:rivita? true
            :salli-poisto? salli-poistaa-tallennettu-liite?
-           :poista-liite-fn poista-tallennettu-liite-fn}]
+           :poista-liite-fn poista-tallennettu-liite-fn
+           :nayta-koko nayta-koko?}]
          ^{:key (:id liite)}
          [liitetiedosto liite {:salli-poisto? salli-poistaa-tallennettu-liite?
-                               :poista-liite-fn poista-tallennettu-liite-fn}])))
+                               :poista-liite-fn poista-tallennettu-liite-fn
+                               :nayta-koko nayta-koko?}])))
 
    ;; Uuden liitteen lähetys
    (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-liitteet urakka-id)

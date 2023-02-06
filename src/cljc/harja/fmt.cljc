@@ -518,7 +518,9 @@
             (or
               (or (nil? luku) (and (string? luku) (empty? luku)))
               (frontin-formatointivirheviestit formatoitu))
-            (throw (js/Error. (str "Arvoa ei voi formatoida desimaaliluvuksi:" (pr-str luku))))
+            (do
+              (println "Lukua ei voitu formatoida. Todennäköisesti sinun pitää muuttaa kentän " luku " tyyppi pois numerosta.")
+              luku)
 
             ryhmitelty?
             formatoitu

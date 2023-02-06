@@ -67,7 +67,7 @@
     (fn [_] (tarkista-harja-status db kehitysmoodi?))))
 
 (defn- poista-statusviestit [db]
-  (status-kyselyt/poista-statusviestit db))
+  (status-kyselyt/poista-statusviestit! db))
 
 (defn- ajastus-poista-statusviestit [db]
   (log/info "Ajastetaan statusviestien siivous - ajetaan kerran vuorokaudessa - poistetaan viikon kaikki yli kaksi päivää vanhat")
