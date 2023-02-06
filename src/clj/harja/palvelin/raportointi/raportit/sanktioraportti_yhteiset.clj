@@ -38,9 +38,10 @@
           (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
 
-(defn- suodata-bonukset [bonukset {:keys [laji urakka-id] :as suodattimet}]
+(defn- suodata-bonukset [bonukset {:keys [laji urakka-id hallintayksikko-id] :as suodattimet}]
   (filter (fn [bonus]
             (and
+              (or (nil? hallintayksikko-id) (= hallintayksikko-id (:hallintayksikko_id bonus)))
               (or (nil? laji) (contains? laji (:laji bonus)))
               (or (nil? urakka-id) (= urakka-id (:urakka-id bonus)))))
     bonukset))
@@ -403,9 +404,7 @@
              (raporttirivit-yhteensa rivit alueet optiot))))
 
 (defn- raporttirivit-bonukset [bonukset alueet {:keys [yhteensa-sarake?] :as optiot}]
-  (let [bonustyypit (keys (group-by :laji bonukset))
-        r (luo-rivi-bonusten-summa "Bonukset yhteensä" bonukset alueet
-            {:yhteensa-sarake? yhteensa-sarake?})]
+  (let [bonustyypit (keys (group-by :laji bonukset))]
     (concat
       [{:otsikko "Bonusten yhteenveto"}]
       (map
@@ -417,6 +416,8 @@
       [(luo-rivi-bonusten-summa "Bonukset yhteensä" bonukset alueet
          {:yhteensa-sarake? yhteensa-sarake?})
        (luo-rivi-indeksien-summa "Indeksit" bonukset alueet
+         {:yhteensa-sarake? yhteensa-sarake?})
+       (luo-rivi-kaikki-yht "Bonukset yhteensä (indeksikorjattu)" bonukset alueet
          {:sakkoryhma #{:lupaussanktio}
           :yhteensa-sarake? yhteensa-sarake?})])))
 
