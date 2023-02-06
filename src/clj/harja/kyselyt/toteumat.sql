@@ -623,6 +623,8 @@ WHERE tk.tehtavaryhma = tr.id
   AND tk.poistettu IS NOT TRUE
   -- rajataan pois alue- eli hoitoluokkatiedot
   AND tk.aluetieto = false
+  -- haetaan Lisää toteuma-listaan vain MH-urakoissa käytössä olevat tehtävät, ei samaa tarkoittavia alueurakoiden tehtäviä.
+  AND tk.ensisijainen = true
   -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
   -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
   AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
