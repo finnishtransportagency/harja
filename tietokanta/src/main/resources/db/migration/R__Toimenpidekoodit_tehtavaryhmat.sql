@@ -216,9 +216,9 @@ ON CONFLICT (nimi) DO UPDATE SET emo = (select id from tehtavaryhma where nimi =
 
 
 ---- dummy
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Lisätyöt', null, 'ylataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE) on conflict do nothing;
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Välitaso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Lisätyöt'), 'valitaso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
-insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('7.0 LISÄTYÖT', 'Alataso Lisätyöt', (select id from tehtavaryhma where otsikko = '7.0 LISÄTYÖT' and nimi = 'Välitaso Lisätyöt'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Lisätyöt', null, 'ylataso', 990, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE) on conflict do nothing;
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Välitaso Lisätyöt', (select id from tehtavaryhma where otsikko = '9 LISÄTYÖT' and nimi = 'Lisätyöt'), 'valitaso', 991, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
+insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES ('9 LISÄTYÖT', 'Alataso Lisätyöt', (select id from tehtavaryhma where otsikko = '9 LISÄTYÖT' and nimi = 'Välitaso Lisätyöt'), 'alataso', 992, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), FALSE)  on conflict do nothing;
 -- Samaan kastiin kuuluu myös '4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA' - se on saatava näkymään määrien toteumat sivulla
 insert into tehtavaryhma (otsikko, nimi, emo, tyyppi, jarjestys, luotu, luoja, nakyva) VALUES
 ('4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', 'Liikenteen varmistaminen', null,
@@ -498,23 +498,23 @@ ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen (soratiet)', (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'),	NULL,	136, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Vahinkojen korjaukset, Soratiet (T2)'), jarjestys = 1362;
 
---- MHU: Lisätyöt - nämä ovat dummy-tehtäviä, joita käytetään lisätöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 7.0 Lisätyöt
+--- MHU: Lisätyöt - nämä ovat dummy-tehtäviä, joita käytetään lisätöitä kirjatessa selventämään. Kuuluvat toimenpiteelle (tehtäväryhmä) 9 Lisätyöt
 
 INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (talvihoito)',
-            (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9900, NULL,
+            (SELECT id FROM tehtavaryhma WHERE otsikko = '9 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9900, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23104'), current_timestamp,
             (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE)  on conflict do nothing;
 
 INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (l.ymp.hoito)',
-            (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9910, NULL,
+            (SELECT id FROM tehtavaryhma WHERE otsikko = '9 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9910, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23116'), current_timestamp,
             (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE) on conflict do nothing;
 
 INSERT INTO toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen, kasin_lisattava_maara)
     VALUES ('Lisätyö (sorateiden hoito)',
-            (SELECT id FROM tehtavaryhma WHERE otsikko = '7.0 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9920, NULL,
+            (SELECT id FROM tehtavaryhma WHERE otsikko = '9 LISÄTYÖT' AND nimi = 'Alataso Lisätyöt'), NULL, 9920, NULL,
             (SELECT id FROM toimenpidekoodi WHERE koodi = '23124'), current_timestamp,
             (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), 4, TRUE, TRUE) ON CONFLICT DO NOTHING;
 
@@ -1088,6 +1088,7 @@ UPDATE tehtavaryhma SET yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714
 UPDATE tehtavaryhma SET yksiloiva_tunniste = '19907c24-dd26-460f-9cb4-2ed974b891aa' WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä';
 UPDATE tehtavaryhma SET yksiloiva_tunniste = 'be34116b-2264-43e0-8ac8-3762b27a9557' WHERE nimi = 'Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä';
 
+UPDATE tehtavaryhma SET yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd' WHERE nimi = 'Alataso Lisätyöt'; -- Dummy tehtäväryhmä siinä mielessä, että tälle ei kirjata kustannuksia
 
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8' WHERE nimi = 'Hoidonjohtopalkkio';
 UPDATE toimenpidekoodi SET yksiloiva_tunniste = 'c9712637-fbec-4fbd-ac13-620b5619c744' WHERE nimi = 'Hoitourakan työnjohto';
@@ -1124,6 +1125,24 @@ UPDATE toimenpidekoodi
 SET yksiloiva_tunniste = 'e5f61569-bed3-4be3-8aa0-9e0dd2725c6b'
 WHERE nimi = 'Hoitovuoden päättäminen'
   AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = '55c920e7-5656-4bb0-8437-1999add714a3');
+
+-- Lisätyöt
+
+UPDATE toimenpidekoodi
+SET yksiloiva_tunniste = 'e32341fc775a490a8eabc98b8849f968'
+WHERE nimi = 'Lisätyö (talvihoito)'
+  AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
+
+UPDATE toimenpidekoodi
+SET yksiloiva_tunniste = '0c466f20620d407d87b03cbb41e8342e'
+WHERE nimi = 'Lisätyö (l.ymp.hoito)'
+  AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
+
+UPDATE toimenpidekoodi
+SET yksiloiva_tunniste = 'c058933e58d3414d99d1352929aa8cf9'
+WHERE nimi = 'Lisätyö (sorateiden hoito)'
+  AND tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE yksiloiva_tunniste = 'c7d9be7c-7bea-49a4-bd30-a432041cf6dd');
+
 
 -- Korjataan toimenpidekoodien (tehtävien) tehtäväryhmämäppäyksiä
 UPDATE toimenpidekoodi SET tehtavaryhma = (SELECT id FROM tehtavaryhma WHERE nimi = 'KT-Valu (Y3)') WHERE nimi in ('KT-valuasfalttipaikkaus T', 'KT-valuasfalttipaikkaus K', 'KT-reikävaluasfalttipaikkaus', 'KT-valuasfalttisaumaus');
@@ -1291,7 +1310,6 @@ UPDATE tehtavaryhma SET otsikko = '6.1 YLLÄPITO / Rumpujen uusiminen' WHERE nim
 UPDATE tehtavaryhma SET otsikko = '6.2 YLLÄPITO / Avo-ojien kunnossapito' WHERE nimi IN ('MHU Ylläpito', 'Välitaso MHU Ylläpito', 'Ojitus', 'Avo-ojitus, soratiet (Z)', 'Avo-ojitus, päällystetyt tiet (X)');
 UPDATE tehtavaryhma SET otsikko = '7 KORVAUSINVESTOINTI' WHERE otsikko = '5 KORJAAMINEN';
 UPDATE tehtavaryhma SET otsikko = '8 MUUTA' WHERE otsikko = '6 MUUTA';
-UPDATE tehtavaryhma SET otsikko = '9 LISÄTYÖT' WHERE otsikko = '7.0 LISÄTYÖT';
 
 -- Pohjavesisuojaukset kuuluvat Muut-otsikon alle
 UPDATE tehtavaryhma
