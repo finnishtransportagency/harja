@@ -54,16 +54,18 @@
     (range alku-hoitokausi (inc loppu-hoitokausi))))
 
 (defn- hae-tehtavamaarat
-  [db kysely-fn {:keys [urakka-id hallintayksikko-id alkupvm loppupvm]}]
+  [db kysely-fn {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
   (log/debug "hae-tehtavamaarat: saatiin alku/loppupvm:t" alkupvm loppupvm)
-  (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)]
+  (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
+        vain-mhut? (parametrit "Vain MHUt ja HJU:t")]
     (kysely-fn
       db
       {:alkupvm alkupvm
        :loppupvm loppupvm
        :hoitokausi hoitokaudet
        :urakka urakka-id
-       :hallintayksikko hallintayksikko-id})))
+       :hallintayksikko hallintayksikko-id
+       :vain-mhut? vain-mhut?})))
 
 (defn pyorista-kahteen-decimaaliin [arvo]
   (when (not (nil? arvo))

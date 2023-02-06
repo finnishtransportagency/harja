@@ -265,6 +265,7 @@
                [:input {:type "hidden" :name "parametrit"
                         :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                                                       :tila (:valittu-tila app)
+                                                      :elyt (:valitut-elyt app)
                                                       :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
                                                       :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                       :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]

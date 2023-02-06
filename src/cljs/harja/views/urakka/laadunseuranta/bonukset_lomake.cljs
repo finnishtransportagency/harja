@@ -232,7 +232,7 @@
        :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
-      (when-not lukutila?
+      (if-not lukutila?
         {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
          :tyyppi :komponentti
          ::lomake/col-luokka "col-xs-12"
@@ -245,7 +245,20 @@
                           :poista-lisatty-liite-fn #(e! (tiedot/->PoistaLisattyLiite))
                           :salli-poistaa-tallennettu-liite? true
                           :nayta-lisatyt-liitteet? false
-                          :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])})]
+                          :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])}
+        {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
+         :tyyppi :komponentti
+         ::lomake/col-luokka "col-xs-12"
+         :komponentti (fn [_]
+                        [:div
+                         (if (and (get-in app [:lomake :liitteet])
+                               (not (empty? (get-in app [:lomake :liitteet]))))
+                           (doall
+                             (for [l (get-in app [:lomake :liitteet])]
+                               ^{:key l}
+                               [liitteet/liitetiedosto l {:salli-poisto? false
+                                                          :nayta-koko? true}]))
+                           "Ei liitettä")])})]
      lomakkeen-tiedot]))
 
 

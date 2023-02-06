@@ -39,25 +39,11 @@
        :salasana ""}
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
-       ;; :slack {:taso :warn
-       ;;         :webhook-url #=(slurp "../.harja/slack-webhook-url")}
-       ;; :hipchat {:taso     :warn
-       ;;           :huone-id 1396730
-       ;;           :token    "h4egJmxnIjE1EiApo70VQZlJOl29g6Hzo5dcFGnD"}
-
-       ;; :email {:taso          :error
-       ;;         :palvelin      "solita-service-1.solita.fi"
-
-       ;;         ;; Lisää nimesi vektoriin, jos haluat spämmiä
-       ;;         :vastaanottaja [;;"sinunmailisi@example.org"
-       ;;                         ]}
        :testidata? true
        :ei-logiteta #{"http-palvelin"
                       "ajastettu-geometriapaivitys"
                       "komponentti-event"
-                      "sillat"}
-       }
-
+                      "sillat"}}
 
  :itmf
  {:url #=(eval (str "tcp://"
@@ -138,7 +124,7 @@
                         :siltojen-tuontikohde "./shp/Sillat/TL261_H.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
-                        :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tierekisteri:tie_hoitourakat&outputformat=shape-zip"
+                        :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:tie_hoitourakat&outputformat=shape-zip"
                         :urakoiden-tuontikohde "./shp/Hoitourakat/tie_hoitourakatPolygon.shz"
 
                         :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
