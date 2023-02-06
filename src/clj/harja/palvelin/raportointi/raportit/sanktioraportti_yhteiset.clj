@@ -43,6 +43,12 @@
           (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
 
+(defn- suodata-bonukset [bonukset {:keys [laji urakka-id] :as suodattimet}]
+  (filter (fn [bonus]
+            (and
+              (or (nil? laji) (contains? laji (:laji bonus)))
+              (or (nil? urakka-id) (= urakka-id (:urakka-id bonus)))))
+    bonukset))
 (defn- suodata-muistutukset [rivit {:keys [urakka-id hallintayksikko-id talvihoito?] :as suodattimet}]
   (filter
     (fn [rivi]
@@ -75,6 +81,12 @@
                  #(or (:summa %) 0)
                  laskettavat)))))
 
+(defn bonusten-summa [rivit suodattimet]
+  (let [laskettavat (suodata-bonukset rivit suodattimet)]
+    (reduce + (map
+                #(or (:summa %) 0)
+                laskettavat))))
+
 (defn- indeksien-summa
   ([rivit] (indeksien-summa rivit {}))
   ([rivit suodattimet]
@@ -97,6 +109,17 @@
                                        :fmt :raha
                                        :korosta-hennosti? true}])
        rivi))))
+
+(defn luo-rivi-bonusten-summa [otsikko rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (let [rivi (apply conj [otsikko] (mapv (fn [alue]
+                                           (bonusten-summa rivit (merge optiot alue)))
+                                     alueet))]
+    (if yhteensa-sarake?
+      (conj rivi
+        [:arvo-ja-yksikko-korostettu {:arvo (bonusten-summa rivit optiot)
+                                      :fmt :raha
+                                      :korosta-hennosti? true}])
+      rivi)))
 
 (defn luo-rivi-muistutusten-maara
   ([otsikko rivit alueet]
@@ -188,6 +211,23 @@
                                (concat
                                 (map (fn [x]
                                        x) rivi)))}]))) osamateriaalit)])
+(defn- raporttirivit-bonukset [bonukset alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (let [bonustyypit (keys (group-by :laji bonukset))
+        r (luo-rivi-bonusten-summa "Bonukset yhteensä" bonukset alueet
+            {:yhteensa-sarake? yhteensa-sarake?})]
+    (concat
+      [{:otsikko "Bonusten yhteenveto"}]
+      (map
+        (fn [b]
+          (luo-rivi-bonusten-summa (sanktiot-domain/sanktiolaji->teksti (keyword b)) bonukset alueet
+            {:laji #{b}
+             :yhteensa-sarake? yhteensa-sarake?}))
+        bonustyypit)
+      [(luo-rivi-bonusten-summa "Bonukset yhteensä" bonukset alueet
+         {:yhteensa-sarake? yhteensa-sarake?})
+       (luo-rivi-indeksien-summa "Indeksit" bonukset alueet
+         {:sakkoryhma #{:lupaussanktio}
+          :yhteensa-sarake? yhteensa-sarake?})])))
 
 (defn suorita-runko [db user {:keys [alkupvm loppupvm
                                      urakka-id hallintayksikko-id
