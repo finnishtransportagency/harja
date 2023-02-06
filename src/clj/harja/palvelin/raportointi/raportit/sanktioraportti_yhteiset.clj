@@ -273,17 +273,18 @@
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
         otsikko (str "Sanktiot, bonukset ja arvonvähennykset " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
-        raportin-rivit (raportin-rivit-fn {:konteksti konteksti
-                                           :naytettavat-alueet naytettavat-alueet
-                                           :sanktiot-kannassa sanktiot-kannassa
-                                           :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
-                                           :yhteensa-sarake? yhteensa-sarake?})
+        sanktioiden-rivit (kasittele-sanktioiden-rivit db {:konteksti konteksti
+                                                           :naytettavat-alueet naytettavat-alueet
+                                                           :sanktiot-kannassa sanktiot-kannassa
+                                                           :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
+                                                           :yhteensa-sarake? yhteensa-sarake?})
+        bonusten-rivit (raporttirivit-bonukset bonukset naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})
 
         taulukon-tiedot {:urakka nil
                          :otsikko nil
                          :osamateriaalit nil
                          :nimi raportin-nimi
-                         :raportin-rivit raportin-rivit
+                         :raportin-rivit sanktioiden-rivit
                          :raportin-otsikot raportin-otsikot}
 
         runko [:raportti {:nimi raportin-nimi
@@ -292,9 +293,18 @@
                [:otsikko otsikko]
                [:jakaja nil]
 
-               ;; Uusi taulukon tyyli
-               (koosta-taulukko (-> taulukon-tiedot
-                                    (assoc :osamateriaalit raportin-rivit)))]]
+               ;; Sanktiotaulukko
+               (koosta-taulukko
+                 "Sanktiot"
+                 (-> taulukon-tiedot
+                   (assoc :sheet-nimi "Sanktiot")
+                   (assoc :osamateriaalit sanktioiden-rivit)))
+
+               (koosta-taulukko
+                 "Bonukset"
+                 (-> taulukon-tiedot
+                   (assoc :sheet-nimi "Bonukset")
+                   (assoc :osamateriaalit bonusten-rivit)))]]
     (if info-teksti
       (conj runko [:teksti info-teksti])
       runko)))
