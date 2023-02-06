@@ -464,9 +464,11 @@ FROM osa_toteumat ot
                        AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
                        AND ut.poistettu IS NOT TRUE
                        AND ot.toimenpidekoodi = ut.tehtava
-         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and tk.aluetieto = false AND
-            -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-            -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
+         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and
+                                    -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+                                    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE)) AND
+                                    -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+                                    -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
                                     ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
                                      tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
                                                                '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
@@ -495,9 +497,11 @@ SELECT ut.tehtava               AS toimenpidekoodi_id,
        tk.suunnitteluyksikko    AS yk,
        'kokonaishintainen'      AS tyyppi
 FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava and tk.aluetieto = false AND
-             -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-             -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
+         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava AND
+                                    -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+                                    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE)) AND
+                                    -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+                                     -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
                                     ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
                                      tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
                                                                '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
@@ -621,8 +625,8 @@ WHERE tk.tehtavaryhma = tr.id
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
   AND tk.poistettu IS NOT TRUE
-  -- rajataan pois alue- eli hoitoluokkatiedot
-  AND tk.aluetieto = false
+  -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+  AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE)) AND
   -- haetaan Lisää toteuma-listaan vain MH-urakoissa käytössä olevat tehtävät, ei samaa tarkoittavia alueurakoiden tehtäviä.
   AND tk.ensisijainen = true
   -- rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
