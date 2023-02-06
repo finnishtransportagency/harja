@@ -403,6 +403,13 @@
              (raporttirivit-lupaus rivit alueet optiot)
              (raporttirivit-yhteensa rivit alueet optiot))))
 
+(defn- raporttirivit-arvonvahennys [sanktiot alueet {:keys [yhteensa-sarake?] :as optiot}]
+  (concat
+    [{:otsikko "Arvonvähennysten yhteenveto"}]
+    [(luo-rivi-sakkojen-summa "Arvonvähennykset yhteensä" sanktiot alueet
+       {:sakkoryhma #{:arvonvahennyssanktio}
+        :yhteensa-sarake? yhteensa-sarake?})]))
+
 (defn- raporttirivit-bonukset [bonukset alueet {:keys [yhteensa-sarake?] :as optiot}]
   (let [bonustyypit (keys (group-by :laji bonukset))]
     (concat
@@ -448,6 +455,8 @@
                               (map #(konv/string->keyword % :sakkoryhma))
                               (map #(konv/array->set % :sanktiotyyppi_laji keyword)))
                             sanktiot)
+        ;; Poistetaan sanktioden joukostaarvonvähennykset, koska ne on erotettu omaan taulukkoon
+        filtteroidyt-sanktiot (filter #(not= :arvonvahennyssanktio (:sakkoryhma %)) sanktiot-kannassa)
 
         urakat-joista-loytyi-sanktioita (into #{} (map #(select-keys % [:urakka-id :nimi :loppupvm]) sanktiot-kannassa))
         ;; jos on jostain syystä sanktioita urakassa joka ei käynnissä, spesiaalikäsittely, I'm sorry
@@ -471,10 +480,11 @@
         otsikko (str "Sanktiot, bonukset ja arvonvähennykset " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         sanktioiden-rivit (kasittele-sanktioiden-rivit db {:konteksti konteksti
                                                            :naytettavat-alueet naytettavat-alueet
-                                                           :sanktiot-kannassa sanktiot-kannassa
+                                                           :sanktiot-kannassa filtteroidyt-sanktiot
                                                            :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
                                                            :yhteensa-sarake? yhteensa-sarake?})
         bonusten-rivit (raporttirivit-bonukset bonukset naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})
+        arvonvahennys-rivit (raporttirivit-arvonvahennys sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})
 
         taulukon-tiedot {:urakka nil
                          :otsikko nil
@@ -500,7 +510,13 @@
                  "Bonukset"
                  (-> taulukon-tiedot
                    (assoc :sheet-nimi "Bonukset")
-                   (assoc :osamateriaalit bonusten-rivit)))]]
+                   (assoc :osamateriaalit bonusten-rivit)))
+
+               (koosta-taulukko
+                 "Arvonvähennykset"
+                 (-> taulukon-tiedot
+                   (assoc :sheet-nimi "Arvonvähennykset")
+                   (assoc :osamateriaalit arvonvahennys-rivit)))]]
     (if info-teksti
       (conj runko [:teksti info-teksti])
       runko)))
