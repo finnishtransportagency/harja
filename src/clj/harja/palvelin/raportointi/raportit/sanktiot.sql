@@ -118,9 +118,13 @@ SELECT ek.id,
                                                  CASE
                                                      WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
                                                      ELSE FALSE
-                                                     END)) AS indeksikorjaus
+                                                     END)) AS indeksikorotus,
+       o.id           AS hallintayksikko_id,
+       o.nimi         AS hallintayksikko_nimi,
+       o.elynumero    AS hallintayksikko_elynumero
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
+         JOIN organisaatio o ON u.hallintayksikko = o.id
     AND u.alkupvm < :loppu::DATE
     AND u.loppupvm > :alku::DATE -- Varmista, että urakka on käynnissä annetulla aikavälillä
     AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
