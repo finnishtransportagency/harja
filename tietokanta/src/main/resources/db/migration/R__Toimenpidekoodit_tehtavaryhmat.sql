@@ -1379,5 +1379,17 @@ UPDATE toimenpidekoodi SET nimi = 'Nopeusvalvontakameroiden tolppien ja laitekot
 UPDATE toimenpidekoodi SET nimi = 'Meluesteiden siisteydestä huolehtiminen' WHERE nimi = 'Meluesteiden pesu' and suunnitteluyksikko = 'jm';
 
 -- Viilataan käsinkirjausmahdollisuutta
-UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE WHERE nimi IN ('Nopeusnäyttötaulujen ylläpito, käyttö ja siirto', 'Nopeusnäyttötaulun hankinta');
+-- Ei nykyisellään aluetietoja
+UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE WHERE nimi IN ('Nopeusnäyttötaulujen ylläpito, käyttö ja siirto',
+                                                                                                   'Nopeusnäyttötaulun hankinta',
+                                                                                                   'Meluesteiden siisteydestä huolehtiminen',
+                                                                                                   'Päällystettyjen teiden sorapientareen täyttö');
+-- Aluetietoja
+UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE  WHERE nimi IN ('Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus',
+                                                                       'Reunapaalujen kunnossapito',
+                                                                       'Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset',
+                                                                       'Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu',
+                                                                       'Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)',
+                                                                       'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)');
+
 
