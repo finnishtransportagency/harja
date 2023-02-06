@@ -56,14 +56,20 @@ SELECT t.id,
 -- fetch-size: 64
 SELECT
   t.id,
-  t.tyyppi,
+  -- Esitetään tilaajan tekemät talvihoito- ja tiestötarkastukset tilaajan laadunvalvontana, mutta säilytetään ero kantatasolla
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::TARKASTUSTYYPPI
+      END                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
-  END                                                        AS tekija,
+  END                      AS tekija,
   t.aika,
   t.tarkastaja,
+  o.nimi                   AS organisaatio,
   t.havainnot,
   t.sijainti,
   (SELECT array_agg(nimi)
