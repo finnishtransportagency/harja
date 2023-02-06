@@ -32,7 +32,6 @@
                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                     :alku alkupvm
                     :loppu loppupvm})
-
         bonukset (hae-bonukset db {:urakka urakka-id
                                    :hallintayksikko hallintayksikko-id
                                    :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))

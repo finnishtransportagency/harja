@@ -18,8 +18,7 @@
   ((into #{} (map str/lower-case) tpkt) (str/lower-case toimenpidekoodi_taso2)))
 
 (defn- suodata-sakot [rivit {:keys [urakka-id hallintayksikko-id sakkoryhma talvihoito?
-                                    sanktiotyyppi_koodi sailytettavat-toimenpidekoodit
-                                    poistettavat-tpkt sailytettavat-tpkt]}]
+                                    sanktiotyyppi_koodi sailytettavat-toimenpidekoodit]}]
   (filter
     (fn [rivi]
       (and
@@ -35,11 +34,6 @@
             (contains? sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))
             (= sanktiotyyppi_koodi (:sanktiotyyppi_koodi rivi))))
         (or (nil? talvihoito?) (= talvihoito? (rivi-kuuluu-talvihoitoon? rivi)))
-        (or (nil? poistettavat-tpkt)
-          (and (:toimenpidekoodi_taso2 rivi)
-            (not (rivi-kuuluu-tpkhn? rivi poistettavat-tpkt))))
-        (or (nil? sailytettavat-tpkt)
-          (rivi-kuuluu-tpkhn? rivi sailytettavat-tpkt))
         (or (nil? sailytettavat-toimenpidekoodit)
           (contains? sailytettavat-toimenpidekoodit (:toimenpide_koodi rivi)))))
     rivit))
@@ -173,11 +167,11 @@
     (keep identity
       [{:otsikko "Yhteensä"}
        (luo-rivi-muistutusten-maara muistutusrivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-       (when-not yllapito?
-         (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))
        (luo-rivi-sakkojen-summa sakkorivin-nimi rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
        (when-not yllapito?
-         (luo-rivi-kaikki-yht "Kaikki yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
+         (luo-rivi-indeksien-summa "Indeksit yht." rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))
+       (when-not yllapito?
+         (luo-rivi-kaikki-yht "Sanktiot yht. (indeksikorjattu) " rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
 
 (defn koosta-taulukko [otsikko {:keys [raportin-otsikot nimi osamateriaalit sheet-nimi]}]
 
