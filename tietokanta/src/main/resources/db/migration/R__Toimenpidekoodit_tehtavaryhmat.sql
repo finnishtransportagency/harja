@@ -1371,3 +1371,13 @@ VALUES ('Reunapaalujen kunnossapito', (select id from tehtavaryhma where nimi = 
         (select id from toimenpidekoodi where koodi = '23116'), current_timestamp,
         (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE, 2022, '{muutoshintainen}', TRUE, TRUE)
 ON CONFLICT(nimi, emo) DO NOTHING;
+
+
+-- Viilataan tietokannan nimiä samaksi kuin tehtävä- ja määräluettelon tekstissä
+UPDATE toimenpidekoodi SET nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' WHERE nimi = 'Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)' and yksikko = 'm2';
+UPDATE toimenpidekoodi SET nimi = 'Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus' WHERE nimi = 'Valvontakameratolppien puhdistus/tarkistus keväisin' and yksikko = 'kpl';
+UPDATE toimenpidekoodi SET nimi = 'Meluesteiden siisteydestä huolehtiminen' WHERE nimi = 'Meluesteiden pesu' and suunnitteluyksikko = 'jm';
+
+-- Viilataan käsinkirjausmahdollisuutta
+UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE WHERE nimi IN ('Nopeusnäyttötaulujen ylläpito, käyttö ja siirto', 'Nopeusnäyttötaulun hankinta');
+
