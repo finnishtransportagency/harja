@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
 # Hakee viimeisimmät migraatioiden versionumerot. Haetaan oletuksena develop ja nykyinen branch.
 #
 # esim.
