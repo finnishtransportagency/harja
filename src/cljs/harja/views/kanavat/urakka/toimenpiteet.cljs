@@ -95,7 +95,7 @@
         :voi-kumota? false
         :virheet virhe-atom
         :piilota-toiminnot? false
-        :tyhja "Ei varaosia"
+        :tyhja "Ei materiaaleja"
         :otsikko "Materiaalit"
         :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
        [{:otsikko "Materiaali"

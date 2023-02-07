@@ -136,7 +136,7 @@
     ;; Estä taulukon näyttäminen, mikäli varaosia ei ole lisättäväksi. Mahdollisesti parempi teksit olisi kehoitus
     ;; käydä lisäämässä materiaaleja jotenkin hienovaraisesti
     (if (empty? materiaalit)
-      [:p "Ei varaosia lisättäväksi. Lisää niitä materiaalit välilehdeltä."]
+      [:p "Ei materiaaleja lisättäväksi. Lisää niitä materiaalit välilehdeltä."]
       [grid/muokkaus-grid
        {:voi-muokata? voi-muokata?
         :voi-lisata? false
@@ -144,7 +144,7 @@
         :voi-kumota? false
         :virheet virhe-atom
         :piilota-toiminnot? false
-        :tyhja "Ei varaosia"
+        :tyhja "Ei materiaaleja"
         :otsikko "Materiaalit"
         :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
        [{:otsikko "Materiaali"
