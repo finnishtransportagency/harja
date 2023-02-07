@@ -41,7 +41,7 @@
                    :kokonaishintainen 0.0M
                    :lisatyo 10000.0M
                    :muu 1000.0M
-                   :sakko -1434.0M
+                   :sakko -2434.0M
                    :tpi_id 5
                    :urakka_id 4
                    :yksikkohintainen 11882.50M}

@@ -56,11 +56,12 @@
                                  :parametrit {:alkupvm (pvm/->pvm "1.1.2017")
                                               :loppupvm (pvm/->pvm "31.1.2017")
                                               :urakkatyyppi :paallystys}})
-        nurkkasumma (last (last (last (last (last (last (butlast vastaus)))))))]
+        sanktiotaulukko (nth vastaus 4)
+        sanktiosumma (last (last (last (last (last sanktiotaulukko)))))]
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
-    (is (=marginaalissa? nurkkasumma -2500.00))
-    (let [otsikko "Sanktiot"
+    (is (=marginaalissa? sanktiosumma -2500.00))
+    (let [otsikko "Sakot ja bonukset"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= "Muhoksen päällystysurakka" (:otsikko (second (nth taulukko 2)))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
@@ -129,7 +130,7 @@
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
     (is (=marginaalissa? nurkkasumma -2500.00))
-    (let [otsikko "Sanktiot"
+    (let [otsikko "Sakot ja bonukset"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
@@ -199,7 +200,7 @@
     (is (vector? vastaus))
     (is (= [:teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."] (last vastaus)))
     (is (=marginaalissa? nurkkasumma -5500.00M))
-    (let [otsikko "Sanktiot"
+    (let [otsikko "Sakot ja bonukset"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
