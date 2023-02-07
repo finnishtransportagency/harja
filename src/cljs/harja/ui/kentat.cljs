@@ -1081,7 +1081,10 @@
 
 (defmethod nayta-arvo :pvm [{:keys [jos-tyhja]} data]
   [:span (if-let [p @data]
-           (pvm/pvm p)
+           ;; On mahdollista, että goog.date.DateTime muuttuu jossakin tilanteessa stringiksi, niin palauta vain se
+           (if (string? p)
+             p
+             (pvm/pvm p))
            (or jos-tyhja ""))])
 
 (defn- resetoi-jos-tyhja-tai-matchaa [t re atomi]

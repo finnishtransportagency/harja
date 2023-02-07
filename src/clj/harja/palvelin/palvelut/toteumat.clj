@@ -469,9 +469,9 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (toteumat-q/listaa-urakan-toteutumien-toimenpiteet db))
 
-(defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma]}]
+(defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma otsikko]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :tehtavaryhma tehtavaryhma}))
+  (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :otsikko otsikko}))
 
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)

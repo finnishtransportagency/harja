@@ -58,6 +58,8 @@
                        :otsikko "Päi­vä­mää­rä"}
                        {:leveys 5
                         :otsikko "Klo"}
+                      {:leveys 9
+                       :otsikko "Tekijä"}
                        {:leveys 6
                         :otsikko "Tie"
                         :tasaa :oikea}
@@ -75,6 +77,8 @@
                         :tasaa :oikea}
                        {:leveys 20
                         :otsikko "Tar­kas­taja"}
+                      {:leveys 15
+                       :otsikko "Organisaatio"}
                        {:leveys 25
                         :otsikko "Ha­vain­not"}
                        {:leveys 6
@@ -84,24 +88,28 @@
                         :tyyppi :liite}]
                      [["05.01.2015"
                        "16:18"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli muutamia pieniä kuoppia, ei kuitenkaan mitään vakavaa ongelmaa aiheuta"
                        "Ei"
                        [:liitteet
                         []]]
                       ["02.01.2015"
                        "16:02"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli pieni kuoppa"
                        "Ei"
                        [:liitteet
@@ -137,53 +145,61 @@
                       :tyhja nil}
                      [{:leveys 10
                        :otsikko "Päi­vä­mää­rä"}
-                       {:leveys 5
-                        :otsikko "Klo"}
-                       {:leveys 6
-                        :otsikko "Tie"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Aosa"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Aet"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Losa"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Let"
-                        :tasaa :oikea}
-                       {:leveys 20
-                        :otsikko "Tar­kas­taja"}
-                       {:leveys 25
-                        :otsikko "Ha­vain­not"}
-                       {:leveys 6
-                        :otsikko "Laadun alitus"}
-                       {:leveys 5
-                        :otsikko "Liit­teet"
-                        :tyyppi :liite}]
+                      {:leveys 5
+                       :otsikko "Klo"}
+                      {:leveys 9
+                       :otsikko "Tekijä"}
+                      {:leveys 6
+                       :otsikko "Tie"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Aet"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Losa"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Let"
+                       :tasaa :oikea}
+                      {:leveys 20
+                       :otsikko "Tar­kas­taja"}
+                      {:leveys 15
+                       :otsikko "Organisaatio"}
+                      {:leveys 25
+                       :otsikko "Ha­vain­not"}
+                      {:leveys 6
+                       :otsikko "Laadun alitus"}
+                      {:leveys 5
+                       :otsikko "Liit­teet"
+                       :tyyppi :liite}]
                      [{:otsikko "Oulun alueurakka 2014-2019"}
                       ["05.01.2015"
                        "16:18"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli muutamia pieniä kuoppia, ei kuitenkaan mitään vakavaa ongelmaa aiheuta"
                        "Ei"
                        [:liitteet
                         []]]
                       ["02.01.2015"
                        "16:02"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli pieni kuoppa"
                        "Ei"
                        [:liitteet
@@ -217,53 +233,61 @@
                       :tyhja nil}
                      [{:leveys 10
                        :otsikko "Päi­vä­mää­rä"}
-                       {:leveys 5
-                        :otsikko "Klo"}
-                       {:leveys 6
-                        :otsikko "Tie"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Aosa"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Aet"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Losa"
-                        :tasaa :oikea}
-                       {:leveys 6
-                        :otsikko "Let"
-                        :tasaa :oikea}
-                       {:leveys 20
-                        :otsikko "Tar­kas­taja"}
-                       {:leveys 25
-                        :otsikko "Ha­vain­not"}
-                       {:leveys 6
-                        :otsikko "Laadun alitus"}
-                       {:leveys 5
-                        :otsikko "Liit­teet"
-                        :tyyppi :liite}]
+                      {:leveys 5
+                       :otsikko "Klo"}
+                      {:leveys 9
+                       :otsikko "Tekijä"}
+                      {:leveys 6
+                       :otsikko "Tie"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Aosa"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Aet"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Losa"
+                       :tasaa :oikea}
+                      {:leveys 6
+                       :otsikko "Let"
+                       :tasaa :oikea}
+                      {:leveys 20
+                       :otsikko "Tar­kas­taja"}
+                      {:leveys 15
+                       :otsikko "Organisaatio"}
+                      {:leveys 25
+                       :otsikko "Ha­vain­not"}
+                      {:leveys 6
+                       :otsikko "Laadun alitus"}
+                      {:leveys 5
+                       :otsikko "Liit­teet"
+                       :tyyppi :liite}]
                      [{:otsikko "Oulun alueurakka 2014-2019"}
                       ["05.01.2015"
                        "16:18"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli muutamia pieniä kuoppia, ei kuitenkaan mitään vakavaa ongelmaa aiheuta"
                        "Ei"
                        [:liitteet
                         []]]
                       ["02.01.2015"
                        "16:02"
+                       "Urakoitsija"
                        4
                        364
                        8012
                        nil
                        nil
                        "Tarmo Tarkastaja"
+                       "YIT Rakennus Oy"
                        "Tiessä oli pieni kuoppa"
                        "Ei"
                        [:liitteet
