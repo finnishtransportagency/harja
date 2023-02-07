@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset
   (:require
     [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [clojure.string :as str]
     [clojure.set :as set]
     [harja.kyselyt.konversio :as konv]
@@ -437,11 +438,29 @@
               urakat-joista-loytyi-sanktioita))
       {:yhteensa-sarake? yhteensa-sarake?})))
 
-(defn suorita-runko [db user {:keys [alkupvm loppupvm
-                                     urakka-id hallintayksikko-id
-                                     urakkatyyppi sanktiot bonukset
-                                     raportin-nimi
-                                     info-teksti sanktiotyypit]}]
+(defn- yllapitoluokan-raporttirivit
+  [luokka luokan-rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
+  [{:otsikko (if luokka
+               (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi luokka))
+               "Ei ylläpitoluokkaa")}
+   (luo-rivi-muistutusten-maara +muistutusrivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
+   (luo-rivi-sakkojen-summa +sakkorivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
+
+(defn kasittele-yllapitoraportti [{:keys [naytettavat-alueet sanktiot-kannassa yhteensa-sarake? urakkatyyppi] :as o}]
+  (let [optiot {:yhteensa-sarake? yhteensa-sarake? :urakkatyyppi urakkatyyppi}
+        sanktiot-yllapitoluokittain (group-by :yllapitoluokka sanktiot-kannassa)
+        yllapitoluokittaiset-rivit (mapcat (fn [[luokka luokan-rivit]]
+                                             (yllapitoluokan-raporttirivit luokka luokan-rivit naytettavat-alueet optiot))
+                                     sanktiot-yllapitoluokittain)
+        yhteensa-rivit (raporttirivit-yhteensa sanktiot-kannassa naytettavat-alueet optiot)]
+    (into []
+      (when (> (count naytettavat-alueet) 0)
+        (concat
+          yllapitoluokittaiset-rivit
+          yhteensa-rivit)))))
+
+(defn suorita-runko [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id urakkatyyppi sanktiot bonukset
+                                     raportin-nimi info-teksti]}]
   (let [konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
                         :default :koko-maa)
@@ -477,14 +496,26 @@
                                       naytettavat-alueet)
                                     (when yhteensa-sarake?
                                       [{:otsikko "Yh\u00ADteen\u00ADsä" :leveys 15 :fmt :raha}])))
-        otsikko (str "Sanktiot, bonukset ja arvonvähennykset " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
-        sanktioiden-rivit (kasittele-sanktioiden-rivit db {:konteksti konteksti
-                                                           :naytettavat-alueet naytettavat-alueet
-                                                           :sanktiot-kannassa filtteroidyt-sanktiot
-                                                           :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
-                                                           :yhteensa-sarake? yhteensa-sarake?})
-        bonusten-rivit (raporttirivit-bonukset bonukset naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})
-        arvonvahennys-rivit (raporttirivit-arvonvahennys sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?})
+        otsikko (if (urakka-domain/yllapitourakka? urakkatyyppi)
+                  (str "Sakko- ja bonusraportti " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+                  (str "Sanktiot, bonukset ja arvonvähennykset " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm)))
+        sanktioiden-rivit (when-not (urakka-domain/yllapitourakka? urakkatyyppi)
+                            (kasittele-sanktioiden-rivit db {:konteksti konteksti
+                                                             :naytettavat-alueet naytettavat-alueet
+                                                             :sanktiot-kannassa filtteroidyt-sanktiot
+                                                             :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
+                                                             :yhteensa-sarake? yhteensa-sarake?}))
+        bonusten-rivit (when-not (urakka-domain/yllapitourakka? urakkatyyppi)
+                         (raporttirivit-bonukset bonukset naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
+        arvonvahennys-rivit (when-not (urakka-domain/yllapitourakka? urakkatyyppi)
+                              (raporttirivit-arvonvahennys sanktiot-kannassa naytettavat-alueet {:yhteensa-sarake? yhteensa-sarake?}))
+        paallystysurakan-rivit (when (urakka-domain/yllapitourakka? urakkatyyppi)
+                                 (kasittele-yllapitoraportti {:konteksti konteksti
+                                                              :urakkatyyppi urakkatyyppi
+                                                              :naytettavat-alueet naytettavat-alueet
+                                                              :sanktiot-kannassa sanktiot-kannassa
+                                                              :urakat-joista-loytyi-sanktioita urakat-joista-loytyi-sanktioita
+                                                              :yhteensa-sarake? yhteensa-sarake?}))
 
         taulukon-tiedot {:urakka nil
                          :otsikko nil
@@ -498,6 +529,15 @@
 
                [:otsikko otsikko]
                [:jakaja nil]
+
+               ;; Päällystyksen taulukko
+               (if (urakka-domain/yllapitourakka? urakkatyyppi)
+                 (koosta-taulukko
+                   "Sakot ja bonukset"
+                   (-> taulukon-tiedot
+                     (assoc :sheet-nimi "Sakot ja bonukset")
+                     (assoc :osamateriaalit paallystysurakan-rivit)))
+                 (concat
 
                ;; Sanktiotaulukko
                (koosta-taulukko
@@ -518,7 +558,7 @@
                  "Arvonvähennykset"
                  (-> taulukon-tiedot
                    (assoc :sheet-nimi "Arvonvähennykset")
-                   (assoc :osamateriaalit arvonvahennys-rivit)))]]
+                   (assoc :osamateriaalit arvonvahennys-rivit)))))]]
     (if info-teksti
       (conj runko [:teksti info-teksti])
       runko)))
