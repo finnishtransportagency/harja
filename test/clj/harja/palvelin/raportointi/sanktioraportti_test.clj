@@ -120,8 +120,8 @@
         bonustaulukko (nth vastaus 5)
         arvonvahennystaulukko (nth vastaus 6)
         sanktiosumma (last (last (last (last (last sanktiotaulukko)))))
-        bonussumma (:arvo (second (last (:rivi (nth (nth bonustaulukko 3) 2)))))
-        arvonvahennyssumma (:arvo (second (last (:rivi (second (nth arvonvahennystaulukko 3))))))]
+        bonussumma (last (:rivi (last (nth bonustaulukko 3))))
+        arvonvahennyssumma (:arvo (second (last (:rivi (last (nth arvonvahennystaulukko 3))))))]
     (is (vector? vastaus))
     (is (=marginaalissa? sanktiosumma 15786.15))
     (is (=marginaalissa? bonussumma 4000M))
