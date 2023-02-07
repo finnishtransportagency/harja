@@ -38,7 +38,7 @@
 ;; Olemassaolevat tehtävät
 (def id-palteiden-poisto (hae-toimenpidekoodin-id "Päällystettyjen teiden palteiden poisto" "23116"))
 (def id-opastustaulut (hae-toimenpidekoodin-id
-                        "Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)"
+                        "Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)"
                         "23116"))
 (def id-K2 (hae-toimenpidekoodin-id "K2" "23104"))
 (def id-ib-rampit (hae-toimenpidekoodin-id "Ib rampit" "23104"))
