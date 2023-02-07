@@ -727,7 +727,7 @@
                         :luokka "btn-xs"}])}
       ;; Tiemerkintä-puoli näkee, Merkintä ja Jyrsinnät
       (when (= (:nakyma optiot) :tiemerkinta)
-        {:otsikko "Merkin\u00ADtä" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
+        {:otsikko "Merkin\u00ADtä\u00ADluok\u00ADka" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
          :fmt tm-domain/merkinta-ja-jyrsinta-fmt
          :leveys 6 :nimi :aikataulu-tiemerkinta-merkinta :tyyppi :valinta
          :otsikkorivi-luokka "tiemerkinta-tausta"

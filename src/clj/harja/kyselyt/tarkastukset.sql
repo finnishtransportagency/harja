@@ -13,7 +13,11 @@ SELECT
   t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
-  t.tyyppi,
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::TARKASTUSTYYPPI
+      END                  AS tyyppi,
   t.nayta_urakoitsijalle   AS "nayta-urakoitsijalle",
   (SELECT normalisoi_talvihoitoluokka(thm.talvihoitoluokka::INTEGER, t.aika)) AS talvihoitomittaus_hoitoluokka,
   thm.lumimaara            AS talvihoitomittaus_lumimaara,
@@ -43,6 +47,7 @@ SELECT
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                      AS tekija,
+  o.nimi                   AS organisaatio,
   (SELECT array_agg(nimi)
    FROM tarkastus_vakiohavainto t_vh
      JOIN vakiohavainto vh ON t_vh.vakiohavainto = vh.id
@@ -154,12 +159,17 @@ WHERE t.urakka = :urakka
 -- Hakee pisteessä löytyneet tarkastukset karttaa klikattaessa
 SELECT
   t.id,
-  t.tyyppi,
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::tarkastustyyppi
+      END                  AS tyyppi,
   t.laadunalitus,
   CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
     THEN 'urakoitsija' :: osapuoli
   ELSE 'tilaaja' :: osapuoli
   END                                                        AS tekija,
+  o.nimi                   AS organisaatio,
   t.aika,
   t.tarkastaja,
   t.havainnot,
@@ -204,6 +214,9 @@ WHERE t.urakka = :urakka
                          FROM soratiemittaus
                          WHERE tarkastus = t.id)))
       AND (:vain_laadunalitukset = FALSE OR t.laadunalitus = TRUE)
+      AND (:tekija::varchar IS NULL OR
+           :tekija = 'tilaaja' AND o.tyyppi != 'urakoitsija'::organisaatiotyyppi OR
+           :tekija = 'urakoitsija' AND o.tyyppi = 'urakoitsija'::organisaatiotyyppi)
       AND t.poistettu IS NOT TRUE;
 
 -- name: hae-tarkastus
@@ -408,13 +421,25 @@ SELECT
   t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
-  t.tyyppi,
+  -- Esitetään tilaajan tekemät talvihoito- ja tiestötarkastukset tilaajan laadunvalvontana, mutta säilytetään ero kantatasolla
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::TARKASTUSTYYPPI
+      END         AS tyyppi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+           THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+      END         AS tekija,
+  o.nimi          AS organisaatio,
   liite.id        AS liite_id,
   liite.nimi      AS liite_nimi,
   liite.tyyppi    AS liite_tyyppi,
   liite.koko      AS liite_koko,
   liite.liite_oid AS liite_oid
 FROM tarkastus t
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
 WHERE t.urakka = :urakka
@@ -444,7 +469,17 @@ SELECT
   t.laadunalitus,
   t.sijainti,
   t.tarkastaja,
-  t.tyyppi,
+  -- Esitetään tilaajan tekemät talvihoito- ja tiestötarkastukset tilaajan laadunvalvontana, mutta säilytetään ero kantatasolla
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::TARKASTUSTYYPPI
+      END         AS tyyppi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+           THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+      END         AS tekija,
+  o.nimi          AS organisaatio,
   u.nimi          AS urakka,
   liite.id        AS liite_id,
   liite.nimi      AS liite_nimi,
@@ -452,6 +487,8 @@ SELECT
   liite.koko      AS liite_koko,
   liite.liite_oid AS liite_oid
 FROM tarkastus t
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id
@@ -487,7 +524,17 @@ SELECT
   t.havainnot,
   t.laadunalitus,
   t.tarkastaja,
-  t.tyyppi,
+  -- Esitetään tilaajan tekemät talvihoito- ja tiestötarkastukset tilaajan laadunvalvontana, mutta säilytetään ero kantatasolla
+  CASE
+      WHEN o.tyyppi = 'urakoitsija' :: ORGANISAATIOTYYPPI
+          THEN t.tyyppi
+      ELSE 'tilaajan laadunvalvonta' ::TARKASTUSTYYPPI
+      END         AS tyyppi,
+  CASE WHEN o.tyyppi = 'urakoitsija' :: organisaatiotyyppi
+           THEN 'urakoitsija' :: osapuoli
+       ELSE 'tilaaja' :: osapuoli
+      END         AS tekija,
+  o.nimi          AS organisaatio,
   u.nimi          AS urakka,
   liite.id        AS liite_id,
   liite.nimi      AS liite_nimi,
@@ -495,6 +542,8 @@ SELECT
   liite.koko      AS liite_koko,
   liite.liite_oid AS liite_oid
 FROM tarkastus t
+  LEFT JOIN kayttaja k ON t.luoja = k.id
+  LEFT JOIN organisaatio o ON k.organisaatio = o.id
   JOIN urakka u ON (t.urakka = u.id AND u.urakkanro IS NOT NULL)
   LEFT JOIN tarkastus_liite ON t.id = tarkastus_liite.tarkastus
   LEFT JOIN liite ON tarkastus_liite.liite = liite.id

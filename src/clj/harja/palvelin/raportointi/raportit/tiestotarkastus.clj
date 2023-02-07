@@ -9,7 +9,8 @@
             [taoensso.timbre :as log]
             [harja.domain.roolit :as roolit]
             [harja.kyselyt.konversio :as konv]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]))
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [clojure.string :as str]))
 
 (defn hae-tarkastukset-urakalle [db user {:keys [urakka-id alkupvm loppupvm tienumero]}]
   (tarkastukset-q/hae-urakan-tiestotarkastukset-liitteineen-raportille db
@@ -93,12 +94,14 @@
                  :sheet-nimi raportin-nimi}
       (flatten (keep identity [{:leveys 10 :otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}
                                {:leveys 5 :otsikko "Klo"}
+                               {:leveys 9 :otsikko "Tekijä"}
                                {:leveys 6 :otsikko "Tie" :tasaa :oikea}
                                {:leveys 6 :otsikko "Aosa" :tasaa :oikea}
                                {:leveys 6 :otsikko "Aet" :tasaa :oikea}
                                {:leveys 6 :otsikko "Losa" :tasaa :oikea}
                                {:leveys 6 :otsikko "Let" :tasaa :oikea}
                                {:leveys 20 :otsikko "Tar\u00ADkas\u00ADtaja"}
+                               {:leveys 15 :otsikko "Organisaatio"}
                                {:leveys 25 :otsikko "Ha\u00ADvain\u00ADnot"}
                                {:leveys 6 :otsikko "Laadun alitus"}
                                {:leveys 5 :otsikko "Liit\u00ADteet" :tyyppi :liite}]))
@@ -110,12 +113,14 @@
         (fn [rivi]
           [(pvm/pvm (:aika rivi))
            (pvm/aika (:aika rivi))
+           (some-> (:tekija rivi) str/capitalize)
            (get-in rivi [:tr :numero])
            (get-in rivi [:tr :alkuosa])
            (get-in rivi [:tr :alkuetaisyys])
            (get-in rivi [:tr :loppuosa])
            (get-in rivi [:tr :loppuetaisyys])
            (:tarkastaja rivi)
+           (:organisaatio rivi)
            (:havainnot rivi)
            (fmt/totuus (:laadunalitus rivi))
            [:liitteet (:liitteet rivi)]]))]]))
