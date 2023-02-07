@@ -25,8 +25,7 @@
                         :else "Sanktiot, bonukset ja arvonvähennykset")]
     raportin-nimi))
 (defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi alkupvm loppupvm] :as parametrit}]
-  (let [
-        sanktiot (hae-sanktiot db
+  (let [sanktiot (hae-sanktiot db
                    {:urakka urakka-id
                     :hallintayksikko hallintayksikko-id
                     :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))

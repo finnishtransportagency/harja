@@ -506,12 +506,14 @@
                    (assoc :sheet-nimi "Sanktiot")
                    (assoc :osamateriaalit sanktioiden-rivit)))
 
+               ;; Bonustaulukko
                (koosta-taulukko
                  "Bonukset"
                  (-> taulukon-tiedot
                    (assoc :sheet-nimi "Bonukset")
                    (assoc :osamateriaalit bonusten-rivit)))
 
+               ;; Arvonvähennystaulukko
                (koosta-taulukko
                  "Arvonvähennykset"
                  (-> taulukon-tiedot
