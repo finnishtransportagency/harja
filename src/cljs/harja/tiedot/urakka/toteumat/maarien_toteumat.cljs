@@ -107,14 +107,14 @@
   ([toimenpide]
    (hae-tehtavat-tyypille toimenpide :maaramitattava))
   ([toimenpide tyyppi]
-   (let [tehtavaryhma (when toimenpide
+   (let [otsikko (when toimenpide
                         (:otsikko toimenpide))
          rajapinta :maarien-toteutumien-toimenpiteiden-tehtavat
          toimenpide-re-string (when toimenpide
                                 (cond
-                                  (re-find #"TALVIHOITO" tehtavaryhma) "alvihoito"
-                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" tehtavaryhma) "Liikenneympäristön hoito|l.ymp.hoito"
-                                  (re-find #"SORATEIDEN HOITO" tehtavaryhma) "Soratiet|sorateiden"
+                                  (re-find #"TALVIHOITO" otsikko) "alvihoito"
+                                  (re-find #"LIIKENNEYMPÄRISTÖN HOITO" otsikko) "Liikenneympäristön hoito|l.ymp.hoito"
+                                  (re-find #"SORATEIDEN HOITO" otsikko) "Soratiet|sorateiden"
                                   :else ""))
          parametrit {:polku :tehtavat
                      :filtteri (case tyyppi
@@ -126,7 +126,7 @@
 
                                  (constantly true))}]
      (tuck-apurit/post! rajapinta
-                        {:tehtavaryhma (:id toimenpide)
+                        {:otsikko otsikko
                          :urakka-id (-> @tila/yleiset :urakka :id)}
                         {:onnistui ->TehtavatHakuOnnistui
                          :onnistui-parametrit [parametrit]
@@ -657,7 +657,7 @@
    (let [tehtavaryhma (when toimenpide
                         (:id toimenpide))]
      (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                        {:tehtavaryhma tehtavaryhma
+                        {:otsikko (:otsikko toimenpide)
                          :urakka-id (-> @tila/yleiset :urakka :id)}
                         {:onnistui ->TehtavatHakuOnnistui
                          :epaonnistui ->TehtavatHakuEpaonnistui

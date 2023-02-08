@@ -23,9 +23,9 @@
   [tarkastus-tiesto :tiesto "Tiestö"]
   [tarkastus-talvihoito :talvihoito "Talvihoito"]
   [tarkastus-soratie :soratie "Soratie"]
-  [tarkastus-laatu :laatu "Laatu"]
+  [tarkastus-laatu :laatu "Laatu"] ;; Mobiili-Harjalla tehdyt ja Harjan käyttöliittymästä kirjatut laaduntarkastukset. Näitä ovat tehneet sekä urakoitsijat että ELYt.
   [turvallisuuspoikkeamat :turvallisuuspoikkeamat "Turvallisuuspoikkeamat"]
-  [tilaajan-laadunvalvonta "tilaajan laadunvalvonta" "Tilaajan laadunvalvonta"]
+  [tilaajan-laadunvalvonta "tilaajan laadunvalvonta" "Tilaajan laadunvalvonta"] ;; Tilaajan tekemät tiestö- ja kelitarkastukset. Kantatasolla erotetaan toisistaan, tilannekuvassa niputetaan tähän.
 
   [tpp :toimenpidepyynto "TPP"]
   [tur :tiedoitus "TUR"]
