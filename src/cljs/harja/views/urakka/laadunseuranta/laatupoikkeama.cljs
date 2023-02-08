@@ -581,7 +581,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       {:otsikko "Sanktiot"
                        :nimi :sanktiot
                        :tyyppi :komponentti
-                       :palstoja 2
+                       :palstoja 3
                        :komponentti (fn [_]
                                       [laatupoikkeaman-sanktiot
                                        (r/cursor laatupoikkeama [:sanktiot])
