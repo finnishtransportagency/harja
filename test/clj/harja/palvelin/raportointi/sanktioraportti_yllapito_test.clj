@@ -68,7 +68,7 @@
                                           {:otsikko ""}
                                           {:otsikko "Muhoksen päällystysurakka"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "Ylläpitoluokka 1"}
+                                      {:otsikko "PK-luokka 1"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -76,7 +76,7 @@
                                        :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0)]}
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 2000M]}
 
-                                      {:otsikko "Ylläpitoluokka 2"}
+                                      {:otsikko "PK-luokka 2"}
                                        {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -86,7 +86,7 @@
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0]}
 
 
-                                      {:otsikko "Ylläpitoluokka 3"}
+                                      {:otsikko "PK-luokka 3"}
                                         {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -96,7 +96,7 @@
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ -3000M]}
 
 
-                                      {:otsikko "Ei ylläpitoluokkaa"}
+                                      {:otsikko "Ei PK-luokkaa"}
                                          {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -140,7 +140,7 @@
                                           {:otsikko "YHA-päällystysurakka (sidottu)"}
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "Ylläpitoluokka 1"}
+                                      {:otsikko "PK-luokka 1"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -149,7 +149,7 @@
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 2000M 0 0 0 (summa-yhteenveto-solu 2000M)]}
 
 
-                                      {:otsikko "Ylläpitoluokka 2"}
+                                      {:otsikko "PK-luokka 2"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -158,7 +158,7 @@
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 (summa-yhteenveto-solu 0)]}
 
 
-                                      {:otsikko "Ylläpitoluokka 3"}
+                                      {:otsikko "PK-luokka 3"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -167,7 +167,7 @@
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ -3000M 0 0 0 (summa-yhteenveto-solu -3000M)]}
 
 
-                                      {:otsikko "Ei ylläpitoluokkaa"}
+                                      {:otsikko "Ei PK-luokkaa"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -215,7 +215,7 @@
                                           {:otsikko "14 Lappi"}
                                           {:otsikko "Yh\u00ADteen\u00ADsä"})
       (apurit/tarkista-taulukko-rivit taulukko
-                                      {:otsikko "Ylläpitoluokka 1"}
+                                      {:otsikko "PK-luokka 1"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -223,7 +223,7 @@
                                        :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-yhteenveto-solu 0)]}
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 2000M 0 (summa-yhteenveto-solu 2000M)]}
 
-                                      {:otsikko "Ylläpitoluokka 2"}
+                                      {:otsikko "PK-luokka 2"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -231,7 +231,7 @@
                                        :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 0 0 (summa-yhteenveto-solu 0)]}
 
-                                      {:otsikko "Ylläpitoluokka 3"}
+                                      {:otsikko "PK-luokka 3"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
@@ -239,7 +239,7 @@
                                        :rivi [yhteiset/+muistutusrivin-nimi-yllapito+ (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 0) (muistutus-solu 1) (muistutus-solu 0) (muistutus-yhteenveto-solu 1)]}
                                       {:korosta-harmaa? true :valkoinen? false, :korosta-hennosti? false, :lihavoi? false :rivi [yhteiset/+sakkorivin-nimi-yllapito+ 0 0 0 0 0 0 0 -3000M 0 (summa-yhteenveto-solu -3000M)]}
 
-                                      {:otsikko "Ei ylläpitoluokkaa"}
+                                      {:otsikko "Ei PK-luokkaa"}
                                       {:korosta-harmaa? true,
                                        :valkoinen? false,
                                        :korosta-hennosti? false,
