@@ -41,10 +41,8 @@
                     :alku alkupvm
                     :loppu loppupvm})
         raportin-nimi (jasenna-raportin-nimi db parametrit)
-        sanktiotyypit (sanktiot-kyselyt/hae-sanktiotyypit db)
         info-teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]
 
     (yhteiset/suorita-runko db user (merge parametrit {:sanktiot sanktiot
                                                        :raportin-nimi raportin-nimi
-                                                       :sanktiotyypit sanktiotyypit
                                                        :info-teksti info-teksti}))))

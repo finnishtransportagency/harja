@@ -36,10 +36,8 @@
                                    :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
                                    :alku alkupvm
                                    :loppu loppupvm})
-        raportin-nimi (jasenna-raportin-nimi db parametrit)
-        sanktiotyypit (sanktiot-kyselyt/hae-sanktiotyypit db)]
+        raportin-nimi (jasenna-raportin-nimi db parametrit)]
 
     (yhteiset/suorita-runko db user (merge parametrit {:sanktiot sanktiot
                                                        :bonukset bonukset
-                                                       :raportin-nimi raportin-nimi
-                                                       :sanktiotyypit sanktiotyypit}))))
+                                                       :raportin-nimi raportin-nimi}))))
