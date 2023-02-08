@@ -352,7 +352,7 @@
           haku-ei-kaynnissa (not (:suunniteltujen-toiden-haku-kaynnissa? app))]
       (if (and haku-ei-kaynnissa (some? urakka-id))
         (do (tuck-apurit/post! :yksikkohintaiset-tyot
-                               {:urakka urakka-id}
+                               urakka-id
                                {:onnistui ->SuunnitellutTyotHaettu
                                 :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
