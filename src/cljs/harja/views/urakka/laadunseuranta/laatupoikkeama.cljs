@@ -129,10 +129,7 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                {:otsikko "Laji" :tyyppi :valinta :leveys 2
                 :nimi :laji
                 :aseta (fn [rivi arvo]
-                         (let [paivitetty (assoc rivi :laji arvo :tyyppi nil)]
-                           (if-not (sanktio-domain/muu-kuin-muistutus? paivitetty)
-                             (assoc paivitetty :summa nil :toimenpideinstanssi nil :indeksi nil)
-                             paivitetty)))
+                         (assoc rivi :laji arvo :tyyppi nil :summa nil :toimenpideinstanssi nil :indeksi nil))
                 :valinnat mahdolliset-sanktiolajit
                 :valinta-nayta #(or (sanktio-domain/sanktiolaji->teksti %) "- valitse laji -")
                 :sarake-disabloitu-arvo-fn #(sanktio-domain/sanktiolaji->teksti (get-in % [:rivi :laji]))
@@ -155,12 +152,11 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       :tyyppi :valinta
                       :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
                                ;; Asetetaan uusi sanktiotyyppi sekä toimenpideinstanssi, joka tähän kuuluu
-                               (let [paivitetty (assoc sanktio :tyyppi tyyppi)]
-                                 (if (sanktio-domain/muu-kuin-muistutus? paivitetty)
-                                   (assoc paivitetty :toimenpideinstanssi
-                                                     (when tpk
-                                                       (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))))
-                                   (assoc paivitetty :toimenpideinstanssi nil))))
+                               (assoc sanktio
+                                 :tyyppi tyyppi
+                                 :toimenpideinstanssi
+                                 (when tpk
+                                   (:tpi_id (urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk)))))
                       :valinnat-fn #(vec (sanktio-domain/sanktiolaji->sanktiotyypit
                                            (:laji %) kaikki-sanktiotyypit urakan-alkupvm))
                       :valinta-nayta :nimi
@@ -172,16 +168,15 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
                       :leveys 2
                       :hae (comp :nimi :tyyppi)}))
 
-             (if voi-muokata?
-               {:otsikko "Kulun Kohdistus"
-                :nimi :toimenpideinstanssi
-                :tyyppi :valinta
-                :valinta-arvo :tpi_id
-                :valinta-nayta :tpi_nimi
-                :valinnat-fn #(when (sanktio-domain/muu-kuin-muistutus? %) urakan-tpit)
-                :leveys 2
-                :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]
-                :muokattava? sanktio-domain/muu-kuin-muistutus?}
+              (if voi-muokata?
+                {:otsikko "Kulun Kohdistus"
+                 :nimi :toimenpideinstanssi
+                 :tyyppi :valinta
+                 :valinta-arvo :tpi_id
+                 :valinta-nayta :tpi_nimi
+                 :valinnat urakan-tpit
+                 :leveys 2
+                 :validoi [[:ei-tyhja "Valitse toimenpide, johon sakko liittyy"]]}
                ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti, jotta
                ;; valinnan arvo näkyy varmasti oikein.
                {:otsikko "Kulun kohdistus" :tyyppi :teksti :nimi :toimenpideinstanssi
@@ -222,10 +217,10 @@ sekä sanktio-virheet atomin, jonne yksittäisen sanktion virheet kirjoitetaan (
 
 (defn- pakolliset-kentat
   [nakyma sakko?]
-  (let [pakolliset-yllapito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi]]
+  (let [pakolliset-yllapito-sakko [[:perintapvm] [:laji] [:toimenpideinstanssi] [:summa]]
         pakolliset-yllapito-muistutus [[:perintapvm] [:laji]]
-        pakolliset-hoito-sakko [[:perintapvm] [:laji] [:summa] [:toimenpideinstanssi] [:tyyppi]]
-        pakolliset-hoito-muistutus [[:laji] [:tyyppi] [:perintapvm]]]
+        pakolliset-hoito-sakko [[:perintapvm] [:laji] [:tyyppi] [:toimenpideinstanssi] [:summa]]
+        pakolliset-hoito-muistutus [[:perintapvm] [:laji] [:tyyppi] [:toimenpideinstanssi]]]
     (if (or (= :yllapito nakyma) (= :vesivayla nakyma))
       (if sakko?
         pakolliset-yllapito-sakko
