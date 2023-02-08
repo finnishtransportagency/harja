@@ -24,6 +24,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+    [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
@@ -282,6 +283,11 @@
                         (tierekisteri/->Tierekisteri (:url asetukset)
                                                      (:uudelleenlahetys-aikavali-minuutteina asetukset))
                         [:db :integraatioloki]))
+
+      ;; Didiroad
+      :digiroad (component/using
+                  (digiroad-integraatio/->Digiroad (:digiroad asetukset))
+                  [:http-palvelin :db :integraatioloki])
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
