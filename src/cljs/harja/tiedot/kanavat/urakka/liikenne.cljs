@@ -160,7 +160,7 @@
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
   ;; Käydään läpi tapahtumat ja niiden alukset 
-  ;; Palautetaan montako alusta on tietyllä toiminnolla ja suunnalla
+  ;; Palautetaan integer (Long) montako tapahtumaa tietyllä palvelulla/toimenpiteellä/suunnalla
   (apply + (map
             (fn [tapahtuma]
               (let [yhteensa (map
@@ -168,17 +168,17 @@
                                 (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
                                       palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot tapahtuma)))]
                                   (if (or
-                                       ;; Lasketaan sulutuksen suuntia 
+                                       ;; Lasketaan annetun toiminnon annettua suuntaa
                                        (and
                                         (= toiminto haluttu-toiminto)
                                         (= (::lt-alus/suunta alus) haluttu-suunta))
 
-                                       ;; Lasketaan vain tiettyä toimenpidettä suunnasta huolimatta
+                                       ;; Lasketaan annettua toimenpidettä muusta huolimatta
                                        (and
                                         (= haluttu-suunta nil)
                                         (= toiminto haluttu-toiminto))
 
-                                       ;; Lasketaan vain tiettyä palvelumuotoa suunnasta ja toimenpiteestä huolimatta 
+                                       ;; Lasketaan annettua palvelumuotoa muusta huolimatta 
                                        (and
                                         (= haluttu-suunta nil)
                                         (= haluttu-toiminto nil)

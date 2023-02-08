@@ -128,6 +128,9 @@
                                            :muu 0
                                            :yhteensa 0]}))
 
+(defn yhteenveto-arvo [tyyppi indeksi]
+  (get-in @yhteenveto-atom [tyyppi indeksi]))
+
 (def suunnat-atom (atom
                    {:ylos "Ylös"
                     :alas "Alas"

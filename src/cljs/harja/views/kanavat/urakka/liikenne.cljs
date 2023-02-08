@@ -514,10 +514,33 @@
   [:div
    [debug app]
    [valinnat e! app kohteet]
-   
+
    [:h3 "Liikennetapahtumat"]
-   [:div {:class "urakkavalinnat"} "123"]
-   
+   [:div {:class "urakkavalinnat"}
+    [:div {:class "liikenneyhteenveto"}
+
+     [:div {:class "yhteenveto-rivi"}
+
+      [:span {:class "caption"} "Toimenpiteet"]
+      [:span {:class "body-text strong"} "Sulutukset ylös: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 1)]]
+      [:span {:class "body-text strong"} "Sulutukset alas: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 3)]]
+      [:span {:class "body-text strong"} "Sillan avaukset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 5)]]
+      [:span {:class "body-text strong"} "Tyhjennykset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 7)]]
+      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 9)]]]
+
+     [:hr {:style
+           {:width "98%"}
+           {:border ".5px solid #D6D6D6"}
+           {:height "0px"}}]
+
+     [:div {:class "yhteenveto-rivi"}
+      [:span {:class "caption"} "Palvelumuoto"]
+      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 1)]]
+      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 3)]]
+      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 5)]]
+      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 7)]]
+      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 9)]]]]]
+
    [grid/grid
     {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
