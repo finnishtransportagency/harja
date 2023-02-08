@@ -95,14 +95,14 @@
         :voi-kumota? false
         :virheet virhe-atom
         :piilota-toiminnot? false
-        :tyhja "Ei varaosia"
-        :otsikko "Varaosat"
+        :tyhja "Ei materiaaleja"
+        :otsikko "Materiaalit"
         :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
-       [{:otsikko "Varaosa"
+       [{:otsikko "Materiaali"
          :nimi :varaosa
          :validoi [[:ei-tyhja "Tieto puuttuu"]]
          :tyyppi :valinta
-         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse materiaali -")
          :valinnat urakan-materiaalit
          :leveys 3}
         {:otsikko "Käytetty määrä"
@@ -236,7 +236,7 @@
       :uusi-rivi? true
       :komponentti (fn [_]
                      (assert lisaa-materiaali-fn)
-                     [napit/uusi "Lisää varaosa"
+                     [napit/uusi "Lisää materiaali"
                       lisaa-materiaali-fn
                       ;; todo: katsotaan oikeustarkistuksesta näytetäänkö nappia
                       {:disabled false}])}]))
