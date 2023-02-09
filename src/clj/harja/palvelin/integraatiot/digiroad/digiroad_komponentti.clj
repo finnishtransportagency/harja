@@ -8,7 +8,8 @@
             [clojure.java.jdbc :as jdbc]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
-            [slingshot.slingshot :refer [throw+ try+]]))
+            [slingshot.slingshot :refer [throw+ try+]]
+            [cheshire.core :as cheshire]))
 
 (def +virhe-kaistojen-haussa+ ::digiroad-virhe-kaistojen-haussa)
 
@@ -23,8 +24,8 @@
 
 (defn kasittele-kaistat-vastaus [body headers]
   (println "### Kaistat vastaus: " body)
-  ;; TODO
-  body)
+  ;; TODO: Virhetilanteet
+  (cheshire/decode body true))
 
 ;; tien numero (road_number)
 ;; ajorata (track) (on tulossa muutos, että ajoratatieto ei olisi pakollinen.
@@ -46,6 +47,14 @@
     (println "### Digiroad url: " url)
     (println "### tr-osoite: " tr-osoite)
     (println "### ajorata: " ajorata)
+
+    ;; TODO: Virhevastauksien hallinta
+    ;;       200 OK -> JSON-muotoinen järjestämätön puurakenteinen (tie, tieosa, kaistat) lista hakuparametrien
+    ;;                 (tie, ajorata, tieosoiteväli) mukaisista kaistaosuuksista
+    ;;       400 Bad Request -> Virheellinen parametri (ajokaista, tr-osoite) TAI haussa tehty liian monta
+    ;;                          automaattista uudelleenyritystä: "Maximum retries reached. Unable to get object."
+    ;;       500 Internal Server Error -> Digiroadin puolen sisäinen virhe
+    ;;       AWS API GW:n mahdolliset vastaukset: https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponses.html
 
     (try+
       (integraatiotapahtuma/suorita-integraatio
