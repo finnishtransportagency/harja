@@ -370,6 +370,7 @@
 (defn poista-suorasanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n."
   [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
+  (println "jere testaa:: poista-suorasanktio" sanktio-id urakka-id)
   (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
   (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
   (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
