@@ -34,10 +34,19 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest hae-kaistat
-  (with-fake-http [tyokalut/+kaistojen-haku-url+ tyokalut/+onnistunut-kaistojen-hakuvastaus+]
-    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :hae-kaistat-digiroadista +kayttaja-jvh+
-                    {:tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
-                     :ajorata 1})]
-      (is (= vastaus
-            tyokalut/+onnistunut-kaistojen-hakuvastaus+)))))
+  (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-kaistojen-hakuvastaus+ true)]
+    (with-fake-http [tyokalut/+kaistojen-haku-url+ tyokalut/+onnistunut-kaistojen-hakuvastaus+]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :hae-kaistat-digiroadista +kayttaja-jvh+
+                      {:tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
+                       :ajorata 1
+                       :urakka-id (hae-kemin-paallystysurakan-2019-2023-id)})]
+        (is (= vastaus odotettu-vastaus))))))
+
+(deftest hae-kaistat-ei-oikeutta
+  (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :hae-kaistat-digiroadista +kayttaja-seppo+
+                           {:tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
+                            :ajorata 1
+                            :urakka-id (hae-kemin-paallystysurakan-2019-2023-id)}))
+    "Poikkeusta ei heitetty! Sepolla olikin oikeus hakea kaistat."))

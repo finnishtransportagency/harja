@@ -37,7 +37,7 @@
 
 (comment
   (harja.palvelin.integraatiot.digiroad.digiroad-komponentti/hae-kaistat
-    (:digiroad harja.palvelin.main/harja-jarjestelma)
+    (:digiroad-integraatio harja.palvelin.main/harja-jarjestelma)
     {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
     1))
 
@@ -48,7 +48,7 @@
     (println "### tr-osoite: " tr-osoite)
     (println "### ajorata: " ajorata)
 
-    ;; TODO: Virhevastauksien hallinta
+    ;; Digiroad vastaukset
     ;;       200 OK -> JSON-muotoinen järjestämätön puurakenteinen (tie, tieosa, kaistat) lista hakuparametrien
     ;;                 (tie, ajorata, tieosoiteväli) mukaisista kaistaosuuksista
     ;;       400 Bad Request -> Virheellinen parametri (ajokaista, tr-osoite) TAI haussa tehty liian monta
@@ -75,9 +75,7 @@
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-kaistat-vastaus body headers))))
       (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-        (do
-          (log/error "Kaistojen haku Digiroadista epäonnistui:" virheet)
-          false)))))
+        (log/error "Kaistojen haku Digiroadista epäonnistui:" virheet)))))
 
 (defrecord Digiroad [asetukset]
   component/Lifecycle

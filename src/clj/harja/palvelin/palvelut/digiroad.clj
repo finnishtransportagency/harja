@@ -16,10 +16,12 @@
 
 
 (defn hae-kaistat [digiroad kayttaja tiedot]
-  ;; TODO: käyttöoikeudet
-  ;; TODO: ..
-  (let [{:keys [tr-osoite ajorata]} tiedot]
-    (digiroad/hae-kaistat digiroad tr-osoite ajorata)))
+  (let [urakka-id (:urakka-id tiedot)]
+    ;; TODO: Tarkista, onko tämä oikeustarkastus riittävä
+    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset kayttaja urakka-id)
+
+    (let [{:keys [tr-osoite ajorata]} tiedot]
+      (digiroad/hae-kaistat digiroad tr-osoite ajorata))))
 
 (def hakutyypit
   [{:palvelu :hae-kaistat-digiroadista

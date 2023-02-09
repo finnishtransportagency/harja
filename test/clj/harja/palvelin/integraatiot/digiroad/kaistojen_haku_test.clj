@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
             [harja.palvelin.integraatiot.digiroad.tyokalut :as tyokalut]
-            [slingshot.slingshot :refer [try+]]))
+            [slingshot.slingshot :refer [try+]]
+            [cheshire.core :as cheshire]))
 
 (def kayttaja "jvh")
 
@@ -22,7 +23,7 @@
 
 ;; TODO:
 (deftest tarkista-kaistojen-haku
-  (let [odotettu-vastaus tyokalut/+onnistunut-kaistojen-hakuvastaus+
+  (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-kaistojen-hakuvastaus+ true)
         url tyokalut/+kaistojen-haku-url+
         tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
         ajokaista 1]
