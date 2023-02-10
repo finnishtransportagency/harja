@@ -160,7 +160,7 @@
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
   ;; Käydään läpi tapahtumat ja niiden alukset 
-  ;; Palautetaan integer (Long) montako tapahtumaa tietyllä palvelulla/toimenpiteellä/suunnalla
+  ;; Palautetaan integer (Long) montako tapahtumaa annetulla palvelulla/toimenpiteellä/suunnalla
   (apply + (map
             (fn [tapahtuma]
               (let [yhteensa (map
@@ -199,16 +199,16 @@
         muut (laske-yhteenveto tulos nil nil :muu)
         
         toimenpiteet-yhteensa (apply + (map
-                                        (fn [asd]
-                                          (count (::lt/alukset asd))) tulos))
+                                        (fn [alus]
+                                          (count (::lt/alukset alus))) tulos))
 
-        toimenpiteet [:sulutukset-ylos sulutukset-ylos
+        toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa toimenpiteet-yhteensa]
+                      :yhteensa toimenpiteet-yhteensa}
 
-        palvelumuoto [:paikallispalvelu paikallispalvelut
+        palvelumuoto {:paikallispalvelu paikallispalvelut
                       :kaukopalvelu kaukopalvelut
                       :itsepalvelu itsepalvelut
                       :muu muut
@@ -216,11 +216,10 @@
                                  paikallispalvelut
                                  kaukopalvelut
                                  itsepalvelut
-                                 muut)]]
+                                 muut)}]
 
     (swap! lt/yhteenveto-atom assoc :toimenpiteet toimenpiteet)
-    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto)
-    (println "päivitetty atom: " @lt/yhteenveto-atom))
+    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto))
 
   (-> app
       (assoc :liikennetapahtumien-haku-kaynnissa? false)
@@ -235,7 +234,8 @@
                :kanavien-liikennetapahtumat
                {:alkupvm (first (:aikavali (:valinnat app)))
                 :loppupvm (second (:aikavali (:valinnat app)))
-                :urakkatyyppi :vesivayla-kanavien-hoito}))))
+                :urakkatyyppi :vesivayla-kanavien-hoito
+                :yhteenveto @lt/yhteenveto-atom}))))
 
 (defn tallennusparametrit [t]
   (-> t

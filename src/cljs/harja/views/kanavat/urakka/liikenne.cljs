@@ -506,6 +506,31 @@
     :nimi ::lt/kuittaaja
     :fmt kayttaja/kayttaja->str}]))
 
+(defn liikennetapahtuimien-yhteenveto []
+  [:div
+   [:h3 "Liikennetapahtumat"]
+   [:div {:class "urakkavalinnat"}
+    [:div {:class "liikenneyhteenveto"}
+
+     [:div {:class "yhteenveto-rivi"}
+
+      [:span {:class "caption"} "Toimenpiteet"]
+      [:span {:class "body-text strong"} "Sulutukset ylös: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-ylos)]]
+      [:span {:class "body-text strong"} "Sulutukset alas: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet :sulutukset-alas)]]
+      [:span {:class "body-text strong"} "Sillan avaukset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet :sillan-avaukset)]]
+      [:span {:class "body-text strong"} "Tyhjennykset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet :tyhjennykset)]]
+      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet :yhteensa)]]]
+
+     [:hr {:style
+           {:width "98%" :height "0px" :border ".5px solid #D6D6D6"}}]
+     
+     [:div {:class "yhteenveto-rivi"}
+      [:span {:class "caption"} "Palvelumuoto"]
+      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto :paikallispalvelu)]]
+      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto :kaukopalvelu)]]
+      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto :itsepalvelu)]]
+      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto :muu)]]
+      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto :yhteensa)]]]]]])
 
 (defn liikennetapahtumataulukko [e! {:keys [tapahtumarivit liikennetapahtumien-haku-kaynnissa?
                                             liikennetapahtumien-haku-tulee-olemaan-kaynnissa?
@@ -514,37 +539,10 @@
   [:div
    [debug app]
    [valinnat e! app kohteet]
-
-   [:h3 "Liikennetapahtumat"]
-   [:div {:class "urakkavalinnat"}
-    [:div {:class "liikenneyhteenveto"}
-
-     [:div {:class "yhteenveto-rivi"}
-
-      [:span {:class "caption"} "Toimenpiteet"]
-      [:span {:class "body-text strong"} "Sulutukset ylös: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 1)]]
-      [:span {:class "body-text strong"} "Sulutukset alas: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 3)]]
-      [:span {:class "body-text strong"} "Sillan avaukset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 5)]]
-      [:span {:class "body-text strong"} "Tyhjennykset: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 7)]]
-      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :toimenpiteet 9)]]]
-
-     [:hr {:style
-           {:width "98%"}
-           {:border ".5px solid #D6D6D6"}
-           {:height "0px"}}]
-
-     [:div {:class "yhteenveto-rivi"}
-      [:span {:class "caption"} "Palvelumuoto"]
-      [:span {:class "body-text strong"} "Paikallispalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 1)]]
-      [:span {:class "body-text strong"} "Kaukopalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 3)]]
-      [:span {:class "body-text strong"} "Itsepalvelu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 5)]]
-      [:span {:class "body-text strong"} "Muu: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 7)]]
-      [:span {:class "body-text strong"} "Yhteensä: " [:span {:class "caption"} (lt/yhteenveto-arvo :palvelumuoto 9)]]]]]
-
    [grid/grid
     {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
-                "Testing otsikko")
+                [liikennetapahtuimien-yhteenveto])
      :tunniste (juxt ::lt/id ::lt-alus/id)
      :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))
