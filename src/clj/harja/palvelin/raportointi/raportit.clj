@@ -107,6 +107,7 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :sanktioraportti
+    :kuvaus-tarkenne "Sanktiot, bonukset ja arvonvähennykset"
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sanktioiden yhteenveto"

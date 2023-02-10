@@ -47,9 +47,9 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2011 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})
-        nurkkasumma (last (last (last (last (last (last vastaus))))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 26488.52))
+    (is (=marginaalissa? sanktiosumma 26488.52))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= "Oulun alueurakka 2014-2019" (:nimi (second vastaus))))
@@ -68,9 +68,9 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 10 1))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last (last (last vastaus))))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 71977.05))
+    (is (=marginaalissa? sanktiosumma 71977.05))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
@@ -92,9 +92,11 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last (last (last vastaus))))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))
+        bonussumma (:arvo (second (last (:rivi (nth (nth (nth vastaus 5) 3) 2)))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 8099.80))
+    (is (=marginaalissa? sanktiosumma 8099.80))
+    (is (=marginaalissa? bonussumma 2000M))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
@@ -114,9 +116,16 @@
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last (last (last vastaus))))))]
+        sanktiotaulukko (nth vastaus 4)
+        bonustaulukko (nth vastaus 5)
+        arvonvahennystaulukko (nth vastaus 6)
+        sanktiosumma (last (last (last (last (last sanktiotaulukko)))))
+        bonussumma (last (:rivi (last (nth bonustaulukko 3))))
+        arvonvahennyssumma (:arvo (second (last (:rivi (last (nth arvonvahennystaulukko 3))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 15786.15))
+    (is (=marginaalissa? sanktiosumma 15786.15))
+    (is (=marginaalissa? bonussumma 4000M))
+    (is (=marginaalissa? arvonvahennyssumma 1000M))
     (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= "Koko maa" (:nimi (second vastaus))))

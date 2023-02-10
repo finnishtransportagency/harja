@@ -573,10 +573,9 @@
                                          :parametrit {:urakkatyyppi :hoito
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
-        sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
-        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
-
+        sanktiotaulukko (nth sanktioraportti 4)
+        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                #(select-keys % [:sakot_laskutetaan
                                                                 :sakot_laskutetaan_ind_korotus
@@ -591,7 +590,7 @@
     (is (= (count vastaus) 8) "Sanktioita odotettu määrä testikannassa.")
 
     (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2)
-           (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
+           (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
            "1900,67")
       "Sanktioiden summat palvelusta.")
 
@@ -642,10 +641,10 @@
                                          :parametrit {:urakkatyyppi :teiden-hoito
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
-        sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
-        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
-
+        sanktiotaulukko (nth sanktioraportti 4)
+        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 41)))
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
+        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -662,7 +661,7 @@
     (is (= (:summa sanktio) -100.2) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio) -8.1162) "sanktion indeksikorjaus laskettu oikein")
     (is (= (fmt/desimaaliluku (- summat-yhteensa-hae-sanktiot-palvelusta) 2)
-          (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
+          (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
           "100,20") "Sanktioiden summat palvelusta.")
     (is (= (fmt/desimaaliluku (- indeksikorotukset-yhteensa-hae-sanktiot-palvelusta) 2)
           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
@@ -695,9 +694,9 @@
                                          :parametrit {:urakkatyyppi :teiden-hoito
                                                       :alkupvm alkupvm
                                                       :loppupvm loppupvm}})
-        sanktioraportti-yhteensa-rivi (last (last sanktioraportti))
-        sanktioraportti-sakot-yhteensa (last (last (last (last (butlast sanktioraportti-yhteensa-rivi)))))
-        sanktioraportti-indeksit-yhteensa (last (last (last (last (butlast (butlast sanktioraportti-yhteensa-rivi))))))
+        sanktiotaulukko (nth sanktioraportti 4)
+        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 42)))
+        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 43)))
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot

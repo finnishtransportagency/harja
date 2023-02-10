@@ -149,7 +149,8 @@
                            (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))
         muokattava-oikaisu (-> muokattava-oikaisu
                              (assoc ::valikatselmus/summa 50000M) ;; Summa muuttuu 2000 -> 50000 ja tätä nimen omaan testataan
-                             (update :harja.domain.muokkaustiedot/muokattu #(pvm/aika-iso8601-ilman-millisekunteja %))
+                             (assoc :harja.domain.muokkaustiedot/muokattu (pvm/aika-iso8601-ilman-millisekunteja
+                                                                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))))
                              (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))]
     (is (= muokattava-oikaisu odotettu-vastaus) "Summan muokkaus ei onnistunut")
 
