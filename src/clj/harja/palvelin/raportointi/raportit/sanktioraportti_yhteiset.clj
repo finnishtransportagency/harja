@@ -268,14 +268,14 @@
         ;; A-ryhmän eri toimenpiteiden rivit
         ;"Liikenneympäristön hoito"
         [(luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;"Muut hoitourakan tehtäväkokonaisuudet"
+           {:sanktiotyyppi_koodi #{15} ;"Liikenneympäristön hoito"
             :sailytettavat-toimenpidekoodit #{"23110"} ;"Liikenneympäristön hoito"
             :sakkoryhma :A
             :talvihoito? false
             :yhteensa-sarake? yhteensa-sarake?})]
         ;"Soratien hoito"
         [(luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;"Muut hoitourakan tehtäväkokonaisuudet"
+           {:sanktiotyyppi_koodi 16 ;"Soratien hoito"
             :sailytettavat-toimenpidekoodit #{"23120"} ;"Soratien hoito"
             :sakkoryhma :A
             :talvihoito? false
@@ -292,14 +292,14 @@
             :talvihoito? false
             :yhteensa-sarake? yhteensa-sarake?})]
         [(luo-rivi-sakkojen-summa (str "        • Liikenneympäristön hoito") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;"Muut hoitourakan tehtäväkokonaisuudet"
+           {:sanktiotyyppi_koodi 15 ;"Liikenneympäristön hoito"
             :sailytettavat-toimenpidekoodit #{"23110"} ;"Liikenneympäristön hoito"
             :sakkoryhma :B
             :talvihoito? false
             :yhteensa-sarake? yhteensa-sarake?})]
         ;"Soratien hoito"
         [(luo-rivi-sakkojen-summa (str "        • Soratien hoito") rivit alueet
-           {:sanktiotyyppi_koodi 17 ;"Muut hoitourakan tehtäväkokonaisuudet"
+           {:sanktiotyyppi_koodi 16 ;"Soratien hoito"
             :sailytettavat-toimenpidekoodit #{"23120"} ;"Soratien hoito"
             :sakkoryhma :B
             :talvihoito? false
