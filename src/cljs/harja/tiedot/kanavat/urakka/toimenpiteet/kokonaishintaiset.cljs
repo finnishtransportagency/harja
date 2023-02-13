@@ -289,8 +289,8 @@
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
                 (vec
                  (for [m materiaalit]
-                   (if (-> m :varaosat ::materiaalit/muutokset)
-                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                   (if (-> m :materiaaleja ::materiaalit/muutokset)
+                     (update m :tallennetut-materiaalit dissoc ::materiaalit/muutokset ::materiaalit/id)
                      m))))
       app))
 
@@ -306,4 +306,4 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:avattu-toimenpide :varaosat-taulukon-virheet] virhe)))
+    (assoc-in app [:avattu-toimenpide :materiaalit-taulukon-virheet] virhe)))

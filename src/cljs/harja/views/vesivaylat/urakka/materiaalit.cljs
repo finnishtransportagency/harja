@@ -22,25 +22,25 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]
                    [cljs.core.async.macros :refer [go]]))
 
-(defn- muuta-yksikko-varaosan-muuttuessa
+(defn- muuta-yksikko-materiaalin-muuttuessa
   [grid-tila predikaatti]
   (into {} (map (fn [[avain arvo]]
                   (if (predikaatti arvo)
-                    [avain (assoc arvo :yksikko (-> arvo :varaosa ::m/yksikko))]
+                    [avain (assoc arvo :yksikko (-> arvo :tallennetut-materiaalit ::m/yksikko))]
                     [avain arvo]))
                 grid-tila)))
 
-(defn hoida-varaosataulukon-yksikko
+(defn hoida-materiaalitaulukon-yksikko
   [grid-komponentti]
   ;; Tässä on tarkoituksena laittaa gridissä käsiteltävän rivin
-  ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali varaosa valikosta.
+  ;; :yksikko avaimen alle oikea yksikkö, kun valitaan materiaali valikosta.
   (let [grid-tila (grid-protokolla/hae-muokkaustila grid-komponentti)
-        varaosa-muutettu? #(and (:varaosa %)
-                                (not= (-> % :varaosa ::m/yksikko)
+        materiaali-muutettu? #(and (:tallennetut-materiaalit %)
+                                (not= (-> % :tallennetut-materiaalit ::m/yksikko)
                                       (:yksikko %)))
-        joku-varaosa-muutettu? (some varaosa-muutettu? (vals grid-tila))]
-    (when joku-varaosa-muutettu?
-      (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-varaosan-muuttuessa grid-tila varaosa-muutettu?)))))
+        joku-materiaali-muutettu? (some materiaali-muutettu? (vals grid-tila))]
+    (when joku-materiaali-muutettu?
+      (grid-protokolla/aseta-muokkaustila! grid-komponentti (muuta-yksikko-materiaalin-muuttuessa grid-tila materiaali-muutettu?)))))
 
 (defn- materiaaliloki [e! urakka-id rivit nimi yksikko nayta-kaikki?]
   (let [rivit-jarjestyksessa (reverse (sort-by (juxt ::m/pvm ::m/luotu) rivit))
@@ -239,6 +239,7 @@
 
          [grid/grid
           {:voi-lisata? false
+           :voi-poistaa? (constantly false)
            :id "vv-materiaalilistaus"
            :tunniste ::m/nimi
            :tyhja "Ei materiaaleja"

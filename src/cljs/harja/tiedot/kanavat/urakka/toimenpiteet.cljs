@@ -60,11 +60,11 @@
             (transduce
              (comp
                (filter (partial toimenpiteen-materiaalimuutos? toimenpide))
-              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
+              ;; Materiaalit gridissä on :maara, :yksikko ja :tallennetut-materiaalit nimiset sarakkeet. Materiaalin
               ;; nimi, yksikko, urakka-id, pvm ja id tarvitaan tallentamista varten.
               (map #(identity {:maara (- (::materiaalit/maara %))
                                :yksikko (::materiaalit/yksikko materiaalilistaus)
-                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                               :tallennetut-materiaalit {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                          ::materiaalit/id (::materiaalit/id %)
@@ -99,9 +99,9 @@
 ;; vv_materiaali aka materiaalikirjaus on yhtä muutosta esittävä rivi.
 ;; front-koodissa taas materiaalikirjauksiksi kutsutaan myös grid-mappeina olevia kirjauksiksi.
 ;;
-;; ::materiaalit/materiaalit -avaimen alla oleva map sisaltaa :varaosa avaimen alla listaus-viewin muotoa,
+;; ::materiaalit/materiaalit -avaimen alla oleva map sisaltaa :tallennetut-materiaalit avaimen alla listaus-viewin muotoa,
 ;; {:jarjestysnumero 0,
-;;  :varaosa {::materiaalit/urakka-id 31,
+;;  :tallennetut-materiaalit {::materiaalit/urakka-id 31,
 ;;            ::materiaalit/maara-nyt 964,
 ;;            ::materiaalit/halytysraja 200,
 ;;            ::materiaalit/muutokset [
@@ -119,22 +119,22 @@
 (defn materiaalikirjaus->tallennettava [grid-rivi]
   (for [muutos (::materiaalit/muutokset grid-rivi)]
     {:maara (- (::materiaalit/maara muutos))
-     :varaosa {::materiaalit/nimi (::materiaalit/nimi grid-rivi)
+     :tallennetut-materiaalit {::materiaalit/nimi (::materiaalit/nimi grid-rivi)
                ::materiaalit/urakka-id (::materiaalit/urakka-id grid-rivi)
                ::materiaalit/pvm (::materiaalit/pvm muutos)
                ::materiaalit/id (::materiaalit/id muutos)}}))
 
-(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero varaosa] :as grid-rivi}]
+(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero materiaali]}]
   ;; poistetaan mapista poistetuksi merkatut uudet rivit
   (when (and poistettu (not jarjestysnumero))
-    (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))
+    (select-keys materiaali #{::materiaalit/id ::materiaalit/urakka-id})))
 
 
-(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [poistettu jarjestysnumero varaosa] :as muokkaamaton-grid-rivi}]
+(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [jarjestysnumero materiaali]}]
   ;; poistetaan materiaalit jotka löytyy vain muokkaamattomista materiaaleista
 
   (let [nykygridin-samannimiset (filter
-                                 #(= (::materiaalit/nimi varaosa) (-> % :varaosa ::materiaalit/nimi))
+                                 #(= (::materiaalit/nimi materiaali) (-> % :tallennetut-materiaalit ::materiaalit/nimi))
                                  nykygrid)]
     ;; (log "samannimiset:" (pr-str nykygridin-samannimiset))
     ;; pyydetään backilta poistettavaksi, jos 1) ei loydy saman nimisiä nykygridistä
@@ -143,7 +143,7 @@
       ;; (log "not jnr:" (pr-str (not jarjestysnumero)))
       (when (not jarjestysnumero)
 
-        (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id})))))
+        (select-keys materiaali #{::materiaalit/id ::materiaalit/urakka-id})))))
 
 (defn poistettavat-materiaalit [tp]
   (concat
@@ -152,7 +152,7 @@
          (::materiaalit/muokkaamattomat-materiaalit tp))))
 
 (defn yksi-tallennettava-materiaalikirjaus
-  "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:varaosa ... :maara ...} - muutoin nil"
+  "Palauttaa tallennettavan mapin kun m-kirjaus on muokattu, ei-tyhja, ei-poistettu grid-rivi tyyliin {:tallennetut-materiaalit ... :maara ...} - muutoin nil"
   [muokkaamattomat-kirjaukset lisatieto paivamaara m-kirjaus]
 
   (let [muokkaamaton? (if (seq muokkaamattomat-kirjaukset)
@@ -160,13 +160,13 @@
                        false)
         tyhja? (= [:jarjestysnumero] (keys m-kirjaus))
         poistettu? (:poistettu m-kirjaus)
-        varaosa (dissoc (:varaosa m-kirjaus)
+        materiaali (dissoc (:tallennetut-materiaalit m-kirjaus)
                         ::materiaalit/maara-nyt ::materiaalit/halytysraja
                         ::materiaalit/muutokset ::materiaalit/alkuperainen-maara)]
     ;; jatetaan tallentamatta tyhjat, poistetut, muokkaamattomat.
     (if (or tyhja? poistettu? muokkaamaton?)
       nil
-      (assoc varaosa
+      (assoc materiaali
              ::materiaalit/pvm paivamaara
              ::materiaalit/maara (- (:maara m-kirjaus)) ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
              ::materiaalit/lisatieto (or lisatieto "Käytetty toimenpiteen kirjauksesssa")))))
@@ -195,8 +195,7 @@
   ;; TODO Yritä yhdistää samaksi muodoksi, ikävää arvailla mistä id löytyy.
 
   (let [tehtava (or (::kanavatoimenpide/toimenpidekoodi-id toimenpide)
-                    (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))
-        materiaalit (::materiaalit/materiaalit toimenpide)]
+                    (get-in toimenpide [::kanavatoimenpide/toimenpidekoodi ::toimenpidekoodi/id]))]
     (-> toimenpide
         (select-keys [::kanavatoimenpide/id
                       ::kanavatoimenpide/urakka-id
