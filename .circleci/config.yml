@@ -254,7 +254,7 @@ jobs:
             tail -50 harja.out
             echo +++++++++++++++++++
             echo
-            cd /tmp/cypress-run && $(npm bin)/cypress run
+            cd /tmp/cypress-run && npx cypress run
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
 
