@@ -242,6 +242,7 @@ jobs:
             mkdir -p ../.harja
             echo aaaa > ../.harja/anti-csrf-token
             touch ../.harja/{mml,google-static-maps-key,turi-salasana,ava-salasana,yha-salasana,yha-api-key,labyrintti-salasana,velho-salasana,velho-varuste-salasana,api-sahkoposti-salasana,digiroad-api-key}
+            touch ../.harja/harjalle_ajorata_kaista_puoli_20210825.csv
             java -jar /tmp/harja/target/harja-0.0.1-SNAPSHOT-standalone.jar > harja.out 2>&1 &
             for i in $(seq 10); do
               curl localhost:3000 > /dev/null 2>&1 && break
