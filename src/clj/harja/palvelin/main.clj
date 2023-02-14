@@ -24,6 +24,7 @@
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
     [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
     [harja.palvelin.integraatiot.tierekisteri.tierekisteri-komponentti :as tierekisteri]
+    [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad-integraatio]
     [harja.palvelin.integraatiot.labyrintti.sms :as labyrintti]
     [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
     [harja.palvelin.integraatiot.turi.turi-komponentti :as turi]
@@ -80,6 +81,7 @@
     [harja.palvelin.palvelut.varuste-ulkoiset :as varuste-ulkoiset]
     [harja.palvelin.palvelut.yha :as yha]
     [harja.palvelin.palvelut.yha-velho :as yha-velho]
+    [harja.palvelin.palvelut.digiroad :as digiroad]
     [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
     [harja.palvelin.palvelut.tietyoilmoitukset :as tietyoilmoitukset]
     [harja.palvelin.palvelut.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
@@ -282,6 +284,11 @@
                         (tierekisteri/->Tierekisteri (:url asetukset)
                                                      (:uudelleenlahetys-aikavali-minuutteina asetukset))
                         [:db :integraatioloki]))
+
+      ;; Didiroad integraatio
+      :digiroad-integraatio (component/using
+                              (digiroad-integraatio/->Digiroad (:digiroad asetukset))
+                              [:http-palvelin :db :integraatioloki])
 
       ;; Labyrintti SMS Gateway
       :labyrintti (component/using
@@ -518,6 +525,10 @@
       :varustetoteuma-ulkoiset (component/using
                    (varuste-ulkoiset/->VarusteVelho)
                    [:http-palvelin :db :velho-integraatio :excel-vienti])
+
+      :digiroad (component/using
+                  (digiroad/->Digiroad)
+                  [:http-palvelin :db :digiroad-integraatio])
 
       :tr-haku (component/using
                  (tierekisteri-haku/->TierekisteriHaku)
