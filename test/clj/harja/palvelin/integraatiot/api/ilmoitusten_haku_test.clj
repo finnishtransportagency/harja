@@ -167,6 +167,27 @@
       (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
       (is (< 0 ilmoituksia)))))
 
+(defn- poista-ilmoista-turhat
+  "Palauttaa ilmoitukset yksinkertaistettuna.
+  {'ilmoitukset'
+  [{'ilmoitus' {'kuittaukset' ['ja yksinkertaistetut kuittaukset tähän']
+                'valitetty-urakkaan' <timestamp>
+                'ilmoitusid' <ilmoitusid>}}]}"
+  [ilmoitukset]
+  (let [ilmoitukset-listana (get ilmoitukset "ilmoitukset")
+        ;; Siivotaan yksittäisistä ilmoituksista pois kaikki mitä ei tarvita
+        siivotut-ilmoitukset (mapv (fn [i]
+                                     (let [kuittaukset (get-in i ["ilmoitus" "kuittaukset"])
+                                           siivotut-kuittaukset (mapv (fn [k]
+                                                                        (-> {}
+                                                                          (assoc "kuittaustyyppi" (get-in k ["kuittaus" "kuittaustyyppi"])
+                                                                                 "kanava" (get-in k ["kuittaus" "kanava"])
+                                                                                 "kuitattu" (get-in k ["kuittaus" "kuitattu"])))) kuittaukset)]
+                                       (-> {}
+                                         (assoc-in ["ilmoitus" "kuittaukset"] siivotut-kuittaukset)
+                                         (assoc-in ["ilmoitus" "valitetty-urakkaan"] (get i "valitetty-urakkaan"))
+                                         (assoc-in ["ilmoitus" "ilmoitusid"] (get i "ilmoitusid"))))) ilmoitukset-listana)]
+    {"ilmoitukset" siivotut-ilmoitukset}))
 
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
