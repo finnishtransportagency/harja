@@ -124,17 +124,17 @@
                ::materiaalit/pvm (::materiaalit/pvm muutos)
                ::materiaalit/id (::materiaalit/id muutos)}}))
 
-(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero materiaali]}]
+(defn materiaalikirjaus->poistettavat-1 [{:keys [poistettu jarjestysnumero tallennetut-materiaalit]}]
   ;; poistetaan mapista poistetuksi merkatut uudet rivit
   (when (and poistettu (not jarjestysnumero))
-    (select-keys materiaali #{::materiaalit/id ::materiaalit/urakka-id})))
+    (select-keys tallennetut-materiaalit #{::materiaalit/id ::materiaalit/urakka-id})))
 
 
-(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [jarjestysnumero materiaali]}]
+(defn materiaalikirjaus->poistettavat-2 [nykygrid {:keys [jarjestysnumero tallennetut-materiaalit]}]
   ;; poistetaan materiaalit jotka löytyy vain muokkaamattomista materiaaleista
 
   (let [nykygridin-samannimiset (filter
-                                 #(= (::materiaalit/nimi materiaali) (-> % :tallennetut-materiaalit ::materiaalit/nimi))
+                                 #(= (::materiaalit/nimi tallennetut-materiaalit) (-> % :tallennetut-materiaalit ::materiaalit/nimi))
                                  nykygrid)]
     ;; (log "samannimiset:" (pr-str nykygridin-samannimiset))
     ;; pyydetään backilta poistettavaksi, jos 1) ei loydy saman nimisiä nykygridistä
@@ -143,7 +143,7 @@
       ;; (log "not jnr:" (pr-str (not jarjestysnumero)))
       (when (not jarjestysnumero)
 
-        (select-keys materiaali #{::materiaalit/id ::materiaalit/urakka-id})))))
+        (select-keys tallennetut-materiaalit #{::materiaalit/id ::materiaalit/urakka-id})))))
 
 (defn poistettavat-materiaalit [tp]
   (concat
