@@ -47,9 +47,9 @@
 
  :itmf
  {:url #=(eval (str "tcp://"
-                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
-                 ":"
-                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                   ":"
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq
@@ -92,6 +92,12 @@
 
  :tierekisteri {:url ""
                 :uudelleenlahetys-aikavali-minuutteina nil}
+
+ :digiroad {:url "https://api.testivaylapilvi.fi/digiroad/externalApi/"
+            ;; Testipalvelimen avain projektin salaisuuksien jakamiseen tarkoitetussa paikassa
+            :api-key #=(eval (some->
+                                 (slurp "../.harja/digiroad-api-key")
+                                 (clojure.string/trim-newline)))}
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
