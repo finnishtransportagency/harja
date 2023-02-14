@@ -2,22 +2,12 @@
   "Digiroad haut"
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-            [harja.kyselyt.konversio :as konv]
             [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad]
-            [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]
-            [slingshot.slingshot :refer [try+]]
-            [clj-time.core :as t]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
-            [clojure.set :as set]))
+            [harja.domain.oikeudet :as oikeudet]))
 
 
 (defn hae-kaistat [digiroad kayttaja tiedot]
   (let [urakka-id (:urakka-id tiedot)]
-    ;; TODO: Tarkista, onko tämä oikeustarkastus riittävä
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset kayttaja urakka-id)
 
     (let [{:keys [tr-osoite ajorata]} tiedot]

@@ -20,31 +20,29 @@
 
 (use-fixtures :each jarjestelma-fixture)
 
-
-;; TODO:
 (deftest tarkista-kaistojen-haku
   (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-kaistojen-hakuvastaus+ true)
         url tyokalut/+kaistojen-haku-url+
         tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
-        ajokaista 1]
+        ajorata 1]
     (with-fake-http [url tyokalut/+onnistunut-kaistojen-hakuvastaus+]
-      (let [vastaus (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajokaista)]
+      (let [vastaus (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajorata)]
         (is (= odotettu-vastaus vastaus))))))
 
 #_(deftest tarkista-epaonnistunut-kutsu
   (with-fake-http [{:url kaistojen-haku-url :method :get} 500]
     (let [tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
-          ajokaista 1]
-      (is (thrown? Exception (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajokaista))
+          ajorata 1]
+      (is (thrown? Exception (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajorata))
         "Poikkeusta ei heitetty epäonnistuneesta kutsusta."))))
 
 #_(deftest tarkista-virhevastaus
   (let [url kaistojen-haku-url]
     (with-fake-http [url "virhevastaus"]
       (let [tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
-            ajokaista 1]
+            ajorata 1]
         (try+
-          (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajokaista)
+          (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajorata)
           (is false "Poikkeusta ei heitetty epäonnistuneesta kutsusta.")
           (catch [:type digiroad-integraatio/+virhe-kaistojen-haussa+] {:keys [virheet]}
             (is true "Poikkeus heitettiin epäonnistuneesta kutsusta.")))))))

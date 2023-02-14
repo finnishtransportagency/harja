@@ -9,7 +9,6 @@
             [harja.palvelin.integraatiot.digiroad.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [org.httpkit.fake :refer [with-fake-http]]
-            [harja.kyselyt.konversio :as konversio]
             [cheshire.core :as cheshire]))
 
 (defn jarjestelma-fixture [testit]

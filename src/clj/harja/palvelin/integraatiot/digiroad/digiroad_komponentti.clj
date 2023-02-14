@@ -23,17 +23,7 @@
   (hae-kaistat [this tr-osoite ajorata]))
 
 (defn kasittele-kaistat-vastaus [body headers]
-  (println "### Kaistat vastaus: " body)
-  ;; TODO: Virhetilanteet
   (cheshire/decode body true))
-
-;; tien numero (road_number)
-;; ajorata (track) (on tulossa muutos, että ajoratatieto ei olisi pakollinen.
-;                 Tällöin rajapinnasta voitaisiin hakea kaistatietoa jo aiemmin, sisältäen mahdolliset ajoradat)
-;; aosa (start_part)
-;; aet (start_addrm)
-;; losa (end_part)
-;; let (end_addrm)
 
 (comment
   (harja.palvelin.integraatiot.digiroad.digiroad-komponentti/hae-kaistat
@@ -44,14 +34,10 @@
 (defn hae-kaistat-digiroadista
   [integraatioloki db {:keys [url api-key] :as asetukset} tr-osoite ajorata]
   (let [url (str url "lanes/lanes_in_range")]
-    (println "### Digiroad url: " url)
-    (println "### tr-osoite: " tr-osoite)
-    (println "### ajorata: " ajorata)
-
     ;; Digiroad vastaukset
     ;;       200 OK -> JSON-muotoinen järjestämätön puurakenteinen (tie, tieosa, kaistat) lista hakuparametrien
     ;;                 (tie, ajorata, tieosoiteväli) mukaisista kaistaosuuksista
-    ;;       400 Bad Request -> Virheellinen parametri (ajokaista, tr-osoite) TAI haussa tehty liian monta
+    ;;       400 Bad Request -> Virheellinen parametri (ajorata, tr-osoite) TAI haussa tehty liian monta
     ;;                          automaattista uudelleenyritystä: "Maximum retries reached. Unable to get object."
     ;;       500 Internal Server Error -> Digiroadin puolen sisäinen virhe
     ;;       AWS API GW:n mahdolliset vastaukset: https://docs.aws.amazon.com/apigateway/latest/api/API_GetGatewayResponses.html
@@ -61,6 +47,13 @@
         db integraatioloki "digiroad" "hae-kaistat"
         (fn [konteksti]
           (let [{:keys [tie aosa aet losa let]} tr-osoite
+                ;; tien numero (road_number)
+                ;; ajorata (track) (on tulossa muutos, että ajoratatieto ei olisi pakollinen.
+                ;                 Tällöin rajapinnasta voitaisiin hakea kaistatietoa jo aiemmin, sisältäen mahdolliset ajoradat)
+                ;; aosa (start_part)
+                ;; aet (start_addrm)
+                ;; losa (end_part)
+                ;; let (end_addrm)
                 parametrit {:road_number tie
                             :start_part aosa
                             :start_addrm aet
