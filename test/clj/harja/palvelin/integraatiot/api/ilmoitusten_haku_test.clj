@@ -207,6 +207,17 @@
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))))
 
+(defn luo-ilmoitus [ilmoitusid urakka-id db-timestamp]
+  (let [sql-str (format "INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, \"valitetty-urakkaan\")
+      VALUES (%s, %s, '%s', '%s', '%s');" urakka-id ilmoitusid db-timestamp db-timestamp db-timestamp)
+        _ (u sql-str)
+        ilmoituksen-id (ffirst (q (format "SELECT id FROM ilmoitus WHERE urakka = %s order by id desc limit 1;" urakka-id)))]
+    ilmoituksen-id))
+
+(defn luo-kuittaus [ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp] ;kuittaustyyppi= lopetus, aloitus, vastaanotto
+  (let [sql-str (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu, suunta) VALUES
+  (%s, %s, '%s' , '%s', 'sisaan'::viestisuunta);" ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp)]
+    (u sql-str)))
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
