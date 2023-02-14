@@ -139,6 +139,16 @@
    "tienumero" 79
    "yhteydenottopyynto" false})
 
+;; Apufunktiot
+(defn urakkaidt-ytunnuksella [ytunnus-str]
+  (let [idt (q-map (format "(SELECT u.id as id, u.urakkanro as urakkanro
+                             FROM urakka u
+                                  JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = '%s'
+                                  -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
+                                  -- 12 h urakan päättymisvuorokauden jälkeenkin.
+                              WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
+                                    (u.loppupvm IS NULL AND u.alkupvm <= NOW())))" ytunnus-str))]
+    idt))
 
 (deftest hae-muuttuneet-ilmoitukset
   (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour'
