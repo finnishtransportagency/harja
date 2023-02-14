@@ -160,7 +160,7 @@
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
   ;; Käydään läpi tapahtumat ja niiden alukset 
-  ;; Palautetaan integer (Long) montako tapahtumaa annetulla palvelulla/toimenpiteellä/suunnalla
+  ;; Palautetaan integer (Long) montako alusta annetulla palvelulla/toimenpiteellä/suunnalla
   (apply + (map
             (fn [tapahtuma]
               (let [yhteensa (map
@@ -197,16 +197,24 @@
         kaukopalvelut (laske-yhteenveto tulos nil nil :kauko)
         itsepalvelut (laske-yhteenveto tulos nil nil :itse)
         muut (laske-yhteenveto tulos nil nil :muu)
-        
-        toimenpiteet-yhteensa (apply + (map
-                                        (fn [alus]
-                                          (count (::lt/alukset alus))) tulos))
+
+        ;; Lasketaan toimenpiteet mitkä kuuluvat yhteenvetoon (kaikki paitsi :ei-avausta)
+        alukset-joilla-toimenpide (apply + (map
+                                          (fn [tapahtuma]
+                                            ;; Käydään läpi tapahtuman alukset, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
+                                            (let [alukset (::lt/alukset tapahtuma)
+                                                  toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
+                                                  alusten-toiminnot (map (fn [_]
+                                                                           (when-not (= toimenpide :ei-avausta)
+                                                                             toimenpide)) alukset)]
+                                              (count (remove nil? alusten-toiminnot)))
+                                            ) tulos))
 
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa toimenpiteet-yhteensa}
+                      :yhteensa alukset-joilla-toimenpide}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
                       :kaukopalvelu kaukopalvelut

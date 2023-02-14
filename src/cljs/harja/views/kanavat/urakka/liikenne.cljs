@@ -506,7 +506,7 @@
     :nimi ::lt/kuittaaja
     :fmt kayttaja/kayttaja->str}]))
 
-(defn liikennetapahtuimien-yhteenveto []
+(defn liikennetapahtumien-yhteenveto []
   [:div
    [:h3 "Liikennetapahtumat"]
    [:div {:class "urakkavalinnat"}
@@ -542,7 +542,7 @@
    [grid/grid
     {:otsikko (if (or liikennetapahtumien-haku-kaynnissa? liikennetapahtumien-haku-tulee-olemaan-kaynnissa?)
                 [ajax-loader-pieni "Päivitetään listaa.."]
-                [liikennetapahtuimien-yhteenveto])
+                [liikennetapahtumien-yhteenveto])
      :tunniste (juxt ::lt/id ::lt-alus/id)
      :sivuta grid/vakiosivutus
      :rivi-klikattu #(e! (tiedot/->ValitseTapahtuma %))

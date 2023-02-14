@@ -87,39 +87,6 @@
     transition: 0.1s;
 }
 
-// Liikennetapahtumien yhteenveto
-.liikenneyhteenveto>*:first-child {
-    padding-bottom: 0px;
-}
-
-.liikenneyhteenveto>*:last-child {
-    padding-top: 0px;
-}
-
-.musta {
-    color: @black-default;
-}
-
-.yhteenveto-rivi {
-    display: grid;
-    align-items: start;
-    text-align: left;
-    grid-template-columns: repeat(6, 1fr);
-    padding: 16px;
-    gap: 8px;
-}
-
-// Sarakkeista tulee hieman luettavampia pienemmällä resoluttiolla
-.yhteenveto-rivi>* {
-    width: 70%;
-    border-radius: 3px;
-}
-
-// Yhteensä-sarake
-.yhteenveto-rivi>*:last-child {
-    text-align: right;
-}
-
 .crash-component {
     background: @oranssi-kevyt;
     border: 1px dashed @punainen1;

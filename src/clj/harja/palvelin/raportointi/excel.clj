@@ -550,12 +550,12 @@
                    arvo (liikenneyhteenveto-arvo-str sarakkeiden-arvot x (first y))
                    ;; Sarake indeksi (mille sarakkeelle data laitetaan)
                    ;; Avaimet on indeksijärjestyksessä
-                   indeksi (+ 1 (.indexOf (keys (x sarakkeen_nimet)) (first y)))
+                   indeksi (inc (.indexOf (keys (x sarakkeen_nimet)) (first y)))
                    ;; Lisätään *3 koska mergetään nämä rivit jotta data mahtuu sarakkeisiin ja sitä voi lukea
                    indeksi (* indeksi 3)
-                   solu-nro (- indeksi 1)
+                   solu-nro (dec indeksi)
                    ;; Neljännet arvot mergetään kolmella sarakkeella, tulee luettavampi
-                   merge (if (= solu-nro 11) (+ 2 solu-nro) (+ 1 solu-nro))
+                   merge (if (= solu-nro 11) (+ 2 solu-nro) (inc solu-nro))
                    _ (.addMergedRegion sheet (CellRangeAddress. nolla nolla solu-nro merge))
                    solu (.createCell rivi solu-nro)]
 
