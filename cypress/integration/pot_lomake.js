@@ -1,5 +1,3 @@
-import transit from '../../node_modules/transit-js/transit'
-
 let ajaxLoaderTimeout = 60000;
 let odotaElementtia = 45000;
 
