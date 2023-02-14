@@ -218,6 +218,29 @@
   (let [sql-str (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu, suunta) VALUES
   (%s, %s, '%s' , '%s', 'sisaan'::viestisuunta);" ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp)]
     (u sql-str)))
+
+(deftest hae-ilmoitukset-ytunnuksella-onnistuu-vaikka-haetaan-vain-kuittauksen-ajankohdasta
+  (let [;; Luo uusi ilmoitus ja pari kuittausta
+        y-tunnus "1565583-5"
+        ilmoitusid (rand-int 92333123)
+        ensimmainen-urakka-ytunnuksella (:id (first (q-map (format "select u.id as id
+        from urakka u join organisaatio o on u.urakoitsija = o.id AND o.ytunnus = '%s'
+        and u.loppupvm > NOW()
+        and u.tyyppi = 'teiden-hoito'" y-tunnus))))
+
+        db-timestamp-60min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 60)
+        db-timestamp-45min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 45)
+        ilmoituksen-id (luo-ilmoitus ilmoitusid ensimmainen-urakka-ytunnuksella db-timestamp-60min-sitten)
+        ;; Luo ilmoitukselle 3 kuittausta, jotka alkavat vähän eri aikaan, jotta voidaan testissä varmistua, että hakemalla vain kuittausajankohtaa, kaikki kuittaukset kuitenkin tulevat
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 49))
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 48))
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 10))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 51) "/" db-timestamp-45min-sitten)]
+                  kayttaja portti)
+        siivotut-ilmoitukset (poista-ilmoista-turhat (cheshire/decode (:body vastaus)))
+        kuittausten-maara (count (get-in siivotut-ilmoitukset ["ilmoitukset" 0 "ilmoitus" "kuittaukset"]))]
+    (is (= 200 (:status vastaus)))
+    (is (= 3 kuittausten-maara))))
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
