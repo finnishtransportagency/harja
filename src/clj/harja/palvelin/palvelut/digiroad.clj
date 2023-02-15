@@ -15,7 +15,7 @@
 
 (def hakutyypit
   [{:palvelu :hae-kaistat-digiroadista
-    :kasittely-fn (fn [digiroad _ kayttaja tiedot]
+    :kasittely-fn (fn [digiroad kayttaja tiedot]
                     (hae-kaistat digiroad kayttaja tiedot))}])
 
 
@@ -23,7 +23,8 @@
   component/Lifecycle
   (start [{http :http-palvelin db :db digiroad :digiroad-integraatio :as this}]
     (doseq [{:keys [palvelu kasittely-fn]} hakutyypit]
-      (julkaise-palvelu http palvelu (partial kasittely-fn digiroad db)))
+      (julkaise-palvelu http palvelu (fn [kayttaja tiedot]
+                                       (kasittely-fn digiroad kayttaja tiedot))))
     this)
 
   (stop [{http :http-palvelin :as this}]
