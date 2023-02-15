@@ -1,6 +1,9 @@
 -- name: vie-tien-osan-ajorata!
-INSERT INTO tr_osan_ajorata (tie,osa,ajorata,geom)
-VALUES (:tie, :osa, :ajorata, ST_GeomFromText(:geom));
+INSERT INTO tr_osan_ajorata (tie, osa, ajorata, geom, paivitetty)
+VALUES (:tie, :osa, :ajorata, ST_GeomFromText(:geom), current_timestamp);
+
+-- name: tarkista-tieosoitedata
+SELECT count(*) as lkm FROM tr_osan_ajorata;
 
 -- name: hae-tr-osoite-valille
 -- hakee tierekisteriosoitteen kahden pisteen välille

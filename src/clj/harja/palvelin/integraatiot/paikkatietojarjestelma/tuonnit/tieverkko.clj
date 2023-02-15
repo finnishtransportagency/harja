@@ -256,22 +256,22 @@
     (tallenna-ajoradan-pituus 2)))
 
 (defn vie-tieverkko-kantaan [db shapefile]
-  (if shapefile
-    (do
-      (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
-      (jdbc/with-db-transaction [db db]
-        (k/tuhoa-tien-osien-ajoradat! db)
-        (k/tuhoa-ajoratojen-pituudet! db)
-        (shapefile/tuo-ryhmiteltyna
-         shapefile :tie
-         (fn [tien-geometriat]
-           (let [tie (:tie (first tien-geometriat))]
-             (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
-               (vie-tieosa db tie osa geometriat)))))
-
-        (k/paivita-paloiteltu-tieverkko db))
-      (log/debug "Tieosoiteverkon tuonti kantaan valmis."))
-    (log/debug "Tieosoiteverkon tiedostoa ei löydy konfiguraatiosta. Tuontia ei suoriteta.")))
+      (if shapefile
+        (do
+          (log/debug (str "Tuodaan tieosoiteverkkoa kantaan tiedostosta " shapefile))
+          (jdbc/with-db-transaction [db db]
+                                    (k/tuhoa-tien-osien-ajoradat! db)
+                                    (k/tuhoa-ajoratojen-pituudet! db)
+                                    (shapefile/tuo-ryhmiteltyna
+                                      shapefile :tie
+                                      (fn [tien-geometriat]
+                                          (let [tie (:tie (first tien-geometriat))]
+                                               (doseq [[osa geometriat] (sort-by first (group-by :osa tien-geometriat))]
+                                                      (vie-tieosa db tie osa geometriat)))))
+                                    (k/paivita-paloiteltu-tieverkko db)
+                                    (when (= 0 (:lkm (first (k/tarkista-tieosoitedata db))))
+                                          (throw (Exception. "Yhtään tieosoitetta ei viety kantaan. Tarkista aineiston yhteensopivuus sisäänlukevan kooditoteutuksen kanssa.")))))
+        (throw (Exception. (format "Tieosoiteverkon geometrioiden tiedostopolkua % ei löydy konfiguraatiosta. Tuontia ei suoriteta." shapefile)))))
 
 (defn- lue-csv
   "Tämän funktion voi poistaa sitten, kun oikea integraatio on saatu"
