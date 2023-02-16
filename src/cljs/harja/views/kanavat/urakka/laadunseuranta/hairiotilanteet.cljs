@@ -214,14 +214,14 @@
       {:tyyppi :checkbox
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :teksti "Siirrytty paikalliskäyttöön"})
-    {:nimi :materiaaleja
+    {:nimi :materiaalit
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
                     [materiaalitaulukko e! app])}
     ;; Estetään Lisää Materiaali napin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. 
     (when (not (empty? (:materiaalit app)))
-      {:nimi :lisaa-varaosa
+      {:nimi :lisaa-materiaali
        :tyyppi :komponentti
        :uusi-rivi? true
        :komponentti (fn [_]

@@ -226,12 +226,12 @@
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}
      (lomake/rivi
-       {:nimi :materiaaleja
+       {:nimi :materiaalit
         :tyyppi :komponentti
         :palstoja 2
         :komponentti (fn [_]
                        [materiaalitaulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn materiaali-virheet])})
-     {:nimi :lisaa-varaosa
+     {:nimi :lisaa-materiaali
       :tyyppi :komponentti
       :uusi-rivi? true
       :komponentti (fn [_]
