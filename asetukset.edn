@@ -106,12 +106,11 @@
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
  ;; Huom. Kutsut julkinen.vayla.fi-palveluun epäonnistuvat, jos käyttäjätunnus ja salasana on asetettu. Kutsut ava.vaylapilvi.fi-osoitteeseen epäonnistuvat, jos käyttäjätiedot puuttuvat.
- :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
-                        :tieosoiteverkon-osoite "https://ava.vaylapilvi.fi/ava/Tie/Tieosoiteverkko/[AINEISTO].zip"
-                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
+ :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
+                        :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
 
                         :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
-
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
                         :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
