@@ -120,20 +120,20 @@
      :tyyppi :string :fmt fmt/totuus :leveys 2}]
    hairiotilanteet])
 
-(defn varaosataulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
+(defn materiaalitaulukko [e! {:keys [materiaalit valittu-hairiotilanne] :as app}]
   (let [voi-muokata? (boolean (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-hairiotilanteet (get-in app [:valinnat :urakka :id])))
-        virhe-atom (r/wrap (:varaosat-taulukon-virheet valittu-hairiotilanne)
+        virhe-atom (r/wrap (:materiaalit-taulukon-virheet valittu-hairiotilanne)
                            (fn [virhe] (e! (tiedot/->LisaaVirhe virhe))))
         sort-fn (fn [materiaalin-kirjaus]
-                  (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
+                  (if (and (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])
                            (nil? (:jarjestysnumero materiaalin-kirjaus)))
-                    [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                    [nil (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])]
                     [(:jarjestysnumero materiaalin-kirjaus) nil]))
-        varaosat-atom (r/wrap
+        materiaalit-atom (r/wrap
                         (zipmap (range)
                           (sort-by sort-fn (::materiaali/materiaalit valittu-hairiotilanne)))
                         #(e! (tiedot/->MuokkaaMateriaaleja (sort-by sort-fn (vals %)))))]
-    ;; Estä taulukon näyttäminen, mikäli varaosia ei ole lisättäväksi. Mahdollisesti parempi teksit olisi kehoitus
+    ;; Estä taulukon näyttäminen, mikäli materiaaleja ei ole lisättäväksi. Mahdollisesti parempi teksit olisi kehoitus
     ;; käydä lisäämässä materiaaleja jotenkin hienovaraisesti
     (if (empty? materiaalit)
       [:p "Ei materiaaleja lisättäväksi. Lisää niitä materiaalit välilehdeltä."]
@@ -146,9 +146,9 @@
         :piilota-toiminnot? false
         :tyhja "Ei materiaaleja"
         :otsikko "Materiaalit"
-        :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
+        :muutos #(materiaali-view/hoida-materiaalitaulukon-yksikko %)}
        [{:otsikko "Materiaali"
-         :nimi :varaosa
+         :nimi :tallennetut-materiaalit
          :leveys 3
          :validoi [[:ei-tyhja "Tieto puuttuu"]]
          :tyyppi :valinta
@@ -164,7 +164,7 @@
          :nimi :yksikko
          :leveys 1
          :muokattava? (constantly false)}]
-       varaosat-atom])))
+       materiaalit-atom])))
 
 (defn odottavan-liikenteen-kentat []
   (lomake/ryhma
@@ -214,14 +214,14 @@
       {:tyyppi :checkbox
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :teksti "Siirrytty paikalliskäyttöön"})
-    {:nimi :varaosat
+    {:nimi :materiaalit
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
-                    [varaosataulukko e! app])}
-    ;; Estetään Lisää Varaosanapin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. Myöhemmin nimi varaosa -> materiaalit
+                    [materiaalitaulukko e! app])}
+    ;; Estetään Lisää Materiaali napin näyttäminen, jos materiaalit listauksessa ei ole materiaaleja. 
     (when (not (empty? (:materiaalit app)))
-      {:nimi :lisaa-varaosa
+      {:nimi :lisaa-materiaali
        :tyyppi :komponentti
        :uusi-rivi? true
        :komponentti (fn [_]
@@ -250,7 +250,7 @@
                       {:tallennus-kaynnissa? tallennus-kaynnissa?
                        :disabled (or
                                    (not oikeus?)
-                                   (not (empty? (:varaosat-taulukon-virheet valittu-hairiotilanne)))
+                                   (not (empty? (:materiaalit-taulukon-virheet valittu-hairiotilanne)))
                                    (not (tiedot/voi-tallentaa? valittu-hairiotilanne))
                                    (not (lomake/voi-tallentaa? valittu-hairiotilanne)))}]
 
