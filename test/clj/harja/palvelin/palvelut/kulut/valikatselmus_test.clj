@@ -98,7 +98,8 @@
     ;; Muuttuiko kattohinta?
     (is (= oikaistu-kattohinta-jalkeen oikea-kattohinta))))
 
-(deftest oikaisun-teko-epaonnistuu-alkuvuodesta
+;; Tämä ominaisuus on otettu toistaiseksi pois käytöstä
+#_ (deftest oikaisun-teko-epaonnistuu-alkuvuodesta
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         virheellinen-vuosi (+ hoitokauden-alkuvuosi 2)
@@ -141,8 +142,17 @@
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-tavoitehinnan-oikaisu
                                   +kayttaja-jvh+
-                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))]
-    (is (= 1 vastaus) "Summan muokkaus ei onnistunut")
+                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))
+        ;; Ajankohtien millisekunnit hieman heittävät tallennuksen yhteydessä, niin trimmataan niitä hieman
+        odotettu-vastaus (-> vastaus
+                           (update :harja.domain.muokkaustiedot/muokattu #(pvm/aika-iso8601-ilman-millisekunteja %))
+                           (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))
+        muokattava-oikaisu (-> muokattava-oikaisu
+                             (assoc ::valikatselmus/summa 50000M) ;; Summa muuttuu 2000 -> 50000 ja tätä nimen omaan testataan
+                             (assoc :harja.domain.muokkaustiedot/muokattu (pvm/aika-iso8601-ilman-millisekunteja
+                                                                            (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))))
+                             (update :harja.domain.muokkaustiedot/luotu #(pvm/aika-iso8601-ilman-millisekunteja %)))]
+    (is (= muokattava-oikaisu odotettu-vastaus) "Summan muokkaus ei onnistunut")
 
     (let [oikaisut-jalkeen (get (kutsu-palvelua (:http-palvelin jarjestelma)
                                                 :hae-tavoitehintojen-oikaisut
@@ -151,7 +161,8 @@
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut-jalkeen "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
 
-(deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         virheellinen-vuosi (+ 2 hoitokauden-alkuvuosi)
@@ -485,7 +496,8 @@
     (is (= 20000M (::valikatselmus/urakoitsijan-maksu vastaus)))
     (is (= hoitokauden-alkuvuosi (::valikatselmus/hoitokauden-alkuvuosi vastaus)))))
 
-(deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest paatosta-ei-voi-tehda-urakka-ajan-ulkopuolella
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2018
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
@@ -654,7 +666,8 @@
                   (catch Exception e e))]
     (is (= "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa." (-> vastaus ex-data :virheet :viesti)))))
 
-(deftest lupaussanktio-paatos-test-epaonnistuu-tulevaisuuteen
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest lupaussanktio-paatos-test-epaonnistuu-tulevaisuuteen
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         sanktion-maara -1500M
         hoitokauden-alkuvuosi 2021
@@ -710,7 +723,8 @@
                   (catch Exception e e))]
     (is (= (::valikatselmus/tilaajan-maksu vastaus) bonus-maara))))
 
-(deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
+;; Tarkistus otettu toistaiseksi pois käytöstä
+#_ (deftest lupausbonus-paatos-mh-2019-vuodelle-vuonna-2023-epaonnistuu
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
         bonus-maara 1500M
         hoitokauden-alkuvuosi 2019

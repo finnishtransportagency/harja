@@ -27,7 +27,7 @@
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement rivi-poistettavissa?)
                 :esta-poistaminen-tooltip
-                (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
+                (fn [_] "Sanktioiden muokkaus tapahtuu Laadunseurannan Sakot ja bonukset -osiossa.")})
 
 
 (def grid-skeema

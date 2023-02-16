@@ -1,4 +1,5 @@
-(ns harja.tyokalut.muunnos)
+(ns harja.tyokalut.muunnos
+  (:require [clojure.string :as str]))
 
 (defn ms->s
   "Muuttaa millisekunnit sekunneiksi"
@@ -10,3 +11,8 @@
       arvo
       #?(:clj (Math/round arvo)
          :cljs (js/Math.round arvo)))))
+
+#?(:clj
+   (defn str->double [s]
+     (when (and s (not (str/blank? s)))
+       (Double/parseDouble s))))

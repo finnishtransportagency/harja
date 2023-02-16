@@ -564,6 +564,7 @@
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
+(def tampereen-alueurakan-2017-2022-id (atom nil))
 (def oulun-maanteiden-hoitourakan-2019-2024-id (atom nil))
 (def oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (atom nil))
 (def kajaanin-alueurakan-2014-2019-id (atom nil))
@@ -785,6 +786,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-tampereen-alueurakan-2017-2022-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
+
 (defn hae-kemin-paallystysurakan-2019-2023-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -934,7 +940,7 @@
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024'"))))
 
 (defn hae-pudasjarven-alueurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
@@ -1170,6 +1176,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012"))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! tampereen-alueurakan-2017-2022-id (hae-tampereen-alueurakan-2017-2022-id))
   (reset! kemin-alueurakan-2019-2023-id (hae-kemin-paallystysurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))

@@ -442,5 +442,8 @@
     (digest/sha-256 (to-byte-array x))))
 
 (defn prettyprint-xml [xml]
-  (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
-    (data-xml/indent-str parsittu-xml)))
+  ; Varmista, että Harja on osannut lukea sisään tulleen XML viestin oikein. Jos ei ole, </sisalto> tagi puuttuu
+  (if (and (str/includes? xml "<sisalto>") (not (str/includes? xml "</sisalto>")))
+    xml
+    (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
+      (data-xml/indent-str parsittu-xml))))

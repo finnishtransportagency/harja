@@ -19,16 +19,15 @@
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
 
-(defn laske-asiakastyytyvaisyysbonus
-  [db {:keys [urakka-id maksupvm indeksinimi summa] :as tiedot}]
-  (assert (and maksupvm summa) "Annettava maksupvm ja summa jotta voidaan laskea asiakastyytyväisyysbonuksen arvo.")
+(defn laske-erilliskustannuksen-indeksit [db {:keys [urakka-id pvm indeksinimi summa erilliskustannustyyppi pyorista?] :as tiedot}]
   (first
     (into []
-          (laskutus-q/laske-asiakastyytyvaisyysbonus db
-                                                     urakka-id
-                                                     (konv/sql-date maksupvm)
-                                                     indeksinimi
-                                                     summa))))
+      (laskutus-q/laske-erilliskustannuksen-indeksi db {:pvm (konv/sql-date pvm),
+                                                       :indeksinimi indeksinimi,
+                                                       :summa summa,
+                                                       :urakka_id urakka-id,
+                                                       :tyyppi erilliskustannustyyppi,
+                                                       :pyorista pyorista?}))))
 
 (defn- korotettuna-jos-indeksi-saatavilla
   [rivi avain]

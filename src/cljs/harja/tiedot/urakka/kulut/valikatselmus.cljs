@@ -110,12 +110,17 @@
     (let [oikaisu (merge {::urakka/id (-> @tila/yleiset :urakka :id)
                           :harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          oikaisu)]
-      (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
-                         oikaisu
-                         {:onnistui ->TallennaOikaisuOnnistui
-                          :onnistui-parametrit [id]
-                          :epaonnistui ->TallennaOikaisuEpaonnistui
-                          :paasta-virhe-lapi? true}))
+      ;; Lähetetään oikaisun tallennus serverille vain, jos kaikki tiedot on syötetty
+      (when (and (:harja.domain.kulut.valikatselmus/otsikko oikaisu)
+              (:harja.domain.kulut.valikatselmus/summa oikaisu)
+              (:harja.domain.kulut.valikatselmus/hoitokauden-alkuvuosi oikaisu)
+              (::urakka/id oikaisu))
+        (tuck-apurit/post! :tallenna-tavoitehinnan-oikaisu
+          oikaisu
+          {:onnistui ->TallennaOikaisuOnnistui
+           :onnistui-parametrit [id]
+           :epaonnistui ->TallennaOikaisuEpaonnistui
+           :paasta-virhe-lapi? true})))
     app)
 
   TallennaOikaisuOnnistui
@@ -303,37 +308,39 @@
 
   TallennaPaatos
   (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! app :tallenna-urakan-paatos
-                       paatos
-                       {:onnistui ->TallennaPaatosOnnistui
-                        :onnistui-parametrit [(::valikatselmus/tyyppi paatos)
-                                              (nil? (::valikatselmus/paatoksen-id paatos))]
-                        :epaonnistui ->TallennaPaatosEpaonnistui}))
+    (-> app
+      (assoc :tallennus-kesken? true)
+      (tuck-apurit/post! :tallenna-urakan-paatos
+              paatos
+              {:onnistui ->TallennaPaatosOnnistui
+               :onnistui-parametrit [(::valikatselmus/tyyppi paatos)
+                                     (nil? (::valikatselmus/paatoksen-id paatos))]
+               :epaonnistui ->TallennaPaatosEpaonnistui})))
 
   TallennaPaatosOnnistui
   (process-event [{tyyppi :tyyppi vastaus :vastaus uusi? :uusi?} {:keys [urakan-paatokset] :as app}]
     (viesti/nayta-toast! "Päätöksen tallennus onnistui")
     (let [paivitetyt-paatokset (map #(if (= (select-keys % [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi])
-                                            (select-keys vastaus [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi]))
+                                           (select-keys vastaus [::valikatselmus/tyyppi ::valikatselmus/hoitokauden-alkuvuosi]))
                                        vastaus
                                        %)
-                                    urakan-paatokset)
+                                 urakan-paatokset)
           paivitetyt-paatokset (if uusi? (conj paivitetyt-paatokset vastaus)
                                          paivitetyt-paatokset)]
-      (do
-        ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
-        (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
-        (hae-lupaustiedot app)
-        (-> app
-            (assoc :urakan-paatokset paivitetyt-paatokset)
-            (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
-            (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)))))
+      ;; Jos tallennettiin lupauspäätös, niin joudutaan hakemaan lupaukset uusiksi.
+      (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
+      (hae-lupaustiedot app)
+      (-> app
+        (assoc :urakan-paatokset paivitetyt-paatokset)
+        (assoc-in [(tyyppi tyyppi->lomake) ::valikatselmus/paatoksen-id] (::valikatselmus/paatoksen-id vastaus))
+        (assoc-in [(tyyppi tyyppi->lomake) :muokataan?] false)
+        (assoc :tallennus-kesken? false))))
 
   TallennaPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "TallennaPaatosEpaonnistui" vastaus)
     (viesti/nayta-toast! "Päätöksen tallennuksessa tapahtui virhe" :varoitus)
-    app)
+    (assoc app :tallennus-kesken? false))
 
   PoistaPaatos
   (process-event [{id :id tyyppi :tyyppi} app]
@@ -364,12 +371,12 @@
 
   PoistaLupausPaatos
   (process-event [{id :id} app]
-    (do
+    (-> app
       (tuck-apurit/post! :poista-paatos
                          {::valikatselmus/paatoksen-id id}
                          {:onnistui ->PoistaLupausPaatosOnnistui
                           :epaonnistui ->PoistaLupausPaatosEpaonnistui})
-      app))
+      (assoc :tallennus-kesken? true)))
 
   PoistaLupausPaatosOnnistui
   (process-event [{vastaus :vastaus} app]
@@ -378,11 +385,11 @@
     (kustannusten-seuranta-tiedot/hae-kustannukset (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app) nil nil)
     (hae-lupaustiedot app)
     (viesti/nayta-toast! "Päätöksen poisto onnistui!")
-    app)
+    (assoc app :tallennus-kesken? false))
 
   PoistaLupausPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "PoistaLupausPaatosEpaonnistui" vastaus)
     (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
-    app)
+    (assoc app :tallennus-kesken? false))
   )

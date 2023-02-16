@@ -26,20 +26,21 @@
                          groupit) ]
     yhteenlasketut))
 
-(defn hae-tm-combo [db params]
+(defn hae-tm-combo [db {:keys [vain-mhut?] :as params}]
   (let [mhut (tm-q/hae-tehtavamaarat-ja-toteumat-aikavalilla db params)
-        yht (vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla db params)
+        yht (when-not vain-mhut?
+              (vemtr-q/hae-yh-suunnitellut-ja-toteutuneet-aikavalilla db params))
         paluuarvo (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys)
                            (yhdistele-toimenpiteet-ja-tehtavat mhut yht))]
     paluuarvo))
 
 (defn suorita
-  [db user {:keys [alkupvm loppupvm testiversio?] :as params}]
+  [db user {:keys [alkupvm loppupvm] :as params}]
   (let [{:keys [otsikot rivit debug]} (tm-r/muodosta-taulukko db user hae-tm-combo params)]
     [:raportti
      {:nimi "Valtakunnallinen määrätoteumaraportti"}
      [:taulukko
-      {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm) (when testiversio? " - TESTIVERSIO"))
+      {:otsikko (str "Määrätoteumat ajalta " (pvm/pvm alkupvm) "-" (pvm/pvm loppupvm))
        :sheet-nimi "Määrätoteumat"}
       otsikot
       rivit]]))

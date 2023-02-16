@@ -1,12 +1,11 @@
 (ns harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma
-  (:require [hiccup.core :refer [html]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clj-time.core :as time]
             [clj-time.periodic :as time-period]
-            [clj-time.coerce :as coerce]
             [harja.tyokalut.xml :as xml]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.pvm :as pvm])
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
 (def +xsd-polku+ "xsd/sampo/outbound/")
@@ -43,7 +42,7 @@
     :code koodi}])
 
 (defn kustannussuunnitelmajakso [pvm]
-  (let [vuosi (time/year (coerce/from-sql-date pvm))]
+  (let [vuosi (pvm/vuosi pvm)]
     (str "1.1." vuosi "-31.12." vuosi)))
 
 (defn kustannussuunnitelma-hiccup [maksuera]

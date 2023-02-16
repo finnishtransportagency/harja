@@ -131,6 +131,7 @@ SELECT
   ypk.kohdenumero                     AS yllapitokohde_numero,
   ypk.nimi                            AS yllapitokohde_nimi,
   ypk.id                              AS yllapitokohde_id,
+  ypk.yhaid                           AS yllapitokohde_yhaid,
 
   t.nimi                              AS tyyppi_nimi,
   t.id                                AS tyyppi_id,
@@ -169,6 +170,7 @@ WHERE
 -- row-fn: muunna-urakan-bonus
 -- Palauttaa kaikki urakalle kirjatut bonukset perintäpäivämäärällä ja toimenpideinstanssilla rajattuna
 -- Käytetään siis mm. Laadunseuranta/sanktiot välilehdellä
+-- Filtteröi muu tyyppiset erilliskustannukset pois, koska niitä ei voi tämän renderöivässä näkymässä muokata eikä lisätä
 
 -- Bonukset erilliskustannuksista
 SELECT ek.id,
@@ -181,13 +183,13 @@ SELECT ek.id,
        TRUE                   as bonus,
        ek.kasittelytapa       as kasittelytapa,
        ek.toimenpideinstanssi AS toimenpideinstanssi,
-       CASE
-           WHEN ek.tyyppi::TEXT IN ('lupausbonus', 'asiakastyytyvaisyysbonus')
-               THEN (SELECT korotus
-                       FROM sanktion_indeksikorotus(ek.pvm, ek.indeksin_nimi, ek.rahasumma, :urakka::INTEGER,
-                                                    NULL::SANKTIOLAJI))
-           ELSE 0
-           END                AS indeksikorjaus,   -- TODO Varmista laskusäännöt
+       (SELECT korotus
+        from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi, ek.rahasumma,
+                                                 ek.urakka, ek.tyyppi,
+                                                 CASE
+                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
+                                                     ELSE FALSE
+                                                     END)) AS indeksikorjaus,
        ek.lisatieto           AS lisatieto,
        --  Muilla urakkatyypeillä kuin ylläpidon urakoilla ei voi olla bonukseen liitettyä ylläpitokohdetta
        NULL AS yllapitokohde_tr_numero,
@@ -197,10 +199,15 @@ SELECT ek.id,
        NULL AS yllapitokohde_tr_loppuetaisyys,
        NULL AS yllapitokohde_numero,
        NULL AS yllapitokohde_nimi,
-       NULL AS yllapitokohde_id
+       NULL AS yllapitokohde_id,
+       NULL AS yllapitokohde_yhaid
   FROM erilliskustannus ek
+      JOIN urakka u ON ek.urakka = u.id
  WHERE ek.urakka = :urakka
-   AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
+   -- MHU urakoille on olennaista, että bonukset on tallennettu 23150 koodilla olevalle toimenpideinstanssille
+   -- eli hoidon johdolle. Alueurakoilla tätä vaatimusta ei ole. Joten bonukset voivat kohdistua
+   -- vapaammin mille tahansa toimenpideinstanssille
+   AND (u.tyyppi = 'hoito' OR (u.tyyppi = 'teiden-hoito' AND ek.toimenpideinstanssi = (SELECT tpi.id AS id
                                    FROM toimenpideinstanssi tpi
                                             JOIN toimenpidekoodi tpk3 ON tpk3.id = tpi.toimenpide
                                             JOIN toimenpidekoodi tpk2 ON tpk3.emo = tpk2.id,
@@ -208,9 +215,10 @@ SELECT ek.id,
                                   WHERE tpi.urakka = :urakka
                                     AND m.toimenpideinstanssi = tpi.id
                                     AND tpk2.koodi = '23150'
-                                  LIMIT 1)
+                                  LIMIT 1)))
    AND ek.pvm BETWEEN :alku AND :loppu
    AND ek.poistettu IS NOT TRUE
+   AND ek.tyyppi != 'muu'::erilliskustannustyyppi
 
 UNION
 
@@ -240,7 +248,8 @@ SELECT s.id,
        ypk.tr_loppuetaisyys                AS yllapitokohde_tr_loppuetaisyys,
        ypk.kohdenumero                     AS yllapitokohde_numero,
        ypk.nimi                            AS yllapitokohde_nimi,
-       ypk.id                              AS yllapitokohde_id
+       ypk.id                              AS yllapitokohde_id,
+       ypk.yhaid                           AS yllapitokohde_yhaid
   FROM sanktio s
            JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
            LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id

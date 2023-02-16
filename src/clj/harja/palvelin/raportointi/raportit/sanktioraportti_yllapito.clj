@@ -10,40 +10,39 @@
 
   Riveinä muistutusten ja sakkojen määrä ylläpitoluokittain ja kaikki luokat yhteensä."
   (:require [jeesql.core :refer [defqueries]]
-            [taoensso.timbre :as log]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.sanktioraportti-yhteiset :as yhteiset]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-            [harja.kyselyt.konversio :as konv]))
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
+            [harja.kyselyt.sanktiot :as sanktiot-kyselyt]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
-(defn- yllapitoluokan-raporttirivit
-  [luokka luokan-rivit alueet {:keys [yhteensa-sarake?] :as optiot}]
-  [{:otsikko (if luokka
-               (str "Ylläpitoluokka " (yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi luokka))
-               "Ei ylläpitoluokkaa")}
-   (yhteiset/luo-rivi-muistutusten-maara yhteiset/+muistutusrivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})
-   (yhteiset/luo-rivi-sakkojen-summa yhteiset/+sakkorivin-nimi-yllapito+ luokan-rivit alueet {:yhteensa-sarake? yhteensa-sarake?})])
-
-(defn suorita [db user parametrit]
-  (let [raportin-rivit-fn (fn [{:keys [naytettavat-alueet sanktiot-kannassa yhteensa-sarake?]}]
-                            (let [optiot {:yhteensa-sarake? yhteensa-sarake? :urakkatyyppi (:urakkatyyppi parametrit)}
-                                  sanktiot-yllapitoluokittain (group-by :yllapitoluokka sanktiot-kannassa)
-                                  yllapitoluokittaiset-rivit (mapcat (fn [[luokka luokan-rivit]]
-                                                                       (yllapitoluokan-raporttirivit luokka luokan-rivit naytettavat-alueet optiot))
-                                                                     sanktiot-yllapitoluokittain)
-                                  yhteensa-rivit (yhteiset/raporttirivit-yhteensa sanktiot-kannassa naytettavat-alueet optiot)]
-                              (into []
-                                    (when (> (count naytettavat-alueet) 0)
-                                      (concat
-                                        yllapitoluokittaiset-rivit
-                                        yhteensa-rivit)))))
-        db-haku-fn hae-sanktiot-yllapidon-raportille
-        raportin-nimi "Sakko- ja bonusraportti"
+(defn- jasenna-raportin-nimi [db parametrit]
+  (let [urakan-tiedot (if (not (nil? (:urakka-id parametrit)))
+                        (first (urakat-kyselyt/hae-urakka db (:urakka-id parametrit)))
+                        nil)
+        hallintayksikon-tiedot (if (not (nil? (:hallintayksikko-id parametrit)))
+                                 (first (organisaatiot-kyselyt/hae-organisaatio db (:hallintayksikko-id parametrit)))
+                                 nil)
+        raportin-tyyppi (if (nil? (:kasittelija parametrit))
+                          :html
+                          (:kasittelija parametrit))
+        raportin-nimi (cond
+                        (and (= :html raportin-tyyppi) urakan-tiedot) (:nimi urakan-tiedot)
+                        (and (= :html raportin-tyyppi) hallintayksikon-tiedot) (:nimi hallintayksikon-tiedot)
+                        (and (= :html raportin-tyyppi) (nil? hallintayksikon-tiedot) (nil? urakan-tiedot)) "Koko maa"
+                        :else "Sanktiot, bonukset ja arvonvähennykset")]
+    raportin-nimi))
+(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakkatyyppi alkupvm loppupvm] :as parametrit}]
+  (let [sanktiot (hae-sanktiot-yllapidon-raportille db
+                   {:urakka urakka-id
+                    :hallintayksikko hallintayksikko-id
+                    :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                    :alku alkupvm
+                    :loppu loppupvm})
+        raportin-nimi (jasenna-raportin-nimi db parametrit)
         info-teksti "Huom! Sakot ovat miinusmerkkisiä ja bonukset plusmerkkisiä."]
 
-    (yhteiset/suorita-runko db user (merge parametrit {:raportin-rivit-fn raportin-rivit-fn
-                                                       :db-haku-fn db-haku-fn
+    (yhteiset/suorita-runko db user (merge parametrit {:sanktiot sanktiot
                                                        :raportin-nimi raportin-nimi
                                                        :info-teksti info-teksti}))))

@@ -11,13 +11,17 @@
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.views.kartta :as kartta]))
+            [harja.views.kartta :as kartta]
+            [harja.tiedot.navigaatio :as nav]))
 
 
-(defn hakuehdot* [e! {:keys [valinnat aikavali-otsikko voi-valita-trn-kartalta? urakan-tyomenetelmat] :as app}]
+(defn hakuehdot* [e! {:keys [valinnat]}]
   (let [nayta-atom (atom (get valinnat :nayta :kaikki-kohteet))
         tr-atom (atom (:tr valinnat))
-        aikavali-atom (atom (:aikavali valinnat))
+        ;; Jos urakan tyyppi on päällystys käytetään 1.1 -> 31.12, muuten käytetään hoitokautta.
+        aikavali-atom (if (= (:tyyppi @nav/valittu-urakka) :paallystys)
+                        (atom (:aikavali-kuluva valinnat))
+                        (atom (:aikavali-hoitokausi valinnat)))
         haku-fn (fn [] (e! (yhteiset-tiedot/->HaeItemit)))]
     (add-watch nayta-atom
                :nayta-haku

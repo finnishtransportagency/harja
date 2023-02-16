@@ -280,9 +280,9 @@
                 :tasaa :oikea :kokonaisluku? true}
                {:otsikko "Let" :nimi ::tierekisteri/let :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}
-               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata
+               {:otsikko "Ajo\u00ADrata" :nimi ::paikkaus/ajorata :kokonaisluku? true
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
-               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista
+               {:otsikko "Kais\u00ADta" :nimi ::paikkaus/kaista  :kokonaisluku? true
                 :tyyppi :positiivinen-numero :leveys 4 :tasaa :oikea}
                {:otsikko "Pit. (m)" :nimi :suirun-pituus :leveys 4 :tyyppi :positiivinen-numero
                 :tasaa :oikea :kokonaisluku? true}]

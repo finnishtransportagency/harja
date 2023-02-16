@@ -187,6 +187,21 @@
           :else
           (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
+(defn- poista-urakan-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja]
+  (let [paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)]
+    (doseq [paatos paatokset]
+      (cond
+        (and
+          (= (::valikatselmus/tyyppi paatos) "lupaussanktio")
+          (not (nil? (::valikatselmus/sanktio-id paatos))))
+        (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (::valikatselmus/sanktio-id paatos) :urakka-id urakka-id})
+        (and
+          (= (::valikatselmus/tyyppi paatos) "lupausbonus")
+          (not (nil? (:erilliskustannus_id paatos))))
+        (toteumat-palvelu/poista-erilliskustannus db kayttaja
+          {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})))
+    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi (:id kayttaja))))
+
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do
     (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
@@ -221,16 +236,16 @@
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
+                                      ::muokkaustiedot/muokattu (pvm/nyt)
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
                                       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+    (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
     (if (::valikatselmus/oikaisun-id tiedot)
       (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
       (valikatselmus-q/tee-oikaisu db oikaisu-specql))))
@@ -249,8 +264,8 @@
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+    (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
     (valikatselmus-q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db kayttaja tiedot]
@@ -291,7 +306,7 @@
                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
           _ (do
               (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
               (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
           vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
           oikaisu-specql (merge
@@ -304,7 +319,8 @@
                             ::muokkaustiedot/muokattu (pvm/nyt)
                             ::valikatselmus/uusi-kattohinta (bigdec uusi-kattohinta)
                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+      (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
+
       (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
         (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
             (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
@@ -323,8 +339,8 @@
                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
           _ (do
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+      (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
@@ -345,7 +361,7 @@
                  ::muokkaustiedot/luoja-id (:id kayttaja)
                  ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))}))
+                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))}))
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -436,7 +452,7 @@
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
-            (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
+            #_ (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})

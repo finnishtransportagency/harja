@@ -123,11 +123,13 @@
        :valitse-oletus? true
        :valinta-arvo :tpi_id
        :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+       ;; MHU urakoiden toimenpideinstanssi on määrätty. Alueurakoilla ei
        :valinnat (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                    (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit)
                    @tiedot-urakka/urakan-toimenpideinstanssit)
        ::lomake/col-luokka "col-xs-12"
-       :disabled? true}
+       ;; Koska MHU urakoilla on määrätty toimenpideinstanssi, niin ei anneta käyttäjän vaihtaa, mutta alueurakoille se sallitaan
+       :disabled? (if (= :teiden-hoito (:tyyppi @nav/valittu-urakka)) true false)}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
@@ -230,7 +232,7 @@
        :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
-      (when-not lukutila?
+      (if-not lukutila?
         {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
          :tyyppi :komponentti
          ::lomake/col-luokka "col-xs-12"
@@ -243,7 +245,20 @@
                           :poista-lisatty-liite-fn #(e! (tiedot/->PoistaLisattyLiite))
                           :salli-poistaa-tallennettu-liite? true
                           :nayta-lisatyt-liitteet? false
-                          :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])})]
+                          :poista-tallennettu-liite-fn #(e! (tiedot/->PoistaTallennettuLiite %))}])}
+        {:otsikko "Liitteet" :nimi :liitteet :kaariva-luokka "sanktioliite"
+         :tyyppi :komponentti
+         ::lomake/col-luokka "col-xs-12"
+         :komponentti (fn [_]
+                        [:div
+                         (if (and (get-in app [:lomake :liitteet])
+                               (not (empty? (get-in app [:lomake :liitteet]))))
+                           (doall
+                             (for [l (get-in app [:lomake :liitteet])]
+                               ^{:key l}
+                               [liitteet/liitetiedosto l {:salli-poisto? false
+                                                          :nayta-koko? true}]))
+                           "Ei liitettä")])})]
      lomakkeen-tiedot]))
 
 

@@ -28,4 +28,7 @@ RUN apt-get -y autoremove && \
     rm -rf /var/lib/apt/lists/*
 
 USER circleci
-RUN mkdir -p /tmp/cypress-run && cd /tmp/cypress-run && npm i cypress@^9.1.1 && $(npm bin)/cypress verify
+RUN mkdir -p /tmp/cypress-run
+RUN cd /tmp/cypress-run
+RUN npm i cypress@^9.1.1
+RUN npx cypress verify

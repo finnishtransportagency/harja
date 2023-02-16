@@ -32,6 +32,7 @@
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
+(def harmaa-korostettu-vari "#FAFAFA")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -207,6 +208,8 @@
                   [rivi {}])
                 lihavoi-rivi? (:lihavoi? optiot)
                 korosta-rivi? (:korosta? optiot)
+                valkoinen? (:valkoinen? optiot)
+                korosta-harmaa? (:korosta-harmaa? optiot)
                 korosta-hennosti? (:korosta-hennosti? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
@@ -218,6 +221,12 @@
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
                          {:background-color korostettu-vari
                           :color "white"})
+              valkoinen? (when valkoinen?
+                           {:background-color "white"
+                            :color "black"})
+              korosta-harmaa? (when korosta-harmaa?
+                                  {:background-color harmaa-korostettu-vari
+                                   :color "black"})
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
@@ -253,6 +262,8 @@
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
+                               valkoinen?
+                               korosta-harmaa?
                                (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
                                lihavoi?)
               (when korosta?
@@ -330,6 +341,11 @@
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
+
+(defmethod muodosta-pdf :jakaja [[_ _]]
+  [:fo:block {:border "solid 0.1mm gray"
+              :margin-top "30px"
+              :margin-bottom "30px"}])
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
@@ -419,6 +435,7 @@
         [:fo:block
             (fo/checkbox koko vaihtoehto)
             " " otsikko]])]]])
+
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
@@ -474,6 +491,9 @@
 
                                         :content-height (str (+ 5 (count rivit)) "cm")}
            aikajana]]))]))
+
+(defmethod muodosta-pdf :boolean [[_ {:keys [arvo]}]]
+  (if arvo "Kyllä" "Ei"))
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)
