@@ -113,9 +113,9 @@
         (remove #(empty? (dissoc % :jarjestysnumero)))
         ;; Lisätään käytetty määrä lähetettävään mappiin ja
         ;; muutetaan miinusmerkkiseksi (muuten tulee merkattua lisäystä eikä käyttöä)
-        (map #(assoc-in % [:varaosa ::materiaalit/maara] (- (:maara %))))
+        (map #(assoc-in % [:tallennetut-materiaalit ::materiaalit/maara] (- (:maara %))))
         ;; Käsitellään pelkästään lähetettävää mappia
-        (map :varaosa)
+        (map :tallennetut-materiaalit)
         ;; Lisätään lisätieto ja materiaalin pvm, koska se on required field. Materiaalia
         ;; muokatessa kumminkin ei vaihdeta pvm:ää
         (map #(assoc % ::materiaalit/pvm (or (::hairiotilanne/havaintoaika hairiotilanne) (pvm/nyt))
@@ -139,8 +139,8 @@
         ;; Käsitellään pelkästään poistetuksi merkattuja
         (filter :poistettu)
         ;; Käsitellään kannasta materiaalin poistaminen
-        (map (fn [{varaosa :varaosa}]
-               (select-keys varaosa #{::materiaalit/id ::materiaalit/urakka-id}))))
+        (map (fn [{materiaali :tallennetut-materiaalit}]
+               (select-keys materiaali #{::materiaalit/id ::materiaalit/urakka-id}))))
       conj materiaali-kirjaukset)))
 
 (defn hairiotilanteiden-hakuparametrit [valinnat]
@@ -273,7 +273,7 @@
   ValitseHairiotilanne
   (process-event [{hairiotilanne :hairiotilanne} {:keys [materiaalit] :as app}]
     ;;hairiotilanteiden mukana voisi kannasta tuoda myös häiriötilanteiden materiaalit
-    ;;mutta ne täytyisi joka tapauksessa formatoida varaosat gridille sopivaan muotoon,
+    ;;mutta ne täytyisi joka tapauksessa formatoida materiaalit gridille sopivaan muotoon,
     ;;niin sama formatoida jo haetuista materiaalilistauksista.
     (let [materiaali-kirjaukset (mapcat (fn [materiaalilistaus]
                                           (transduce
@@ -282,11 +282,11 @@
                                               ;; materiaalikirjaukset
                                               (filter #(= (::hairiotilanne/id hairiotilanne)
                                                           (::materiaalit/hairiotilanne %)))
-                                              ;; Varaosat gridissä on :maara, :yksikko ja :varaosa nimiset sarakkeet. Materiaalin
+                                              ;; Materiaalit gridissä on :maara, :yksikko ja :tallennetut-materiaalit nimiset sarakkeet. Materiaalin
                                               ;; nimi, urakka-id, pvm ja id tarvitaan tallentamista varten.
                                               (map #(identity {:maara (- (::materiaalit/maara %))
                                                                :yksikko (::materiaalit/yksikko materiaalilistaus)
-                                                               :varaosa {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
+                                                               :tallennetut-materiaalit {::materiaalit/nimi (::materiaalit/nimi materiaalilistaus)
                                                                          ::materiaalit/urakka-id (::materiaalit/urakka-id materiaalilistaus)
                                                                          ::materiaalit/pvm (::materiaalit/pvm %)
                                                                          ::materiaalit/id (::materiaalit/id %)
@@ -316,7 +316,7 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:valittu-hairiotilanne :varaosat-taulukon-virheet] virhe))
+    (assoc-in app [:valittu-hairiotilanne :materiaalit-taulukon-virheet] virhe))
 
   KytkePaikannusKaynnissa
   (process-event [_ app]
