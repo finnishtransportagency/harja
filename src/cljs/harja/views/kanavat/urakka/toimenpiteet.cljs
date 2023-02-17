@@ -72,15 +72,15 @@
       :rivi-valittu-fn rivi-valittu-fn
       :leveys 5})])
 
-(defn varaosataulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet]
+(defn materiaalitaulukko [urakan-materiaalit avattu-toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn materiaali-virheet]
   (when urakan-materiaalit
     (let [voi-muokata? true
           avatun-materiaalit (::materiaali/materiaalit avattu-toimenpide)
-          virhe-atom (r/wrap varaosat-virheet lisaa-virhe-fn)
+          virhe-atom (r/wrap materiaali-virheet lisaa-virhe-fn)
           vertailuavaimet-jarjestysnumerolla (fn [materiaalin-kirjaus]
-                                               (if (and (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])
+                                               (if (and (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])
                                                         (nil? (:jarjestysnumero materiaalin-kirjaus)))
-                                                 [nil (get-in materiaalin-kirjaus [:varaosa ::materiaali/nimi])]
+                                                 [nil (get-in materiaalin-kirjaus [:tallennetut-materiaalit ::materiaali/nimi])]
                                                  [(:jarjestysnumero materiaalin-kirjaus) nil]))
           muokatut-atom (r/wrap
                          (zipmap (range)
@@ -95,14 +95,14 @@
         :voi-kumota? false
         :virheet virhe-atom
         :piilota-toiminnot? false
-        :tyhja "Ei varaosia"
-        :otsikko "Varaosat"
-        :muutos #(materiaali-view/hoida-varaosataulukon-yksikko %)}
-       [{:otsikko "Varaosa"
-         :nimi :varaosa
+        :tyhja "Ei materiaaleja"
+        :otsikko "Materiaalit"
+        :muutos #(materiaali-view/hoida-materiaalitaulukon-yksikko %)}
+       [{:otsikko "Materiaali"
+         :nimi :tallennetut-materiaalit
          :validoi [[:ei-tyhja "Tieto puuttuu"]]
          :tyyppi :valinta
-         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse varaosa -")
+         :valinta-nayta #(or (::materiaali/nimi %) "- Valitse materiaali -")
          :valinnat urakan-materiaalit
          :leveys 3}
         {:otsikko "Käytetty määrä"
@@ -119,7 +119,7 @@
 
 (defn toimenpidelomakkeen-kentat [{:keys [toimenpide sopimukset kohteet huoltokohteet
                                           toimenpideinstanssit tehtavat urakan-materiaalit lisaa-materiaali-fn
-                                          muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet paikannus-kaynnissa-fn]}]
+                                          muokkaa-materiaaleja-fn lisaa-virhe-fn materiaali-virheet paikannus-kaynnissa-fn]}]
   (assert urakan-materiaalit)
   (let [tehtava (valittu-tehtava toimenpide)
         valittu-kohde-id (get-in toimenpide [::kanavan-toimenpide/kohde ::kohde/id])
@@ -226,17 +226,17 @@
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}
      (lomake/rivi
-       {:nimi :varaosat
+       {:nimi :materiaalit
         :tyyppi :komponentti
         :palstoja 2
         :komponentti (fn [_]
-                       [varaosataulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn varaosat-virheet])})
-     {:nimi :lisaa-varaosa
+                       [materiaalitaulukko urakan-materiaalit toimenpide muokkaa-materiaaleja-fn lisaa-virhe-fn materiaali-virheet])})
+     {:nimi :lisaa-materiaali
       :tyyppi :komponentti
       :uusi-rivi? true
       :komponentti (fn [_]
                      (assert lisaa-materiaali-fn)
-                     [napit/uusi "Lisää varaosa"
+                     [napit/uusi "Lisää materiaali"
                       lisaa-materiaali-fn
                       ;; todo: katsotaan oikeustarkistuksesta näytetäänkö nappia
                       {:disabled false}])}]))
@@ -256,7 +256,7 @@
     #(tallenna-lomake-fn toimenpide)
     {:tallennus-kaynnissa? tallennus-kaynnissa?
      :disabled (or (not (lomake/voi-tallentaa? toimenpide))
-                   (not-empty (:varaosat-taulukon-virheet toimenpide)))}]
+                   (not-empty (:materiaalit-taulukon-virheet toimenpide)))}]
    (when (not (nil? (::kanavan-toimenpide/id toimenpide)))
      [napit/poista
       "Poista"
@@ -298,6 +298,6 @@
                                      :lisaa-materiaali-fn lisaa-materiaali-fn
                                      :muokkaa-materiaaleja-fn muokkaa-materiaaleja-fn
                                      :lisaa-virhe-fn lisaa-virhe-fn
-                                     :varaosat-virheet (-> app :avattu-toimenpide :varaosat-taulukon-virheet)})
+                                     :materiaali-virheet (-> app :avattu-toimenpide :materiaalit-taulukon-virheet)})
         avattu-toimenpide]
        [ajax-loader "Ladataan..."])]))

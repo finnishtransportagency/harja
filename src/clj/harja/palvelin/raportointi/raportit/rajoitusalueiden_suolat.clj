@@ -51,8 +51,8 @@
   [{:leveys 0.8 :fmt :kokonaisluku :otsikko "Tie"}
    {:leveys 2.5 :fmt :teksti :otsikko "Osoiteväli"}
    {:leveys 2.5 :fmt :teksti :otsikko "Pohjavesialue (tunnus)" :jos-tyhja "-"}
-   {:leveys 1.5 :fmt :numero :otsikko "Pituus (m)" :jos-tyhja "-"}
-   {:leveys 1.5 :fmt :numero :otsikko "Pituus ajoradat (m)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :kokonaisluku :otsikko "Pituus (m)" :jos-tyhja "-"}
+   {:leveys 1.5 :fmt :kokonaisluku :otsikko "Pituus ajoradat (m)" :jos-tyhja "-"}
    {:leveys 1.5 :fmt :numero :otsikko "Formiaatit yhteensä (t)"}
    {:leveys 1.5 :fmt :numero :otsikko "Formiaatit (t/ajoratakm)" :jos-tyhja "-"}
    {:leveys 1.5 :fmt :numero :otsikko "Talvisuola yhteensä (t)" :jos-tyhja "-"}

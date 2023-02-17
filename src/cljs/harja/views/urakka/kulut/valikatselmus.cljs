@@ -437,6 +437,7 @@
         lupausbonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaussanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+        tallennus-kesken? (:tallennus-kesken? app)
         urakoitsijan-maksu (cond lupaussanktio lupaussanktio
                                  tavoite-taytetty? 0M
                                  :else nil)
@@ -512,7 +513,9 @@
               #(e! (valikatselmus-tiedot/->TallennaPaatos
                      ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
                      (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))
-              {:disabled (not voi-muokata?)}]
+              {:disabled (or
+                           tallennus-kesken?
+                           (not voi-muokata?))}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
@@ -523,7 +526,9 @@
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
               {:luokka "nappi-toissijainen napiton-nappi"
                :ikoni [ikonit/harja-icon-action-undo]
-               :disabled (not voi-muokata?)}]
+               :disabled (or
+                           tallennus-kesken?
+                           (not voi-muokata?))}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])

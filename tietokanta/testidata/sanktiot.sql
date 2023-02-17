@@ -180,6 +180,20 @@ VALUES ('muistutus'::SANKTIOLAJI, NULL, '2016-10-12 06:06.37',
                 -- 1, Muut tuote
           WHERE koodi = 1), FALSE, 2);
 
+-- Arvonvahennyssanktio
+INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                            luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus)
+VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '',
+        'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Vahvat perusteet', 1, NOW(), '2015-10-11 06:06.37',
+        '2015-10-11 06:06.37', FALSE, FALSE, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
+        'Arvonvähennyksen sisältävä laatupoikkeama 123');
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2015-10-12 06:06.37', 'MAKU 2015',
+        (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Arvonvähennyksen sisältävä laatupoikkeama 123'),
+        (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Oulu Liikenneympäristön hoito TP 2014-2019'),
+        (SELECT id FROM sanktiotyyppi WHERE koodi = 8), FALSE, 1);
+
+
 -----------------------------------------
 -- Pudasjärven alueurakka 2007-2012
 -----------------------------------------

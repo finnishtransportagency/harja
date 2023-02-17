@@ -47,9 +47,9 @@
 
  :itmf
  {:url #=(eval (str "tcp://"
-                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
-                 ":"
-                 (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
+                   ":"
+                   (harja.tyokalut.env/env "HARJA_ITMF_BROKER_PORT" 61626)))
   :kayttaja ""
   :salasana ""
   :tyyppi :activemq
@@ -93,6 +93,12 @@
  :tierekisteri {:url ""
                 :uudelleenlahetys-aikavali-minuutteina nil}
 
+ :digiroad {:url "https://api.testivaylapilvi.fi/digiroad/externalApi/"
+            ;; Testipalvelimen avain projektin salaisuuksien jakamiseen tarkoitetussa paikassa
+            :api-key #=(eval (some->
+                                 (slurp "../.harja/digiroad-api-key")
+                                 (clojure.string/trim-newline)))}
+
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
  :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
@@ -100,28 +106,27 @@
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
  ;; Huom. Kutsut julkinen.vayla.fi-palveluun epäonnistuvat, jos käyttäjätunnus ja salasana on asetettu. Kutsut ava.vaylapilvi.fi-osoitteeseen epäonnistuvat, jos käyttäjätiedot puuttuvat.
- :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/Tieosoiteverkko.shp"
-                        :tieosoiteverkon-osoite "https://ava.vaylapilvi.fi/ava/Tie/Tieosoiteverkko/[AINEISTO].zip"
-                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/Tieosoiteverkko.shz"
+ :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
+                        :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
+                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
 
                         :laajennetun-tieosoiteverkon-tiedot "../.harja/harjalle_ajorata_kaista_puoli_20210825.csv"
-
 
                         :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
                         :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
                         :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/pohjavesialueetLine.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/TL132.shp"
-                        :talvihoidon-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL132&outputFormat=SHAPE-ZIP"
-                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/TL132.shz"
+                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/talvihoitoluokkaLine.shp"
+                        :talvihoidon-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:talvihoitoluokka&outputFormat=SHAPE-ZIP"
+                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/talvihoitoluokkaLine.shz"
 
-                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/TL149.shp"
-                        :soratien-hoitoluokkien-osoite "https://julkinen.vayla.fi/inspirepalvelu/avoin/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=avoin:TL149&outputFormat=SHAPE-ZIP"
-                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/TL149.shz"
+                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/soratieluokkaLine.shp"
+                        :soratien-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:soratieluokka&outputFormat=SHAPE-ZIP"
+                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
 
                         :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
                         :siltojen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
-                        :siltojen-tuontikohde "./shp/Sillat/TL261_H.shz"
+                        :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
 
                         :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
                         :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:tie_hoitourakat&outputformat=shape-zip"

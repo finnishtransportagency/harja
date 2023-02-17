@@ -427,7 +427,7 @@
     (let [urakka-id (get-in app [:valinnat :urakka-id])]
       (if (and (not (:suunniteltujen-toiden-haku-kaynnissa? app)) (some? urakka-id))
         (do (tuck-tyokalut/post! :yksikkohintaiset-tyot
-                                 {:urakka urakka-id}
+                                 urakka-id
                                  {:onnistui ->SuunnitellutTyotHaettu
                                          :epaonnistui ->SuunnitellutTyotEiHaettu})
             (assoc app :suunniteltujen-toiden-haku-kaynnissa? true))
