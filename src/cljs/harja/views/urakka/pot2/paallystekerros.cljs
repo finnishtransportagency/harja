@@ -67,8 +67,10 @@
       :ohjaus ohjauskahva :validoi-alussa? true
       :virheet virheet-atom
       :piilota-toiminnot? true
-      :rivi-validointi (:rivi validointi)
-      :taulukko-validointi (:taulukko validointi)
+      ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
+      ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
+      :rivi-varoitus (:rivi validointi)
+      :taulukko-varoitus (:taulukko validointi)
       :tyhja (if (nil? @kohdeosat-atom)
                [ajax-loader "Haetaan kohdeosia..."]
                [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
