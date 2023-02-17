@@ -163,30 +163,28 @@
   ;; Palautetaan integer (Long) montako alusta annetulla palvelulla/toimenpiteellä/suunnalla
   (apply + (map
             (fn [tapahtuma]
-              (let [yhteensa (map
+              (let [yhteensa (filter
                               (fn [alus]
                                 (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
                                       palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot tapahtuma)))]
-                                  (if (or
-                                       ;; Lasketaan annetun toiminnon annettua suuntaa
-                                       (and
-                                        (= toiminto haluttu-toiminto)
-                                        (= (::lt-alus/suunta alus) haluttu-suunta))
+                                  (or
+                                   ;; Lasketaan annetun toiminnon annettua suuntaa
+                                   (and
+                                    (= toiminto haluttu-toiminto)
+                                    (= (::lt-alus/suunta alus) haluttu-suunta))
 
-                                       ;; Lasketaan annettua toimenpidettä muusta huolimatta
-                                       (and
-                                        (= haluttu-suunta nil)
-                                        (= toiminto haluttu-toiminto))
+                                   ;; Lasketaan annettua toimenpidettä muusta huolimatta
+                                   (and
+                                    (= haluttu-suunta nil)
+                                    (= toiminto haluttu-toiminto))
 
-                                       ;; Lasketaan annettua palvelumuotoa muusta huolimatta 
-                                       (and
-                                        (= haluttu-suunta nil)
-                                        (= haluttu-toiminto nil)
-                                        (= palvelumuoto haluttu-palvelumuoto)))
-                                    alus
-                                    nil)))
+                                   ;; Lasketaan annettua palvelumuotoa muusta huolimatta 
+                                   (and
+                                    (= haluttu-suunta nil)
+                                    (= haluttu-toiminto nil)
+                                    (= palvelumuoto haluttu-palvelumuoto)))))
                               (::lt/alukset tapahtuma))]
-                (count (remove nil? yhteensa)))) tapahtumat)))
+                (count yhteensa))) tapahtumat)))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
