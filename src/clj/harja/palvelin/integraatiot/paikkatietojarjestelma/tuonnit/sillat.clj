@@ -38,14 +38,15 @@
         nimi (:nimi silta)
         geometria (:the_geom silta)
         geometria-str (.toString geometria)
-        tie (string-intiksi (:tienumero silta))
-        alkuosa (string-intiksi (:tieosa silta))
-        alkuetaisyys (string-intiksi (:etaisyys silta))
+        tie (string-intiksi (:tr_numero (:tienumero silta)))
+        alkuosa (string-intiksi (:tr_alkuosa (:tieosa silta)))
+        alkuetaisyys (string-intiksi (:tr_alkuetaisyys (:tieosa silta)))
         muutospvm (:paivitetty silta)
         trex-oid (when-not (empty? (:oid silta))
                    (:oid silta))
         tila (:tila silta)
-        urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltatunnus tunnus :siltanimi nimi})
+        kaytossa? (= "kaytossa" tila)
+        silta-kannassa (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltatunnus tunnus :siltanimi nimi})
         urakat (loop [threshold 0]
                  (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
                                                                    :urakkatyyppi "hoito" :threshold threshold})]
@@ -63,8 +64,10 @@
                         :tunnus tunnus
                         :trex-oid trex-oid
                         :muutospvm muutospvm
+                        :loppupvm (when-not kaytossa? muutospvm)
+                        ;; Ei merkitä siltaa poistetuksi, jos sillä on tarkastuksia.
+                        :poistettu  (not (or kaytossa? (:siltatarkastuksia? silta-kannassa)))
                         :urakat urakka-idt
-                        :poistettu false
                         :kunnan-vastuulla false}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
@@ -83,7 +86,7 @@
 
     (when-not (or (nil? siltanumero)
                 (nil? trex-oid))
-      (if-not (empty? urakkatiedot)
+      (if-not (empty? silta-kannassa)
         (q-sillat/paivita-silta! db sql-parametrit)
         (when (= "kaytossa" tila)
           (q-sillat/luo-silta<! db sql-parametrit))))))
@@ -149,24 +152,22 @@
 (defn- suodata-sillat [sillat]
   (filter #(and
              (str/includes? (:nykyinen_o %) "Väylävirasto")
+             (and (seq (:vaylanpito %)) (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko"))
              (let [kunnossapitaja (str/lower-case (:nykyinenku %))]
                (not (or (str/includes? kunnossapitaja "yksityinen")
                       (str/includes? kunnossapitaja "kaupunki")
                       (str/includes? kunnossapitaja "kunta")
                       (str/includes? kunnossapitaja "tieyhtiö")
                       (str/includes? kunnossapitaja "ruotsi")
-                      (str/includes? kunnossapitaja "hkl"))))
-             ;; TODO: Selvitä, mitä tehdään jos väylänpito on nil tai ""
-             (and (seq (:vaylanpito %)) (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko"))) sillat))
+                      (str/includes? kunnossapitaja "hkl")
+                      (str/includes? kunnossapitaja "sairaanhoitopiiri"))))) sillat))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
           tallennettavat-siltatietueet (-> siltatietueet-shapefilesta
-                                         parsi-tieosoitteet
-                                         karsi-voimassaolevien-siltojen-poistetut-osuudet
-                                         jarjesta-voimassaolevat-sillat-yksittaisille-riveille
-                                         suodata-sillat)]
+                                         suodata-sillat
+                                         parsi-tieosoitteet)]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
              (doseq [silta tallennettavat-siltatietueet]
