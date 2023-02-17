@@ -1120,6 +1120,7 @@ yllapitoluokkanimi->numero
             kohteen-tiedot (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa}))
             alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
                                ali-ja-muut-kohteet)
+            ;; Jos tienumero on eri kuin pääkohteella, niin silloin kohde menee muihin kohteisiin
             muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
                                 ali-ja-muut-kohteet)
             yhden-vuoden-muut-kohteet (map #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})
