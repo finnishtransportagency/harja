@@ -1,47 +1,8 @@
----- Tavoitehintaan vaikuttavat toteutuneet kustannukset
---- Hankinnat
--- Talvihoito x
--- Liikenneympäristön hoito x
--- Sorateiden hoito x
--- Päällystepaikkaukset x
--- MHU ylläpito x
--- MHU korvausinvestointi x
--- Hankinnat yhteensä x
+-- Työmaakokousta varten räätälöityyn laskutusyhteenvetoon liittyvät tietokantahaut on pakattu
+-- tässä yhden funktion alle.
 
-
---- Hoidonjohto
--- Johto- ja hallintokorvaukset x
--- Erillishankinnat x
--- Hoidonjohtopalkkio x
--- yhteensä
-
--- Hankinnat ja hoidonjohto yhteensä
-
---- Äkilliset hoitotyöt ja vahinkojen korjaukset
--- Äkilliset hiototyöt x
--- Vahinkojen korjaukset x
-
---- Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä x
---- Tavoitehinta (indeksikorjattu) x
---- Siirto edellisestlä vuodelta x
---- Budjettia jäljellä x
-
----- Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)
---- Lisätyöt
--- Lisätyöt (talvihoito) x
--- Lisätyöt (liikenneympäristön hoito) x
--- Lisätyöt (sorateiden hoito) x
--- Lisätyöt (päällystepaikkaukset) x
--- Lisätyöt (MHU korvausinvestointi) x
-
-
---- Muut
--- Bonukset x
--- Sanktiot x
--- Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä
-
---- Muut kustannukset yhteensä
-DROP TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
+-- Ensin määritellään TYPE, joka on ikäänkuin se objekti/rivi, jonka funktio palauttaa.
+-- Tähän on sisällytetty kaikki yksittäiset tulokset, jotta koodiin ei jää enää yhtään laskutehtävää tehtäväksi.
 CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
 (
     talvihoito_hoitokausi_yht             NUMERIC,
@@ -107,7 +68,7 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
 
 );
 
-DROP FUNCTION ly_raportti_tyomaakokous;
+-- Tätä kutsummalla saadaan työmaakokouksen laskutusyhteenvetoon kaikki tarvittavat tiedot
 CREATE OR REPLACE FUNCTION ly_raportti_tyomaakokous(hk_alkupvm DATE, hk_loppupvm DATE, aikavali_alkupvm DATE,
                                                     aikavali_loppupvm DATE, ur INTEGER)
     RETURNS SETOF LY_RAPORTTI_TYOMAAKOKOUS_TULOS
