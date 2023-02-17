@@ -202,11 +202,9 @@
                                             ;; Käydään läpi tapahtuman alukset, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
                                             (let [alukset (::lt/alukset tapahtuma)
                                                   toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                                                  alusten-toiminnot (map (fn [_]
-                                                                           (when-not (= toimenpide :ei-avausta)
-                                                                             toimenpide)) alukset)]
-                                              (count (remove nil? alusten-toiminnot)))
-                                            ) tulos))
+                                                  alusten-toiminnot (filter (fn [_]
+                                                                              (not= toimenpide :ei-avausta)) alukset)]
+                                              (count alusten-toiminnot))) tulos))
 
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
