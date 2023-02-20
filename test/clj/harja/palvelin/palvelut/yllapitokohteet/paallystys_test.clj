@@ -298,6 +298,8 @@
     (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
           sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
           paallystysilmoitus (-> (assoc pot-testidata :paallystyskohde-id paallystyskohde-id)
+                                 (assoc-in [:perustiedot :tila] :aloitettu)
+                                 (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
                                  (assoc :ilmoitustiedot
                                         {:osoitteet [{;; Alikohteen tiedot
                                                       :nimi "Tie 666"
@@ -840,6 +842,36 @@
         (is (= (:kokonaishinta-ilman-maaramuutoksia paallystysilmoitus-kannassa) 0M))
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
+(deftest tallenna-uusi-pot2-paallystysilmoitus-kantaan-vaikka-paallystyskerros-ei-validi
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
+    (is (some? paallystyskohde-id))
+    (is (= 28 paallystyskohde-id))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Wut' WHERE yllapitokohde = 28"))
+    (log/debug "Tallennetaan päällystyskohteelle " paallystyskohde-id " uusi pot2 ilmoitus")
+    (let [paallystysilmoitus (-> pot2-testidata
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               ;; Aseta virheellinen tr-loppuetaisyys (5000 ylittyy)
+                               (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] 5001)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] false))
+          [urakka-id sopimus-id vastaus yllapitokohdeosadata] (tallenna-testipaallystysilmoitus
+                                                                paallystysilmoitus
+                                                                paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
+      ;; Vastauksena saadaan annetun vuoden ylläpitokohteet ja päällystysilmoitukset. Poistetun kohteen ei pitäisi tulla.
+      (is (= 3 (count (:yllapitokohteet vastaus))) "Ylläpitokohteiden määrä vuonna 2021")
+      (is (= 3 (count (:paallystysilmoitukset vastaus))) "Ylläpitokohteiden määrä vuonna 2021")
+
+      (let [paallystysilmoitus-kannassa (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :urakan-paallystysilmoitus-paallystyskohteella
+                                          +kayttaja-jvh+ {:urakka-id urakka-id
+                                                          :sopimus-id sopimus-id
+                                                          :paallystyskohde-id paallystyskohde-id})]
+        (log/debug "Testitallennus valmis. POTTI kannassa: " (pr-str paallystysilmoitus-kannassa))
+        (is (not (nil? paallystysilmoitus-kannassa)))
+        (is (= (:tila paallystysilmoitus-kannassa) :aloitettu))
+
+        (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
+
 (deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat
   (let [;; Ei saa olla POT ilmoitusta
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
@@ -881,6 +913,27 @@
                   :massamaara nil,
                   :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest paivittaa-pot2-paallystysilmoitus-luonnostilassa-vaikka-epavalidi
+  (let [;; Ei saa olla POT ilmoitusta
+        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
+    (is (= 28 paallystyskohde-id))
+    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Freude' WHERE yllapitokohde = 28"))
+    (let [alkuperainen-paallystysilmoitus (-> pot2-testidata
+                                            (assoc :paallystyskohde-id paallystyskohde-id)
+                                            (assoc-in [:perustiedot :valmis-kasiteltavaksi] false))
+          _ (tallenna-testipaallystysilmoitus
+              alkuperainen-paallystysilmoitus
+              paallystysilmoitus-domain/pot2-vuodesta-eteenpain)
+          uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
+                                    (assoc-in [:paallystekerros 0 :nimi] "Uusi uudistettu tie 22")
+                                    ;; Aseta virheellinen tr-loppuetaisyys (5000 ylittyy)
+                                    (assoc-in [:paallystekerros 0 :tr-loppuetaisyys] 5001))
+
+          ;; Päivitä päällystysilmoitus käyttäen epävalidia dataa
+          _  (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
+
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
