@@ -200,10 +200,13 @@
         alukset-joilla-toimenpide (apply + (map
                                           (fn [tapahtuma]
                                             ;; Käydään läpi tapahtuman alukset, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
+                                            ;; Suunnattomia aluksia ei myöskään lasketa yhteenvetoon
                                             (let [alukset (::lt/alukset tapahtuma)
                                                   toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                                                  alusten-toiminnot (filter (fn [_]
-                                                                              (not= toimenpide :ei-avausta)) alukset)]
+                                                  alusten-toiminnot (filter (fn [alus]
+                                                                              (and 
+                                                                               (not= toimenpide :ei-avausta)
+                                                                               (not= (::lt-alus/suunta alus) :ei-suuntaa))) alukset)]
                                               (count alusten-toiminnot))) tulos))
 
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
