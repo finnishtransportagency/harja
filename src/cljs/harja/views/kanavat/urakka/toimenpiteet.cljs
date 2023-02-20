@@ -226,7 +226,7 @@
       :hae #(kayttaja/kokonimi (::kanavan-toimenpide/kuittaaja %))
       :muokattava? (constantly false)}
      (lomake/rivi
-       {:nimi :materiaalit
+       {:nimi :materiaalitaulukko
         :tyyppi :komponentti
         :palstoja 2
         :komponentti (fn [_]
