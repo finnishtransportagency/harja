@@ -528,16 +528,15 @@
                                  :parametrit {:alkupvm nil 
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {
-                                                           :toimenpiteet {:sulutukset-ylos 0, 
-                                                                          :sulutukset-alas 0, 
-                                                                          :sillan-avaukset 0, 
-                                                                          :tyhjennykset 0, 
-                                                                          :yhteensa 0}, 
-                                                           :palvelumuoto {:paikallispalvelu 1, 
-                                                                          :kaukopalvelu 1, 
-                                                                          :itsepalvelu 1, 
-                                                                          :muu 1, 
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0
+                                                                          :sulutukset-alas 0
+                                                                          :sillan-avaukset 0
+                                                                          :tyhjennykset 0
+                                                                          :yhteensa 1}
+                                                           :palvelumuoto {:paikallispalvelu 1
+                                                                          :kaukopalvelu 1
+                                                                          :itsepalvelu 1
+                                                                          :muu 1
                                                                           :yhteensa 4}}}}}
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
@@ -748,15 +747,15 @@
                                  :parametrit {:alkupvm nil
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, 
-                                                                          :sulutukset-alas 0, 
-                                                                          :sillan-avaukset 0, 
-                                                                          :tyhjennykset 0, 
-                                                                          :yhteensa 0}, 
-                                                           :palvelumuoto {:paikallispalvelu 1, 
-                                                                          :kaukopalvelu 1, 
-                                                                          :itsepalvelu 1, 
-                                                                          :muu 1, 
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0
+                                                                          :sulutukset-alas 0
+                                                                          :sillan-avaukset 0
+                                                                          :tyhjennykset 0
+                                                                          :yhteensa 1}
+                                                           :palvelumuoto {:paikallispalvelu 1
+                                                                          :kaukopalvelu 1
+                                                                          :itsepalvelu 1
+                                                                          :muu 1
                                                                           :yhteensa 4}}}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
