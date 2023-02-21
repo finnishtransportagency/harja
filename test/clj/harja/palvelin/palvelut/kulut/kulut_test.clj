@@ -396,6 +396,7 @@
 (deftest saako-kulua-tallentaa?
   (let [erapaiva #inst "2020-09-30T23:00:00.000-00:00"
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vanha-erapaiva nil
         ;; Feikkaa, että välikatselmus on pidetty
         ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] true)]
                 (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))
