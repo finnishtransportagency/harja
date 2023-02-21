@@ -157,7 +157,74 @@
 (defn koko-tapahtuma [rivi {:keys [haetut-tapahtumat]}]
   (some #(when (= (::lt/id rivi) (::lt/id %)) %) haetut-tapahtumat))
 
+(defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
+  ;; Laskee liikennetapahtumien yhteenvetotietoja
+  ;; Käydään läpi tapahtumat ja niiden alukset 
+  ;; Palautetaan integer (Long) montako alusta annetulla palvelulla/toimenpiteellä/suunnalla
+  (apply + (map
+            (fn [tapahtuma]
+              (let [yhteensa (filter
+                              (fn [alus]
+                                (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
+                                      palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot tapahtuma)))]
+                                  (or
+                                   ;; Lasketaan annetun toiminnon annettua suuntaa
+                                   (and
+                                    (= toiminto haluttu-toiminto)
+                                    (= (::lt-alus/suunta alus) haluttu-suunta))
+
+                                   ;; Lasketaan annettua toimenpidettä muusta huolimatta
+                                   (and
+                                    (= haluttu-suunta nil)
+                                    (= toiminto haluttu-toiminto))
+
+                                   ;; Lasketaan annettua palvelumuotoa muusta huolimatta 
+                                   (and
+                                    (= haluttu-suunta nil)
+                                    (= haluttu-toiminto nil)
+                                    (= palvelumuoto haluttu-palvelumuoto)))))
+                              (::lt/alukset tapahtuma))]
+                (count yhteensa))) tapahtumat)))
+
 (defn tapahtumat-haettu [app tulos]
+  (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
+        sulutukset-ylos (laske-yhteenveto tulos :sulutus :ylos nil)
+        sillan-avaukset (laske-yhteenveto tulos :avaus nil nil)
+        tyhjennykset (laske-yhteenveto tulos :tyhjennys nil nil)
+        paikallispalvelut (laske-yhteenveto tulos nil nil :paikallis)
+        kaukopalvelut (laske-yhteenveto tulos nil nil :kauko)
+        itsepalvelut (laske-yhteenveto tulos nil nil :itse)
+        muut (laske-yhteenveto tulos nil nil :muu)
+
+        ;; Lasketaan toimenpiteet mitkä kuuluvat yhteenvetoon (kaikki paitsi :ei-avausta)
+        alukset-joilla-toimenpide (apply + (map
+                                          (fn [tapahtuma]
+                                            ;; Käydään läpi tapahtuman alukset, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
+                                            (let [alukset (::lt/alukset tapahtuma)
+                                                  toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
+                                                  alusten-toiminnot (filter (fn [_]
+                                                                              (not= toimenpide :ei-avausta)) alukset)]
+                                              (count alusten-toiminnot))) tulos))
+
+        toimenpiteet {:sulutukset-ylos sulutukset-ylos
+                      :sulutukset-alas sulutukset-alas
+                      :sillan-avaukset sillan-avaukset
+                      :tyhjennykset tyhjennykset
+                      :yhteensa alukset-joilla-toimenpide}
+
+        palvelumuoto {:paikallispalvelu paikallispalvelut
+                      :kaukopalvelu kaukopalvelut
+                      :itsepalvelu itsepalvelut
+                      :muu muut
+                      :yhteensa (+
+                                 paikallispalvelut
+                                 kaukopalvelut
+                                 itsepalvelut
+                                 muut)}]
+
+    (swap! lt/yhteenveto-atom assoc :toimenpiteet toimenpiteet)
+    (swap! lt/yhteenveto-atom assoc :palvelumuoto palvelumuoto))
+
   (-> app
       (assoc :liikennetapahtumien-haku-kaynnissa? false)
       (assoc :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false)
@@ -171,7 +238,8 @@
                :kanavien-liikennetapahtumat
                {:alkupvm (first (:aikavali (:valinnat app)))
                 :loppupvm (second (:aikavali (:valinnat app)))
-                :urakkatyyppi :vesivayla-kanavien-hoito}))))
+                :urakkatyyppi :vesivayla-kanavien-hoito
+                :yhteenveto @lt/yhteenveto-atom}))))
 
 (defn tallennusparametrit [t]
   (-> t

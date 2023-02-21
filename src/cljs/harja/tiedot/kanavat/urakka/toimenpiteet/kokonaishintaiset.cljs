@@ -289,7 +289,7 @@
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
                 (vec
                  (for [m materiaalit]
-                   (if (-> m :materiaalit ::materiaalit/muutokset)
+                   (if (-> m :materiaalitaulukko ::materiaalit/muutokset)
                      (update m :tallennetut-materiaalit dissoc ::materiaalit/muutokset ::materiaalit/id)
                      m))))
       app))

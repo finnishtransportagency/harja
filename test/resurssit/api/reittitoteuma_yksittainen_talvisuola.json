@@ -1,0 +1,184 @@
+{
+    "otsikko": {
+        "lahettaja": {
+            "jarjestelma": "Urakoitsijan järjestelmä",
+            "organisaatio": {
+                "nimi": "Urakoitsija",
+                "ytunnus": "1234567-8"
+            }
+        },
+        "viestintunniste": {
+            "id": 137023
+        },
+        "lahetysaika": "2016-01-30T12:00:00Z"
+    },
+    "reittitoteuma": {
+        "toteuma": {
+            "tunniste": {
+                "id": __ID__
+            },
+            "suorittaja": {
+                "nimi": "__SUORITTAJA_NIMI__",
+                "ytunnus": "8765432-1"
+            },
+            "sopimusId": __SOPIMUS_ID__,
+            "alkanut": "2016-01-30T12:00:00Z",
+            "paattynyt": "2016-01-30T14:00:00Z",
+            "toteumatyyppi": "kokonaishintainen",
+            "lisatieto": "Normisuolaus",
+            "tehtavat": [
+                {
+                    "tehtava": {
+                        "id": 1370,
+                        "maara": {
+                            "yksikko": "km",
+                            "maara": 123
+                        }
+                    }
+                },
+                {
+                    "tehtava": {
+                        "id": 1363,
+                        "maara": {
+                            "yksikko": "km",
+                            "maara": 123
+                        }
+                    }
+                },
+                {
+                    "tehtava": {
+                        "id": 987654,
+                        "maara": {
+                            "yksikko": "kpl",
+                            "maara": 1
+                        }
+                    }
+                }
+            ],
+            "materiaalit": [
+                {
+                    "materiaali": "Talvisuola",
+                    "maara": {
+                        "yksikko": "kg",
+                        "maara": 4.62
+                    }
+                }
+            ]
+        },
+        "reitti": [
+            {
+                "reittipiste": {
+                    "aika": "2016-01-30T12:00:00Z",
+                    "koordinaatit": {
+                        "x": 429451.2124,
+                        "y": 7199520.6102
+                    },
+                    "tehtavat": [
+                        {
+                            "tehtava": {
+                                "id": 1370
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 1363
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 987654
+                            }
+                        }
+                    ],
+                    "materiaalit": [
+                        {
+                            "materiaali": "Talvisuola",
+                            "maara": {
+                                "yksikko": "kg",
+                                "maara": 1.32
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "reittipiste": {
+                    "aika": "2016-01-30T13:00:00Z",
+                    "koordinaatit": {
+                        "x": 429449.505,
+                        "y": 7199521.6673
+                    },
+                    "tehtavat": [
+                        {
+                            "tehtava": {
+                                "id": 1370
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 1363
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 987654,
+                                "maara": {
+                                    "yksikko": "kpl",
+                                    "maara": 1
+                                }
+                            }
+                        }
+                    ],
+                    "materiaalit": [
+                        {
+                            "materiaali": "Talvisuola",
+                            "maara": {
+                                "yksikko": "kg",
+                                "maara": 0.9
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "reittipiste": {
+                    "aika": "2016-01-30T13:00:00Z",
+                    "koordinaatit": {
+                        "x": 429440.5079,
+                        "y": 7199523.6547
+                    },
+                    "tehtavat": [
+                        {
+                            "tehtava": {
+                                "id": 1370
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 1363
+                            }
+                        },
+                        {
+                            "tehtava": {
+                                "id": 987654,
+                                "maara": {
+                                    "yksikko": "kpl",
+                                    "maara": 4
+                                }
+                            }
+                        }
+                    ],
+                    "materiaalit": [
+                        {
+                            "materiaali": "Talvisuola",
+                            "maara": {
+                                "yksikko": "kg",
+                                "maara": 2.4
+                            }
+                        }
+                    ]
+                }
+            }
+        ]
+    }
+}

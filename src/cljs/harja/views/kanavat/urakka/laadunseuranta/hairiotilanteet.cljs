@@ -214,7 +214,7 @@
       {:tyyppi :checkbox
        :nimi ::hairiotilanne/paikallinen-kaytto?
        :teksti "Siirrytty paikalliskäyttöön"})
-    {:nimi :materiaalit
+    {:nimi :materiaalitaulukko
      :tyyppi :komponentti
      :palstoja 2
      :komponentti (fn [_]
