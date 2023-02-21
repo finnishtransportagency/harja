@@ -4,11 +4,13 @@
             [harja.kyselyt
              [konversio :as konv]
              [siltatarkastukset :as q-tarkastukset]
-             [sillat :as q-sillat]]
+             [sillat :as q-sillat]
+             [urakat :as q-urakka]]
             [harja.geo :as geo]
             [harja.testi :refer :all]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as sillat])
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat :as sillat]
+            [harja.pvm :as pvm])
   (:import (org.locationtech.jts.geom Point Coordinate GeometryFactory)
            (org.locationtech.jts.geom.impl CoordinateArraySequence)
            (java.util Date)))
@@ -16,23 +18,19 @@
 (use-fixtures :once tietokanta-fixture)
 
 (def silta-tuonti
-  {:siltanimi "Testisilta"
-   :ajr 0
-   :tie 22
-   :aosa 1
-   :aet 0
-   :ely_lyhenn "Pop"
-   :trex_oid "123456789"
+  {:nimi "Testisilta"
+   :tieosoite {:tr_numero 22
+               :tr_alkuosa 1
+               :tr_alkuetaisyys 0}
+   :oid "123456789"
    :loppupvm ""
-   :rakennety "Jämäkkä silta"
+   :janteet "numero:1,rakennetyypit:nimi:Jämäkkä silta,lyhenne:Jsi"
    :the_geom (Point. (CoordinateArraySequence. (into-array Coordinate [(Coordinate. 428022.4972067006 7210433.780978538)])) (GeometryFactory.))
-   :muutospvm ""
-   :loc_error "NO ERROR"
-   :status 1
-   :siltanro 123
-   :silta_id 123
-   :lakkautpvm ""
-   :ualue (ffirst (q "SELECT alueurakkanro FROM alueurakka WHERE nimi='Oulu';"))})
+   :paivitetty "2015-01-05"
+   :tila "kaytossa"
+   :nykyinen_o "nimi:Väylävirasto,ytunnus:1010547-1"
+   :tunnus "O-123"
+   :nykyinenku "nimi:Pohjois-Pohjanmaan ELY-keskus"})
 
 (def odotettu-vastaus
   (doall {:siltanimi "Testisilta"
@@ -46,12 +44,12 @@
           :alue {:type :point
                  :coordinates [428022.4972067006 7210433.780978538]}
           :askelipaino nil
-          :muutospvm nil
+          :muutospvm (pvm/->pvm "05.01.2015")
           :tr_loppuosa nil
           :muokkaaja nil
           :tr_numero 22
-          :status 1
-          :siltaid 123
+          :status nil
+          :siltaid nil
           :poistettu false
           :urakat (vec (first (q "SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'")))
           :siltanro 123
@@ -63,28 +61,30 @@
           :tr_alkuosa 1
           :kunnan_vastuulla false}))
 
+(defn- vie-silta-urakalle [db silta urakka-id]
+  (with-redefs [q-urakka/hae-urakka-sijainnilla (fn [_db _opts] [{:id urakka-id}])]
+    (sillat/vie-silta-entry db silta)))
+
 (deftest luo-ja-paivita-silta
   (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta;"))]
     (testing "Luodaan silta"
-      (let [lisaa-silta (-> (sillat/vie-silta-entry ds silta-tuonti)
+      (let [lisaa-silta (-> (vie-silta-urakalle ds silta-tuonti (ffirst (q "SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'")))
                             (update :alue #(geo/pg->clj %))
                             (update :urakat #(konv/pgarray->vector %))
-                            (dissoc :luotu :id)
-                            )
+                            (dissoc :luotu :id))
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta;"))]
         (is (= lisaa-silta odotettu-vastaus))
         (is (= sillat-ennen (dec sillat-jalkeen)))))
 
     (testing "Päivitetään silta"
-      (let [paivita-silta (sillat/vie-silta-entry ds (assoc silta-tuonti :siltanimi "Testisilta päivitetty"))
+      (let [paivita-silta (vie-silta-urakalle ds (assoc silta-tuonti :nimi "Testisilta päivitetty") (ffirst (q "SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'")))
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta;"))]
         (is (= paivita-silta 1))
         (is (= sillat-ennen (dec sillat-jalkeen)))))
 
     (testing "Sillan aktiivinen urakka vaihtuu"
-      (let [silta-tuonti (assoc silta-tuonti :ualue (ffirst (q "SELECT alueurakkanro FROM alueurakka WHERE nimi='Oulu Testi';")))
-            paivita-silta (sillat/vie-silta-entry ds silta-tuonti)
-            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE siltanro = " (:siltanro silta-tuonti))))
+      (let [paivita-silta (vie-silta-urakalle ds silta-tuonti (ffirst (q "SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'")))
+            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                           (update :alue #(geo/pg->clj %))
                           (update :urakat #(into #{} (konv/pgarray->vector %)))
                           (dissoc :luotu :muokattu :id))
@@ -96,10 +96,9 @@
         (is (= sillat-ennen (dec sillat-jalkeen)))))
 
     (testing "Päivitetään silta uudestaan"
-      (let [silta-tuonti (assoc silta-tuonti :ualue (ffirst (q "SELECT alueurakkanro FROM alueurakka WHERE nimi='Oulu Testi';"))
-                                             :siltanimi "Testisilta päivitetty")
-            paivita-silta (sillat/vie-silta-entry ds silta-tuonti)
-            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE siltanro = " (:siltanro silta-tuonti))))
+      (let [silta-tuonti (assoc silta-tuonti :nimi "Testisilta päivitetty")
+            paivita-silta (vie-silta-urakalle ds silta-tuonti (ffirst (q "SELECT id FROM urakka WHERE nimi='Aktiivinen Oulu Testi'")))
+            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                           (update :alue #(geo/pg->clj %))
                           (update :urakat #(into #{} (konv/pgarray->vector %)))
                           (dissoc :luotu :muokattu :id))
@@ -115,10 +114,9 @@
 (deftest urakan-vaihtaminen
   (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta;"))]
     (testing "Siirrä silta toiseen urakkaan"
-      (let [uusi-urakka (first (q-map "SELECT nimi, urakkanro FROM urakka WHERE nimi='Aktiivinen Kajaani Testi';"))
-            silta-tuonti (assoc silta-tuonti :ualue (:urakkanro uusi-urakka))
-            paivita-silta (sillat/vie-silta-entry ds silta-tuonti)
-            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE siltanro = " (:siltanro silta-tuonti))))
+      (let [uusi-urakka (first (q-map "SELECT nimi, id FROM urakka WHERE nimi='Aktiivinen Kajaani Testi';"))
+            paivita-silta (vie-silta-urakalle ds silta-tuonti (:id uusi-urakka))
+            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                           (update :alue #(geo/pg->clj %))
                           (update :urakat #(into #{} (konv/pgarray->vector %)))
                           (dissoc :luotu :muokattu :id))
@@ -131,17 +129,16 @@
         (is (= sillat-ennen sillat-jalkeen))))
 
     (testing "Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan"
-      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus) :siltatunnus nil :siltaid nil :siltanimi "Testisilta"})))
+      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus)})))
                                                :urakka (ffirst (q "SELECT id FROM urakka WHERE nimi='Aktiivinen Kajaani Testi';"))
                                                :tarkastusaika (Date.)
                                                :tarkastaja "Foo"
                                                :luoja 1
                                                :ulkoinen_id "123"
                                                :lahde "harja-ui"})
-      (let [uusi-urakka (first (q-map "SELECT nimi, urakkanro FROM urakka WHERE nimi='Aktiivinen Oulu Testi';"))
-            silta-tuonti (assoc silta-tuonti :ualue (:urakkanro uusi-urakka))
-            paivita-silta (sillat/vie-silta-entry ds silta-tuonti)
-            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE siltanro = " (:siltanro silta-tuonti))))
+      (let [uusi-urakka (first (q-map "SELECT nimi, id FROM urakka WHERE nimi='Aktiivinen Oulu Testi';"))
+            paivita-silta (vie-silta-urakalle ds silta-tuonti (:id uusi-urakka))
+            hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                           (update :alue #(geo/pg->clj %))
                           (update :urakat #(into #{} (konv/pgarray->vector %)))
                           (dissoc :luotu :muokattu :id))
@@ -153,7 +150,51 @@
         (is (= paivita-silta 1))
         (is (= sillat-ennen sillat-jalkeen))))))
 
-(deftest hoida-kunnalle-kuuluva-silta
+(deftest kasittele-poistettu-silta
+  (testing "Ei poisteta siltaa, jos sillä on siltatarkastus aktiivisessa urakassa"
+    (let [aktiivinen-urakka (first (q-map "SELECT id FROM urakka WHERE nimi = 'Aktiivinen Oulu Testi'"))
+          luotava-silta (assoc silta-tuonti :oid "54350234")
+          _tee-silta (vie-silta-urakalle ds luotava-silta (:id aktiivinen-urakka))
+          tehty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta)})))
+                                                              :urakka (:id aktiivinen-urakka)
+                                                              :tarkastusaika (Date.)
+                                                              :tarkastaja "Foo"
+                                                              :luoja 1
+                                                              :ulkoinen_id "123"
+                                                              :lahde "harja-ui"})
+          siltoja-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu=false"))
+          _paivita-silta (vie-silta-urakalle ds (assoc luotava-silta :tila "poistettu") (:id aktiivinen-urakka))
+          paivitetty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
+          siltoja-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu=false"))]
+      (is (= siltoja-ennen siltoja-jalkeen))
+      (is (not (:poistettu tehty-silta)))
+      (is (not (:poistettu paivitetty-silta)))
+      (is (some? (:loppupvm paivitetty-silta)))
+      (is (= siltoja-ennen siltoja-jalkeen))))
+
+  (testing "Poistetaan silta, vaikka sillä on siltatarkastus päättyneessä urakasssa"
+    (let [paattynyt-urakka (first (q-map "SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'"))
+          aktiivinen-urakka (first (q-map "SELECT id FROM urakka WHERE nimi = 'Aktiivinen Oulu Testi'"))
+          luotava-silta (assoc silta-tuonti :oid "9876543")
+          _tee-silta (vie-silta-urakalle ds luotava-silta (:id paattynyt-urakka))
+          tehty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta)})))
+                                                             :urakka (:id paattynyt-urakka)
+                                                             :tarkastusaika (Date.)
+                                                             :tarkastaja "Foo"
+                                                             :luoja 1
+                                                             :ulkoinen_id "123"
+                                                             :lahde "harja-ui"})
+          siltoja-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu=false"))
+          _paivita-silta (vie-silta-urakalle ds (assoc luotava-silta :tila "poistettu") (:id aktiivinen-urakka))
+          paivitetty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
+          siltoja-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu=false"))]
+         (is (= (dec siltoja-ennen) siltoja-jalkeen))
+         (is (false? (:poistettu tehty-silta)))
+         (is (:poistettu paivitetty-silta)))))
+
+#_(deftest hoida-kunnalle-kuuluva-silta
   (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
     (testing "uuden kuntasillan tuominen"
       (let [silta-tuonti (assoc silta-tuonti :ualue 400

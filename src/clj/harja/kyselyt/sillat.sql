@@ -24,8 +24,7 @@ SET tyyppi          = :tyyppi,
     urakat          = (SELECT array_agg(a) ::INT[] || '{}' ::INT[] FROM unnest(ARRAY[:urakat] ::INT[]) a WHERE a IS NOT NULL),
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
-WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
-      (trex_oid IS NULL AND siltaid IS NULL AND (:tunnus ::TEXT IS NOT NULL AND siltatunnus = :tunnus) AND (:siltanimi ::TEXT IS NOT NULL AND siltanimi = :siltanimi));
+WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid);
 
 -- name: hae-sillan-tiedot
 SELECT
@@ -44,7 +43,7 @@ WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR
 -- name: poista-urakka-sillalta!
 UPDATE silta
 SET urakat = array_remove(urakat, :urakka-id)
-WHERE id = :silta-taulun-id
+WHERE id = :silta-taulun-id;
 
 -- name: merkkaa-kunnan-silta-poistetuksi!
 UPDATE silta
