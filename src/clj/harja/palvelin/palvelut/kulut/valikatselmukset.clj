@@ -12,7 +12,14 @@
     [harja.kyselyt.valikatselmus :as valikatselmus-q]
     [harja.kyselyt.urakat :as urakat-q]
     [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+    [harja.kyselyt.konversio :as konv]
+    [harja.kyselyt.toteumat :as toteumat-q]
+    [harja.kyselyt.sanktiot :as sanktiot-q]
+    [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
+    [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
+    [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
     [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
     [harja.pvm :as pvm]
     [harja.domain.roolit :as roolit]
@@ -180,6 +187,21 @@
           :else
           (heita-virhe "Lupaussanktion urakoitsijan maksun summa ei täsmää lupauksissa lasketun sanktion kanssa."))))
 
+(defn- poista-urakan-paatokset [db urakka-id hoitokauden-alkuvuosi kayttaja]
+  (let [paatokset (valikatselmus-q/hae-urakan-paatokset-hoitovuodelle db urakka-id hoitokauden-alkuvuosi)]
+    (doseq [paatos paatokset]
+      (cond
+        (and
+          (= (::valikatselmus/tyyppi paatos) "lupaussanktio")
+          (not (nil? (::valikatselmus/sanktio-id paatos))))
+        (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (::valikatselmus/sanktio-id paatos) :urakka-id urakka-id})
+        (and
+          (= (::valikatselmus/tyyppi paatos) "lupausbonus")
+          (not (nil? (:erilliskustannus_id paatos))))
+        (toteumat-palvelu/poista-erilliskustannus db kayttaja
+          {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})))
+    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi (:id kayttaja))))
+
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do
     (tarkista-ei-siirtoa-viimeisena-vuotena tiedot urakka)))
@@ -214,16 +236,16 @@
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))
         tiedot (select-keys tiedot (columns ::valikatselmus/tavoitehinnan-oikaisu))
         oikaisu-specql (merge tiedot {::urakka/id urakka-id
                                       ::muokkaustiedot/luoja-id (:id kayttaja)
                                       ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                                       ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                                      ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))
+                                      ::muokkaustiedot/muokattu (pvm/nyt)
                                       ::valikatselmus/summa (bigdec (::valikatselmus/summa tiedot))
                                       ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+    (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
     (if (::valikatselmus/oikaisun-id tiedot)
       (valikatselmus-q/paivita-oikaisu db oikaisu-specql)
       (valikatselmus-q/tee-oikaisu db oikaisu-specql))))
@@ -242,8 +264,8 @@
                 kayttaja
                 urakka-id)
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+    (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
     (valikatselmus-q/poista-oikaisu db tiedot)))
 
 (defn hae-tavoitehintojen-oikaisut [db kayttaja tiedot]
@@ -284,7 +306,7 @@
                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
           _ (do
               (tarkista-valikatselmusten-urakkatyyppi urakka :kattohinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi)
               (tarkista-kattohinta-suurempi-kuin-tavoitehinta db urakka-id hoitokauden-alkuvuosi uusi-kattohinta))
           vanha-rivi (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi)
           oikaisu-specql (merge
@@ -297,7 +319,8 @@
                             ::muokkaustiedot/muokattu (pvm/nyt)
                             ::valikatselmus/uusi-kattohinta (bigdec uusi-kattohinta)
                             ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+      (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
+
       (if (::valikatselmus/kattohinnan-oikaisun-id oikaisu-specql)
         (do (valikatselmus-q/paivita-kattohinnan-oikaisu db oikaisu-specql)
             (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))
@@ -316,8 +339,8 @@
                               (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
           _ (do
               (tarkista-valikatselmusten-urakkatyyppi urakka :tavoitehinnan-oikaisu)
-              (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
-      (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi)
+              #_ (tarkista-aikavali urakka :tavoitehinnan-oikaisu kayttaja valittu-hoitokausi))]
+      (poista-urakan-paatokset db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/poista-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi kayttaja)
       (valikatselmus-q/hae-kattohinnan-oikaisu db urakka-id hoitokauden-alkuvuosi))))
 
@@ -326,23 +349,95 @@
     (assert (number? urakka-id) "Virhe urakan ID:ssä.")
     (valikatselmus-q/hae-kattohinnan-oikaisut db tiedot)))
 
-(defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi]
+(defn tee-paatoksen-tiedot [tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id]
   (merge tiedot {::valikatselmus/tyyppi (name (::valikatselmus/tyyppi tiedot))
                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                  ::valikatselmus/siirto (bigdec (or (::valikatselmus/siirto tiedot) 0))
                  ::valikatselmus/urakoitsijan-maksu (bigdec (or (::valikatselmus/urakoitsijan-maksu tiedot) 0))
                  ::valikatselmus/tilaajan-maksu (bigdec (or (::valikatselmus/tilaajan-maksu tiedot) 0))
+                 ::valikatselmus/erilliskustannus-id erilliskustannus_id
+                 ::valikatselmus/sanktio-id sanktio_id
                  ::muokkaustiedot/poistettu? false
                  ::muokkaustiedot/luoja-id (:id kayttaja)
                  ::muokkaustiedot/muokkaaja-id (:id kayttaja)
                  ::muokkaustiedot/luotu (or (::muokkaustiedot/luotu tiedot) (pvm/nyt))
-                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot (pvm/nyt)))}))
+                 ::muokkaustiedot/muokattu (or (::muokkaustiedot/muokattu tiedot) (pvm/nyt))}))
 
 (defn hae-urakan-paatokset [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
     kayttaja
     (::urakka/id tiedot))
   (valikatselmus-q/hae-urakan-paatokset db tiedot))
+
+(defn- lupauksen-indeksi
+  "Lupausbonukselle ja -sanktiolle lisätään indeksi urakan tiedoista, mikäli ne on MH-urakoita ja alkavat vuonna -19 tai -20"
+  [urakan-tiedot]
+  (if (and
+        (= "teiden-hoito" (:tyyppi urakan-tiedot))
+        (or
+          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2020)
+          (= (-> urakan-tiedot :alkupvm pvm/vuosi) 2019)))
+    (:indeksi urakan-tiedot)
+    nil))
+
+(defn- tallenna-lupaussanktio [db paatoksen-tiedot kayttaja]
+  (when (= ::valikatselmus/lupaussanktio (::valikatselmus/tyyppi paatoksen-tiedot))
+   (let [urakka-id (::urakka/id paatoksen-tiedot)
+         urakka (first (q-urakat/hae-urakka db urakka-id))
+         toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
+         perustelu (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
+                     " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
+         kohdistuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
+
+         ; "Riippuen urakan alkuvuodesta, indeksejä ei välttämättä käytetä sakoissa/sanktioissa. MHU urakoissa joiden alkuvuosi 2021 tai eteenpäin niitä ei sidota indeksiin"
+         indeksi (lupauksen-indeksi urakka)
+         laatupoikkeama {:tekijanimi (:nimi kayttaja)
+                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/nyt), :perustelu perustelu, :kasittelytapa :valikatselmus}
+                         :kohde nil
+                         :aika kohdistuspvm
+                         :urakka urakka-id
+                         :yllapitokohde nil}
+         lupaussanktiotyyppi (first (sanktiot-q/hae-sanktiotyypin-tiedot-koodilla db {:koodit 0}))
+         sanktio {:kasittelyaika (pvm/nyt)
+                  :suorasanktio true,
+                  :laji :lupaussanktio,
+                  :summa (::valikatselmus/urakoitsijan-maksu paatoksen-tiedot),
+                  :toimenpideinstanssi toimenpideinstanssi-id,
+                  :perintapvm kohdistuspvm
+                  ;; Lupaussanktion tyyppiä ei tarvitse valita
+                  :tyyppi lupaussanktiotyyppi
+                  :indeksi indeksi}
+
+         ;; Tallennus palauttaa sanktio-id:n
+         uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])]
+     uusin-sanktio-id)))
+
+(defn- tallenna-lupausbonus
+  "Lupauspäätöstä tallennettaessa voidaan tallentaa myös lupausbonus"
+  [db paatoksen-tiedot kayttaja]
+  (when (= ::valikatselmus/lupausbonus (::valikatselmus/tyyppi paatoksen-tiedot))
+    (let [urakka-id (::urakka/id paatoksen-tiedot)
+          urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
+          indeksin-nimi (lupauksen-indeksi urakan-tiedot)
+          toimenpideinstanssi-id (valikatselmus-q/hae-urakan-bonuksen-toimenpideinstanssi-id db urakka-id)
+          sopimus-id (:id (first (urakat-q/hae-urakan-sopimukset db urakka-id)))
+          ;; Asetetaan päivämäärä hoitokauden viimeiselle kuukaudelle
+          laskutuspvm (konv/sql-date (pvm/luo-pvm-dec-kk (inc (::valikatselmus/hoitokauden-alkuvuosi paatoksen-tiedot)) 9 15))
+          lisatiedot (str "Urakoitsija sai " (::valikatselmus/lupaus-toteutuneet-pisteet paatoksen-tiedot)
+                       " pistettä ja lupasi " (::valikatselmus/lupaus-luvatut-pisteet paatoksen-tiedot) " pistettä.")
+          ek {:tyyppi "lupausbonus"
+              :urakka urakka-id
+              :sopimus sopimus-id
+              :toimenpideinstanssi toimenpideinstanssi-id
+              :pvm laskutuspvm
+              :rahasumma (::valikatselmus/tilaajan-maksu paatoksen-tiedot)
+              :indeksin_nimi indeksin-nimi
+              :lisatieto lisatiedot
+              :laskutuskuukausi laskutuspvm
+              :kasittelytapa "valikatselmus"
+              :luoja (:id kayttaja)}
+          bonus (toteumat-q/luo-erilliskustannus<! db ek)]
+      (:id bonus))))
 
 (defn tee-paatos-urakalle [db kayttaja tiedot]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
@@ -357,30 +452,43 @@
                             (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
         _ (do
             (tarkista-valikatselmusten-urakkatyyppi urakka :paatos)
-            (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
+            #_ (tarkista-aikavali urakka :paatos kayttaja valittu-hoitokausi))
         paatoksen-tyyppi (::valikatselmus/tyyppi tiedot)
         tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
-                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
+                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        erilliskustannus_id (tallenna-lupausbonus db tiedot kayttaja)
+        sanktio_id (tallenna-lupaussanktio db tiedot kayttaja)]
     (case paatoksen-tyyppi
       ::valikatselmus/tavoitehinnan-ylitys (tarkista-tavoitehinnan-ylitys tiedot tavoitehinta kattohinta)
       ::valikatselmus/kattohinnan-ylitys (tarkista-kattohinnan-ylitys tiedot urakka)
       ::valikatselmus/tavoitehinnan-alitus (tarkista-tavoitehinnan-alitus db tiedot urakka tavoitehinta hoitokauden-alkuvuosi)
       ::valikatselmus/lupausbonus (tarkista-lupausbonus db kayttaja tiedot)
       ::valikatselmus/lupaussanktio (tarkista-lupaussanktio db kayttaja tiedot))
-    (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi))))
+    (valikatselmus-q/tee-paatos db (tee-paatoksen-tiedot tiedot kayttaja hoitokauden-alkuvuosi erilliskustannus_id sanktio_id))))
 
-(defn poista-paatos
-  [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu
-    kayttaja
-    (::urakka/id tiedot))
+(defn poista-paatos [db kayttaja {::valikatselmus/keys [paatoksen-id] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja (::urakka/id tiedot))
   (log/debug "poista-lupaus-paatos :: tiedot" (pr-str tiedot))
-  (let [vastaus (if-not (number? paatoksen-id)
-                  (heita-virhe "Päätöksen id puuttuu!")
-                  (valikatselmus-q/poista-paatos db paatoksen-id))]
-    vastaus))
+  (if (number? paatoksen-id)
+    (let [;; Poista mahdollinen lupausbonus / lupaussanktio
+          paatos (first (valikatselmus-q/hae-paatos db paatoksen-id))
+          urakka-id (:urakka-id paatos)
+          ;; Poista joko lupaussanktio tai lupausbonus jos tyyppi täsmää
+          _ (cond
+              (and
+                (= (:tyyppi paatos) "lupaussanktio")
+                (not (nil? (:sanktio_id paatos))))
+              (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (:sanktio_id paatos) :urakka-id urakka-id})
+              (and
+                (= (:tyyppi paatos) "lupausbonus")
+                (not (nil? (:erilliskustannus_id paatos))))
+              (toteumat-palvelu/poista-erilliskustannus db kayttaja
+                {:id (:erilliskustannus_id paatos) :urakka-id urakka-id}))
+          vastaus (valikatselmus-q/poista-paatos db paatoksen-id)]
+      vastaus)
+    (heita-virhe "Päätöksen id puuttuu!")))
 
 (defrecord Valikatselmukset []
   component/Lifecycle

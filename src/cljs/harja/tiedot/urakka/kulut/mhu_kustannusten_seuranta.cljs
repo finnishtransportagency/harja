@@ -115,7 +115,8 @@
     ;; Muutetaan se {vuosi {0 {data}
     ;;                      1 {data}}}
     (assoc app :tavoitehinnan-oikaisut
-               (fmap #(zipmap (range) %) vastaus)))
+               ;; Merkitään samalla koskemattomiksi, jotta voidaan välttää turhien päivitysten tekeminen
+               (fmap #(zipmap (range) (map (fn [o] (assoc o :koskematon true)) %)) vastaus)))
 
   HaeTavoitehintojenOikaisutEpaonnistui
   (process-event [{vastaus :vastaus} app]

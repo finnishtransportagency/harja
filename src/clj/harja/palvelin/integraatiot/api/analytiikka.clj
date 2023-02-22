@@ -51,20 +51,32 @@
 (def db-reitti->avaimet
   {:f1 :reittipiste_aika
    :f2 :reittipiste_tehtavat
-   :f3 :reittipiste_sijainti
-   :f4 :reittipiste_materiaalit})
+   :f3 :reittipiste_sijainti_epsg4326
+   :f4 :reittipiste_sijainti_epsg3067
+   :f5 :reittipiste_materiaalit})
 
 (defn rakenna-reittipiste-sijainti
   "Reittipisteen sijainnin tiedot tulevat row_to_json funktion käytön vuoksi tekstimuodossa, joten
   niiden käsittely koordinaattimuotoon on monimutkaista."
-  [reitti]
-  (let [sijainti (:sijainti (:reittipiste reitti))
-        sijainnit (when sijainti (str/split sijainti #","))
-        koordinaatit (when sijainnit {:x (str/replace (first sijainnit) #"\(" "")
-                                      :y (str/replace (second sijainnit) #"\)" "")})
+  [reitti lisaa-epsg-4326-koordinaatit?]
+  (let [tee-koordinaatit (fn [sijainti x-avain y-avain]
+                           (when sijainti (let [sijainnit (-> sijainti
+                                                            (str/replace #"\(|\)" "")
+                                                            (str/split #","))]
+                                            {x-avain (first sijainnit)
+                                             y-avain (second sijainnit)})))
+        koordinaatit-3067 (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg3067]) :x :y)
+        koordinaatit-4326 (when lisaa-epsg-4326-koordinaatit?
+                            ;; PostGIS palauttaa epsg:4326-koordinaatin lon-lat järjestyksessä, täsmäten 3067:n järjestystä
+                            ;; Käytetään avaimina :lat ja :lon, jotta pysyy selkeänä, mikä suunta on mikäkin
+                            (tee-koordinaatit (get-in reitti [:reittipiste :sijainti :epsg4326]) :lon :lat))
+
         reitti (-> reitti
                  (update-in [:reittipiste] dissoc :sijainti)
-                 (assoc-in [:reittipiste :koodinaatit] koordinaatit))]
+                 (assoc-in [:reittipiste :koodinaatit] koordinaatit-3067))
+        reitti (if lisaa-epsg-4326-koordinaatit?
+                 (assoc-in reitti [:reittipiste :koordinaatit-4326] koordinaatit-4326)
+                 reitti)]
     reitti))
 
 (defn rakenna-reittipiste-tehtavat [reitti]
@@ -94,15 +106,17 @@
     reitti))
 
 (defn palauta-toteumat
-  "Haetaan toteumat annettujen alku- ja loppuajan puitteissa."
-  [db {:keys [alkuaika loppuaika] :as parametrit} kayttaja]
+  "Haetaan toteumat annettujen alku- ja loppuajan puitteissa.
+  koordinaattimuutos-parametrilla voidaan hakea lisäksi reittipisteet EPSG:4326-muodossa."
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
   (tarkista-toteumahaun-parametrit parametrit)
   (let [;; Materiaalikoodeja ei ole montaa, mutta niitä on vaikea yhdistää tietokantalauseeseen tehokkaasti
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
-                                                                       :loppuaika loppuaika} )
+                                                                       :loppuaika loppuaika
+                                                                       :koordinaattimuutos koordinaattimuutos})
         toteumat (->> toteumat
                    (map (fn [toteuma]
                            (-> toteuma
@@ -138,7 +152,7 @@
                                         ;; Muokkaa reittipisteen nimet oikein
                                         r (-> r
                                             (konversio/alaviiva->rakenne)
-                                            (rakenna-reittipiste-sijainti)
+                                            (rakenna-reittipiste-sijainti koordinaattimuutos)
                                             (rakenna-reittipiste-tehtavat)
                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
                                     r))

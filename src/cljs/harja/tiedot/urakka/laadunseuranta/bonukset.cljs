@@ -1,58 +1,31 @@
 (ns harja.tiedot.urakka.laadunseuranta.bonukset
-  (:require [clojure.set :as set]
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
 
+            [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka]
 
             [harja.tyokalut.tuck :as tuck-apurit]
+            [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
 
-(def konversioavaimet
-  {:perintapvm :pvm
-   :summa :rahasumma
-   :perustelu :lisatieto
-   :laji :tyyppi
-   :indeksi :indeksin_nimi
-   :kasittelyaika :laskutuskuukausi})
+(defn uusi-bonus []
+  (let [nyt (pvm/nyt)
+        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+    {:laji nil
+     :kasittelytapa nil
+     :perintapvm default-perintapvm
+     :kasittelyaika nyt
+     :toimenpideinstanssi (let [tpis (if urakka/mh-urakka?
+                                       (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
+                                       @urakka/urakan-toimenpideinstanssit)]
+                            (when (= 1 (count tpis))
+                              (:tpi_id (first tpis))))}))
 
-(def valitut-avaimet [:pvm :rahasumma :toimenpideinstanssi :tyyppi :lisatieto :indeksikorjaus :sijainti
-                      :laskutuskuukausi :kasittelytapa :indeksin_nimi :id :suorasanktio])
-
-(defn- keywordisoi
-  [avain tiedot]
-  (let [keywordisoi? (some? (get #{:laji :kasittelytapa} avain))]
-    (if keywordisoi?
-      (keyword tiedot)
-      tiedot)))
-
-(defn- assoc-in-muotoon
-  [[avain tiedot]]
-  (let [konversiot {:sijainti [:laatupoikkeama :sijainti]
-                    :kasittelyaika [:laatupoikkeama :paatos :kasittelyaika]
-                    :perustelu [:laatupoikkeama :paatos :perustelu]}]
-    [(or (get konversiot avain) [avain]) tiedot]))
-
-(defn- lomake->sanktiolistaus
-  [lomake]
-  (let [konversiot (set/map-invert konversioavaimet)
-        tee-valitut-avaimet (map #(-> [% (get lomake %)]))
-        keywordisoi-tiedot (map #(let [[avain tiedot] %]
-                                   [avain (keywordisoi avain tiedot)]))
-        konvertoi-avaimet (map #(let [[avain tiedot] %]                                 
-                                  [(or (get konversiot avain) avain) tiedot]))        
-        assoc-in-avaimet (map assoc-in-muotoon)
-        poistettu? (:poistettu lomake)]
-    (merge
-      (reduce
-        (fn [acc [avain tieto]]
-          (assoc-in acc avain tieto))
-        {}
-        (into [] (comp tee-valitut-avaimet konvertoi-avaimet keywordisoi-tiedot assoc-in-avaimet) valitut-avaimet))
-      {:bonus true :suorasanktio true :poistettu poistettu?})))
+;; ---------
 
 (defrecord LisaaLiite [liite])
 (defrecord PoistaLisattyLiite [])
@@ -68,69 +41,175 @@
 (defrecord LiitteidenHakuEpaonnistui [vastaus])
 (defrecord HaeLiitteet [])
 
+
+
+(defn- tallenna-bonus-mhu
+  "Muodostaa payloadin bonuslomakkeesta ja tallentaa bonuksen tiedot erilliskustannus-tauluun."
+  [{:keys [lomake] :as app}]
+  (let [lomake (lomake/ilman-lomaketietoja lomake)
+        payload {:id (:id lomake)
+                 :tyyppi (-> lomake :laji name)
+                 :toimenpideinstanssi (:toimenpideinstanssi lomake)
+                 :urakka-id (:id @nav/valittu-urakka)
+
+                 :pvm (:kasittelyaika lomake)
+                 ;; Erilliskustannus-taulussa ei ole saraketta 'perintapvm', joten perintapvm-kentän arvo
+                 ;; tallennetaan sarakkeeseen 'laskutuskuukausi'
+                 :laskutuskuukausi (:perintapvm lomake)
+                 :rahasumma (:summa lomake)
+                 :indeksin_nimi (:indeksi lomake)
+                 :lisatieto (:lisatieto lomake)
+                 :kasittelytapa (:kasittelytapa lomake)
+                 :liitteet (:liitteet lomake)}]
+
+    (tuck-apurit/post! app :tallenna-erilliskustannus
+      payload
+      {:onnistui ->TallennusOnnistui
+       :epaonnistui ->TallennusEpaonnistui})))
+
+
+(defn- tallenna-bonus-yllapito
+  "Muodostaa payloadin bonuslomakkeesta ja tallentaa bonuksen sanktio-tauluun.
+  Yllapidon urakoiden bonus tallennetaan poikkeuksellisesti sanktiona sanktio-tauluun."
+  [{:keys [lomake] :as app}]
+  (let [lomake (lomake/ilman-lomaketietoja lomake)
+        payload {:sanktio {:id (:id lomake)
+                           :laji :yllapidon_bonus
+                           :suorasanktio true
+                           :summa (:summa lomake)
+                           :indeksi (:indeksi lomake)
+                           :perintapvm (:perintapvm lomake)
+                           :toimenpideinstanssi (:toimenpideinstanssi lomake)}
+                 :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                                  :urakka (:id @nav/valittu-urakka)
+                                  :yllapitokohde (:id (:yllapitokohde lomake))
+                                  ;; Laatupoikkeamalla on pakko olla jokin "havaintoaika", vaikka tässä on kyseessä bonus.
+                                  ;; Asetetaan se samaksi kuin käsittelyaika.
+                                  :aika (:kasittelyaika lomake)
+                                  ;; Päätös on poikkeuksellisesti "sanktio" vaikka oikeasti kyseessä on bonus.
+                                  :paatos {:paatos "sanktio"
+                                           :perustelu (:lisatieto lomake)
+                                           :kasittelyaika (:kasittelyaika lomake)
+                                           :kasittelytapa (:kasittelytapa lomake)}
+                                  :liitteet (:liiteet lomake)}
+                 :hoitokausi @urakka/valittu-hoitokausi}]
+
+    (tuck-apurit/post! app :tallenna-suorasanktio
+      payload
+      {:onnistui ->TallennusOnnistui
+       :epaonnistui ->TallennusEpaonnistui})))
+
+(defn poista-bonus-mhu [{:keys [lomake] :as app}]
+  (let [payload {:id (:id lomake)
+                 :urakka-id (:id @nav/valittu-urakka)}]
+    (-> app
+      (tuck-apurit/post! :poista-erilliskustannus
+        payload
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
+      (assoc :tallennus-kaynnissa? true))))
+
+(defn poista-bonus-yllapito [{:keys [lomake] :as app}]
+  (let [payload {:id (:id lomake)
+                 :urakka-id (:id @nav/valittu-urakka)}]
+    (-> app
+      (tuck-apurit/post! :poista-suorasanktio
+        payload
+        {:onnistui ->TallennusOnnistui
+         :epaonnistui ->TallennusEpaonnistui})
+      (assoc :tallennus-kaynnissa? true))))
+
 (extend-protocol tuck/Event
   PoistaPoistetutLiitteet
   (process-event
-    [{:keys [liite-id]} app]    
+    [{:keys [liite-id]} app]
+    (log/debug "PoistaPoistetutLiitteet")
+
     (let [liitteet (get-in app [:lomake :liitteet])]
       (assoc-in app [:lomake :liitteet]
         (filter (fn [liite]
                   (not= (:id liite) liite-id))
           liitteet))))
+
   PoistaLisattyLiite
   (process-event
     [_ app]
+    (log/debug "PoistaLisattyLiite")
+
     (assoc-in app [:uusi-liite] nil))
+
   PoistaTallennettuLiite
   (process-event
     [{:keys [liite-id]} app]
+    (log/debug "PoistaTallennettuLiite")
+
     (let [{urakka-id :id} @nav/valittu-urakka
-          e! (tuck/current-send-function)]
-      (liitteet/poista-liite-kannasta
-        {:urakka-id urakka-id
-         :domain :bonukset
-         :domain-id (get-in app [:lomake :id])
-         :liite-id liite-id
-         :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})))
+          e! (tuck/current-send-function)
+          _ (liitteet/poista-liite-kannasta
+              {:urakka-id urakka-id
+               :domain :bonukset
+               :domain-id (get-in app [:lomake :id])
+               :liite-id liite-id
+               :poistettu-fn #(e! (->PoistaPoistetutLiitteet liite-id))})]
+      app))
+
   LisaaLiite
   (process-event
     [{liite :liite} app]
+    (log/debug "LisaaLiite")
+
     (-> app
       (update-in [:lomake :liitteet] conj liite)
       (assoc-in [:uusi-liite] liite)))
+
   LiitteidenHakuEpaonnistui
   (process-event
     [_ app]
+    (log/debug "LiitteidenHakuEpaonnistui")
+
     (viesti/nayta-toast! "Liitteiden haku epäonnistui" :varoitus)
     app)
+
   LiitteidenHakuOnnistui
   (process-event
     [{:keys [liitteet]} app]
+    (log/debug "LiitteidenHakuOnnistui")
+
     (-> app
       (assoc :liitteet-haettu? true)
       (assoc-in [:lomake :liitteet] liitteet)))
+
   HaeLiitteet
   (process-event
     [_ app]
+    (log/debug "HaeLiitteet")
+
     (-> app
       (tuck-apurit/post! :hae-bonuksen-liitteet
         {:urakka-id (:id @nav/valittu-urakka)
          :bonus-id (-> app :lomake :id)}
         {:onnistui ->LiitteidenHakuOnnistui
          :epaonnistui ->LiitteidenHakuEpaonnistui})))
+
   TyhjennaLomake
   (process-event
-    [{sulje-fn :sulje-fn} {:keys [tallennettu-lomake] :as app}]
-    (sulje-fn (lomake->sanktiolistaus tallennettu-lomake))
+    [{sulje-fn :sulje-fn} {:keys [tallennus-onnistui?] :as app}]
+    (log/debug "TyhjennaLomake")
+
+    ;; Välitetään tieto tallentumisen onnistumisesta sulje-fn:lle.
+    ;; Sanktiot & bonukset listaus päivitetään tarvittaessa uudestaan tiedon perusteella.
+    (sulje-fn tallennus-onnistui?)
+
     (-> app
-      (dissoc :lomake)
+      (dissoc :lomake :tallennus-onnistui?)
       (assoc :voi-sulkea? false)))
+
   PaivitaLomaketta
   (process-event
     [{lomake :lomake} app]
     (let [{viimeksi-muokattu ::lomake/viimeksi-muokattu-kentta
            muokatut ::lomake/muokatut} lomake
-          pvm-muokattu-viimeksi? (= :pvm viimeksi-muokattu)
+          pvm-muokattu-viimeksi? (= :kasittelyaika viimeksi-muokattu)
           laskutuskuukausi-muokattuihin? (and pvm-muokattu-viimeksi?
                                            (nil? (:laskutuskuukausi muokatut))
                                            (some? (:laskutuskuukausi lomake)))
@@ -138,47 +217,56 @@
                    (update lomake ::lomake/muokatut conj :laskutuskuukausi)
                    lomake)]
       (assoc app :lomake lomake)))
+
   TallennusOnnistui
   (process-event    
     [{vastaus :vastaus optiot :optiot} app]
+    (log/debug "TallennusOnnistui")
+
     (viesti/nayta-toast! "Tallennus onnistui")
-    (let [tallennettu-bonus (merge vastaus optiot)
-          [hoitokausi-alku hoitokausi-loppu] @urakka/valittu-hoitokausi
-          bonus-hoitokaudella? (pvm/valissa? (:pvm tallennettu-bonus) hoitokausi-alku hoitokausi-loppu)]
-      (assoc app :tallennus-kaynnissa? false :voi-sulkea? true
-        :tallennettu-lomake (when bonus-hoitokaudella? (merge vastaus optiot)))))
+
+    ;; Merkitään tallennus onnistuneeksi, jotta tieto voidaan välittää ylemmälle kerrokselle
+    ;; Sanktiot & bonukset listaus päivitetään tarvittaessa uudestaan tiedon perusteella.
+    ;; Bonuksia tallennetaan erilliskustannust-tauluun (MHU ym.) ja sanktio-tauluun (ylläpito),
+    ;; joten on yksinkertaisempaa päivittää listauksen tiedot sanktiot & bonukset näkymässä tallennuksen jälkeen.
+    (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? true :voi-sulkea? true))
+
   TallennusEpaonnistui
   (process-event
     [{vastaus :vastaus} app]
+    (log/debug "TallennusEpaonnistui")
+
     (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
-    (assoc app :tallennus-kaynnissa? false))
+    (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? false))
+
   PoistaBonus
   (process-event
-    [_ app]
-    (let [lomakkeen-tiedot (select-keys (:lomake app) valitut-avaimet)
-          payload (assoc lomakkeen-tiedot
-            :poistettu true
-            :urakka-id (:id @nav/valittu-urakka)
-            :tyyppi (-> lomakkeen-tiedot :tyyppi name)
-            :palauta-tallennettu? true)]
+    [_ {:keys [lomake] :as app}]
+    (log/debug "PoistaBonus")
+
+    (let [bonuksen-laji (:laji lomake)
+          poista-fn (fn [app]
+                        ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
+                        ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
+                        (if (= :yllapidon_bonus bonuksen-laji)
+                          (poista-bonus-yllapito app)
+                          (poista-bonus-mhu app)))]
       (-> app
-        (tuck-apurit/post! :tallenna-erilliskustannus
-               payload
-               {:onnistui ->TallennusOnnistui
-                :epaonnistui ->TallennusEpaonnistui})
+        poista-fn
         (assoc :tallennus-kaynnissa? true))))
+
   TallennaBonus
   (process-event
-    [_ app]    
-    (let [lomakkeen-tiedot (select-keys (:lomake app) valitut-avaimet)
-          payload (merge lomakkeen-tiedot
-                    {:urakka-id (:id @nav/valittu-urakka)
-                     :tyyppi (-> lomakkeen-tiedot :tyyppi name)
-                     :palauta-tallennettu? true
-                     :liitteet (:liitteet (:lomake app))})]
+    [_ {:keys [lomake] :as app}]
+    (log/debug "TallennaBonus: " lomake)
+
+    (let [bonuksen-laji (:laji lomake)
+          tallenna-fn (fn [app]
+                        ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
+                        ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
+                        (if (= :yllapidon_bonus bonuksen-laji)
+                          (tallenna-bonus-yllapito app)
+                          (tallenna-bonus-mhu app)))]
       (-> app
-        (tuck-apurit/post! :tallenna-erilliskustannus
-               payload
-               {:onnistui ->TallennusOnnistui
-                :epaonnistui ->TallennusEpaonnistui})
+        tallenna-fn
         (assoc :tallennus-kaynnissa? true)))))

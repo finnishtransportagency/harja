@@ -27,11 +27,11 @@
                 :voi-muokata-rivia? :muokattava
                 :esta-poistaminen? (complement rivi-poistettavissa?)
                 :esta-poistaminen-tooltip
-                (fn [_] "Kohteeseen liittymättömästä sanktiosta johtuvaa kustannusta ei voi poistaa.")})
+                (fn [_] "Sanktioiden muokkaus tapahtuu Laadunseurannan Sakot ja bonukset -osiossa.")})
 
 
 (def grid-skeema
-  [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm
+  [{:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt
     :validoi [[:ei-tyhja "Anna päivämäärä"]]
     :tyyppi :pvm :leveys kustannus-pvm-leveys}
    {:otsikko "Kustannuksen kuvaus" :nimi :selite

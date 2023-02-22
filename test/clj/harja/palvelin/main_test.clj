@@ -29,13 +29,6 @@
                              (assoc-in [:http-palvelin :dev-resources-path] "dev-resources")
                              (assoc :tietokanta testi/testitietokanta)
                              (assoc :tietokanta-replica testi/testitietokanta)
-                             (assoc :sonja {:url (str "tcp://"
-                                                      (harja.tyokalut.env/env "HARJA_SONJA_BROKER_HOST" "localhost")
-                                                      ":"
-                                                      (harja.tyokalut.env/env "HARJA_SONJA_BROKER_PORT" 61616))
-                                            :kayttaja ""
-                                            :salasana ""
-                                            :tyyppi :activemq})
                              (assoc :itmf {:url (str "tcp://"
                                                       (harja.tyokalut.env/env "HARJA_ITMF_BROKER_HOST" "localhost")
                                                       ":"
@@ -43,7 +36,6 @@
                                             :kayttaja ""
                                             :salasana ""
                                             :tyyppi :activemq})
-                             (assoc :sampo integraatio/integraatio-sampo-asetukset)
                              (assoc :tloik {:ilmoitusviestijono tloik-tyokalut/+tloik-ilmoitusviestijono+
                                             :ilmoituskuittausjono tloik-tyokalut/+tloik-ilmoituskuittausjono+
                                             :toimenpidejono tloik-tyokalut/+tloik-ilmoitustoimenpideviestijono+
@@ -102,21 +94,22 @@
 
 (def halutut-komponentit
   #{:metriikka
+    :info
     :db :db-replica
     :todennus :http-palvelin
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :sonja :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tloik :tierekisteri :labyrintti
-    :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tloik :tierekisteri :labyrintti
+    :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
-    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
+    :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
@@ -165,24 +158,25 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
-    :api-sampo})
+    :api-sampo
+    :harja-status})
 
 (def ei-statusta
   #{:metriikka
     :todennus
     :pdf-vienti :excel-vienti
     :virustarkistus :liitteiden-hallinta :kehitysmoodi
-    :integraatioloki :solita-sahkoposti :api-sahkoposti :sonja-sahkoposti :fim :sampo :tierekisteri :labyrintti
-    :turi :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
+    :integraatioloki :solita-sahkoposti :api-sahkoposti :fim :tierekisteri :labyrintti
+    :turi :digiroad-integraatio :yha-integraatio :velho-integraatio :raportointi :paivystystarkistukset :reittitarkistukset
     :kayttajatiedot :urakoitsijat :hallintayksikot :ping :pois-kytketyt-ominaisuudet :haku
     :indeksit :urakat :urakan-toimenpiteet :yksikkohintaiset-tyot :kokonaishintaiset-tyot :budjettisuunnittelu :tehtavamaarat
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
     :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
-    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
+    :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
-    :tienakyma :karttakuvat :debug :sahke :api-jarjestelmatunnukset :geometria-aineistot
+    :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
     :api-reittitoteuma :api-varustetoteuma :api-siltatarkastukset :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
@@ -230,9 +224,11 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
-    :api-sampo})
+    :api-sampo
+    :harja-status
+    :info})
 
-(def hidas-ok-status #{:sonja :itmf})
+(def hidas-ok-status #{:itmf})
 
 (deftest main-komponentit-loytyy
   (reset! jarjestelma (component/start (sut/luo-jarjestelma (asetukset/lue-asetukset *testiasetukset*))))
@@ -266,7 +262,6 @@
            (catch Throwable t
              (is false (str "Komponentin käynnistäminen epäonnistui!\n"
                             "Viesti: " (.getMessage t)))))
-      (jms/aloita-jms (:sonja @jarjestelma))
       (jms/aloita-jms (:itmf @jarjestelma))
       (doseq [komponentti (sort (dep/topo-comparator (component/dependency-graph @jarjestelma komponentit)) komponentit)]
         (cond

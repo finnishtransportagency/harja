@@ -335,7 +335,18 @@ WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
                                 -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
                                 -- 12 h urakan päättymisvuorokauden jälkeenkin.
                           WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
-                                (u.loppupvm IS NULL AND u.alkupvm <= NOW())))
+                                (u.loppupvm IS NULL AND u.alkupvm <= NOW()))),
+     loydetyt_ilmoitukset AS (SELECT distinct i.id as id, u.urakkanro
+                              from ilmoitus_urakat u,
+                                   ilmoitus i
+                              WHERE i.urakka = u.id
+                                and i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+                              union
+                              SELECT distinct i.id as id, u.urakkanro
+                              from ilmoitus_urakat u
+                                       join ilmoitus i on i.urakka = u.id
+                                       JOIN ilmoitustoimenpide it on it.ilmoitus = i.id AND
+                                                                     it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
 SELECT
     i.ilmoitusid,
     i.tunniste,
@@ -349,7 +360,7 @@ SELECT
         ELSE
             i.vastaanotettu
         END as "paivitetty-harjaan",
-    u.urakkanro AS alueurakkanumero,
+    li.urakkanro AS alueurakkanumero,
     i.ilmoitustyyppi,
     i.yhteydenottopyynto,
     i.paikankuvaus,
@@ -371,14 +382,10 @@ SELECT
     json_agg(row_to_json(row(it.kuitattu::timestamptz, it.kuittaustyyppi, coalesce(it.vakiofraasi,''), coalesce(it.vapaateksti,''),
         it.kuittaaja_henkilo_etunimi,it.kuittaaja_henkilo_sukunimi, it.kuittaaja_organisaatio_nimi,
         coalesce(it.kuittaaja_organisaatio_ytunnus, ''), it.kanava))) AS kuittaukset
-FROM ilmoitus i
-     JOIN ilmoitus_urakat u ON u.id = i.urakka,
-     ilmoitustoimenpide it
-where it.ilmoitus = i.id AND
-    (i."valitetty-urakkaan" between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
-      OR
-      it.kuitattu between :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-GROUP BY i.id, u.urakkanro, i."valitetty-urakkaan"
+FROM loydetyt_ilmoitukset li
+         JOIN ilmoitus i ON i.id = li.id
+         JOIN ilmoitustoimenpide it on it.ilmoitus = li.id
+GROUP BY i.id, li.urakkanro, i."valitetty-urakkaan"
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
 

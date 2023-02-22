@@ -12,7 +12,6 @@
             [clojure.data.zip.xml :as z]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.itmf :as itmf]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.integraatio :as integraatio]
             [harja.kyselyt.integraatiot :as integraatio-kyselyt]
             [harja.palvelin.integraatiot.jms :as jms]
@@ -35,8 +34,7 @@
 (def spostin-vastaanotto-url "/sahkoposti/toimenpidekuittaus")
 (def kayttaja "destia")
 (def kayttaja-yit "yit-rakennus")
-(defonce asetukset {:itmf integraatio/itmf-asetukset
-                    :sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset})
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea
@@ -48,10 +46,12 @@
     :pdf-vienti (component/using
                   (pdf-vienti/luo-pdf-vienti)
                   [:http-palvelin])
-    :sonja (feikki-jms "sonja")
     :api-sahkoposti (component/using
                               (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset
-                                                               :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                                                               :tloik {:toimenpidekuittausjono tloik-testi-tyokalut/+tloik-ilmoitustoimenpidekuittausjono+
+                                                                       :toimenpideviestijono tloik-testi-tyokalut/+tloik-toimenpideviestijono+
+                                                                       :ilmoitusviestijono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+
+                                                                       :ilmoituskuittausjono tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+}})
                               [:http-palvelin :db :integraatioloki :itmf])
     :labyrintti (component/using
                   (labyrintti/->Labyrintti "foo" "testi" "testi" (atom #{}))
@@ -61,7 +61,7 @@
              [:db :itmf :integraatioloki :labyrintti :api-sahkoposti])))
 
 (use-fixtures :each (fn [testit]
-                      (binding [*aloitettavat-jmst* #{"itmf" "sonja"}
+                      (binding [*aloitettavat-jmst* #{"itmf"}
                                 *lisattavia-kuuntelijoita?* true
                                 *jms-kaynnistetty-fn* (fn []
                                                         (jms-tyokalut/itmf-jolokia-jono tloik-testi-tyokalut/+tloik-ilmoitusviestijono+ nil :purge)
@@ -304,14 +304,18 @@
   2. Harja kuittaa pyynnön vastaanotetuksi
   3. Harja selvittää mihin urakkaan toimenpidepyyntö kuuluu ja lähettää urakan päivystäjälle sähköpostia. REST-APIn kautta.
   4. Päivystäjä kuittaa viestin vastaanotetuksi.
-  5. Harja päivittää toimenpiteen voimassaolevaksi
+  4.1 Päivystäjä kuittaa toimenpiteet aloitetuksi
+  5. Harja päivittää toimenpiteen vastaanotetuksi ja ilmoittaa siitä jonon kautta t-loikille
   6. Päivystäjä kuittaa toimenpiteen valmiiksi.
   7. Harja merkitsee kokonaisuudessaan toimenpidepyynnön valmiiksi ja käsitellyksi."
   (let [paivystajan-email "pekka.paivystaja@example.com"
         toimenpiteen-vastausemail "harja@vayla.fi"
-        viestit (atom [])
+        ilmoituskuittausviestit (atom [])
+        toimenpideviestit (atom [])
         viesti-id (str (UUID/randomUUID))]
-    (lisaa-kuuntelijoita! {"itmf" {"Harja.HarjaToT-LOIK.Ack" #(swap! viestit conj (.getText %))}})
+    ;; Kuuntele sekä Harjaan tulevia ilmoituksia, että t-loikille lähetettäviä kuittauksia toimenpiteen etenemisestä.
+    (lisaa-kuuntelijoita! {"itmf" {tloik-testi-tyokalut/+tloik-ilmoituskuittausjono+ #(swap! ilmoituskuittausviestit conj (.getText %))
+                                   tloik-testi-tyokalut/+tloik-toimenpideviestijono+ #(swap! toimenpideviestit conj (.getText %))}})
 
     ;; Lisää urakalle kuvitteellinen päivystäjä
     (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
@@ -352,7 +356,7 @@
             sijainti aineisto-toimenpidepyynnot/sijainti-oulun-alueella
             ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
         (async/<!! (async/timeout 2000))
-        ;; Ilmoita jonon kautta toimenpidepyynnöstä urakoitsijalle
+        ;; 1. T-LOIK lähettää toimenpidepyynnön
         (jms/laheta (:itmf jarjestelma) tloik-testi-tyokalut/+tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
 
         (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." ehdon-timeout)
@@ -372,13 +376,13 @@
           (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
           (is (= "valitys" (:kuittaustyyppi ilmoitustoimenpide)) "Ilmoitustoimenpide ei ole valitys vaiheessa menossa."))
 
-        ;; Merkataan hommat aloitetuksi/selvittely alkaa
+        ;; 4. Päivystäjä kuittaa viestin vastaanotetuksi.
         (let [sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                            "[Aloitettu] Alan alan hommiin" paivystajan-email toimenpiteen-vastausemail)
               tyon-aloitus-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
               _ (Thread/sleep 1000)
               _ (odota-ehdon-tayttymista #(realized? tyon-aloitus-vastaus) "Saatiin tyon-aloitus-vastaus." ehdon-timeout)
-              _ (odota-ehdon-tayttymista #(< 0 (count @viestit)) "Viestikuittaus on vastaanotettu." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(< 0 (count @ilmoituskuittausviestit)) "Viestikuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 
@@ -386,7 +390,7 @@
           ;; Pitäisi olla menossa ensimmäinen kuittaus eli ilmoitustoimenpide
           (is (= "aloitus" (:kuittaustyyppi (nth ilmoitustoimenpiteet 2))) "Ilmoitustoimenpide ei ole aloitettu -vaiheessa menossa."))
 
-        ;; Merkataan toimenpiteet aloitetuksi
+        ;; 4.1 Päivystäjä kuittaa toimenpiteet aloitetuksi
         (let [sposti_xml (aseta-xml-sahkopostin-sisalto (str "#[" urakka-id "/" ilmoitus-id "] Toimenpidepyynto")
                            "[Toimenpiteet aloitettu] Puristettiin homma liikkeelle. Korjattavaa löytyi."
                            paivystajan-email toimenpiteen-vastausemail)
@@ -395,7 +399,7 @@
               ;; T-LOIKille ei ITMF jonon kautta lähetetä toimenpiteiden aloituksesta sen kummemmin enää ilmoituksia
               ;; Eli jonosta saa löytyä vain 2 viestiä. Lopetuksesta tulee sitten lisää viestejä t-loikille välitettäväksi.
               _ (try
-                  (odota-ehdon-tayttymista #(= 2 (count @viestit)) "Toimenpiteetkuittaus on vastaanotettu." ehdon-timeout)
+                  (odota-ehdon-tayttymista #(= 2 (count @toimenpideviestit)) "Toimenpiteetkuittaus on vastaanotettu." ehdon-timeout)
                   (catch Exception e
                     (println "VIRHE testeissä! " (pr-str e))))
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
@@ -411,7 +415,7 @@
                            paivystajan-email toimenpiteen-vastausemail)
               tyon-lopetus-vastaus (future (api-tyokalut/post-kutsu [spostin-vastaanotto-url] kayttaja-yit portti sposti_xml nil true))
               _ (odota-ehdon-tayttymista #(realized? tyon-lopetus-vastaus) "Saatiin tyon-lopetus-vastaus." ehdon-timeout)
-              _ (odota-ehdon-tayttymista #(= 3 (count @viestit)) "Lopetuskuittaus on vastaanotettu." ehdon-timeout)
+              _ (odota-ehdon-tayttymista #(= 3 (count @toimenpideviestit)) "Lopetuskuittaus on vastaanotettu." ehdon-timeout)
               ilmoitustoimenpiteet (tloik-testi-tyokalut/hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
               ilmoitus (tloik-testi-tyokalut/hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id)]
 

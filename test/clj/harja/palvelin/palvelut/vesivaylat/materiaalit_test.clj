@@ -34,12 +34,11 @@
                         :db (tietokanta/luo-tietokanta testi/testitietokanta)
                         :http-palvelin (testi/testi-http-palvelin)
                         :fim (component/using
-                               (fim/->FIM +testi-fim+)
+                               (fim/->FIM {:url +testi-fim+})
                                [:db :integraatioloki])
                         :integraatioloki (component/using
                                            (integraatioloki/->Integraatioloki nil)
                                            [:db])
-                        :sonja (feikki-jms "sonja")
                         :itmf (feikki-jms "itmf")
                         :api-sahkoposti (component/using
                                           (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti integraatio/api-sahkoposti-asetukset

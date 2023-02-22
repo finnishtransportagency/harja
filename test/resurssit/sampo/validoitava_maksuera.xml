@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<NikuDataBus>
+    <Header action="write" externalSource="NIKU" objectType="product" version="8.0"></Header>
+    <Products>
+        <Product financialDepartment="KP4340" financialLocation="Kpito" financialProjectClass="INVCLASS"
+                 financialWipClass="WIPCLASS" finish="2027-12-31T17:00:00" managerUserName="L934498"
+                 name="Vesiliikenteen käyttöpalvelut: Lisätyöt" objectID="HA13506" start="2022-01-01T00:00:00">
+            <InvestmentAssociations>
+                <Allocations>
+                    <ParentInvestment InvestmentID="PR00052150" InvestmentType="project"
+                                      defaultAllocationPercent="1.0"></ParentInvestment>
+                </Allocations>
+            </InvestmentAssociations>
+            <InvestmentResources>
+                <Resource resourceID="kulu2022"></Resource>
+            </InvestmentResources>
+            <InvestmentTasks>
+                <Task name="Vesiliikenteen käyttöpalvelut: Lisätyöt" outlineLevel="1" taskID="~rmw">
+                    <Assignments>
+                        <TaskLabor resourceID="kulu2022"></TaskLabor>
+                    </Assignments>
+                </Task>
+            </InvestmentTasks>
+            <OBSAssocs completed="false">
+                <OBSAssoc id="LiiviKP" name="Kustannuspaikat"
+                          unitPath="/Liikennevirasto-4560/Väylänpito TOA-456040/Kunnossapito OSA-4560410/Sisävesiväylä YK-45604340/Sisävesiväylät-4560434000"></OBSAssoc>
+                <OBSAssoc id="LiiviSIJ" name="Sijainti" unitPath="/Kirjanpito"></OBSAssoc>
+                <OBSAssoc id="tuote2013" name="Tuoteryhma/Tuote" unitPath="/Kunnossapito/Hoito"></OBSAssoc>
+            </OBSAssocs>
+            <CustomInformation>
+                <ColumnValue name="vv_tilaus">01PRZ-T00010575</ColumnValue>
+                <ColumnValue name="vv_inst_no">13506</ColumnValue>
+                <ColumnValue name="vv_code">HA13506</ColumnValue>
+                <ColumnValue name="vv_me_type">6</ColumnValue>
+                <ColumnValue name="vv_type">me</ColumnValue>
+                <ColumnValue name="vv_status">2</ColumnValue>
+                <ColumnValue name="travel_cost_ok">false</ColumnValue>
+                <instance instanceCode="AL13506" objectCode="vv_invoice_receipt" parentInstanceCode="HA13506"
+                          parentObjectCode="Product">
+                    <CustomInformation>
+                        <ColumnValue name="code">AL13506</ColumnValue>
+                        <ColumnValue name="vv_payment_date">2022-11-02T23:00:35</ColumnValue>
+                        <ColumnValue name="vv_paym_sum"></ColumnValue>
+                        <ColumnValue name="vv_paym_sum_currency">EUR</ColumnValue>
+                        <ColumnValue name="name">Laskutus- ja maksutiedot</ColumnValue>
+                    </CustomInformation>
+                </instance>
+            </CustomInformation>
+        </Product>
+    </Products>
+</NikuDataBus>

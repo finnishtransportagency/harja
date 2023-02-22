@@ -24,7 +24,7 @@
                                         " vaan urakkaan " toteuman-todellinen-urakka-id)))))))
 
 (defn vaadi-erilliskustannus-kuuluu-urakkaan [db erilliskustannus-id vaitetty-urakka-id]
-  (log/debug "Tarkikistetaan, että erilliskustannus " erilliskustannus-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
+  (log/debug "Tarkistetaan, että erilliskustannus " erilliskustannus-id " kuuluu väitettyyn urakkaan " vaitetty-urakka-id)
   (assert vaitetty-urakka-id "Urakka id puuttuu!")
   (when erilliskustannus-id
     (let [urakka-id-kannassa (:urakka (first

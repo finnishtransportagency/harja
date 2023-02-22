@@ -18,7 +18,6 @@
   (process-event [{:keys [jarjestelma]} tila]
     (tuck-tyokalut/get! tila
                         (case jarjestelma
-                          :sonja :hae-sonjan-tila
                           :itmf :hae-itmfn-tila)
                         {:onnistui ->JMSnTilaHaettu
                          :epaonnistui ->JMSnTilahakuEpaonnistui

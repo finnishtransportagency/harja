@@ -12,8 +12,7 @@
      db integraatioloki jarjestelma integraatio nil
      (fn [konteksti]
        (let [http-asetukset (cond-> {:metodi :GET
-                                     :url url
-                                     :otsikot {"Content-Type" "text/xml"}}
+                                     :url url}
                                     (not (nil? kayttajatunnus)) (assoc :kayttajatunnus kayttajatunnus)
                                     (not (nil? salasana)) (assoc :salasana salasana))
              {body :body} (integraatiotapahtuma/laheta

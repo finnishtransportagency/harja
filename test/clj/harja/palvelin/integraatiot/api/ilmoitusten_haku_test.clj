@@ -139,44 +139,16 @@
    "tienumero" 79
    "yhteydenottopyynto" false})
 
-
-;; Toistuvasti feilaa, kommentoidaan pois. Olisi hyvä korjata vakaaksi.
-;; Älä poista testiä kokonaan. Sitä voi käyttää lokaalisti, vaikka se häiriköikin ci-puolella.
-#_(deftest kuuntele-urakan-ilmoituksia
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)'"))
-        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 185)))
-        aika-tz (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ssZ" (t/time-zone-for-id "Europe/Helsinki"))
-                            (t/now))
-        _ (Thread/sleep 2000)
-        ;;TODO VHAR-1754 Väliaikasesti ilmoitusaika = lähetysaika
-        ilmoitusaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 180)))
-        lahetysaika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss" (t/time-zone-for-id "Europe/Helsinki"))
-                                 (t/minus (t/now) (t/minutes 180)))
-        vastaus (future (api-tyokalut/get-kutsu [(str "/api/urakat/" urakka-id
-                                                      "/ilmoitukset?odotaUusia=true&muuttunutJalkeen=" (URLEncoder/encode aika-tz))] kayttaja portti))
-        _ (Thread/sleep 2000)
-        tloik-kuittaukset (atom [])
-        sonja-kuittaus (jms/kuuntele! (:sonja jarjestelma) +kuittausjono+ #(swap! tloik-kuittaukset conj (.getText %)))
-        _ (Thread/sleep 2000)
-        sonja-ilmoitus (jms/laheta (:sonja jarjestelma) +tloik-ilmoitusviestijono+ (testi-ilmoitus-sanoma ilmoitusaika lahetysaika))]
-    (odota-ehdon-tayttymista #(realized? vastaus) "Saatiin vastaus ilmoitushakuun." 30000)
-    (is (= 200 (:status @vastaus)))
-
-    (let [vastausdata (cheshire/decode (:body @vastaus))
-          ilmoitus (get (first (get vastausdata "ilmoitukset")) "ilmoitus")]
-      (when (not= 1 (count (get vastausdata "ilmoitukset")))
-        (println @vastaus))
-      (is (= 1 (count (get vastausdata "ilmoitukset"))))
-      (is (= (odotettu-ilmoitus (str ilmoitusaika "Z") (str lahetysaika "Z")) ilmoitus)))
-
-
-    (odota-ehdon-tayttymista #(= 1 (count @tloik-kuittaukset)) "Kuittaus on vastaanotettu." 20000)
-
-    (let [xml (first @tloik-kuittaukset)
-          data (xml/lue xml)]
-      (is (= "valitetty" (z/xml1-> data :kuittaustyyppi z/text))))))
+;; Apufunktiot
+(defn urakkaidt-ytunnuksella [ytunnus-str]
+  (let [idt (q-map (format "(SELECT u.id as id, u.urakkanro as urakkanro
+                             FROM urakka u
+                                  JOIN organisaatio o ON o.id = u.urakoitsija AND o.ytunnus = '%s'
+                                  -- Haetaan vain käynnissäolevista urakoista. Urakat ovat vastuussa tieliikenneilmoituksista
+                                  -- 12 h urakan päättymisvuorokauden jälkeenkin.
+                              WHERE (((u.loppupvm + interval '36 hour') >= NOW() AND (u.alkupvm + interval '36 hour') <= NOW()) OR
+                                    (u.loppupvm IS NULL AND u.alkupvm <= NOW())))" ytunnus-str))]
+    idt))
 
 (deftest hae-muuttuneet-ilmoitukset
   (u (str "UPDATE ilmoitus SET muokattu = NOW() + INTERVAL '1 hour'
@@ -195,6 +167,27 @@
       (is (> kaikkien-ilmoitusten-maara-suoraan-kannasta ilmoituksia))
       (is (< 0 ilmoituksia)))))
 
+(defn- poista-ilmoista-turhat
+  "Palauttaa ilmoitukset yksinkertaistettuna.
+  {'ilmoitukset'
+  [{'ilmoitus' {'kuittaukset' ['ja yksinkertaistetut kuittaukset tähän']
+                'valitetty-urakkaan' <timestamp>
+                'ilmoitusid' <ilmoitusid>}}]}"
+  [ilmoitukset]
+  (let [ilmoitukset-listana (get ilmoitukset "ilmoitukset")
+        ;; Siivotaan yksittäisistä ilmoituksista pois kaikki mitä ei tarvita
+        siivotut-ilmoitukset (mapv (fn [i]
+                                     (let [kuittaukset (get-in i ["ilmoitus" "kuittaukset"])
+                                           siivotut-kuittaukset (mapv (fn [k]
+                                                                        (-> {}
+                                                                          (assoc "kuittaustyyppi" (get-in k ["kuittaus" "kuittaustyyppi"])
+                                                                                 "kanava" (get-in k ["kuittaus" "kanava"])
+                                                                                 "kuitattu" (get-in k ["kuittaus" "kuitattu"])))) kuittaukset)]
+                                       (-> {}
+                                         (assoc-in ["ilmoitus" "kuittaukset"] siivotut-kuittaukset)
+                                         (assoc-in ["ilmoitus" "valitetty-urakkaan"] (get i "valitetty-urakkaan"))
+                                         (assoc-in ["ilmoitus" "ilmoitusid"] (get i "ilmoitusid"))))) ilmoitukset-listana)]
+    {"ilmoitukset" siivotut-ilmoitukset}))
 
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
@@ -214,6 +207,40 @@
                   kayttaja portti)]
     (is (= 200 (:status vastaus)))))
 
+(defn luo-ilmoitus [ilmoitusid urakka-id db-timestamp]
+  (let [sql-str (format "INSERT INTO ilmoitus (urakka, ilmoitusid, ilmoitettu, valitetty, \"valitetty-urakkaan\")
+      VALUES (%s, %s, '%s', '%s', '%s');" urakka-id ilmoitusid db-timestamp db-timestamp db-timestamp)
+        _ (u sql-str)
+        ilmoituksen-id (ffirst (q (format "SELECT id FROM ilmoitus WHERE urakka = %s order by id desc limit 1;" urakka-id)))]
+    ilmoituksen-id))
+
+(defn luo-kuittaus [ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp] ;kuittaustyyppi= lopetus, aloitus, vastaanotto
+  (let [sql-str (format "INSERT INTO ilmoitustoimenpide (ilmoitus, ilmoitusid, kuittaustyyppi, kuitattu, suunta) VALUES
+  (%s, %s, '%s' , '%s', 'sisaan'::viestisuunta);" ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp)]
+    (u sql-str)))
+
+(deftest hae-ilmoitukset-ytunnuksella-onnistuu-vaikka-haetaan-vain-kuittauksen-ajankohdasta
+  (let [;; Luo uusi ilmoitus ja pari kuittausta
+        y-tunnus "1565583-5"
+        ilmoitusid (rand-int 92333123)
+        ensimmainen-urakka-ytunnuksella (:id (first (q-map (format "select u.id as id
+        from urakka u join organisaatio o on u.urakoitsija = o.id AND o.ytunnus = '%s'
+        and u.loppupvm > NOW()
+        and u.tyyppi = 'teiden-hoito'" y-tunnus))))
+
+        db-timestamp-60min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 60)
+        db-timestamp-45min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 45)
+        ilmoituksen-id (luo-ilmoitus ilmoitusid ensimmainen-urakka-ytunnuksella db-timestamp-60min-sitten)
+        ;; Luo ilmoitukselle 3 kuittausta, jotka alkavat vähän eri aikaan, jotta voidaan testissä varmistua, että hakemalla vain kuittausajankohtaa, kaikki kuittaukset kuitenkin tulevat
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 49))
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 48))
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 10))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 51) "/" db-timestamp-45min-sitten)]
+                  kayttaja portti)
+        siivotut-ilmoitukset (poista-ilmoista-turhat (cheshire/decode (:body vastaus)))
+        kuittausten-maara (count (get-in siivotut-ilmoitukset ["ilmoitukset" 0 "ilmoitus" "kuittaukset"]))]
+    (is (= 200 (:status vastaus)))
+    (is (= 3 kuittausten-maara))))
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))

@@ -19,10 +19,19 @@
 
 (defn hae-yksikkohintaiset-toimenpiteet [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)
-    (let [urakka-id (::to/urakka-id tiedot)]
+    (let [urakka-id (::to/urakka-id tiedot)
+          ;; Kun toimenpide tallennetaan, tätä funktiota kutsutaan :aikavali tiedoilla, 
+          ;; vaikka tiedoissa pitäisi olla :alku ja :loppu. Tällöin käyttöliittymä näyttää kaikki toimenpiteet, vaikka ei pitäisi.
+          ;; Lisätään :alku ja :loppu 
+          optiot (if (:aikavali tiedot)
+                   (-> tiedot
+                       (assoc :alku (first (:aikavali tiedot)))
+                       (assoc :loppu (second (:aikavali tiedot))))
+                   tiedot)]
+
       (assert urakka-id "Urakka-id puuttuu!")
       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-vesivaylatoimenpiteet-yksikkohintaiset user urakka-id)
-      (q/hae-toimenpiteet db (assoc tiedot :tyyppi :yksikkohintainen)))))
+      (q/hae-toimenpiteet db (assoc optiot :tyyppi :yksikkohintainen)))))
 
 (defn siirra-toimenpiteet-kokonaishintaisiin [db user tiedot]
   (when (ominaisuus-kaytossa? :vesivayla)

@@ -16,6 +16,8 @@
         margin-top: 3rem;
         margin-bottom: 3rem;
     }
+}
+.paallystysilmoitusluettelo {
     .harja-icon-status-selected {
         color: @green-dark;
     }
@@ -33,6 +35,10 @@
     button {
         font-size: @fontin-koko-taulukko-pienempi;
     }
+  // yhteenvetoriville ei haluta tyhjää checkboksia
+  tr.yhteenveto > td .boolean {
+    display: none;
+  }
 }
 .aikataulu-valinnat {
     background-color: @gray240;
@@ -114,6 +120,9 @@
             .pvm-kentta > .form-control {
                 max-width: 243px;
             }
+            .solujen-valistys-8 td {
+                min-width: 51px; //pot-tietojen tapauksessa basis256 TR-osoitekentän vuoksi tämä
+            }
         }
     }
 }
@@ -194,12 +203,18 @@
     .tiemerkinta-tausta {
         background-color: @lemon-light;
     }
-    .paallystys-tausta {
-        background-color: @white-dark;
-    }
-    .paallystys-tausta-tumma {
-        background-color: @white-darker;
-    }
+}
+.paallystys-tausta {
+  background-color: @white-dark;
+}
+.paallystys-tausta-tumma {
+  background-color: @white-darker;
+}
+// Liittyvät taulukon sarakkeiden ryhmittelyotsikoihin
+div.yllapitokohteet {
+  thead > tr:first-child > th {
+    text-align: center;
+  }
 }
 .tuoreusvihje {
     display: flex;
@@ -224,11 +239,6 @@
 // ylläpitokohteet näkymässä headeri on matalampi, siinä tuoreusvihjettä ei ole tarvetta laskea keinotekoisesti alaspäin
 .paallystyskohteet .tuoreusvihje {
     top: 0;
-}
-.pot2-alustan-vinkki {
-    font-size: 0.75rem;
-    font-weight: normal;
-    margin-top: 12px;
 }
 .yha-ja-velho-lahetyksen-tila {
     > .info-laatikko {
@@ -287,4 +297,13 @@
 }
 .paallystyskustannusten-toiminnot {
     float: right;
+}
+.raaka-aineindeksit {
+  margin: @valistys-16 0;
+  .indeksitietosailio {
+    .tietokentta {
+      width: 200px;
+      margin-right: @valistys-64;
+    }
+  }
 }

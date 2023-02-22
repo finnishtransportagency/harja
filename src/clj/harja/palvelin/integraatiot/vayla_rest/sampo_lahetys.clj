@@ -17,7 +17,7 @@
                     (fn [konteksti]
                       (let [http-asetukset {:metodi :POST
                                             :url url
-                                            :otsikot {"Content-Type" "application/xml"}
+                                            :otsikot {"Content-Type" "application/xml; charset=utf-8"}
                                             :kayttajatunnus kayttajatunnus
                                             :salasana salasana}
                             vastaus (integraatiotapahtuma/laheta konteksti :http http-asetukset sampoviesti-xml)]
@@ -26,5 +26,5 @@
       vastaus)
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
       (do
-        (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
+        (log/error "rest-api api-sampo lähetys epäonnistui! " virheet)
         false))))

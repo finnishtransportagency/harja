@@ -24,7 +24,8 @@
             [harja.fmt :as fmt]
             [harja.ui.aikajana :as aikajana]
             [harja.ui.ikonit :as ikonit]
-            [clojure.string :as str]))
+            [clojure.string :as str]
+            [harja.ui.kentat :as kentat]))
 
 (defmulti muodosta-html
   "Muodostaa Reagent komponentin annetulle raporttielementille."
@@ -214,6 +215,8 @@
                                       lihavoi? (:lihavoi? optiot)
                                       korosta? (:korosta? optiot)
                                       korosta-hennosti? (:korosta-hennosti? optiot)
+                                      korosta-harmaa? (:korosta-harmaa? optiot)
+                                      valkoinen? (:valkoinen? optiot)
                                       rivin-luokka (:rivin-luokka optiot)
                                       mappina (assoc
                                                 (zipmap (range (count sarakkeet))
@@ -226,6 +229,12 @@
 
                                           korosta-hennosti?
                                           (assoc :korosta-hennosti true)
+                                    
+                                          korosta-harmaa?
+                                          (assoc :korosta-harmaa true)
+                                    
+                                          valkoinen?
+                                          (assoc :valkoinen true)
 
                                           (or korosta? (when korosta-rivit (korosta-rivit index)))
                                           (assoc :korosta true)
@@ -243,6 +252,10 @@
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
+
+(defmethod muodosta-html :jakaja [_]
+  [:hr {:style {:margin-top "30px"
+                :margin-bottom "30px"}}])
 
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3 teksti])
@@ -312,6 +325,14 @@
 
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
+
+(defmethod muodosta-html :boolean [[_ {:keys [arvo]}]]
+  [:div.boolean
+   (kentat/vayla-checkbox {:data arvo
+                           :input-id (str "harja-checkbox" (gensym))
+                           :disabled? true
+                           :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
+                           :arvo arvo})])
 
 (defmethod muodosta-html :default [elementti]
   (log "HTML-raportti ei tue elementtiä: " elementti)

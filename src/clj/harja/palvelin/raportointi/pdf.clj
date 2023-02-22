@@ -32,6 +32,7 @@
 (def raportin-tehostevari "#f0f0f0")
 (def korostettu-vari "#004D99")
 (def hennosti-korostettu-vari "#E0EDF9")
+(def harmaa-korostettu-vari "#FAFAFA")
 
 (defmulti muodosta-pdf
           "Muodostaa PDF:n XSL-FO hiccupin annetulle raporttielementille.
@@ -207,6 +208,8 @@
                   [rivi {}])
                 lihavoi-rivi? (:lihavoi? optiot)
                 korosta-rivi? (:korosta? optiot)
+                valkoinen? (:valkoinen? optiot)
+                korosta-harmaa? (:korosta-harmaa? optiot)
                 korosta-hennosti? (:korosta-hennosti? optiot)]]
       (if-let [otsikko (:otsikko optiot)]
         (taulukko-valiotsikko otsikko sarakkeet)
@@ -218,6 +221,12 @@
               korosta? (when (or korosta-rivi? (some #(= i-rivi %) korosta-rivit))
                          {:background-color korostettu-vari
                           :color "white"})
+              valkoinen? (when valkoinen?
+                           {:background-color "white"
+                            :color "black"})
+              korosta-harmaa? (when korosta-harmaa?
+                                  {:background-color harmaa-korostettu-vari
+                                   :color "black"})
               korosta-hennosti? (when korosta-hennosti?
                                   {:background-color hennosti-korostettu-vari
                                    :color "black"})
@@ -253,6 +262,8 @@
                                               (tasaus (:tasaa sarake)))}
                                yhteenveto?
                                korosta?
+                               valkoinen?
+                               korosta-harmaa?
                                (korostetaanko-hennosti korosta-hennosti? arvo-datassa)
                                lihavoi?)
               (when korosta?
@@ -331,6 +342,11 @@
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
 
+(defmethod muodosta-pdf :jakaja [[_ _]]
+  [:fo:block {:border "solid 0.1mm gray"
+              :margin-top "30px"
+              :margin-bottom "30px"}])
+
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
 
@@ -377,6 +393,42 @@
               pylvaat)]
    [:fo:block {:space-after "1em"}]])
 
+(defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
+  (str (avain (get arvot tyyppi))))
+
+(defmethod muodosta-pdf :liikenneyhteenveto [[_ yhteenveto]]
+  [:fo:table {:font-size otsikon-fonttikoko}
+   [:fo:table-column {:column-width "8%"}]
+   [:fo:table-column {:column-width "18%"}]
+   [:fo:table-column {:column-width "18%"}]
+   [:fo:table-column {:column-width "18%"}]
+   [:fo:table-column {:column-width "18%"}]
+   [:fo:table-column {:column-width "18%"}]
+
+   (let [saraketyyli-yla {:margin-left "8mm" :margin-top "30px" :font-weight "bold"}
+         sivusarakkeet-yla {:margin-left "14mm" :margin-top "30px" :font-weight "bold"}
+         saraketyyli-ala {:margin-left "8mm" :margin-top "6px" :font-weight "bold"}
+         sivusarakkeet-ala {:margin-left "14mm" :margin-top "6px" :font-weight "bold"}]
+
+     [:fo:table-body
+      [:fo:table-row
+       [:fo:table-cell [:fo:block {:margin-top "30px"} "Toimenpiteet"]]
+
+       [:fo:table-cell [:fo:block sivusarakkeet-yla "Sulutukset ylös: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sulutukset-ylos)]]
+       [:fo:table-cell [:fo:block saraketyyli-yla "Sulutukset alas: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sulutukset-alas)]]
+       [:fo:table-cell [:fo:block saraketyyli-yla "Sillan avaukset: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sillan-avaukset)]]
+       [:fo:table-cell [:fo:block saraketyyli-yla "Tyhjennykset: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :tyhjennykset)]]
+       [:fo:table-cell [:fo:block sivusarakkeet-yla "Yhteensä: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :yhteensa)]]]
+      
+      [:fo:table-row
+       [:fo:table-cell [:fo:block {:margin-top "6px"} "Palvelumuoto"]]
+
+       [:fo:table-cell [:fo:block sivusarakkeet-ala "Paikallispalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :paikallispalvelu)]]
+       [:fo:table-cell [:fo:block saraketyyli-ala "Kaukopalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :kaukopalvelu)]]
+       [:fo:table-cell [:fo:block saraketyyli-ala "Itsepalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :itsepalvelu)]]
+       [:fo:table-cell [:fo:block saraketyyli-ala "Muu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :muu)]]
+       [:fo:table-cell [:fo:block sivusarakkeet-ala "Yhteensä: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :yhteensa)]]]])])
+
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
   [:fo:table {:font-size otsikon-fonttikoko}
@@ -409,6 +461,16 @@
          "Sivu " [:fo:page-number]
          ;;" / " [:fo:page-number-citation {:ref-id "raportti-loppu"}]
          ]]]]]))
+
+(defmethod muodosta-pdf :checkbox-lista [[_ otsikot-ja-arvot]]
+  [:fo:table {:font-size otsikon-fonttikoko}
+   [:fo:table-body
+    [:fo:table-row
+     (for [[otsikko vaihtoehto koko] otsikot-ja-arvot]
+       [:fo:table-cell
+        [:fo:block
+            (fo/checkbox koko vaihtoehto)
+            " " otsikko]])]]])
 
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
@@ -465,6 +527,9 @@
 
                                         :content-height (str (+ 5 (count rivit)) "cm")}
            aikajana]]))]))
+
+(defmethod muodosta-pdf :boolean [[_ {:keys [arvo]}]]
+  (if arvo "Kyllä" "Ei"))
 
 (defmethod muodosta-pdf :default [elementti]
   (log/debug "PDF-raportti ei tue elementtiä " elementti)

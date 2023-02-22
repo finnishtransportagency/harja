@@ -28,6 +28,7 @@
                           :tr_loppuetaisyys (:let sijainti)
                           :tr_ajorata (:ajr sijainti)
                           :tr_kaista (:kaista sijainti)
+                          :yllapitoluokka (:yllapitoluokka alikohde)
                           :paallystetyyppi (paallystys-ja-paikkaus/hae-koodi-apin-paallysteella (:paallystetyyppi alikohde))
                           :raekoko (:raekoko alikohde)
                           :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))

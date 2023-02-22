@@ -72,7 +72,6 @@
 
                  [javax.jms/jms-api "1.1-rev-1"]
                  [org.apache.activemq/activemq-client "5.15.9"]
-                 [org.apache.activemq/artemis-jms-client "2.20.0"]
 
 
                  ;; Fileyard  liitetiedostojen tallennus
@@ -146,7 +145,9 @@
                  [clj-gatling "0.13.0" :exclusions [[clj-time]]]
                  ;; Tarvitaan käännöksessä
                  [com.bhauman/figwheel-main "0.2.18"]
-                 [digest "1.4.9"]]
+                 [digest "1.4.9"]
+                 ;; Nätimpi xml:n printtaus mahdollistettu
+                 [org.clojure/data.xml "0.0.8"]]
   :managed-dependencies [[org.apache.poi/poi "4.1.0"]
                          [org.apache.poi/poi-scratchpad "4.1.0"]
                          [org.apache.poi/poi-ooxml "4.1.0"]]

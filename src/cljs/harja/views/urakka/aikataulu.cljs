@@ -139,7 +139,7 @@
       [vihje-elementti
        [:span
         [:span
-         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystysurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään valmistumispäivänä."]
+         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystys- ja tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään valmistumispäivänä."]
          (if muutos-taulukosta?
            [:span.bold (str " Tämän kohteen sähköposti lähetetään "
                             (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
@@ -265,14 +265,14 @@
                          :vuosi @u/valittu-urakan-vuosi})] 
        [upotettu-raportti/raportin-vientimuodot 
         (assoc parametrit 
-          :otsikko "Lataa PDF"
+          :otsikko "PDF"
           :kasittelija :pdf)
         (assoc parametrit
-          :otsikko "Lataa Excel"
+          :otsikko "Excel"
           :kasittelija :excel)
         (-> parametrit 
           (assoc       
-            :otsikko "Lataa alikohteiden Excel"
+            :otsikko "Alikohteiden Excel"
             :kasittelija :excel)
           (assoc-in [:parametrit :alikohderaportti?] true))])]))
 
@@ -583,12 +583,12 @@
   [nakyma]
   (case nakyma
     :tiemerkinta
-    [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
+    [{:teksti "" :sarakkeita 5 :luokka "paallystys-tausta"}
      {:teksti "Päällystys" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
      {:teksti "Tiemerkintä" :sarakkeita 7 :luokka "tiemerkinta-tausta"}]
 
     ;; kaikki muut, käytännössä :paallystys
-    [{:teksti "" :sarakkeita 6 :luokka "paallystys-tausta"}
+    [{:teksti "" :sarakkeita 5 :luokka "paallystys-tausta"}
      {:teksti "Päällystys" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
      {:teksti "Tiemerkintä" :sarakkeita 6 :luokka "tiemerkinta-tausta"}
      {:teksti "" :sarakkeita 1 :luokka "paallystys-tausta-tumma"}]))
@@ -655,10 +655,6 @@
       {:otsikko "Pit. (m)" :nimi :pituus :leveys 3
        :tyyppi :positiivinen-numero
        :tasaa :oikea
-       :muokattava? (constantly false)}
-      {:otsikko "PK-lk"
-       :nimi :yllapitoluokka :leveys 3 :tyyppi :string
-       :fmt yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi
        :muokattava? (constantly false)}
       (when (= (:nakyma optiot) :paallystys) ;; Asiakkaan mukaan ei tarvi näyttää tiemerkkareille
         {:otsikko "Koh\u00ADteen aloi\u00ADtus" :leveys 8 :nimi :aikataulu-kohde-alku
@@ -731,7 +727,7 @@
                         :luokka "btn-xs"}])}
       ;; Tiemerkintä-puoli näkee, Merkintä ja Jyrsinnät
       (when (= (:nakyma optiot) :tiemerkinta)
-        {:otsikko "Merkin\u00ADtä" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
+        {:otsikko "Merkin\u00ADtä\u00ADluok\u00ADka" :valinta-nayta #(tm-domain/merkinta-ja-jyrsinta-fmt % "Valitse")
          :fmt tm-domain/merkinta-ja-jyrsinta-fmt
          :leveys 6 :nimi :aikataulu-tiemerkinta-merkinta :tyyppi :valinta
          :otsikkorivi-luokka "tiemerkinta-tausta"

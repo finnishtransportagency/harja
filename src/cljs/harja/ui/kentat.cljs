@@ -372,11 +372,13 @@
            (when (and yksikko vayla-tyyli?)
              [:span.sisainen-label.black-lighter {:style {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))}} yksikko])])))))
 
-(defmethod nayta-arvo :numero [{:keys [kokonaisluku? desimaalien-maara jos-tyhja salli-whitespace?] :as kentta} data]
+(defmethod nayta-arvo :numero [{:keys [jos-tyhja salli-whitespace? yksikko] :as kentta} data]
  (let [fmt (or (numero-fmt kentta) #(fmt/desimaaliluku-opt % +desimaalin-oletus-tarkkuus+))]
     [:span (if (and jos-tyhja (nil? @data))
              jos-tyhja
-             (normalisoi-numero (fmt @data) salli-whitespace?))]))
+             (normalisoi-numero (fmt @data) salli-whitespace?))
+     (when yksikko
+       (str " " yksikko))]))
 
 (defmethod tee-kentta :negatiivinen-numero [kentta data]
   [tee-kentta (assoc kentta :vaadi-negatiivinen? true
@@ -392,6 +394,23 @@
 
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
+
+(defmethod tee-kentta :euro [{:keys [fmt] :as kentta} data]
+  [tee-kentta (assoc kentta
+                :tyyppi :numero
+                :fmt (or fmt (partial fmt/euro-opt false))
+                :salli-whitespace? true
+                :yksikko "€"
+                :desimaalien-maara 2
+                :veda-oikealle? true)
+   data])
+
+(defmethod nayta-arvo :euro [{:keys [fmt] :as kentta} data]
+  [nayta-arvo (assoc kentta
+                :tyyppi :numero
+                :fmt (or fmt (partial fmt/euro-opt false))
+                :yksikko "€"
+                :salli-whitespace? true) data])
 
 (defmethod tee-kentta :big [{:keys [lomake? desimaalien-maara placeholder]} data]
   (let [fmt #(big/fmt % desimaalien-maara)
@@ -488,7 +507,7 @@
       (fn! event))))
 
 (defn vayla-checkbox
-  [{:keys [input-id disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
+  [{:keys [input-id lukutila? disabled? arvo data teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
   (let [input-id (or input-id
                      (gensym "checkbox-input-id-"))
         label-id (or label-id
@@ -496,7 +515,7 @@
     [:div
      [:input.vayla-checkbox
       {:id input-id
-       :class "check"
+       :class (y/luokat "check" (when lukutila? "lukutila"))
        :type "checkbox"
        :disabled disabled?
        :checked arvo
@@ -668,6 +687,7 @@
                     :input-id (str "harja-checkbox" (gensym))
                     :teksti teksti
                     :disabled? true
+                    :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
 
 (defn- vayla-radio [{:keys [id teksti ryhma valittu? oletus-valittu? disabloitu? kaari-flex-row? muutos-fn opts radio-luokka]}]
@@ -1061,7 +1081,10 @@
 
 (defmethod nayta-arvo :pvm [{:keys [jos-tyhja]} data]
   [:span (if-let [p @data]
-           (pvm/pvm p)
+           ;; On mahdollista, että goog.date.DateTime muuttuu jossakin tilanteessa stringiksi, niin palauta vain se
+           (if (string? p)
+             p
+             (pvm/pvm p))
            (or jos-tyhja ""))])
 
 (defn- resetoi-jos-tyhja-tai-matchaa [t re atomi]

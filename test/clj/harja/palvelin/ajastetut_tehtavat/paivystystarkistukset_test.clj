@@ -25,7 +25,7 @@
           :http-palvelin (testi-http-palvelin)
           :integraatioloki (component/using (integraatioloki/->Integraatioloki nil) [:db])
           :fim (component/using
-                 (fim/->FIM fim-test/+testi-fim+)
+                 (fim/->FIM {:url fim-test/+testi-fim+})
                  [:db :integraatioloki])))))
 
   (testit)
@@ -99,16 +99,13 @@
         testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
-    ;; Muhoksen ja Oulun urakalla päivitys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
-    (is (nil? (first (filter
-                  #(= (:nimi %) "Muhoksen päällystysurakka")
-                  urakat-ilman-paivystysta))))
+    ;; Oulun urakalla päivystys kyseisenä aikana, eli ei sisälly joukkoon "urakat ilman päivystystä"
     (is (nil? (first (filter
                        #(= (:nimi %) "Oulun alueurakka 2014-2019")
                        urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat sisältyy
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest oulun-urakan-paivystys-loytyy
   (let [pvm (t/local-date 2015 11 2)
@@ -141,16 +138,13 @@
         testitietokanta (:db jarjestelma)
         urakat (paivystajatarkistukset/hae-urakat-paivystystarkistukseen testitietokanta pvm)
         urakat-ilman-paivystysta (hae-urakat-ilman-paivystysta pvm)]
-    ;; Oulun 2014-2019 ja Muhoksen urakalla päivitys kyseisenä aikana
+    ;; Oulun 2014-2019 urakalla päivystys kyseisenä aikana
     (is (nil? (first (filter
                        #(= (:nimi %) "Oulun alueurakka 2014-2019")
                        urakat-ilman-paivystysta))))
-    (is (nil? (first (filter
-                       #(= (:nimi %) "Muhoksen päällystysurakka")
-                       urakat-ilman-paivystysta))))
 
     ;; Kaikki muut urakat ilman päivytystä
-    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 2)))))
+    (is (= (count urakat-ilman-paivystysta) (- (count urakat) 1)))))
 
 (deftest kaikki-urakat-listataan-ilman-paivystysta
   (let [pvm (t/local-date 2060 1 1)

@@ -279,11 +279,22 @@
           false)))
 
 
+    ;; Tässä rajapinnassa on virheellisesti kauttaviiva. Rajapinta duplikoitu ilman kauttaviivaa,
+    ;; ja tämä jätetty varmuuden vuoksi tähän.
+    ;; TODO: Jos näet tämän kesäkuun 2023 jälkeen, tarkista graylokista, näkyykö alla olevaa varoitusta. Jos ei, tämä voidaan poistaa
     (julkaise-reitti
       http :kirjaa-ilmoitustoimenpide
       (PUT "/api/ilmoitukset/:id/" request
            (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
-                         (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
+                         (fn [parametrit data _ db]
+                           (log/warn ":kirjaa-ilmoitustoimenpide kutsuttu kauttaviivalla osoitteen lopussa!")
+                           (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
+
+    (julkaise-reitti
+      http :kirjaa-ilmoitustoimenpide
+      (PUT "/api/ilmoitukset/:id" request
+        (kasittele-kutsu db integraatioloki :kirjaa-ilmoitustoimenpide request json-skeemat/ilmoitustoimenpiteen-kirjaaminen json-skeemat/kirjausvastaus
+          (fn [parametrit data _ db] (kirjaa-ilmoitustoimenpide db tloik parametrit data)))))
     this)
 
   (stop [{http :http-palvelin :as this}]

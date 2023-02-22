@@ -553,6 +553,9 @@ DECLARE
     asiakas_tyyt_bon_laskutettu           NUMERIC;
     asiakas_tyyt_bon_laskutetaan          NUMERIC;
     asiakas_tyyt_bon_rivi                 RECORD;
+    muu_bonus_laskutettu                  NUMERIC;
+    muu_bonus_laskutetaan                 NUMERIC;
+    muu_bonus_rivi                        RECORD;
     tavoitehinnan_ulk_rahav_laskutettu    NUMERIC;
     tavoitehinnan_ulk_rahav_laskutetaan   NUMERIC;
     tavoitehinnan_ulk_rahav_rivi          RECORD;
@@ -772,6 +775,8 @@ BEGIN
             tavoitepalkk_bon_laskutetaan := 0.0;
             asiakas_tyyt_bon_laskutettu := 0.0;
             asiakas_tyyt_bon_laskutetaan := 0.0;
+            muu_bonus_laskutettu := 0.0;
+            muu_bonus_laskutetaan := 0.0;
             tavoitehinnan_ulk_rahav_laskutettu := 0.0;
             tavoitehinnan_ulk_rahav_laskutetaan := 0.0;
             bonukset_laskutettu := 0.0;
@@ -794,7 +799,7 @@ BEGIN
             -- Erilliskustannus-tauluun tallennetaan erilaiset bonukset.
             -- Hoitokauden päättämiseen liittyviä kuluja ei tallenneta erilliskustannus tauluun, ne kirjataan kuluina ja tallennetaan kulu ja kulu_kohdistus-tauluun
             IF (t.tuotekoodi = '23150') THEN
-                FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi
+                FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
                                                  FROM erilliskustannus ek
                                                  WHERE ek.sopimus = sopimus_id
                                                    AND ek.toimenpideinstanssi = t.tpi
@@ -805,6 +810,9 @@ BEGIN
 
                         RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS Tyyppi = % ', erilliskustannus_rivi.tyyppi;
 
+                        -- Alihankintabonukselle ei tule indeksikorotusta, joten tämä saa jäädä näin.
+                        -- Kun on aikaa, niin tämän voisi laittaa käyttämään erilliskustannuksen_indeksilaskentaa, vaikka korotusta ei tulisikaan
+                        -- Mutta se olisi yhdenmukaisempaa
                         IF erilliskustannus_rivi.tyyppi = 'alihankintabonus' THEN
                             -- Bonus :: alihankintabonus
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -823,10 +831,13 @@ BEGIN
                         ELSEIF erilliskustannus_rivi.tyyppi = 'lupausbonus' THEN
                             -- Bonus :: lupausbonus
                             SELECT *
-                                FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                    erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
-                                INTO lupaus_bon_rivi;
+                            FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                     erilliskustannus_rivi.indeksin_nimi,
+                                                                     erilliskustannus_rivi.rahasumma,
+                                                                     erilliskustannus_rivi.urakka,
+                                                                     erilliskustannus_rivi.tyyppi,
+                                                                     pyorista_kerroin)
+                            INTO lupaus_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
                                 -- Hoitokauden alusta
@@ -844,9 +855,12 @@ BEGIN
                             -- Asiakastyytyväisyysbonus
                         ELSEIF erilliskustannus_rivi.tyyppi = 'asiakastyytyvaisyysbonus' THEN
                             SELECT *
-                                FROM laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kuukausi,
-                                                                    erilliskustannus_rivi.indeksin_nimi,
-                                                                    erilliskustannus_rivi.rahasumma, perusluku, pyorista_kerroin)
+                                FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                         erilliskustannus_rivi.indeksin_nimi,
+                                                                         erilliskustannus_rivi.rahasumma,
+                                                                         erilliskustannus_rivi.urakka,
+                                                                         erilliskustannus_rivi.tyyppi,
+                                                                         pyorista_kerroin)
                                 INTO asiakas_tyyt_bon_rivi;
 
                             IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
@@ -859,6 +873,30 @@ BEGIN
                                     -- Laskutetaan nyt
                                     asiakas_tyyt_bon_laskutetaan := asiakas_tyyt_bon_laskutetaan +
                                                                     COALESCE(asiakas_tyyt_bon_rivi.korotettuna, 0.0);
+                                END IF;
+                            END IF;
+
+                            -- Muu bonus
+                        ELSEIF erilliskustannus_rivi.tyyppi = 'muu-bonus' THEN
+                            SELECT *
+                              FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
+                                                                       erilliskustannus_rivi.indeksin_nimi,
+                                                                       erilliskustannus_rivi.rahasumma,
+                                                                       erilliskustannus_rivi.urakka,
+                                                                       erilliskustannus_rivi.tyyppi,
+                                                                       pyorista_kerroin)
+                              INTO muu_bonus_rivi;
+
+                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                -- Hoitokauden alusta
+                                muu_bonus_laskutettu := muu_bonus_laskutettu +
+                                                               COALESCE(muu_bonus_rivi.korotettuna, 0.0);
+
+                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                    -- Laskutetaan nyt
+                                    muu_bonus_laskutetaan := muu_bonus_laskutetaan +
+                                                                    COALESCE(muu_bonus_rivi.korotettuna, 0.0);
                                 END IF;
                             END IF;
 
@@ -914,9 +952,11 @@ BEGIN
                 RAISE NOTICE 'Tavoitepalkkio laskutettu :: laskutetaan: % :: %', tavoitepalkk_bon_laskutettu, tavoitepalkk_bon_laskutetaan;
 
                 bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu + lupaus_bon_laskutettu +
-                                       asiakas_tyyt_bon_laskutettu + tavoitepalkk_bon_laskutettu + tavoitehinnan_ulk_rahav_laskutettu;
+                                       asiakas_tyyt_bon_laskutettu + tavoitepalkk_bon_laskutettu + muu_bonus_laskutettu
+                                           + tavoitehinnan_ulk_rahav_laskutettu;
                 bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan + lupaus_bon_laskutetaan +
-                                        asiakas_tyyt_bon_laskutetaan + tavoitepalkk_bon_laskutetaan + tavoitehinnan_ulk_rahav_laskutetaan;
+                                        asiakas_tyyt_bon_laskutetaan + tavoitepalkk_bon_laskutetaan + muu_bonus_laskutetaan
+                                            + tavoitehinnan_ulk_rahav_laskutetaan;
                 RAISE NOTICE 'Bonuksia laskutettu :: laskutetaan: % :: %', bonukset_laskutettu, bonukset_laskutetaan;
 
                 -- HOIDON JOHTO, tpk 23150.

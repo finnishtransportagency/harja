@@ -34,45 +34,27 @@
             (kustannussuunnitelma/kasittele-kustannussuunnitelma-kuittaus db kuittaus viesti-id)))
         (log/error "Sampon kuittauksesta ei voitu hakea viesti-id:tä.")))))
 
-(defn aja-paivittainen-jms-lahetys [sonja integraatioloki db lahetysjono-ulos]
-  (log/warn "Maksuerien päivittäinen lähetys käynnistetty: " (t/now))
-  (let [maksuerat (qm/hae-likaiset-maksuerat db)
-        kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
-        urakkaidt (distinct (map :urakkaid maksuerat))
-        urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))]
-    (log/warn "Käsitellään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
-
-    (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
-      (try
-        (let [summat (urakoiden-summat urakkaid)]
-          (maksuera/laheta-maksuera sonja integraatioloki db lahetysjono-ulos maksuera-numero summat))
-        (catch Exception e
-          (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
-
-    (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (try
-        (kustannussuunnitelma/laheta-kustannussuunitelma sonja integraatioloki db lahetysjono-ulos (:maksuera kustannussuunnitelma))
-        (catch Exception e
-          (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e)))))))
-
 (defn aja-paivittainen-api-lahetys [db integraatioloki api-sampo-asetukset]
   (log/info "Maksuerien päivittäinen lähetys käynnistetty apin kautta: " (t/now))
   (let [maksuerat (qm/hae-likaiset-maksuerat db)
         kustannussuunnitelmat (qk/hae-likaiset-kustannussuunnitelmat db)
         urakkaidt (distinct (map :urakkaid maksuerat))
-        urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))]
-    (log/warn "Käsitellään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
-
-    (doseq [{maksuera-numero :numero urakkaid :urakkaid} maksuerat]
-      (try
-        (let [summat (urakoiden-summat urakkaid)]
-          (maksuera/laheta-api-maksuera db api-sampo-asetukset integraatioloki maksuera-numero summat))
-        (catch Exception e
-          (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
-
-    (doseq [kustannussuunnitelma kustannussuunnitelmat]
-      (try
-        (let [maksuera-numero (:maksuera kustannussuunnitelma)]
-          (kustannussuunnitelma/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki maksuera-numero))
-        (catch Exception e
-          (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e)))))))
+        urakoiden-summat (group-by :urakka_id (mapcat #(qm/hae-urakan-maksueran-summat db %) urakkaidt))
+        _ (log/warn "Käsitellään " (count maksuerat) " maksuerää ja " (count kustannussuunnitelmat) " kustannussuunnitelmaa.")
+        ;; Sampo ei kykene käsittelemään kustannussuunnitelmia, ennen maksueriä.
+        ;; Sampo vastaa maksuerään xml viestillä, kun se on prosessoitu. Ja vastauksen jälkeen kustannussuunnitelmat voidaan lähettää.
+        ;; Joten otetaan maksuerien lähetystiedot tässä erikseen ylös ja lähetetään kustannussuunnitelmat, kun maksueriin on saatu vastaukset
+        maksuera-vastaukset (mapv (fn [{maksuera-numero :numero urakkaid :urakkaid}]
+                                    (try
+                                      (let [summat (urakoiden-summat urakkaid)]
+                                        (maksuera/laheta-api-maksuera db api-sampo-asetukset integraatioloki maksuera-numero summat))
+                                      (catch Exception e
+                                        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä tapahtui poikkeus: %s." maksuera-numero e)))))
+                              maksuerat)]
+    (when maksuera-vastaukset
+      (doseq [kustannussuunnitelma kustannussuunnitelmat]
+        (try
+          (let [maksuera-numero (:maksuera kustannussuunnitelma)]
+            (kustannussuunnitelma/laheta-api-kustannusuunnitelma db api-sampo-asetukset integraatioloki maksuera-numero))
+          (catch Exception e
+            (log/warn e (format "Kustannussuunnitelman lähetyksessä tapahtui poikkeus: %s." e))))))))

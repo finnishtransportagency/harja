@@ -26,9 +26,11 @@
             [harja.ui.debug :as debug]
             [harja.views.urakka.kulut.yhteiset :as yhteiset]))
 
+;; TODO: Parempi olisi muokata tämä käyttämään normaalia oikeustarkistusta.
 (defn onko-oikeudet-tehda-paatos? [urakka-id]
   (or
     (roolit/roolissa? @istunto/kayttaja roolit/ely-urakanvalvoja)
+    (roolit/roolissa? @istunto/kayttaja roolit/ely-paakayttaja)
     (roolit/jvh? @istunto/kayttaja)
     (roolit/rooli-urakassa? @istunto/kayttaja roolit/ely-urakanvalvoja urakka-id)))
 
@@ -56,7 +58,9 @@
   ja hoitopäättyy 30.09.2021 niin hoitokausi ei ole vielä menneisyydessä. Tehdään tulkinta tässä vaiheessa niin, että
   käyttäjille jää n. 3kk aikaa tehdä välikatselmukset ja sen jälkeen se lukitaan."
   [hoitokausi nykyhetki urakan-alkuvuosi]
-  (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
+  ;; Niin moni urakka ei ole tehnyt välikatselmusta, että otetaan tarkistus hetkeksi pois käytöstä
+  false
+  #_ (let [hoitokauden-loppuvuosi (pvm/vuosi (second hoitokausi))
         nykyvuosi (pvm/vuosi nykyhetki)
         vanha-mhu? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)]
     (cond
@@ -96,7 +100,7 @@
      (when (and hoitokausi-menneisyydessa? (not jvh?))
        [:div.valikatselmus-menneisyydessa-varoitus {:style {:margin-top "16px"}}
         [ikonit/harja-icon-status-alert]
-        [:span "Hoitovuosi on päättynyt ja välikatselmusta ei voi enää muokata."]])]))
+        [:span "Hoitovuosi on lukittu vuoden vaihteessa ja välikatselmusta ei voi enää muokata."]])]))
 
 (defn kattohinnan-oikaisu [e! app]
   (let [oikaistu-kattohinta (some->
@@ -148,6 +152,7 @@
 (defn tavoitehinnan-oikaisut [e! {:keys [urakan-paatokset valittu-hoitokausi tavoitehinnan-oikaisut hoitokauden-alkuvuosi] :as app}]
   (let [paatoksia? (seq urakan-paatokset)
         hoitokauden-oikaisut (get tavoitehinnan-oikaisut hoitokauden-alkuvuosi)
+        hoitokauden-oikaisut-atom (atom hoitokauden-oikaisut)
         nykyhetki (pvm/nyt)
         ;; Joskus valittua hoitokautta ei ole asetettu
         valittu-hoitokausi (or
@@ -169,8 +174,8 @@
                                            voi-muokata?
                                            (lupaus-domain/vuosi-19-20? urakan-alkuvuosi))]
     [:div
-     [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut
-      {:voi-muokata voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+     [yhteiset/tavoitehinnan-oikaisut-taulukko hoitokauden-oikaisut-atom
+      {:voi-muokata? voi-muokata? :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
        :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))
        :tallenna-oikaisu-fn #(e! (valikatselmus-tiedot/->TallennaOikaisu %1 %2))
        :paivita-oikaisu-fn #(e! (valikatselmus-tiedot/->PaivitaTavoitehinnanOikaisut %1 %2))}]
@@ -228,13 +233,13 @@
          (when (and voi-muokata? (or (zero? oikaistu-tavoitehinta) (nil? oikaistu-tavoitehinta)))
            [urakalla-ei-tavoitehintaa-varoitus])
          [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot)
-             {:disabled? (not voi-muokata?)})]]
+          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (not voi-muokata?)}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled? (not voi-muokata?)
+         {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]
     )
@@ -310,13 +315,13 @@
            [urakalla-ei-tavoitehintaa-varoitus])
 
          [napit/yleinen-ensisijainen "Tallenna päätös"
-          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot)
-             {:disabled? (not voi-muokata?)})]]
+          #(e! (valikatselmus-tiedot/->TallennaPaatos paatoksen-tiedot))
+          {:disabled (not voi-muokata?)}]]
 
         [napit/nappi
          "Kumoa päätös"
          #(e! (valikatselmus-tiedot/->PoistaPaatos (::valikatselmus/paatoksen-id paatos) ::valikatselmus/tavoitehinnan-alitus))
-         {:disabled? (not voi-muokata?)
+         {:disabled (not voi-muokata?)
           :luokka "nappi-toissijainen napiton-nappi"
           :ikoni [ikonit/harja-icon-action-undo]}])]]))
 
@@ -422,7 +427,7 @@
             {:luokka "nappi-toissijainen napiton-nappi"
              :ikoni [ikonit/harja-icon-action-undo]}]))]]]))
 
-(defn lupaus-lomake [e! oikaistu-tavoitehinta app]
+(defn lupaus-lomake [e! oikaistu-tavoitehinta app voi-muokata?]
   (let [yhteenveto (:yhteenveto app)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)
         paatos-tehty? (or (= :katselmoitu-toteuma (:ennusteen-tila yhteenveto)) false)
@@ -432,6 +437,7 @@
         lupausbonus (get-in app [:yhteenveto :bonus-tai-sanktio :bonus])
         lupaussanktio (get-in app [:yhteenveto :bonus-tai-sanktio :sanktio])
         tavoite-taytetty? (get-in app [:yhteenveto :bonus-tai-sanktio :tavoite-taytetty])
+        tallennus-kesken? (:tallennus-kesken? app)
         urakoitsijan-maksu (cond lupaussanktio lupaussanktio
                                  tavoite-taytetty? 0M
                                  :else nil)
@@ -439,7 +445,7 @@
                              tavoite-taytetty? 0M
                              :else nil)
         summa (cond
-                lupaussanktio lupaussanktio
+                lupaussanktio (- lupaussanktio)          ; Käännetään positiiviseksi, koska nyt maksetaan
                 lupausbonus lupausbonus
                 tavoite-taytetty? 0M)
         pisteet (get-in app [:yhteenveto :pisteet :toteuma])
@@ -483,7 +489,11 @@
              " Urakoitsija maksaa sanktiota "
              " Maksetaan urakoitsijalle bonusta ")
            [:strong (fmt/euro-opt summa)]
-           " (100%)"]
+           (when (not (nil? (:indeksikorotus yhteenveto)))
+             (str " (+ indeksi  " (fmt/euro-opt (if lupaussanktio
+                                                  (* -1 (:indeksikorotus yhteenveto)) ;; Käännetään positiiviseksi
+                                                  (:indeksikorotus yhteenveto)
+                                                  )) " )"))]
 
           tavoite-taytetty?
           [:<>
@@ -502,7 +512,10 @@
              [napit/yleinen-ensisijainen "Tallenna päätös"
               #(e! (valikatselmus-tiedot/->TallennaPaatos
                      ;; Lupaus-päätös tallennetaan aina uutena tai poistetaan - ei muokata
-                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))]
+                     (dissoc paatoksen-tiedot ::valikatselmus/paatoksen-id)))
+              {:disabled (or
+                           tallennus-kesken?
+                           (not voi-muokata?))}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))]
@@ -512,7 +525,10 @@
               "Kumoa päätös"
               #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos-id))
               {:luokka "nappi-toissijainen napiton-nappi"
-               :ikoni [ikonit/harja-icon-action-undo]}]
+               :ikoni [ikonit/harja-icon-action-undo]
+               :disabled (or
+                           tallennus-kesken?
+                           (not voi-muokata?))}]
              (if lupaussanktio
                [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
                [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."]))])
@@ -563,7 +579,8 @@
                          (not (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi nykyhetki))
                          (or
                            poikkeusvuosi?
-                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))]
+                           (not (onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi))
+                           )))]
 
     ;; Piilotetaan kaikki mahdollisuudet tehdä päätös, jos tavoitehintaa ei ole asetettu.
     (when (and oikaistu-tavoitehinta (> oikaistu-tavoitehinta 0))
@@ -577,7 +594,7 @@
          [tavoitehinnan-alitus-lomake e! app toteuma oikaistu-tavoitehinta tavoitehinta voi-muokata?])
        [:h2 "Lupauksiin liittyvät päätökset"]
        (if lupaukset-valmiina?
-         [lupaus-lomake e! oikaistu-tavoitehinta app]
+         [lupaus-lomake e! oikaistu-tavoitehinta app voi-muokata?]
          [lupaus-ilmoitus e! app])])))
 
 (defn valikatselmus [e! app]

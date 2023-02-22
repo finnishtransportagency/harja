@@ -77,10 +77,8 @@
 (defn ei-lisattavia-kuuntelijoita! []
   "Helpperi funktio, jolla voi ilmoittaa, ettei ole lisättäviä kuuntelijoita testiin, jos käyttää laajenna-integraatiojarjestelmafixturea, jolle
    on lisätty oikea sonja"
-  {:pre [(not (nil? *lisattavat-kuuntelijat*))
-         (not (nil? @sonja-aloitus-go))]}
-  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa)
-  (async/<!! @sonja-aloitus-go))
+  {:pre [(not (nil? *lisattavat-kuuntelijat*))]}
+  (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa) )
 
 (defn circleci? []
   (not (nil? (env/env "CIRCLE_BRANCH"))))
@@ -566,6 +564,7 @@
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
+(def tampereen-alueurakan-2017-2022-id (atom nil))
 (def oulun-maanteiden-hoitourakan-2019-2024-id (atom nil))
 (def oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (atom nil))
 (def kajaanin-alueurakan-2014-2019-id (atom nil))
@@ -787,6 +786,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-tampereen-alueurakan-2017-2022-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Tampereen alueurakka 2017-2022'"))))
+
 (defn hae-kemin-paallystysurakan-2019-2023-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
@@ -936,7 +940,7 @@
 (defn hae-oulun-tiemerkintaurakan-paasopimuksen-id []
   (ffirst (q (str "SELECT id
                    FROM   sopimus
-                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2013-2022'"))))
+                   WHERE  nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024'"))))
 
 (defn hae-pudasjarven-alueurakan-paasopimuksen-id []
   (ffirst (q (str "(SELECT id FROM sopimus WHERE urakka =
@@ -1172,6 +1176,7 @@
   (reset! testikayttajien-lkm (hae-testikayttajat))
   (reset! oulun-alueurakan-2005-2010-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012"))
   (reset! oulun-alueurakan-2014-2019-id (hae-oulun-alueurakan-2014-2019-id))
+  (reset! tampereen-alueurakan-2017-2022-id (hae-tampereen-alueurakan-2017-2022-id))
   (reset! kemin-alueurakan-2019-2023-id (hae-kemin-paallystysurakan-2019-2023-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id))
   (reset! oulun-maanteiden-hoitourakan-2019-2024-sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id))
@@ -1383,8 +1388,7 @@
                                      [:klusterin-tapahtumat :rajapinta])
                         :rajapinta (rajapinta/->Rajapintakasittelija)
                         :uudelleen-kaynnistaja (if *uudelleen-kaynnistaja-mukaan?*
-                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:sonja {:paivitystiheys-ms (* 1000 10)}
-                                                                                                :itmf {:paivitystiheys-ms (* 1000 10)}}
+                                                 (uudelleen-kaynnistaja/->UudelleenKaynnistaja {:itmf {:paivitystiheys-ms (* 1000 10)}}
                                                                                                (atom nil))
                                                  (reify component/Lifecycle
                                                    (start [this]
@@ -1395,8 +1399,6 @@
 (defn jms-kasittely [kuuntelijoiden-lopettajat]
   (when *aloitettavat-jmst*
     (let [jms-kaynnistaminen! (fn []
-                                (when (contains? *aloitettavat-jmst* "sonja")
-                                  (<!! (jms/aloita-jms (:sonja jarjestelma))))
                                 (when (contains? *aloitettavat-jmst* "itmf")
                                   (<!! (jms/aloita-jms (:itmf jarjestelma))))
                                 (when *jms-kaynnistetty-fn*
@@ -1405,11 +1407,7 @@
         (reset! sonja-aloitus-go
                 (go (let [[jms-kuuntelijat _] (alts! [*lisattavat-kuuntelijat*
                                                       (timeout 5000)])
-                          sonja-kuuntelijat (get jms-kuuntelijat "sonja")
                           itmf-kuuntelijat (get jms-kuuntelijat "itmf")]
-                      (when (and sonja-kuuntelijat (map? sonja-kuuntelijat))
-                        (doseq [[kanava f] sonja-kuuntelijat]
-                          (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:sonja jarjestelma) kanava f))))
                       (when (and itmf-kuuntelijat (map? itmf-kuuntelijat))
                         (doseq [[kanava f] itmf-kuuntelijat]
                           (swap! kuuntelijoiden-lopettajat conj (jms/kuuntele! (:itmf jarjestelma) kanava f))))
@@ -1653,3 +1651,12 @@
   [maara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
 
+(defn nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSX") (Date. (- (.getTime (Date.)) (* maara 60000)))))
+
+(defn nykyhetki-psql-timestamp-formaatissa-tulevaisuuteen-minuutteja
+  "Anna määrä parametriin, että montako minuuttia siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSX") (Date. (+ (.getTime (Date.)) (* maara 60000)))))

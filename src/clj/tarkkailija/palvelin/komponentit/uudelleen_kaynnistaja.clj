@@ -49,8 +49,6 @@
                                        (> (viestien-maara-kaynnistyksesta) 3)))
                           (kaynnista-jarjestelma-uusiksi! this jarjestelma))))))}))
 
-(defn- varmista-sonjan-toimivuus! [this timeout]
-  (varmista-jms-toimivuus! this "sonja" timeout))
 
 (defn- varmista-itmfn-toimivuus! [this timeout]
   (varmista-jms-toimivuus! this "itmf" timeout))
@@ -63,9 +61,6 @@
            (fn [tarkkailijat]
              (merge tarkkailijat
                     (case jarjestelma
-                      "sonja" (varmista-sonjan-toimivuus! uudelleen-kaynnistaja (+ (or (get-in timeout-asetukset [:sonja :paivitystiheys-ms])
-                                                                                       oletusarvo)
-                                                                                   varoaika))
                       "itmf" (varmista-itmfn-toimivuus! uudelleen-kaynnistaja (+ (or (get-in timeout-asetukset [:itmf :paivitystiheys-ms])
                                                                                      oletusarvo)
                                                                                  varoaika))))))))
@@ -109,11 +104,7 @@
 
 (defonce start-lukko (Object.))
 
-(def alkutila {::sonja {::yhteys-aloitettu? nil
-                        ::uudelleen-kaynnistyksia 0
-                        ::viestien-maara-kaynnistyksesta 0
-                        ::uudelleen-kaynnistys-aika nil}
-               ::itmf {::yhteys-aloitettu? nil
+(def alkutila {::itmf {::yhteys-aloitettu? nil
                        ::uudelleen-kaynnistyksia 0
                        ::viestien-maara-kaynnistyksesta 0
                        ::uudelleen-kaynnistys-aika nil}})
@@ -122,11 +113,8 @@
   component/Lifecycle
   (start [this]
     (locking start-lukko
-      (when-not (contains? this ::sonja-yhteys-aloitettu-atom?)
+      (when-not (contains? this ::itmf-yhteys-aloitettu-atom?)
         (let [this (assoc this ::tila (atom alkutila))]
-          (if (asetukset/ominaisuus-kaytossa? :sonja-uudelleen-kaynnistys)
-            (jmstarkkailu! "sonja" this)
-            (log/info "Sonja uudelleen käynnistys ei ole käytössä"))
           (if (and (asetukset/ominaisuus-kaytossa? :itmf-uudelleen-kaynnistys)
                    (asetukset/ominaisuus-kaytossa? :itmf))
             (jmstarkkailu! "itmf" this)

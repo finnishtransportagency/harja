@@ -774,7 +774,9 @@
                           [livi-pudotusvalikko {:valinta @valittu-raporttityyppi
                                                 ;;\u2014 on väliviivan unikoodi
                                                 :format-fn #(if % (str
-                                                                    (:kuvaus %)
+                                                                    (or
+                                                                      (:kuvaus-tarkenne %)
+                                                                      (:kuvaus %))
                                                                     (if (:testiversio? %)
                                                                       " - TESTIVERSIO"
                                                                       "")) "Valitse")

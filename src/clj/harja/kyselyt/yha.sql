@@ -59,9 +59,7 @@ SELECT
   yhaid,
   toimenpide,
   tyomenetelma,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
+  karttapaivamaara
 FROM yllapitokohdeosa
 WHERE yllapitokohde = :yllapitokohde AND
       -- Tämä ottaa pois kaikki ne jotka on luotu Harjassa ja sen jälkeen poistettu,
@@ -80,7 +78,8 @@ WHERE yt.yhaid IN (:yhaidt);
 -- name: luo-yllapitokohde<!
 INSERT INTO yllapitokohde
 (urakka, sopimus, yha_tr_osoite, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
- tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, nimi, vuodet)
+ tunnus, yhaid, yha_kohdenumero, kohdenumero, yllapitokohdetyyppi, yllapitokohdetyotyyppi, nimi, vuodet,
+ karttapaivamaara)
 VALUES (
   :urakka,
   (SELECT id
@@ -99,13 +98,14 @@ VALUES (
   :yllapitokohdetyyppi :: yllapitokohdetyyppi,
   :yllapitokohdetyotyyppi :: yllapitokohdetyotyyppi,
   :nimi,
-  :vuodet :: INTEGER []);
+  :vuodet :: INTEGER [],
+  :karttapaivamaara);
 
 -- name: luo-yllapitokohdeosa<!
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
-                              yhaid)
+                              yhaid, yllapitoluokka)
 VALUES (
   :yllapitokohde,
   :nimi,
@@ -123,7 +123,8 @@ VALUES (
                                           CAST(:tr_loppuosa AS INTEGER),
                                           CAST(:tr_loppuetaisyys AS INTEGER),
 					  CAST(:tr_ajorata AS INTEGER))),
-  :yhaid);
+  :yhaid,
+  :yllapitoluokka);
 
 -- name: hae-urakan-yha-id
 -- single?: true

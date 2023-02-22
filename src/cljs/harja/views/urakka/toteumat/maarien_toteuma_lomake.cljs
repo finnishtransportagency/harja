@@ -72,7 +72,7 @@
                                validius ::tila/validius
                                toimenpide ::t/toimenpide
                                :as      lomake} :data}]
-  (let [ei-saa-olla-tehtavaa? (= "4 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
+  (let [ei-saa-olla-tehtavaa? (= "5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA" (:otsikko toimenpide))
         tehtavat (if ei-saa-olla-tehtavaa? [] tehtavat)
         paivita! (fn [polku indeksi arvo]
                    (if-not
