@@ -1,0 +1,32 @@
+
+// Liikennetapahtumien yhteenveto
+.liikenneyhteenveto>*:first-child {
+    padding-bottom: 0px;
+}
+
+.liikenneyhteenveto>*:last-child {
+    padding-top: 0px;
+}
+
+.musta {
+    color: @black-default;
+}
+
+.yhteenveto-rivi {
+    display: grid;
+    align-items: start;
+    text-align: left;
+    grid-template-columns: repeat(6, 1fr);
+    padding: @valistys-16;
+    gap: @valistys-8;
+}
+
+// Sarakkeista tulee hieman luettavampia pienemmällä resoluttiolla
+.yhteenveto-rivi>* {
+    width: 70%;
+}
+
+// Yhteensä-sarake
+.yhteenveto-rivi>*:last-child {
+    text-align: right;
+}
