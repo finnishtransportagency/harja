@@ -6,6 +6,7 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.kentat :as kentat]
 
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.urakka :as u]
@@ -28,14 +29,27 @@
 
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
 
-(defonce laskutusyhteenvedon-parametrit
+(def valittu-yhteenveto-muoto (atom :tyomaakokous))
+
+(defonce yhteenvedeon-valinnat
+  [["Työmaakokous" :tyomaakokous]
+   ["Tuotekohtainen" :tuotekohtainen]])
+
+(def laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
                   nakymassa? @laskutusyhteenveto-nakyvissa?
                   urakkatyyppi (:tyyppi ur)
-                  raportin-nimi (if (= :teiden-hoito urakkatyyppi)
-                                  :laskutusyhteenveto-mhu
-                                  :laskutusyhteenveto)]
+                  _ (println "urakkatyyppi: " urakkatyyppi "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
+                  raportin-nimi (cond (and
+                                       (= :teiden-hoito urakkatyyppi)
+                                       (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
+
+                                      (and
+                                       (= :teiden-hoito urakkatyyppi)
+                                       (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
+
+                                      (not= :teiden-hoito urakkatyyppi) :laskutusyhteenveto)]
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
                  (:id ur)
@@ -44,32 +58,51 @@
                   :loppupvm loppupvm
                   :urakkatyyppi urakkatyyppi})))))
 
-
-(defonce laskutusyhteenvedon-tiedot
+(def laskutusyhteenvedon-tiedot
   (reaction<! [p @laskutusyhteenvedon-parametrit]
               {:nil-kun-haku-kaynnissa? true}
               (when p
                 (raportit/suorita-raportti p))))
 
-
 (defn laskutusyhteenveto
   []
   (komp/luo
-    (komp/lippu laskutusyhteenveto-nakyvissa?)
-    (fn []
-      (let [ur @nav/valittu-urakka
-                     valittu-aikavali @u/valittu-hoitokauden-kuukausi
-            raportin-nimi (if (= :teiden-hoito (:urakkatyyppi ur))
-                            :laskutusyhteenveto-mhu
-                            :laskutusyhteenveto)]
-        [:span.laskutusyhteenveto
-         [:div.flex-row.alkuun
-          [valinnat/urakan-hoitokausi ur]
-          [valinnat/hoitokauden-kuukausi]
-          
-          (when-let [p @laskutusyhteenvedon-parametrit]
-            [upotettu-raportti/raportin-vientimuodot p])]
+   (komp/lippu laskutusyhteenveto-nakyvissa?)
+   (fn []
+     (let [ur @nav/valittu-urakka
+           valittu-aikavali @u/valittu-hoitokauden-kuukausi
+           ;;_ (println "urakkatyyppi: " (:urakkatyyppi ur) "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
+           raportin-nimi (cond (and
+                                (= :teiden-hoito (:urakkatyyppi ur))
+                                (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
+
+                               (and
+                                (= :teiden-hoito (:urakkatyyppi ur))
+                                (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
+
+                               (not= :teiden-hoito (:urakkatyyppi ur)) :laskutusyhteenveto)]
+
+       [:span.laskutusyhteenveto
+        [:div.flex-row.alkuun
+         [:div "Laskutusyhteenvedon muoto"
+          [:div
+           [kentat/tee-kentta {:tyyppi :radio
+                               :valinta-nayta first
+                               :valinta-arvo second
+                               :valinnat yhteenvedeon-valinnat}
+            valittu-yhteenveto-muoto]]]
          
-         (if-let [tiedot @laskutusyhteenvedon-tiedot]
-           [muodosta-html (assoc-in tiedot [1 :tunniste] raportin-nimi)]
-           [yleiset/ajax-loader "Raporttia suoritetaan..."])]))))
+         [valinnat/urakan-hoitokausi ur]
+         [valinnat/hoitokauden-kuukausi]
+
+         (when-let [p @laskutusyhteenvedon-parametrit]
+           [upotettu-raportti/raportin-vientimuodot p])]
+        
+        (when (or (= @valittu-yhteenveto-muoto :tyomaakokous) (= @valittu-yhteenveto-muoto :tuotekohtainen))
+
+          (if-let [tiedot @laskutusyhteenvedon-tiedot]
+            [muodosta-html
+             (-> tiedot
+                 (assoc-in [1 :tunniste] raportin-nimi)
+                 (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
+            [yleiset/ajax-loader "Raporttia suoritetaan..."]))]))))

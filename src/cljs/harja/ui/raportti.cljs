@@ -105,10 +105,11 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
-  [:span.varillinen-teksti
-   [:span.arvo {:style {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")}}
-    (if fmt (fmt arvo) arvo)]])
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+  (let [lihavoi (when lihavoi? {:font-weight "bold"})]
+    [:span.varillinen-teksti
+     [:span.arvo {:style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
+      (if fmt (fmt arvo) arvo)]]))
 
 (defmethod muodosta-html :infopallura
   ;; :infopallura elementtiä käytetään näyttämään tooltip tyyppisessä infokentässä lisätietoja kohteesta
@@ -128,8 +129,25 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
+(defmethod muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi asd1 asd2 laskutettu laskutetaan]]
+
+  [:div
+   [:div {:class "tyomaakokous-footer"}
+
+    [:span (str "Laskutus yhteensä " hoitokausi)]
+
+    [:div {:class "sisalto"}
+
+     [:span "Hoitokauden alusta"]
+     [:span "Laskutetaan 01/22"]
+
+     [:span (str asd1 " €")]
+     [:span (str asd2 " €")]]]])
+
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
+                                               piilota-border?
+                                               raportin-tunniste
                                                tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
@@ -146,7 +164,9 @@
                 :piilota-toiminnot? true
                 :sivuttain-rullattava? sivuttain-rullattava?
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
-                :esta-tiivis-grid? esta-tiivis-grid?}
+                :esta-tiivis-grid? esta-tiivis-grid?
+                :piilota-border? piilota-border?
+                :raportin-tunniste raportin-tunniste}
      (into []
            (map-indexed
             (fn [i sarake]
@@ -306,7 +326,6 @@
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
   (apply yleiset/taulukkotietonakyma {}
          (mapcat identity otsikot-ja-arvot)))
-
 
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
