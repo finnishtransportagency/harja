@@ -9,14 +9,17 @@
 
 (use-fixtures :once tietokantakomponentti-fixture)
 
-(def sanoma-oikein "{\"poistettavat-paikkauskohteet\":[1]}")
+(def kohde-id
+  (ffirst (q (str "SELECT id FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';"))))
+
+(def sanoma-oikein (str "{\"poistettavat-paikkauskohteet\":[" kohde-id"]}"))
 
 (deftest tarkista-poistosanoman-muodostus
   (let [db (:db jarjestelma)
-        _ (u "UPDATE paikkauskohde SET poistettu = TRUE where id = 1;")
-        sanoma (paikkauskohteen-poistosanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
+        _ (u (str "UPDATE paikkauskohde SET poistettu = TRUE where id = " kohde-id ";"))
+        sanoma (paikkauskohteen-poistosanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) kohde-id)
         sanoma-avaimilla (walk/keywordize-keys (cheshire/decode sanoma))
-        _ (u "UPDATE paikkauskohde SET poistettu = FALSE where id = 1;")]
+        _ (u (str "UPDATE paikkauskohde SET poistettu = FALSE where id = " kohde-id ";"))]
     (is (= sanoma-oikein sanoma) "Oikeanlainen sanoma palautuu.")
     (is (= 1 (count (:poistettavat-paikkauskohteet sanoma-avaimilla))) "Poistettavia paikkauskohteita on oikea määrä.")))
 

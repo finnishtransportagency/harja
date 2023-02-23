@@ -14,8 +14,10 @@
             [harja.kyselyt.materiaalit :as materiaalit-q]
             [harja.kyselyt.muutoshintaiset-tyot :as mht-q]
             [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.geometriapaivitykset :as geometriat-q]
+            [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
@@ -365,6 +367,10 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            ;; varmista sopimus (id) mikäli sitä ei ole annettu
+            sopimus (if (nil? sopimus)
+                      (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
+                      sopimus)
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
@@ -381,10 +387,19 @@
                           (toteumat-q/paivita-erilliskustannus! db (merge (dissoc parametrit :luoja)
                                                                      {:poistettu (or poistettu false)
                                                                       :id id
-                                                                      :muokkaaja (:id user)})))]
+                                                                      :muokkaaja (:id user)})))
+            ;; Päivitys tai tallennus ei laske bonukselle indeksikorotusta, joten haetaan erilliskustannus uusiksi mahdollisen indeksikorotuksen kanssa
+            tallennettu (first (erilliskustannus-kyselyt/hae-erilliskustannus db {:urakka-id urakka-id
+                                                                                  :id (:id tallennettu)}))
+            bonuksen-liitteet-tietokannasta (when id
+                                              (laatupoikkeamat-kyselyt/hae-bonuksen-liitteet db id))]
         (when (not (empty? liitteet))
           (doseq [l liitteet]
-            (toteumat-q/tallenna-erilliskustannukselle-liitteet<! db {:bonus (or (:id tallennettu) id) :liite (:id l)})))
+            (let [onko-liite-kannassa? (some #(when (and %
+                                                      (= (:id %) (:id l)))
+                                                true) bonuksen-liitteet-tietokannasta)]
+              (when-not onko-liite-kannassa?
+                (toteumat-q/tallenna-erilliskustannukselle-liitteet<! db {:bonus (or (:id tallennettu) id) :liite (:id l)})))))
         (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi ek))
         (cond
           (and
@@ -400,6 +415,30 @@
           (hae-urakan-erilliskustannukset db user {:urakka-id (:urakka-id ek)
                                                    :alkupvm   (:alkupvm ek)
                                                    :loppupvm  (:loppupvm ek)}))))
+
+    (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
+
+(defn poista-erilliskustannus
+  "Merkitään erilliskustannus poistetuksi"
+  [db user {erilliskustannus-id :id urakka-id :urakka-id :as ek}]
+  (assert (integer? erilliskustannus-id) "Parametria 'erilliskustannus-id' ei ole määritelty")
+  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+
+  (log/debug "Poista erilliskustannus:" ek)
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-erilliskustannukset user urakka-id)
+  (tarkistukset/vaadi-erilliskustannus-kuuluu-urakkaan db erilliskustannus-id urakka-id)
+
+  (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
+        (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
+
+    (jdbc/with-db-transaction
+      [db db]
+      (let [poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
+                                                               :muokkaaja (:id user)
+                                                               :urakka urakka-id})]
+        (when (:toimenpideinstanssi poistettu)
+          (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu)))
+        erilliskustannus-id))
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
@@ -430,9 +469,9 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (toteumat-q/listaa-urakan-toteutumien-toimenpiteet db))
 
-(defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma]}]
+(defn hae-maarien-toteumien-toimenpiteiden-tehtavat [db user {:keys [urakka-id tehtavaryhma otsikko]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :tehtavaryhma tehtavaryhma}))
+  (toteumat-q/listaa-maarien-toteumien-toimenpiteiden-tehtavat db {:urakka urakka-id :otsikko otsikko}))
 
 (defn poista-maarien-toteuma! [db user {:keys [urakka-id toteuma-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -1138,6 +1177,9 @@
       :tallenna-erilliskustannus
       (fn [user toteuma]
         (tallenna-erilliskustannus db user toteuma))
+      :poista-erilliskustannus
+      (fn [user erilliskustannus]
+        (poista-erilliskustannus db user erilliskustannus))
       :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
         (hae-urakan-toimenpiteet db-replica user tiedot))
@@ -1212,6 +1254,7 @@
       :paivita-yk-hint-toteumien-tehtavat
       :urakan-erilliskustannukset
       :tallenna-erilliskustannus
+      :poista-erilliskustannus
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma

@@ -237,6 +237,20 @@
       false
       true)))
 
+(defn- piirra-taulukko-rivi [asetukset tiedot]
+  [:tr.bottom-border {:class (str (:tr-luokka asetukset))}
+   [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+   [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+   [:td {:style {:width (:tehtava leveydet)
+                 :font-weight "700"}}
+    (:otsikko tiedot)]
+
+   [:td.numero {:style {:width (:suunniteltu leveydet)}} (:budjetoitu-summa tiedot)]
+   [:td.numero {:style {:width (:indeksikorjattu leveydet)}} (:indeksikorjattu-budjetoitu-summa tiedot)]
+   [:td.numero {:style {:width (:toteuma leveydet)}} (:toteutunut-summa tiedot)]
+   [:td {:style {:width (:erotus leveydet)}} (:erotus tiedot)]
+   [:td {:style {:width (:prosentti leveydet)}} (:prosentti tiedot)]])
+
 (defn- vuoden-paattamiskulu-rivi [toteutunut-rivi]
   [:tr.bottom-border.selectable
    [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
@@ -257,6 +271,21 @@
    [:td {:style {:width (:erotus leveydet)}}]
    [:td {:style {:width (:prosentti leveydet)}}]])
 
+(defn- toteuma-rivi [rivi]
+  (let [toteutunut-avain (keyword (str (:paaryhma rivi) "-toteutunut"))]
+    [:tr.bottom-border
+       [:td.paaryhma-center {:style {:width (:caret-paaryhma leveydet)}}]
+       [:td.paaryhma-center {:style {:width (:paaryhma-vari leveydet)}}]
+       [:td {:style {:width (:tehtava leveydet)
+                     :font-weight "700"}}
+        (str/capitalize (:toimenpide rivi))]
+
+       [:td.numero {:style {:width (:suunniteltu leveydet)}}]
+       [:td.numero {:style {:width (:indeksikorjattu leveydet)}}]
+       [:td.numero {:style {:width (:toteuma leveydet)}} (str (fmt->big (get rivi toteutunut-avain)))]
+       [:td {:style {:width (:erotus leveydet)}}]
+       [:td {:style {:width (:prosentti leveydet)}}]]))
+
 (defn- kustannukset-taulukko [e! app rivit-paaryhmittain]
   (let [hankintakustannusten-toimenpiteet (toimenpidetason-rivitys e! app (:hankintakustannukset rivit-paaryhmittain))
         hoidonjohdonpalkkiot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:hoidonjohdonpalkkio rivit-paaryhmittain)))
@@ -264,7 +293,9 @@
         jjhk-toimenpiteet (toimenpidetason-rivitys e! app (:johto-ja-hallintakorvaus rivit-paaryhmittain))
         lisatyot (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:lisatyot rivit-paaryhmittain))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
-        bonukset (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:bonukset rivit-paaryhmittain)))
+        bonukset (:bonukset rivit-paaryhmittain)
+        ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
+        sanktiot (:sanktiot rivit-paaryhmittain)
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
@@ -357,7 +388,19 @@
        ;; Lisätyöt
        [:table.table-default-header-valkoinen {:style {:margin-top "32px"}}
         [:tbody
-         (paaryhman-rivitys e! app "Tavoitehinnan ulkopuoliset rahavaraukset" :bonukset bonukset rivit-paaryhmittain)
+         (when (> (:ulkopuoliset-rahavaraukset-budjetoitu ulkopuoliset-rahavaraukset) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Tavoitehinnan ulkopuoliset rahavaraukset"
+              :budjetoitu-summa (str (fmt->big (:ulkopuoliset-rahavaraukset-budjetoitu ulkopuoliset-rahavaraukset)))
+              :indeksikorjattu-budjetoitu-summa (str (fmt->big (:ulkopuoliset-rahavaraukset-budjetoitu-indeksikorjattu ulkopuoliset-rahavaraukset)))}))
+         (when (> (count (:tehtavat bonukset)) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Bonukset"
+              :toteutunut-summa (str (fmt->big (:bonukset-toteutunut bonukset)))}))
+         (when (> (count (:tehtavat sanktiot)) 0)
+           (piirra-taulukko-rivi nil
+             {:otsikko "Sanktiot"
+              :toteutunut-summa (str (fmt->big (:sanktiot-toteutunut sanktiot)))}))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitepalkkio :tehtavat])) 0)
            (vuoden-paattamiskulu-rivi tavoitepalkkio))
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnan-ylitys :tehtavat])) 0)
@@ -409,7 +452,7 @@
                         (pvm/iso8601 (pvm/hoitokauden-loppupvm (inc valittu-hoitokausi))))
         valikatselmus-tekematta? (t-yhteiset/valikatselmus-tekematta? app)]
     [:div.kustannusten-seuranta
-     [debug/debug app]
+     ;[debug/debug app]
      [:div
       [:div.row.header
        [:div.col-xs-12

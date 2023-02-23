@@ -47,11 +47,12 @@
                                  :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                                  :parametrit {:alkupvm  (c/to-date (t/local-date 2011 10 1))
                                               :loppupvm (c/to-date (t/local-date 2016 10 1))}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 26488.52))
-    (let [otsikko "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
+    (is (=marginaalissa? sanktiosumma 26488.52))
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= "Oulun alueurakka 2014-2019" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Oulun alueurakka 2014-2019"}))))
@@ -67,11 +68,12 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2011 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2016 10 1))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 71977.05))
-    (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2011 - 01.10.2016"
+    (is (=marginaalissa? sanktiosumma 71977.05))
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Kajaanin alueurakka 2014-2019"}
@@ -90,11 +92,14 @@
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                                       :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        sanktiosumma (last (last (last (last (last (nth vastaus 4))))))
+        bonussumma (:arvo (second (last (:rivi (nth (nth (nth vastaus 5) 3) 2)))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 8099.80))
-    (let [otsikko "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
+    (is (=marginaalissa? sanktiosumma 8099.80))
+    (is (=marginaalissa? bonussumma 2000M))
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= "Pohjois-Pohjanmaa" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Kajaanin alueurakka 2014-2019"}
@@ -111,11 +116,19 @@
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 12 31))
                                               :urakkatyyppi :hoito}})
-        nurkkasumma (last (last (last (last vastaus))))]
+        sanktiotaulukko (nth vastaus 4)
+        bonustaulukko (nth vastaus 5)
+        arvonvahennystaulukko (nth vastaus 6)
+        sanktiosumma (last (last (last (last (last sanktiotaulukko)))))
+        bonussumma (last (:rivi (last (nth bonustaulukko 3))))
+        arvonvahennyssumma (:arvo (second (last (:rivi (last (nth arvonvahennystaulukko 3))))))]
     (is (vector? vastaus))
-    (is (=marginaalissa? nurkkasumma 15786.15))
-    (let [otsikko "KOKO MAA, Sanktioiden yhteenveto ajalta 01.01.2015 - 31.12.2015"
+    (is (=marginaalissa? sanktiosumma 15786.15))
+    (is (=marginaalissa? bonussumma 4000M))
+    (is (=marginaalissa? arvonvahennyssumma 1000M))
+    (let [otsikko "Sanktiot"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+      (is (= "Koko maa" (:nimi (second vastaus))))
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "01 Uusimaa"}
@@ -159,8 +172,9 @@
         (suorita-sanktioraportti "urakka" [2018 10 1] [2019 9 30])
         taulukko (apurit/taulukko-otsikolla
                    urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
-                   "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.10.2018 - 30.09.2019")
+                   "Sanktiot")
         tarkistus-fn (tarkista-rivi-summalle 777M)]
+    (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkistus-fn)))
@@ -170,8 +184,9 @@
         (suorita-sanktioraportti "urakka" [2018 9 1] [2019 8 1])
         taulukko (apurit/taulukko-otsikolla
                    urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
-                   "Oulun alueurakka 2014-2019, Sanktioiden yhteenveto ajalta 01.09.2018 - 01.08.2019")
+                   "Sanktiot")
         tarkistus-fn (tarkista-rivi-summalle 0)]
+    (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkistus-fn)))
@@ -202,8 +217,9 @@
         (suorita-sanktioraportti "hallintayksikko" [2018 10 1] [2019 9 30])
         taulukko (apurit/taulukko-otsikolla
                    elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi
-                   "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2018 - 30.09.2019")
+                   "Sanktiot")
         tarkista-fn (tarkista-ely-rivit sanktio-loytyy-elyriveissa)]
+    (is (= "Pohjois-Pohjanmaa" (:nimi (second elylla-sanktiot-tulee-mukaan-jos-jossain-urakassa-viimeinen-hoitokausi))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkista-fn)))
@@ -213,8 +229,9 @@
         (suorita-sanktioraportti "hallintayksikko" [2019 10 1] [2020 9 30])
         taulukko (apurit/taulukko-otsikolla
                    elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi
-                   "Pohjois-Pohjanmaa, Sanktioiden yhteenveto ajalta 01.10.2019 - 30.09.2020")
+                   "Sanktiot")
         tarkista-fn (tarkista-ely-rivit ei-sanktiota-elyriveissa)]
+    (is (= "Pohjois-Pohjanmaa" (:nimi (second elylla-sanktiot-ei-tule-mukaan-jos-edellista-casea-seuraava-hoitokausi))))
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkista-fn)))

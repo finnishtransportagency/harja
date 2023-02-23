@@ -108,6 +108,32 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2016, 10,
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2016, 11, 115.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2016, 12, 116.2);
 
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 1, 111.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 2, 111.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 3, 111.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 4, 111.6);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 5, 111.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 6, 111.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 7, 111.8);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 8, 111.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 9, 112.0);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 10, 112.0);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 11, 111.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2017, 12, 111.8);
+
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 1, 112.5);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 2, 112.6);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 3, 112.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 4, 112.9);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 5, 113.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 6, 113.6);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 7, 113.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 8, 113.3);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 9, 113.7);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 10, 114.2);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 11, 114.4);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010', 2018, 12, 114.2);
+
 
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kunnossapidon osaindeksi', 2016, 1, 103.9);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2005 kunnossapidon osaindeksi', 2016, 2, 105.2);
@@ -171,19 +197,19 @@ VALUES
 -- Ylläpidon indeksejä
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
 VALUES
-  ('Platts: testiindeksi XYZ', 2015, 9, 225.00),
-  ('Platts: testiindeksi XYZ', 2016, 9, 306.00),
-  ('Platts: FO 3,5%S CIF NWE Cargo', 2015, 9, 125.36),
-  ('Platts: FO 3,5%S CIF NWE Cargo', 2016, 9, 206.29),
-  ('Platts: Propane CIF NWE 7kt+', 2015, 9, 285.55),
-  ('Platts: Propane CIF NWE 7kt+', 2016, 9, 271.02),
-  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2015, 9, 123.45),
-  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2016, 9, 234.56);
+  ('Platts: testiindeksi XYZ', 2018, 9, 225.00),
+  ('Platts: testiindeksi XYZ', 2019, 9, 306.00),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2018, 9, 125.36),
+  ('Platts: FO 3,5%S CIF NWE Cargo', 2019, 9, 206.29),
+  ('Platts: Propane CIF NWE 7kt+', 2018, 9, 285.55),
+  ('Platts: Propane CIF NWE 7kt+', 2019, 9, 271.02),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2018, 9, 123.45),
+  ('Platts: ULSD 10ppmS CIF NWE Cargo', 2019, 9, 234.56);
 
 
 INSERT INTO paallystysurakan_indeksi (indeksi,lahtotason_vuosi,lahtotason_kuukausi,urakka)
 VALUES
   ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: testiindeksi XYZ' AND urakkatyyppi = 'paallystys'),
-  2015, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka')),
+  2018, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka')),
   ((SELECT id FROM urakkatyypin_indeksi WHERE indeksinimi = 'Platts: FO 3,5%S CIF NWE Cargo' AND urakkatyyppi = 'paallystys'),
-   2016, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));
+   2018, 9, (SELECT id FROM urakka where nimi = 'Muhoksen päällystysurakka'));

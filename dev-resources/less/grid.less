@@ -21,6 +21,7 @@
 @kalenterin-pvm-korkeus: 36px;
 @infolaatikko-leveys: 300px;
 @hento-korostusvari: @blue-lighter;
+@harmaa-korostusvari: @gray250;
 
 .vihje-hento-korostus {
   background-color: @hento-korostusvari;
@@ -434,9 +435,9 @@
       &.muokattava.tasaa-oikealle > span.grid-kentta-wrapper > input {
         padding: 0;
       }
-      .alasveto-gridin-kentta.tasaa-oikealle {
-        .nappi-alasveto {
-          padding: 0;
+      .alasveto-gridin-kentta {
+        &.tasaa-oikealle .nappi-alasveto {
+          padding: 0.5rem 0;
           text-align: right;
           .valittu {
             padding-right: 30px;
@@ -444,6 +445,18 @@
           }
           .livicon-chevron-down, .livicon-chevron-up {
             right: 2px;
+          }
+        }
+        // mm. ajoradan ja kaistan osalta tärkeää ettei piilotu edes osa, esim. 11 -> 1 ei ole hyvä juttu.
+        &.kavenna-jos-kapea {
+          > .nappi-alasveto {
+            padding: 0.5rem 0.2rem;
+            @media (max-width: @screen-md-max) {
+              padding: 0.5rem 0.1rem;
+            }
+            @media (max-width: @screen-sm-max) {
+              padding: 0.5rem 0;
+            }
           }
         }
       }

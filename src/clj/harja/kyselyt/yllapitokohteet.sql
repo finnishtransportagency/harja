@@ -223,6 +223,8 @@ SELECT
   ypk.nimi,
   ypk.tunnus,
   ypkk.sopimuksen_mukaiset_tyot          AS "sopimuksen-mukaiset-tyot",
+  ypkk.maaramuutokset,
+  ypkk.maku_paallysteet                  AS "maku-paallysteet",
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi                    AS "bitumi-indeksi",
   ypkk.kaasuindeksi,
@@ -242,6 +244,7 @@ SELECT
   ypk.yllapitokohdetyyppi,
   ypk.yllapitokohdetyotyyppi,
   ypk.vuodet,
+  ypk.yotyo,
   ypka.kohde_alku                       AS "kohde-alkupvm",
   ypka.paallystys_alku                  AS "paallystys-alkupvm",
   ypka.paallystys_loppu                 AS "paallystys-loppupvm",
@@ -272,7 +275,7 @@ WHERE
   AND (:vain_yha_kohteet IS NOT TRUE OR ypk.yhaid IS NOT NULL)
 GROUP BY ypk.id, pi.id, o.nimi, u.nimi, u.id,
   ypka.kohde_alku, ypka.paallystys_alku, ypka.paallystys_loppu, ypka.tiemerkinta_alku, ypka.tiemerkinta_loppu,
-  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
+  ypka.kohde_valmis, ypkk.sopimuksen_mukaiset_tyot, ypkk.maaramuutokset, ypkk.maku_paallysteet, ypkk.arvonvahennykset, ypkk.bitumi_indeksi, ypkk.kaasuindeksi, ypkk.toteutunut_hinta;
 
 -- name: hae-tiemerkintaurakalle-osoitetut-yllapitokohteet
 SELECT
@@ -339,6 +342,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -364,6 +368,7 @@ SELECT
   ypko.tr_loppuetaisyys AS "tr-loppuetaisyys",
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -389,6 +394,7 @@ SELECT
   ypko.tr_loppuetaisyys              AS "tr-loppuetaisyys",
   ypko.tr_ajorata                    AS "tr-ajorata",
   ypko.tr_kaista                     AS "tr-kaista",
+  ypko.yllapitoluokka,
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -440,7 +446,7 @@ SELECT p."paikkauskohde-id"                 AS "yllapitokohde-id",
 
 -- name: luo-yllapitokohde<!
 -- Luo uuden ylläpitokohteen
-INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi,
+INSERT INTO yllapitokohde (urakka, sopimus, kohdenumero, nimi, yotyo,
                            tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
                            tr_ajorata, tr_kaista, keskimaarainen_vuorokausiliikenne,
                            yllapitoluokka, yllapitokohdetyyppi, yllapitokohdetyotyyppi, vuodet)
@@ -448,6 +454,7 @@ VALUES (:urakka,
   :sopimus,
   :kohdenumero,
   :nimi,
+  :yotyo,
   :tr_numero,
   :tr_alkuosa,
   :tr_alkuetaisyys,
@@ -468,6 +475,7 @@ SET
   kohdenumero                       = :kohdenumero,
   nimi                              = :nimi,
   tunnus                            = :tunnus,
+  yotyo                             = :yotyo,
   tr_numero                         = :tr_numero,
   tr_alkuosa                        = :tr_alkuosa,
   tr_alkuetaisyys                   = :tr_alkuetaisyys,
@@ -494,22 +502,23 @@ WHERE id = :id
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
                               paallystetyyppi, raekoko, tyomenetelma, massamaara,
-                              ulkoinen_id, sijainti)
+                              ulkoinen_id, yllapitoluokka, sijainti)
 VALUES (:yllapitokohde,
-  :nimi,
-  :tr_numero,
-  :tr_alkuosa,
-  :tr_alkuetaisyys,
-  :tr_loppuosa,
-  :tr_loppuetaisyys,
-  :tr_ajorata,
-  :tr_kaista,
-  :toimenpide,
-  :paallystetyyppi,
-  :raekoko,
-  :tyomenetelma,
-  :massamaara,
-  :ulkoinen-id,
+        :nimi,
+        :tr_numero,
+        :tr_alkuosa,
+        :tr_alkuetaisyys,
+        :tr_loppuosa,
+        :tr_loppuetaisyys,
+        :tr_ajorata,
+        :tr_kaista,
+        :toimenpide,
+        :paallystetyyppi,
+        :raekoko,
+        :tyomenetelma,
+        :massamaara,
+        :ulkoinen-id,
+        :yllapitoluokka,
   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
    FROM tierekisteriosoitteelle_viiva_ajr(CAST(:tr_numero AS INTEGER),
                                           CAST(:tr_alkuosa AS INTEGER),
@@ -551,6 +560,7 @@ SET
   tr_loppuetaisyys = :tr_loppuetaisyys,
   tr_ajorata       = :tr_ajorata,
   tr_kaista        = :tr_kaista,
+  yllapitoluokka   = :yllapitoluokka,
   paallystetyyppi  = :paallystetyyppi,
   raekoko          = :raekoko,
   tyomenetelma     = :tyomenetelma,
@@ -780,6 +790,7 @@ WHERE yllapitokohde = :id
 UPDATE yllapitokohteen_aikataulu
    SET
        kohde_alku       = :aikataulu_kohde_alku,
+       paallystys_loppu = :aikataulu_paallystys_valmis,
        kohde_valmis     = :aikataulu_kohde_valmis,
        muokattu         = NOW(),
        muokkaaja        = :aikataulu_muokkaaja
@@ -793,6 +804,8 @@ UPDATE yllapitokohteen_aikataulu
 UPDATE yllapitokohteen_kustannukset
 SET
   sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+  maaramuutokset           = :maaramuutokset,
+  maku_paallysteet         = :maku_paallysteet,
   arvonvahennykset         = :arvonvahennykset,
   bitumi_indeksi           = :bitumi_indeksi,
   kaasuindeksi             = :kaasuindeksi,
@@ -810,6 +823,8 @@ UPDATE yllapitokohteen_kustannukset
        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
        bitumi_indeksi           = :bitumi_indeksi,
        kaasuindeksi             = :kaasuindeksi,
+       maaramuutokset           = :maaramuutokset,
+       maku_paallysteet         = :maku_paallysteet,
        muokattu                 = NOW(),
        muokkaaja                = :muokkaaja
   FROM yllapitokohde
@@ -896,7 +911,7 @@ SELECT
             -- varmistetaan ettei alikohdetta ole poistettu
             EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
      FROM pot2_paallystekerros paall
-    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS toimenpiteet,
+    WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS toimenpiteet,
   (SELECT string_agg(DISTINCT (
       select t.lyhenne || m.max_raekoko || ', ' || m.kuulamyllyluokka
       FROM pot2_mk_urakan_massa m
@@ -905,7 +920,7 @@ SELECT
          -- varmistetaan ettei alikohdetta ole poistettu
            EXISTS (SELECT id FROM yllapitokohdeosa WHERE id = paall.kohdeosa_id AND poistettu IS FALSE)), '; ')
     FROM pot2_paallystekerros paall
-   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE ypka.yllapitokohde = ypk.id)) AS paallysteet,
+   WHERE paall.kohdeosa_id IN (SELECT id FROM yllapitokohdeosa WHERE yllapitokohde = ypk.id)) AS paallysteet,
   pu.id                     AS "paallystysurakka-id",
   pu.nimi                   AS "paallystysurakka-nimi",
   pu.sampoid                AS "paallystysurakka-sampo-id",
@@ -992,15 +1007,18 @@ WHERE id = :id;
 -- name: hae-yllapitokohde
 SELECT
   ypk.id,
+  paik.id                    AS "paikkauskohde-id",
   ypk.urakka,
   sopimus,
   kohdenumero,
-  nimi,
+  ypk.nimi,
   ypkk.sopimuksen_mukaiset_tyot,
+  ypkk.maaramuutokset,
   ypkk.arvonvahennykset,
   ypkk.bitumi_indeksi,
   ypkk.kaasuindeksi,
-  poistettu,
+  ypkk.maku_paallysteet,
+  ypk.poistettu,
   ypka.kohde_alku            AS "aikataulu_kohde_alku",
   ypka.paallystys_alku       AS "aikataulu_paallystys_alku",
   ypka.paallystys_loppu      AS "aikataulu_paallystys_loppu",
@@ -1027,12 +1045,11 @@ SELECT
   keskimaarainen_vuorokausiliikenne,
   nykyinen_paallyste,
   suorittava_tiemerkintaurakka,
-  (SELECT viimeisin_paivitys
-   FROM geometriapaivitys
-   WHERE nimi = 'tieverkko') AS karttapvm
+  karttapaivamaara
 FROM yllapitokohde ypk
   LEFT JOIN yllapitokohteen_aikataulu ypka ON ypka.yllapitokohde = ypk.id
   LEFT JOIN yllapitokohteen_kustannukset ypkk ON ypkk.yllapitokohde = ypk.id
+  LEFT JOIN paikkauskohde paik ON paik."yllapitokohde-id" = ypk.id AND paik.poistettu IS FALSE
 WHERE ypk.id = :id;
 
 -- name: hae-yllapitokohteen-tiemerkintaaikataulu
@@ -1119,12 +1136,12 @@ SELECT paivita_paallystys_tai_paikkausurakan_geometria(:urakka :: INTEGER);
 INSERT INTO yllapitokohteen_aikataulu (yllapitokohde) VALUES (:yllapitokohde);
 
 -- name: luo-yllapitokohteelle-kustannukset<!
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet)
+VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahennykset, :bitumi_indeksi, :kaasuindeksi, :maaramuutokset, :maku_paallysteet);
 
 -- name: luo-yllapitokohteelle-tyhja-kustannustaulu<!
-INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi)
-VALUES (:yllapitokohde, 0, 0, 0, 0, 0);
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
+VALUES (:yllapitokohde, 0, 0, 0, 0, 0, 0);
 
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT

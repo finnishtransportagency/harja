@@ -84,14 +84,14 @@
     :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus "Tehtävämäärät"
-    :testiversio? true
     :suorita #'harja.palvelin.raportointi.raportit.tehtavamaarat/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
    ;; testidatasta huomoita: myös lapissa ivalon mhu-testiurakka
    ;; urakkatyypit: teiden-hoito = mh eli mhu, hoito = vanhan tyyliset
    {:nimi :vemtr
-    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :parametrit [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
+                 {:tyyppi "checkbox" :konteksti nil, :pakollinen false :nimi "Vain MHUt ja HJU:t"}]
     :konteksti #{"hallintayksikko" "koko maa"}
     :kuvaus "Valtakunnalliset ja ELY-kohtaiset määrätoteumat"
     :suorita #'harja.palvelin.raportointi.raportit.vemtr/suorita
@@ -107,6 +107,7 @@
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
    {:nimi         :sanktioraportti
+    :kuvaus-tarkenne "Sanktiot, bonukset ja arvonvähennykset"
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sanktioiden yhteenveto"

@@ -20,7 +20,6 @@
             [slingshot.slingshot :refer [try+]]
 
             [harja.palvelin.komponentit.itmf :as itmf]
-            [harja.palvelin.komponentit.sonja :as sonja]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -28,11 +27,9 @@
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [taoensso.timbre :as log]))
 
-(defonce asetukset {:itmf integraatio/itmf-asetukset
-                    :sonja integraatio/sonja-asetukset})
+(defonce asetukset {:itmf integraatio/itmf-asetukset})
 
 (def ^:dynamic *itmf-yhteys* nil)
-(def ^:dynamic *sonja-yhteys* nil)
 
 (defrecord Testikomponentti [tila]
   component/Lifecycle
@@ -98,9 +95,6 @@
                         :itmf (component/using
                                  (itmf/luo-oikea-itmf (:itmf asetukset))
                                  [:db])
-                        :sonja (component/using
-                                (sonja/luo-oikea-sonja (:sonja asetukset))
-                                [:db])
                         :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                           [:db])
                         :http-palvelin (testi-http-palvelin)
@@ -119,14 +113,7 @@
                              ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
                              (let [testijonot (<! (-> jarjestelma :testikomponentti :testijonot))]
                                (swap! (-> jarjestelma :testikomponentti :tila) merge testijonot))
-                             (<! (jms/aloita-jms (:itmf jarjestelma))))
-            *sonja-yhteys* (go
-                             ;; Ennen kuin aloitetaan yhteys, varmistetaan, että testikomponentin thread on päässyt loppuun
-                             (loop [itmf-yhteys-aloitettu? (-> jarjestelma :itmf :yhteys-aloitettu? deref)]
-                               (if itmf-yhteys-aloitettu?
-                                 (<! (jms/aloita-jms (:sonja jarjestelma)))
-                                 (do (<! (timeout 1000))
-                                     (recur (-> jarjestelma :itmf :yhteys-aloitettu? deref))))))]
+                             (<! (jms/aloita-jms (:itmf jarjestelma))))]
     (testit))
   (alter-var-root #'jarjestelma component/stop)
   (lopeta-harja-tarkkailija!))
@@ -203,7 +190,7 @@
                             (recur))
                           {}))))]
       ;; Varmistetaan, että component/start ei blokkaa vaikka itmfyhteyttä ei saada
-      ;; HUOM: Sekä itmf, että sonja käyttävät molemmat activemq classic:ia testeissä.
+      ;; HUOM: itmf käyttää  activemq classic:ia testeissä.
       (let [[toinen-jarjestelma _] (alts!! [(thread
                                               (try
                                                 (component/start
@@ -213,9 +200,6 @@
                                                     :itmf (component/using
                                                             (itmf/luo-oikea-itmf (:itmf asetukset))
                                                             [:db])
-                                                    :sonja (component/using
-                                                             (sonja/luo-oikea-sonja (:sonja asetukset))
-                                                             [:db])
                                                     :integraatioloki (component/using (integraatioloki/->Integraatioloki nil)
                                                                        [:db])
                                                     :api-sahkoposti (component/using
@@ -256,38 +240,6 @@
       ;; Tarkistetaan, että onhan kuuntelijoita enää yksi jäljellä
       (is (= 1 (-> vastaanottaja .getMessageListener meta :kuuntelijoiden-maara))))))
 
-;; Sonja-sähköpostin toimintaa ei tarvitse enää erikseen testata
-#_ (deftest viestin-lahetys-onnistuu
-  ;; Tässä ei oikeasti lähetä mitään viestiä. Jonoon lähetetään viestiä, mutta sen jonon ei pitäisi olla konffattu lähettämään mitään.
-  (let [_ (alts!! [*sonja-yhteys* (timeout 10000)])
-        _ (jms-tk/sonja-jolokia-jono "harja-to-email" nil :purge)
-        istunnot-ennen-lahetysta (-> jarjestelma :sonja :tila deref :istunnot)
-        jonot-ennen-lahetysta (apply merge
-                                     (map (fn [[istunnon-nimi istunnon-tiedot]]
-                                            (:jonot istunnon-tiedot))
-                                          istunnot-ennen-lahetysta))
-        _ (sahkoposti/laheta-viesti! (:sonja-sahkoposti jarjestelma) "lahettaja@example.com" "vastaanottaja@example.com" "Testiotsikko" "Testisisalto")
-        istunnot-lahetyksen-jalkeen (-> jarjestelma :sonja :tila deref :istunnot)
-        jonot-lahetyksen-jalkeen (apply merge
-                                        (map (fn [[istunnon-nimi istunnon-tiedot]]
-                                               (:jonot istunnon-tiedot))
-                                             istunnot-lahetyksen-jalkeen))
-        istunto (-> istunnot-lahetyksen-jalkeen (get "istunto-harja-to-email") :istunto)
-        jono (-> jonot-lahetyksen-jalkeen (get "harja-to-email") :jono)
-        viestit-jonossa (jms/hae-jonon-viestit istunto jono)
-        viesti (->> viestit-jonossa first (cast javax.jms.TextMessage) .getText .getBytes java.io.ByteArrayInputStream. xml/parse)]
-    (is (= (count jonot-ennen-lahetysta) (dec (count jonot-lahetyksen-jalkeen))))
-    (tarkista-xml-sisalto viesti {:vastaanottajat (fn [vastaanottajat]
-                                                    (is (every? #(= :vastaanottaja (:tag %)) vastaanottajat)))
-                                  :vastaanottaja (fn [[vastaanottaja]]
-                                                   (is (= vastaanottaja "vastaanottaja@example.com")))
-                                  :lahettaja (fn [[lahettaja]]
-                                               (is (= lahettaja "lahettaja@example.com")))
-                                  :otsikko (fn [[otsikko]]
-                                             (is (= otsikko "Testiotsikko")))
-                                  :sisalto (fn [[sisalto]]
-                                             (is (= sisalto "Testisisalto")))})
-    (is (= 1 (count viestit-jonossa)))))
 
 (s/def ::testilahetys-viesti string?)
 

@@ -123,7 +123,7 @@
 (defn vastaanota-sahkoposti [kutsun-parametrit kutsun-data kayttaja db this itmf asetukset integraatioloki]
   (log/info "RestApi - Sähköposti :: vastaanota-sahkoposti")
   (let [jms-lahettaja (jms/jonolahettaja (tloik-komponentti/tee-lokittaja this "toimenpiteen-lahetys")
-                        itmf (get-in asetukset [:tloik :toimenpidekuittausjono]))
+                        itmf (get-in asetukset [:tloik :toimenpideviestijono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
         ;; Lisää mahdolliset virheet kuittausviestiin

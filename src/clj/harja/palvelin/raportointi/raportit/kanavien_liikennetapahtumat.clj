@@ -18,4 +18,6 @@
                  :tyhja (when (empty? rivit) "Ei raportoitavaa.")
                  :sheet-nimi "Yhteensä"}
       sarakkeet
-      rivit]]))
+      rivit]
+     
+     [:liikenneyhteenveto (:yhteenveto parametrit)]]))

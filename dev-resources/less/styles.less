@@ -191,11 +191,11 @@ tr.uusitehtavakoodi td {
 
 .label-ja-alasveto {
   display: inline-block;
-  margin: 5px;
+  margin: @valistys-4;
 
   .alasvedon-otsikko {
     display: inline-block;
-    font-weight: bold;
+    .caption-small-strong();
   }
 
   .livi-alasveto(@valintakontrollin-leveys);
@@ -307,6 +307,8 @@ tr.uusitehtavakoodi td {
     background: @red-lighter;
     border-radius: 4px;
     border: 1px solid @red-light;
+    color: @black-default;
+    font-weight: 600;
     span.livicon-exclamation-triangle {
       color: @red-dark;
       font-size: 24px;
@@ -505,4 +507,10 @@ tr.uusitehtavakoodi td {
 
 .ala-margin-16 {
     margin-bottom:@valistys-16;
+}
+.paivystajat .paivystys-aikajana {
+  .nappi-toissijainen {
+    margin-top: @valistys-16;
+    margin-bottom: @valistys-32;
+  }
 }

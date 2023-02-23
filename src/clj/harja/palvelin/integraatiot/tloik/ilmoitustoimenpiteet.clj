@@ -21,9 +21,10 @@
         (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)))))
 
 (defn laheta-ilmoitustoimenpide [jms-lahettaja db id]
-  (log/debug (format "Lähetetään ilmoitustoimenpide (id: %s) T-LOIK:n." id))
+  (log/debug (format "Käynnistetään ilmoitustoimenpiteen (id: %s) lähetys T-LOIK:n." id))
   (try
     (laheta jms-lahettaja db id)
+    (log/debug (format "Ilmoitustoimenpide (id: %s) lähetetty T-LOIK:n onnistuneesti!" id))
     (catch Exception e
       (log/error e (format "Ilmoitustoimenpiteen (id: %s) lähetyksessä T-LOIK:n tapahtui poikkeus." id))
       (ilmoitukset/merkitse-ilmoitustoimenpidelle-lahetysvirhe-idlla! db id)

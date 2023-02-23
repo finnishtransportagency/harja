@@ -712,7 +712,14 @@ SELECT EXISTS(
 -- Hakee sijainnin ja urakan tyypin perusteella urakan. Urakan täytyy myös olla käynnissä.
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
 SELECT u.id,
-       :urakkatyyppi as urakkatyyppi,
+       u.nimi,
+       u.tyyppi,
+       u.alkupvm,
+       u.loppupvm,
+       u.takuu_loppupvm,
+       u.urakkanro AS alueurakkanumero,
+       urk.nimi    AS urakoitsija_nimi,
+       urk.ytunnus AS urakoitsija_ytunnus,
        COALESCE(ST_Distance84(u.alue, st_makepoint(:x, :y)),
                 ST_Distance84(vua.alue, st_makepoint(:x, :y)),
                 ST_Distance84(pua.alue, st_makepoint(:x, :y))) AS etaisyys
@@ -720,6 +727,7 @@ FROM urakka u
          LEFT JOIN urakoiden_alueet ua ON u.id = ua.id
          LEFT JOIN valaistusurakka vua ON vua.valaistusurakkanro = u.urakkanro
          LEFT JOIN paallystyspalvelusopimus pua ON pua.paallystyspalvelusopimusnro = u.urakkanro
+         JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE (CASE
            WHEN (:urakkatyyppi = 'hoito' OR :urakkatyyppi = 'teiden-hoito') THEN
                (u.tyyppi IN ('hoito', 'teiden-hoito') AND
@@ -736,10 +744,19 @@ WHERE (CASE
                WHERE vu.valaistusurakkanro = u.urakkanro
                  AND st_dwithin(vu.alue, st_makepoint(:x, :y), :threshold)))
     OR ((:urakkatyyppi = 'paallystys' OR :urakkatyyppi = 'paikkaus') AND
-        exists(SELECT id
-               FROM paallystyspalvelusopimus pps
-               WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
-                 AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold)))
+        (CASE
+             WHEN u.sopimustyyppi = 'palvelusopimus' THEN
+                 EXISTS(SELECT id
+                          FROM paallystyspalvelusopimus pps
+                         WHERE pps.paallystyspalvelusopimusnro = u.urakkanro
+                           AND st_dwithin(pps.alue, st_makepoint(:x, :y), :threshold))
+            -- Kommentoitu toistaiseksi pois koska ilmoitusten urakan haku sijainnilla menee rikki.
+            -- TODO Täytyykö pystyä hakemaan sijainnilla myös 'kokonaisurakka' sopimuksen piirissä olevia urakoita?
+            --      Riittääkö keskittyminen pelkästään palvelusopimuksen piirissä oleviin päällystysurakoihin,
+            --      vai tehdäänkö esim. erillinen 'sopimustyyppi' parametri, jolla tätä hakua voi suodattaa?
+             --ELSE (u.sopimustyyppi = 'kokonaisurakka' AND
+             --      (st_contains(ua.alue, st_makepoint(:x, :y))))
+            END))
     OR ((:urakkatyyppi = 'tekniset-laitteet') AND
         exists(SELECT id
                FROM tekniset_laitteet_urakka tlu
@@ -853,14 +870,9 @@ FROM valaistusurakka;
 SELECT count(*) as lkm
 FROM valaistusurakka;
 
--- name: hae-valaistusurakan-alueurakkanumero-sijainnilla
-SELECT alueurakka
-FROM valaistusurakka
-WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
-
 -- name: luo-valaistusurakka<!
-INSERT INTO valaistusurakka (alueurakkanro, alue, valaistusurakkanro, paivitetty)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
+INSERT INTO valaistusurakka (alue, valaistusurakkanro, paivitetty)
+VALUES (ST_GeomFromText(:alue) :: GEOMETRY, :valaistusurakka, current_timestamp);
 
 -- name: tuhoa-paallystyspalvelusopimusdata!
 DELETE
@@ -870,14 +882,9 @@ FROM paallystyspalvelusopimus;
 SELECT count(*) as lkm
 FROM paallystyspalvelusopimus;
 
--- name: hae-paallystyspalvelusopimus-alueurakkanumero-sijainnilla
-SELECT alueurakka
-FROM paallystyspalvelusopimus
-WHERE st_dwithin(alue, st_makepoint(:x, :y), :treshold);
-
 -- name: luo-paallystyspalvelusopimus<!
-INSERT INTO paallystyspalvelusopimus (alueurakkanro, alue, paallystyspalvelusopimusnro, paivitetty)
-VALUES (:alueurakkanro, ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestamp);
+INSERT INTO paallystyspalvelusopimus (alue, paallystyspalvelusopimusnro, paivitetty)
+VALUES (ST_GeomFromText(:alue) :: GEOMETRY, :paallystyssopimus, current_timestamp);
 
 -- name: hae-lahin-hoidon-alueurakka
 -- Päättyvän urakan vastuu tieliikenneilmoituksista loppuu 1.10. klo 12. Siksi alkupvm ja loppupvm laskettu tunteja lisää.
@@ -999,48 +1006,11 @@ FROM urakka u
 WHERE k.kayttajanimi = :kayttajanimi
       AND k.jarjestelma;
 
--- name: hae-urakka-lahetettavaksi-sahkeeseen
--- Hakee urakan perustiedot id:llä APIa varten.
-SELECT
-  u.id,
-  u.sampoid,
-  u.nimi,
-  u.tyyppi,
-  u.alkupvm,
-  u.loppupvm,
-  u.indeksi,
-  u.takuu_loppupvm,
-  u.urakkanro,
-  u.hanke     AS "hanke-id",
-  urk.nimi    AS urakoitsija_nimi,
-  urk.ytunnus AS urakoitsija_ytunnus,
-  y.id        AS "yhteyshenkilo-id",
-  o.ytunnus   AS "urakoitsija-y-tunnus",
-  o.nimi      AS "urakoitsijanimi"
-FROM urakka u
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
-  LEFT JOIN yhteyshenkilo_urakka yu ON u.id = yu.urakka AND yu.rooli = 'Sampo yhteyshenkilö'
-  LEFT JOIN yhteyshenkilo y ON yu.yhteyshenkilo = y.id
-  LEFT JOIN organisaatio o ON u.urakoitsija = o.id
-WHERE u.id = :id;
-
--- name: kirjaa-sahke-lahetys!
-INSERT INTO sahkelahetys (urakka, lahetetty, onnistunut)
-VALUES (:urakka, now(), :onnistunut)
-ON CONFLICT (urakka)
-  DO
-  UPDATE SET lahetetty = now(), onnistunut = :onnistunut;
-
 -- name: perustettu-harjassa?
 -- single?: true
 SELECT harjassa_luotu
 FROM urakka u
 WHERE u.sampoid = :sampoid;
-
--- name: hae-urakat-joiden-lahetys-sahkeeseen-epaonnistunut
-SELECT urakka
-FROM sahkelahetys
-WHERE onnistunut IS FALSE;
 
 -- name: hae-jarjestelmakayttajan-urakat
 SELECT

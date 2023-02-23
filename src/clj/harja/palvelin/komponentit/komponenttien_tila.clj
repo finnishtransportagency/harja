@@ -97,8 +97,7 @@
   (start [this]
     (let [komponentti-kaynnissa? (::harja-kuuntelija this)]
       (if-not komponentti-kaynnissa?
-        (let [{sonja-asetukset :sonja
-               itmf-asetukset :itmf
+        (let [{itmf-asetukset :itmf
                db-asetukset :db
                db-replica-asetukset :db-replica} timeout-asetukset
               varoaika (* 5 1000)
@@ -107,9 +106,7 @@
                                                                          :harjajarjestelman-restart {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :aloitus)
                                                                          :harjajarjestelman-restart-onnistui {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :onnistui)
                                                                          :harjajarjestelman-restart-epaonnistui {:tyyppi :perus} (partial harjajarjestelman-restart komponenttien-tila :epaonnistui)
-                                                                         :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms sonja-asetukset) default-odotus) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "sonja")
                                                                          :jms-tila {:tyyppi :viimeisin-per-palvelin :timeout (+ (or (:paivitystiheys-ms itmf-asetukset) default-odotus) varoaika)} (partial tallenna-jms-tila-cacheen komponenttien-tila "itmf")
-                                                                         :jms-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-jms-uudelleen-kaynnistamisen-tila-cacheen "sonja" komponenttien-tila)
                                                                          :jms-uudelleenkaynnistys-epaonnistui {:tyyppi :perus} (partial tallenna-jms-uudelleen-kaynnistamisen-tila-cacheen "itmf" komponenttien-tila)
                                                                          :db-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-asetukset) default-odotus) varoaika)} (partial tallenna-dbn-tila-cacheen komponenttien-tila)
                                                                          :db-replica-tila {:tyyppi :viimeisin :timeout (+ (or (:paivitystiheys-ms db-replica-asetukset) default-odotus) varoaika)} (partial tallenna-db-replikan-tila-cacheen komponenttien-tila))]
@@ -117,9 +114,8 @@
             @tf)
           (merge this
                  (zipmap [::harja-kuuntelija ::harjajarjestelman-restart ::harjajarjestelman-restart-onnistui
-                          ::harjajarjestelman-restart-epaonnistui ::sonja-kuuntelija ::itmf-kuuntelija
-                          ::sonja-uudelleenkaynnistys-epaonnistui ::itmf-uudelleenkaynnistys-epaonnistui ::db-kuuntelija
-                          ::db-replica-kuuntelija]
+                          ::harjajarjestelman-restart-epaonnistui ::itmf-kuuntelija
+                          ::itmf-uudelleenkaynnistys-epaonnistui ::db-kuuntelija ::db-replica-kuuntelija]
                          tarkkailija-futuret)))
         this)))
   (stop [this]
@@ -130,17 +126,14 @@
       (lopeta-kuuntelu! (::harjajarjestelman-restart this))
       (lopeta-kuuntelu! (::harjajarjestelman-restart-onnistui this))
       (lopeta-kuuntelu! (::harjajarjestelman-restart-epaonnistui this))
-      (lopeta-kuuntelu! (::sonja-kuuntelija this))
       (lopeta-kuuntelu! (::itmf-kuuntelija this))
-      (lopeta-kuuntelu! (::sonja-uudelleenkaynnistys-epaonnistui this))
       (lopeta-kuuntelu! (::itmf-uudelleenkaynnistys-epaonnistui this))
       (lopeta-kuuntelu! (::db-kuuntelija this))
       (lopeta-kuuntelu! (::db-replica-kuuntelija this))
       (tyhjenna-cache! (:komponenttien-tila this))
       (dissoc this ::harja-kuuntelija ::harjajarjestelman-restart ::harjajarjestelman-restart-onnistui
-              ::harjajarjestelman-restart-epaonnistui ::sonja-kuuntelija ::itmf-kuuntelija
-              ::sonja-uudelleenkaynnistys-epaonnistui ::itmf-uudelleenkaynnistys-epaonnistui ::db-kuuntelija
-              ::db-replica-kuuntelija))))
+              ::harjajarjestelman-restart-epaonnistui ::itmf-kuuntelija ::itmf-uudelleenkaynnistys-epaonnistui
+              ::db-kuuntelija ::db-replica-kuuntelija))))
 
 (defn komponentin-tila [timeout-asetukset]
   (->KomponentinTila timeout-asetukset (atom {})))

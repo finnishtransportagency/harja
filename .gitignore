@@ -55,7 +55,6 @@ out/
 resources/private/
 resources/public/laadunseuranta/js/compiled/
 resources/public/laadunseuranta/css/
-/test_envs/upcloud/*.retry
 .deploy3
 .deploy3_known_hosts
 testi.pdf
@@ -71,3 +70,5 @@ yhdistetty_dc_env
 .lsp/
 lsp/
 .java-version
+.calva/
+test.calva-repl

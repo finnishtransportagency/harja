@@ -20,7 +20,7 @@
         bud (bigdec bud)]
     (if (or (= (bigdec 0) tot) (= (bigdec 0) bud))
       0
-      (* 100 (* 100 (with-precision 4 (/ tot bud)))))))
+      (* 100 (with-precision 4 (/ tot bud))))))
 
 (defn- kokoa-toimenpiteen-alle
   "Kustannus seurannan ui ja tämä excel on rakennettu ajatukselle, että alimmaisen kolmannen tason tehtäviä (osa on tehtäväryhmiä)
@@ -273,7 +273,9 @@
                      (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut")
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
-                     (luo-excel-rivit kustannusdata "bonukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivit kustannusdata "ulkopuoliset-rahavaraukset" "Tavoitehinnan ulkopuoliset rahavaraukset")
+                     (luo-excel-rivit kustannusdata "bonukset" "Bonukset")
+                     (luo-excel-rivit kustannusdata "sanktiot" "Sanktiot")
                      (luo-excel-rivi-vuoden-paatos kustannusdata)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))

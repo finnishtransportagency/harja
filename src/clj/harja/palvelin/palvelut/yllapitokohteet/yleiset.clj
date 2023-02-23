@@ -18,7 +18,6 @@
             [harja.domain.tierekisteri :as tr]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-haku]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
             [harja.id :as id])
   (:use org.httpkit.fake))
@@ -209,7 +208,7 @@
 
 (def urakan-yllapitokohde-xf
   (comp
-    yllapitokohteet-domain/yllapitoluokka-xf
+    yllapitokohde-domain/yllapitoluokka-xf
     (map #(assoc % :tila (yllapitokohde-domain/yllapitokohteen-tarkka-tila %)))
     (map #(assoc % :vuodet (set (konv/pgarray->vector (:vuodet %)))))
     (map #(konv/string-polusta->keyword % [:paallystysilmoitus-tila]))
@@ -248,7 +247,9 @@
                                                          :sopimus-id sopimus-id
                                                          :vuosi vuosi
                                                          :vain-yha-kohteet? vain-yha-kohteet?})
-        yllapitokohteet (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)]
+        yllapitokohteet (if (and vuosi (yllapitokohde-domain/eritellyt-maaramuutokset-kaytossa? vuosi))
+                          (liita-yllapitokohteisiin-maaramuutokset db yllapitokohteet)
+                          yllapitokohteet)]
     (vec yllapitokohteet)))
 
 (defn lisaa-yllapitokohteelle-pituus [db {:keys [tr-numero tr-alkuosa tr-loppuosa] :as kohde}]

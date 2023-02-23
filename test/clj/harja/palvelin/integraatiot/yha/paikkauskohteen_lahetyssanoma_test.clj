@@ -12,7 +12,8 @@
 
 (deftest tarkista-lahetyssanoman-muodostus
   (let [db (:db jarjestelma)
-        sanoma-json (paikkauskohteen-lahetyssanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) 1)
+        kohde-id (ffirst (q (str "SELECT id FROM paikkauskohde WHERE lisatiedot = 'Oulun testipaikkauskohde';")))
+        sanoma-json (paikkauskohteen-lahetyssanoma/muodosta db (hae-oulun-alueurakan-2014-2019-id) kohde-id)
         sanoma (walk/keywordize-keys
                  (cheshire/decode sanoma-json))
         eka-paikkaus (-> (first (:paikkauskohteet sanoma))

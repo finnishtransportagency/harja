@@ -3,12 +3,14 @@
             [harja.palvelin.komponentit.http-palvelin :as http-palvelin]
             [harja.palvelin.tyokalut.tapahtuma-apurit :as tapahtuma-apurit]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
+            [harja.kyselyt.status :as status-kyselyt]
             [com.stuartsierra.component :as component]
             [compojure.core :refer [GET]]
             [clojure.core.async :as async]
             [clojure.set :as clj-set]
             [cheshire.core :refer [encode]]
-            [harja.tyokalut.muunnos :as muunnos]))
+            [harja.tyokalut.muunnos :as muunnos]
+            [clojure.string :as str]))
 
 (defn tarkista-tila!
   "Palauttaa kanavan, jonka sisällä testataan predikaattia. Kokeilee timeout-ms ajan, että palauttaako annettu predikaatti true. Jos ei palauta annetussa ajassa, palauttaa false."
@@ -48,14 +50,7 @@
                                    (get-in host-tila [:db-replica :kaikki-ok?]))
                                  @komponenttien-tila)))))
 
-(defn sonja-yhteyden-tila-ok?
-  [timeout-ms komponenttien-tila]
-  (tarkista-tila! timeout-ms
-                  (fn []
-                    (and (> (count @komponenttien-tila) 1)
-                         (every? (fn [[_ host-tila]]
-                                   (get-in host-tila [:sonja :kaikki-ok?]))
-                                 @komponenttien-tila)))))
+
 (defn itmf-yhteyden-tila-ok?
   [timeout-ms komponenttien-tila]
   (tarkista-tila! timeout-ms
@@ -92,14 +87,7 @@
        :viesti (when-not replikoinnin-tila-ok?
                  (str "Replikoinnin viive on suurempi kuin " (muunnos/ms->s timeout-ms) " sekunttia"))})))
 
-(defn sonja-yhteyden-tila [komponenttien-tila]
-  (async/go
-    (let [timeout-ms 120000
-          yhteys-ok? (async/<! (sonja-yhteyden-tila-ok? timeout-ms (get komponenttien-tila :komponenttien-tila)))]
-      {:ok? yhteys-ok?
-       :komponentti :sonja
-       :viesti (when-not yhteys-ok?
-                 (str "Ei saatu yhteyttä Sonjaan " (muunnos/ms->s timeout-ms) " sekunnin kuluessa."))})))
+
 
 (defn itmf-yhteyden-tila [komponenttien-tila]
   (async/go
@@ -130,7 +118,6 @@
 (defn- nimea-komponentin-tila [komponentti ok?]
   (clj-set/rename-keys {komponentti ok?}
                        {:harja :harja-ok?
-                        :sonja :sonja-yhteys-ok?
                         :itmf :itmf-yhteys-ok?
                         :db :yhteys-master-kantaan-ok?
                         :db-replica :replikoinnin-tila-ok?}))
@@ -155,18 +142,63 @@
             (fn [viestit]
               (apply str (interpose "\n" viestit))))))
 
+(defn- hae-status
+  "Haetaan komponenttien status tietokannasta."
+  [db]
+  (let [komponenttien-tila (status-kyselyt/hae-komponenttien-tila db)
+        tilaviesti (reduce (fn [viestit {:keys [status komponentti palvelin] :as tila}]
+                        (let [viesti (cond
+                                       (= "nok" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " rikki")
+                                       (= "hidas" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " käy hitaalla.")
+                                       (= "ei-kaytossa" status) (str "Palvelin: " palvelin " Komponentti: " (str/upper-case komponentti) " ei ole käytössä")
+                                       :else nil)
+                              tulos (if viesti
+                                      (str viesti ", " viestit)
+                                      viestit)]
+                          tulos))
+                "" komponenttien-tila)
+        tarkista-status-fn (fn [status]
+                             (or (= "ok" status) (= "ei-kaytossa" status) false))
+        ;; Yksittäinen komponentti on ok, jos joltakin palvelimelta on saatu ok status
+        itmf-yhteys-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "itmf") komponenttien-tila)) false)
+        replikoinnin-tila-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "replica") komponenttien-tila)) false)
+        yhteys-master-kantaan-ok? (or (some #(tarkista-status-fn (:status %)) (filter #(= (:komponentti %) "db") komponenttien-tila)) false)
+        ;; Harja on ok, mikäli kaikki komponentit on ok
+        harja-ok? (every? true? [itmf-yhteys-ok? replikoinnin-tila-ok? yhteys-master-kantaan-ok?])
+        viesti (cond
+                 (empty? tilaviesti) "Harja ok"
+                 (and (not (empty? tilaviesti)) harja-ok?)  (str "Harja ok" ", " tilaviesti)
+                 :else tilaviesti)]
+    {:status (if harja-ok? 200 503)
+     :harja-ok? harja-ok?
+     :itmf-yhteys-ok? itmf-yhteys-ok?
+     :replikoinnin-tila-ok? replikoinnin-tila-ok?
+     :yhteys-master-kantaan-ok? yhteys-master-kantaan-ok?
+     :viesti viesti}))
+
 (defrecord Status [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin
            komponenttien-tila :komponenttien-tila
+           db :db
            :as this}]
+    (http-palvelin/julkaise-reitti
+      http :uusi-status
+      (GET "/uusi-status" _
+        (let [{:keys [status] :as lahetettava-viesti} (hae-status db)]
+          (do
+            (when (not (= status 200))
+              (log/error "Status palauttaa virheen, viesti:\n" lahetettava-viesti))
+            {:status status
+             :headers {"Content-Type" "application/json; charset=UTF-8"}
+             :body (encode
+                     (dissoc lahetettava-viesti :status))}))))
     (http-palvelin/julkaise-reitti
      http :status
      (GET "/status" _
           (let [testit (async/merge
                          [(tietokannan-tila komponenttien-tila)
                           (replikoinnin-tila komponenttien-tila)
-                          (sonja-yhteyden-tila komponenttien-tila)
                           (itmf-yhteyden-tila komponenttien-tila)
                           (harjan-tila komponenttien-tila)])
                 {:keys [status] :as lahetettava-viesti} (koko-status testit)]
@@ -206,6 +238,7 @@
     this)
 
   (stop [{http :http-palvelin :as this}]
+    (http-palvelin/poista-palvelu http :uusi-status)
     (http-palvelin/poista-palvelu http :status)
     (http-palvelin/poista-palvelu http :app-status)
     (http-palvelin/poista-palvelu http :app-status-local)

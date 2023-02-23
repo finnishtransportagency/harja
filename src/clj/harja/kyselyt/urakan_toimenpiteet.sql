@@ -49,6 +49,15 @@ FROM toimenpideinstanssi tpi
   LEFT JOIN toimenpidekoodi t1 ON t1.id = t2.emo
 WHERE urakka = :urakka;
 
+-- name: hae-mh-urakoiden-toimenpiteet
+-- Hakee kaikki 2.tason toimenpiteet mh-urakoille
+SELECT DISTINCT on (t2.nimi) t2.nimi, t2.koodi
+FROM toimenpideinstanssi tpi
+         LEFT JOIN toimenpidekoodi t3 ON tpi.toimenpide = t3.id
+         LEFT JOIN toimenpidekoodi t2 ON t2.id = t3.emo
+         LEFT JOIN urakka u ON tpi.urakka = u.id
+WHERE urakka IN (:urakat) AND u.tyyppi='teiden-hoito';
+
 
 -- name: hae-urakan-muutoshintaiset-tehtavat
 -- Hakee kaikki urakan 4. tason muutoshintaiset toimenpiteet

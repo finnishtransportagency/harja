@@ -104,35 +104,6 @@
                            maksueran-tiedot)]
     maksueran-tiedot))
 
-(defn tee-maksuera-jms-lahettaja [sonja integraatioloki db jono]
-  (jms/jonolahettaja (integraatioloki/lokittaja integraatioloki db "sampo" "maksuera-lahetys") sonja jono))
-
-(defn laheta-maksuera [sonja integraatioloki db lahetysjono-ulos numero summat]
-  (if (maksuerat/onko-olemassa? db numero)
-    (try
-      (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
-      (if (lukitse-maksuera db numero)
-        (let [jms-lahettaja (tee-maksuera-jms-lahettaja sonja integraatioloki db lahetysjono-ulos)
-              muodosta-sanoma (fn []
-                                (let [maksuera (hae-maksueran-tiedot db numero summat)]
-                                  (tarkista-maksueran-tiedot maksuera)
-                                  (maksuera-sanoma/maksuera-xml maksuera)))]
-
-          (let [viesti-id (jms-lahettaja muodosta-sanoma nil)]
-            (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-            (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
-        (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
-
-      (catch Exception e
-        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä Sonjaan tapahtui poikkeus: %s." numero e))
-        (merkitse-maksueralle-lahetysvirhe db numero)
-        (throw e)))
-
-    (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
-      (log/error virheviesti)
-      (throw+ {:type    virheet/+tuntematon-maksuera+
-               :virheet [{:koodi :tuntematon-maksuera :viesti virheviesti}]}))))
-
 (defn kasittele-maksuera-kuittaus [db kuittaus viesti-id]
   (jdbc/with-db-transaction [db db]
     (if-let [maksueranumero (hae-maksueranumero db viesti-id)]
@@ -157,12 +128,15 @@
               ;; Jos ulkoiseen järjestelmään ei saada yhteyttä, vastaus on false
               _ (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
                   ;; Merkitse virhe
-                (merkitse-maksueralle-lahetysvirhe db numero)
-                (merkitse-maksuera-odottamaan-vastausta db numero viesti-id))
-              _ (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))
+                  (do
+                    (merkitse-maksueralle-lahetysvirhe db numero)
+                    (log/debug (format "Maksuerälle (numero: %s) merkittiin virhe." numero)))
+                  (do
+                    (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+                    (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
               ;; Kuittaus pitänee käsitellä samantien
               _ (when-not (false? vastaus)
-                                 (kasittele-maksuera-kuittaus db vastaus viesti-id))]
+                  (kasittele-maksuera-kuittaus db vastaus viesti-id))]
           ;; Palautetaan vastaus true/false
           (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
             false

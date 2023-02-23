@@ -384,6 +384,7 @@
      :tiedot [{:otsikko "Aika" :tyyppi :pvm-aika :nimi :aika}
               {:otsikko "Tierekisteriosoite" :tyyppi :tierekisteriosoite :nimi :tierekisteriosoite}
               {:otsikko "Tarkastaja" :nimi :tarkastaja}
+              {:otsikko "Organisaatio" :nimi :organisaatio}
               {:otsikko "Havainnot" :hae (hakufunktio
                                            #(and (contains? % :havainnot)
                                                  (contains? % :vakiohavainnot)

@@ -165,7 +165,7 @@
 
   SiirraValitut
   (process-event [_ app]
-    (when-not (:toimenpiteiden-siirto-kaynnissa? app)
+    (if-not (:toimenpiteiden-siirto-kaynnissa? app)
       (-> app
           (tuck-apurit/post! :siirra-kanavatoimenpiteet
                              {::kanavan-toimenpide/toimenpide-idt (:valitut-toimenpide-idt app)
@@ -173,7 +173,8 @@
                               ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
                              {:onnistui ->ValitutSiirretty
                               :epaonnistui ->ValitutEiSiirretty})
-          (assoc :toimenpiteiden-siirto-kaynnissa? true))))
+          (assoc :toimenpiteiden-siirto-kaynnissa? true))
+      app))
 
   ValitutSiirretty
   (process-event [_ app]
@@ -258,7 +259,7 @@
   HaeMateriaalit
   (process-event [_ {:keys [materiaalien-haku-kaynnissa?] :as app}]
     (assert (some? materiaalien-haku-kaynnissa?) "huono tila: materiaalien-haku-kaynnissa? oli nil")
-    (when-not materiaalien-haku-kaynnissa?
+    (if-not materiaalien-haku-kaynnissa?
       (let [urakka-id (:id @navigaatio/valittu-urakka)]
         (-> app
             (tuck-apurit/post! :hae-vesivayla-materiaalilistaus
@@ -266,7 +267,8 @@
                                {:onnistui ->MateriaalitHaettu
                                 :epaonnistui ->MateriaalienHakuEpaonnistui})
             (assoc :materiaalien-haku-kaynnissa? true
-                   :urakan-materiaalit nil)))))
+                   :urakan-materiaalit nil)))
+      app))
 
   MateriaalitHaettu
   (process-event [{materiaalit :materiaalit} app]
@@ -287,8 +289,8 @@
       (assoc-in app [:avattu-toimenpide ::materiaalit/materiaalit]
                 (vec
                  (for [m materiaalit]
-                   (if (-> m :varaosat ::materiaalit/muutokset)
-                     (update m :varaosa dissoc ::materiaalit/muutokset ::materiaalit/id)
+                   (if (-> m :materiaalitaulukko ::materiaalit/muutokset)
+                     (update m :tallennetut-materiaalit dissoc ::materiaalit/muutokset ::materiaalit/id)
                      m))))
       app))
 
@@ -304,4 +306,4 @@
 
   LisaaVirhe
   (process-event [{virhe :virhe} app]
-    (assoc-in app [:avattu-toimenpide :varaosat-taulukon-virheet] virhe)))
+    (assoc-in app [:avattu-toimenpide :materiaalit-taulukon-virheet] virhe)))

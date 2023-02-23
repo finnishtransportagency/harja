@@ -96,9 +96,9 @@
   (yha-q/merkitse-urakan-yllapitokohteet-paivitetyksi<! db {:urakka harja-urakka-id
                                                             :kayttaja (:id user)}))
 
-(defn- tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
-                                                          tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
-                                                          nimi] :as kohde}]
+(defn tallenna-kohde-ja-alikohteet [db urakka-id {:keys [tierekisteriosoitevali
+                                                         tunnus yha-id yha-kohdenumero alikohteet yllapitokohdetyyppi yllapitokohdetyotyyppi
+                                                         nimi] :as kohde}]
   (log/debug "Tallennetaan kohde, jonka yha-id on: " yha-id (pr-str tierekisteriosoitevali))
   (let [kohde (yha-q/luo-yllapitokohde<!
                 db
@@ -108,6 +108,7 @@
                  :tr_alkuetaisyys (:aet tierekisteriosoitevali)
                  :tr_loppuosa (:losa tierekisteriosoitevali)
                  :tr_loppuetaisyys (:let tierekisteriosoitevali)
+                 :karttapaivamaara (:karttapaivamaara tierekisteriosoitevali)
                  :tunnus tunnus
                  :yhaid yha-id
                  :yllapitokohdetyyppi (name yllapitokohdetyyppi)
@@ -133,12 +134,13 @@
                              :tr_loppuetaisyys (:let tierekisteriosoitevali)
                              :tr_ajorata (:ajorata tierekisteriosoitevali)
                              :tr_kaista (:kaista tierekisteriosoitevali)
+                             :karttapaivamaara (:karttapaivamaara tierekisteriosoitevali)
                              :yllapitoluokka yllapitoluokka
                              :nykyinen_paallyste nykyinen-paallyste
                              :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
                              :yhaid yha-id})]))))
 
-(defn- lisaa-kohteisiin-validointitiedot [db kohteet]
+(defn lisaa-kohteisiin-validointitiedot [db kohteet]
   (map
     (fn [{:keys [tierekisteriosoitevali alikohteet] :as kohde}]
       (let [kohteen-validointi (tr-haku/validoi-tr-osoite-tieverkolla db tierekisteriosoitevali)
@@ -166,10 +168,11 @@
 (defn hae-vkm-osoite [vkm-kohteet hakutunnus]
   (first (filter #(= (:yha-id %) hakutunnus) vkm-kohteet)))
 
-(defn paivita-kohde [kohde osoite]
+(defn paivita-kohde [kohde osoite tilannepvm]
   (if (some? (:virheet osoite))
     (assoc kohde :virheet (:virheet osoite))
     (-> kohde
+      (assoc-in [:tierekisteriosoitevali :tilannepvm] tilannepvm)
       (paivita-osoitteen-osa osoite :tienumero)
       (paivita-osoitteen-osa osoite :ajorata)
       (paivita-osoitteen-osa osoite :aet)
@@ -177,16 +180,16 @@
       (paivita-osoitteen-osa osoite :let)
       (paivita-osoitteen-osa osoite :losa))))
 
-(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet]
+(defn yhdista-yha-ja-vkm-kohteet [yha-kohteet vkm-kohteet tilannepvm]
   (mapv (fn [kohde]
           (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id kohde))]
             (-> kohde
-              (paivita-kohde osoite)
+              (paivita-kohde osoite tilannepvm)
               (assoc :alikohteet
                      (mapv
                        (fn [alikohde]
                          (let [osoite (hae-vkm-osoite vkm-kohteet (:yha-id alikohde))]
-                           (paivita-kohde alikohde osoite)))
+                           (paivita-kohde alikohde osoite tilannepvm)))
                        (:alikohteet kohde))))))
     yha-kohteet))
 
@@ -201,13 +204,15 @@
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (let [yha-kohteet (yha/hae-kohteet yha urakka-id (:kayttajanimi user))
         uudet-kohteet (suodata-pois-harjassa-jo-olevat-kohteet db yha-kohteet)
+        ;; TODO: Hae kohdepvm harjan tieverkon tilannepäivämäärästä.
+        kohdepvm (or kohdepvm (pvm/nyt))
         tieosoitteet (vkm/yllapitokohde->vkm-parametrit uudet-kohteet
                        (or
                          tilannepvm
                          (:karttapaivamaara (:tierekisteriosoitevali (first uudet-kohteet))))
-                       (or kohdepvm (pvm/nyt)))
+                       kohdepvm)
         vkm-kohteet (vkm/muunna-tieosoitteet-verkolta-toiselle vkm tieosoitteet)
-        yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-kohteet vkm-kohteet)
+        yhdistetyt-kohteet (yhdista-yha-ja-vkm-kohteet uudet-kohteet vkm-kohteet kohdepvm)
         kohteet-validointitiedoilla (lisaa-kohteisiin-validointitiedot db yhdistetyt-kohteet)
         validit-kohteet (filter :kohde-validi? kohteet-validointitiedoilla)
         epavalidit-kohteet (filter (comp not :kohde-validi?) kohteet-validointitiedoilla)

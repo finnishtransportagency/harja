@@ -12,21 +12,22 @@
 
 (defn laheta-pot-yhaan-ja-velhoon
   "Lähettää annettu pot YHAan ja Velhoon."
-  [db yha velho user {:keys [urakka-id kohde-id paallystetoteuma-url]}]
+  [db yha velho kehitysmoodi? user {:keys [urakka-id kohde-id paallystetoteuma-url]}]
   (oikeudet/vaadi-oikeus "sido" oikeudet/urakat-kohdeluettelo-paallystyskohteet user urakka-id)
   (yha-apurit/tarkista-lahetettavat-kohteet db [kohde-id])
   (log/debug (format "Lähetetään kohde: %s YHAan ja Velhoon" kohde-id))
   (let [yha-lahetys (try+ (yha/laheta-kohteet yha urakka-id [kohde-id])
                           (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
                             virheet))
-        ;TODO enable VELHO lähetys
-        ;velho-lahetys (try+ (velho/laheta-kohde velho urakka-id kohde-id)
-        ;                    (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
-        ;                      virheet))
+        ;; Velho-lähetys toistaiseksi pois päältä. Testattu enimmäkseen toimivaksi testiympäristössä. On vielä selvityksessä, otetaanko Velho-lähetys käyttöön.
+        #_velho-lahetys #_(when kehitysmoodi?
+                        (try+ (velho/laheta-kohde velho urakka-id kohde-id)
+                          (catch [:type yha/+virhe-kohteen-lahetyksessa+] {:keys [virheet]}
+                            virheet)))
         tila (first (q-yllapitokohteet/hae-yha-velho-lahetyksen-tila db {:kohde-id kohde-id}))]
     tila))
 
-(defrecord YhaVelho []
+(defrecord YhaVelho [asetukset]
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
@@ -35,7 +36,7 @@
           velho (:velho-integraatio this)]
       (julkaise-palvelu http :laheta-pot-yhaan-ja-velhoon
                         (fn [user data]
-                          (laheta-pot-yhaan-ja-velhoon db yha velho user data))))
+                          (laheta-pot-yhaan-ja-velhoon db yha velho (:kehitysmoodi asetukset) user data))))
     this)
   (stop [this]
     (poista-palvelut

@@ -154,9 +154,10 @@ button > .ajax-loader {
 .label-ja-kentta {
   display: inline-block;
   vertical-align: top;
-  margin: 5px;
+  margin: @valistys-4;
   .kentan-otsikko {
-    font-weight: bold;
+    .caption-small-strong();
+    margin-bottom: @valistys-4;
   }
   .livi-alasveto(@valintakontrollin-leveys);
   input:not([type="checkbox"]) {
@@ -312,21 +313,15 @@ button > .ajax-loader {
 .haitari-levea { max-width: 100%; }
 
 .liitekomponentti {
-  > div.file-upload {
-    position: relative;
-    overflow: hidden;
-    margin: 0px;
-
-    input.upload {
-      position: absolute;
-      top: 0;
-      right: 0;
-      margin: 0;
-      padding: 0;
-      cursor: pointer;
-      opacity: 0;
-      filter: alpha(opacity=0);
+  /* Pakotettu fontin väri, jotta .lomake .label määritykset eivät yliajaisi näitä. */
+  label.file-upload {
+    color: @blue-default!important;
+    &.ei-margin-topia {
+      margin-top: 0;
     }
+  }
+  label.file-upload:hover {
+    color: @white-default!important;
   }
 
   > .liite-virheviesti {
@@ -644,6 +639,7 @@ button > .ajax-loader {
     }
   }
 }
+
 .placeholder {
   color: @harmaa5;
 }
@@ -654,6 +650,7 @@ button > .ajax-loader {
         min-width: 64px;
     }
 }
+
 /*
 .margin-top-4 {
   margin-top: 4px;

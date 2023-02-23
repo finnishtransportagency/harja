@@ -19,17 +19,24 @@
                                        :tyyppi "kokonaishintainen"
                                        :summa  1304.89}
                  :toimenpideinstanssi {:alkupvm       #inst"2015-10-01T00:00:00.000+03:00"
-                                       :loppupvm      #inst"2017-09-30T00:00:00.000+03:00"
                                        :vastuuhenkilo "A009717"
                                        :talousosasto  "talousosasto"
                                        :talousosastopolku  "polku/talousosasto"
                                        :tuotepolku    "polku/tuote"
                                        :sampoid       "SAMPOID"}
-                 :urakka              {:sampoid "PR00020606"}
+                 :urakka              {:sampoid "PR00020606"
+                                       :loppupvm      #inst"2017-09-30T00:00:00.000+03:00"}
                  :sopimus             {:sampoid "00LZM-0033600"}})
 
 (deftest tarkista-maksueran-validius
   (let [maksuera (html (maksuera_sanoma/maksuera-xml +maksuera+))
+        xsd "nikuxog_product.xsd"]
+    (is (xml/validi-xml? +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
+
+;; Varmistetaan erityisesti urakan viimeisen vuoden käyttöä, koska maksimi on 2076 ja Taloushallinnon kanssa on sovittu, että siihen
+;; annetaan urakan viimeisen vuoden viimeinen päivä.
+(deftest tarkista-maksueran-validius2
+  (let [maksuera (slurp "test/resurssit/sampo/validoitava_maksuera.xml")
         xsd "nikuxog_product.xsd"]
     (is (xml/validi-xml? +xsd-polku+ xsd maksuera) "Muodostettu XML-tiedosto on XSD-skeeman mukainen")))
 

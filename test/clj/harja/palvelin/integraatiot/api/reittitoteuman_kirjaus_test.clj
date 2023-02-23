@@ -95,6 +95,62 @@
 
           (poista-reittitoteuma toteuma-id ulkoinen-id))))))
 
+(deftest tallenna-yksittainen-reittitoteuma-vanhalla-talvisuola-materiaalilla
+  (let [;; Talvisuola, rakeinen NaCl - materiaalikoodi id
+        materiaalikoodi-id (ffirst (q (str "select id from materiaalikoodi where nimi = 'Talvisuola, rakeinen NaCl';")))
+        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
+        api-payload (slurp "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json")
+        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                         (-> api-payload
+                           (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                           (.replace "__ID__" (str ulkoinen-id))
+                           (.replace "__SUORITTAJA_NIMI__" "Tiensuolaajat Oy")))]
+    (is (= 200 (:status vastaus-lisays)))
+    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tiensuolaajat Oy"]))
+
+
+      ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
+      (let [vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja portti
+                               (-> "test/resurssit/api/reittitoteuma_yksittainen_talvisuola.json"
+                                 slurp
+                                 (.replace "__SOPIMUS_ID__" (str sopimus-id))
+                                 (.replace "__ID__" (str ulkoinen-id))
+                                 (.replace "__SUORITTAJA_NIMI__" "Peltikoneen Pojat Oy")))]
+        (is (= 200 (:status vastaus-paivitys)))
+
+        (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
+                                                          (columns ::rp/toteuman-reittipisteet)
+                                                          {::rp/toteuma-id toteuma-id}))
+              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+              toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
+              toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
+              toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
+                                                    JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
+                                                    WHERE toteuma = " toteuma-id)))
+              ;; Varmista, että Talvisuola materiaalinimellä lisätty toteuma menee myös suolatoteuma_reittipiste-tauluun
+              suolatoteumatoteuma-reittipisteet  (q-map (str "SELECT aika, pohjavesialue, sijainti, materiaalikoodi, maara,
+              rajoitusalue_id FROM suolatoteuma_reittipiste  WHERE toteuma = " toteuma-id))]
+          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Peltikoneen Pojat Oy"]))
+          (is (= (count reittipisteet) 3))
+          (is (= (count toteuma-tehtava-idt) 3))
+          (is (= (count toteuma-materiaali-idt) 1))
+          (is (= 6 (count suolatoteumatoteuma-reittipisteet)))
+          (is (every? #(= materiaalikoodi-id (:materiaalikoodi %)) suolatoteumatoteuma-reittipisteet))
+          (is (= toteuman-materiaali "Talvisuola, rakeinen NaCl"))
+
+          (doseq [reittipiste reittipisteet]
+            (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
+                  reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
+                  reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
+              (is (= (count reitti-tehtava-idt) 3))
+              (is (= (count reitti-materiaali-idt) 1))
+              (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
+
+          (poista-reittitoteuma toteuma-id ulkoinen-id))))))
+
 (deftest tallenna-soratiehoitoluokalle-reittitoteuma
   (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)

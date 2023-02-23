@@ -127,7 +127,17 @@
       (is (= urakka @oulun-alueurakan-2005-2010-id) "Virheellistä urakkaa ei päivitetty")
       (is (= indeksin-nimi "MAKU 2010") "Virheellistä indeksiä ei päivitetty"))
 
-    ;; Poista luotu erilliskustannus
+    ;; Testaa poistetuksi merkitsemistä
+    (let [ek-id (:id lisatty)
+          poistettu-id (kutsu-palvelua (:http-palvelin jarjestelma)
+                         :poista-erilliskustannus +kayttaja-jvh+
+                         {:id ek-id
+                          :urakka-id @oulun-alueurakan-2005-2010-id})
+          poistettu? (ffirst (q (str "SELECT poistettu FROM erilliskustannus WHERE id = " ek-id ";")))]
+      (is (= poistettu-id ek-id) "Poistetun erilliskustannuksen id")
+      (is (= poistettu? true)))
+
+    ;; Siivoa
     (u
       (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))

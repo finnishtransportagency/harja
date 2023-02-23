@@ -335,6 +335,7 @@
                                                                 :sopimus sopimus-id
                                                                 :kohdenumero (:ulkoinen-id uusi-kohde)
                                                                 :nimi (:nimi uusi-kohde)
+                                                                :yotyo (:yotyo uusi-kohde)
                                                                 :tr_numero (:tie uusi-kohde)
                                                                 :tr_alkuosa (:aosa uusi-kohde)
                                                                 :tr_alkuetaisyys (:aet uusi-kohde)
@@ -354,6 +355,7 @@
                           {:kohdenumero (:ulkoinen-id uusi-kohde)
                            :nimi (:nimi uusi-kohde)
                            :tunnus nil
+                           :yotyo (:yotyo uusi-kohde)
                            :tr_numero (:tie uusi-kohde)
                            :tr_alkuosa (:aosa uusi-kohde)
                            :tr_alkuetaisyys (:aet uusi-kohde)
@@ -589,9 +591,7 @@
   (start [this]
     (let [http (:http-palvelin this)
           fim (:fim this)
-          email (if (ominaisuus-kaytossa? :sonja-sahkoposti)
-                  (:sonja-sahkoposti this)
-                  (:api-sahkoposti this))
+          email (:api-sahkoposti this)
           db (:db this)
           excel (:excel-vienti this)]
       (julkaise-palvelu http :paikkauskohteet-urakalle

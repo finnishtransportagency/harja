@@ -20,8 +20,7 @@
             [harja.pvm :as pvm]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clj-time.coerce :as c]
-            [harja.palvelin.integraatiot.sahke.sahke-komponentti :as sahke]))
+            [clj-time.coerce :as c]))
 
 (def ^{:const true} oletus-toleranssi 50)
 
@@ -49,7 +48,9 @@
     (when (and (< radius 500)
                (< k 10))
       (let [urakat (distinct (map #(dissoc % :etaisyys :urakkatyyppi )
-                                  (q/hae-urakka-sijainnilla db urakkatyyppi x y radius)))]
+                                  (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                :threshold radius
+                                                                :urakkatyyppi urakkatyyppi})))]
         (cond
           (empty? urakat) (recur (* 2 radius) (inc k))
           (> (count urakat) 1) (recur (* 0.75 radius) (inc k))
@@ -80,7 +81,9 @@
   [db urakkatyyppi {:keys [x y]}]
   ;; Oletuksena haetaan valaistusurakat & päällystyksen palvelusopimukset 1000 metrin thesholdilla
   (let [urakka-idt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi))
-                                  (q/hae-urakka-sijainnilla db urakkatyyppi x y 1000)))]
+                                  (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                :threshold 1000
+                                                                :urakkatyyppi urakkatyyppi})))]
     (if (empty? urakka-idt)
       (if (#{"hoito" "teiden-hoito"} urakkatyyppi)
         ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
@@ -88,7 +91,9 @@
 
         ;; Jos ei löytynyt urakkaa annetulla tyypillä, haetaan alueella toimiva hoidon alueurakka
         (let [hoidon-urakkaidt (distinct (map #(:id (dissoc % :etaisyys :urakkatyyppi ))
-                                              (q/hae-urakka-sijainnilla db "hoito" x y 10)))]
+                                              (q/hae-urakka-sijainnilla db {:x x :y y
+                                                                            :threshold 10
+                                                                            :urakkatyyppi "hoito"})))]
           (if hoidon-urakkaidt
             hoidon-urakkaidt
             ;; Jos hoidon alueurakkaa ei löytynyt suoraan alueelta, haetaan lähin hoidon alueurakka 10 kilometrin säteellä
@@ -430,6 +435,7 @@
                            (map #(assoc % :hallintayksikko (when (get-in % [:hallintayksikko :id]) (:hallintayksikko %)))))
                          (q/hae-harjassa-luodut-urakat db))
                    {:sopimus      :sopimukset
+                    ;; Sähke on poistettu käytöstä, mutta nämä jätetty tähän varmuuden vuoksi.
                     :sahkelahetys :sahkelahetykset})]
       (namespacefy urakat {:ns    :harja.domain.urakka
                            :inner {:hallintayksikko {:ns :harja.domain.organisaatio}
@@ -437,16 +443,11 @@
                                    :sopimukset      {:ns :harja.domain.sopimus}
                                    :hanke           {:ns :harja.domain.hanke}}}))))
 
-(defn laheta-urakka-sahkeeseen [sahke user urakka-id]
-  (when (ominaisuus-kaytossa? :vesivayla)
-    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
-    (sahke/laheta-urakka-sahkeeseen sahke urakka-id)))
 
 (defrecord Urakat []
   component/Lifecycle
   (start [{http  :http-palvelin
            db    :db
-           sahke :sahke
            :as   this}]
     (julkaise-palvelu http
                       :hallintayksikon-urakat
@@ -505,10 +506,6 @@
                         (hae-harjassa-luodut-urakat db user))
                       {:vastaus-spec ::u/hae-harjassa-luodut-urakat-vastaus})
 
-    (julkaise-palvelu http
-                      :laheta-urakka-sahkeeseen
-                      (fn [user urakka-id]
-                        (laheta-urakka-sahkeeseen sahke user urakka-id)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -521,7 +518,6 @@
                      :tallenna-urakan-tyyppi
                      :aseta-takuun-loppupvm
                      :tallenna-vesivaylaurakka
-                     :hae-harjassa-luodut-urakat
-                     :laheta-urakka-sahkeeseen)
+                     :hae-harjassa-luodut-urakat)
 
     this))

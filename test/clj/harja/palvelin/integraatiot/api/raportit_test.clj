@@ -43,7 +43,9 @@
             (sort-by :materiaali [{:materiaali "Natriumformiaatti" :maara {:yksikko "t" :maara 2000}}
                                   {:materiaali "Talvisuola, rakeinen NaCl" :maara {:yksikko "t" :maara 200}}
                                   {:materiaali "Talvisuolaliuos NaCl" :maara {:yksikko "t" :maara 1800}}
-                                  {:materiaali "Hiekoitushiekka" :maara {:yksikko "t" :maara 0}}])
+                                  {:materiaali "Hiekoitushiekka" :maara {:yksikko "t" :maara 0}}
+                                  {:materiaali "Kuumapäällyste" :maara {:yksikko "t" :maara 1000}}
+                                  {:materiaali "Massasaumaus" :maara {:yksikko "t" :maara 1000}}])
             (sort-by :materiaali (get-in dekoodattu-body [:raportti :materiaaliraportti]))))))
 
   (testing "Annettu aikaväli on liian suuri"

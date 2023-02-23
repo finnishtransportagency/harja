@@ -135,6 +135,12 @@
                     "tilaaja"
                     "Sanktion sisältävä laatupoikkeama 6"
                     [:liitteet
+                     []]]
+                   ["11.10.2015"
+                    "Testikohde"
+                    "tilaaja"
+                    "Arvonvähennyksen sisältävä laatupoikkeama 123"
+                    [:liitteet
                      []]]}))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
@@ -235,6 +241,12 @@
                     "Testikohde"
                     "tilaaja"
                     "Sanktion sisältävä laatupoikkeama 6"
+                    [:liitteet
+                     []]]
+                   ["11.10.2015"
+                    "Testikohde"
+                    "tilaaja"
+                    "Arvonvähennyksen sisältävä laatupoikkeama 123"
                     [:liitteet
                      []]]}))))
 
@@ -361,6 +373,12 @@
                     "Testikohde"
                     "tilaaja"
                     "Sanktion sisältävä laatupoikkeama 6767"
+                    [:liitteet
+                     []]]
+                   ["11.10.2015"
+                    "Testikohde"
+                    "tilaaja"
+                    "Arvonvähennyksen sisältävä laatupoikkeama 123"
                     [:liitteet
                      []]]}))))
 

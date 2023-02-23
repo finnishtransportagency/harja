@@ -3,11 +3,6 @@
             [harja.palvelin.integraatiot.tloik.tyokalut :as tloik-tk]
             [harja.tyokalut.env :as env]))
 
-(def sonja-asetukset {:url (str "tcp://" (env/env "HARJA_SONJA_BROKER_HOST" "localhost") ":" (env/env "HARJA_SONJA_BROKER_PORT" 61616))
-                      :kayttaja ""
-                      :salasana ""
-                      :tyyppi :activemq
-                      :paivitystiheys-ms 3000})
 ;; Jos haluat ajaa lokaalikoneella itmf testejä,
 ;; käynnistä ativemq jonot (ohjeet readme.md:Ssä) ja aseta HARJA_ITMF_BROKER_PORT porttiin 61616
 ;; tai muuta portti 61626 -> 61616. Näin pystyt olemassa olevilla jonoilla simuloimaan sekä sonja jonoja, että itmf jonoja.

@@ -5,7 +5,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
             [harja.kyselyt.tarkastukset :as q-tarkastukset]
             [harja.palvelin.integraatiot.api.tyokalut.json :as json]
-            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]))
+            [harja.palvelin.integraatiot.api.tyokalut.liitteet :as tyokalut-liitteet]
+            [harja.geo :as geo]))
 
 (defn tallenna-mittaustulokset-tarkastukselle [db id tyyppi uusi? mittaus]
   (case tyyppi
@@ -29,6 +30,7 @@
            (mapv
              (fn [rivi]
                (let [tarkastus (:tarkastus rivi)
+                     {alkusijainti :alkusijainti loppusijainti :loppusijainti} tarkastus
                      ulkoinen-id (-> tarkastus :tunniste :id)
                      tyyppi (if (nil? tyyppi)
                               (:tarkastustyyppi rivi)
@@ -64,7 +66,16 @@
                                                (nil? yllapitokohde)
                                                (not (str/blank? (:havainnot tarkastus))))
                                              alitus))
-                           :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))})
+                           :nayta-urakoitsijalle (boolean (:naytetaan-urakoitsijalle tarkastus))
+                           :pisteet
+                           (->
+                             (if-not loppusijainti
+                               {:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
+                               {:type :multipoint,
+                                :coordinates [{:type :point :coordinates [(:x alkusijainti) (:y alkusijainti)]}
+                                              {:type :point, :coordinates [(:x loppusijainti) (:y loppusijainti)]}]})
+                             geo/clj->pg
+                             geo/geometry)})
                      liitteet (:liitteet tarkastus)]
                  (tyokalut-liitteet/tallenna-liitteet-tarkastukselle db liitteiden-hallinta urakka-id id kayttaja liitteet)
                  (tallenna-mittaustulokset-tarkastukselle db id tyyppi uusi? (:mittaus rivi))
