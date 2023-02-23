@@ -34,7 +34,8 @@ SELECT
   s.siltaid AS "aineiston_silta_id",
   s.siltatunnus AS "siltatunnus",
   s.trex_oid AS "trex-oid",
-  EXISTS(SELECT 1 FROM siltatarkastus st WHERE st.urakka=u.id AND st.silta=s.id) AS "siltatarkastuksia?"
+  s.poistettu,
+  EXISTS(SELECT 1 FROM siltatarkastus st WHERE st.urakka=u.id AND st.silta=s.id AND st.poistettu = false) AS "siltatarkastuksia?"
 FROM silta s
   LEFT OUTER JOIN urakka u ON ARRAY[u.id] :: INT[] <@ s.urakat
 WHERE (:trex-oid ::TEXT IS NOT NULL AND trex_oid = :trex-oid) OR

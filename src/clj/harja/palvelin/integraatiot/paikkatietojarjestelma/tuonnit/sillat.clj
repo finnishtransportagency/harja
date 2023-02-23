@@ -28,6 +28,16 @@
                   [k (float-intiksi v)])
                 m)))
 
+(defn- silta-kuuluu-kunnalle? [silta]
+  (let [kunnossapitaja (str/lower-case (:nykyinenku silta))]
+    (or (str/includes? kunnossapitaja "yksityinen")
+      (str/includes? kunnossapitaja "kaupunki")
+      (str/includes? kunnossapitaja "kunta")
+      (str/includes? kunnossapitaja "tieyhtiö")
+      (str/includes? kunnossapitaja "ruotsi")
+      (str/includes? kunnossapitaja "hkl")
+      (str/includes? kunnossapitaja "sairaanhoitopiiri"))))
+
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
         ;; Parsitaan sillan tyyppi rakennetyypeistä. Sillalla voi olla useampi rakennetyyppi
@@ -56,9 +66,9 @@
                                  urakat)))
 
         _ (when (< 1 (count urakat-sijainnilla))
-            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: "
-              (str/join (map (:id urakat-sijainnilla) ","))
-              ". Sillalle merkitään vain ensimmäinen."))
+            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t:["
+              (str/join ", " (map :id urakat-sijainnilla))
+              "]. Sillalle merkitään vain ensimmäinen."))
 
         urakka-id (:id (first urakat-sijainnilla))
 
@@ -67,6 +77,10 @@
                                                         (and (:siltatarkastuksia? silta)
                                                           (pvm/ennen? (pvm/nyt) (:loppupvm silta))
                                                           (not= urakka-id (:urakka-id silta)))) urakkatiedot)
+
+        sillalla-tarkastuksia? (or (seq aktiiviset-urakat-joilla-tarkastuksia)
+                                 (some #(and (= urakka-id (:urakka-id %))
+                                          (:siltatarkastuksia? %)) urakkatiedot))
 
         _ (when-not (empty? aktiiviset-urakat-joilla-tarkastuksia)
             (log/warn "Kaikkia käsiteltyyn siltaan ( trex-oid:" trex-oid ") virheellisesti liitettyjä urakoita ("
@@ -82,12 +96,14 @@
                                               (empty? aktiiviset-urakat-joilla-tarkastuksia)
                                               (conj urakka-id))))
 
-        ;; Merkitään silta kokonaan poistetuksi, jos sen tila ei ole käytössä, eikä sille ole aktiivisissa urakoissa
-        ;; tehtyjä tarkastuksia.
-        poistetaan? (boolean (and (not kaytossa?)
-                               (empty? aktiiviset-urakat-joilla-tarkastuksia)
-                               (not (some #(and (= urakka-id (:urakka-id %))
-                                             (:siltatarkastuksia? %)) urakkatiedot))))
+        silta-kuuluu-kunnalle? (silta-kuuluu-kunnalle? silta)
+
+        ;; Merkitään silta kokonaan poistetuksi, jos sen tila ei ole käytössä tai se kuuluu kunnalle,
+        ;; eikä sille ole aktiivisissa urakoissa tehtyjä tarkastuksia.
+        poistetaan? (boolean (and
+                               (or (not kaytossa?)
+                                 silta-kuuluu-kunnalle?)
+                               (not sillalla-tarkastuksia?)))
 
         sql-parametrit {:tyyppi tyyppi
                         :siltanro siltanumero
@@ -100,30 +116,34 @@
                         :trex-oid trex-oid
                         :muutospvm muutospvm
                         :loppupvm (when-not kaytossa? muutospvm)
-                        ;; Ei merkitä siltaa poistetuksi, jos sillä on tarkastuksia.
                         :poistettu poistetaan?
                         :urakat urakka-idt
-                        :kunnan-vastuulla false}]
+                        :kunnan-vastuulla silta-kuuluu-kunnalle?}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
 
-    ; Ensimmäinen Harjassa tehty siltatarkastus: 2016-09-28 => Suodatetaan aineistosta mukaan vain ne sillat,
-    ; joissa ei ole loppupäivämäärää tai joiden loppupäivämäärä on Harjan käyttöönoton jälkeen.
-    ; Päivitettävä silta etsitään siltatunnuksella tai uudella Taitorakennerekisterin tunnuksella
-
-    ; Loppupäivämäärä: Tietty ominaisuus, päätös tai asian tila päättyy tieverkolla sen loppupäivämääränä.   
-    ; Lakkautuspäivämäärä: Lakkautuspäivämäärä on vain ja ainoastaan ajorataa ja tietä koskeva termi. Ajorataosuus on poistunut lakkautuspäivänä yleiseltä tieverkolta. Tämänkin hetken jälkeen tie saattaaa jäädä olemaan ja sille voidaan myöhemmin muuttaa ainakin teoriassa ominaisuuksia.  
-    ; Kun ajorataosuus lakkautetaan, geometria poistuu tierekisteristä (=> aineistovirhe). Jotta geometria säilyy Harjassa, päivitetään lakkautetuista tieosuuksista ainoastaan lakkautuspäivämäärä.
-
-    ; Silta_id on vanhan Siltarekisterin tunniste, nykyinen Taitorakennerekisteri yksilöi trex-oid-tiedolla. Siltaid ei enää kuulu aineistoon.
-    ; Siltanumero on molempien id:n kanssa relevantti => Otetaan aineistoon mukaan vain sillat, joissa siltanumero on annettu.
-    ; Jos trex-oid puuttuu, ei viedä siltaa kantaan.
+    ; HOX! Aineiston rakenne muuttunut 2022 lopulla huomattavasti, muutokset tehty 2023 alkupuolella.
+    ;
+    ; Uudessa aineistossa saadaan tieto vain siitä, onko silta päättynyt, lakkautettu, täytetty tms. Jos sillan tila
+    ; on mitä tahansa muuta kuin käytössä, merkitän sen loppumispäiväksi sen edellisen päivityksen pvm.
+    ;
+    ; Jos silta siirtyy urakalta toiselle, ja sillalle on tehty siltatarkastuksia toisessa aktiivisessa urakassa,
+    ; nostetaan virhe lokille eikä siirretä siltaa.
+    ;
+    ; Uusille silloille tätä ei pitäisi tapahtua, koska ainoa tilanne, jossa silta siirtyy toiselle urakalle, pitäisi
+    ; olla kun urakka päättyy ja uusi alkaa. Vanhan aineiston mukana on kuitenkin tullut alueurakkaid, jonka takia
+    ; kannassa saattaa olla urakoita, jotka kuuluvat eri urakalle kuin sillan sijainti antaa ymmärtää.
+    ;
+    ; Päättyneen urakan ID jätetään sillalle, koska sitä tarvitaan ainakin siltatarkastusraporteissa
+    ;
+    ; Ei tallenneta siltoja ollenkaan, joista puuttuu siltanumero tai trex-oid
+    ; Ei myöskään luoda siltaa, jos se ei ole käytössä tai kuuluu kunnalle.
 
     (when-not (or (nil? siltanumero)
                 (nil? trex-oid))
       (if-not (empty? urakkatiedot)
         (q-sillat/paivita-silta! db sql-parametrit)
-        (when (= "kaytossa" tila)
+        (when (and kaytossa? (not silta-kuuluu-kunnalle?))
           (q-sillat/luo-silta<! db sql-parametrit))))))
 
 
@@ -160,15 +180,7 @@
 (defn- suodata-sillat [sillat]
   (filter #(and
              (str/includes? (:nykyinen_o %) "Väylävirasto")
-             (and (seq (:vaylanpito %)) (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko"))
-             (let [kunnossapitaja (str/lower-case (:nykyinenku %))]
-               (not (or (str/includes? kunnossapitaja "yksityinen")
-                      (str/includes? kunnossapitaja "kaupunki")
-                      (str/includes? kunnossapitaja "kunta")
-                      (str/includes? kunnossapitaja "tieyhtiö")
-                      (str/includes? kunnossapitaja "ruotsi")
-                      (str/includes? kunnossapitaja "hkl")
-                      (str/includes? kunnossapitaja "sairaanhoitopiiri"))))) sillat))
+             (and (seq (:vaylanpito %)) (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko"))) sillat))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile

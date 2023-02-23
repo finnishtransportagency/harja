@@ -129,7 +129,7 @@
         (is (= sillat-ennen sillat-jalkeen))))
 
     (testing "Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan"
-      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus)})))
+      (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:trex_oid odotettu-vastaus) :siltatunnus (:siltatunnus odotettu-vastaus) :siltanimi (:siltanimi odotettu-vastaus)})))
                                                :urakka (ffirst (q "SELECT id FROM urakka WHERE nimi='Aktiivinen Kajaani Testi';"))
                                                :tarkastusaika (Date.)
                                                :tarkastaja "Foo"
@@ -156,7 +156,7 @@
           luotava-silta (assoc silta-tuonti :oid "54350234")
           _tee-silta (vie-silta-urakalle ds luotava-silta (:id aktiivinen-urakka))
           tehty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
-          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta)})))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta) :siltatunnus (:tunnus luotava-silta) :siltanimi (:nimi luotava-silta)})))
                                                               :urakka (:id aktiivinen-urakka)
                                                               :tarkastusaika (Date.)
                                                               :tarkastaja "Foo"
@@ -179,7 +179,7 @@
           luotava-silta (assoc silta-tuonti :oid "9876543")
           _tee-silta (vie-silta-urakalle ds luotava-silta (:id paattynyt-urakka))
           tehty-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid luotava-silta) "'")))
-          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta)})))
+          _tarkastus (q-tarkastukset/luo-siltatarkastus<! ds {:silta (:silta-taulun-id (first (q-sillat/hae-sillan-tiedot ds {:trex-oid (:oid luotava-silta) :siltanimi (:nimi luotava-silta) :siltatunnus (:tunnus luotava-silta)})))
                                                              :urakka (:id paattynyt-urakka)
                                                              :tarkastusaika (Date.)
                                                              :tarkastaja "Foo"
@@ -194,25 +194,23 @@
          (is (false? (:poistettu tehty-silta)))
          (is (:poistettu paivitetty-silta)))))
 
-#_(deftest hoida-kunnalle-kuuluva-silta
-  (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
+(deftest hoida-kunnalle-kuuluva-silta
+  (let [sillat-ennen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))
+        aktiivinen-urakka (first (q-map "SELECT id FROM urakka WHERE nimi = 'Aktiivinen Oulu Testi'"))]
     (testing "uuden kuntasillan tuominen"
-      (let [silta-tuonti (assoc silta-tuonti :ualue 400
-                                             :trex_oid "987654321"
-                                             :silta_id 1234
-                                             :siltanro 1234)
-            lisaa-silta (sillat/vie-silta-entry ds silta-tuonti)
+      (let [silta-tuonti (assoc silta-tuonti :oid "987654321" :nykyinenku "Raahen kunta")
+            lisaa-silta (vie-silta-urakalle ds silta-tuonti (:id aktiivinen-urakka))
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
         (is (nil? lisaa-silta))
         (is (= sillat-ennen sillat-jalkeen))))
-    (testing "vanhan kuntasillan merkkaaminen poistetuksi"
-      (let [silta-tuonti (assoc silta-tuonti :ualue 400
-                                             :trex_oid ""
-                                             :silta_id 0
-                                             :siltanro 0)
-            lisaa-silta (sillat/vie-silta-entry ds silta-tuonti)
-            hae-silta (first (q-map (str "SELECT * FROM silta WHERE siltanro = 0")))
+    (testing "Sillan siirtyminen kunnalle"
+      (let [silta-tuonti (assoc silta-tuonti :oid "35234525" :tunnus "O-234")
+            lisaa-silta (vie-silta-urakalle ds silta-tuonti (:id aktiivinen-urakka))
+            silta-kunnalla (assoc silta-tuonti :nykyinenku "Oulun kaupunki")
+            paivita-silta (vie-silta-urakalle ds silta-kunnalla (:id aktiivinen-urakka))
+            hae-silta (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '35234525'")))
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
-        (is (= 1 lisaa-silta))
+        (is (= (:tunnus silta-tuonti) (:siltatunnus lisaa-silta)))
+        (is (= 1 paivita-silta))
         (is (:poistettu hae-silta))
-        (is (= sillat-ennen (inc sillat-jalkeen)))))))
+        (is (= sillat-ennen sillat-jalkeen))))))
