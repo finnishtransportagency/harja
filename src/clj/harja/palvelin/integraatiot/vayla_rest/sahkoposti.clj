@@ -70,7 +70,7 @@
 (defn laheta-sahkoposti-sahkopostipalveluun
   "Harjalla on lähetetty sähköpostit aiemmin laittamalla niistä jonoon ilmoitus, jonka Sähköpostipalvelin on käynyt
   lukemassa ja lähettänyt. Tämä fn lähettää samaiset sähköpostit suoralla api-rest kutsulla."
-  [db asetukset integraatioloki sahkoposti-xml liite?]
+  [db asetukset integraatioloki sahkoposti-xml http-otsikot liite?]
   (try+
     (let [_ (log/info "Lähetä rest-api sähköposti.")
           vastaus (integraatiotapahtuma/suorita-integraatio
@@ -80,7 +80,9 @@
                     (fn [konteksti]
                       (let [http-asetukset {:metodi :POST
                                             :url (muodosta-lahetys-uri asetukset liite?)
-                                            :otsikot {"Content-Type" "application/xml"}
+                                            :otsikot (merge
+                                                       {"Content-Type" "application/xml"}
+                                                       http-otsikot)
                                             :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
                                             :salasana (get-in asetukset [:api-sahkoposti :salasana])}
                             {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
@@ -126,6 +128,10 @@
                         itmf (get-in asetukset [:tloik :toimenpideviestijono]))
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
+        otsikko (:otsikko kutsun-data)
+        ;; TODO: tämän toimivuutta ei ole vielä testattu
+        [_ _ ilmoitus-id] (re-matches tloik-sahkoposti/otsikko-pattern otsikko)
+        _ (log/info "Vastaanotettu sähköpostikuittaus, korrelaatio-id (ilmoitus-id): " ilmoitus-id)
         ;; Lisää mahdolliset virheet kuittausviestiin
         virheet (if (#{"Virheellinen kuittausviesti" "Kuittausta ei voitu käsitellä"} (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
@@ -141,7 +147,7 @@
     ;; Lähetetään kuittaus saatuun sähköpostiin, mikäli siinä on virheitä. Onnistuneesta vastaanotosta ei kuittausta lähetetä.
     (when-not (nil? virheet)
       (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this)
-        vastaus-virheelliseen-viestiin false)
+        vastaus-virheelliseen-viestiin {"X-Correlation-ID" ilmoitus-id} false)
       kuittaus-xml)
     kuittaus-xml))
 
@@ -174,18 +180,18 @@
     this)
 
   Sahkoposti
-  (laheta-viesti! [this lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti! [this lahettaja vastaanottaja otsikko sisalto headers]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sahkoposti-sanomat/sahkoposti viesti-id lahettaja vastaanottaja otsikko sisalto)
           viesti (xml/tee-xml-sanoma sahkoposti)
           ;; Validoidaan viesti
           virhe (validoi-sahkoposti viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti false)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti headers false)
         (throw+ virhe))))
   (vastausosoite [this]
     (get-in asetukset [:api-sahkoposti :vastausosoite]))
-  (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+  (laheta-viesti-ja-liite! [this lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]
     (let [viesti-id (str (UUID/randomUUID))
           sahkoposti (sahkoposti-sanomat/sahkoposti-ja-liite viesti-id vastaanottajat lahettaja otsikko sisalto tiedosto-nimi (pvm/nyt))
           viesti (xml/tee-xml-sanoma sahkoposti)
@@ -193,7 +199,7 @@
           ;;TODO: Missään ei koskaan ole validoitu liitteellistä sähköpostia. Laita toimimaan
           virhe nil #_(validoi-sahkoposti-liite viesti)]
       (if (nil? virhe)
-        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti true)
+        (laheta-sahkoposti-sahkopostipalveluun (:db this) asetukset (:integraatioloki this) viesti headers true)
         (throw+ virhe))))
   (rekisteroi-kuuntelija!
     [this kuuntelija-fn]

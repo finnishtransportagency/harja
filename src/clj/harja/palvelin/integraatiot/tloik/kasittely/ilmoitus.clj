@@ -97,10 +97,10 @@
     id))
 
 (defn tallenna-ilmoitus [db urakka-id ilmoitus]
-  (log/debug (format "Käsitellään ilmoitusta T-LOIK:sta id:llä: %s, joka välitettiin viestillä id: %s urakalle id: %s."
-                     (:ilmoitus-id ilmoitus)
-                     (:viesti-id ilmoitus)
-                     urakka-id))
+  (log/info (format "Käsitellään ilmoitusta T-LOIK:sta id:llä: %s, joka välitettiin viestillä id: %s urakalle id: %s."
+                    (:ilmoitus-id ilmoitus)
+                    (:viesti-id ilmoitus)
+                    urakka-id))
   (let [ilmoitus-id (:ilmoitus-id ilmoitus)
         nykyinen-ilmoitus (first (ilmoitukset/hae-id-ja-urakka-ilmoitus-idlla db ilmoitus-id))
         nykyinen-id (:id nykyinen-ilmoitus)
@@ -113,7 +113,7 @@
                                                         urakka-id)
                                      ilmoitus)
                   (luo-ilmoitus db urakka-id urakkatyyppi ilmoitus))]
-    (log/debug (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
+    (log/info (format "Ilmoitus (id: %s) käsitelty onnistuneesti" (:ilmoitus-id ilmoitus)))
     (when-not urakka-id
       (throw+ {:type virheet/+urakkaa-ei-loydy+}))
     uusi-id))
