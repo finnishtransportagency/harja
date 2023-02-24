@@ -10,11 +10,11 @@
   ;; Lähetetään vain vastaanottajalle, jolla on jonkinlainen emailosoite annettuna
   (if (and vastaanottaja (> (count vastaanottaja) 3))
     (do
-      (log/debug "Lähetetään ilmoitus (id: " id ") sähköpostilla osoitteeseen: " vastaanottaja)
+      (log/info "Lähetetään ilmoitus (id: " id ") sähköpostilla osoitteeseen: " vastaanottaja)
       (let [lahettaja (sahkoposti/vastausosoite email)
             [otsikko viesti] (tloik-sahkoposti/otsikko-ja-viesti lahettaja ilmoitus)]
         (try
-         (sahkoposti/laheta-viesti! email lahettaja vastaanottaja otsikko viesti)
+         (sahkoposti/laheta-viesti! email lahettaja vastaanottaja otsikko viesti {"X-Correlation-ID" id})
          (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
            db
            (:id ilmoitus)
@@ -25,8 +25,8 @@
            "ulos"
            "sahkoposti")
          (catch Exception e
-           (log/error "Ilmoituksen lähettämisessä sähköpostilla tapahtui poikkeus." e)))))
-    (log/warn "Ilmoitusta %s ei voida lähettää sähköpostilla ilman sähköpostiosoitetta." id)))
+           (log/error (format "Ilmoituksen %s lähettämisessä sähköpostilla tapahtui poikkeus." (:ilmoitus-id ilmoitus)) e)))))
+    (log/warn (format "Ilmoitusta %s ei voida lähettää sähköpostilla ilman sähköpostiosoitetta." (:ilmoitus-id ilmoitus)))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (tloik-tekstiviesti/laheta-ilmoitus-tekstiviestilla sms db ilmoitus paivystaja))

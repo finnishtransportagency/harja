@@ -1089,6 +1089,16 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                  :clj  Exception) e
          nil))))
 
+#?(:clj
+   (defn psql-timestamp->aika
+     "Parsii annetun postgresql timestamp (yyyy-MM-dd'T'HH:mm:ss.SSS) formaatissa olevan merkkijonon päivämääräksi."
+     [teksti]
+     (try
+       (df/parse (df/formatter "yyyy-MM-dd'T'HH:mm:ss.SSS") teksti)
+       (catch #?(:cljs js/Error
+                 :clj  Exception) e
+         nil))))
+
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
