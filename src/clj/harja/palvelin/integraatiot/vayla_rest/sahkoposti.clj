@@ -129,9 +129,7 @@
         viesti-id (:viesti-id kutsun-data)
         kasitelty-vastaus (tloik-sahkoposti/vastaanota-sahkopostikuittaus jms-lahettaja db kutsun-data)
         otsikko (:otsikko kutsun-data)
-        ;; TODO: tämän toimivuutta ei ole vielä testattu
-        [_ _ ilmoitus-id] (re-matches tloik-sahkoposti/otsikko-pattern otsikko)
-        _ (log/info "Vastaanotettu sähköpostikuittaus, korrelaatio-id (ilmoitus-id): " ilmoitus-id)
+        [_ _ ilmoitus-id] (when otsikko (re-matches tloik-sahkoposti/otsikko-pattern otsikko))
         ;; Lisää mahdolliset virheet kuittausviestiin
         virheet (if (#{"Virheellinen kuittausviesti" "Kuittausta ei voitu käsitellä"} (:otsikko kasitelty-vastaus))
                   [(:sisalto kasitelty-vastaus)]
