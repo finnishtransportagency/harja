@@ -121,14 +121,15 @@
                         [:kustomi desimaalien-maara]))])
 
 (defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
-                                                          korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
+                                                          korosta-hennosti? ala-korosta? korosta-harmaa?
+                                                          varoitus?]}] solun-tyyli]
   (let [etuliite (cond
                    (neg? arvo) "- "
                    (zero? arvo) ""
                    :else "+ ")
         arvo (Math/abs (float arvo))
         prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -148,8 +149,9 @@
 ;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
 ;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
 (defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
-                                                                 korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+                                                                 korosta-hennosti? korosta-harmaa? ala-korosta?
+                                                                 varoitus?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -394,6 +396,7 @@
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        korosta-hennosti? (:korosta-hennosti? optiot)
+                       korosta-harmaa? (:korosta-harmaa? optiot)
                        arvo-datassa (nth data sarake-nro)
                        ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
                        arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
@@ -404,7 +407,7 @@
                                   (:fmt (second arvo-datassa)))
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
-                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
                        [naytettava-arvo solun-tyyli formaatti]
                        (if (and (raportti-domain/raporttielementti? arvo-datassa)
                              (not (raportti-domain/excel-kaava? arvo-datassa)))
