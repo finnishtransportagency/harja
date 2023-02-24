@@ -482,7 +482,7 @@
   ToteumaHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [valittu-tehtava {:id (:tehtava_id vastaus) :tehtava (:tehtava vastaus) :yksikko (:yksikko vastaus)}
-          valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}
+          valittu-toimenpide {:otsikko (:toimenpide_otsikko vastaus)}
           sijainti {:numero (:sijainti_numero vastaus)
                     :alkuosa (:sijainti_alku vastaus)
                     :alkuetaisyys (:sijainti_alkuetaisyys vastaus)
@@ -522,9 +522,13 @@
 
   ToimenpiteetHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (-> app
+    (let [;; Siivotaan toimenpiteistä :id avaimet pois.
+    ;; Toimenpiteet ovat nimestään huolimatta tehtäväryhmiä.
+    ;; Ja koska eri urakoilla tulee eri tehtäväryhmät, niiden id:t ei täsmää, mutta otsikot täsmäävät
+          toimenpiteet (map #(dissoc % :id) vastaus)]
+      (-> app
         (assoc :toimenpiteet-lataa false)
-        (assoc-in [:toimenpiteet] vastaus)))
+        (assoc-in [:toimenpiteet] toimenpiteet))))
 
   ToimenpiteetHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
