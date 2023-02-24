@@ -90,7 +90,7 @@
 ;; Tallentaa rajapintaan lähetetyt sähköpostiviestit, mutta ei lähetä oikeasti mitään
 (defrecord FakeSahkoposti []
   Sahkoposti
-  (laheta-viesti! [_this _lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti! [_this _lahettaja vastaanottaja otsikko sisalto headers]
     (println
       "Lähetetään leikisti sähköposti"
       (pr-str {:vastaanottaja vastaanottaja :otsikko otsikko :sisalto sisalto}))

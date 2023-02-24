@@ -194,7 +194,8 @@
                 (sahkoposti/vastausosoite email)
                 muu-vastaanottaja
                 (str "Harja: " (viestin-otsikko vastaanottajan-kohteet))
-                (viestin-vartalo vastaanottajan-kohteet))))
+                (viestin-vartalo vastaanottajan-kohteet)
+                {})))
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                                muu-vastaanottaja (pr-str e)))))))
@@ -290,7 +291,8 @@
             (sahkoposti/vastausosoite email)
             muu-vastaanottaja
             (str "Harja: " viestin-otsikko)
-            viestin-vartalo)
+            viestin-vartalo
+            {})
           (catch Exception e
             (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
                                muu-vastaanottaja (pr-str e))))))
@@ -426,7 +428,8 @@
               (sahkoposti/vastausosoite email)
               muu-vastaanottaja
               (str "Harja: " viestin-otsikko)
-              viestin-vartalo)
+              viestin-vartalo
+              {})
             (catch Exception e
               (swap! epaonnistuneet-viestit-yhteensa inc)
               (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"

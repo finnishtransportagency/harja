@@ -149,7 +149,8 @@
             (sahkoposti/vastausosoite email)
             (:sahkoposti henkilo)
             (str "Harja: " viestin-otsikko)
-            viestin-vartalo)
+            viestin-vartalo
+            {})
           (log/debug "Sähköposti lähtetty roolin perusteella: " (pr-str (:sahkoposti henkilo)) " - " (pr-str viestin-otsikko))))
 
       (catch Exception e
