@@ -41,8 +41,9 @@
   (case listaus
     :kaikki
     (into []
-          (geo/muunna-pg-tulokset :alue)
-          (q/hae-urakan-sillat db urakka-id))
+      (comp (geo/muunna-pg-tulokset :alue)
+        (map konv/alaviiva->rakenne))
+      (q/hae-urakan-sillat db urakka-id))
 
     :urakan-korjattavat
     (into []

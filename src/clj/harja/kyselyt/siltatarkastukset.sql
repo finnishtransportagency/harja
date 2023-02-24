@@ -13,7 +13,10 @@ SELECT s.id,
        s.tr_numero,
        s.loppupvm,
        s.lakkautuspvm,
-       s.kunnan_vastuulla
+       s.kunnan_vastuulla AS "kunnan-vastuulla?",
+       (s.vastuu_urakka = :urakka) AS "urakan-vastuulla?",
+       (SELECT nimi FROM urakka WHERE id = s.vastuu_urakka) AS "vastuu-urakka-nimi",
+       s.urakkatieto_kasin_muokattu AS "urakkatieto-kasin-muokattu"
 FROM silta s
        LEFT JOIN siltatarkastus s1 ON (s1.silta = s.id
   AND s1.poistettu = FALSE)
