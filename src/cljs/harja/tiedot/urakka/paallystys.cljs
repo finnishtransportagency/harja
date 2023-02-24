@@ -606,7 +606,19 @@
   (process-event [{vastaus :vastaus} app]
     (log/info "HaeKaistatEpaonnistui: " vastaus)
 
-    (viesti/nayta-toast! (str "Kaistojen haku epäonnistui: " vastaus) :varoitus viesti/viestin-nayttoaika-pitka)
+    (let [status (get-in vastaus [:status])
+          viesti (get-in vastaus [:response :virhe])]
+      ;; Näytetään toast vain jos status on 500 (esim. ongelma Digiroadin puolella tai Harjan integraatiossa)
+      ;; TODO: Tällä hetkellä Digiroadin kaistahaku niputtaa statuksen 400 alle kaikki seuraavat virhetyypit:
+      ;;       Hakuparametrit ovat vääriä, tieosoitetta ei ole olemassa, tai on yritetty hakea tulosta liian monta kertaa
+      ;;       Digiroadin puolella ja uudelleenyritysten maksimimäärä on saavutettu.
+      ;;       Ideaalitapauksessa, ei näytetä virheitä käyttäjälle mikäli hakuparametrit ovat vääriä.
+      ;;       Mutta, virhe pitäisi näyttää jos Digiroadista tai Harjasta tulee jokin tuntematon virhe (kuten nyt status 500).
+      ;;       Ratkaisematta on vielä tilanne, että mitä tehdään kun haun maksimiyritysten määrä on ylittynyt.
+      ;;          -> Yrittäisikö Harjan Digiroad integraatio hakua itsenäisesti uudelleen vai pitääkö käyttäjän muokata
+      ;;             lomakkeella jotakin riviä, jotta kaistojen hakua yritetään uudelleen?
+      (when (= 500 status)
+        (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-aareton)))
     app)
 
   HoidaCtrl+Z
