@@ -91,9 +91,9 @@
                   (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) tarkastus))]
                     [(:siltanro tarkastus)
                      (:siltanimi tarkastus)
-                     (if (:tarkastusaika tarkastus)
-                       (:tarkastusaika tarkastus)
-                       tarkastamatta-info)
+                     (cond (:tarkastusaika tarkastus) (:tarkastusaika tarkastus)
+                           (not (:silta-urakan-vastuulla? tarkastus)) "Silta ei ole urakan vastuulla"
+                           :else tarkastamatta-info)
                      (or (:tarkastaja tarkastus)
                          "-")
                      [:arvo-ja-osuus {:arvo (:a tarkastus)
@@ -109,7 +109,7 @@
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:d tarkastus) arvioidut-kohteet-yhteensa))}]
                      [:liitteet (:liitteet tarkastus)]
-                     (:silta-urakan-vastuulla? tarkastus)]))
+                     (not (:silta-urakan-vastuulla? tarkastus))]))
                 tarkastukset)
         rivit+yhteensa (conj rivit (siltojen-yhteensa-rivit tarkastukset))]
     rivit+yhteensa))
@@ -295,11 +295,12 @@
         jarjesta-ryhmien-sisallot (fn [tila-ja-rivit]
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
-                           (let [jarjestys (fn [a b c] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
+                           (println (group-by (juxt :tarkastamaton? :virhe? :siirretty?) rivit))
+                           (let [jarjestys (fn [a b] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
                                                                    [false true] 1
                                                                    [false false] 2}
-                                                             arvo #(if c (+ 3 (arvo %))
-                                                                         (arvo %))]
+                                                             arvo #(if (last %) (+ 3 (arvo (butlast %)))
+                                                                         (arvo (butlast %)))]
                                                          (< (arvo a) (arvo b))))]
                              (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe? :siirretty?) rivit))))
         otsikko (case konteksti
