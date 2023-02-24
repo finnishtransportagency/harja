@@ -82,18 +82,21 @@
                                  (some #(and (= urakka-id (:urakka-id %))
                                           (:siltatarkastuksia? %)) urakkatiedot))
 
-        _ (when-not (empty? aktiiviset-urakat-joilla-tarkastuksia)
-            (log/warn "Kaikkia käsiteltyyn siltaan ( trex-oid:" trex-oid ") virheellisesti liitettyjä urakoita ("
-              (mapv :urakka-id aktiiviset-urakat-joilla-tarkastuksia) ") ei saatu poistettua sillan tiedoista. "
-              "Ei lisätä oikeaa urakkaa ( urakka: " urakka-id ") listaan."))
-
         sillan-vanhat-urakat (concat aktiiviset-urakat-joilla-tarkastuksia
                                ;; Jätetään talteen myös sillalle merkityt päättyneet urakat.
                                (filter (fn [silta]
                                          (pvm/ennen? (:loppupvm silta) (pvm/nyt))) urakkatiedot))
 
+        ;; Jos urakkatietoa on muokattu käsin, ei päivitetä sillan urakkoja.
+        urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
+
+        ;; Silta siirtyy löydetylle urakalle, paitsi jos se on asetettu käsin.
+        vastuu-urakka (if urakkatieto-kasin-muokattu?
+                        (:vastuu-urakka (first urakkatiedot))
+                        urakka-id)
+
         urakka-idt (distinct (keep identity (cond-> (map :urakka-id sillan-vanhat-urakat)
-                                              (empty? aktiiviset-urakat-joilla-tarkastuksia)
+                                              (not urakkatieto-kasin-muokattu?)
                                               (conj urakka-id))))
 
         silta-kuuluu-kunnalle? (silta-kuuluu-kunnalle? silta)
@@ -118,6 +121,7 @@
                         :loppupvm (when-not kaytossa? muutospvm)
                         :poistettu poistetaan?
                         :urakat urakka-idt
+                        :vastuu-urakka vastuu-urakka
                         :kunnan-vastuulla silta-kuuluu-kunnalle?}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
