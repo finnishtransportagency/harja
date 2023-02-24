@@ -229,18 +229,30 @@
         and u.tyyppi = 'teiden-hoito'" y-tunnus))))
 
         db-timestamp-60min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 60)
-        db-timestamp-45min-sitten (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 45)
+        haku-timestamp-45min-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 45)
+        haku-timestamp-51min-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja 51)
         ilmoituksen-id (luo-ilmoitus ilmoitusid ensimmainen-urakka-ytunnuksella db-timestamp-60min-sitten)
         ;; Luo ilmoitukselle 3 kuittausta, jotka alkavat vähän eri aikaan, jotta voidaan testissä varmistua, että hakemalla vain kuittausajankohtaa, kaikki kuittaukset kuitenkin tulevat
-        _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 49))
-        _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 48))
-        _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 10))
-        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 51) "/" db-timestamp-45min-sitten)]
+        vastaanotto-kuitattu (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 49)
+        aloitus-kuitattu (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 48)
+        lopetus-kuitattu (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 10)
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "vastaanotto" vastaanotto-kuitattu)
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "aloitus" aloitus-kuitattu)
+        _ (luo-kuittaus ilmoituksen-id ilmoitusid "lopetus" lopetus-kuitattu)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/ilmoitukset/" y-tunnus "/" haku-timestamp-51min-sitten "/" haku-timestamp-45min-sitten)]
                   kayttaja portti)
         siivotut-ilmoitukset (poista-ilmoista-turhat (cheshire/decode (:body vastaus)))
-        kuittausten-maara (count (get-in siivotut-ilmoitukset ["ilmoitukset" 0 "ilmoitus" "kuittaukset"]))]
+        kuittaukset (get-in siivotut-ilmoitukset ["ilmoitukset" 0 "ilmoitus" "kuittaukset"])
+        kuittausten-maara (count kuittaukset)]
     (is (= 200 (:status vastaus)))
-    (is (= 3 kuittausten-maara))))
+    (is (= 3 kuittausten-maara))
+    ;; Tarkista kuittauksen kuittausaika
+    (is (= (pvm/iso-8601->aika vastaanotto-kuitattu)
+          (pvm/psql-timestamp->aika (get (first kuittaukset) "kuitattu"))))
+    (is (= (pvm/iso-8601->aika aloitus-kuitattu)
+          (pvm/psql-timestamp->aika (get (second kuittaukset) "kuitattu"))))
+    (is (= (pvm/iso-8601->aika lopetus-kuitattu)
+          (pvm/psql-timestamp->aika (get (nth kuittaukset 2) "kuitattu"))))))
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
