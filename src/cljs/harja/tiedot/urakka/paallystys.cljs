@@ -30,7 +30,9 @@
     [harja.tyokalut.vkm :as vkm]
     [clojure.string :as str]
     [harja.pvm :as pvm]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+    [taoensso.timbre :as log]
+    [harja.domain.tierekisteri :as tr])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -373,17 +375,26 @@
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord SuljePaallystysilmoitus [])
+
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
+
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
+
 (defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord HaeTrOsienTiedot [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienTiedotOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienTiedotEpaonnistui [vastaus])
+
+;; Digiroad kaistojen haku tr-osoite & ajorata-kombinaatiolle
+(defrecord HaeKaistat [tr-osoite ajorata])
+(defrecord HaeKaistatOnnistui [vastaus tr-osoite ajorata])
+(defrecord HaeKaistatEpaonnistui [vastaus])
+
 (defrecord HoidaCtrl+Z [])
 (defrecord JarjestaYllapitokohteet [jarjestys])
 (defrecord KumoaHistoria [])
@@ -563,6 +574,41 @@
   (process-event [{vastaus :vastaus} app]
     ;;TODO tähän joku järkevä handlaus
     app)
+
+  HaeKaistat
+  (process-event [{:keys [tr-osoite ajorata]} app]
+    ;; Haetaan kaistat vain jos kaikki vaadittavat tiedot on syötetty lomakkeella
+    (if (and (tr/validi-osoite? tr-osoite) (tr/on-alku-ja-loppu? tr-osoite) (integer? ajorata))
+      (do
+        (log/info "HaeKaistat: " [tr-osoite ajorata])
+        (let [parametrit {:tr-osoite tr-osoite
+                          :ajorata ajorata}]
+          (tuck-apurit/post! app
+            :hae-kaistat-digiroadista
+            parametrit
+            {:onnistui ->HaeKaistatOnnistui
+             :onnistui-parametrit [(:tr-osoite parametrit) (:ajorata parametrit)]
+             :epaonnistui ->HaeKaistatEpaonnistui
+             :paasta-virhe-lapi? true})))
+      app))
+
+  HaeKaistatOnnistui
+  (process-event [{:keys [vastaus tr-osoite ajorata ]} app]
+    (log/info "HaeKaistatOnnistui: " vastaus)
+
+    (-> app
+      (update :paallystysilmoitus-lomakedata (fn [lomake]
+                                               (-> lomake
+                                                 (assoc-in [:kaistat tr-osoite ajorata] vastaus)
+                                                 (assoc :validoi-lomake? true))))))
+
+  HaeKaistatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/info "HaeKaistatEpaonnistui: " vastaus)
+
+    (viesti/nayta-toast! (str "Kaistojen haku epäonnistui: " vastaus) :varoitus viesti/viestin-nayttoaika-pitka)
+    app)
+
   HoidaCtrl+Z
   (process-event [_ {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
     (process-event (->KumoaHistoria) app))

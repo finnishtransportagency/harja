@@ -188,7 +188,13 @@
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:alusta ohjauskahvat)]
+        ohjauskahva (:alusta ohjauskahvat)
+        on-rivi-blur (fn [rivi]
+                       (let [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                     tr-ajorata]} rivi]
+                         (e! (paallystys/->HaeKaistat
+                               {:tie tr-numero :aosa tr-alkuosa :aet tr-alkuetaisyys :losa tr-loppuosa :let tr-loppuetaisyys}
+                               tr-ajorata))))]
     [:div.alusta
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
@@ -210,6 +216,7 @@
        :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+       :on-rivi-blur on-rivi-blur
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
        :rivi-varoitus (:rivi validointi)

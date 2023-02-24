@@ -54,12 +54,19 @@
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
    {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:paallystekerros ohjauskahvat)]
+        ohjauskahva (:paallystekerros ohjauskahvat)
+        on-rivi-blur (fn [rivi]
+                       (let [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
+                                     tr-ajorata]} rivi]
+                         (e! (paallystys/->HaeKaistat
+                               {:tie tr-numero :aosa tr-alkuosa :aet tr-alkuetaisyys :losa tr-loppuosa :let tr-loppuetaisyys}
+                               tr-ajorata))))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-muokata? voi-muokata? :voi-lisata? false
       :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+      :on-rivi-blur on-rivi-blur
       :custom-toiminto {:teksti "Lisää toimenpide"
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
