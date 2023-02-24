@@ -758,6 +758,9 @@
           (let [virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla
                                db paallystyskohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
             (when (seq virheviestit)
+              ;; TODO: Virheviestit voisi tallentaa updatella paallysilmoitus-tauluun uuteen sarakkeeseen esim. virheet TEXT
+              ;;       Huom: Tallenna vain virheet riville, ei muuta.
+              ;;       Halutaan mahdollisesti myös erotella virheviestit toisistaan kantaan (käytä esim. separaattoria ;)
               (throw (IllegalArgumentException. (cheshire/encode virheviestit))))))
 
 
