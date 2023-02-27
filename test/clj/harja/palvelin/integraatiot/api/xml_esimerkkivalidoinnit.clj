@@ -24,8 +24,9 @@
     (is (true? (validoi xsd-polku "vastaus.xsd" xml-esimerkit/+virhe-vastaus-tietuetta-ei-loydy-response+)))))
 
 (deftest validoi-tloik-xmlsanomat
-  (let [xsd-polku "xsd/tloik/"]
-    (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitus+)))
-    (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitustoimenpide+)))
-    (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+harja-kuittaus+)))
-    (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+vastaanottokuittus+)))))
+         (let [xsd-polku "xsd/tloik/"]
+              (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitus+)))
+              (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitustoimenpide+)))
+              (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+harja-kuittaus+)))
+              (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+vastaanottokuittus+)))
+              (is (true? (validoi xsd-polku "harja-tloik.xsd" xml-esimerkit/+ilmoitusperuutus+)))))
