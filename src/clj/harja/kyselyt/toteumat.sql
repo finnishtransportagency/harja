@@ -449,82 +449,44 @@ WITH osa_toteumat AS
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi)
-SELECT ot.toimenpidekoodi       AS toimenpidekoodi_id,
-       tr_valitaso.otsikko       AS toimenpide,
+SELECT tk.id                    AS toimenpidekoodi_id,
+       tr_alataso.otsikko       AS toimenpide,
        tk.nimi                  AS tehtava,
        sum(ot.maara)            AS maara,
        sum(ot.materiaalimaara)  AS materiaalimaara,
        sum(ut.maara)            AS suunniteltu_maara,
        tk.kasin_lisattava_maara AS kasin_lisattava_maara,
        tk.suunnitteluyksikko    AS yk,
-       ot.tyyppi                AS tyyppi
-FROM osa_toteumat ot
-         LEFT JOIN urakka_tehtavamaara ut
-                   ON ot.urakka = ut.urakka
-                       AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                       AND ut.poistettu IS NOT TRUE
-                       AND ot.toimenpidekoodi = ut.tehtava
-         JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi and
-                                    -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-                                    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE)) AND
-                                    tk.ensisijainen = true AND -- Rajataan pois ne, jotka eivät ole ensisijaisia.
-                                    -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-                                    -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
-                                    ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
-                                     tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
-                                                               '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
-                                                               'd373c08b-32eb-4ac2-b817-04106b862fb1',
-                                                               '49b7388b-419c-47fa-9b1b-3797f1fab21d',
-                                                               '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                                                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                                                               'e32341fc-775a-490a-8eab-c98b8849f968',
-                                                               '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                                                               'c058933e-58d3-414d-99d1-352929aa8cf9'))
-
-         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
-                                          AND (:tehtavaryhma::TEXT IS NULL OR tr_valitaso.otsikko = :tehtavaryhma)
-GROUP BY ot.toimenpidekoodi, tk.nimi, tr_valitaso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
-UNION
--- Pelkästään suunnitellut tehtavat pitää hakea erikseen, koska niitä ei voida hakea toteuman kautta
-SELECT ut.tehtava               AS toimenpidekoodi_id,
-       tr_ylataso.otsikko               AS toimenpide,
-       tk.nimi                  AS tehtava,
-       0                        AS maara,
-       0                        AS materiaalimaara,
-       sum(ut.maara)            AS suunniteltu_maara,
-       tk.kasin_lisattava_maara AS kasin_lisattava_maara,
-       tk.suunnitteluyksikko    AS yk,
-       'kokonaishintainen'      AS tyyppi
-FROM urakka_tehtavamaara ut
-         JOIN toimenpidekoodi tk ON tk.id = ut.tehtava AND
-                                    -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-                                    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE)) AND
-                                    -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
-                                     -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
-                                    ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
-                                     tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
-                                                               '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
-                                                               'd373c08b-32eb-4ac2-b817-04106b862fb1',
-                                                               '49b7388b-419c-47fa-9b1b-3797f1fab21d',
-                                                               '63a2585b-5597-43ea-945c-1b25b16a06e2',
-                                                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
-                                                               'e32341fc-775a-490a-8eab-c98b8849f968',
-                                                               '0c466f20-620d-407d-87b0-3cbb41e8342e',
-                                                               'c058933e-58d3-414d-99d1-352929aa8cf9'))
-JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
-         JOIN tehtavaryhma tr_ylataso ON tr_valitaso.emo = tr_ylataso.id -- Liimataan välistaso ylätasoon, ja samalla haun tehtäväryhmään eli toimenpiteeseen
-                                         AND (:tehtavaryhma::TEXT IS NULL OR tr_ylataso.otsikko = :tehtavaryhma)
-WHERE ut.urakka = :urakka
-  AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-  AND ut.poistettu IS NOT TRUE
-  -- Rajataan edellisessä haussa löydetyt toteumat, joilla on suunnitelma ja määrä olemassa, pois tästä
-  AND tk.id NOT IN (SELECT tk.id
-                    FROM osa_toteumat ot
-                             JOIN toimenpidekoodi tk ON tk.id = ot.toimenpidekoodi
-                             JOIN tehtavaryhma tr ON tr.id = tk.tehtavaryhma)
-GROUP BY ut.tehtava, tk.nimi, tr_ylataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko;
+       CASE
+           WHEN tr_alataso.otsikko = '9 LISÄTYÖT'
+               THEN 'lisatyo'
+           ELSE 'kokonaishintainen' END AS tyyppi
+FROM toimenpidekoodi tk
+     -- Alataso on linkitetty toimenpidekoodiin
+     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma AND (:tehtavaryhma::TEXT IS NULL OR tr_alataso.otsikko = :tehtavaryhma)
+     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
+                       AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
+     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+     JOIN urakka u on u.id = :urakka
+WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
+      (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+  AND tk.ensisijainen = true -- Rajataan pois ne, jotka eivät ole ensisijaisia.
+  AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+  -- Rajataan pois tehtävät joilla ei ole suunnitteluyksikköä ja tehtävät joiden yksikkö on euro
+  -- mutta otetaan mukaan äkilliset hoitotyöt ja vahinkojen korjaukset sekä lisätyöt
+  AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
+      tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
+                               '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
+                               'd373c08b-32eb-4ac2-b817-04106b862fb1',
+                               '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                               '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                               'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
+                               'e32341fc-775a-490a-8eab-c98b8849f968',
+                               '0c466f20-620d-407d-87b0-3cbb41e8342e',
+                               'c058933e-58d3-414d-99d1-352929aa8cf9'))
+GROUP BY tk.id, tk.nimi, tr_alataso.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+ORDER BY tr_alataso.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
 -- Haetaan yksittäiselle tehtavalle kaikki toteumat.
@@ -619,8 +581,7 @@ SELECT tk.id AS id,
 FROM toimenpidekoodi tk
          JOIN urakka u ON :urakka = u.id
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma -- Alataso on linkitetty toimenpidekoodiin
-         JOIN tehtavaryhma tr_valitaso ON tr_alataso.emo = tr_valitaso.id -- Liimataan altaso välitasoon
-                                          AND (:otsikko::TEXT IS NULL OR tr_valitaso.otsikko = :otsikko)
+                                          AND (:otsikko::TEXT IS NULL OR tr_alataso.otsikko = :otsikko)
 WHERE tk.tehtavaryhma = tr_alataso.id
   AND tk.taso = 4
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
