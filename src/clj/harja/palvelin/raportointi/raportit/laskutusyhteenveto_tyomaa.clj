@@ -21,7 +21,7 @@
      [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-                         kyseessa-kk-vali?]}]
+                         kyseessa-kk-vali? sheet-nimi]}]
   (let [rivit (into []
                     (remove nil?
                             (cond
@@ -59,7 +59,8 @@
                               )))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
-                :viimeinen-rivi-yhteenveto? false}
+                :viimeinen-rivi-yhteenveto? false
+                :sheet-nimi sheet-nimi}
 
      (rivi
       {:otsikko otsikko
@@ -71,15 +72,14 @@
      rivit]))
 
 (defn- kt-rivi
-  [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
+  [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi? vari kustomi-tyyli]
   (rivi
    [:varillinen-teksti {:arvo ""}]
    [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}]
-   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}]
+   [:varillinen-teksti {:itsepaisesti-maaritelty-oma-vari (or vari nil) :arvo (or (avain_hoitokausi tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}]
    (when kyseessa-kk-vali?
-     (let [arvo (or (avain_yht tp-rivi) (summa-fmt nil))
-           arvo (if (= 0.0M arvo) 0.00M arvo)]
-       [:varillinen-teksti {:arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
+     (let [arvo (or (avain_yht tp-rivi) (summa-fmt nil))]
+       [:varillinen-teksti {:kustomi-tyyli kustomi-tyyli :arvo arvo :fmt :raha :lihavoi? lihavoi?}]))))
 
 (defn- kustannus-ja-tavoite-taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                              kyseessa-kk-vali?]}]
@@ -87,17 +87,24 @@
                     (remove nil?
                             (cond
                               (= "Toteutuneet" otsikko)
-                              [(kt-rivi data kyseessa-kk-vali? "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä" :talvihoito_hoitokausi_yht :talvihoito_val_aika_yht false)
-                               (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :lyh_hoitokausi_yht :lyh_val_aika_yht false)
-                               (kt-rivi data false "Siirto edelliseltä vuodelta" :lyh_hoitokausi_yht :lyh_val_aika_yht false)
-                               (kt-rivi data false "Budjettia jäljellä" :lyh_hoitokausi_yht :lyh_val_aika_yht false)
-                               (kt-rivi data false "" :nil :nil false)
-                               (kt-rivi data false "" :nil :nil false)]
+                              [(kt-rivi data kyseessa-kk-vali? 
+                                        "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä" 
+                                        :talvihoito_hoitokausi_yht 
+                                        :talvihoito_val_aika_yht 
+                                        true 
+                                        nil
+                                        "vahvistamaton")
+                               
+                               (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :lyh_hoitokausi_yht :lyh_val_aika_yht true nil nil)
+                               (kt-rivi data false "Siirto edelliseltä vuodelta" :lyh_hoitokausi_yht :lyh_val_aika_yht true "red" nil)
+                               (kt-rivi data false "Budjettia jäljellä" :lyh_hoitokausi_yht :lyh_val_aika_yht true nil nil)
+                               (kt-rivi data false "" :nil :nil false nil nil)
+                               (kt-rivi data false "" :nil :nil false nil nil)]
 
                               :else
-                              [(kt-rivi data kyseessa-kk-vali? "Muut kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht false)
-                               (kt-rivi data false "" :nil :nil false)
-                               (kt-rivi data false "" :nil :nil false)])))]
+                              [(kt-rivi data kyseessa-kk-vali? "Muut kustannukset yhteensä" :muut_kustannukset_hoitokausi_yht :muut_kustannukset_val_aika_yht true nil "vahvistamaton")
+                               (kt-rivi data false "" :nil :nil false nil nil)
+                               (kt-rivi data false "" :nil :nil false nil nil)])))]
 
     [:taulukko {:piilota-border? true
                 :raportin-tunniste :tyomaa-yhteenveto
@@ -126,7 +133,7 @@
   ;; Hankinnat ja hoidonjohto
   (let [rivit (into []
                     (remove nil?
-                            [(hh-rivi data "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht false)
+                            [(hh-rivi data "Hankinnat ja hoidonjohto yhteensä" :hankinnat_hoitokausi_yht :hoidonjohto_hoitokausi_yht true)
                              (hh-rivi data "" :nil :nil false)
                              (hh-rivi data "" :nil :nil false)]))]
 
@@ -193,12 +200,13 @@
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")}
      [:otsikko (str alueen-nimi)]
      [:teksti ""]
-     [:teksti-paksu "Tavoitehintaan vaikuttavat toteutuneet kustannukset"]
+     [:otsikko-iso "Tavoitehintaan vaikuttavat toteutuneet kustannukset"]
 
      (concat (for [x otsikot]
                (do
                  (taulukko {:data rivitiedot
                             :otsikko x
+                            :sheet-nimi (when (= (.indexOf otsikot x) 0) "Työmaakokous")
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?}))))
@@ -237,6 +245,6 @@
                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
 
      [:tyomaa-laskutusyhteenveto-yhteensa (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
-      (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))
+      (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
       laskutettu-teksti laskutetaan-teksti]]))

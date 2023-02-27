@@ -116,6 +116,21 @@
   (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
        (roolit/tilaajan-kayttaja? kayttaja)))
 
+(defn laskutus-otsikot-tyomaaraportti [sarakkeet]
+  ;; Palauttaa laskutusotsikkoja työmaakokouksen laskutusraporttiin
+  (remove nil? (map (fn [asd]
+                      (let [otsikko (second (concat (first asd)))]
+                        (when (> (count otsikko) 1) otsikko))) sarakkeet)))
+
+(defn laskutus-arvot-typmaaraportti [tiedot decimal?]
+  ;; Palauttaa laskutusarvot työmaakokouksen laskutusraporttiin
+  (doall (remove nil?
+                 (mapcat (fn [x]
+                           (map (fn [y]
+                                  (let [arvo (:arvo (second y))
+                                        koko (if (decimal? arvo) 1 (count arvo))]
+                                    (if (> koko 0) arvo nil))) x)) tiedot))))
+
 #?(:cljs
    (defn nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit? []
      (voi-nahda-laajemman-kontekstin-raportit? @harja.tiedot.istunto/kayttaja)))

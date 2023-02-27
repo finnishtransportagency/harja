@@ -328,93 +328,95 @@
 (defn valitaulukko [tiedot workbook raportin-tunniste sarakkeet]
 
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
-        [sheet nolla] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]]
+        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]]
 
     (cond
       ;; Työmaakokouksen laskutusyhteenvedon 'välitaulukko'
       (= :tyomaa-yhteenveto raportin-tunniste)
-      (let [laskutus-otsikot (map (fn [asd]
-                                    (let [otsikko (second (concat (first asd)))]
-                                      (when (> (count otsikko) 1) otsikko))) sarakkeet)
 
-            ;; Mitenkä sitä filtteriä nyt käytetäänkään?
-            laskutus-otsikot (remove nil? laskutus-otsikot)
-
-            tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
+      (let [tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
             tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
-            tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))]
+            tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
-        (doall
-         (for [x tiedot]
+            rivi (.createRow sheet rivi-nro)
+            _ (.createCell rivi 0)
 
-           ;; Rivien määrät ovat vakiot, joten vaikkei haluta kovakoodata rivi arvoja, voidaan 
-           ;; kuitenkin näin tehdä. Toteutuneet tavoitehinnat rivin alle tarvitaan 2 riviä tilaa
-           ;; Muut kustannukset yhteensä riveille tarvii myös hieman virvelöintiä
-           (let [muut-kustannukset-rivi 54
-                 toteutuneet-kustannukset-rivi 28
+            ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+            laskutus-otsikot (raportti-domain/laskutus-otsikot-tyomaaraportti sarakkeet)
+            hoitokauden-otsikko (first laskutus-otsikot)
+            valittu-pvm-otsikko (second laskutus-otsikot)
 
-                 nolla (+ nolla (.indexOf tiedot x))
-                 nolla (if (> nolla toteutuneet-kustannukset-rivi) (+ nolla 2) nolla)
+            ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
+            arvot (raportti-domain/laskutus-arvot-typmaaraportti tiedot decimal?)
+            koko (dec (count arvot))]
 
-                 rivi (.createRow sheet nolla)
-                 seuraava-rivi (if (= nolla toteutuneet-kustannukset-rivi) (.createRow sheet (inc nolla)) nil)
-                 rivin-solu (.createCell rivi 0)]
+        ;; Haetaan selitysten arvot
+        ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
+        (doseq [[n elem] (map-indexed #(vector %1 %2) arvot)]
 
-             (doseq [y x]
-               (let [solu-nro (dec (.indexOf x y))
-                     nolla (if (> nolla muut-kustannukset-rivi) (inc nolla) nolla)
-                     arvo (:arvo (second y))]
+          ;; Alkaa aina otsikolla joka on string
+          (when (string? elem)
+            (if (>= koko (+ n 2))
+              (let [hoitokauden-arvo (nth arvot (inc n))
+                    laskutetaan-arvo (nth arvot (+ n 2))]
 
-                 ;; Kun kyseessä desimaali arvo, laitetaan toiselle sarakkeelle data
-                 (when (decimal? arvo)
-                   (let [arvo-rahassa (str (fmt/euro arvo))]
+                (if (decimal? laskutetaan-arvo)
 
-                     ;;(println "Arvo: " (fmt/euro arvo) "[row] " nolla " [idx] " solu-nro)
-                     ;; Onko rivi toteutuneet tavoitehinnat, tähän tulee hoitokauden ja valitun kuukauden data
-                     (if (= nolla toteutuneet-kustannukset-rivi)
-                       (let [toteutuneet-solut (.createCell seuraava-rivi solu-nro)]
-                         (tee-solu toteutuneet-solut arvo-rahassa tyyli-normaali))
+                  ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
+                  (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                        rivin-solu (.createCell rivi 0)
+                        hoitokausi-solu (.createCell rivi 1)
+                        laskutetaan-solu (.createCell rivi 2)
 
-                       (let [solu-numero (if (= (str arvo) "0.0") 1 2)
-                             solu-numero (if (= nolla (+ muut-kustannukset-rivi 2)) solu-numero 1)
-                             solu (.createCell rivi solu-numero)]
-                         (tee-solu solu arvo-rahassa tyyli-normaali)))))
+                        rivi-arvot (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                        solu-hoitokausi (.createCell rivi-arvot 1)
+                        solu-valittu-aika (.createCell rivi-arvot 2)]
 
-                 ;; Katsotaan ettei ole tyhjä string
-                 (when (and (string? arvo) (> (count arvo) 0))
-                   
-                   ;;(println "Arvo: " arvo "Row : " nolla)
-                   (if (= arvo "Muut kustannukset yhteensä")
-                     (let [aiempi-rivi (.getLastRowNum aiempi-sheet)]
+                    ;; (println "[] String:" elem " Arvot: " hoitokauden-arvo " - " laskutetaan-arvo)
+                    ;; Ensimmäinen solu (selitys)
+                    (tee-solu rivin-solu (str elem ":") tyyli-otsikko)
 
-                       (when (> nolla aiempi-rivi)
-                         (let [tee-aiempi-rivi (.createRow sheet (dec aiempi-rivi))
-                               solu (.createCell tee-aiempi-rivi 0)
-                               solu-hoitokausi (.createCell tee-aiempi-rivi 1)
-                               solu-valittu (.createCell tee-aiempi-rivi 2)]
-                           (tee-solu solu (str arvo) tyyli-otsikko)
-                           (tee-solu solu-hoitokausi (first laskutus-otsikot) tyyli-otsikko)
-                           (tee-solu solu-valittu (second laskutus-otsikot) tyyli-otsikko))))
+                    ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+                    (tee-solu hoitokausi-solu hoitokauden-otsikko tyyli-otsikko)
+                    (tee-solu laskutetaan-solu valittu-pvm-otsikko tyyli-otsikko)
 
-                     (tee-solu rivin-solu (str arvo) tyyli-otsikko))
+                    ;; Laskutus-arvot
+                    (tee-solu solu-hoitokausi (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)
+                    (tee-solu solu-valittu-aika (str (fmt/euro laskutetaan-arvo)) tyyli-normaali)
+                    ;; Tehdään yksi tyhjä rivi
+                    (.createRow sheet (inc (.getLastRowNum aiempi-sheet))))
 
-                   (when (= arvo "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä")
-                     (let [solu-hoitokausi (.createCell rivi 1)
-                           solu-valittu (.createCell rivi 2)]
+                  ;; Seuraava muuttuja on string, tähän tulee taulukon muodolla "Tavoitehinta" sekä "Siirto edelliseltä vuodelta"
+                  (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                        rivin-otsikko (.createCell rivi 0)
+                        rivin-arvo (.createCell rivi 1)]
 
-                       (tee-solu solu-hoitokausi (first laskutus-otsikot) tyyli-otsikko)
-                       (tee-solu solu-valittu (second laskutus-otsikot) tyyli-otsikko)))))))))))))
+                    ;; (println "[] String:" elem " Arvo: " hoitokauden-arvo)
+                    (tee-solu rivin-otsikko (str elem ":") tyyli-otsikko)
+                    (tee-solu rivin-arvo (str (fmt/euro hoitokauden-arvo)) tyyli-normaali))))
+              
+              ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
+              ;; Tähän tulee hankinnat ja hoidonjohto yhteensä
+              ;; sekä Budjettia jäljellä
+              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    rivin-solu (.createCell rivi 0)
+                    hoitokausi-solu (.createCell rivi 1)
+                    hoitokauden-arvo (nth arvot (inc n))]
+
+                ;; (println "[] String:" elem " Arvo: " hoitokauden-arvo)
+                (tee-solu rivin-solu (str elem ":") tyyli-otsikko)
+                (tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))))
 
 (defmethod muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
 
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
-        [sheet nolla] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
+        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
 
         tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
         tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
-        rivi (.createRow sheet nolla)
+        rivi (.createRow sheet rivi-nro)
         rivin-solu (.createCell rivi 0)
         solu-laskutettu (.createCell rivi 1)
         solu-laskutetaan (.createCell rivi 2)]
@@ -423,20 +425,36 @@
     (tee-solu solu-laskutettu laskutettu-str tyyli-otsikko)
     (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko)
 
-    (let [nolla (+ 1 nolla)
-          rivi (.createRow sheet nolla)
+    (let [rivi-nro (+ 1 rivi-nro)
+          rivi (.createRow sheet rivi-nro)
           solu-laskutettu (.createCell rivi 1)
           solu-laskutetaan (.createCell rivi 2)]
       (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
       (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))))
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
-                                                sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen piilota-border? raportin-tunniste] :as optiot}
+(defn taulukon-valiotsikko [otsikko workbook]
+  ;; Tekee väliotsikon exceliin mikäli tämä puuttuu, annetaan raportin taulukon parametreissa 
+  (let [aiempi-sheet (last (excel/sheet-seq workbook))
+        [sheet rivi-numero] [aiempi-sheet (inc (.getLastRowNum aiempi-sheet))]
+        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Aria"}}
+        tyyli (excel/create-cell-style! workbook tyyli-tiedot)
+
+        rivi (.createRow sheet rivi-numero)
+        rivin-solu (.createCell rivi 0)
+        harmaa-sivu (.createCell rivi 1)]
+    (tee-solu rivin-solu otsikko tyyli)
+    (tee-solu harmaa-sivu nil tyyli)
+    rivi-numero))
+
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot 
+                                                viimeinen-rivi-yhteenveto? lista-tyyli?
+                                                sheet-nimi samalle-sheetille? 
+                                                rivi-ennen rivi-jalkeen piilota-border? 
+                                                raportin-tunniste lisaa-excel-valiotsikot] :as optiot}
                                       sarakkeet data] workbook]
   (try
     (if piilota-border? 
-    (valitaulukko data workbook raportin-tunniste sarakkeet)
-      
+      (valitaulukko data workbook raportin-tunniste sarakkeet)
     (let [
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
@@ -496,7 +514,11 @@
       (dorun
        (map-indexed
         (fn [rivi-nro rivi]
-          (let [rivi-nro (+ nolla 1 rivi-nro)
+          ;; Korjattu sanktioraportin väliotsikot
+          (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
+                               (taulukon-valiotsikko (:otsikko rivi) workbook))
+                rivi-nro (+ nolla 1 rivi-nro)
+                rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
                 [data optiot] (if (map? rivi)
                                 [(:rivi rivi) rivi]
                                 [rivi {}])

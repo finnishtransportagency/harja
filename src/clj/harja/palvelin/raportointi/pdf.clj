@@ -329,15 +329,105 @@
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
      (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
+(defn valitaulukko-valittu-aika [otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+
+  [:fo:table {:font-size "9pt" :margin-bottom "12px"}
+   [:fo:table-column {:column-width "56%"}]
+
+   [:fo:table-column {:column-width "20%"}]
+   [:fo:table-column {:column-width "20%"}]
+
+   [:fo:table-body
+    [:fo:table-row
+     ;; Selitys
+     [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
+     ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+     [:fo:table-cell [:fo:block {:font-weight "bold"} hoitokauden-otsikko]]
+     [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]]]
+
+    ;; Arvot rahana
+    [:fo:table-row
+     [:fo:table-cell [:fo:block ""]]
+     [:fo:table-cell [:fo:block hoitokauden-arvo]]
+     [:fo:table-cell [:fo:block laskutetaan-arvo]]]]])
+
+(defn valitaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
+  [:fo:table {:font-size "9pt"}
+   [:fo:table-column {:column-width "56%"}]
+   [:fo:table-column {:column-width "20%"}]
+
+   [:fo:table-body
+    [:fo:table-row
+     [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
+     [:fo:table-cell [:fo:block hoitokauden-arvo]]]]])
+
+(defn valitaulukko [raportin-tunniste sarakkeet tiedot]
+
+  (cond
+    ;; Työmaakokouksen laskutusyhteenvedon 'välitaulukko'
+    (= :tyomaa-yhteenveto raportin-tunniste)
+    (let [
+          ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+          laskutus-otsikot (raportti-domain/laskutus-otsikot-tyomaaraportti sarakkeet)
+          hoitokauden-otsikko (first laskutus-otsikot)
+          valittu-pvm-otsikko (second laskutus-otsikot)
+          ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
+          arvot (raportti-domain/laskutus-arvot-typmaaraportti tiedot decimal?)
+          koko (dec (count arvot))]
+
+      ;; Haetaan selitysten arvot
+      ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
+      (for [[n elem] (map-indexed #(vector %1 %2) arvot)]
+        
+        ;; Alkaa aina otsikolla joka on string
+        (when (string? elem)
+          (if (>= koko (+ n 2))
+            (let [hoitokauden-arvo (nth arvot (inc n))
+                  laskutetaan-arvo (nth arvot (+ n 2))]
+
+              (if (decimal? laskutetaan-arvo)
+                ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
+                (valitaulukko-valittu-aika
+                 (str elem ":")
+                 (str hoitokauden-otsikko)
+                 (str valittu-pvm-otsikko)
+                 (str (fmt/euro hoitokauden-arvo))
+                 (str (fmt/euro laskutetaan-arvo)))
+
+                ;; Seuraava muuttuja on string, tähän tulee taulukon muodolla "Tavoitehinta" sekä "Siirto edelliseltä vuodelta"
+                (valitaulukko-ei-valittua-aikaa 
+                 (str elem ":") 
+                 (str (fmt/euro hoitokauden-arvo)))))
+
+            ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
+            ;; Tähän tulee hankinnat ja hoidonjohto yhteensä
+            ;; sekä Budjettia jäljellä
+            (let [hoitokauden-arvo (nth arvot (inc n))]
+              (valitaulukko-ei-valittua-aikaa 
+               (str elem ":") 
+               (str (fmt/euro hoitokauden-arvo)))
+              )))))))
+
+(defmethod muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
+  (valitaulukko-valittu-aika
+   (str "Laskutus yhteensä " hoitokausi)
+   (str laskutettu-str)
+   (str laskutetaan-str)
+   (str (fmt/euro laskutettu))
+   (str (fmt/euro laskutetaan))))
+
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko piilota-border? raportin-tunniste] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
+    (if piilota-border?
+    (valitaulukko raportin-tunniste sarakkeet data)
+      
     [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
      [:fo:table
       (for [{:keys [leveys]} sarakkeet]
         [:fo:table-column {:column-width leveys}])
       (taulukko-header optiot sarakkeet)
       (taulukko-body sarakkeet data optiot)]
-     [:fo:block {:space-after "1em"}]]))
+     [:fo:block {:space-after "1em"}]])))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))

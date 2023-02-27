@@ -105,10 +105,10 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? kustomi-tyyli]}]]
   (let [lihavoi (when lihavoi? {:font-weight "bold"})]
     [:span.varillinen-teksti
-     [:span.arvo {:style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
+     [:span.arvo {:class kustomi-tyyli :style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
       (if fmt (fmt arvo) arvo)]]))
 
 (defmethod muodosta-html :infopallura
@@ -129,20 +129,16 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defmethod muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi asd1 asd2 laskutettu laskutetaan]]
-
+(defmethod muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
+  ;; Työmaakokouksen laskutusyhteenvedon footer
   [:div
    [:div {:class "tyomaakokous-footer"}
-
-    [:span (str "Laskutus yhteensä " hoitokausi)]
-
+    [:h3 (str "Laskutus yhteensä " hoitokausi)]
     [:div {:class "sisalto"}
-
-     [:span "Hoitokauden alusta"]
-     [:span "Laskutetaan 01/22"]
-
-     [:span (str asd1 " €")]
-     [:span (str asd2 " €")]]]])
+     [:span {:class "laskutus-yhteensa"} laskutettu-str]
+     [:span {:class "laskutus-yhteensa"} laskutetaan-str]
+     [:h1 (str laskutettu " €")]
+     [:h1 [:span {:class "vahvistamaton"} (str laskutetaan " €")]]]]])
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -272,6 +268,9 @@
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
+
+(defmethod muodosta-html :otsikko-iso [[_ teksti]]
+  [:h2 teksti])
 
 (defmethod muodosta-html :jakaja [_]
   [:hr {:style {:margin-top "30px"
