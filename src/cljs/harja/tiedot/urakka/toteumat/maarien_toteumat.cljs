@@ -456,10 +456,8 @@
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
       (hae-toteutuneet-maarat urakka toimenpide (:hoitokauden-alkuvuosi app))
-      (hae-tehtavat toimenpide)
       (-> app
           (assoc :toimenpiteet-lataa true)
-          (assoc :ajax-loader true)
           (assoc :valittu-toimenpide toimenpide)
           (assoc :haetut-toteumat nil)
           (assoc-in [:lomake ::t/toimenpide] toimenpide)
@@ -535,7 +533,6 @@
     (do
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
-        (assoc :ajax-loader true)
         (assoc :toimenpiteet-lataa true)
         (assoc :avattu-tehtava nil)
         (assoc-in [:hoitokauden-alkuvuosi] vuosi)
@@ -617,7 +614,7 @@
 
     (-> app
         (assoc :avattu-tehtava nil) ;; Pikafiksi: Sulje avatut, jotta se päivitetään uudestaan
-        (assoc :ajax-loader true)
+        (assoc :toimenpiteet-lataa true)
         (assoc :syottomoodi false)))
 
   PoistaToteumaEpaonnistui
@@ -633,7 +630,7 @@
     (-> app
         (assoc :syottomoodi false
                :tehtavat [])
-        (assoc :ajax-loader true)
+        (assoc :toimenpiteet-lataa true)
         (assoc-in [:lomake ::t/toteumat] [])))
 
   TallennaToteumaEpaonnistui
