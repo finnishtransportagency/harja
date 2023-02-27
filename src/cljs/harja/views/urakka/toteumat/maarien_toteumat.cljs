@@ -247,7 +247,7 @@
       [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
        [napit/uusi
         "Lisää toteuma"
-        (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
+        (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
      [:div.flex-row

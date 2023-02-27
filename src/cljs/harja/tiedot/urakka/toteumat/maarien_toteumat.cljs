@@ -300,7 +300,6 @@
       (if (true? validi?)
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id urakka-id
-                            :toimenpide toimenpide
                             :tyyppi tyyppi
                             :loppupvm loppupvm
                             :toteumat toteumat}
@@ -482,7 +481,7 @@
   ToteumaHakuOnnistui
   (process-event [{vastaus :vastaus} app]
     (let [valittu-tehtava {:id (:tehtava_id vastaus) :tehtava (:tehtava vastaus) :yksikko (:yksikko vastaus)}
-          valittu-toimenpide {:otsikko (:toimenpide_otsikko vastaus)}
+          valittu-toimenpide {:id (:toimenpide_id vastaus) :otsikko (:toimenpide_otsikko vastaus)}
           sijainti {:numero (:sijainti_numero vastaus)
                     :alkuosa (:sijainti_alku vastaus)
                     :alkuetaisyys (:sijainti_alkuetaisyys vastaus)
@@ -522,13 +521,9 @@
 
   ToimenpiteetHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [;; Siivotaan toimenpiteistä :id avaimet pois.
-    ;; Toimenpiteet ovat nimestään huolimatta tehtäväryhmiä.
-    ;; Ja koska eri urakoilla tulee eri tehtäväryhmät, niiden id:t ei täsmää, mutta otsikot täsmäävät
-          toimenpiteet (map #(dissoc % :id) vastaus)]
-      (-> app
+    (-> app
         (assoc :toimenpiteet-lataa false)
-        (assoc-in [:toimenpiteet] toimenpiteet))))
+        (assoc-in [:toimenpiteet] vastaus)))
 
   ToimenpiteetHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -649,7 +644,7 @@
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
   (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
     {:urakka-id urakka-id
-     :tehtavaryhma (:id toimenpide)
+     :tehtavaryhma (:otsikko toimenpide)
      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
     {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
      :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
@@ -658,11 +653,9 @@
 (defn- hae-tehtavat
   ([toimenpide] (hae-tehtavat toimenpide nil))
   ([toimenpide valittu-tehtava]
-   (let [tehtavaryhma (when toimenpide
-                        (:id toimenpide))]
-     (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                        {:otsikko (:otsikko toimenpide)
-                         :urakka-id (-> @tila/yleiset :urakka :id)}
-                        {:onnistui ->TehtavatHakuOnnistui
-                         :epaonnistui ->TehtavatHakuEpaonnistui
-                         :paasta-virhe-lapi? true}))))
+   (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
+     {:otsikko (:otsikko toimenpide)
+      :urakka-id (-> @tila/yleiset :urakka :id)}
+     {:onnistui ->TehtavatHakuOnnistui
+      :epaonnistui ->TehtavatHakuEpaonnistui
+      :paasta-virhe-lapi? true})))

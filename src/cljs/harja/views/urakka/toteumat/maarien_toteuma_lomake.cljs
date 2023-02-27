@@ -201,7 +201,10 @@
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [{tyyppi       ::t/tyyppi
+  (let [;; Poista toimenpiteistä id, jotta toimenpiteen valinta voi toimia
+        toimenpiteet (mapv #(dissoc % :id) toimenpiteet)
+        lomake (update lomake ::t/toimenpide #(dissoc % :id))
+        {tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat
          validius     ::tila/validius
          koko-validi? ::tila/validi?} lomake
