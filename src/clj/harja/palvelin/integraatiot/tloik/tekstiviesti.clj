@@ -22,7 +22,7 @@
        "Ilmoittaja: %s\n\n"
        "Lähettäjä: %s\n\n"
        "Paikka: %s\n\n"
-       "TR-osoite: %s\n\n"
+       "Tienumero: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
        "Huom: tekstiviestikuittaus on poistunut käytöstä. Kuittaa viestit Harjassa tai sähköpostilla.\n"))
