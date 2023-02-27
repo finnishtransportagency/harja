@@ -11,7 +11,7 @@
 
 (defprotocol Sms
   (rekisteroi-kuuntelija! [this kasittely-fn])
-  (laheta [this numero viesti]))
+  (laheta [this numero viesti otsikot]))
 
 (defn kasittele-vastaus [body headers]
   (log/debug (format "Labyrintin SMS Gateway vastasi: sisältö: %s, otsikot: %s" body headers))
@@ -20,13 +20,15 @@
              :error body}))
   {:sisalto body :otsikot headers})
 
-(defn laheta-sms [db integraatioloki kayttajatunnus salasana url numero viesti]
+(defn laheta-sms [db integraatioloki kayttajatunnus salasana url numero viesti otsikot]
   (if (or (empty? kayttajatunnus) (empty? salasana) (empty? url))
     (log/warn "Käyttäjätunnusta, salasanaa tai URL Labyrintin SMS Gatewayhyn ei ole annettu. Viestiä ei voida lähettää.")
     (integraatiotapahtuma/suorita-integraatio
       db integraatioloki "labyrintti" "laheta"
       (fn [konteksti]
-        (let [otsikot {"Content-Type" "application/x-www-form-urlencoded"}
+        (let [otsikot (merge
+                        {"Content-Type" "application/x-www-form-urlencoded"}
+                        otsikot)
               parametrit {"dests" numero
                           "text" viesti}
               http-asetukset {:metodi :GET
@@ -91,14 +93,15 @@
     (swap! kuuntelijat conj kuuntelija-fn)
     #(swap! kuuntelijat disj kuuntelija-fn))
 
-  (laheta [this numero viesti]
+  (laheta [this numero viesti otsikot]
     (laheta-sms (:db this)
                 (:integraatioloki this)
                 (:kayttajatunnus this)
                 (:salasana this)
                 (:url this)
                 numero
-                viesti)))
+                viesti
+                otsikot)))
 
 (defn luo-labyrintti [asetukset]
   (->Labyrintti (:url asetukset) (:kayttajatunnus asetukset) (:salasana asetukset) (atom #{})))
@@ -112,7 +115,7 @@
   (rekisteroi-kuuntelija! [this kasittelija]
     (log/info "Feikki Labyrintti EI tue kuuntelijan rekisteröintiä")
     #(log/info "Poistetaan Feikki Labyrintin kuuntelija"))
-  (laheta [this numero viesti]
+  (laheta [this numero viesti otsikot]
     (log/info "Feikki Labyrintti lähettää muka viestin numeroon " numero ": " viesti)))
 
 (defn feikki-labyrintti []
