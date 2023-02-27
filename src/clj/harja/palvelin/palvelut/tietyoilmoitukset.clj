@@ -151,6 +151,7 @@
                                                           (str "Harja: " viestin-otsikko)
                                                           {:viesti viestin-vartalo
                                                            :pdf-liite pdf}
+                                                          {}
                                                           tiedostonimi)
                                                        {::tietyoilmoituksen-e/tietyoilmoitus-id tietyoilmoitus-id
                                                         ::tietyoilmoituksen-e/tiedostonimi tiedostonimi

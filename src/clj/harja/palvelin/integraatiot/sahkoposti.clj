@@ -13,14 +13,14 @@
    [this kuuntelija-fn]
    "Rekisteröi funktion, joka vastaanottaa sähköpostiviestit.")
   (laheta-viesti!
-   [this lahettaja vastaanottaja otsikko sisalto]
+   [this lahettaja vastaanottaja otsikko sisalto headers]
    "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä")
   (vastausosoite
    [this]
    "Palauttaa oletus vastausosoitteen, jota voi käyttää lähettäjänä ja johon lähetetyt viestit
     tulevat takaisin tälle kuuntelijalle tai api rajapinnalle.")
   (laheta-viesti-ja-liite!
-    [this lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+    [this lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]
     "Lähettää viestin vastaanottajalle annetulla otsikolla ja sisällöllä. Sisällön pitäisi sisältää myös liite"))
 
 (defn sanitoi-otsikko [otsikko]
@@ -60,7 +60,7 @@
   Sahkoposti
   (rekisteroi-kuuntelija! [_ _]
     (log/info "Vain lähetys sähköposti ei tue kuuntelijan rekisteröintiä!"))
-  (laheta-viesti! [_ lahettaja vastaanottaja otsikko sisalto]
+  (laheta-viesti! [_ lahettaja vastaanottaja otsikko sisalto headers]
     (do
      (log/info "VainLahetys :: postal - Lähetettiin sähköposti. Tarkista tietokannasta yksityiskohdat.")
      (log/debug "VainLahetys :: Lähettäjä:" (pr-str lahettaja) "Vastaanottaja:" (pr-str vastaanottaja))
@@ -71,7 +71,7 @@
         :body [{:type "text/html; charset=UTF-8"
                 :content sisalto}]})))
   (vastausosoite [_] vastausosoite)
-  (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto tiedosto-nimi]
+  (laheta-viesti-ja-liite! [_ lahettaja vastaanottajat otsikko sisalto headers tiedosto-nimi]
     (laheta-postal-viesti-ja-liite {:palvelin palvelin
                                     :lahettaja lahettaja
                                     :vastaanottajat vastaanottajat

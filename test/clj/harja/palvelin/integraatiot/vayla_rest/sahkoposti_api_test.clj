@@ -109,6 +109,7 @@
                     ["ville.vastaanottaja@example.com"]
                     "Otsikoidaan"
                     sisalto
+                    {}
                     tiedostonimi))]
 
     (is (not (nil? (:viesti-id vastaus))) "Ei saatu viesti-id:tä kuittauksessa")
@@ -137,7 +138,8 @@
                         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                           "seppoyit@example.org"
                           "pekka.paivystaja@example.org"
-                          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+                          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+                          {})))
           (catch Throwable th
             (println (str "VIRHE: " (.getMessage th) " " (.getStackTrace th)))
             "VIRHE"))
@@ -161,7 +163,8 @@
                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                             "seppoyit@example.org"
                             "pekka.paivystaja@example.org"
-                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+                            {})))
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
@@ -183,7 +186,8 @@
                           (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                             "seppoyit@example.org"
                             "pekka.paivystaja@example.org"
-                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+                            "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+                            {})))
         _ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
@@ -204,7 +208,8 @@
                            (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                              "seppoyit@example.org"
                              "pekka.paivystaja@example.org"
-                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+                             {})))
         _ (odota-ehdon-tayttymista #(realized? vastaus1) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         vaarallinen-kuittaus2 (str "<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"http://localhost:8080/\"> ]>\n"
                                 (onnistunut-sahkopostikuittaus viesti-id))
@@ -212,7 +217,8 @@
                            (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                              "seppoyit@example.org"
                              "pekka.paivystaja@example.org"
-                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")))
+                             "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+                             {})))
         _ (odota-ehdon-tayttymista #(realized? vastaus2) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
@@ -233,7 +239,8 @@
         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
           "seppoyit@example.org"
           "pekka.paivystaja@example.org"
-          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123")
+          "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"
+          {})
         ;_ (odota-ehdon-tayttymista #(realized? vastaus) "Sähköpostin lähetystä on yritetty." ehdon-timeout)
         integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
@@ -250,7 +257,7 @@
                     (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
                       "seppoyit@example.org"
                       "pekka.paivystaja@example.org"
-                      "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123"))
+                      "Otsikko" "Nyt ois päällystyskode 22 valmiina tiellä 23/123/123/123" {}))
           _ (pr-str "******************* vastaus" (pr-str vastaus))
           ;; Tarkista, että integraatio -tauluun tulee oikeat merkinnät sähköpostin lähettämisestä
           integraatiot (hae-integraatiotapahtumat-tietokannasta)

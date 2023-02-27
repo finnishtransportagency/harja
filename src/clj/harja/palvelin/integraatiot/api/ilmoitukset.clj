@@ -240,10 +240,7 @@
                                      ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
                                      (when (not (nil? (:f1 r)))
                                        (let [r (-> r
-                                                 (clojure.set/rename-keys db-kuittaus->avaimet)
-                                                 (update :kuitattu
-                                                   (fn [rivi]
-                                                     (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss.SSSX") rivi))))]
+                                                 (clojure.set/rename-keys db-kuittaus->avaimet))]
                                          r)))
                                    rivit)]
                        tulos)))))
