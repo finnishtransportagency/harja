@@ -32,8 +32,8 @@
 (def valittu-yhteenveto-muoto (atom :tyomaakokous))
 
 (defonce yhteenvedeon-valinnat
-  [["Työmaakokous" :tyomaakokous]
-   ["Tuotekohtainen" :tuotekohtainen]])
+  {:tyomaakokous "Työmaakokous"
+   :tuotekohtainen "Tuotekohtainen"})
 
 (defonce laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
@@ -87,17 +87,22 @@
 
        [:span.laskutusyhteenveto
         [:div.flex-row.alkuun
-         (println "Calling.." (:tyyppi ur))
+         
          (when (= :teiden-hoito (:tyyppi ur))
-           (println "True")
-           [:div "Laskutusyhteenvedon muoto"
-            [:div
-             [kentat/tee-kentta {:tyyppi :radio
-                                 :valinta-nayta first
-                                 :valinta-arvo second
-                                 :valinnat yhteenvedeon-valinnat}
+           
+           ;; (println "True : " yhteenvedeon-valinnat)
+           ;; (println "Valittu tyyppi: " valittu-yhteenveto-muoto)
+           [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Laskutusyhteenvedon muoto"
+            [:div {:style {:margin-right "60px" :margin-top "-10px" :margin-bottom "40px"}}
+             
+             [kentat/tee-kentta {:tyyppi :radio-group
+                                 :space-valissa? true
+                                 :vaihtoehdot [:tyomaakokous :tuotekohtainen]
+                                 :vayla-tyyli? true
+                                 :nayta-rivina? true
+                                 :vaihtoehto-nayta yhteenvedeon-valinnat}
               valittu-yhteenveto-muoto]]])
-
+         
          [valinnat/urakan-hoitokausi ur]
          [valinnat/hoitokauden-kuukausi]
 

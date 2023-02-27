@@ -48,5 +48,5 @@
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
         _ (println "vastaus: " vastaus)]
 
-    (is (nil? vastaus))))
+    (is (nil? (nth (first vastaus) 28)))))
 
