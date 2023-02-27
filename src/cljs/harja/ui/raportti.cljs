@@ -137,8 +137,8 @@
     [:div {:class "sisalto"}
      [:span {:class "laskutus-yhteensa"} laskutettu-str]
      [:span {:class "laskutus-yhteensa"} laskutetaan-str]
-     [:h1 (str laskutettu " €")]
-     [:h1 [:span {:class "vahvistamaton"} (str laskutetaan " €")]]]]])
+     [:h1 (str (fmt/euro laskutettu))]
+     [:h1 [:span {:class "vahvistamaton"} (str (fmt/euro laskutetaan))]]]]])
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen

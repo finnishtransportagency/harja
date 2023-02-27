@@ -35,23 +35,29 @@
   {:tyomaakokous "Työmaakokous"
    :tuotekohtainen "Tuotekohtainen"})
 
+(defn raportin-nimi-avain [urakkatyyppi]
+  
+  ;; valittu-aikavali @u/valittu-hoitokauden-kuukausi
+  ;; _ (println "urakkatyyppi: " urakkatyyppi "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
+  (cond (and
+         ;; MHU / HJU -urakoille näytetään työmaakokous ja tuotekohtainen yhteenveto
+         ;; Tuotekohtainen
+         (= :teiden-hoito urakkatyyppi)
+         (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
+
+        (and
+         ;; Työmaakokous
+         (= :teiden-hoito urakkatyyppi)
+         (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
+
+        ;; Muille urakoille näytetään "perus" yhteenveto
+        (not= :teiden-hoito urakkatyyppi) :laskutusyhteenveto))
+
 (defonce laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
                   nakymassa? @laskutusyhteenveto-nakyvissa?
-                  urakkatyyppi (:tyyppi ur)
-
-                  ;; _ (println "urakkatyyppi: " urakkatyyppi "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
-
-                  raportin-nimi (cond (and
-                                       (= :teiden-hoito urakkatyyppi)
-                                       (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
-
-                                      (and
-                                       (= :teiden-hoito urakkatyyppi)
-                                       (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
-
-                                      (not= :teiden-hoito urakkatyyppi) :laskutusyhteenveto)]
+                  raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
               
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
@@ -59,7 +65,7 @@
                  raportin-nimi
                  {:alkupvm alkupvm
                   :loppupvm loppupvm
-                  :urakkatyyppi urakkatyyppi})))))
+                  :urakkatyyppi (:tyyppi ur)})))))
 
 (defonce laskutusyhteenvedon-tiedot
   (reaction<! [p @laskutusyhteenvedon-parametrit]
@@ -73,25 +79,13 @@
    (komp/lippu laskutusyhteenveto-nakyvissa?)
    (fn []
      (let [ur @nav/valittu-urakka
-           ;; valittu-aikavali @u/valittu-hoitokauden-kuukausi
-           ;;_ (println "urakkatyyppi: " (:urakkatyyppi ur) "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
-           raportin-nimi (cond (and
-                                (= :teiden-hoito (:urakkatyyppi ur))
-                                (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
-
-                               (and
-                                (= :teiden-hoito (:urakkatyyppi ur))
-                                (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
-
-                               (not= :teiden-hoito (:urakkatyyppi ur)) :laskutusyhteenveto)]
+           raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
 
        [:span.laskutusyhteenveto
         [:div.flex-row.alkuun
          
+         ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
          (when (= :teiden-hoito (:tyyppi ur))
-           
-           ;; (println "True : " yhteenvedeon-valinnat)
-           ;; (println "Valittu tyyppi: " valittu-yhteenveto-muoto)
            [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Laskutusyhteenvedon muoto"
             [:div {:style {:margin-right "60px" :margin-top "-10px" :margin-bottom "40px"}}
              
