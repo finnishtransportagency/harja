@@ -268,7 +268,7 @@
                            (liita rivi :tarkastamaton? false)))
         siirtynyt? (fn [rivi]
                      (let [silta-urakan-vastuulla? (kentta-indeksilla rivi 9)]
-                       (liita (assoc rivi :rivi (butlast (:rivi rivi))) :siirtynyt? silta-urakan-vastuulla?)))
+                       (liita (assoc rivi :rivi (subvec (:rivi rivi) 0 9)) :siirtynyt? silta-urakan-vastuulla?)))
 
         lihavoi (fn [rivi]
                   (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
