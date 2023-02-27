@@ -95,7 +95,8 @@
     (sahkoposti/vastausosoite email)
     vastaanottaja
     otsikko
-    sisalto)
+    sisalto
+    {})
   (log/info "Muistutus lähetetty vastaanottajalle:" vastaanottaja))
 
 (defn laheta-viesti-vastaanottajille

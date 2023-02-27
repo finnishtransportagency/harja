@@ -16,7 +16,7 @@
             [harja.fmt :as fmt]
             [harja.domain.tierekisteri :as tierekisteri]))
 
-(def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true :private true}
+(def ^{:doc "Ilmoituksen otsikon regex pattern, josta urakka ja ilmoitusid tunnistetaan" :const true}
 otsikko-pattern #".*\#\[(\d+)/(\d+)\].*")
 
 (def ^{:doc "Kuittaustyypit, joita sähköpostilla voi ilmoittaa" :const true :private true}

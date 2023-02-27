@@ -36,7 +36,8 @@
                                (format "Harja: Urakalta %s puuttuu päivystystiedot päivämäärälle %s"
                                        urakka-nimi
                                        (fmt/pvm (c/to-date pvm)))
-                               (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm))))
+                               (viesti-puuttuvasta-paivystyksesta urakka-nimi pvm)
+                               {})))
 
 (defn hae-ilmoituksen-saajat [fim sampo-id]
   (fim/hae-urakan-kayttajat-jotka-roolissa fim sampo-id #{"ely urakanvalvoja" "urakan vastuuhenkilö"}))

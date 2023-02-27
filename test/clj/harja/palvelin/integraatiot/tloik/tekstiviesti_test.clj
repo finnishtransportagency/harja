@@ -69,7 +69,7 @@
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "TR-osoite: 1 / 2 / 3 / 4 / 5"))
+    (is (rivit "Tienumero: 1 / 2 / 3 / 4 / 5"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-pisteelle
@@ -87,7 +87,7 @@
     (is (rivit "Yhteydenottopyyntö: Kyllä"))
     (is (rivit "Paikka: Konesali"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "TR-osoite: 1 / 2 / 3"))
+    (is (rivit "Tienumero: 1 / 2 / 3"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 (deftest tekstiviestin-muodostus-ilman-tr-osoitetta
@@ -102,7 +102,7 @@
     (is (rivit "Yhteydenottopyyntö: Ei"))
     (is (rivit "Paikka: Kilpisjärvi"))
     (is (rivit "Lisätietoja: Soittakaapa äkkiä."))
-    (is (rivit "TR-osoite: Ei tierekisteriosoitetta"))
+    (is (rivit "Tienumero: Ei tierekisteriosoitetta"))
     (is (rivit "Selitteet: Toimenpidekysely."))))
 
 
