@@ -11,6 +11,22 @@
             [org.httpkit.fake :refer [with-fake-http]]
             [cheshire.core :as cheshire]))
 
+(def +onnistunut-kaistojen-hakuvastaus+
+  [{:aet 0
+    :ajorata 0
+    :kaista 12
+    :let 1000
+    :osa 2
+    :tie 837
+    :tyyppi 2}
+   {:aet 0
+    :ajorata 0
+    :kaista 11
+    :let 1000
+    :osa 2
+    :tie 837
+    :tyyppi 1}])
+
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
     (fn [_]
@@ -33,8 +49,8 @@
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
 
 (deftest hae-kaistat
-  (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-kaistojen-hakuvastaus+ true)]
-    (with-fake-http [tyokalut/+kaistojen-haku-url+ tyokalut/+onnistunut-kaistojen-hakuvastaus+]
+  (let [odotettu-vastaus +onnistunut-kaistojen-hakuvastaus+]
+    (with-fake-http [tyokalut/+kaistojen-haku-url+ tyokalut/+onnistunut-digiroad-kaistojen-hakuvastaus+]
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                       :hae-kaistat-digiroadista +kayttaja-jvh+
                       {:tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}

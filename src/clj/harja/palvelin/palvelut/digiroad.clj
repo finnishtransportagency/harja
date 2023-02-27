@@ -5,15 +5,28 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.palvelin.integraatiot.digiroad.digiroad-komponentti :as digiroad]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]))
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [cheshire.core :as cheshire]
+            [clojure.set :as set]))
+(def +fake-onnistunut-kaistojen-hakuvastaus+
+  "[{\"roadNumber\":837,\"roadPartNumber\":2,\"track\":0,\"startAddrMValue\":0,\"endAddrMValue\":1000,\"laneCode\":12,\"laneType\":2},{\"roadNumber\":837,\"roadPartNumber\":2,\"track\":0,\"startAddrMValue\":0,\"endAddrMValue\":1000,\"laneCode\":11,\"laneType\":1}]")
 
+(def digiroad-kaista-avaimet->tr-avaimet
+  {:roadNumber :tie
+   :roadPartNumber :osa
+   :track :ajorata
+   :startAddrMValue :aet
+   :endAddrMValue :let
+   :laneCode :kaista
+   :laneType :tyyppi})
 
 (defn hae-kaistat [digiroad kayttaja tiedot]
   (let [urakka-id (:urakka-id tiedot)]
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset kayttaja urakka-id)
 
     (let [{:keys [tr-osoite ajorata]} tiedot
-          vastaus (digiroad/hae-kaistat digiroad tr-osoite ajorata)]
+          vastaus (cheshire/decode +fake-onnistunut-kaistojen-hakuvastaus+ true)
+          #_(digiroad/hae-kaistat digiroad tr-osoite ajorata)]
 
       (if (false? (:onnistunut? vastaus))
         (cond
@@ -26,7 +39,9 @@
           :else
           (throw (Exception. "Kaistojen haku epäonnistui sisäisen virheen takia")))
 
-        vastaus))))
+        (mapv
+          #(set/rename-keys % digiroad-kaista-avaimet->tr-avaimet)
+          vastaus)))))
 
 (def hakutyypit
   [{:palvelu :hae-kaistat-digiroadista
