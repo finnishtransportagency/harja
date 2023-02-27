@@ -32,7 +32,8 @@
     [harja.pvm :as pvm]
     [harja.domain.yllapitokohde :as yllapitokohteet-domain]
     [taoensso.timbre :as log]
-    [harja.domain.tierekisteri :as tr])
+    [harja.domain.tierekisteri :as tr]
+    [clojure.set :as set])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -581,13 +582,20 @@
     (if (and (tr/validi-osoite? tr-osoite) (tr/on-alku-ja-loppu? tr-osoite) (integer? ajorata))
       (do
         (log/info "HaeKaistat: " [tr-osoite ajorata])
-        (let [parametrit {:tr-osoite tr-osoite
+        ;; Huom: Päällystyksen puolella käytetään pääsääntöisesti pitkiä muotoja tr-osoitteista.
+        ;;       Digiroad-integraation puolella käytetään lyhyempiä.
+        ;;       Muunnetaan lomakkeelta tuleva tr-osoite rajapinnan tarvitsemaan lyhyempään muotoon.
+        (let [parametrit {:tr-osoite (set/rename-keys tr-osoite {:tr-numero :tie
+                                                                 :tr-alkuosa :aosa
+                                                                 :tr-alkuetaisyys :aet
+                                                                 :tr-loppuetaisyys :let
+                                                                 :tr-loppuosa :losa})
                           :ajorata ajorata}]
           (tuck-apurit/post! app
             :hae-kaistat-digiroadista
             parametrit
             {:onnistui ->HaeKaistatOnnistui
-             :onnistui-parametrit [(:tr-osoite parametrit) (:ajorata parametrit)]
+             :onnistui-parametrit [tr-osoite ajorata]
              :epaonnistui ->HaeKaistatEpaonnistui
              :paasta-virhe-lapi? true})))
       app))

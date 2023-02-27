@@ -56,10 +56,9 @@
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)
         on-rivi-blur (fn [rivi]
-                       (let [{:keys [tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
-                                     tr-ajorata]} rivi]
+                       (let [{:keys [tr-ajorata]} rivi]
                          (e! (paallystys/->HaeKaistat
-                               {:tie tr-numero :aosa tr-alkuosa :aet tr-alkuetaisyys :losa tr-loppuosa :let tr-loppuetaisyys}
+                               (select-keys rivi tr/paaluvali-avaimet)
                                tr-ajorata))))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true

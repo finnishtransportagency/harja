@@ -22,6 +22,7 @@
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.alusta :as alusta]
     [harja.views.urakka.pot2.paallystekerros :as paallystekerros]
+    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteinen]
     [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
     [harja.views.urakka.pot2.massa-lomake :as massa-lomake]
     [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
@@ -42,7 +43,9 @@
                                          :tr-alkuosa :tr-alkuosa
                                          :tr-alkuetaisyys :tr-alkuetaisyys
                                          :tr-loppuosa :tr-loppuosa
-                                         :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                         :tr-loppuetaisyys :tr-loppuetaisyys}}
+                            {:fn pot2-yhteinen/validoi-kaistavalinta
+                             :sarakkeet {:tr-kaista :tr-kaista}}]
                      :taulukko [{:fn (r/partial paallystekerros/kohde-toisten-kanssa-paallekkain-validointi true)
                                  :sarakkeet {:tr-numero :tr-numero
                                              :tr-ajorata :tr-ajorata
@@ -58,7 +61,9 @@
                                 :tr-alkuosa :tr-alkuosa
                                 :tr-alkuetaisyys :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuosa
-                                :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                                :tr-loppuetaisyys :tr-loppuetaisyys}}
+                   {:fn pot2-yhteinen/validoi-kaistavalinta
+                    :sarakkeet {:tr-kaista :tr-kaista}}]
             :taulukko [{:fn (constantly :default) ;; no-op
                         :sarakkeet {:tr-numero :tr-numero
                                     :tr-ajorata :tr-ajorata

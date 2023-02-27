@@ -3,12 +3,38 @@
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+            [harja.domain.tierekisteri :as tr]
+            [harja.tiedot.urakka.paallystys :as paallystys]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.pot-yhteinen :as pot-yhteinen]
             [harja.ui.viesti :as viesti]
             [harja.ui.grid :as grid]))
+
+(defn validoi-kaistavalinta
+  [rivi taulukko]
+  (let [{:keys [kaistat]} (:paallystysilmoitus-lomakedata @paallystys/tila)
+        valittu-kaista (get-in rivi [:tr-kaista])
+        alikohde (select-keys rivi tr/vali-avaimet)
+        ajorata (get-in alikohde [:tr-ajorata])
+        alikohteen-kaistat (get-in kaistat [(select-keys alikohde tr/paaluvali-avaimet) ajorata])
+        validi? (some #(= valittu-kaista (:kaista %)) alikohteen-kaistat)]
+
+    #_#_#_#_
+    (println "### alikohde:\n" (with-out-str
+                             (cljs.pprint/pprint alikohde)))
+    (println "### Valittu kaista: " valittu-kaista " ajorata: " ajorata)
+    (println "### kaistat:\n" (with-out-str
+                             (cljs.pprint/pprint kaistat)))
+    (println "### alikohteen kaistat\n" (with-out-str
+                                          (cljs.pprint/pprint alikohteen-kaistat)))
+
+    (when-not validi?
+      {:tr-kaista
+       ["Kaista-aineiston mukaan tällä tieosoitteella ei ole kyseistä kaistaa. Tarkista tieosoitteen ja kaistatiedon oikeellisuus."]})))
+
+;; ----
 
 (def hint-kopioi-kaistoille "Kopioi rivin sisältö kaikille rinnakkaisille kaistoille. Jos kaistaa ei vielä ole, se lisätään taulukkoon.")
 (def hint-nayta-virheet "Lähetys epäonnistunut, näytä lisää")
