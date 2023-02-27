@@ -8,6 +8,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [cheshire.core :as cheshire]
             [clojure.set :as set]))
+
+;; TODO: Poista mockup-data, kun digiroad-rajapinta taas toimii
 (def +fake-onnistunut-kaistojen-hakuvastaus+
   "[{\"roadNumber\":837,\"roadPartNumber\":2,\"track\":0,\"startAddrMValue\":0,\"endAddrMValue\":1000,\"laneCode\":12,\"laneType\":2},{\"roadNumber\":837,\"roadPartNumber\":2,\"track\":0,\"startAddrMValue\":0,\"endAddrMValue\":1000,\"laneCode\":11,\"laneType\":1}]")
 
@@ -26,6 +28,7 @@
 
     (let [{:keys [tr-osoite ajorata]} tiedot
           vastaus (cheshire/decode +fake-onnistunut-kaistojen-hakuvastaus+ true)
+          ;; TODO: Aktivoi oikea digiroad-haku kun rajapinta taas toimii
           #_(digiroad/hae-kaistat digiroad tr-osoite ajorata)]
 
       (if (false? (:onnistunut? vastaus))
