@@ -53,7 +53,12 @@
                                              :tr-alkuosa :tr-alkuosa
                                              :tr-alkuetaisyys :tr-alkuetaisyys
                                              :tr-loppuosa :tr-loppuosa
-                                             :tr-loppuetaisyys :tr-loppuetaisyys}}]}
+                                             :tr-loppuetaisyys :tr-loppuetaisyys}}]
+                     ;; TR-osoitevälissä täytyy olla jotkin arvot, jotta BE:ssä ei tule virheitä luonnosta tallentaessa
+                     :tr-alkuosa [[:ei-tyhja "Anna arvo"]]
+                     :tr-alkuetaisyys [[:ei-tyhja "Anna arvo"]]
+                     :tr-loppuosa [[:ei-tyhja "Anna arvo"]]
+                     :tr-loppuetaisyys [[:ei-tyhja "Anna arvo"]]}
    :alusta {:rivi [{:fn alusta/alustan-validointi
                     :sarakkeet {:tr-numero :tr-numero
                                 :tr-ajorata :tr-ajorata
@@ -71,7 +76,12 @@
                                     :tr-alkuosa :tr-alkuosa
                                     :tr-alkuetaisyys :tr-alkuetaisyys
                                     :tr-loppuosa :tr-loppuosa
-                                    :tr-loppuetaisyys :tr-loppuetaisyys}}]}})
+                                    :tr-loppuetaisyys :tr-loppuetaisyys}}]
+            ;; TR-osoitevälissä täytyy olla jotkin arvot, jotta BE:ssä ei tule virheitä luonnosta tallentaessa
+            :tr-alkuosa [[:ei-tyhja "Anna arvo"]]
+            :tr-alkuetaisyys [[:ei-tyhja "Anna arvo"]]
+            :tr-loppuosa [[:ei-tyhja "Anna arvo"]]
+            :tr-loppuetaisyys [[:ei-tyhja "Anna arvo"]]}})
 
 (def materiaalikirjasto-tyhja-txt
   "Urakan materiaalikirjasto on tyhjä. Aloita päällystysilmoitus lisäämällä urakalle materiaalit.")
