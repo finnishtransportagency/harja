@@ -27,9 +27,10 @@
     (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset kayttaja urakka-id)
 
     (let [{:keys [tr-osoite ajorata]} tiedot
-          vastaus (cheshire/decode +fake-onnistunut-kaistojen-hakuvastaus+ true)
-          ;; TODO: Aktivoi oikea digiroad-haku kun rajapinta taas toimii
-          #_(digiroad/hae-kaistat digiroad tr-osoite ajorata)]
+          vastaus (digiroad/hae-kaistat digiroad tr-osoite ajorata)
+          ;; TODO: Digiroad kaistojenhaku-API on tällä hetkellä rikki.
+          ;;      Aktivoi kehittäessä mockup vastauksen lähetys käyttöliittymälle.
+          #_(cheshire/decode +fake-onnistunut-kaistojen-hakuvastaus+ true)]
 
       (if (false? (:onnistunut? vastaus))
         (cond
