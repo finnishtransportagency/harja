@@ -825,6 +825,10 @@
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
                    toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
 
+(defn hae-toimenpideinstanssi-id [urakka-id toimenpidekoodi]
+  (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = " urakka-id " AND
+                   toimenpide = (select id from toimenpidekoodi where koodi = '" toimenpidekoodi "');"))))
+
 (defn hae-toimenpidekoodin-id [nimi koodi]
   (ffirst (q (str "SELECT id from toimenpidekoodi where nimi = '" nimi "' AND emo = (select id from toimenpidekoodi WHERE koodi = '" koodi "');"))))
 

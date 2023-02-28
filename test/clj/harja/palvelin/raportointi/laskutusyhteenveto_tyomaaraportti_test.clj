@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto_tyomaaraportti_test
   (:require [clojure.test :refer :all]
+            [clojure.string :as str]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
@@ -11,7 +12,9 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.fmt :as fmt]))
+            [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -28,7 +31,10 @@
                          [:db :pdf-vienti])
           :raportit (component/using
                       (raportit/->Raportit)
-                      [:http-palvelin :db :raportointi :pdf-vienti])))))
+                      [:http-palvelin :db :raportointi :pdf-vienti])
+          :kulut (component/using
+                   (kulut/->Kulut)
+                   [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -38,15 +44,237 @@
                       urakkatieto-fixture))
 
 
+(defn pura-tyomaaraportti-mapiksi [raportti]
+  (let [tulos
+        {:talvihoito_hoitokausi_yht (nth raportti 0)
+         :talvihoito_val_aika_yht (nth raportti 1)
+         :lyh_hoitokausi_yht (nth raportti 2)
+         :lyh_val_aika_yht (nth raportti 3)
+         :sora_hoitokausi_yht (nth raportti 4)
+         :sora_val_aika_yht (nth raportti 5)
+         :paallyste_hoitokausi_yht (nth raportti 6)
+         :paallyste_val_aika_yht (nth raportti 7)
+         :yllapito_hoitokausi_yht (nth raportti 8)
+         :yllapito_val_aika_yht (nth raportti 9)
+         :korvausinv_hoitokausi_yht (nth raportti 10)
+         :korvausinv_val_aika_yht (nth raportti 11)
+         :hankinnat_hoitokausi_yht (nth raportti 12)
+         :hankinnat_val_aika_yht (nth raportti 13)
+         :johtojahallinto_hoitokausi_yht (nth raportti 14)
+         :johtojahallinto_val_aika_yht (nth raportti 15)
+         :erillishankinnat_hoitokausi_yht (nth raportti 16)
+         :erillishankinnat_val_aika_yht (nth raportti 17)
+         :hjpalkkio_hoitokausi_yht (nth raportti 18)
+         :hjpalkkio_val_aika_yht (nth raportti 19)
+         :hoidonjohto_hoitokausi_yht (nth raportti 20)
+         :hoidonjohto_val_aika_yht (nth raportti 21)
+         :akilliset_hoitokausi_yht (nth raportti 22)
+         :akilliset_val_aika_yht (nth raportti 23)
+         :vahingot_hoitokausi_yht (nth raportti 24)
+         :vahingot_val_aika_yht (nth raportti 25)
+         :tavhin_hoitokausi_yht (nth raportti 26)
+         :tavhin_val_aika_yht (nth raportti 27)
+         :hoitokauden_tavoitehinta (nth raportti 28)
+         :hk_tavhintsiirto_ed_vuodelta (nth raportti 29)
+         :budjettia_jaljella (nth raportti 30)
+         :lisatyo_talvihoito_hoitokausi_yht (nth raportti 31)
+         :lisatyo_talvihoito_val_aika_yht (nth raportti 32)
+         :lisatyo_lyh_hoitokausi_yht (nth raportti 33)
+         :lisatyo_lyh_val_aika_yht (nth raportti 34)
+         :lisatyo_sora_hoitokausi_yht (nth raportti 35)
+         :lisatyo_sora_val_aika_yht (nth raportti 36)
+         :lisatyo_paallyste_hoitokausi_yht (nth raportti 37)
+         :lisatyo_paallyste_val_aika_yht (nth raportti 38)
+         :lisatyo_yllapito_hoitokausi_yht (nth raportti 39)
+         :lisatyo_yllapito_val_aika_yht (nth raportti 40)
+         :lisatyo_korvausinv_hoitokausi_yht (nth raportti 41)
+         :lisatyo_korvausinv_val_aika_yht (nth raportti 42)
+         :lisatyot_hoitokausi_yht (nth raportti 43)
+         :lisatyot_val_aika_yht (nth raportti 44)
+         :bonukset_hoitokausi_yht (nth raportti 45)
+         :bonukset_val_aika_yht (nth raportti 46)
+         :sanktiot_hoitokausi_yht (nth raportti 47)
+         :sanktiot_val_aika_yht (nth raportti 48)
+         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 49)
+         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 50)
+         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 51)
+         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 52)
+         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 53)
+         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 54)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 55)
+         :muut_kustannukset_val_aika_yht (nth raportti 56)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 57)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 58)}]
+    tulos))
+
+(defn luo-kulu [urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa toimenpideinstanssi-id tehtavaryhma-id]
+  {:id nil
+   :urakka urakka-id
+   :viite "123456781"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi "laskutettava"
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :suoritus-alku suoritushetki
+                   :suoritus-loppu suoritushetki
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava nil}]
+   :koontilaskun-kuukausi koontilaskun-kuukausi})
+
+(defn- poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
+  (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
+        _ (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut)))
+        _ (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut)))
+        _ (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm))]))
+
 (deftest raportin-suoritus-urakalle-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
         aikavali_loppupvm "2020-09-30"
-        urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                     hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-        _ (println "vastaus: " vastaus)]
+                     hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
+    (is (not (nil? vastaus)) "Saatiin raportti")
+    (is (= (count (first vastaus)) 59) "Raportilla on 59 riviä")))
 
-    (is (nil? (nth (first vastaus) 28)))))
+;; Oulun MHU:n toimenpideinstanssit ja toimenpidekoodi taulun koodit
+;Oulu MHU Talvihoito TP,23104
+;Oulu MHU Liikenneympäristön hoito TP,23116
+;Oulu MHU Soratien hoito TP,23124
+;Oulu MHU Hallinnolliset toimenpiteet TP,23151
+;Oulu MHU Päällystepaikkaukset TP,20107
+;Oulu MHU MHU Ylläpito TP,20191
+;Oulu MHU MHU Korvausinvestointi TP,14301
+
+
+(deftest tyomaaraportti-talvihoito-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+
+        ;; Poistetaan kaikki kulut urakalta
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan talvihoitokulut
+        erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        suoritushetki (pvm/->pvm "15.10.2019")
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104")
+        tehtavaryhma-id (hae-tehtavaryhman-id "Talvihoito (A)")
+        talvihoitosumma 1234M
+
+        talvihoitokulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi talvihoitosumma toimenpideinstanssi-id tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen talvihoitokulu})
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+    (is (= talvihoitosumma (:talvihoito_hoitokausi_yht purettu)))
+    (is (= talvihoitosumma (:talvihoito_val_aika_yht purettu)))))
+
+(deftest tyomaaraportti-liikenneymparistonhoito-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+
+        ;; Poistetaan kaikki kulut urakalta
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan liikenneympäristönhoitokulut
+        erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        suoritushetki (pvm/->pvm "15.10.2019")
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23116")
+        tehtavaryhma-id (hae-tehtavaryhman-id "Liikennemerkit ja liikenteenohjauslaitteet (L)")
+        lyhsumma 1234M
+
+        lyhkulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi lyhsumma toimenpideinstanssi-id tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen lyhkulu})
+
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+    (is (= lyhsumma (:lyh_hoitokausi_yht purettu)))
+    (is (= lyhsumma (:lyh_val_aika_yht purettu)))))
+
+(deftest tyomaaraportti-muut-tpit-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+
+        ;; Poistetaan kaikki kulut urakalta
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan kulut
+        erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        suoritushetki (pvm/->pvm "15.10.2019")
+        summa 1234M
+
+        ;; Sora
+        sora-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
+        sora-tehtavaryhma-id (hae-tehtavaryhman-id "Sorateiden hoito (C)")
+        sorakulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa sora-toimenpideinstanssi-id sora-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen sorakulu})
+
+        ;; Päällyste
+        paal-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "20107")
+        paal-tehtavaryhma-id (hae-tehtavaryhman-id "Kuumapäällyste (Y1)")
+        paalkulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa paal-toimenpideinstanssi-id paal-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen paalkulu})
+
+        ;; Ylläpito
+        yl-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "20191")
+        yl-tehtavaryhma-id (hae-tehtavaryhman-id "Muut, MHU ylläpito (F)")
+        ylkulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa yl-toimenpideinstanssi-id yl-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen ylkulu})
+
+
+        ;; Hallinnolliset toimenpiteet
+        ;;TODO: Lisää myös johto_ja_hallintokorvaus tauluun jotenkin dataa ja muista siivota se ensin
+        hal-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
+        hal-tehtavaryhma-id (hae-tehtavaryhman-id "Johto- ja hallintokorvaus (J)")
+        halkulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa hal-toimenpideinstanssi-id hal-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen halkulu})
+
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+    (is (= summa (:sora_hoitokausi_yht purettu)))
+    (is (= summa (:sora_val_aika_yht purettu)))
+
+    (is (= summa (:paallyste_hoitokausi_yht purettu)))
+    (is (= summa (:paallyste_val_aika_yht purettu)))
+
+    (is (= summa (:yllapito_hoitokausi_yht purettu)))
+    (is (= summa (:yllapito_val_aika_yht purettu)))
+
+    (is (= summa (:sora_hoitokausi_yht purettu)))
+    (is (= summa (:sora_val_aika_yht purettu)))))
+
 
