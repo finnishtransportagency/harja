@@ -700,7 +700,7 @@
             (throw (IllegalArgumentException.
                      (cheshire/encode {:alustatoimenpide (ex-message pe)})))))))))
 
-(defn tallenna-paallystysilmoitus
+(defn tallenna-paallystysilmoitus*
   "Tallentaa päällystysilmoituksen tiedot kantaan.
 
   Päällystysilmoituksen kohdeosien tietoja ei tallenneta itse ilmoitukseen, vaan ne tallennetaan
@@ -721,6 +721,7 @@
     ;; Kirjoitusoikeudet tarkistetaan syvemällä, päivitetään vain ne osat, jotka saa
     (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id (:paallystyskohde-id paallystysilmoitus))
     (yha-apurit/lukitse-urakan-yha-sidonta db urakka-id)
+
     (let [pot2? (onko-pot2? paallystysilmoitus)
           paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)
           paikkauskohde? (q/yllapitokohde-paikkauskohde? db paallystyskohde-id)
@@ -741,9 +742,10 @@
             (throw (IllegalArgumentException. (str "Väärä POT versio. Pyynnössä on " versio-pyynnossa
                                                    ", pitäisi olla " oikea-versio
                                                    ". Ota yhteyttä Harjan tukeen."))))))
-      (let [seuraava-tila (pot-domain/paattele-ilmoituksen-tila
-                            (get-in paallystysilmoitus [:perustiedot :valmis-kasiteltavaksi])
-                            (= :hyvaksytty (get-in paallystysilmoitus [:perustiedot :tekninen-osa :paatos])))
+      (let [seuraava-tila (keyword
+                            (pot-domain/paattele-ilmoituksen-tila
+                              (get-in paallystysilmoitus [:perustiedot :valmis-kasiteltavaksi])
+                              (= :hyvaksytty (get-in paallystysilmoitus [:perustiedot :tekninen-osa :paatos]))))
             tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
             ali-ja-muut-kohteet (remove :poistettu (if pot2?
                                                      (-> paallystysilmoitus :paallystekerros)
@@ -754,13 +756,10 @@
 
         ;; Validoidaan data ainoastaan silloin, kun päällystysilmoituksen seuraava tila on jotain muuta kuin "aloitettu".
         ;;  Eli, päällystysilmoitus on jo kerran tallennettu kantaan ja se olisi siirtymässä tilaan valmis tai lukittu.
-        (when (not= seuraava-tila "aloitettu")
+        (when (not= seuraava-tila :aloitettu)
           (let [virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla
                                db paallystyskohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
             (when (seq virheviestit)
-              ;; TODO: Virheviestit voisi tallentaa updatella paallysilmoitus-tauluun uuteen sarakkeeseen esim. virheet TEXT
-              ;;       Huom: Tallenna vain virheet riville, ei muuta.
-              ;;       Halutaan mahdollisesti myös erotella virheviestit toisistaan kantaan (käytä esim. separaattoria ;)
               (throw (IllegalArgumentException. (cheshire/encode virheviestit))))))
 
 
@@ -813,6 +812,12 @@
                                                              :uusi-paatos (:tekninen-osa_paatos tuore-paallystysilmoitus)
                                                              :vanha-paatos (:tekninen-osa_paatos vanha-paallystysilmoitus)})
 
+          ;; Poista mahdolliset vanhat virheet tietokannasta lopullisen tallennuksen onnistuessa
+          ;; Säilytetään virheet kuitenkin, jos käyttäjä on kokeillut esimerkiksi lähettää ilmoitusta tarkastettavaksi,
+          ;; mutta muokkaakin ilmoitusta sen jälkeen
+          (when-not (= :aloitettu (:tila tuore-paallystysilmoitus))
+            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id :virhe nil}))
+
           ;; Rakennetaan vastaus
           (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
                                                                                      :sopimus-id sopimus-id
@@ -822,6 +827,23 @@
                                                                              :vuosi vuosi})]
             {:yllapitokohteet yllapitokohteet
              :paallystysilmoitukset uudet-ilmoitukset}))))))
+
+(defn tallenna-paallystysilmoitus
+  "Tallentaa päällysilmoituksen ja tallennukseen liittyvät mahdolliset validointivirheet kantaan.
+  Virheet throwataan varsinaisen päällystysilmoituksen tallentamisen ja validoinnin toteuttavassa funktiossa ja napataan täällä.
+  Virheet tallennetaan tietokantaan erillisessä transaktiossa."
+  [db user fim email {:keys [urakka-id sopimus-id vuosi paallystysilmoitus] :as parametrit}]
+  (try
+    (tallenna-paallystysilmoitus* db user fim email parametrit)
+    (catch IllegalArgumentException e
+      (jdbc/with-db-transaction [db db]
+        (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)]
+          ;; Tallenna tallennukseen/validointiin liittyvät virheviestit kantaan, jotta niitä voidaan tutkia myöhemmin tarvittaessa
+          (when paallystyskohde-id
+            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id :virhe (.getMessage e)}))))
+
+      ;; Heitetään virhe uudestaan, jotta UI voi prosessoida virheviestin
+      (throw (IllegalArgumentException. (.getMessage e))))))
 
 (defn tallenna-paallystysilmoitusten-takuupvmt [db user {urakka-id ::urakka-domain/id
                                                          takuupvmt ::pot-domain/tallennettavat-paallystysilmoitusten-takuupvmt}]
