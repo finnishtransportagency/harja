@@ -25,7 +25,16 @@
        "Tienumero: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
-       "Huom: tekstiviestikuittaus on poistunut käytöstä. Kuittaa viestit Harjassa tai sähköpostilla.\n"))
+       "Kuittauskoodit:\n"
+       "V%s = vastaanotettu\n"
+       "A%s = aloitettu\n"
+       "K%s = toimenpiteet aloitettu\n"
+       "L%s = lopetettu\n"
+       "T%s = lopetettu toimenpitein\n"
+       "M%s = muutettu\n"
+       "R%s = vastattu\n"
+       "U%s = väärä urakka\n\n"
+       "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
@@ -158,7 +167,15 @@
               paikankuvaus
               tr-osoite
               selitteet
-              lisatietoja))))
+              lisatietoja
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
