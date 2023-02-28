@@ -191,7 +191,7 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      (if (:toimenpiteet-lataa app)
+      (if (:toteutuneet-maarat-lataa app)
         [:tbody
          [:tr
           [:td {:colSpan "5"} [yleiset/ajax-loader "Haetaan..."]]]]

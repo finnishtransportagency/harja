@@ -230,19 +230,19 @@
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
-      (assoc app :toimenpiteet-lataa true)))
+      (assoc app :toteutuneet-maarat-lataa true)))
 
   HaeToimenpiteenTehtavaYhteenvetoOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
-        (assoc :toimenpiteet-lataa false)
+        (assoc :toteutuneet-maarat-lataa false)
         (assoc :toteutuneet-maarat vastaus)
         (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus (:hakufiltteri app)))))
 
   HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    (assoc app :toimenpiteet-lataa false))
+    (assoc app :toteutuneet-maarat-lataa false))
 
   HaeTehtavanToteumat
   (process-event [{tehtava :tehtava} app]
@@ -457,7 +457,7 @@
     (do
       (hae-toteutuneet-maarat urakka toimenpide (:hoitokauden-alkuvuosi app))
       (-> app
-          (assoc :toimenpiteet-lataa true)
+          (assoc :toteutuneet-maarat-lataa true)
           (assoc :valittu-toimenpide toimenpide)
           (assoc :haetut-toteumat nil)
           (assoc-in [:lomake ::t/toimenpide] toimenpide)
@@ -533,7 +533,7 @@
     (do
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
-        (assoc :toimenpiteet-lataa true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc :avattu-tehtava nil)
         (assoc-in [:hoitokauden-alkuvuosi] vuosi)
         (assoc-in [:toteuma :aikavali-alkupvm] nil)
@@ -557,7 +557,7 @@
                        {:onnistui ->ToimenpiteetHakuOnnistui
                         :epaonnistui ->ToimenpiteetHakuEpaonnistui
                         :paasta-virhe-lapi? true})
-    app)
+    (assoc app :toimenpiteet-lataa true))
 
   HaeKaikkiTehtavat
   (process-event [_ app]
@@ -614,7 +614,7 @@
 
     (-> app
         (assoc :avattu-tehtava nil) ;; Pikafiksi: Sulje avatut, jotta se päivitetään uudestaan
-        (assoc :toimenpiteet-lataa true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc :syottomoodi false)))
 
   PoistaToteumaEpaonnistui
@@ -630,7 +630,7 @@
     (-> app
         (assoc :syottomoodi false
                :tehtavat [])
-        (assoc :toimenpiteet-lataa true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc-in [:lomake ::t/toteumat] [])))
 
   TallennaToteumaEpaonnistui
