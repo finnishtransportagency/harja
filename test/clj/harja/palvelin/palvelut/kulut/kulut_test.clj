@@ -1,9 +1,10 @@
-(ns harja.palvelin.palvelut.kulut-test
+(ns harja.palvelin.palvelut.kulut.kulut-test
   (:require [clojure.test :refer :all]
             [clojure.string :as s]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.palvelin.palvelut.kulut :as kulut]
+            [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
             [harja.domain.kulut :as tyokalut]
             [harja.pvm :as pvm]))
 
@@ -391,6 +392,19 @@
       "Erapäivä muutetaan")
     (is (not= (:erapaiva alkuperainen) (:erapaiva paivitetty)) "Erapäivä muutetaan")
     (is (not= (:koontilaskun-kuukausi alkuperainen) (:koontilaskun-kuukausi paivitetty)) "Erapäivä muutetaan")))
+
+(deftest saako-kulua-tallentaa?
+  (let [erapaiva #inst "2020-09-30T23:00:00.000-00:00"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        vanha-erapaiva nil
+        ;; Feikkaa, että välikatselmus on pidetty
+        ei-saa-koska-valikatselmus-pidetty (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] true)]
+                (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))
+        ;; Feikkaa, että välikatselmusta ei ole vielä ehditty pitää
+        saa-koska-valikatselmus-pitamatta (with-redefs [valikatselmus-kyselyt/onko-valikatselmus-pidetty? (fn [_ _] false)]
+                                             (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))]
+    (is (= false ei-saa-koska-valikatselmus-pidetty))
+    (is (= true saa-koska-valikatselmus-pitamatta))))
 
 (deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

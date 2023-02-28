@@ -186,7 +186,7 @@
                                                 ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
                                                 ::materiaali/materiaalit (seq [{:maara 4
                                                                                 :yksikko "kpl"
-                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                :tallennetut-materiaalit {::materiaali/nimi "Naulat"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
                                                                                           ::materiaali/id 13
@@ -194,7 +194,7 @@
                                                                                {:poistettu true
                                                                                 :maara 12
                                                                                 :yksikko "kpl"
-                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                :tallennetut-materiaalit {::materiaali/nimi "Ämpäreitä"
                                                                                           ::materiaali/urakka-id 1
                                                                                           ::materiaali/pvm nil
                                                                                           ::materiaali/id 12
@@ -202,14 +202,14 @@
                                                                                ])
                                                 ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
                                                                                                 :yksikko "kpl"
-                                                                                                :varaosa {::materiaali/nimi "Naulat"
+                                                                                                :tallennetut-materiaalit {::materiaali/nimi "Naulat"
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
                                                                                                           ::materiaali/id 13
                                                                                                           ::materiaali/yksikko "kpl"}}
                                                                                                {:maara 12
                                                                                                 :yksikko "kpl"
-                                                                                                :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                                :tallennetut-materiaalit {::materiaali/nimi "Ämpäreitä"
                                                                                                           ::materiaali/urakka-id 1
                                                                                                           ::materiaali/pvm nil
                                                                                                           ::materiaali/yksikko "kpl"
@@ -268,28 +268,28 @@
                                      ::kanavan-toimenpide/luotu (pvm/luo-pvm 2017 11 10)
                                      ::materiaali/materiaalit (seq [{:maara 3
                                                                      :yksikko "kpl"
-                                                                     :varaosa {::materiaali/nimi "Naulat"
+                                                                     :tallennetut-materiaalit {::materiaali/nimi "Naulat"
                                                                                ::materiaali/urakka-id 1
                                                                                ::materiaali/pvm nil
                                                                                ::materiaali/id 13
                                                                                ::materiaali/yksikko "kpl"}}
                                                                     {:maara 12
                                                                      :yksikko "kpl"
-                                                                     :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                     :tallennetut-materiaalit {::materiaali/nimi "Ämpäreitä"
                                                                                ::materiaali/urakka-id 1
                                                                                ::materiaali/pvm nil
                                                                                ::materiaali/id 12
                                                                                ::materiaali/yksikko "kpl"}}])
                                      ::materiaali/muokkaamattomat-materiaalit (seq [{:maara 3
                                                                                      :yksikko "kpl"
-                                                                                     :varaosa {::materiaali/nimi "Naulat"
+                                                                                     :tallennetut-materiaalit {::materiaali/nimi "Naulat"
                                                                                                ::materiaali/urakka-id 1
                                                                                                ::materiaali/pvm nil
                                                                                                ::materiaali/id 13
                                                                                                ::materiaali/yksikko "kpl"}}
                                                                                     {:maara 12
                                                                                      :yksikko "kpl"
-                                                                                     :varaosa {::materiaali/nimi "Ämpäreitä"
+                                                                                     :tallennetut-materiaalit {::materiaali/nimi "Ämpäreitä"
                                                                                                ::materiaali/urakka-id 1
                                                                                                ::materiaali/pvm nil
                                                                                                ::materiaali/id 12

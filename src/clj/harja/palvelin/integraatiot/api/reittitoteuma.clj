@@ -135,6 +135,7 @@ maksimi-linnuntien-etaisyys 200)
             ::rp/maara (some-> (get-in t [:tehtava :maara :maara]) bigdec)})
          (for [m materiaalit]
            {::rp/materiaalikoodi (->> m :materiaali
+                                   (api-toteuma/mat-apilta->mat-db)
                                    (materiaalit/hae-materiaalikoodin-id-nimella db)
                                    first :id)
             ::rp/maara (some-> (get-in m [:maara :maara]) bigdec)})))}))
