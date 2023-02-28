@@ -52,8 +52,8 @@
                                          :suunta "sisaan"
                                          :kanava "harja"
                                          :tila nil
-                                         :kuittaaja_henkilo_etunimi nil
-                                         :kuittaaja_henkilo_sukunimi nil
+                                         :kuittaaja_henkilo_etunimi "Harja"
+                                         :kuittaaja_henkilo_sukunimi "Automatiikka"
                                          :kuittaaja_henkilo_matkapuhelin nil
                                          :kuittaaja_henkilo_tyopuhelin nil
                                          :kuittaaja_henkilo_sahkoposti nil

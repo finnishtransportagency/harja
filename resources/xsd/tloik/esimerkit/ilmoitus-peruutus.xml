@@ -1,0 +1,17 @@
+<harja:ilmoitus-peruutus xmlns:harja="http://www.liikennevirasto.fi/xsd/harja">
+    <viestiId>10a24e56-d7d4-4b23-9776-2a5a12f987af</viestiId>
+    <lahetysaika>2022-10-19T04:49:45</lahetysaika>
+    <peruutettu>2022-10-19T04:49:45</peruutettu>
+    <ilmoitusId>3213123</ilmoitusId>
+    <peruuttaja>
+        <henkilo>
+            <etunimi>Antti</etunimi>
+            <sukunimi>Auraaja</sukunimi>
+            <matkapuhelin>09823489</matkapuhelin>
+            <sahkoposti>tieliikennekeskus@suomessa.fi</sahkoposti>
+        </henkilo>
+        <organisaatio>
+            <nimi>Suomen Tieliikennekeskus</nimi>
+        </organisaatio>
+    </peruuttaja>
+</harja:ilmoitus-peruutus>
