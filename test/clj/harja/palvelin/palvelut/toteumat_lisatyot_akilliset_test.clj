@@ -212,7 +212,8 @@
     (is (= "-muokattu" (:lisatieto haettu-muokattu-toteuma)))
     (is (= (inc (:toteutunut haettu-toteuma)) (:toteutunut haettu-muokattu-toteuma)))))
 
-(deftest lisaa-akillinen-hoitotyo-test
+;; Äkillisiä hoitotöitä ei voi enää lisätä toteumasivulta
+#_ (deftest lisaa-akillinen-hoitotyo-test
   (let [_ (lisaa-toteuma default-akillinen-hoitotyo)
         hoitokauden-alkuvuosi 2019
         ;; :urakan-maarien-toteumat ottaa hakuparametrina: urakka-id tehtavaryhma alkupvm loppupvm
@@ -232,7 +233,7 @@
                            :toteuma-id (:toteuma_id tallennettu-hoitotyo)})]
     (is (= 1 (count tallennettu-hoitotyo)) "Yksi lisätty toteuma pitäisi löytyä")))
 
-(deftest muokkaa-akillinen-hoitotyo-test
+#_ (deftest muokkaa-akillinen-hoitotyo-test
   (let [tallennettu-hoitotyo (lisaa-toteuma default-akillinen-hoitotyo)
 
         ;; :hae-maarien-toteuma ottaa hakuparametrina: id (toteuma-id)
