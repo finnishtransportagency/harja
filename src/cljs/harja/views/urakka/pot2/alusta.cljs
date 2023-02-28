@@ -31,9 +31,16 @@
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         alikohteet (vals @pot2-tiedot/kohdeosat-atom)
+        alustarivit (into (sorted-map)
+                      (map (fn [[idx rivi-data]]
+                             ;; Lisää muihin alustarivehin rivin järjestyslukuun viittaava numero, jotta siihen
+                             ;; voidaan viitata validoinnin virheviestissä.
+                             [idx (when-not (= rivi rivi-data)
+                                    (assoc rivi-data :rivi-indeksi idx))])
+                        @pot2-tiedot/alustarivit-atom))
         toiset-alustatoimenpiteet (remove
                                     #(= rivi %)
-                                    (vals @pot2-tiedot/alustarivit-atom))
+                                    (vals alustarivit))
         vuosi (pvm/vuosi (pvm/nyt))
         validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet
                                                                    []

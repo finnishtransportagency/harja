@@ -35,13 +35,17 @@
                     (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi))]
     (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys) false)))
 
+
 (defn kohde-toisten-kanssa-paallekkain-validointi
   [alikohde? _ rivi taulukko]
   (let [toiset-alikohteet (keep (fn [[indeksi kohdeosa]]
                                   (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
                                              (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa)
                                              (not= kohdeosa rivi))
-                                    kohdeosa))
+                                    ;; Lisää muihin alikohteisiin taulukon riviin viittava indeksiluku, jotta siihen
+                                    ;; voidaan viitata validoinnin virheviestissä.
+                                    (assoc kohdeosa
+                                      :rivi-indeksi indeksi)))
                                 taulukko)
         paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
                               toiset-alikohteet)]
