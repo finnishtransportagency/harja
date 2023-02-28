@@ -719,15 +719,6 @@
                        :api-sahkoposti :api-sahkoposti
                        :labyrintti :labyrintti})
 
-      :vaylien-geometriahaku
-      (component/using
-        (let [asetukset (:vaylat asetukset)]
-          (vaylien-geometriat/->VaylienGeometriahaku
-            (:geometria-url asetukset)
-            (:paivittainen-tarkistusaika asetukset)
-            (:paivitysvali-paivissa asetukset)))
-        [:db  :http-palvelin :integraatioloki])
-
       :kanavasiltojen-geometriahaku
       (component/using
         (let [asetukset (:kanavasillat asetukset)]
