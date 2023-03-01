@@ -57,6 +57,7 @@
                                              :tr-loppuosa :tr-loppuosa
                                              :tr-loppuetaisyys :tr-loppuetaisyys}}]
                      ;; TR-osoitevälissä täytyy olla jotkin arvot, jotta BE:ssä ei tule virheitä luonnosta tallentaessa
+                     :tr-numero [[:ei-tyhja "Anna arvo"]]
                      :tr-alkuosa [[:ei-tyhja "Anna arvo"]]
                      :tr-alkuetaisyys [[:ei-tyhja "Anna arvo"]]
                      :tr-loppuosa [[:ei-tyhja "Anna arvo"]]
@@ -80,6 +81,7 @@
                                     :tr-loppuosa :tr-loppuosa
                                     :tr-loppuetaisyys :tr-loppuetaisyys}}]
             ;; TR-osoitevälissä täytyy olla jotkin arvot, jotta BE:ssä ei tule virheitä luonnosta tallentaessa
+            :tr-numero [[:ei-tyhja "Anna arvo"]]
             :tr-alkuosa [[:ei-tyhja "Anna arvo"]]
             :tr-alkuetaisyys [[:ei-tyhja "Anna arvo"]]
             :tr-loppuosa [[:ei-tyhja "Anna arvo"]]
