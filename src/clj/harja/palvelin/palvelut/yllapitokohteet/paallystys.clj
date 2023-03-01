@@ -816,7 +816,7 @@
           ;; Säilytetään virheet kuitenkin, jos käyttäjä on kokeillut esimerkiksi lähettää ilmoitusta tarkastettavaksi,
           ;; mutta muokkaakin ilmoitusta sen jälkeen
           (when-not (= :aloitettu (:tila tuore-paallystysilmoitus))
-            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id :virhe nil}))
+            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id :virhe nil :aikaleima nil}))
 
           ;; Rakennetaan vastaus
           (let [yllapitokohteet (yllapitokohteet/hae-urakan-yllapitokohteet db user {:urakka-id urakka-id
@@ -840,7 +840,9 @@
         (let [paallystyskohde-id (:paallystyskohde-id paallystysilmoitus)]
           ;; Tallenna tallennukseen/validointiin liittyvät virheviestit kantaan, jotta niitä voidaan tutkia myöhemmin tarvittaessa
           (when paallystyskohde-id
-            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id :virhe (.getMessage e)}))))
+            (q/paivita-paallystysilmoituksen-virhe! db {:id paallystyskohde-id
+                                                        :virhe (.getMessage e)
+                                                        :aikaleima (pvm/nyt)}))))
 
       ;; Heitetään virhe uudestaan, jotta UI voi prosessoida virheviestin
       (throw (IllegalArgumentException. (.getMessage e))))))

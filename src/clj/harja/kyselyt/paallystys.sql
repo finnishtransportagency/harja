@@ -299,7 +299,7 @@ WHERE paallystyskohde = :id
 -- name: paivita-paallystysilmoituksen-virhe!
 UPDATE paallystysilmoitus
    SET virhe = :virhe::TEXT,
-       muokattu = NOW()
+       virhe_aikaleima = :aikaleima::TIMESTAMP
  WHERE paallystyskohde = :id;
 
 -- name: luo-paallystysilmoitus<!
