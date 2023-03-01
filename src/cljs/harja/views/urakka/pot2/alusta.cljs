@@ -192,7 +192,7 @@
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
-   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom]} alustarivit-atom]
+   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:alusta ohjauskahvat)
@@ -221,6 +221,7 @@
                                 :luokka "nappi-toissijainen"}}
        :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
+       :varoitukset varoitukset-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
        :on-rivi-blur on-rivi-blur
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.

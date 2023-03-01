@@ -28,7 +28,9 @@
     [harja.views.urakka.pot2.murske-lomake :as murske-lomake]
     [harja.tiedot.muokkauslukko :as lukko]
     [harja.ui.grid :as grid]
-    [harja.pvm :as pvm])
+    [harja.pvm :as pvm]
+    [clojure.string :as str]
+    [harja.domain.tierekisteri :as tr])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
@@ -120,6 +122,8 @@
                                 (e! (pot2-tiedot/->Pot2Muokattu))
                                 (reset! lisatiedot-atom %)))]])
 
+
+;; -- START -- Lomakkeen virheiden ja varoitusten infolaatikko --
 (def yha-ja-velho-lahetys-onnistunut-leveys "320px")
 
 (defn- yha-ja-velho-lahetyksen-tila
@@ -129,34 +133,99 @@
   (let [virhe-teksti (pot-yhteinen/lahetys-virhe-teksti lahetyksen-tila)
         muokattu-yhaan-lahettamisen-jalkeen? (when (and muokattu lahetetty)
                                                (> muokattu lahetetty))]
-    [:span.yha-ja-velho-lahetyksen-tila
-     (cond
-       ;; näytetään lähetyksen virheet
-       virhe-teksti
+    (cond
+      ;; näytetään lähetyksen virheet
+      virhe-teksti
+      [yleiset/info-laatikko :varoitus
+       "YHA-lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
+       virhe-teksti nil]
+
+      ;; näytetään jos lähetys on onnistunut
+      (and lahetys-onnistunut lahetetty)
+      [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
+                               :vahva-ilmoitus
+                               :onnistunut)
+       (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
+       (when muokattu-yhaan-lahettamisen-jalkeen?
+         (str "Ilmoitusta on muokattu YHA:an lähettämisen jälkeen "
+           (pvm/pvm-aika-opt muokattu)
+           ". Voit tarvittaessa lähettää ilmoituksen uudelleen listausnäkymästä."))
+       (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-ja-velho-lahetys-onnistunut-leveys)]
+
+      ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
+      (and (nil? lahetetty) (false? lahetys-onnistunut)
+        (#{:valmis :lukittu} tila))
+      [yleiset/info-laatikko :vahva-ilmoitus
+       (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
+
+      :else
+      nil)))
+
+(defn- lomake-varoitukset->yksinkertaistettu-str
+  [varoitukset-map]
+  (let [tieosoite-varoitukset (select-keys varoitukset-map tr/paaluvali-avaimet)
+        kaista-varoitukset (select-keys varoitukset-map [:tr-kaista])]
+    [:<>
+     (when (seq tieosoite-varoitukset)
+       [:span "Tarkista tieosoitteen oikeellisuus"
+        (when (str/includes? (str tieosoite-varoitukset) "päällekkäin")
+          " ja/tai päällekkäisyydet")
+        "."])
+     (when (seq kaista-varoitukset)
+       [:span "Tarkista kaistatietojen oikeellisuus"])]))
+
+(defn- lomake-virheet->yksinkertaistettu-str
+  [virheet-map]
+  [:<>
+   (when (seq virheet-map)
+     ;; Toistaiseksi kehotetaan vain täyttämään pakolliset kentät, koska muun tyyppisiä virheitä ei ole.
+     [:span "Täytä pakolliset kentät."])])
+
+
+(defn- virheet-tai-varoitukset->elementit [virheet tyyppi]
+  (if (map? virheet)
+    (mapv (fn [[rivinro virheet-map]]
+            [:div.virhe-rivi [:span "Rivi " [:b rivinro] ":"]
+             (case tyyppi
+               :varoitus
+               (lomake-varoitukset->yksinkertaistettu-str virheet-map)
+               :virhe
+               (lomake-virheet->yksinkertaistettu-str virheet-map)
+               virheet-map)])
+      virheet)
+    []))
+
+(defn- lomakkeen-virheet
+  [lahetyksen-tila perustiedot]
+  (let [kulutuskerroksen-virheet (virheet-tai-varoitukset->elementit @pot2-tiedot/kohdeosat-virheet-atom :virhe)
+        kulutuskerroksen-varoitukset (virheet-tai-varoitukset->elementit @pot2-tiedot/kohdeosat-varoitukset-atom :varoitus)
+        alustan-virheet (virheet-tai-varoitukset->elementit @pot2-tiedot/alustarivit-virheet-atom :virhe)
+        alustan-varoitukset (virheet-tai-varoitukset->elementit @pot2-tiedot/alustarivit-varoitukset-atom :varoitus)
+        kulutuskerroksen-tekstit (concat [] kulutuskerroksen-virheet kulutuskerroksen-varoitukset)
+        alustan-tekstit (concat [] alustan-virheet alustan-varoitukset)]
+    [:div.pot-lomakkeen-virheet
+     (when
+       (or (seq kulutuskerroksen-tekstit) (seq alustan-tekstit))
        [yleiset/info-laatikko :varoitus
-        "YHA-lähetyksessä virhe" ;; TODO enable VELHO lähetys "YHA/Velho lähetyksessä virhe"
-        virhe-teksti nil]
+        "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
+        [:<>
+         (when (seq kulutuskerroksen-tekstit)
+           [:<>
+            [:br]
+            [:div [:b "Kulutuskerroksen virheet ja varoitukset"]]
+            (into [:<>] kulutuskerroksen-tekstit)])
 
-       ;; näytetään jos lähetys on onnistunut
-       (and lahetys-onnistunut lahetetty)
-       [yleiset/info-laatikko (if muokattu-yhaan-lahettamisen-jalkeen?
-                                :vahva-ilmoitus
-                                :onnistunut)
-        (str "YHA-lähetys onnistunut " (pvm/pvm-aika-opt lahetetty))
-        (when muokattu-yhaan-lahettamisen-jalkeen?
-          (str "Ilmoitusta on muokattu YHA:an lähettämisen jälkeen "
-               (pvm/pvm-aika-opt muokattu)
-               ". Voit tarvittaessa lähettää ilmoituksen uudelleen listausnäkymästä."))
-        (when-not muokattu-yhaan-lahettamisen-jalkeen? yha-ja-velho-lahetys-onnistunut-leveys)]
+         (when (seq alustan-tekstit)
+           [:<>
+            [:br]
+            [:div [:b "Alustan virheet ja varoitukset"]]
+            (into [:<>] alustan-tekstit)])]
+        nil])
 
-       ;; näytetään vain valmiiksi täytetyille ilmoituksille, jos lähetystä ei ole tehty
-       (and (nil? lahetetty) (false? lahetys-onnistunut)
-            (#{:valmis :lukittu} tila))
-       [yleiset/info-laatikko :vahva-ilmoitus
-        (str "YHA-lähetystä ei vielä tehty.") "" "320px"]
+     ;; YHA- ja VELHO-lähetyksen tila näytetään omassa info-laatikossaan, mutta saman virhe-elementin alla.
+     [yha-ja-velho-lahetyksen-tila lahetyksen-tila perustiedot]]))
 
-       :else
-       nil)]))
+;; -- END -- Lomakkeen virheiden ja varoitusten infolaatikko --
 
 (defn- perustiedot-ilman-lomaketietoja
   [perustiedot]
@@ -236,7 +305,7 @@
                                  (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))})
                (e! (pot2-tiedot/->MuutaTila [:paallystysilmoitus-lomakedata] nil)))]
            [pot-yhteinen/otsikkotiedot e! perustiedot urakka]
-           [yha-ja-velho-lahetyksen-tila lahetyksen-tila perustiedot]
+           [lomakkeen-virheet lahetyksen-tila perustiedot]
            [pot-yhteinen/paallystysilmoitus-perustiedot
             e! perustiedot-app urakka false muokkaa! pot2-validoinnit huomautukset paikkauskohteet?]
            [:hr]
@@ -245,13 +314,17 @@
            [paallystekerros/paallystekerros e! paallystekerros-app {:massat massat
                                                                     :materiaalikoodistot materiaalikoodistot
                                                                     :validointi (:paallystekerros pot2-validoinnit)
-                                                                    :virheet-atom pot2-tiedot/kohdeosat-virheet-atom} pot2-tiedot/kohdeosat-atom]
+                                                                    :virheet-atom pot2-tiedot/kohdeosat-virheet-atom
+                                                                    :varoitukset-atom pot2-tiedot/kohdeosat-varoitukset-atom}
+            pot2-tiedot/kohdeosat-atom]
            [yleiset/valitys-vertical]
            [alusta/alusta e! alusta-app {:massat massat :murskeet murskeet
                                          :materiaalikoodistot materiaalikoodistot
                                          :validointi (:alusta pot2-validoinnit)
-                                         :virheet-atom pot2-tiedot/alustarivit-virheet-atom}
+                                         :virheet-atom pot2-tiedot/alustarivit-virheet-atom
+                                         :varoitukset-atom pot2-tiedot/alustarivit-varoitukset-atom}
             pot2-tiedot/alustarivit-atom]
+
            ;; jos käyttäjä haluaa katsella sivupaneelissa massan tai murskeen tietoja
            (cond (and pot2-massa-lomake (:sivulle? pot2-massa-lomake))
                  [massa-lomake/massa-lomake e! massalomake-app]
@@ -267,6 +340,9 @@
              [:span
               [pot-yhteinen/kasittely e! perustiedot-app urakka lukittu? muokkaa! pot2-validoinnit huomautukset]
               [yleiset/valitys-vertical]])
+
+           ;; Näytetään virhe-infolaatikko vielä toisen kerran tallennusnapin yläpuolella, jotta virheet tulee huomioitua.
+           [lomakkeen-virheet lahetyksen-tila perustiedot]
            [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
                                                    :urakka-id (:id urakka)
                                                    :valmis-tallennettavaksi? valmis-tallennettavaksi?

@@ -240,10 +240,21 @@ div.yllapitokohteet {
 .paallystyskohteet .tuoreusvihje {
     top: 0;
 }
-.yha-ja-velho-lahetyksen-tila {
-    > .info-laatikko {
-        margin-top: 24px;
+
+.pot-lomakkeen-virheet {
+  margin-top: 2.5rem;
+  margin-bottom: 1rem;
+
+  > .info-laatikko {
+    margin-top: 1rem;
+
+    .virhe-rivi {
+      span::after {
+        content: ' ';
+        white-space: pre;
+      }
     }
+  }
 }
 .tm-takaraja-muokkaa {
     + .tooltip {

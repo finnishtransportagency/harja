@@ -21,8 +21,10 @@
 
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
+(defonce kohdeosat-varoitukset-atom (atom {}))
 (defonce kohdeosat-virheet-atom (atom {}))
 (defonce alustarivit-atom (atom nil))
+(defonce alustarivit-varoitukset-atom (atom {}))
 (defonce alustarivit-virheet-atom (atom {}))
 (defonce lisatiedot-atom (atom nil))
 

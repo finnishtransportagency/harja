@@ -56,7 +56,7 @@
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
-   {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
+   {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))
         ohjauskahva (:paallystekerros ohjauskahvat)
         on-rivi-blur (fn [rivi]
@@ -76,6 +76,7 @@
                                :luokka "nappi-toissijainen"}}
       :ohjaus ohjauskahva :validoi-alussa? true
       :virheet virheet-atom
+      :varoitukset varoitukset-atom
       :piilota-toiminnot? true
       ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
       ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
