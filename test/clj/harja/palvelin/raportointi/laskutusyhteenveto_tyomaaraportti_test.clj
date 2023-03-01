@@ -250,16 +250,13 @@
             {:urakka-id urakka-id
              :kulu-kohdistuksineen ylkulu})
 
-
-        ;; Hallinnolliset toimenpiteet
-        ;;TODO: Lisää myös johto_ja_hallintokorvaus tauluun jotenkin dataa ja muista siivota se ensin
-        hal-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
-        hal-tehtavaryhma-id (hae-tehtavaryhman-id "Johto- ja hallintokorvaus (J)")
-        halkulu (luo-kulu urakka-id erapaiva suoritushetki koontilaskun-kuukausi summa hal-toimenpideinstanssi-id hal-tehtavaryhma-id)
+        ;; Korvausinvestointi
+        korvaus-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "14301")
+        korvaus-tehtavaryhma-id (hae-tehtavaryhman-id "RKR-korjaus (Q)")
+        korvauskulu (luo-kulu urakka-id "laskutettava" erapaiva suoritushetki koontilaskun-kuukausi summa korvaus-toimenpideinstanssi-id korvaus-tehtavaryhma-id)
         _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
             {:urakka-id urakka-id
-             :kulu-kohdistuksineen halkulu})
-
+             :kulu-kohdistuksineen korvauskulu})
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
@@ -274,7 +271,11 @@
     (is (= summa (:yllapito_hoitokausi_yht purettu)))
     (is (= summa (:yllapito_val_aika_yht purettu)))
 
-    (is (= summa (:sora_hoitokausi_yht purettu)))
-    (is (= summa (:sora_val_aika_yht purettu)))))
+    (is (= summa (:korvausinv_hoitokausi_yht purettu)))
+    (is (= summa (:korvausinv_val_aika_yht purettu)))
+
+    ;; Hankinnat yhteensä
+    (is (= (* 4 summa) (:hankinnat_hoitokausi_yht purettu)))
+    (is (= (* 4 summa) (:hankinnat_val_aika_yht purettu)))))
 
 
