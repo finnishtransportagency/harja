@@ -675,7 +675,7 @@
                                                                          :pitoisuus 54
                                                                          :lisaaineet "asd"}))]
     (tallenna-vaara-paallystysilmoitus paallystyskohde-id paallystysilmoitus 2020
-                                       "Kohteenosa on päällekkäin osan")))
+                                       "Kohteenosa on päällekkäin toisen osan")))
 
 (deftest ei-saa-tallenna-pot2-paallystysilmoitus-jos-feilaa-validointi-alkuosa
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")

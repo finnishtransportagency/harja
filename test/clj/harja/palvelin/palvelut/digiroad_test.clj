@@ -13,18 +13,18 @@
 
 (def +onnistunut-kaistojen-hakuvastaus+
   [{:aet 0
-    :ajorata 0
+    :ajorata 1
     :kaista 12
-    :let 1000
-    :osa 2
-    :tie 837
+    :let 170
+    :osa 101
+    :tie 4
     :tyyppi 2}
    {:aet 0
-    :ajorata 0
+    :ajorata 1
     :kaista 11
-    :let 1000
-    :osa 2
-    :tie 837
+    :let 170
+    :osa 101
+    :tie 4
     :tyyppi 1}])
 
 (defn jarjestelma-fixture [testit]

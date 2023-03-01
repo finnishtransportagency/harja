@@ -736,7 +736,9 @@ yllapitoluokkanimi->numero
   {:alikohde         {:paakohteen-ulkopuolella                      "Alikohde ei voi olla pääkohteen ulkopuolella"
                       :alikohteet-paallekkain                       (fn [rivi-indeksi]
                                                                       (str "Kohteenosa on päällekkäin "
-                                                                        (str "rivin " rivi-indeksi)
+                                                                        (if rivi-indeksi
+                                                                          (str "rivin " rivi-indeksi)
+                                                                          "toisen osan")
                                                                         " kanssa"))
                       :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkainen-kohde]
                                                                       (let [paallekkaisen-kohteen-nimi (:paakohteen-nimi paallekkainen-kohde)
