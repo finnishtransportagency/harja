@@ -130,6 +130,14 @@
         _ (u (format "DELETE FROM kulu_liite WHERE kulu IN (%s)" (str/join "," kulut)))
         _ (u (format "delete from kulu k where k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE; " urakka-id hk_alkupvm hk_loppupvm))]))
 
+(defn- poista-bonukset-ja-sanktiot-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
+  (let [toimenpideinstanssit (flatten (q (format "SELECT tpi.id as is
+                                                    FROM toimenpideinstanssi tpi
+                                                   WHERE tpi.urakka = %s;" urakka-id)))
+        _ (u (format "DELETE FROM erilliskustannus WHERE urakka = %s AND pvm BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm))
+        ;; Sanktioihin ei ole tallennettu urakkaa, niin se pitää niputtaa toimenpideinstanssien kautta
+        _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s) AND perintapvm BETWEEN '%s'::DATE AND '%s'::DATE;" (str/join "," toimenpideinstanssit) hk_alkupvm hk_loppupvm))]))
+
 (deftest raportin-suoritus-urakalle-toimii
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
@@ -361,3 +369,37 @@
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
 
 
+(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tpi (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        pvm (pvm/->pvm "15.10.2019")
+        bonus_summa 1000M
+        sanktio_summa 1500M
+        ;; Poistetaan kaikki bonukset ja sanktiot urakalta
+        _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan bonus
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm bonus_summa urakka-id "alihankintabonus"))
+
+        ;; Luodaan sanktio
+        sanktiosql
+        _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
+                      VALUES (%s,'%s'::DATE, %s, %s, %s, '%s'::sanktiolaji)"
+               sanktio_summa pvm tpi 2 true "A"))
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+
+    (is (= bonus_summa (:bonukset_hoitokausi_yht purettu)))
+    (is (= bonus_summa (:bonukset_val_aika_yht purettu)))
+    (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
+    (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
