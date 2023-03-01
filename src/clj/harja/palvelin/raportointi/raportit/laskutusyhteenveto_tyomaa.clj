@@ -95,9 +95,9 @@
                                         nil
                                         "vahvistamaton")
                                
-                               (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :lyh_hoitokausi_yht :lyh_val_aika_yht true nil nil)
-                               (kt-rivi data false "Siirto edelliseltä vuodelta" :lyh_hoitokausi_yht :lyh_val_aika_yht true "red" nil)
-                               (kt-rivi data false "Budjettia jäljellä" :lyh_hoitokausi_yht :lyh_val_aika_yht true nil nil)
+                               (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil)
+                               (kt-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil)
+                               (kt-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil)
                                (kt-rivi data false "" :nil :nil false nil nil)
                                (kt-rivi data false "" :nil :nil false nil nil)]
 
