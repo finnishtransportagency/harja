@@ -78,6 +78,7 @@
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "urakka"}
     :kuvaus       "Laskutusyhteenveto"
+    :kuvaus-tarkenne "Laskutusyhteenveto (tuotekohtainen)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu/suorita
     :urakkatyyppi #{:teiden-hoito}}
    
@@ -85,6 +86,7 @@
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "urakka"}
     :kuvaus       "Laskutusyhteenveto"
+    :kuvaus-tarkenne "Laskutusyhteenveto (työmaakokous)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita
     :urakkatyyppi #{:teiden-hoito}}
 

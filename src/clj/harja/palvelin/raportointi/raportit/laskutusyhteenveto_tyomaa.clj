@@ -12,6 +12,9 @@
 
 (def summa-fmt fmt/euro-opt)
 
+(defn raha-arvo-olemassa? [arvo]
+  (not (or (= arvo 0.0M) (nil? arvo))))
+
 (defn- rivi-taulukolle
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
@@ -56,9 +59,17 @@
                               (= "Muut" otsikko)
                               [(rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_hoitokausi_yht :bonukset_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false)
-                               (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false)]
+                               
+                               ;; Näytetään päätökset vain jos ne on olemassa 
+                               (when (raha-arvo-olemassa? (data :paatos_kattoh_ylitys_hoitokausi_yht))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
+
+                               (when (raha-arvo-olemassa? (data :paatos_tavoiteh_ylitys_hoitokausi_yht))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
+                               
+                               (when (raha-arvo-olemassa? (data :paatos_tavoitepalkkio_hoitokausi_yht))
+                               (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false)
+                            )]
                               )))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
@@ -90,16 +101,20 @@
                     (remove nil?
                             (cond
                               (= "Toteutuneet" otsikko)
-                              [(kt-rivi data kyseessa-kk-vali? 
-                                        "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä" 
+                              [(kt-rivi data kyseessa-kk-vali?
+                                        "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä"
                                         :tavhin_hoitokausi_yht
                                         :tavhin_val_aika_yht
-                                        true 
+                                        true
                                         nil
                                         "vahvistamaton")
-                               
+
                                (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil)
-                               (kt-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil)
+                               
+                               ;; Nätetään siirto vain jos on olemassa
+                               (when (raha-arvo-olemassa? (data :hk_tavhintsiirto_ed_vuodelta))
+                                 (kt-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
+
                                (kt-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil)
                                (kt-rivi data false "" :nil :nil false nil nil)
                                (kt-rivi data false "" :nil :nil false nil nil)]
@@ -200,10 +215,11 @@
         rivitiedot (first (first laskutusyhteenvedot))
         otsikot ["Hankinnat" "Hoidonjohto"]]
 
-    [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")}
-     [:otsikko (str alueen-nimi)]
+    [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
+                :otsikon-koko :iso}
+     [:otsikko-heading-small (str alueen-nimi)]
      [:teksti ""]
-     [:otsikko-iso "Tavoitehintaan vaikuttavat toteutuneet kustannukset"]
+     [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"]
 
      (concat (for [x otsikot]
                (do
@@ -229,7 +245,7 @@
                                      :laskutetaan-teksti laskutetaan-teksti
                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
 
-     [:otsikko "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"]
+     [:otsikko-heading "Muut toteutuneet kustannukset (ei lasketa tavoitehintaan)"]
      
      (let [otsikot ["Lisätyöt" "Muut"]]
 

@@ -265,12 +265,17 @@
                                           (assoc :isanta-rivin-id isanta-rivin-id))))))
                data)))]))
 
+(defmethod muodosta-html :otsikko-title [[_ teksti]]
+  [:h1 teksti])
+
+(defmethod muodosta-html :otsikko-heading [[_ teksti]]
+  [:h2 {:style {:font-size "1.25rem"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
 
-(defmethod muodosta-html :otsikko-iso [[_ teksti]]
-  [:h2 teksti])
+(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
+  [:h4 {:style {:font-size "1rem"}} teksti])
 
 (defmethod muodosta-html :jakaja [_]
   [:hr {:style {:margin-top "30px"
@@ -329,8 +334,16 @@
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
+   
+   ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
-     [:h3 (:nimi raportin-tunnistetiedot)])
+     (cond
+       (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+       [:h1 (:nimi raportin-tunnistetiedot)]
+
+       :else
+       [:h3 (:nimi raportin-tunnistetiedot)]))
+   
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
