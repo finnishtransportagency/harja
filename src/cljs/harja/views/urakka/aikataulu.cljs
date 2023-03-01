@@ -42,6 +42,43 @@
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn- vastaanottajien-tiedot [urakka-id]
+  (komp/luo
+    (komp/sisaan-ulos
+      #(tiedot/hae-urakan-kayttajat-rooleissa urakka-id)
+
+      #(tiedot/tyhjenna-kayttajatiedot))
+
+    (fn [urakka-id]
+      (when @tiedot/fimista-haetut-vastaanottajatiedot
+        [:div.email-vastaanottajat
+         [grid/muokkaus-grid
+          {:otsikko "Valitse vastaanottajat" :voi-poistaa? (constantly false)
+           :piilota-toiminnot? true :voi-lisata? false :voi-kumota? false
+           :tyhja (if (nil? @tiedot/fimista-haetut-vastaanottajatiedot)
+                    "Haetaan urakan henkilötietoja Väyläviraston palvelusta."
+                    "Ulkoisesta palvelusta ei löytynyt vastaanottajien tietoja.")
+           :jarjesta :roolit :tunniste :sahkoposti}
+
+          [{:otsikko " "
+            :tasaa :keskita
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (let [a 1]
+                             [:span
+                              [kentat/raksiboksi {:toiminto #(tiedot/valitse-rivi! rivi)}
+                               (boolean (tiedot/valitut-rivit rivi))]]))
+            :leveys 1}
+           {:otsikko "Vastaanottaja" :nimi :sahkoposti :leveys 5
+            :muokattava? (constantly false)
+            :tyyppi :string}
+           {:otsikko "Rooli"
+            :nimi :roolit :leveys 5
+            :muokattava? (constantly false)
+            :tyyppi :string}]
+
+          tiedot/fimista-haetut-vastaanottajatiedot]]))))
+
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
   []
@@ -88,17 +125,22 @@
                                  (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
-               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle."
-               "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle.")]
+               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista."
+               "Tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista.")
+       "vihje-hento-korostus"]
+      [vastaanottajien-tiedot (:suorittava-urakka-id data)]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-       [(when valmis-tiemerkintaan-lomake?
+       [varmista-kayttajalta/modal-muut-vastaanottajat
+        varmista-kayttajalta/modal-sahkopostikopio
+        {:otsikko "" :tyyppi :komponentti :palstoja 3
+         :komponentti (fn []
+                        [:div.viestin-tiedot.fontti-16-vahvempi "Viestin tiedot"])}
+        (when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        varmista-kayttajalta/modal-muut-vastaanottajat
-        varmista-kayttajalta/modal-saateviesti
-        varmista-kayttajalta/modal-sahkopostikopio]
+        varmista-kayttajalta/modal-saateviesti]
        lomakedata]]]))
 
 (defn tiemerkinta-valmis
@@ -147,7 +189,8 @@
                               (str "valmistuspäivämääränä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
                             ".")])]
         [:br] [:br]
-        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]
+        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]
+       "vihje-hento-korostus"]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
@@ -756,6 +799,7 @@
                                             :vuosi vuosi
                                             :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
                                             :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))
+                                            :suorittava-urakka-id (:suorittava-tiemerkintaurakka rivi)
                                             :lomakedata {:kopio-itselle? true}}]
                         [valmis-tiemerkintaan-sarake rivi {:muokataan? muokataan?
                                                            :paallystys-valmis? paallystys-valmis?

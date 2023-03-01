@@ -16,7 +16,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.roolit :as roolit])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util Date)))
 
@@ -174,7 +175,7 @@
       {:fim fim
        :email email
        :urakka-sampoid urakka-sampo-id
-       :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
+       :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
        :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
        :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
 
@@ -281,7 +282,7 @@
         {:fim fim
          :email email
          :urakka-sampoid tiemerkintaurakka-sampo-id
-         :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
+         :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
          :viesti-otsikko viestin-otsikko
          :viesti-body viestin-vartalo})
       (doseq [muu-vastaanottaja muut-vastaanottajat]

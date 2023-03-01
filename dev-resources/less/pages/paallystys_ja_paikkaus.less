@@ -196,13 +196,32 @@
         }
     }
     thead {
-        > tr:first-child > th {
-            text-align: center;
-        }
+      > tr:first-child > th {
+        &.paallystys-tausta,
+        &.paallystys-tausta-tumma,
+        &.tiemerkinta-tausta {
+        text-align: center;
+      }
+      }
     }
     .tiemerkinta-tausta {
         background-color: @lemon-light;
     }
+  .modal-body .lomake {
+    border: none;
+  }
+  .email-vastaanottajat > .livi-grid {
+    background-color: @white;
+    > .panel-heading {
+      background-color: @white;
+      > h2.panel-title {
+        .fontti-16-vahvempi();
+      }
+    }
+    > .panel-body td.ei-muokattava {
+      background-color: @white;
+    }
+  }
 }
 .paallystys-tausta {
   background-color: @white-dark;

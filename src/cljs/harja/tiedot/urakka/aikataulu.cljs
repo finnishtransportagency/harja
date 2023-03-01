@@ -15,7 +15,9 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tyokalut.local-storage :as local-storage]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit]
+            [clojure.string :as str])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -66,6 +68,33 @@
 
 (def ^{:doc "Tähän säilötään modal-dialogista kohteelle asetettavat sähköpostitiedot palvelimelle tallennusta varten."}
 kohteiden-sahkopostitiedot (atom nil))
+
+
+(def fimista-haetut-vastaanottajatiedot (atom nil))
+
+(defn hae-urakan-kayttajat-rooleissa [urakka-id]
+  (go
+    (let [tiedot (<! (k/post! :hae-urakan-kayttajat-rooleissa
+                              {:urakka-id urakka-id
+                               :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit}))
+          tiedot (map #(assoc % :roolit (when (:roolit %)
+                                          (str/join ", " (:roolit %))))
+                      tiedot)
+          muokkausgridin-muodossa (into (sorted-map)
+                                       (zipmap (iterate inc 1) tiedot))]
+      (reset! fimista-haetut-vastaanottajatiedot muokkausgridin-muodossa))))
+
+(defn tyhjenna-kayttajatiedot []
+  (reset! fimista-haetut-vastaanottajatiedot nil))
+
+(defn valitse-rivi! [saaja]
+  ;;TODO
+  (println "Jarno valitse saaja! " saaja))
+
+(defn valitut-rivit [rivi]
+  ;;TODO
+  (println "Jarno valitse saaja! " rivi)
+  true)
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)

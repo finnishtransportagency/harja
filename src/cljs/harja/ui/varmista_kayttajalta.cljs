@@ -47,7 +47,7 @@
                   sisalto)))
 
 (def modal-muut-vastaanottajat
-  {:otsikko "Muut sähköpostiosoitteet pilkulla eroteltuna"
+  {:otsikko "Lisää muita vastaanottajien sähköpostiosoitteita pilkulla eroteltuna"
    :nimi :muut-vastaanottajat :tyyppi :email :palstoja 3
    :validoi [[:email]]})
 
@@ -55,6 +55,6 @@
                         :koko [90 8]
                         :nimi :saate :palstoja 3 :tyyppi :text})
 
-(def modal-sahkopostikopio {:teksti "Lähetä sähköpostiini kopio viestistä"
+(def modal-sahkopostikopio {:teksti "Lähetä sähköpostiini viestin kopio"
                             :nayta-rivina? true :palstoja 3
                             :nimi :kopio-itselle? :tyyppi :checkbox})

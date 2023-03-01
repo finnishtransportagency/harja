@@ -21,70 +21,25 @@
             [harja.fmt :as fmt])
   (:import (java.sql Date)))
 
-(declare hae-urakan-yhteyshenkilot
-         hae-yhteyshenkilotyypit
-         tallenna-urakan-yhteyshenkilot
-
-         hae-urakan-paivystajat
-         tallenna-urakan-paivystajat
-
-         hae-urakan-kayttajat
-         hae-urakan-vastuuhenkilot
-         tallenna-urakan-vastuuhenkilot-roolille)
-
-(defrecord Yhteyshenkilot []
-  component/Lifecycle
-  (start [this]
-    (julkaise-palvelut
-     (:http-palvelin this)
-
-     :hae-urakan-yhteyshenkilot
-     (fn [user urakka-id]
-       (hae-urakan-yhteyshenkilot (:db this) user urakka-id false))
-
-     :hae-urakan-paivystajat
-     (fn [user urakka-id]
-       (hae-urakan-paivystajat (:db this) user urakka-id))
-
-     :tallenna-urakan-yhteyshenkilot
-     (fn [user tiedot]
-       (tallenna-urakan-yhteyshenkilot (:db this) user tiedot))
-
-     :tallenna-urakan-paivystajat
-     (fn [user tiedot]
-       (tallenna-urakan-paivystajat (:db this) user tiedot))
-
-     :hae-urakan-kayttajat
-     (fn [user urakka-id]
-       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
-       (async
-        (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
-
-     :hae-urakan-vastuuhenkilot
-     (fn [user urakka-id]
-       (hae-urakan-vastuuhenkilot (:db this) user urakka-id))
-
-     :tallenna-urakan-vastuuhenkilot-roolille
-     (fn [user tiedot]
-       (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot)))
-
-    this)
-
-  (stop [this]
-    (poista-palvelut (:http-palvelin this)
-                     :hae-urakan-yhteyshenkilot
-                     :tallenna-urakan-yhteyshenkilot
-                     :hae-urakan-paivystajat
-                     :tallenna-urakan-paivystajat
-                     :hae-urakan-kayttajat
-                     :hae-urakan-vastuuhenkilot
-                     :tallenna-urakan-vastuuhenkilot-roolille)
-    this))
-
 (defn hae-urakan-kayttajat [db fim urakka-id]
   (->> urakka-id
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
+
+(defn hae-urakan-kayttajat-rooleissa
+  "Palauttaa annetun urakan (sampo-id) haluttujen FIM-käyttäjäroolien tiedot.
+
+  Parametrit:
+
+  fim                FIM-komponentti
+  urakka-sampoid     Sen urakan sampo-id, jonka käyttäjiä etsitään FIMistä
+  fim-kayttajaroolit Setti rooleja, joissa oleville henkilöille viesti lähetetään. Huomioi kirjoitusasu!
+    Esim. #{\"ely rakennuttajakonsultti\" \"urakan vastuuhenkilö\" \"ely urakanvalvoja\"}"
+  [db fim {:keys [urakka-id fim-kayttajaroolit]}]
+  (let [urakka-sampoid (uq/hae-urakan-sampo-id db urakka-id)
+        haetut-tiedot (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
+    (println "Jarno haetut- tiedot " haetut-tiedot)
+    haetut-tiedot))
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id salli-ristiinnakeminen?]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
@@ -276,3 +231,59 @@
       (when varahenkilo
         (luo<! c varahenkilo false)))
     (hae-urakan-vastuuhenkilot db user urakka-id)))
+
+(defrecord Yhteyshenkilot []
+  component/Lifecycle
+  (start [this]
+    (julkaise-palvelut
+      (:http-palvelin this)
+
+      :hae-urakan-yhteyshenkilot
+      (fn [user urakka-id]
+        (hae-urakan-yhteyshenkilot (:db this) user urakka-id false))
+
+      :hae-urakan-paivystajat
+      (fn [user urakka-id]
+        (hae-urakan-paivystajat (:db this) user urakka-id))
+
+      :tallenna-urakan-yhteyshenkilot
+      (fn [user tiedot]
+        (tallenna-urakan-yhteyshenkilot (:db this) user tiedot))
+
+      :tallenna-urakan-paivystajat
+      (fn [user tiedot]
+        (tallenna-urakan-paivystajat (:db this) user tiedot))
+
+      :hae-urakan-kayttajat
+      (fn [user urakka-id]
+        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user urakka-id)
+        (async
+          (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
+
+      :hae-urakan-kayttajat-rooleissa
+      (fn [user tiedot]
+        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user (:urakka-id tiedot))
+        (async
+          (hae-urakan-kayttajat-rooleissa (:db this) (:fim this) tiedot)))
+
+      :hae-urakan-vastuuhenkilot
+      (fn [user urakka-id]
+        (hae-urakan-vastuuhenkilot (:db this) user urakka-id))
+
+      :tallenna-urakan-vastuuhenkilot-roolille
+      (fn [user tiedot]
+        (tallenna-urakan-vastuuhenkilot-roolille (:db this) user tiedot)))
+
+    this)
+
+  (stop [this]
+    (poista-palvelut (:http-palvelin this)
+                     :hae-urakan-yhteyshenkilot
+                     :tallenna-urakan-yhteyshenkilot
+                     :hae-urakan-paivystajat
+                     :tallenna-urakan-paivystajat
+                     :hae-urakan-kayttajat
+                     :hae-urakan-kayttajat-rooleissa
+                     :hae-urakan-vastuuhenkilot
+                     :tallenna-urakan-vastuuhenkilot-roolille)
+    this))
