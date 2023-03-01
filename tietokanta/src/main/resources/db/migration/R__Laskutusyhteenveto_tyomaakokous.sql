@@ -789,7 +789,7 @@ BEGIN
 
     -- Budjettia jäljellä
     budjettia_jaljella := 0.0;
-    budjettia_jaljella := (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - tavhin_hoitokausi_yht;
+    budjettia_jaljella := budjettia_jaljella + (hk_tavhintsiirto_ed_vuodelta + hoitokauden_tavoitehinta) - tavhin_hoitokausi_yht;
 
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
