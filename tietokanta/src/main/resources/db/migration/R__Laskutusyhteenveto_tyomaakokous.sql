@@ -824,7 +824,7 @@ BEGIN
                                                                               WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi
                                                                                   THEN TRUE
                                                                               ELSE FALSE
-                                                                              END)) AS indeksikorjaus
+                                                                              END)) AS summa_korotettuna
                          FROM erilliskustannus ek
                                   JOIN urakka u ON ek.urakka = u.id
                          WHERE ek.urakka = ur
@@ -848,17 +848,17 @@ BEGIN
         LOOP
 
             RAISE NOTICE 'bonukset_rivi: % ', bonukset_rivi;
-            RAISE NOTICE 'bonukset_rivi.summa: %', bonukset_rivi.summa;
+            RAISE NOTICE 'bonukset_rivi.summa_korotettuna: %', bonukset_rivi.summa_korotettuna;
 
             IF bonukset_rivi.pvm <= aikavali_loppupvm THEN
                 -- Hoitokauden alusta
-                bonukset_hoitokausi_yht := bonukset_hoitokausi_yht + COALESCE(bonukset_rivi.summa, 0.0);
+                bonukset_hoitokausi_yht := bonukset_hoitokausi_yht + COALESCE(bonukset_rivi.summa_korotettuna, 0.0);
                 RAISE NOTICE 'bonukset_rivi.pvm <= aikavali_loppupvm THEN: %', bonukset_hoitokausi_yht;
 
                 IF bonukset_rivi.pvm >= aikavali_alkupvm AND
                    bonukset_rivi.pvm <= aikavali_loppupvm THEN
                     -- Laskutetaan nyt
-                    bonukset_val_aika_yht := bonukset_val_aika_yht + COALESCE(bonukset_rivi.summa, 0.0);
+                    bonukset_val_aika_yht := bonukset_val_aika_yht + COALESCE(bonukset_rivi.summa_korotettuna, 0.0);
                 END IF;
             END IF;
         END LOOP;
@@ -872,7 +872,7 @@ BEGIN
                                  FROM sanktion_indeksikorotus(s.perintapvm,
                                                               s.indeksi, s.maara,
                                                               ur,
-                                                              s.sakkoryhma)) * -1 AS korotettuna
+                                                              s.sakkoryhma)) * -1 AS summa_korotettuna
                          FROM sanktio s
                                   JOIN toimenpideinstanssi tpi
                                        ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
@@ -881,17 +881,17 @@ BEGIN
                            AND s.poistettu IS NOT TRUE
         LOOP
             RAISE NOTICE 'sanktiot_rivi: % ', sanktiot_rivi;
-            RAISE NOTICE 'sanktiot_rivi.summa: %', sanktiot_rivi.summa;
+            RAISE NOTICE 'sanktiot_rivi.summa_korotettuna: %', sanktiot_rivi.summa_korotettuna;
 
             IF sanktiot_rivi.pvm <= aikavali_loppupvm THEN
                 -- Hoitokauden alusta
-                sanktiot_hoitokausi_yht := sanktiot_hoitokausi_yht + COALESCE(sanktiot_rivi.summa, 0.0);
+                sanktiot_hoitokausi_yht := sanktiot_hoitokausi_yht + COALESCE(sanktiot_rivi.summa_korotettuna, 0.0);
                 RAISE NOTICE 'sanktiot_rivi.pvm <= aikavali_loppupvm THEN: %', sanktiot_hoitokausi_yht;
 
                 IF sanktiot_rivi.pvm >= aikavali_alkupvm AND
                    sanktiot_rivi.pvm <= aikavali_loppupvm THEN
                     -- Laskutetaan nyt
-                    sanktiot_val_aika_yht := sanktiot_val_aika_yht + COALESCE(sanktiot_rivi.summa, 0.0);
+                    sanktiot_val_aika_yht := sanktiot_val_aika_yht + COALESCE(sanktiot_rivi.summa_korotettuna, 0.0);
                 END IF;
             END IF;
         END LOOP;
