@@ -49,6 +49,7 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (liikenneympäristön hoito)" :lisatyo_lyh_hoitokausi_yht :lisatyo_lyh_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (sorateiden hoito)" :lisatyo_sora_hoitokausi_yht :lisatyo_sora_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (päällystepaikkaukset)" :lisatyo_paallyste_hoitokausi_yht :lisatyo_paallyste_val_aika_yht false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (MHU ylläpito)" :lisatyo_yllapito_hoitokausi_yht :lisatyo_yllapito_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt (MHU korvausinvestointi)" :lisatyo_korvausinv_hoitokausi_yht :lisatyo_korvausinv_val_aika_yht false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :lisatyot_hoitokausi_yht :lisatyot_val_aika_yht true)]
 
