@@ -389,7 +389,6 @@
                sopimus-id tpi pvm bonus_summa urakka-id "alihankintabonus"))
 
         ;; Luodaan sanktio
-        sanktiosql
         _ (u (format "INSERT INTO sanktio (maara, perintapvm, toimenpideinstanssi, tyyppi, suorasanktio, sakkoryhma)
                       VALUES (%s,'%s'::DATE, %s, %s, %s, '%s'::sanktiolaji)"
                sanktio_summa pvm tpi 2 true "A"))

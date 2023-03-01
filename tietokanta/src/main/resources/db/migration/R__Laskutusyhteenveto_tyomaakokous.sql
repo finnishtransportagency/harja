@@ -231,7 +231,8 @@ BEGIN
                                  where ut.hoitokausi = hoitokauden_nro
                                    and ut.urakka = ur);
     RAISE NOTICE '*** hoitokauden_tavoitehinta: % ', hoitokauden_tavoitehinta;
-    hk_tavhintsiirto_ed_vuodelta :=
+    hk_tavhintsiirto_ed_vuodelta := 0.0;
+    hk_tavhintsiirto_ed_vuodelta := hk_tavhintsiirto_ed_vuodelta +
         (SELECT COALESCE(ut.tavoitehinta_siirretty_indeksikorjattu, ut.tavoitehinta_siirretty, 0) as siirretty
          from urakka_tavoite ut
          where ut.hoitokausi = hoitokauden_nro
@@ -666,8 +667,8 @@ BEGIN
                                         sopimus_id::INTEGER));
     johtojahallinto_hoitokausi_yht := 0.0;
     johtojahallinto_val_aika_yht := 0.0;
-    johtojahallinto_hoitokausi_yht := johtojahallinto_rivi.johto_ja_hallinto_laskutettu;
-    johtojahallinto_val_aika_yht := johtojahallinto_rivi.johto_ja_hallinto_laskutetaan;
+    johtojahallinto_hoitokausi_yht := johtojahallinto_hoitokausi_yht + johtojahallinto_rivi.johto_ja_hallinto_laskutettu;
+    johtojahallinto_val_aika_yht := johtojahallinto_val_aika_yht + johtojahallinto_rivi.johto_ja_hallinto_laskutetaan;
 
     RAISE NOTICE 'johtojahallinto_hoitokausi_yht: %', johtojahallinto_hoitokausi_yht;
     RAISE NOTICE 'johtojahallinto_val_aika_yht: %', johtojahallinto_val_aika_yht;
@@ -677,18 +678,22 @@ BEGIN
         (SELECT hj_erillishankinnat(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
                                     hoidonjohto_tpi_id::INTEGER, ur::INTEGER, sopimus_id::INTEGER));
 
-    erillishankinnat_hoitokausi_yht := erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
-    erillishankinnat_val_aika_yht := erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
+    erillishankinnat_hoitokausi_yht := 0.0;
+    erillishankinnat_val_aika_yht := 0.0;
+    erillishankinnat_hoitokausi_yht := erillishankinnat_hoitokausi_yht + erillishankinnat_rivi.hj_erillishankinnat_laskutettu;
+    erillishankinnat_val_aika_yht := erillishankinnat_val_aika_yht + erillishankinnat_rivi.hj_erillishankinnat_laskutetaan;
 
     RAISE NOTICE 'erillishankinnat_hoitokausi_yht: %', erillishankinnat_hoitokausi_yht;
     RAISE NOTICE 'erillishankinnat_val_aika_yht: %', erillishankinnat_val_aika_yht;
 
     -- HOIDONJOHTO --  HJ-Palkkio
+    hjpalkkio_hoitokausi_yht := 0.0;
+    hjpalkkio_val_aika_yht := 0.0;
     hjpalkkio_rivi :=
         (SELECT hj_palkkio(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT, hoidonjohto_tpi_id::INTEGER,
                            ur::INTEGER, sopimus_id::INTEGER));
-    hjpalkkio_hoitokausi_yht := hjpalkkio_rivi.hj_palkkio_laskutettu;
-    hjpalkkio_val_aika_yht := hjpalkkio_rivi.hj_palkkio_laskutetaan;
+    hjpalkkio_hoitokausi_yht := hjpalkkio_hoitokausi_yht + hjpalkkio_rivi.hj_palkkio_laskutettu;
+    hjpalkkio_val_aika_yht := hjpalkkio_val_aika_yht + hjpalkkio_rivi.hj_palkkio_laskutetaan;
 
     RAISE NOTICE 'hjpalkkio_hoitokausi_yht: %', hjpalkkio_hoitokausi_yht;
     RAISE NOTICE 'hjpalkkio_val_aika_yht: %', hjpalkkio_val_aika_yht;
@@ -696,9 +701,9 @@ BEGIN
     -- Hoidonjohto yhteensä
     hoidonjohto_hoitokausi_yht := 0.0;
     hoidonjohto_val_aika_yht := 0.0;
-    hoidonjohto_hoitokausi_yht :=
+    hoidonjohto_hoitokausi_yht := hoidonjohto_hoitokausi_yht +
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht;
-    hoidonjohto_val_aika_yht := johtojahallinto_val_aika_yht + erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
+    hoidonjohto_val_aika_yht := hoidonjohto_val_aika_yht + johtojahallinto_val_aika_yht + erillishankinnat_val_aika_yht + hjpalkkio_val_aika_yht;
 
 
     ----------------------------------------------------------------
@@ -775,13 +780,13 @@ BEGIN
 
     -- Laskeskellaan tavoitehintaan kuuluvat yhteen
     tavhin_hoitokausi_yht := 0.0;
-    tavhin_hoitokausi_yht :=
+    tavhin_hoitokausi_yht := tavhin_hoitokausi_yht +
             talvihoito_hoitokausi_yht + lyh_hoitokausi_yht + sora_hoitokausi_yht +
             paallyste_hoitokausi_yht + yllapito_hoitokausi_yht + korvausinv_hoitokausi_yht +
             johtojahallinto_hoitokausi_yht + erillishankinnat_hoitokausi_yht + hjpalkkio_hoitokausi_yht +
             akilliset_hoitokausi_yht + vahingot_hoitokausi_yht;
     tavhin_val_aika_yht := 0.0;
-    tavhin_val_aika_yht :=
+    tavhin_val_aika_yht := tavhin_val_aika_yht +
             talvihoito_val_aika_yht + lyh_val_aika_yht + sora_val_aika_yht +
             paallyste_val_aika_yht + yllapito_val_aika_yht + korvausinv_val_aika_yht +
             johtojahallinto_val_aika_yht +
@@ -987,8 +992,8 @@ BEGIN
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
     yhteensa_kaikki_val_aika_yht := 0.0;
-    yhteensa_kaikki_hoitokausi_yht := tavhin_hoitokausi_yht + muut_kustannukset_hoitokausi_yht;
-    yhteensa_kaikki_val_aika_yht := tavhin_val_aika_yht + muut_kustannukset_val_aika_yht;
+    yhteensa_kaikki_hoitokausi_yht := yhteensa_kaikki_hoitokausi_yht + tavhin_hoitokausi_yht + muut_kustannukset_hoitokausi_yht;
+    yhteensa_kaikki_val_aika_yht := yhteensa_kaikki_val_aika_yht + tavhin_val_aika_yht + muut_kustannukset_val_aika_yht;
     
     
     tulos := (
