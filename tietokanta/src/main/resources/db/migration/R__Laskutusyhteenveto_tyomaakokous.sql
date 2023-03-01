@@ -816,8 +816,6 @@ BEGIN
     -- Sanktiosta haetaan perus sanktiot, koska ylläpidosta ei tartte välittää
     bonukset_hoitokausi_yht := 0.0;
     bonukset_val_aika_yht := 0.0;
-    vahingot_hoitokausi_yht := 0.0;
-    vahingot_val_aika_yht := 0.0;
     FOR bonukset_rivi IN SELECT ek.pvm                                              as pvm,
                                 ek.rahasumma                                        as summa,
                                 (SELECT korotettuna
