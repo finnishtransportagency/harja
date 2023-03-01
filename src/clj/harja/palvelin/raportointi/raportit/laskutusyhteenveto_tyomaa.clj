@@ -89,8 +89,8 @@
                               (= "Toteutuneet" otsikko)
                               [(kt-rivi data kyseessa-kk-vali? 
                                         "Toteutuneet tavoitehintaan vaikuttaneet kustannukset yhteensä" 
-                                        :talvihoito_hoitokausi_yht 
-                                        :talvihoito_val_aika_yht 
+                                        :tavhin_hoitokausi_yht
+                                        :tavhin_val_aika_yht
                                         true 
                                         nil
                                         "vahvistamaton")
