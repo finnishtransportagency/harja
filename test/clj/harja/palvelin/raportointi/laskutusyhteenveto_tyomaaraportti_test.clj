@@ -278,4 +278,86 @@
     (is (= (* 4 summa) (:hankinnat_hoitokausi_yht purettu)))
     (is (= (* 4 summa) (:hankinnat_val_aika_yht purettu)))))
 
+;; Johto ja hallinto on testattu muualla
+;; Erillishankinnat on testattu muualla
+;; Hoidonjohdon palkkio on testattu muualla
+
+;; Testataan siis äkilliset ja vahingot
+(deftest tyomaaraportti-akilliset-ja-vahingot-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+
+        ;; Poistetaan kaikki kulut urakalta
+        _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan kulut
+        erapaiva (pvm/->pvm "15.10.2019") ;#inst "2019-19-15T21:00:00.000-00:00"
+        koontilaskun-kuukausi "lokakuu/1-hoitovuosi"
+        suoritushetki (pvm/->pvm "15.10.2019")
+        summa 1234M
+
+        ;; Äkillinen hoitotyö
+        akillinen-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
+        akillinen-tehtavaryhma-id (hae-tehtavaryhman-id "Äkilliset hoitotyöt, Soratiet (T1)")
+        akillinenkulu (luo-kulu urakka-id "laskutettava" erapaiva suoritushetki koontilaskun-kuukausi summa akillinen-toimenpideinstanssi-id akillinen-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen akillinenkulu})
+
+        ;; Vahingot
+        vahingot-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23124")
+        vahingot-tehtavaryhma-id (hae-tehtavaryhman-id "Vahinkojen korjaukset, Soratiet (T2)")
+        vahingotkulu (luo-kulu urakka-id "laskutettava" erapaiva suoritushetki koontilaskun-kuukausi summa vahingot-toimenpideinstanssi-id vahingot-tehtavaryhma-id)
+        _ (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen vahingotkulu})
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+
+    (is (= summa (:akilliset_hoitokausi_yht purettu)))
+    (is (= summa (:akilliset_val_aika_yht purettu)))
+
+    (is (= summa (:vahingot_hoitokausi_yht purettu)))
+    (is (= summa (:vahingot_val_aika_yht purettu)))))
+
+(deftest tavoitehinta-toimii
+  (let [hk_alkupvm "2019-10-01"
+        hk_loppupvm "2020-09-30"
+        aikavali_alkupvm "2019-10-01"
+        aikavali_loppupvm "2020-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        tav_hinta 100000M
+        _ (u (format "update urakka_tavoite
+                         set tavoitehinta_siirretty_indeksikorjattu = %s
+                       where hoitokausi = 1 AND urakka = %s" tav_hinta urakka-id))
+
+        hoitokauden_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
+                                    from urakka_tavoite ut
+                                    where ut.hoitokausi = %s
+                                    and ut.urakka = %s" 1 urakka-id)))
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))
+
+        tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
+                                (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
+                                (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
+                                (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
+                                (:hjpalkkio_hoitokausi_yht purettu) (:akilliset_hoitokausi_yht purettu)
+                                (:vahingot_hoitokausi_yht purettu))
+        budjettia_jaljella (- (+ (:hk_tavhintsiirto_ed_vuodelta purettu) (:hoitokauden_tavoitehinta purettu))
+                             (:tavhin_hoitokausi_yht purettu))]
+
+    (is (= tav_hinta (:hk_tavhintsiirto_ed_vuodelta purettu)))
+    (is (= tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht purettu)))
+    (is (= budjettia_jaljella (:budjettia_jaljella purettu)))
+    (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
+
 
