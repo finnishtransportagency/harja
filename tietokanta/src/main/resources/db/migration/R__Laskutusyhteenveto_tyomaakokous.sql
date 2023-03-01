@@ -721,10 +721,9 @@ BEGIN
                                                                                             yllapito_tpi_id,
                                                                                             korvausinv_tpi_id)
                                            -- Lisätyöt, äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
-                                      WHERE lk.maksueratyyppi = 'akillinen-hoitotyo'
-                                         OR lk.maksueratyyppi = 'muu'
-                                          AND lk.poistettu IS NOT TRUE
-                                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                      WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
+                                        AND lk.poistettu IS NOT TRUE
+                                        AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
 
         LOOP
             IF akilliset_ja_vahingot_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
@@ -977,11 +976,11 @@ BEGIN
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
     muut_kustannukset_hoitokausi_yht :=
-            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
+            muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
             paatos_kattoh_ylitys_hoitokausi_yht;
     muut_kustannukset_val_aika_yht :=
-            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
+            muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht;
 
