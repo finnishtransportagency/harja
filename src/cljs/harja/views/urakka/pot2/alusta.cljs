@@ -241,7 +241,9 @@
                                 (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
                                                                                                :murskeet murskeet
                                                                                                :materiaalikoodistot materiaalikoodistot}
-                                                                                rivi))))
+                                                                                rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :toimenpide) "valittu-sort")}
         :hae #(pot2-tiedot/toimenpiteen-teksti % materiaalikoodistot)
         :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -255,7 +257,9 @@
                                 (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
                                                                                                :murskeet murskeet
                                                                                                :materiaalikoodistot materiaalikoodistot}
-                                                                                rivi))))
+                                                                                rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-ajor"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
