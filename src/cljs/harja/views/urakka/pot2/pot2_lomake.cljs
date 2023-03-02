@@ -191,15 +191,18 @@
 
 (defn- virheet-tai-varoitukset->elementit [virheet tyyppi]
   (if (map? virheet)
-    (mapv (fn [[rivinro virheet-map]]
-            [:div.virhe-rivi [:span "Rivi " [:b rivinro] ":"]
-             (case tyyppi
-               :varoitus
-               (lomake-varoitukset->yksinkertaistettu-str virheet-map)
-               :virhe
-               (lomake-virheet->yksinkertaistettu-str virheet-map)
-               virheet-map)])
-      virheet)
+    (remove nil?
+      (mapv (fn [[rivinro virheet-map]]
+              ;; Estä mahdollisten nil-validointien nouseminen virhelistaukseen
+              (when (seq virheet-map)
+                [:div.virhe-rivi [:span "Rivi " [:b rivinro] ":"]
+                 (case tyyppi
+                   :varoitus
+                   (lomake-varoitukset->yksinkertaistettu-str virheet-map)
+                   :virhe
+                   (lomake-virheet->yksinkertaistettu-str virheet-map)
+                   virheet-map)]))
+        virheet))
     []))
 
 (defn- lomakkeen-virheet
