@@ -202,7 +202,7 @@
                    :virhe
                    (lomake-virheet->yksinkertaistettu-str virheet-map)
                    virheet-map)]))
-        virheet))
+        (into (sorted-map) virheet)))
     []))
 
 (defn- lomakkeen-virheet
