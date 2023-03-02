@@ -209,17 +209,37 @@
     }
   .modal-body .lomake {
     border: none;
+    h3.lomake-otsikko {
+      margin: 0;
+    }
+    .form-group {
+      margin-bottom: 0;
+      padding: 0;
+      label[for="kopio-itselle?"] {
+        display: none;
+        + .boolean {
+          margin-top: @valistys-8;
+        }
+      }
+    }
   }
   .email-vastaanottajat > .livi-grid {
     background-color: @white;
+    margin-bottom: 0;
     > .panel-heading {
       background-color: @white;
       > h2.panel-title {
         .fontti-16-vahvempi();
       }
     }
-    > .panel-body td.ei-muokattava {
-      background-color: @white;
+    > .panel-body  {
+      td.ei-muokattava {
+        background-color: @white;
+        vertical-align: middle;
+      }
+      tr.muokataan > td.muokattava {
+        padding: 0 @valistys-8;
+      }
     }
   }
 }

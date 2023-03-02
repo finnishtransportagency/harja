@@ -69,11 +69,11 @@
                               [kentat/raksiboksi {:toiminto #(tiedot/valitse-rivi! rivi)}
                                (boolean (tiedot/valitut-rivit rivi))]]))
             :leveys 1}
-           {:otsikko "Vastaanottaja" :nimi :sahkoposti :leveys 5
+           {:otsikko "Vastaanottaja" :nimi :sahkoposti :leveys 8
             :muokattava? (constantly false)
             :tyyppi :string}
            {:otsikko "Rooli"
-            :nimi :roolit :leveys 5
+            :nimi :roolit :leveys 7
             :muokattava? (constantly false)
             :tyyppi :string}]
 
@@ -96,15 +96,9 @@
       :nakyvissa? nakyvissa?
       :sulje-fn #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)
       :footer [:div
-               [napit/peruuta
-                (if valmis-tiemerkintaan-lomake?
-                  "Peruuta"
-                  "Älä perukaan")
-                #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)]
-
                [napit/palvelinkutsu-nappi
                 (if valmis-tiemerkintaan-lomake?
-                  "Merkitse"
+                  "Merkitse valmiiksi ja lähetä viesti"
                   "Vahvista peruutus")
                 #(tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                    {:kohde-id kohde-id
@@ -117,17 +111,21 @@
                     :sopimus-id (first @u/valittu-sopimusnumero)
                     :vuosi vuosi})
                 {:disabled (not valmis-tallennettavaksi?)
-                 :luokka "nappi-myonteinen"
-                 :ikoni (ikonit/check)
+                 :luokka "nappi-ensisijainen pull-left"
                  :virheviesti "Lähetys epäonnistui. Yritä myöhemmin uudelleen."
                  :kun-onnistuu (fn [vastaus]
                                  (reset! tiedot/aikataulurivit vastaus)
-                                 (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
+                                 (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]
+               [napit/peruuta
+                (if valmis-tiemerkintaan-lomake?
+                  "Peruuta"
+                  "Älä perukaan")
+                #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
                "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista."
                "Tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista.")
-       "vihje-hento-korostus"]
+       "vihje-hento-korostus" 16]
       [vastaanottajien-tiedot (:suorittava-urakka-id data)]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
@@ -651,8 +649,7 @@
     [grid/grid
      {:otsikko [:span
                 [:div.inline-block
-                 "Kohteiden aikataulu"
-                 [yleiset/tietyoilmoitus-siirtynyt-toast]]
+                 "Kohteiden aikataulu"]
                 [yllapitokohteet-view/vasta-muokatut-vinkki]]
       :rivi-ennen (taulukon-ryhmittely-header (:nakyma optiot))
       :voi-poistaa? (constantly false)

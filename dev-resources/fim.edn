@@ -58,18 +58,18 @@
  ;; Oulun tiemerkinnän palvelusopimus (testiurakka)
  "4242523-TES4"  [{:tunniste       133
                    :kayttajatunnus "LXV"
-                   :etunimi        "Jarno"
-                   :sukunimi       "Ely TM"
-                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :etunimi        "Veikko"
+                   :sukunimi       "Valvoja"
+                   :sahkoposti     "Veikko.Valvoja@valvontakoneisto.fi"
                    :puhelin        "0123456789"
                    :roolit         "4242523-TES4_ELY_Urakanvalvoja"
                    :organisaatio   "foo"
                    :poistettu      false}
                   {:tunniste       233
                    :kayttajatunnus "LXVV"
-                   :etunimi        "Jarno"
-                   :sukunimi       "Urakoitsija TM"
-                   :sahkoposti     "sinunmailisi@solita.fi"
+                   :etunimi        "Urkki"
+                   :sukunimi       "Urakoitsija"
+                   :sahkoposti     "urkki.urakoitsija@ahkeruus.fi"
                    :puhelin        "012345666"
                    :roolit         "4242523-TES4_vastuuhenkilo"
                    :organisaatio   "foo"

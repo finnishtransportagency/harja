@@ -649,7 +649,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/nelio-info ikonin-koko) teksti)]]))
+     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:div.vihjeteksti teksti]]]))
 
 (defn toast-viesti
   "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
