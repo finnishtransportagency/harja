@@ -169,7 +169,7 @@
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
    {:keys [urakka-id sopimus-id vuosi tiemerkintapvm
-           kopio-itselle? saate kohde-id muut-vastaanottajat] :as tiedot}]
+           kopio-itselle? saate kohde-id vastaanottajat] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
   (if tiemerkintapvm
@@ -201,7 +201,7 @@
                                       :tiemerkintapvm   tiemerkintapvm
                                       :kopio-itselle?   kopio-itselle?
                                       :saate            saate
-                                      :muut-vastaanottajat muut-vastaanottajat
+                                      :vastaanottajat   vastaanottajat
                                       :kayttaja         user})))
 
                                (hae-urakan-aikataulu db user {:urakka-id  urakka-id

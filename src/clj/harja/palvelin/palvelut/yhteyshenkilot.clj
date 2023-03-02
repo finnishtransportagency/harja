@@ -38,7 +38,6 @@
   [db fim {:keys [urakka-id fim-kayttajaroolit]}]
   (let [urakka-sampoid (uq/hae-urakan-sampo-id db urakka-id)
         haetut-tiedot (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
-    (println "Jarno haetut- tiedot " haetut-tiedot)
     haetut-tiedot))
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id salli-ristiinnakeminen?]

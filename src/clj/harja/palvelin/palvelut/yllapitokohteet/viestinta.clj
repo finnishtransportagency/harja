@@ -247,7 +247,7 @@
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
                 tiemerkintaurakka-nimi ajoradat kaistat pituus paallysteet toimenpiteet]} kohteen-tiedot
@@ -278,25 +278,22 @@
         viestin-vartalo (viesti-kohde-valmis-merkintaan-tai-valmius-peruttu viestin-params)]
     (when tiemerkintaurakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
       (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
-      (viestinta/laheta-sposti-fim-kayttajarooleille
-        {:fim fim
-         :email email
-         :urakka-sampoid tiemerkintaurakka-sampo-id
-         :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
-         :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo})
-      (doseq [muu-vastaanottaja muut-vastaanottajat]
-        (try
-          (sahkoposti/laheta-viesti!
-            email
-            (sahkoposti/vastausosoite email)
-            muu-vastaanottaja
-            (str "Harja: " viestin-otsikko)
-            viestin-vartalo
-            {})
-          (catch Exception e
-            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                               muu-vastaanottaja (pr-str e))))))
+      ;; 2023 alkaen käyttöliittymällä resolvataan sähköpostiosoitteet jo ennen lähetystä, tällöin vastaanottajat ei ole nil
+      ;; vaan joko tyhjä collection tai sisältää osoitteita
+      (if vastaanottajat
+        (viestinta/laheta-sposti-sahkopostiosoitteille
+         {:email email
+          :vastaanottajat vastaanottajat
+          :viesti-otsikko viestin-otsikko
+          :viesti-body viestin-vartalo})
+        ;; Rajapinnan kautta voi tulla yhä tilanteita, että täytyy välillää FIM-roolien perusteella, jatketaan sen tukemista
+        (viestinta/laheta-sposti-fim-kayttajarooleille
+          {:fim fim
+           :email email
+           :urakka-sampoid tiemerkintaurakka-sampo-id
+           :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
+           :viesti-otsikko viestin-otsikko
+           :viesti-body viestin-vartalo}))
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
@@ -354,13 +351,13 @@
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
   [{:keys [fim email kohteen-tiedot tiemerkintapvm
-           kopio-itselle? saate kayttaja muut-vastaanottajat]}]
+           kopio-itselle? saate kayttaja vastaanottajat]}]
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
      :tiemerkintapvm tiemerkintapvm
      :kopio-itselle? kopio-itselle?
      :saate saate
-     :muut-vastaanottajat muut-vastaanottajat
+     :vastaanottajat vastaanottajat
      :ilmoittaja kayttaja}))
 
 

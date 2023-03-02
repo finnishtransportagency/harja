@@ -20,3 +20,9 @@
         ;; clj-osiolla ei vielä käyttäjiä, tee desim. käsittely jos tarvitaan joskus
         :clj
         (<= alaraja numero ylaraja)))
+
+(defn validoi-email
+  "Yksinkertainen emailosoitteen-validaattori, joka toimii paremmin kuin string?"
+  [email]
+  (when email
+    (re-matches #".+\@.+\..+" email)))
