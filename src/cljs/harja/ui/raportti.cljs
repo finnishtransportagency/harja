@@ -129,17 +129,6 @@
     :pvm #(raportti-domain/yrita fmt/pvm-opt %)
     str))
 
-(defmethod muodosta-html :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
-  ;; Työmaakokouksen laskutusyhteenvedon footer
-  [:div
-   [:div {:class "tyomaakokous-footer"}
-    [:h3 (str "Laskutus yhteensä " hoitokausi)]
-    [:div {:class "sisalto"}
-     [:span {:class "laskutus-yhteensa"} laskutettu-str]
-     [:span {:class "laskutus-yhteensa"} laskutetaan-str]
-     [:h1 (str (fmt/euro laskutettu))]
-     [:h1 [:span {:class "vahvistamaton"} (str (fmt/euro laskutetaan))]]]]])
-
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
                                                piilota-border?

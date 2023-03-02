@@ -329,7 +329,7 @@
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
      (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 
-(defn valitaulukko-valittu-aika [otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+(defn arvotaulukko-valittu-aika [otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
 
   [:fo:table {:font-size "9pt" :margin-bottom "12px"}
    [:fo:table-column {:column-width "56%"}]
@@ -351,7 +351,7 @@
      [:fo:table-cell [:fo:block hoitokauden-arvo]]
      [:fo:table-cell [:fo:block laskutetaan-arvo]]]]])
 
-(defn valitaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
+(defn arvotaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
   [:fo:table {:font-size "9pt"}
    [:fo:table-column {:column-width "56%"}]
    [:fo:table-column {:column-width "20%"}]
@@ -361,73 +361,75 @@
      [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
      [:fo:table-cell [:fo:block hoitokauden-arvo]]]]])
 
-(defn valitaulukko [raportin-tunniste sarakkeet tiedot]
+(defn hoitokausi-kuukausi-arvotaulukko [sarakkeet tiedot]
+  ;; Käytetään hoitokauden & valitun kuukauden raha-arvojen näyttöön 
+  ;; Sarakkeet pitää sisältää hoitokauden & valitun kuukauden otsikot, esim: (Hoitokauden alusta, Laskutetaan 09/20)
+  ;; Tiedoissa on raha-arvot desimaaleina (BigDecimal) ja niiden selitykset (str), esim: (Muut kustannukset yhteensä, 700.369M 0.0M)
+  ;; Mikäli selityksen jälkeen on 2 desimaalia, funktio generoi <Hoitokausi> & <valittu kk> -otsikot joiden alla näkyy arvot
+  ;; Mikäli selityksen jälkeen on vain 1 desimaali, ei erillisiä otsikkoja tehdä, vaan näytetään pelkästään <selitys: > <arvo>
 
-  (cond
-    ;; Työmaakokouksen laskutusyhteenvedon 'välitaulukko'
-    (= :tyomaa-yhteenveto raportin-tunniste)
-    (let [
-          ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
-          laskutus-otsikot (raportti-domain/laskutus-otsikot-tyomaaraportti sarakkeet)
-          hoitokauden-otsikko (first laskutus-otsikot)
-          valittu-pvm-otsikko (second laskutus-otsikot)
-          ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
-          arvot (raportti-domain/laskutus-arvot-typmaaraportti tiedot decimal?)
-          koko (dec (count arvot))]
+  ;; Esimerkki 1: 
+  ;; OTSIKOT:  ()
+  ;; ARVOT:  (Hankinnat ja hoidonjohto yhteensä 123.123M)
+  ;; Näytetään seuraavasti: "Hankinnat ja hoidonjohto yhteensä: 123.123 €"
 
-      ;; Haetaan selitysten arvot
-      ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
-      (for [[n elem] (map-indexed #(vector %1 %2) arvot)]
-        
-        ;; Alkaa aina otsikolla joka on string
-        (when (string? elem)
-          (if (>= koko (+ n 2))
-            (let [hoitokauden-arvo (nth arvot (inc n))
-                  laskutetaan-arvo (nth arvot (+ n 2))]
+  ;; Esimerkki 2: 
+  ;; OTSIKOT: (Hoitokauden alusta Laskutetaan 09/20)
+  ;; ARVOT: (Toteutuneet kustannukset 123.123M 0.0M)
+  ;; Näytetään seuraavasti: "Toteutuneet kustannukset:  Hoitokauden alusta   Laskutetaan 09/20
+  ;;                                                       123.123 €              0.0 €       "
 
-              (if (decimal? laskutetaan-arvo)
-                ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
-                (valitaulukko-valittu-aika
-                 (str elem ":")
-                 (str hoitokauden-otsikko)
-                 (str valittu-pvm-otsikko)
-                 (str (fmt/euro hoitokauden-arvo))
-                 (str (fmt/euro laskutetaan-arvo)))
+  (let [laskutus-otsikot (raportti-domain/hoitokausi-kuukausi-laskutus-otsikot sarakkeet) ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+        hoitokauden-otsikko (first laskutus-otsikot)
+        valittu-pvm-otsikko (second laskutus-otsikot)
 
-                ;; Seuraava muuttuja on string, tähän tulee taulukon muodolla "Tavoitehinta" sekä "Siirto edelliseltä vuodelta"
-                (valitaulukko-ei-valittua-aikaa 
-                 (str elem ":") 
-                 (str (fmt/euro hoitokauden-arvo)))))
+        ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
+        arvot (raportti-domain/hoitokausi-kuukausi-arvot tiedot decimal?)
+        koko (dec (count arvot))]
 
-            ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
-            ;; Tähän tulee hankinnat ja hoidonjohto yhteensä
-            ;; sekä Budjettia jäljellä
-            (let [hoitokauden-arvo (nth arvot (inc n))]
-              (valitaulukko-ei-valittua-aikaa 
-               (str elem ":") 
-               (str (fmt/euro hoitokauden-arvo)))
-              )))))))
+    ;; Haetaan selitysten arvot
+    ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
+    (for [[n elem] (map-indexed #(vector %1 %2) arvot)]
 
-(defmethod muodosta-pdf :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str]]
-  (valitaulukko-valittu-aika
-   (str "Laskutus yhteensä " hoitokausi)
-   (str laskutettu-str)
-   (str laskutetaan-str)
-   (str (fmt/euro laskutettu))
-   (str (fmt/euro laskutetaan))))
+      ;; Alkaa aina otsikolla joka on string
+      (when (string? elem)
+        (if (>= koko (+ n 2))
+          (let [hoitokauden-arvo (nth arvot (inc n))
+                laskutetaan-arvo (nth arvot (+ n 2))]
 
-(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko piilota-border? raportin-tunniste] :as optiot} sarakkeet data]]
+            (if (decimal? laskutetaan-arvo)
+
+              ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
+              (arvotaulukko-valittu-aika
+               (str elem ":")
+               (str hoitokauden-otsikko)
+               (str valittu-pvm-otsikko)
+               (str (fmt/euro hoitokauden-arvo))
+               (str (fmt/euro laskutetaan-arvo)))
+
+              ;; Seuraava muuttuja on string, eli otsikko ja arvo
+              (arvotaulukko-ei-valittua-aikaa
+               (str elem ":")
+               (str (fmt/euro hoitokauden-arvo)))))
+
+          ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
+          (let [hoitokauden-arvo (nth arvot (inc n))]
+            (arvotaulukko-ei-valittua-aikaa
+             (str elem ":")
+             (str (fmt/euro hoitokauden-arvo)))))))))
+
+(defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko hoitokausi-arvotaulukko?] :as optiot} sarakkeet data]]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    (if piilota-border?
-    (valitaulukko raportin-tunniste sarakkeet data)
-      
-    [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
-     [:fo:table
-      (for [{:keys [leveys]} sarakkeet]
-        [:fo:table-column {:column-width leveys}])
-      (taulukko-header optiot sarakkeet)
-      (taulukko-body sarakkeet data optiot)]
-     [:fo:block {:space-after "1em"}]])))
+    (if hoitokausi-arvotaulukko?
+      (hoitokausi-kuukausi-arvotaulukko sarakkeet data)
+
+      [:fo:block {:space-before "1em" :font-size (str taulukon-fonttikoko taulukon-fonttikoko-yksikko) :font-weight "bold"} otsikko
+       [:fo:table
+        (for [{:keys [leveys]} sarakkeet]
+          [:fo:table-column {:column-width leveys}])
+        (taulukko-header optiot sarakkeet)
+        (taulukko-body sarakkeet data optiot)]
+       [:fo:block {:space-after "1em"}]])))
 
 (defmethod muodosta-pdf :liitteet [liitteet]
   (count (second liitteet)))
@@ -439,6 +441,12 @@
 
 (defmethod muodosta-pdf :otsikko [[_ teksti]]
   [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
+
+(defmethod muodosta-pdf :otsikko-heading [[_ teksti]]
+  [:fo:block {:padding-top "5mm" :font-size "9pt"} teksti])
+
+(defmethod muodosta-pdf :otsikko-heading-small [[_ teksti]]
+  [:fo:block {:padding-top "5mm" :font-size "8pt"} teksti])
 
 (defmethod muodosta-pdf :otsikko-kuin-pylvaissa [[_ teksti]]
   [:fo:block {:font-weight "bold"

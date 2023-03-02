@@ -68,9 +68,7 @@
                                  (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
                                
                                (when (raha-arvo-olemassa? (data :paatos_tavoitepalkkio_hoitokausi_yht))
-                               (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false)
-                            )]
-                              )))]
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
                 :viimeinen-rivi-yhteenveto? false
@@ -128,6 +126,7 @@
                                (kt-rivi data false "" :nil :nil false nil nil)])))]
 
     [:taulukko {:piilota-border? true
+                :hoitokausi-arvotaulukko? true
                 :raportin-tunniste :tyomaa-yhteenveto
                 :oikealle-tasattavat-kentat #{1 2 3}
                 :viimeinen-rivi-yhteenveto? false}
@@ -159,6 +158,7 @@
                              (hh-rivi data "" :nil :nil false)]))]
 
     [:taulukko {:piilota-border? true
+                :hoitokausi-arvotaulukko? true
                 :raportin-tunniste :tyomaa-yhteenveto
                 :oikealle-tasattavat-kentat #{1 2 3}
                 :viimeinen-rivi-yhteenveto? false}
@@ -216,19 +216,19 @@
                                    [alkupvm loppupvm])
 
         rivitiedot (first (first laskutusyhteenvedot))
-        otsikot ["Hankinnat" "Hoidonjohto"]]
+        otsikot ["Hankinnat" "Hoidonjohto"]
+        sheet-nimi "Työmaakokous"]
 
     [:raportti {:nimi (str "Laskutusyhteenveto (" (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm) ")")
                 :otsikon-koko :iso}
      [:otsikko-heading-small (str alueen-nimi)]
-     [:teksti ""]
      [:otsikko-heading "Tavoitehintaan vaikuttavat toteutuneet kustannukset"]
 
      (concat (for [x otsikot]
                (do
                  (taulukko {:data rivitiedot
                             :otsikko x
-                            :sheet-nimi (when (= (.indexOf otsikot x) 0) "Työmaakokous")
+                            :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?}))))

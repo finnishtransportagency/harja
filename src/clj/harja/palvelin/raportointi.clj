@@ -7,6 +7,8 @@
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.raportointi.pdf :as pdf]
             [harja.palvelin.raportointi.excel :as excel]
+            [harja.palvelin.tyokalut.pdf-tyokalut]
+            [harja.palvelin.tyokalut.excel-tyokalut]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [taoensso.timbre :as log]
             [harja.kyselyt

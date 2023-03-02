@@ -321,93 +321,23 @@
 
 (def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
-(defn tee-solu [solu arvo tyyli]
-  (excel/set-cell! solu arvo)
-  (excel/set-cell-style! solu tyyli))
+(defn hoitokausi-kuukausi-arvotaulukko [tiedot workbook sarakkeet]
+  ;; Käytetään hoitokauden & valitun kuukauden raha-arvojen näyttöön 
+  ;; Sarakkeet pitää sisältää hoitokauden & valitun kuukauden otsikot, esim: (Hoitokauden alusta, Laskutetaan 09/20)
+  ;; Tiedoissa on raha-arvot desimaaleina (BigDecimal) ja niiden selitykset (str), esim: (Muut kustannukset yhteensä, 700.369M 0.0M)
+  ;; Mikäli selityksen jälkeen on 2 desimaalia, funktio generoi <Hoitokausi> & <valittu kk> -otsikot joiden alla näkyy arvot
+  ;; Mikäli selityksen jälkeen on vain 1 desimaali, ei erillisiä otsikkoja tehdä, vaan näytetään pelkästään <selitys: > <arvo>
 
-(defn valitaulukko [tiedot workbook raportin-tunniste sarakkeet]
+  ;; Esimerkki 1: 
+  ;; OTSIKOT:  ()
+  ;; ARVOT:  (Hankinnat ja hoidonjohto yhteensä 123.123M)
+  ;; Näytetään seuraavasti: "Hankinnat ja hoidonjohto yhteensä: 123.123 €"
 
-  (let [aiempi-sheet (last (excel/sheet-seq workbook))
-        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]]
-
-    (cond
-      ;; Työmaakokouksen laskutusyhteenvedon 'välitaulukko'
-      (= :tyomaa-yhteenveto raportin-tunniste)
-
-      (let [tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
-            tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
-            tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
-
-            rivi (.createRow sheet rivi-nro)
-            _ (.createCell rivi 0)
-
-            ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
-            laskutus-otsikot (raportti-domain/laskutus-otsikot-tyomaaraportti sarakkeet)
-            hoitokauden-otsikko (first laskutus-otsikot)
-            valittu-pvm-otsikko (second laskutus-otsikot)
-
-            ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
-            arvot (raportti-domain/laskutus-arvot-typmaaraportti tiedot decimal?)
-            koko (dec (count arvot))]
-
-        ;; Haetaan selitysten arvot
-        ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
-        (doseq [[n elem] (map-indexed #(vector %1 %2) arvot)]
-
-          ;; Alkaa aina otsikolla joka on string
-          (when (string? elem)
-            (if (>= koko (+ n 2))
-              (let [hoitokauden-arvo (nth arvot (inc n))
-                    laskutetaan-arvo (nth arvot (+ n 2))]
-
-                (if (decimal? laskutetaan-arvo)
-
-                  ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
-                  (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
-                        rivin-solu (.createCell rivi 0)
-                        hoitokausi-solu (.createCell rivi 1)
-                        laskutetaan-solu (.createCell rivi 2)
-
-                        rivi-arvot (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
-                        solu-hoitokausi (.createCell rivi-arvot 1)
-                        solu-valittu-aika (.createCell rivi-arvot 2)]
-
-                    ;; (println "[] String:" elem " Arvot: " hoitokauden-arvo " - " laskutetaan-arvo)
-                    ;; Ensimmäinen solu (selitys)
-                    (tee-solu rivin-solu (str elem ":") tyyli-otsikko)
-
-                    ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
-                    (tee-solu hoitokausi-solu hoitokauden-otsikko tyyli-otsikko)
-                    (tee-solu laskutetaan-solu valittu-pvm-otsikko tyyli-otsikko)
-
-                    ;; Laskutus-arvot
-                    (tee-solu solu-hoitokausi (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)
-                    (tee-solu solu-valittu-aika (str (fmt/euro laskutetaan-arvo)) tyyli-normaali)
-                    ;; Tehdään yksi tyhjä rivi
-                    (.createRow sheet (inc (.getLastRowNum aiempi-sheet))))
-
-                  ;; Seuraava muuttuja on string, tähän tulee taulukon muodolla "Tavoitehinta" sekä "Siirto edelliseltä vuodelta"
-                  (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
-                        rivin-otsikko (.createCell rivi 0)
-                        rivin-arvo (.createCell rivi 1)]
-
-                    ;; (println "[] String:" elem " Arvo: " hoitokauden-arvo)
-                    (tee-solu rivin-otsikko (str elem ":") tyyli-otsikko)
-                    (tee-solu rivin-arvo (str (fmt/euro hoitokauden-arvo)) tyyli-normaali))))
-              
-              ;; Muuttujia ei ole kun 2, eli otsikko ja arvo
-              ;; Tähän tulee hankinnat ja hoidonjohto yhteensä
-              ;; sekä Budjettia jäljellä
-              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
-                    rivin-solu (.createCell rivi 0)
-                    hoitokausi-solu (.createCell rivi 1)
-                    hoitokauden-arvo (nth arvot (inc n))]
-
-                ;; (println "[] String:" elem " Arvo: " hoitokauden-arvo)
-                (tee-solu rivin-solu (str elem ":") tyyli-otsikko)
-                (tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))))
-
-(defmethod muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
+  ;; Esimerkki 2: 
+  ;; OTSIKOT: (Hoitokauden alusta Laskutetaan 09/20)
+  ;; ARVOT: (Toteutuneet kustannukset 123.123M 0.0M)
+  ;; Näytetään seuraavasti: "Toteutuneet kustannukset:  Hoitokauden alusta   Laskutetaan 09/20
+  ;;                                                       123.123 €              0.0 €       "
 
   (let [aiempi-sheet (last (excel/sheet-seq workbook))
         [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
@@ -417,20 +347,69 @@
         tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
 
         rivi (.createRow sheet rivi-nro)
-        rivin-solu (.createCell rivi 0)
-        solu-laskutettu (.createCell rivi 1)
-        solu-laskutetaan (.createCell rivi 2)]
+        _ (.createCell rivi 0)
 
-    (tee-solu rivin-solu (str "Laskutus yhteensä " hoitokausi) tyyli-otsikko)
-    (tee-solu solu-laskutettu laskutettu-str tyyli-otsikko)
-    (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko)
+        ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+        laskutus-otsikot (raportti-domain/hoitokausi-kuukausi-laskutus-otsikot sarakkeet)
+        hoitokauden-otsikko (first laskutus-otsikot)
+        valittu-pvm-otsikko (second laskutus-otsikot)
 
-    (let [rivi-nro (+ 1 rivi-nro)
-          rivi (.createRow sheet rivi-nro)
-          solu-laskutettu (.createCell rivi 1)
-          solu-laskutetaan (.createCell rivi 2)]
-      (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
-      (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))))
+        ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
+        arvot (raportti-domain/hoitokausi-kuukausi-arvot tiedot decimal?)
+        koko (dec (count arvot))]
+
+    ;; Haetaan selitysten arvot
+    ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
+    (doseq [[n elem] (map-indexed #(vector %1 %2) arvot)]
+
+      ;; Alkaa aina otsikolla joka on string
+      (when (string? elem)
+        (if (>= koko (+ n 2))
+          (let [hoitokauden-arvo (nth arvot (inc n))
+                laskutetaan-arvo (nth arvot (+ n 2))]
+
+            (if (decimal? laskutetaan-arvo)
+
+              ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
+              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    rivin-solu (.createCell rivi 0)
+                    hoitokausi-solu (.createCell rivi 1)
+                    laskutetaan-solu (.createCell rivi 2)
+
+                    rivi-arvot (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    solu-hoitokausi (.createCell rivi-arvot 1)
+                    solu-valittu-aika (.createCell rivi-arvot 2)]
+
+                ;; Ensimmäinen solu (selitys)
+                (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
+
+                ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+                (raportti-domain/tee-solu hoitokausi-solu hoitokauden-otsikko tyyli-otsikko)
+                (raportti-domain/tee-solu laskutetaan-solu valittu-pvm-otsikko tyyli-otsikko)
+
+                ;; Laskutus-arvot
+                (raportti-domain/tee-solu solu-hoitokausi (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)
+                (raportti-domain/tee-solu solu-valittu-aika (str (fmt/euro laskutetaan-arvo)) tyyli-normaali)
+                ;; Tehdään yksi tyhjä rivi
+                (.createRow sheet (inc (.getLastRowNum aiempi-sheet))))
+
+              ;; Seuraava muuttuja on string, eli selityksellä vain 1 arvo
+              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    rivin-otsikko (.createCell rivi 0)
+                    rivin-arvo (.createCell rivi 1)]
+
+                (raportti-domain/tee-solu rivin-otsikko (str elem ":") tyyli-otsikko)
+                (raportti-domain/tee-solu rivin-arvo (str (fmt/euro hoitokauden-arvo)) tyyli-normaali))))
+
+          ;; Muuttujia ei ole kun 2, eli selityksellä vain 1 arvo
+          (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                rivin-solu (.createCell rivi 0)
+                hoitokausi-solu (.createCell rivi 1)
+                hoitokauden-arvo (nth arvot (inc n))]
+
+            (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
+            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))
+
 
 (defn taulukon-valiotsikko [otsikko workbook]
   ;; Tekee väliotsikon exceliin mikäli tämä puuttuu, annetaan raportin taulukon parametreissa 
@@ -442,19 +421,19 @@
         rivi (.createRow sheet rivi-numero)
         rivin-solu (.createCell rivi 0)
         harmaa-sivu (.createCell rivi 1)]
-    (tee-solu rivin-solu otsikko tyyli)
-    (tee-solu harmaa-sivu nil tyyli)
+    (raportti-domain/tee-solu rivin-solu otsikko tyyli)
+    (raportti-domain/tee-solu harmaa-sivu nil tyyli)
     rivi-numero))
 
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot 
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille? 
-                                                rivi-ennen rivi-jalkeen piilota-border? 
-                                                raportin-tunniste lisaa-excel-valiotsikot] :as optiot}
+                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?
+                                                lisaa-excel-valiotsikot] :as optiot}
                                       sarakkeet data] workbook]
   (try
-    (if piilota-border? 
-      (valitaulukko data workbook raportin-tunniste sarakkeet)
+    (if hoitokausi-arvotaulukko? 
+      (hoitokausi-kuukausi-arvotaulukko data workbook sarakkeet)
     (let [
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
@@ -514,7 +493,7 @@
       (dorun
        (map-indexed
         (fn [rivi-nro rivi]
-          ;; Korjattu sanktioraportin väliotsikot
+          ;; Lisää väliotsikot mikäli nämä puuttuvat 
           (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
                                (taulukon-valiotsikko (:otsikko rivi) workbook))
                 rivi-nro (+ nolla 1 rivi-nro)
@@ -622,6 +601,9 @@
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
+(defmethod muodosta-excel :otsikko [[_ _] _] nil)
+(defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
+(defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)

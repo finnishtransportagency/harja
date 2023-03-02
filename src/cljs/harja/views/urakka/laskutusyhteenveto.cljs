@@ -36,9 +36,6 @@
    :tuotekohtainen "Tuotekohtainen"})
 
 (defn raportin-nimi-avain [urakkatyyppi]
-  
-  ;; valittu-aikavali @u/valittu-hoitokauden-kuukausi
-  ;; _ (println "urakkatyyppi: " urakkatyyppi "valittu-yhteenveto-muoto:" @valittu-yhteenveto-muoto)
   (cond (and
          ;; MHU / HJU -urakoille näytetään työmaakokous ja tuotekohtainen yhteenveto
          ;; Tuotekohtainen
