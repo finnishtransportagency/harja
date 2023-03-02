@@ -46,7 +46,9 @@
                                          :tr-alkuetaisyys :tr-alkuetaisyys
                                          :tr-loppuosa :tr-loppuosa
                                          :tr-loppuetaisyys :tr-loppuetaisyys}}
-                            {:fn pot2-yhteinen/validoi-kaistavalinta
+                            ;; TODO: Kaistavalidointi disabloitu, kunnes Digiroad-aineisto on saatu kunnolla käyttöön
+                            ;;       validoinnin tueksi
+                            #_{:fn pot2-yhteinen/validoi-kaistavalinta
                              :sarakkeet {:tr-kaista :tr-kaista}}]
                      :taulukko [{:fn (r/partial paallystekerros/kohde-toisten-kanssa-paallekkain-validointi true)
                                  :sarakkeet {:tr-numero :tr-numero
@@ -70,7 +72,9 @@
                                 :tr-alkuetaisyys :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuosa
                                 :tr-loppuetaisyys :tr-loppuetaisyys}}
-                   {:fn pot2-yhteinen/validoi-kaistavalinta
+                   ;; TODO: Kaistavalidointi disabloitu, kunnes Digiroad-aineisto on saatu kunnolla käyttöön
+                   ;;       validoinnin tueksi
+                   #_{:fn pot2-yhteinen/validoi-kaistavalinta
                     :sarakkeet {:tr-kaista :tr-kaista}}]
             :taulukko [{:fn (constantly :default) ;; no-op
                         :sarakkeet {:tr-numero :tr-numero
@@ -173,7 +177,8 @@
         (when (str/includes? (str tieosoite-varoitukset) "päällekkäin")
           " ja/tai päällekkäisyydet")
         "."])
-     (when (seq kaista-varoitukset)
+     (when (and (seq kaista-varoitukset)
+             (str/includes? (str kaista-varoitukset) "Kaista-aineiston mukaan"))
        [:span "Tarkista kaistatietojen oikeellisuus"])]))
 
 (defn- lomake-virheet->yksinkertaistettu-str

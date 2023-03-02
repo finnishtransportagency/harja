@@ -223,7 +223,9 @@
        :virheet virheet-atom
        :varoitukset varoitukset-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
-       :on-rivi-blur on-rivi-blur
+       ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
+       ;;       on suunniteltu kuntoon validointia ajatellen
+       #_#_:on-rivi-blur on-rivi-blur
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
        ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
        :rivi-varoitus (:rivi validointi)

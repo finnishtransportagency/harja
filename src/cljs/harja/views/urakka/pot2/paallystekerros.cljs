@@ -69,7 +69,9 @@
       :voi-muokata? voi-muokata? :voi-lisata? false
       :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
-      :on-rivi-blur on-rivi-blur
+      ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
+      ;;       on suunniteltu kuntoon validointia ajatellen
+      #_#_:on-rivi-blur on-rivi-blur
       :custom-toiminto {:teksti "Lisää toimenpide"
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
