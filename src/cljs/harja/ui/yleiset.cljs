@@ -684,12 +684,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
-  ([elementti] (vihje-elementti elementti nil))
-  ([elementti luokka]
+  ([elementti] (vihje-elementti elementti nil 24))
+  ([elementti luokka] (vihje-elementti elementti nil 24))
+  ([elementti luokka ikonin-koko]
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-elementti (ikonit/nelio-info) elementti)]]))
+     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:div.vihjeteksti elementti]]]))
 
 (defn keltainen-vihjelaatikko
   ([e]

@@ -63,8 +63,7 @@
   (let [vastaanottajat (keep #(when (:valittu? %) (:sahkoposti %))
                              (vals @fimista-haetut-vastaanottajatiedot))
         kaikki-vastaanottajat (clj-set/union
-                                (into #{} vastaanottajat)
-                                (into #{} muut-vastaanottajat))]
+                                (into #{} vastaanottajat) muut-vastaanottajat)]
     (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
                                                       :tiemerkintapvm tiemerkintapvm
                                                       :kopio-itselle? kopio-itselle?
@@ -77,10 +76,11 @@
 (def ^{:doc "Tähän säilötään modal-dialogista kohteelle asetettavat sähköpostitiedot palvelimelle tallennusta varten."}
 kohteiden-sahkopostitiedot (atom nil))
 
-(defn hae-urakan-kayttajat-rooleissa [urakka-id]
+(defn hae-urakoiden-kayttajat-rooleissa [oman-urakan-id urakka-idt]
   (go
-    (let [tiedot (<! (k/post! :hae-urakan-kayttajat-rooleissa
-                              {:urakka-id urakka-id
+    (let [tiedot (<! (k/post! :hae-urakoiden-kayttajat-rooleissa
+                              {:oman-urakan-id oman-urakan-id
+                               :urakka-idt urakka-idt
                                :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit}))
           tiedot (map #(assoc % :roolit (when (:roolit %)
                                           (str/join ", " (:roolit %)))

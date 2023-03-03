@@ -42,10 +42,10 @@
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn- vastaanottajien-tiedot [urakka-id]
+(defn- vastaanottajien-tiedot [oman-urakan-id urakka-idt]
   (komp/luo
     (komp/sisaan-ulos
-      #(tiedot/hae-urakan-kayttajat-rooleissa urakka-id)
+      #(tiedot/hae-urakoiden-kayttajat-rooleissa oman-urakan-id urakka-idt)
 
       #(tiedot/tyhjenna-kayttajatiedot))
 
@@ -115,7 +115,7 @@
                "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista."
                "Tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista.")
        "vihje-hento-korostus" 16]
-      [vastaanottajien-tiedot (:suorittava-urakka-id data)]
+      [vastaanottajien-tiedot @nav/valittu-urakka-id #{(:suorittava-urakka-id data)}]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
@@ -167,23 +167,21 @@
      [:div
       [vihje-elementti
        [:span
-        [:span
-         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystys- ja tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään valmistumispäivänä."]
-         (if muutos-taulukosta?
-           [:span.bold (str " Tämän kohteen sähköposti lähetetään "
-                            (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
-                              "heti, kun tallennat muutokset taulukosta"
-                              (str "valmistuspäivämääränä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
-                            ".")])]
-        [:br] [:br]
-        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]
-       "vihje-hento-korostus"]
+        [:span "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista. Viesti lähetetään heti, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään merkittynä valmistumispäivänä."]
+        (if muutos-taulukosta?
+          [:span.bold (str " Tämän kohteen sähköposti lähetetään "
+                           (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
+                             "heti, kun tallennat muutokset taulukosta"
+                             (str "valmistuspäivänä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
+                           ".")])]
+       "vihje-hento-korostus" 16]
+      [vastaanottajien-tiedot @nav/valittu-urakka-id #{urakka-id}]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
        [varmista-kayttajalta/modal-muut-vastaanottajat
-        varmista-kayttajalta/modal-saateviesti
-        varmista-kayttajalta/modal-sahkopostikopio]
+        varmista-kayttajalta/modal-sahkopostikopio
+        varmista-kayttajalta/modal-saateviesti]
        lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
@@ -732,9 +730,6 @@
                              :vuosi vuosi
 
                              :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                          :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                                       (map #(-> {:sahkoposti %})
-                                                                            (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
                                           :saate (:saate aiemmat-sahkopostitiedot)}})))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?

@@ -26,19 +26,26 @@
        (uq/hae-urakan-sampo-id db)
        (fim/hae-urakan-kayttajat fim)))
 
-(defn hae-urakan-kayttajat-rooleissa
+(defn hae-urakoiden-kayttajat-rooleissa
   "Palauttaa annetun urakan (sampo-id) haluttujen FIM-käyttäjäroolien tiedot.
 
   Parametrit:
 
-  fim                FIM-komponentti
-  urakka-sampoid     Sen urakan sampo-id, jonka käyttäjiä etsitään FIMistä
+  fim           FIM-komponentti
+  urakka-idt    Niiden urakoiden idt, jonka käyttäjiä etsitään FIMistä
   fim-kayttajaroolit Setti rooleja, joissa oleville henkilöille viesti lähetetään. Huomioi kirjoitusasu!
     Esim. #{\"ely rakennuttajakonsultti\" \"urakan vastuuhenkilö\" \"ely urakanvalvoja\"}"
-  [db fim {:keys [urakka-id fim-kayttajaroolit]}]
-  (let [urakka-sampoid (uq/hae-urakan-sampo-id db urakka-id)
-        haetut-tiedot (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
-    haetut-tiedot))
+  [db fim {:keys [urakka-idt fim-kayttajaroolit]}]
+  (let [rivit (vec
+                (apply
+                  concat
+                  (for [u urakka-idt
+                        :let [urakka (first (uq/hae-urakan-nimi db u))
+                              kayttajat (fim/hae-urakan-kayttajat-jotka-roolissa fim
+                                                                                 (:sampoid urakka)
+                                                                                 fim-kayttajaroolit)]]
+                    (map #(merge urakka %) kayttajat))))]
+    rivit))
 
 (defn hae-urakan-yhteyshenkilot [db user urakka-id salli-ristiinnakeminen?]
   (assert (number? urakka-id) "Urakka-id:n pitää olla numero!")
@@ -259,11 +266,11 @@
         (async
           (hae-urakan-kayttajat (:db this) (:fim this) urakka-id)))
 
-      :hae-urakan-kayttajat-rooleissa
+      :hae-urakoiden-kayttajat-rooleissa
       (fn [user tiedot]
-        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user (:urakka-id tiedot))
+        (oikeudet/vaadi-lukuoikeus oikeudet/urakat-yleiset user (:oman-urakan-id tiedot))
         (async
-          (hae-urakan-kayttajat-rooleissa (:db this) (:fim this) tiedot)))
+          (hae-urakoiden-kayttajat-rooleissa (:db this) (:fim this) tiedot)))
 
       :hae-urakan-vastuuhenkilot
       (fn [user urakka-id]
@@ -282,7 +289,8 @@
                      :hae-urakan-paivystajat
                      :tallenna-urakan-paivystajat
                      :hae-urakan-kayttajat
-                     :hae-urakan-kayttajat-rooleissa
+                     :hae-urakoiden-kayttajat-rooleissa
                      :hae-urakan-vastuuhenkilot
                      :tallenna-urakan-vastuuhenkilot-roolille)
     this))
+
