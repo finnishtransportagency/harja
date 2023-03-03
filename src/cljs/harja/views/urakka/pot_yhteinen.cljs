@@ -447,7 +447,7 @@
 
       ;; Tallenna luonnos
       [napit/tallenna
-       "Tallenna luonnos"
+       (str "Tallenna" (when-not (#{:valmis :lukittu} tila) " luonnos"))
        #(do
           (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
           (if (= 2 versio)
@@ -464,31 +464,29 @@
         :ikoni (ikonit/tallenna)}]
 
       ;; Lähetä tarkastettavaksi
-      (let [kokonaishinta (toteuman-kokonaishinta-hae-fn perustiedot)
-            paikkauskohde? (boolean (:paikkauskohde-id perustiedot))
-            paikkauskohde-toteutunut-hinta (:paikkauskohde-toteutunut-hinta perustiedot)
-            hinta-puuttuu? (if paikkauskohde?
-                             (not (and paikkauskohde-toteutunut-hinta (> paikkauskohde-toteutunut-hinta 0)))
-                             (not (and kokonaishinta (> kokonaishinta 0))))]
+      (when-not (#{:valmis :lukittu} tila)
+        (let [kokonaishinta (toteuman-kokonaishinta-hae-fn perustiedot)
+              paikkauskohde? (boolean (:paikkauskohde-id perustiedot))
+              paikkauskohde-toteutunut-hinta (:paikkauskohde-toteutunut-hinta perustiedot)
+              hinta-puuttuu? (if paikkauskohde?
+                               (not (and paikkauskohde-toteutunut-hinta (> paikkauskohde-toteutunut-hinta 0)))
+                               (not (and kokonaishinta (> kokonaishinta 0))))]
 
-        ;; TODO: Tässä on hauskana juttuna se, että miksi me kerätään virheitä tietokantaan, jos pot-lomaketta ei
-        ;;       saa lähettää tarkastettavaksi, jos siinä on virheitä. Voiko BE-validoinnissa kuitenkin tulla vastaan
-        ;;       erilaisia virheitä mitä FE-validointi ei saa kiinni?
-        [napit/yleinen-toissijainen
-         "Lähetä tarkistettavaksi"
-         #(do
-            (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
-            (if (= 2 versio)
-              (e! (pot2-tiedot/->TallennaPot2Tiedot true))
-              (e! (paallystys/->TallennaPaallystysilmoitus true))))
-         {:data-attributes {:data-cy "pot-laheta-tarkistettavaksi"}
-          :id "laheta-paallystysilmoitus-tarkistettavaksi"
-          :disabled (or tallennus-kaynnissa?
-                      hinta-puuttuu?
-                      (not valmis-tallennettavaksi?)
-                      (not (oikeudet/voi-kirjoittaa?
-                             oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                             urakka-id kayttaja)))}])]
+          [napit/yleinen-toissijainen
+           "Lähetä tarkistettavaksi"
+           #(do
+              (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
+              (if (= 2 versio)
+                (e! (pot2-tiedot/->TallennaPot2Tiedot true))
+                (e! (paallystys/->TallennaPaallystysilmoitus true))))
+           {:data-attributes {:data-cy "pot-laheta-tarkistettavaksi"}
+            :id "laheta-paallystysilmoitus-tarkistettavaksi"
+            :disabled (or tallennus-kaynnissa?
+                        hinta-puuttuu?
+                        (not valmis-tallennettavaksi?)
+                        (not (oikeudet/voi-kirjoittaa?
+                               oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                               urakka-id kayttaja)))}]))]
 
      (when tallennus-kaynnissa?
        [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
