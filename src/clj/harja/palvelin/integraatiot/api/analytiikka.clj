@@ -2,12 +2,10 @@
   "Analytiikkaportaalille endpointit"
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
-            [compojure.core :refer [POST GET DELETE]]
-            [clojure.string :refer [join]]
+            [compojure.core :refer [GET]]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
-            [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.konversio :as konversio]
@@ -203,7 +201,7 @@
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
 
-(defrecord Analytiikka []
+(defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
     (julkaise-reitti
@@ -214,7 +212,7 @@
           (fn [parametrit kayttaja db]
             (palauta-toteumat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+          (not kehitysmoodi?))))
     (julkaise-reitti
       http :analytiikka-materiaalit
       (GET "/api/analytiikka/materiaalit" request
@@ -223,7 +221,7 @@
           (fn [parametrit kayttaja db]
             (palauta-materiaalit db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+          (not kehitysmoodi?))))
     (julkaise-reitti
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
@@ -232,7 +230,7 @@
           (fn [parametrit kayttaja db]
             (palauta-tehtavat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+          (not kehitysmoodi?))))
     (julkaise-reitti
       http :analytiikka-urakat
       (GET "/api/analytiikka/urakat" request
@@ -241,7 +239,7 @@
           (fn [parametrit kayttaja db]
             (palauta-urakat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+          (not kehitysmoodi?))))
     (julkaise-reitti
       http :analytiikka-organisaatiot
       (GET "/api/analytiikka/organisaatiot" request
@@ -250,7 +248,7 @@
           (fn [parametrit kayttaja db]
             (palauta-organisaatiot db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
-          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+          (not kehitysmoodi?))))
     this)
 
   (stop [{http :http-palvelin :as this}]
