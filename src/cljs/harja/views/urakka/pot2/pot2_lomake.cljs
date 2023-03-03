@@ -353,8 +353,9 @@
 
            ;; Näytetään virhe-infolaatikko vielä toisen kerran tallennusnapin yläpuolella, jotta virheet tulee huomioitua.
            [lomakkeen-virheet lahetyksen-tila perustiedot]
-           [pot-yhteinen/tallenna e! tallenna-app {:kayttaja kayttaja
-                                                   :urakka-id (:id urakka)
-                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
-                                                   :tallennus-kaynnissa? tallennus-kaynnissa?}]
+
+           [pot-yhteinen/tallenna e! perustiedot-app tallenna-app {:kayttaja kayttaja
+                                                                   :urakka-id (:id urakka)
+                                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                                   :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

@@ -370,7 +370,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
-(defrecord AsetaKasiteltavaksi [arvo])
 (defrecord AvaaPaallystysilmoituksenLukitus [])
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
@@ -403,7 +402,7 @@
 (defrecord PaivitaTila [polku f])
 (defrecord SuodataYllapitokohteet [])
 (defrecord TallennaHistoria [polku])
-(defrecord TallennaPaallystysilmoitus [])
+(defrecord TallennaPaallystysilmoitus [valmis-kasiteltavaksi?])
 (defrecord TallennaPaallystysilmoitusOnnistui [vastaus])
 (defrecord TallennaPaallystysilmoitusEpaonnistui [vastaus])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
@@ -414,10 +413,6 @@
 
 
 (extend-protocol tuck/Event
-  AsetaKasiteltavaksi
-  (process-event [{arvo :arvo} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :perustiedot :valmis-kasiteltavaksi] arvo))
-
   AvaaPaallystysilmoituksenLukitus
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]
@@ -664,7 +659,7 @@
       (update-in app [:paallystysilmoitus-lomakedata :historia] (fn [vanha-historia]
                                                                   (cons [polku vanha-arvo] vanha-historia)))))
   TallennaPaallystysilmoitus
-  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+  (process-event [{:keys [valmis-kasiteltavaksi?]} {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
@@ -673,6 +668,7 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] valmis-kasiteltavaksi?)
                                ;; Poistetaan pituus
                                (update-in [:ilmoitustiedot :osoitteet] #(into (sorted-map)
                                                                               (map (fn [[id rivi]]

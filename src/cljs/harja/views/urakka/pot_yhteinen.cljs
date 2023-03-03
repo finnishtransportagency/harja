@@ -26,45 +26,6 @@
                    [cljs.core.async.macros :refer [go]]
                    [harja.atom :refer [reaction<!]]))
 
-(defn tallenna
-  [e! {:keys [tekninen-osa tila versio]}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
-  (let [paatos-tekninen-osa (:paatos tekninen-osa)
-        huomautusteksti
-        (cond
-          (= :lukittu tila)
-          "Päällystysilmoitus lukittu, tietoja ei voi muokata."
-
-          (and (not= :lukittu tila)
-               (= :hyvaksytty paatos-tekninen-osa))
-          "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
-
-          :default nil)]
-
-    [:div.pot-tallennus
-     (when huomautusteksti
-       [:div {:style {:margin-bottom "24px"}}
-        [yleiset/vihje huomautusteksti]])
-
-     [napit/tallenna
-      "Tallenna"
-      #(do
-         (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
-         (if (= 2 versio)
-           (e! (pot2-tiedot/->TallennaPot2Tiedot))
-           (e! (paallystys/->TallennaPaallystysilmoitus))))
-      {:luokka "nappi-ensisijainen"
-       :data-attributes {:data-cy "pot-tallenna"}
-       :id "tallenna-paallystysilmoitus"
-       :disabled (or tallennus-kaynnissa?
-                   (false? valmis-tallennettavaksi?)
-                   (not (oikeudet/voi-kirjoittaa?
-                          oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
-                          urakka-id kayttaja)))
-       :ikoni (ikonit/tallenna)}]
-     (when tallennus-kaynnissa?
-       [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
-
 (defn paallystyskohteen-fmt
   [{:keys [kohdenumero tunnus kohdenimi]}]
   (str "#" kohdenumero " " tunnus " " kohdenimi))
@@ -451,13 +412,7 @@
         [:div.kasittelyosio
          (when hinta-puuttuu?
            [hintatiedot-puuttuvat-komp e! true paikkauskohde?])
-         (if-not nayta-kasittelyosiot?
-           [kentat/tee-kentta {:tyyppi :checkbox
-                               :teksti "Merkitse valmiiksi tarkistusta varten"
-                               :disabled? hinta-puuttuu?}
-            (r/wrap (get-in app [:perustiedot :valmis-kasiteltavaksi])
-                    (fn [uusi]
-                      (e! (paallystys/->AsetaKasiteltavaksi uusi))))]
+         (when nayta-kasittelyosiot?
            [:span
             [:h5 "Käsittely"]
             [:span.asiatarkastus-checkbox
@@ -467,3 +422,73 @@
              [:div.pot-kasittely
               [kasittely-asiatarkastus urakka perustiedot lukittu? muokkaa! huomautukset asiatarkastus-sis-tietoja?]
               [kasittely-tekninen-osa urakka perustiedot lukittu? muokkaa! huomautukset]]]])]))))
+
+(defn tallenna
+  [e! {:keys [perustiedot] :as app} {:keys [tekninen-osa tila versio] :as tallenna-app}
+   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
+  (let [paatos-tekninen-osa (:paatos tekninen-osa)
+        huomautusteksti
+        (cond
+          (= :lukittu tila)
+          "Päällystysilmoitus lukittu, tietoja ei voi muokata."
+
+          (and (not= :lukittu tila)
+            (= :hyvaksytty paatos-tekninen-osa))
+          "Päällystysilmoitus hyväksytty, ilmoitus lukitaan tallennuksen yhteydessä."
+
+          :else nil)]
+
+    [:div.pot-tallennus
+     (when huomautusteksti
+       [:div {:style {:margin-bottom "24px"}}
+        [yleiset/vihje huomautusteksti]])
+
+     [:div
+
+      ;; Tallenna luonnos
+      [napit/tallenna
+       "Tallenna luonnos"
+       #(do
+          (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
+          (if (= 2 versio)
+            (e! (pot2-tiedot/->TallennaPot2Tiedot false))
+            (e! (paallystys/->TallennaPaallystysilmoitus false))))
+       {:luokka "nappi-ensisijainen"
+        :data-attributes {:data-cy "pot-tallenna"}
+        :id "tallenna-paallystysilmoitus"
+        :disabled (or tallennus-kaynnissa?
+                    (false? valmis-tallennettavaksi?)
+                    (not (oikeudet/voi-kirjoittaa?
+                           oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                           urakka-id kayttaja)))
+        :ikoni (ikonit/tallenna)}]
+
+      ;; Lähetä tarkastettavaksi
+      (let [kokonaishinta (toteuman-kokonaishinta-hae-fn perustiedot)
+            paikkauskohde? (boolean (:paikkauskohde-id perustiedot))
+            paikkauskohde-toteutunut-hinta (:paikkauskohde-toteutunut-hinta perustiedot)
+            hinta-puuttuu? (if paikkauskohde?
+                             (not (and paikkauskohde-toteutunut-hinta (> paikkauskohde-toteutunut-hinta 0)))
+                             (not (and kokonaishinta (> kokonaishinta 0))))]
+
+        ;; TODO: Tässä on hauskana juttuna se, että miksi me kerätään virheitä tietokantaan, jos pot-lomaketta ei
+        ;;       saa lähettää tarkastettavaksi, jos siinä on virheitä. Voiko BE-validoinnissa kuitenkin tulla vastaan
+        ;;       erilaisia virheitä mitä FE-validointi ei saa kiinni?
+        [napit/yleinen-toissijainen
+         "Lähetä tarkistettavaksi"
+         #(do
+            (e! (pot2-tiedot/->AsetaTallennusKaynnissa))
+            (if (= 2 versio)
+              (e! (pot2-tiedot/->TallennaPot2Tiedot true))
+              (e! (paallystys/->TallennaPaallystysilmoitus true))))
+         {:data-attributes {:data-cy "pot-laheta-tarkistettavaksi"}
+          :id "laheta-paallystysilmoitus-tarkistettavaksi"
+          :disabled (or tallennus-kaynnissa?
+                      hinta-puuttuu?
+                      (not valmis-tallennettavaksi?)
+                      (not (oikeudet/voi-kirjoittaa?
+                             oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                             urakka-id kayttaja)))}])]
+
+     (when tallennus-kaynnissa?
+       [yleiset/ajax-loader-pieni "Tallennus käynnissä"])]))
