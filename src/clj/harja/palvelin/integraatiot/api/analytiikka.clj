@@ -173,8 +173,7 @@
   (let [materiaalikoodit (materiaalit-kyselyt/listaa-materiaalikoodit db)
         materiaaliluokat (materiaalit-kyselyt/hae-materiaaliluokat db)
         vastaus {:materiaalikoodit materiaalikoodit
-                 :materiaaliluokat materiaaliluokat}
-        _ (println "analytiikka :: palauta-materiaalit :: vastaus" vastaus)]
+                 :materiaaliluokat materiaaliluokat}]
     vastaus))
 
 (defn palauta-tehtavat
@@ -186,24 +185,22 @@
                    tehtavat)
         tehtavaryhmat (toimenpidekoodi-kyselyt/listaa-tehtavaryhmat db)
         vastaus {:tehtavat tehtavat
-                 :tehtavaryhmat tehtavaryhmat}
-        _ (println "analytiikka :: palauta-tehtavat :: vastaus" vastaus)]
+                 :tehtavaryhmat tehtavaryhmat}]
     vastaus))
 
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
-  (let [urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
-        vastaus {:urakat urakat}
-        _ (println "analytiikka :: palauta-urakat :: vastaus" vastaus)]
+  (let [_ (println "(not (ominaisuus-kaytossa? :toteumatyokalu))" (not (ominaisuus-kaytossa? :toteumatyokalu)))
+        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        vastaus {:urakat urakat}]
     vastaus))
 
 (defn palauta-organisaatiot
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
   (let [organisaatiot (organisaatiot-kyselyt/listaa-organisaatiot-analytiikalle db)
-        vastaus {:organisaatiot organisaatiot}
-        _ (println "analytiikka :: palauta-organisaatiot :: vastaus" vastaus)]
+        vastaus {:organisaatiot organisaatiot}]
     vastaus))
 
 (defrecord Analytiikka []
