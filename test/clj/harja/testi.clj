@@ -1646,8 +1646,22 @@
   [maara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 86400 1000)))))
 
+(defn nykyhetki-iso8061-formaatissa-menneisyyteen-minuutteja
+  "Anna määrä parametriin, että montako minuuttia siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* maara 60000)))))
+
 (defn nykyhetki-iso8061-formaatissa-tulevaisuuteen
   "Anna määrä parametriin, että montako päivää siirretään tulevaisuuteen."
   [maara]
   (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (+ (.getTime (Date.)) (* maara 86400 1000)))))
 
+(defn nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja
+  "Anna määrä parametriin, että montako päivää siirretään menneisyyteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS") (Date. (- (.getTime (Date.)) (* maara 60000)))))
+
+(defn nykyhetki-psql-timestamp-formaatissa-tulevaisuuteen-minuutteja
+  "Anna määrä parametriin, että montako minuuttia siirretään tulevaisuuteen."
+  [maara]
+  (.format (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS") (Date. (+ (.getTime (Date.)) (* maara 60000)))))

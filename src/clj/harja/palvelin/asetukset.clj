@@ -89,6 +89,9 @@
    (s/optional-key :tierekisteri) {:url s/Str
                                    (s/optional-key :uudelleenlahetys-aikavali-minuutteina) s/Any}
 
+   (s/optional-key :digiroad) {:url s/Str
+                               :api-key s/Str}
+
    :ilmatieteenlaitos {:lampotilat-url s/Str}
 
    (s/optional-key :geometriapaivitykset) {(s/optional-key :tuontivali) s/Int

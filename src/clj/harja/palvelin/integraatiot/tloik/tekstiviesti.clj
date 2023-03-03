@@ -22,10 +22,19 @@
        "Ilmoittaja: %s\n\n"
        "Lähettäjä: %s\n\n"
        "Paikka: %s\n\n"
-       "TR-osoite: %s\n\n"
+       "Tienumero: %s\n\n"
        "Selitteet: %s.\n\n"
        "Lisätietoja: %s.\n\n"
-       "Huom: tekstiviestikuittaus on poistunut käytöstä. Kuittaa viestit Harjassa tai sähköpostilla.\n"))
+       "Kuittauskoodit:\n"
+       "V%s = vastaanotettu\n"
+       "A%s = aloitettu\n"
+       "K%s = toimenpiteet aloitettu\n"
+       "L%s = lopetettu\n"
+       "T%s = lopetettu toimenpitein\n"
+       "M%s = muutettu\n"
+       "R%s = vastattu\n"
+       "U%s = väärä urakka\n\n"
+       "Vastaa lähettämällä kuittauskoodi sekä kommentti. Esim. A1 Työt aloitettu.\n"))
 
 (def +onnistunut-viesti+ "Kuittaus käsiteltiin onnistuneesti. Kiitos!")
 (def +viestinumero-tai-toimenpide-puuttuuviesti+ "Viestiä ei voida käsitellä. Kuittauskoodi puuttuu.")
@@ -158,18 +167,26 @@
               paikankuvaus
               tr-osoite
               selitteet
-              lisatietoja))))
+              lisatietoja
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero
+              viestinumero))))
 
 (defn laheta-ilmoitus-tekstiviestilla [sms db ilmoitus paivystaja]
   (try
     (if-let [puhelinnumero (or (:matkapuhelin paivystaja) (:tyopuhelin paivystaja))]
       (do
-        (log/debug (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s"
-                           (:ilmoitus-id ilmoitus) puhelinnumero))
+        (log/info (format "Lähetetään ilmoitus (id: %s) tekstiviestillä numeroon: %s"
+                          (:ilmoitus-id ilmoitus) puhelinnumero))
         (let [viestinumero (paivystajatekstiviestit/kirjaa-uusi-viesti
                              db (:id paivystaja) (:ilmoitus-id ilmoitus) puhelinnumero)
               viesti (ilmoitus-tekstiviesti ilmoitus viestinumero)]
-          (sms/laheta sms puhelinnumero viesti)
+          (sms/laheta sms puhelinnumero viesti {"X-Correlation-ID" (:ilmoitus-id ilmoitus)})
 
           (ilmoitustoimenpiteet/tallenna-ilmoitustoimenpide
             db
@@ -180,6 +197,6 @@
             paivystaja
             "ulos"
             "sms")))
-      (log/warn "Ilmoitusta ei voida lähettää tekstiviestillä ilman puhelinnumeroa."))
+      (log/warn (format "Ilmoitusta %s ei voida lähettää tekstiviestillä ilman puhelinnumeroa." (:ilmoitus-id ilmoitus))))
     (catch Exception e
-      (log/error "Ilmoituksen lähettämisessä tekstiviestillä tapahtui poikkeus." e))))
+      (log/error (format "Ilmoituksen %s lähettämisessä tekstiviestillä tapahtui poikkeus." (:ilmoitus-id ilmoitus)) e))))

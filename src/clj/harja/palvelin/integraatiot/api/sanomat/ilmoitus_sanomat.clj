@@ -29,10 +29,11 @@
         (rakenna-tierekisteriosoite tierekisteriosoite))))
 
 (defn rakenna-selitteet [ilmoitus]
-  (when (:selitteet ilmoitus)
+  (if (:selitteet ilmoitus)
     (let [selitteet-kannassa (vec (.getArray (:selitteet ilmoitus)))
           selitteet-vastauksessa (mapv (fn [selite] {:selite selite}) selitteet-kannassa)]
-      (update ilmoitus :selitteet (constantly selitteet-vastauksessa)))))
+      (update ilmoitus :selitteet (constantly selitteet-vastauksessa)))
+    ilmoitus))
 
 (defn rakenna-henkilo [ilmoitus henkiloavain]
   (let [henkilo (henkiloavain ilmoitus)]
@@ -76,5 +77,5 @@
                (rakenna-henkilo :ilmoittaja)
                (rakenna-henkilo :lahettaja)
                rakenna-sijanti
-               (rakenna-kuittaukset)
+               rakenna-kuittaukset
                muokkaa-alueurakkanro)})

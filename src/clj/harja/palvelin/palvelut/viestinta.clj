@@ -25,7 +25,7 @@
                  {:viesti viestin-vartalo
                   :pdf-liite liite}
                  viestin-vartalo)
-        argumentit [email (sahkoposti/vastausosoite email) sahkoposti (str "Harja-viesti lähetetty: " viesti-otsikko) viesti]
+        argumentit [email (sahkoposti/vastausosoite email) sahkoposti (str "Harja-viesti lähetetty: " viesti-otsikko) viesti {}]
         argumentit (if liite (conj argumentit tiedostonimi) argumentit)]
     (try
       (apply lahetys-fn argumentit)
@@ -57,7 +57,8 @@
             (sahkoposti/vastausosoite email)
             (:sahkoposti henkilo)
             (str "Harja: " viesti-otsikko)
-            viesti-body)))
+            viesti-body
+            {})))
       {:onnistui? true :viesti "Sähköpostin lähetys onnistui" :virhe nil})
     (catch Exception e
       (log/error (format "Sähköpostia ei voitu lähettää urakan %s FIM-käyttäjille %s. Virhe: %s"
@@ -83,7 +84,7 @@
         (log/warn (format "Urakalle %s ei löydy FIM:stä yhtään henkiöä, jolle lähettää tekstiviesti." urakka-sampoid))
         (doseq [henkilo viestin-saajat]
           (try
-            (sms/laheta sms (:puhelin henkilo) viesti)
+            (sms/laheta sms (:puhelin henkilo) viesti {})
             (catch Exception e
               (log/error (format "Tekstiviestin lähetys FIM-käyttäjälle %s epäonnistui. Virhe: %s"
                                  (pr-str henkilo) (pr-str e))))))))
