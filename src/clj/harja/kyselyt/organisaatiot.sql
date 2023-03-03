@@ -55,7 +55,7 @@ WHERE elynumero = :elynumero;
 -- name: luo-ely<!
 INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
 VALUES (:nimi, :lyhenne, :liikennemuoto :: LIIKENNEMUOTO, :elynumero, ST_GeomFromText(:alue) :: GEOMETRY,
-        'hallintayksikko' :: ORGANISAATIOTYYPPI)
+        'hallintayksikko' :: ORGANISAATIOTYYPPI);
 
 -- name: paivita-ely!
 UPDATE organisaatio
@@ -84,3 +84,9 @@ FROM organisaatio;
 SELECT id
 FROM organisaatio
 WHERE lyhenne = :lyhenne;
+
+-- name: listaa-organisaatiot-analytiikalle
+SELECT id, ytunnus, nimi, lyhenne, tyyppi,
+       liikennemuoto, katuosoite, postinumero, postitoimipaikka, sampoid, elynumero, poistettu, luotu, muokattu
+  FROM organisaatio
+ ORDER BY nimi ASC;

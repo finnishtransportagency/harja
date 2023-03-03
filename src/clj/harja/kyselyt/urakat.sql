@@ -1078,3 +1078,10 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
 
 -- name: hae-urakan-hoitokaudet
 SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);
+
+-- name: listaa-urakat-analytiikalle
+-- Haetaan kaikki urakat ilman geometriatietoja
+SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi, urakkanro,
+       tyyppi, poistettu, velho_oid, luotu, muokattu
+  FROM urakka
+ ORDER BY alkupvm ASC;

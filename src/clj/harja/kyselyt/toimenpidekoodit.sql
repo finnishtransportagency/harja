@@ -223,3 +223,19 @@ SELECT id, nimi, jarjestys
 FROM tehtavaryhma
 WHERE tyyppi = 'alataso'
 ORDER BY jarjestys;
+
+-- name: listaa-tehtavat
+-- Listataan tehtävät APIa varten toimenpidekoodin alatasot eli tehtävät
+SELECT id, nimi, koodi, emo, taso, poistettu, yksikko, tuotenumero, jarjestys, hinnoittelu, api_seuranta,
+       suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, ensisijainen, yksiloiva_tunniste, suunnitteluyksikko,
+       voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id,
+       materiaalikoodi_id, aluetieto, luotu, muokattu
+  FROM toimenpidekoodi
+ WHERE taso in (3,4)
+ ORDER BY nimi ASC;
+
+-- name: listaa-tehtavaryhmat
+-- Listataan tehtäväryhmät APIa varten
+SELECT id, nimi, otsikko, tyyppi, jarjestys, poistettu, versio, yksiloiva_tunniste, luotu, muokattu
+  FROM tehtavaryhma
+ ORDER BY otsikko ASC, nimi ASC;
