@@ -13,6 +13,10 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
+            [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
+            [harja.kyselyt.konversio :as konv]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:import (java.text SimpleDateFormat))
@@ -163,6 +167,45 @@
                     toteumat)}]
     toteumat))
 
+(defn palauta-materiaalit
+  "Haetaan materiaalit ja palautetaan ne json muodossa"
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  (let [materiaalikoodit (materiaalit-kyselyt/listaa-materiaalikoodit db)
+        materiaaliluokat (materiaalit-kyselyt/hae-materiaaliluokat db)
+        vastaus {:materiaalikoodit materiaalikoodit
+                 :materiaaliluokat materiaaliluokat}
+        _ (println "analytiikka :: palauta-materiaalit :: vastaus" vastaus)]
+    vastaus))
+
+(defn palauta-tehtavat
+  "Haetaan tehtävät ja tehtäväryhmät ja palautetaan ne json muodossa"
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  (let [tehtavat (toimenpidekoodi-kyselyt/listaa-tehtavat db)
+        tehtavat (map
+                   #(update % :hinnoittelu konv/pgarray->vector)
+                   tehtavat)
+        tehtavaryhmat (toimenpidekoodi-kyselyt/listaa-tehtavaryhmat db)
+        vastaus {:tehtavat tehtavat
+                 :tehtavaryhmat tehtavaryhmat}
+        _ (println "analytiikka :: palauta-tehtavat :: vastaus" vastaus)]
+    vastaus))
+
+(defn palauta-urakat
+  "Haetaan urakat ja palautetaan ne json muodossa"
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  (let [urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        vastaus {:urakat urakat}
+        _ (println "analytiikka :: palauta-urakat :: vastaus" vastaus)]
+    vastaus))
+
+(defn palauta-organisaatiot
+  "Haetaan urakat ja palautetaan ne json muodossa"
+  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  (let [organisaatiot (organisaatiot-kyselyt/listaa-organisaatiot-analytiikalle db)
+        vastaus {:organisaatiot organisaatiot}
+        _ (println "analytiikka :: palauta-organisaatiot :: vastaus" vastaus)]
+    vastaus))
+
 (defrecord Analytiikka []
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -175,8 +218,49 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+    (julkaise-reitti
+      http :analytiikka-materiaalit
+      (GET "/api/analytiikka/materiaalit" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-materiaalikoodit request
+          (fn [parametrit kayttaja db]
+            (palauta-materiaalit db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+    (julkaise-reitti
+      http :analytiikka-tehtavat
+      (GET "/api/analytiikka/tehtavat" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-tehtavat request
+          (fn [parametrit kayttaja db]
+            (palauta-tehtavat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+    (julkaise-reitti
+      http :analytiikka-urakat
+      (GET "/api/analytiikka/urakat" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-urakat request
+          (fn [parametrit kayttaja db]
+            (palauta-urakat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
+    (julkaise-reitti
+      http :analytiikka-organisaatiot
+      (GET "/api/analytiikka/organisaatiot" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-organisaatiot request
+          (fn [parametrit kayttaja db]
+            (palauta-organisaatiot db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not (ominaisuus-kaytossa? :toteumatyokalu)))))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :analytiikka-toteumat)
+    (poista-palvelut http
+      :analytiikka-toteumat
+      :analytiikka-materiaalit
+      :analytiikka-tehtavat
+      :analytiikka-urakat
+      :analytiikka-organisaatiot)
     this))
