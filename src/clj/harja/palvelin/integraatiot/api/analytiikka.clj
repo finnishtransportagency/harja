@@ -167,7 +167,7 @@
 
 (defn palauta-materiaalit
   "Haetaan materiaalit ja palautetaan ne json muodossa"
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db _ _]
   (let [materiaalikoodit (materiaalit-kyselyt/listaa-materiaalikoodit db)
         materiaaliluokat (materiaalit-kyselyt/hae-materiaaliluokat db)
         vastaus {:materiaalikoodit materiaalikoodit
@@ -176,7 +176,7 @@
 
 (defn palauta-tehtavat
   "Haetaan tehtävät ja tehtäväryhmät ja palautetaan ne json muodossa"
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db _ _]
   (let [tehtavat (toimenpidekoodi-kyselyt/listaa-tehtavat db)
         tehtavat (map
                    #(update % :hinnoittelu konv/pgarray->vector)
@@ -188,7 +188,7 @@
 
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db _ _]
   (let [_ (println "(not (ominaisuus-kaytossa? :toteumatyokalu))" (not (ominaisuus-kaytossa? :toteumatyokalu)))
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
         vastaus {:urakat urakat}]
@@ -196,7 +196,7 @@
 
 (defn palauta-organisaatiot
   "Haetaan urakat ja palautetaan ne json muodossa"
-  [db {:keys [alkuaika loppuaika koordinaattimuutos] :as parametrit} kayttaja]
+  [db _ _]
   (let [organisaatiot (organisaatiot-kyselyt/listaa-organisaatiot-analytiikalle db)
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
