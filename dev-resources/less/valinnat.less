@@ -99,30 +99,3 @@
   }
 
 }
-
-// special case laskutusyhteenvedossa
-.laskutusyhteenveto .upotettu-raporttitallennus,
-.tiemerkinnan-kustannukset .upotettu-raporttitallennus {
-    align-self: flex-end;
-    margin-bottom: 5px;
-}
-
-// Säädetty tallenna napit nätimmäksi MHU yhteenvedossa
-.laskutusyhteenveto .upotettu-raporttitallennus-mhu {
-    margin-top: 15px;
-    margin-left: 35px;
-
-    /* Jotta tallenna- napit näkyvät vielä hieman pienemmällä resolla */
-    @media only screen and (max-width: 915px) {
-        gap: 15px;
-        flex-direction: column;
-    }
-}
-
-.upotettu-raporttitallennus, .upotettu-raporttitallennus-mhu {
-    margin-top:0;
-    align-items:center;
-    display:flex;
-    flex-direction:row;
-    form { margin-left: 6px; margin-right: 8px; }
-}
