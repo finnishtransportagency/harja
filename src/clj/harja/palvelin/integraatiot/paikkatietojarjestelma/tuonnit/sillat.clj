@@ -73,11 +73,11 @@
 
         urakka-id (:id (first urakat-sijainnilla))
 
-        _ (when (< 1 (count urakat-sijainnilla))
+        _ (when (and (< 1 (count urakat-sijainnilla))
+                  (not urakkatieto-kasin-muokattu?))
             (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: ["
               (str/join ", " (map :id urakat-sijainnilla)) "]."
-              (when-not urakkatieto-kasin-muokattu?
-                (str "Vastuu-urakaksi merkitään " urakka-id))))
+              "Vastuu-urakaksi merkitään " urakka-id))
 
         ;; Jätetään vanha urakka sillalle jos urakka ei ole päättynyt ja sillä on siltatarkastuksia
         aktiiviset-urakat-joilla-tarkastuksia (filter (fn [silta]
