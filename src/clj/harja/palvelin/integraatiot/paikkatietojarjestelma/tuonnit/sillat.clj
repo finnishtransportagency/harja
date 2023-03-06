@@ -58,19 +58,26 @@
         tila (:tila silta)
         kaytossa? (= "kaytossa" tila)
         urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltatunnus tunnus :siltanimi nimi})
-        urakat-sijainnilla (loop [threshold 0]
-                             (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
-                                                                               :urakkatyyppi "hoito" :threshold threshold})]
-                               (if (and (empty? urakat) (< threshold 1000))
-                                 (recur (+ threshold 100))
-                                 urakat)))
 
-        _ (when (< 1 (count urakat-sijainnilla))
-            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t:["
-              (str/join ", " (map :id urakat-sijainnilla))
-              "]. Sillalle merkitään vain ensimmäinen."))
+        ;; Jos urakkatietoa on muokattu käsin, ei päivitetä sillan urakkoja.
+        urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
+
+        urakat-sijainnilla (->> (loop [threshold 0]
+                                 (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
+                                                                                   :urakkatyyppi "hoito" :threshold threshold})]
+                                   (if (and (empty? urakat) (< threshold 1000))
+                                     (recur (+ threshold 100))
+                                     urakat)))
+                             (sort-by :alkupvm)
+                             reverse)
 
         urakka-id (:id (first urakat-sijainnilla))
+
+        _ (when (< 1 (count urakat-sijainnilla))
+            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: ["
+              (str/join ", " (map :id urakat-sijainnilla)) "]."
+              (when-not urakkatieto-kasin-muokattu?
+                (str "Vastuu-urakaksi merkitään " urakka-id))))
 
         ;; Jätetään vanha urakka sillalle jos urakka ei ole päättynyt ja sillä on siltatarkastuksia
         aktiiviset-urakat-joilla-tarkastuksia (filter (fn [silta]
@@ -86,9 +93,6 @@
                                ;; Jätetään talteen myös sillalle merkityt päättyneet urakat.
                                (filter (fn [silta]
                                          (pvm/ennen? (:loppupvm silta) (pvm/nyt))) urakkatiedot))
-
-        ;; Jos urakkatietoa on muokattu käsin, ei päivitetä sillan urakkoja.
-        urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
 
         ;; Silta siirtyy löydetylle urakalle, paitsi jos se on asetettu käsin.
         vastuu-urakka (if urakkatieto-kasin-muokattu?
