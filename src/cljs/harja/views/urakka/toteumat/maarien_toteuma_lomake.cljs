@@ -201,7 +201,10 @@
 
 (defn maarien-toteuman-syottolomake*
   [e! {lomake :lomake toimenpiteet :toimenpiteet tehtavat :tehtavat :as app}]
-  (let [{tyyppi       ::t/tyyppi
+  (let [;; Poista toimenpiteistä id, jotta toimenpiteen valinta voi toimia
+        toimenpiteet (mapv #(dissoc % :id) toimenpiteet)
+        lomake (update lomake ::t/toimenpide #(dissoc % :id))
+        {tyyppi       ::t/tyyppi
          toteumat     ::t/toteumat
          validius     ::tila/validius
          koko-validi? ::tila/validi?} lomake
@@ -249,29 +252,6 @@
                          :tyyppi :string
                          :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."
                          :pakollinen? true}]
-        akilliset-ja-korjaukset-skeema [{:otsikko "Pvm"
-                                         :nimi ::t/pvm
-                                         ::ui-lomake/col-luokka ""
-                                         :virhe? (validi? [::t/pvm])
-                                         :tyyppi :pvm
-                                         :pakollinen? true}
-                                        {:otsikko "Tehtävä"
-                                         :nimi [::t/toteumat 0 ::t/tehtava]
-                                         ::ui-lomake/col-luokka ""
-                                         :tyyppi :valinta
-                                         :virhe? (validi? [::t/toteumat 0 ::t/tehtava])
-                                         :valinnat tehtavat
-                                         :valinta-arvo identity
-                                         :valinta-nayta (fn [arvo]
-                                                          (:tehtava arvo))
-                                         :pakollinen? true
-                                         :elementin-id (str "akilliset-tehtavat-")}
-                                        {:otsikko "Kuvaus"
-                                         ::ui-lomake/col-luokka ""
-                                         :nimi [::t/toteumat 0 ::t/lisatieto]
-                                         :virhe? (validi? [::t/toteumat 0 ::t/lisatieto])
-                                         :tyyppi :string
-                                         :vihje "Lyhyt kuvaus tehdystä työstä ja kustannuksesta."}]
         poista! (poista-fn {:toteuma-id toteuma-id
                             :e!         e!
                             :lomake     lomake

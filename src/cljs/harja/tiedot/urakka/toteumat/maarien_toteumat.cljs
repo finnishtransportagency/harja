@@ -230,19 +230,19 @@
                           :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
                          {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
                           :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui})
-      (assoc app :toimenpiteet-lataa true)))
+      (assoc app :toteutuneet-maarat-lataa true)))
 
   HaeToimenpiteenTehtavaYhteenvetoOnnistui
   (process-event [{vastaus :vastaus} app]
     (-> app
-        (assoc :toimenpiteet-lataa false)
+        (assoc :toteutuneet-maarat-lataa false)
         (assoc :toteutuneet-maarat vastaus)
         (assoc :toteutuneet-maarat-grouped (ryhmittele-tehtavat vastaus (:hakufiltteri app)))))
 
   HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Haku epäonnistui!" :danger)
-    (assoc app :toimenpiteet-lataa false))
+    (assoc app :toteutuneet-maarat-lataa false))
 
   HaeTehtavanToteumat
   (process-event [{tehtava :tehtava} app]
@@ -300,7 +300,6 @@
       (if (true? validi?)
         (tuck-apurit/post! :tallenna-toteuma
                            {:urakka-id urakka-id
-                            :toimenpide toimenpide
                             :tyyppi tyyppi
                             :loppupvm loppupvm
                             :toteumat toteumat}
@@ -457,10 +456,8 @@
   (process-event [{urakka :urakka toimenpide :toimenpide} app]
     (do
       (hae-toteutuneet-maarat urakka toimenpide (:hoitokauden-alkuvuosi app))
-      (hae-tehtavat toimenpide)
       (-> app
-          (assoc :toimenpiteet-lataa true)
-          (assoc :ajax-loader true)
+          (assoc :toteutuneet-maarat-lataa true)
           (assoc :valittu-toimenpide toimenpide)
           (assoc :haetut-toteumat nil)
           (assoc-in [:lomake ::t/toimenpide] toimenpide)
@@ -536,8 +533,7 @@
     (do
       (hae-toteutuneet-maarat urakka (:valittu-toimenpide app) vuosi)
       (-> app
-        (assoc :ajax-loader true)
-        (assoc :toimenpiteet-lataa true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc :avattu-tehtava nil)
         (assoc-in [:hoitokauden-alkuvuosi] vuosi)
         (assoc-in [:toteuma :aikavali-alkupvm] nil)
@@ -561,7 +557,7 @@
                        {:onnistui ->ToimenpiteetHakuOnnistui
                         :epaonnistui ->ToimenpiteetHakuEpaonnistui
                         :paasta-virhe-lapi? true})
-    app)
+    (assoc app :toimenpiteet-lataa true))
 
   HaeKaikkiTehtavat
   (process-event [_ app]
@@ -618,7 +614,7 @@
 
     (-> app
         (assoc :avattu-tehtava nil) ;; Pikafiksi: Sulje avatut, jotta se päivitetään uudestaan
-        (assoc :ajax-loader true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc :syottomoodi false)))
 
   PoistaToteumaEpaonnistui
@@ -634,7 +630,7 @@
     (-> app
         (assoc :syottomoodi false
                :tehtavat [])
-        (assoc :ajax-loader true)
+        (assoc :toteutuneet-maarat-lataa true)
         (assoc-in [:lomake ::t/toteumat] [])))
 
   TallennaToteumaEpaonnistui
@@ -645,7 +641,7 @@
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
   (tuck-apurit/post! :hae-toimenpiteen-tehtava-yhteenveto
     {:urakka-id urakka-id
-     :tehtavaryhma (:id toimenpide)
+     :tehtavaryhma (:otsikko toimenpide)
      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}
     {:onnistui ->HaeToimenpiteenTehtavaYhteenvetoOnnistui
      :epaonnistui ->HaeToimenpiteenTehtavaYhteenvetoEpaonnistui
@@ -654,11 +650,9 @@
 (defn- hae-tehtavat
   ([toimenpide] (hae-tehtavat toimenpide nil))
   ([toimenpide valittu-tehtava]
-   (let [tehtavaryhma (when toimenpide
-                        (:id toimenpide))]
-     (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
-                        {:otsikko (:otsikko toimenpide)
-                         :urakka-id (-> @tila/yleiset :urakka :id)}
-                        {:onnistui ->TehtavatHakuOnnistui
-                         :epaonnistui ->TehtavatHakuEpaonnistui
-                         :paasta-virhe-lapi? true}))))
+   (tuck-apurit/post! :maarien-toteutumien-toimenpiteiden-tehtavat
+     {:otsikko (:otsikko toimenpide)
+      :urakka-id (-> @tila/yleiset :urakka :id)}
+     {:onnistui ->TehtavatHakuOnnistui
+      :epaonnistui ->TehtavatHakuEpaonnistui
+      :paasta-virhe-lapi? true})))
