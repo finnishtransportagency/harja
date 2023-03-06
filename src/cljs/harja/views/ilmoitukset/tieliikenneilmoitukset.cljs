@@ -203,6 +203,11 @@
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
     [:div {:class tyyppi} tyyppi]))
 
+(defn tunniste-tooltip [tunniste] 
+    [:div 
+     [:div.harmaa-teksti "Tunniste"]
+     [:span (or tunniste "-")]])
+
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
@@ -266,11 +271,16 @@
            :leveys 2})
         {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
          :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-        {:otsikko "Tunniste" :nimi :tunniste :leveys 3}
         {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
-         :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %))}
+         :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %)) 
+         :solun-tooltip (fn [rivi]
+                          {:teksti (:lisatieto rivi)})}
         {:otsikko "Tiedotettu urakkaan" :nimi :valitetty-urakkaan
-         :hae (comp pvm/pvm-aika :valitetty-urakkaan) :leveys 6}
+         :hae (comp pvm/pvm-aika :valitetty-urakkaan) 
+         :leveys 6
+         :solun-tooltip (fn [rivi]
+                          {:tooltip-tyyppi :komponentti
+                           :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
