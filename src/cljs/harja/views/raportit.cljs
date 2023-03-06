@@ -19,6 +19,7 @@
             [harja.views.urakka.valinnat :as valinnat]
             [harja.ui.valinnat :as ui-valinnat]
             [harja.ui.raportti :as raportti]
+            [harja.ui.tyokalut.raportti-tyokalut]
             [harja.transit :as tr]
             [alandipert.storage-atom :refer [local-storage]]
             [clojure.string :as str]
