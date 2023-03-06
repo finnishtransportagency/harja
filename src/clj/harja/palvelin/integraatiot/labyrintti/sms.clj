@@ -71,6 +71,10 @@
         numero (get parametrit "source")
         viesti (get parametrit "text")]
     (try
+      ;; jos numero tai viesti on nil, tunnistetaan virhe ja heitetään poikkeus
+      (when (or (nil? numero) (nil? viesti))
+        (throw+ {:type :puhelinnumero-tai-viesti-puuttuu
+                 :message (str "numero: " numero ", viesti: " viesti)}))
       (let [vastaukset (mapv #(% numero viesti) @kuuntelijat)
             vastausdata (if (empty? vastaukset) "" (str "text=" (string/join ", " vastaukset)))
             vastausviesti (integraatioloki/tee-rest-lokiviesti "ulos" url nil vastausdata nil nil)]
