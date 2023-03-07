@@ -857,7 +857,7 @@ jatkon."
                                   :on-mouse-leave #(reset! tooltip-visible?-atom false)}
                                  komponentti
                                  [tooltip-sisalto opts @tooltip-visible?-atom sisalto]])
-          komponentti))
+    komponentti))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
