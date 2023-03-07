@@ -105,10 +105,11 @@
   ;; :varillinen-teksti elementtiä voidaan käyttää mm. virheiden näyttämiseen. Pyritään aina käyttämään
   ;; ennaltamääriteltyjä tyylejä, mutta jos on erikoistapaus missä halutaan käyttää itsemääriteltyä väriä,
   ;; voidaan käyttää avainta :itsepaisesti-maaritelty-oma-vari
-  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
-  [:span.varillinen-teksti
-   [:span.arvo {:style {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")}}
-    (if fmt (fmt arvo) arvo)]])
+  [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi? kustomi-tyyli]}]]
+  (let [lihavoi (when lihavoi? {:font-weight "bold"})]
+    [:span.varillinen-teksti
+     [:span.arvo {:class kustomi-tyyli :style (merge lihavoi {:color (or itsepaisesti-maaritelty-oma-vari (raportti-domain/virhetyylit tyyli) "rgb(25,25,25)")})}
+      (if fmt (fmt arvo) arvo)]]))
 
 (defmethod muodosta-html :infopallura
   ;; :infopallura elementtiä käytetään näyttämään tooltip tyyppisessä infokentässä lisätietoja kohteesta
@@ -130,6 +131,8 @@
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko viimeinen-rivi-yhteenveto?
                                                rivi-ennen
+                                               piilota-border?
+                                               raportin-tunniste
                                                tyhja
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
@@ -146,7 +149,9 @@
                 :piilota-toiminnot? true
                 :sivuttain-rullattava? sivuttain-rullattava?
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
-                :esta-tiivis-grid? esta-tiivis-grid?}
+                :esta-tiivis-grid? esta-tiivis-grid?
+                :piilota-border? piilota-border?
+                :raportin-tunniste raportin-tunniste}
      (into []
            (map-indexed
             (fn [i sarake]
@@ -249,9 +254,17 @@
                                           (assoc :isanta-rivin-id isanta-rivin-id))))))
                data)))]))
 
+(defmethod muodosta-html :otsikko-title [[_ teksti]]
+  [:h1 teksti])
+
+(defmethod muodosta-html :otsikko-heading [[_ teksti]]
+  [:h2 {:style {:font-size "1.25rem"}} teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3 teksti])
+
+(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
+  [:h4 {:style {:font-size "1rem"}} teksti])
 
 (defmethod muodosta-html :jakaja [_]
   [:hr {:style {:margin-top "30px"
@@ -307,12 +320,19 @@
   (apply yleiset/taulukkotietonakyma {}
          (mapcat identity otsikot-ja-arvot)))
 
-
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
   [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
+   
+   ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
-     [:h3 (:nimi raportin-tunnistetiedot)])
+     (cond
+       (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+       [:h1 (:nimi raportin-tunnistetiedot)]
+
+       :else
+       [:h3 (:nimi raportin-tunnistetiedot)]))
+   
    (keep-indexed (fn [i elementti]
                    (when elementti
                      ^{:key i}
