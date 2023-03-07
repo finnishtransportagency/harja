@@ -203,10 +203,10 @@
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
     [:div {:class tyyppi} tyyppi]))
 
-(defn tunniste-tooltip [tunniste] 
-    [:div 
-     [:div.harmaa-teksti "Tunniste"]
-     [:span (or tunniste "-")]])
+(defn tunniste-tooltip [tunniste]
+  [:div
+   [:div.harmaa-teksti "Tunniste"]
+   [:span (or tunniste "-")]])
 
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
