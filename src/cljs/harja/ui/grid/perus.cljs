@@ -246,20 +246,20 @@
                                     leveys
                                     1)
                         :class (y/luokat
-                                (y/tasaus-luokka tasaa)
-                                (when pakota-rivitys? "grid-pakota-rivitys")
-                                (when solu-klikattu "klikattava")
-                                (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
-                                (case reunus
-                                  :ei "grid-reunus-ei"
-                                  :vasen "grid-reunus-vasen"
-                                  :oikea "grid-reunus-oikea"
-                                  nil)
-                                (when solun-luokka
-                                  (solun-luokka haettu-arvo rivi))
-                                (if (fn? luokka)
-                                  (luokka rivi)
-                                  luokka))}
+                                 (y/tasaus-luokka tasaa)
+                                 (when pakota-rivitys? "grid-pakota-rivitys")
+                                 (when solu-klikattu "klikattava")
+                                 (grid-yleiset/tiivis-tyyli skeema esta-tiivis-grid?)
+                                 (case reunus
+                                   :ei "grid-reunus-ei"
+                                   :vasen "grid-reunus-vasen"
+                                   :oikea "grid-reunus-oikea"
+                                   nil)
+                                 (when solun-luokka
+                                   (solun-luokka haettu-arvo rivi))
+                                 (if (fn? luokka)
+                                   (luokka rivi)
+                                   luokka))}
                    ;; Solun sisältö
                    [yleiset/tooltip {:tooltip-disabloitu? (when-not solun-tooltip true)}
                     [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
@@ -267,18 +267,18 @@
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
                      (when (and
-                            (= id @valittu-rivi)
-                            (= (inc i) (count skeema))
-                            rivin-infolaatikko
-                            @infolaatikko-nakyvissa?)
+                             (= id @valittu-rivi)
+                             (= (inc i) (count skeema))
+                             rivin-infolaatikko
+                             @infolaatikko-nakyvissa?)
                        [rivin-infolaatikko* rivin-infolaatikko rivi data])
                      (cond
                        (= tyyppi :komponentti) (apply komponentti rivi {:index index
                                                                         :muokataan? false}
-                                                      komponentti-args)
+                                                 komponentti-args)
                        (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
                                                                                        :muokataan? false}]
-                                                                    komponentti-args))
+                                                              komponentti-args))
                        :else
                        (if fmt
                          (fmt haettu-arvo)
@@ -293,7 +293,7 @@
                            (when teksti
                              [yleiset/tooltip {} [:span {:style {:margin-left "3px"}
                                                          :class (str "grid-huomio-"
-                                                                     (name (:tyyppi huomion-tiedot)))}
+                                                                  (name (:tyyppi huomion-tiedot)))}
                                                   ikoni]
                               teksti]))))]
                     (when solun-tooltip
@@ -301,7 +301,7 @@
                         (let [teksti (:teksti solun-tooltip-tiedot)
                               tooltip-tyyppi (:tooltip-tyyppi solun-tooltip-tiedot)
                               tooltip-komponentti (:tooltip-komponentti solun-tooltip-tiedot)]
-                          (cond 
+                          (cond
                             (= tooltip-tyyppi :komponentti) tooltip-komponentti
                             :else
                             (or teksti "-")))))]])))
