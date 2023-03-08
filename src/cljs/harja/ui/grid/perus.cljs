@@ -733,6 +733,12 @@
                                         Saa sarakkeen skeema.
   :komponentti                          Jos sarakkeen tyyppi on :komponentti, tämän avaimen takana tulee olla
                                         komponentin määrittävä funktio.
+  :solun-tooltip                        Koko solulle näytettävä tooltip. Arvona funktio joka palauttaa mapin jossa sallittuja 
+                                        arvoja ovat :teksti, :tooltip-tyyppi ja :tooltip-komponentti. Voit antaa siis teksti arvon tai 
+                                        määritellä tyypiksi komponentin.
+  :huomio                               Solun sisällön jälkeen renderöidään ikoni jossa tooltip. Arvona funktio joka palauttaa mapin 
+                                        jossa sallittuja arvoja ovat :teksti ja :tyyppi. Tyyppi arvo määrittää ikonin ja teksti arvo 
+                                        tooltipin tekstin. 
 
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
