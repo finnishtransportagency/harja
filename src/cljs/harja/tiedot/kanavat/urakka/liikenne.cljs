@@ -417,8 +417,10 @@
                         klikattu-suunta)
 
                ;; Jos toimenpide on sulutus, vaihda suunta automaattisesti sillä käyttäjä ei voi suuntaa vaihtaa
-               suunta (if sulutus-ylos? :ylos suunta)
-               suunta (if sulutus-alas? :alas suunta)]
+               suunta (cond 
+                        sulutus-ylos? :ylos 
+                        sulutus-alas? :alas 
+                        :else suunta)]
 
            (assoc a ::lt-alus/suunta suunta)))
        alukset))
