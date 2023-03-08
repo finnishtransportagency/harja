@@ -843,21 +843,22 @@ jatkon."
     wrapper-luokka: Custom luokan nimi tai vektori luokan nimiä, joilla voidaan tyylitellä tooltip wrapperia ja sen lapsia.
     wrapperin-koko: Käyttäjän määrittelemä koko tooltip-wrapprille. Vaikuttaa siihen, miten tooltip asetellaan annetun komponentin viereen.
                     Käytä ainoastaan silloin, kun tooltipin wrapperin kokoa ei voida laskea automaattisesti (esim. display: none;)
+   tooltip-disabloitu?: Mikäli arvo on true ei renderöidä tooltippiä vaan palautetaan vain annettu komponentti.
 
   komponentti: Komponentti, jolle tooltip asetetaan.
   sisalto: Tooltipin teksti tai hiccup-html.
   "
 
-  [{:keys [suunta leveys wrapper-luokka wrapperin-koko] :as opts} komponentti sisalto]
-  (r/with-let [tooltip-visible?-atom (atom false)]
-    [:div.inline-block
-     {:style {:position "relative"}
-      :class wrapper-luokka
-      :on-mouse-enter #(reset! tooltip-visible?-atom true)
-      :on-mouse-leave #(reset! tooltip-visible?-atom false)}
-     komponentti
-
-     [tooltip-sisalto opts @tooltip-visible?-atom sisalto]]))
+  [{:keys [suunta leveys wrapper-luokka wrapperin-koko tooltip-disabloitu?] :as opts} komponentti sisalto]
+  (if-not tooltip-disabloitu? (r/with-let [tooltip-visible?-atom (atom false)]
+                                [:div.inline-block
+                                 {:style {:position "relative"}
+                                  :class wrapper-luokka
+                                  :on-mouse-enter #(reset! tooltip-visible?-atom true)
+                                  :on-mouse-leave #(reset! tooltip-visible?-atom false)}
+                                 komponentti
+                                 [tooltip-sisalto opts @tooltip-visible?-atom sisalto]])
+    komponentti))
 
 (defn wrap-if
   "If condition is truthy, return container-component with
