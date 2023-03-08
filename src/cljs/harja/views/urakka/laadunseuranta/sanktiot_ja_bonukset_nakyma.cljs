@@ -12,11 +12,11 @@
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
-            
+
             [harja.ui.grid :as grid]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
-            [harja.ui.yleiset  :refer [ajax-loader] :as yleiset]
+            [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.viesti :as viesti]
             [harja.ui.valinnat :as valinnat]
@@ -26,10 +26,11 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tierekisteri]
-            
+
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
-            [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]))
+            [harja.views.urakka.laadunseuranta.bonukset-lomake :as bonukset-lomake]
+            [harja.ui.ikonit :as ikonit]))
 
 ;; --- Sivupaneeli sanktio- ja bonuslomakkeille ---
 
@@ -234,11 +235,11 @@
                                           :loppu hoitokauden-loppu
                                           :suodattimet @tiedot/sanktio-bonus-suodattimet})}]
          [:button {:type "submit"
-                   :class #{"button-secondary-default" "suuri"}} "Tallenna Excel"]]]
+                   :class #{"button-secondary-default" "suuri"}}
+          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna Excel"]]]]
        [:div
         ^{:key "raporttipdf"}
-        [:form {:style {:margin-left "16px"
-                        :margin-right "64px"}
+        [:form {:style {:margin-left "16px"}
                 :target "_blank" :method "POST"
                 :action (k/pdf-url :bonukset-ja-sanktiot)}
          [:input {:type "hidden" :name "parametrit"
@@ -248,7 +249,8 @@
                                           :loppu hoitokauden-loppu
                                           :suodattimet @tiedot/sanktio-bonus-suodattimet})}] ;#{:muistutukset :sanktiot :bonukset :arvonvahennykset}
          [:button {:type "submit"
-                   :class #{"button-secondary-default" "suuri"}} "Tallenna PDF"]]]]]
+                   :class #{"button-secondary-default" "suuri"}}
+          [ikonit/ikoni-ja-teksti [ikonit/livicon-download] "Tallenna PDF"]]]]]]
      [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid

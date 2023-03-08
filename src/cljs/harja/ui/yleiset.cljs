@@ -877,11 +877,11 @@ jatkon."
 
 (defn tallenna-excel-nappi
   [url]
-  [(ikonit/save) "Tallenna Excel" "raporttixls" url])
+  [[ikonit/livicon-download] "Tallenna Excel" "raporttixls" url])
 
 (defn tallenna-pdf-nappi
   [url]
-  [(ikonit/print) "Tallenna PDF" "raporttipdf" url])
+  [[ikonit/livicon-download] "Tallenna PDF" "raporttipdf" url])
 
 (def ^{:doc "Mahdolliset raportin vientimuodot"}
 +raportin-vientimuodot+

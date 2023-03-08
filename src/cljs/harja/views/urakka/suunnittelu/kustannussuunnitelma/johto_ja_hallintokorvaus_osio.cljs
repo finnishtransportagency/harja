@@ -944,7 +944,7 @@
     (map (juxt
            identity
            (r/partial luo-kursori tiedot toimenkuva polku)))
-    (range 1 vuosien-erotus)))
+    (range 1 (inc vuosien-erotus))))
 
 (defn- palkkakentta-muokattava?
   [erikseen-syotettava? tiedot hoitokausi]

@@ -194,9 +194,10 @@
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                            mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
-                           data esta-tiivis-grid? avattavat-rivit isanta-rivin-id] :as rivin-data}
+                           data esta-tiivis-grid? piilota-border? avattavat-rivit isanta-rivin-id] :as rivin-data}
                    skeema rivi index]
-  [:tr {:class (str luokka
+  [:tr {:class (str luokka 
+                (when piilota-border? " valiotsikko ")
                 (when (= id @valittu-rivi)
                   " rivi-valittu ")
                 ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
@@ -604,7 +605,7 @@
                                      piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?
-                                     esta-tiivis-grid? avattavat-rivit]}]
+                                     esta-tiivis-grid? piilota-border? avattavat-rivit]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
     (if (empty? rivit)
       [:tr.tyhja [:td {:col-span colspan} tyhja]]
@@ -659,7 +660,8 @@
                                          :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :nayta-toimintosarake? nayta-toimintosarake?
-                                         :esta-tiivis-grid? esta-tiivis-grid?}
+                                         :esta-tiivis-grid? esta-tiivis-grid?
+                                         :piilota-border? piilota-border?}
                              skeema rivi i]
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id vetolaatikko-colspan)]))))
                     rivit-jarjestetty)))))))
@@ -776,6 +778,7 @@
   :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
                                         joka saa muokkaustiedot parametrina ja palauttaa
                                         sekvenssin mäppejä kuten :rivi-ennen
+  :piilota-border?                      piilottaa taulukon sarakkeiden borderit
 
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
@@ -797,7 +800,7 @@
            ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -1218,7 +1221,8 @@
                                          :skeema skeema
                                          :vetolaatikot-auki vetolaatikot-auki
                                          :avattavat-rivit-auki avattavat-rivit-auki
-                                         :esta-tiivis-grid? esta-tiivis-grid?}))
+                                         :esta-tiivis-grid? esta-tiivis-grid?
+                                         :piilota-border? piilota-border?}))
                 (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
                                              ((:rivi-jalkeen-fn opts)
                                                (if muokataan

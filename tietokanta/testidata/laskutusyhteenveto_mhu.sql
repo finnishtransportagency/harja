@@ -106,8 +106,8 @@ $$
                     (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 1300, kayttaja_id, urakka_id);
 
 
-        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
-            VALUES (urakka_id, 1, 250000, 240000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, tarjous_tavoitehinta, tavoitehinta_siirretty, kattohinta, luotu, luoja)
+            VALUES (urakka_id, 1, 250000, 250000, 240000, NULL, 1.1 * 250000, NOW(), kayttaja_id);
 
 
         -- MHU Hoidonjohto - SANKTIOT: vastuuhenkilön vaihtosanktio (tämän lopullinen summa indeksilaskennan kautta), arvonvähennykset
