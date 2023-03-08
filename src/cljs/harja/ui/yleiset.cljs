@@ -446,7 +446,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
            (let [rivin-attribuutit (when (otsikot-samalla-rivilla otsikko)
                                      {:style {:display "auto"}})]
              ^{:key (str i otsikko)}
-             [:div.tietorivi (merge
+             [:div.tietorivi.padding-8 (merge
                                (when-not piirra-viivat?
                                  {:class "tietorivi-ilman-alaviivaa"})
                                (when (and kavenna?
