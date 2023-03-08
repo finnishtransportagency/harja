@@ -162,9 +162,10 @@
   ;; Sulutuksen aluksilla on aina 1 suunta, tällä haetaan siis sulutuksen suunta
   (count (filter
    (fn [alus]
-     (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))]
+     (let [toiminnot #{(::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
+                       (::toiminto/toimenpide (second (::lt/toiminnot tapahtuma)))}]
        (and
-        (= toiminto haluttu-toiminto)
+        (contains? toiminnot haluttu-toiminto)
         (= (::lt-alus/suunta alus) haluttu-suunta))))
    (::lt/alukset tapahtuma))))
 
