@@ -843,6 +843,7 @@ jatkon."
     wrapper-luokka: Custom luokan nimi tai vektori luokan nimiä, joilla voidaan tyylitellä tooltip wrapperia ja sen lapsia.
     wrapperin-koko: Käyttäjän määrittelemä koko tooltip-wrapprille. Vaikuttaa siihen, miten tooltip asetellaan annetun komponentin viereen.
                     Käytä ainoastaan silloin, kun tooltipin wrapperin kokoa ei voida laskea automaattisesti (esim. display: none;)
+   tooltip-disabloitu?: Mikäli arvo on true ei renderöidä tooltippiä vaan palautetaan vain annettu komponentti.
 
   komponentti: Komponentti, jolle tooltip asetetaan.
   sisalto: Tooltipin teksti tai hiccup-html.
