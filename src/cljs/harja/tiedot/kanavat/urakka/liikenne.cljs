@@ -396,7 +396,9 @@
 (defn kasittele-suunta-alukselle [tapahtuma alukset]
   (map (fn [a]
          (let [valittu-suunta (#{:ylos :alas :ei-suuntaa} (:valittu-suunta tapahtuma))
-               
+               sulutus-ylos? (> (hae-sulutuksen-suunta tapahtuma :sulutus :ylos) 0)
+               sulutus-alas? (> (hae-sulutuksen-suunta tapahtuma :sulutus :alas) 0)
+
                ;; Jos valittu-suunta on ei-suuntaa mutta sitä ei toimenpide tai palvelumuoto salli, vaihda suunta
                vaihdettu-suunta (if (and (not (:ei-suuntaa @lt/suunnat-atom))
                                          (= valittu-suunta :ei-suuntaa))
@@ -412,7 +414,11 @@
                
                suunta (if (nil? klikattu-suunta)
                         vaihdettu-suunta
-                        klikattu-suunta)]
+                        klikattu-suunta)
+
+               ;; Jos toimenpide on sulutus, vaihda suunta automaattisesti sillä käyttäjä ei voi suuntaa vaihtaa
+               suunta (if sulutus-ylos? :ylos suunta)
+               suunta (if sulutus-alas? :alas suunta)]
 
            (assoc a ::lt-alus/suunta suunta)))
        alukset))
