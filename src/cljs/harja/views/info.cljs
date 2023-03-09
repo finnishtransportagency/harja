@@ -51,7 +51,7 @@
                                            [ikonit/ikoni-ja-teksti "https://finnishtransportagency.github.io/harja/ " [ikonit/livicon-external]]]]]]
 
         [:ul
-         [:h2 {:class "header-yhteiset"} "Harja Tietosuojaseloste"]
+         [:h2 {:class "header-yhteiset"} "Tietoja henkilötietojesi käsittelystä"]
          [:ul
           [:h3 {:class "header-yhteiset"} [:a {:href "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja" :target "_blank" :style {:color "#004D99"}}
                                            [ikonit/ikoni-ja-teksti "https://vayla.fi/tietoa-meista/yhteystiedot/tietosuoja " [ikonit/livicon-external]]]]]]
