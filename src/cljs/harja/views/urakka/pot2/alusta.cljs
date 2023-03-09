@@ -31,9 +31,16 @@
 (defn alustan-validointi [rivi taulukko]
   (let [{:keys [tr-osien-tiedot]} (:paallystysilmoitus-lomakedata @paallystys/tila)
         alikohteet (vals @pot2-tiedot/kohdeosat-atom)
+        alustarivit (into (sorted-map)
+                      (map (fn [[idx rivi-data]]
+                             ;; Lisää muihin alustarivehin rivin järjestyslukuun viittaava numero, jotta siihen
+                             ;; voidaan viitata validoinnin virheviestissä.
+                             [idx (when-not (= rivi rivi-data)
+                                    (assoc rivi-data :rivi-indeksi idx))])
+                        @pot2-tiedot/alustarivit-atom))
         toiset-alustatoimenpiteet (remove
                                     #(= rivi %)
-                                    (vals @pot2-tiedot/alustarivit-atom))
+                                    (vals alustarivit))
         vuosi (pvm/vuosi (pvm/nyt))
         validoitu (yllapitokohteet-domain/validoi-alustatoimenpide alikohteet
                                                                    []
@@ -185,10 +192,15 @@
 (defn alusta
   "Alikohteiden päällysteiden alustakerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot alustalomake tr-osien-pituudet ohjauskahvat] :as app}
-   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom]} alustarivit-atom]
+   {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} alustarivit-atom]
   (let [alusta-toimenpiteet (:alusta-toimenpiteet materiaalikoodistot)
         voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:alusta ohjauskahvat)]
+        ohjauskahva (:alusta ohjauskahvat)
+        on-rivi-blur (fn [rivi]
+                       (let [{:keys [tr-ajorata]} rivi]
+                         (e! (paallystys/->HaeKaistat
+                               (select-keys rivi tr/paaluvali-avaimet)
+                               tr-ajorata))))]
     [:div.alusta
      (when alustalomake
        [alustalomake-nakyma e! {:alustalomake alustalomake
@@ -209,9 +221,15 @@
                                 :luokka "nappi-toissijainen"}}
        :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
+       :varoitukset varoitukset-atom
        :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
-       :rivi-validointi (:rivi validointi)
-       :taulukko-validointi (:taulukko validointi)
+       ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
+       ;;       on suunniteltu kuntoon validointia ajatellen
+       #_#_:on-rivi-blur on-rivi-blur
+       ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
+       ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
+       :rivi-varoitus (:rivi validointi)
+       :taulukko-varoitus (:taulukko validointi)
        :tyhja (if (nil? @alustarivit-atom)
                 [ajax-loader "Haetaan alustarivejä..."]
                 [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}
@@ -225,7 +243,9 @@
                                 (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
                                                                                                :murskeet murskeet
                                                                                                :materiaalikoodistot materiaalikoodistot}
-                                                                                rivi))))
+                                                                                rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :toimenpide) "valittu-sort")}
         :hae #(pot2-tiedot/toimenpiteen-teksti % materiaalikoodistot)
         :validoi [[:ei-tyhja "Anna arvo"]]}
@@ -239,7 +259,9 @@
                                 (pot2-tiedot/jarjesta-valitulla-sort-funktiolla @pot2-tiedot/valittu-alustan-sort {:massat massat
                                                                                                :murskeet murskeet
                                                                                                :materiaalikoodistot materiaalikoodistot}
-                                                                                rivi))))
+                                                                                rivi)))
+                            (when ohjauskahva
+                              (grid/validoi-grid ohjauskahva)))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-ajor"
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi

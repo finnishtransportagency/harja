@@ -21,8 +21,10 @@
 
 (defonce pot2-nakymassa? (atom false))
 (defonce kohdeosat-atom (atom nil))
+(defonce kohdeosat-varoitukset-atom (atom {}))
 (defonce kohdeosat-virheet-atom (atom {}))
 (defonce alustarivit-atom (atom nil))
+(defonce alustarivit-varoitukset-atom (atom {}))
 (defonce alustarivit-virheet-atom (atom {}))
 (defonce lisatiedot-atom (atom nil))
 
@@ -32,7 +34,7 @@
 (defrecord HaePot2TiedotOnnistui [vastaus])
 (defrecord HaePot2TiedotEpaonnistui [vastaus])
 (defrecord AsetaTallennusKaynnissa [])
-(defrecord TallennaPot2Tiedot [])
+(defrecord TallennaPot2Tiedot [valmis-kasiteltavaksi?])
 (defrecord KopioiToimenpiteetTaulukossa [rivi toimenpiteet-taulukko-atom])
 (defrecord AvaaAlustalomake [lomake])
 (defrecord PaivitaAlustalomake [alustalomake])
@@ -226,7 +228,7 @@
     (assoc-in app [:paallystysilmoitus-lomakedata :tallennus-kaynnissa?] true))
 
   TallennaPot2Tiedot
-  (process-event [_ {{urakka-id :id :as urakka} :urakka
+  (process-event [{:keys [valmis-kasiteltavaksi?]} {{urakka-id :id :as urakka} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
                      paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
@@ -234,6 +236,7 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] valmis-kasiteltavaksi?)
                                (assoc :lisatiedot @lisatiedot-atom
                                       :versio 2)
                                (update :ilmoitustiedot dissoc :virheet)
