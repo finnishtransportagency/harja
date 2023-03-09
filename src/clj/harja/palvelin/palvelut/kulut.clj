@@ -230,8 +230,8 @@
 (defn- varmista-erapaiva-on-koontilaskun-kuukauden-sisalla [db koontilaskun-kuukausi erapaiva urakka-id]
   (let [{alkupvm :alkupvm loppupvm :loppupvm} (urakat/urakan-paivamaarat db urakka-id)
         sisalla?-fn (kulut/koontilaskun-kuukauden-sisalla?-fn koontilaskun-kuukausi
-                                                              (pvm/joda-timeksi alkupvm)
-                                                              (pvm/joda-timeksi loppupvm))]
+                      (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi alkupvm))
+                      (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi loppupvm)))]
     (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
               (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi

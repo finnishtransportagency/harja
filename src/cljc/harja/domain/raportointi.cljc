@@ -1,5 +1,7 @@
 (ns harja.domain.raportointi
-  (:require [harja.domain.roolit :as roolit]))
+  (:require [harja.domain.roolit :as roolit]
+            #?(:clj
+               [dk.ative.docjure.spreadsheet :as excel])))
 
 ;; API to colors that can be used in Excel:
 ;; https://poi.apache.org/apidocs/4.0/org/apache/poi/ss/usermodel/IndexedColors.html
@@ -115,6 +117,26 @@
 (defn voi-nahda-laajemman-kontekstin-raportit? [kayttaja]
   (and (not (roolit/roolissa? roolit/tilaajan-laadunvalvontakonsultti kayttaja))
        (roolit/tilaajan-kayttaja? kayttaja)))
+
+#?(:clj
+(defn tee-solu [solu arvo tyyli]
+  (excel/set-cell! solu arvo)
+  (excel/set-cell-style! solu tyyli)))
+
+(defn hoitokausi-kuukausi-laskutus-otsikot [sarakkeet]
+  ;; Palauttaa laskutusotsikkoja laskutusraporttiin
+  (remove nil? (map (fn [sarake]
+                      (let [otsikko (second (concat (first sarake)))]
+                        (when (> (count otsikko) 1) otsikko))) sarakkeet)))
+
+(defn hoitokausi-kuukausi-arvot [tiedot decimal?]
+  ;; Palauttaa laskutusarvot laskutusraporttiin
+  (doall (remove nil?
+                 (mapcat (fn [x]
+                           (map (fn [y]
+                                  (let [arvo (:arvo (second y))
+                                        koko (if (decimal? arvo) 1 (count arvo))]
+                                    (if (> koko 0) arvo nil))) x)) tiedot))))
 
 #?(:cljs
    (defn nykyinen-kayttaja-voi-nahda-laajemman-kontekstin-raportit? []
