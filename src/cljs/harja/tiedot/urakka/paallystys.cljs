@@ -30,7 +30,10 @@
     [harja.tyokalut.vkm :as vkm]
     [clojure.string :as str]
     [harja.pvm :as pvm]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain])
+    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+    [taoensso.timbre :as log]
+    [harja.domain.tierekisteri :as tr]
+    [clojure.set :as set])
 
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]
@@ -367,23 +370,31 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Pikkuhiljaa tätä muutetaan tuckin yhden atomin maalimaan
 
-(defrecord AsetaKasiteltavaksi [arvo])
 (defrecord AvaaPaallystysilmoituksenLukitus [])
 (defrecord AvaaPaallystysilmoituksenLukitusOnnistui [vastaus paallystyskohde-id])
 (defrecord AvaaPaallystysilmoituksenLukitusEpaonnistui [vastaus])
 (defrecord AvaaPaallystysilmoitus [paallystyskohde-id])
 (defrecord SuljePaallystysilmoitus [])
+
 (defrecord HaePaallystysilmoitukset [])
 (defrecord HaePaallystysilmoituksetOnnnistui [vastaus])
 (defrecord HaePaallystysilmoituksetEpaonnisuti [vastaus])
+
 (defrecord HaePaallystysilmoitusPaallystyskohteellaOnnnistui [vastaus])
 (defrecord HaePaallystysilmoitusPaallystyskohteellaEpaonnisuti [vastaus])
+
 (defrecord HaeTrOsienPituudet [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienPituudetOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienPituudetEpaonnistui [vastaus])
 (defrecord HaeTrOsienTiedot [tr-numero tr-alkuosa tr-loppuosa])
 (defrecord HaeTrOsienTiedotOnnistui [vastaus tr-numero])
 (defrecord HaeTrOsienTiedotEpaonnistui [vastaus])
+
+;; Digiroad kaistojen haku tr-osoite & ajorata-kombinaatiolle
+(defrecord HaeKaistat [tr-osoite ajorata])
+(defrecord HaeKaistatOnnistui [vastaus tr-osoite ajorata])
+(defrecord HaeKaistatEpaonnistui [vastaus])
+
 (defrecord HoidaCtrl+Z [])
 (defrecord JarjestaYllapitokohteet [jarjestys])
 (defrecord KumoaHistoria [])
@@ -391,7 +402,7 @@
 (defrecord PaivitaTila [polku f])
 (defrecord SuodataYllapitokohteet [])
 (defrecord TallennaHistoria [polku])
-(defrecord TallennaPaallystysilmoitus [])
+(defrecord TallennaPaallystysilmoitus [valmis-kasiteltavaksi?])
 (defrecord TallennaPaallystysilmoitusOnnistui [vastaus])
 (defrecord TallennaPaallystysilmoitusEpaonnistui [vastaus])
 (defrecord TallennaPaallystysilmoitustenTakuuPaivamaarat [paallystysilmoitus-rivit takuupvm-tallennus-kaynnissa-kanava])
@@ -402,10 +413,6 @@
 
 
 (extend-protocol tuck/Event
-  AsetaKasiteltavaksi
-  (process-event [{arvo :arvo} app]
-    (assoc-in app [:paallystysilmoitus-lomakedata :perustiedot :valmis-kasiteltavaksi] arvo))
-
   AvaaPaallystysilmoituksenLukitus
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [paallystyskohde-id]} :paallystysilmoitus-lomakedata :as app}]
@@ -563,6 +570,60 @@
   (process-event [{vastaus :vastaus} app]
     ;;TODO tähän joku järkevä handlaus
     app)
+
+  HaeKaistat
+  (process-event [{:keys [tr-osoite ajorata]} app]
+    ;; Haetaan kaistat vain jos kaikki vaadittavat tiedot on syötetty lomakkeella
+    (if (and (tr/validi-osoite? tr-osoite) (tr/on-alku-ja-loppu? tr-osoite) (integer? ajorata))
+      (do
+        (log/info "HaeKaistat: " [tr-osoite ajorata])
+        ;; Huom: Päällystyksen puolella käytetään pääsääntöisesti pitkiä muotoja tr-osoitteista.
+        ;;       Digiroad-integraation puolella käytetään lyhyempiä.
+        ;;       Muunnetaan lomakkeelta tuleva tr-osoite rajapinnan tarvitsemaan lyhyempään muotoon.
+        (let [parametrit {:tr-osoite (set/rename-keys tr-osoite {:tr-numero :tie
+                                                                 :tr-alkuosa :aosa
+                                                                 :tr-alkuetaisyys :aet
+                                                                 :tr-loppuetaisyys :let
+                                                                 :tr-loppuosa :losa})
+                          :ajorata ajorata}]
+          (tuck-apurit/post! app
+            :hae-kaistat-digiroadista
+            parametrit
+            {:onnistui ->HaeKaistatOnnistui
+             :onnistui-parametrit [tr-osoite ajorata]
+             :epaonnistui ->HaeKaistatEpaonnistui
+             :paasta-virhe-lapi? true})))
+      app))
+
+  HaeKaistatOnnistui
+  (process-event [{:keys [vastaus tr-osoite ajorata ]} app]
+    (log/info "HaeKaistatOnnistui: " vastaus)
+
+    (-> app
+      (update :paallystysilmoitus-lomakedata (fn [lomake]
+                                               (-> lomake
+                                                 (assoc-in [:kaistat tr-osoite ajorata] vastaus)
+                                                 (assoc :validoi-lomake? true))))))
+
+  HaeKaistatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (log/info "HaeKaistatEpaonnistui: " vastaus)
+
+    (let [status (get-in vastaus [:status])
+          viesti (get-in vastaus [:response :virhe])]
+      ;; Näytetään toast vain jos status on 500 (esim. ongelma Digiroadin puolella tai Harjan integraatiossa)
+      ;; TODO: Tällä hetkellä Digiroadin kaistahaku niputtaa statuksen 400 alle kaikki seuraavat virhetyypit:
+      ;;       Hakuparametrit ovat vääriä, tieosoitetta ei ole olemassa, tai on yritetty hakea tulosta liian monta kertaa
+      ;;       Digiroadin puolella ja uudelleenyritysten maksimimäärä on saavutettu.
+      ;;       Ideaalitapauksessa, ei näytetä virheitä käyttäjälle mikäli hakuparametrit ovat vääriä.
+      ;;       Mutta, virhe pitäisi näyttää jos Digiroadista tai Harjasta tulee jokin tuntematon virhe (kuten nyt status 500).
+      ;;       Ratkaisematta on vielä tilanne, että mitä tehdään kun haun maksimiyritysten määrä on ylittynyt.
+      ;;          -> Yrittäisikö Harjan Digiroad integraatio hakua itsenäisesti uudelleen vai pitääkö käyttäjän muokata
+      ;;             lomakkeella jotakin riviä, jotta kaistojen hakua yritetään uudelleen?
+      (when (= 500 status)
+        (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-aareton)))
+    app)
+
   HoidaCtrl+Z
   (process-event [_ {{historia :historia} :paallystysilmoitus-lomakedata :as app}]
     (process-event (->KumoaHistoria) app))
@@ -598,7 +659,7 @@
       (update-in app [:paallystysilmoitus-lomakedata :historia] (fn [vanha-historia]
                                                                   (cons [polku vanha-arvo] vanha-historia)))))
   TallennaPaallystysilmoitus
-  (process-event [_ {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
+  (process-event [{:keys [valmis-kasiteltavaksi?]} {{urakka-id :id :as urakka} :urakka {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila paallystysilmoitus-lomakedata :paallystysilmoitus-lomakedata :as app}]
     (let [lahetettava-data (-> paallystysilmoitus-lomakedata
                                ;; Otetaan vain backin tarvitsema data
                                (select-keys #{:perustiedot :ilmoitustiedot :paallystyskohde-id})
@@ -607,6 +668,7 @@
                                (update :perustiedot lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :asiatarkastus] lomakkeen-muokkaus/ilman-lomaketietoja)
                                (update-in [:perustiedot :tekninen-osa] lomakkeen-muokkaus/ilman-lomaketietoja)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] valmis-kasiteltavaksi?)
                                ;; Poistetaan pituus
                                (update-in [:ilmoitustiedot :osoitteet] #(into (sorted-map)
                                                                               (map (fn [[id rivi]]

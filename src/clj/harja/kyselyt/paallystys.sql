@@ -296,6 +296,12 @@ WHERE paallystyskohde = :id
                               FROM yllapitokohde
                               WHERE urakka = :urakka);
 
+-- name: paivita-paallystysilmoituksen-virhe!
+UPDATE paallystysilmoitus
+   SET virhe = :virhe::TEXT,
+       virhe_aikaleima = :aikaleima::TIMESTAMP
+ WHERE paallystyskohde = :id;
+
 -- name: luo-paallystysilmoitus<!
 -- Luo uuden päällystysilmoituksen
 INSERT INTO paallystysilmoitus (paallystyskohde, tila, ilmoitustiedot, takuupvm, luotu, luoja, poistettu, versio, lisatiedot)
