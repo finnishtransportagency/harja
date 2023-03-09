@@ -36,6 +36,25 @@
                    :roolit         "1242141-OULU2_vastuuhenkilo"
                    :organisaatio   "urakoitsija"
                    :poistettu      false}]
+ ;; Utajärven päällystysurakka
+ "1337133-TES2"  [{:tunniste       133
+                   :kayttajatunnus "LXV123"
+                   :etunimi        "Utajärven"
+                   :sukunimi       "Valvoja"
+                   :sahkoposti     "uta.valvoja@ely.fi"
+                   :puhelin        "0123456789"
+                   :roolit         "1337133-TES2_ELY_Urakanvalvoja"
+                   :organisaatio   "Pohjois-Pohjanmaa"
+                   :poistettu      false}
+                  {:tunniste       233
+                   :kayttajatunnus "LXVV123"
+                   :etunimi        "Ulli"
+                   :sukunimi       "Urakoitsija"
+                   :sahkoposti     "ulli.urakoitsija@skanska.fi"
+                   :puhelin        "012345666"
+                   :roolit         "1337133-TES2_vastuuhenkilo"
+                   :organisaatio   "foo"
+                   :poistettu      false}]
  ;; Muhoksen päällystysurakka (testiurakka)
  "4242523-TES2"  [{:tunniste       133
                    :kayttajatunnus "LXV"

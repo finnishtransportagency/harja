@@ -1524,6 +1524,74 @@
         (is (nil? (:aikataulu-tiemerkinta-takaraja leppajarven-ramppi-testin-jalkeen)))
         (is (nil? (:valmis-tiemerkintaan leppajarven-ramppi-testin-jalkeen)))))))
 
+(deftest paallystyksen-merkitseminen-valmiiksi-toimii-vastaanottajat-etukateen-haettu
+  (let [urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        puolangantie-id (hae-yllapitokohteen-id-nimella "Puolangantie")
+        suorittava-tiemerkintaurakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
+        fim-vastaus (slurp (io/resource "xsd/fim/esimerkit/hae-oulun-tiemerkintaurakan-kayttajat.xml"))
+        vuosi 2023
+        viesti-id (str (UUID/randomUUID))]
+
+    (with-fake-http
+      [+testi-fim+ fim-vastaus
+       {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
+
+      ;; Lisätään kohteelle ensin päällystyksen aikataulutiedot ja suorittava tiemerkintäurakka
+      (let [tiemerkintapvm (pvm/->pvm-aika "23.5.2023 12:00")
+            ;; Merkitään kohde valmiiksi tiemerkintään
+            aikataulu-ennen-testia (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                   :hae-yllapitourakan-aikataulu +kayttaja-jvh+
+                                                   {:urakka-id urakka-id
+                                                    :sopimus-id sopimus-id
+                                                    :vuosi vuosi})
+            puolangantie-ennen-testia (kohde-nimella aikataulu-ennen-testia "Puolangantie")
+            muut-kohteet-ennen-testia (first (filter #(not= (:nimi %) "Puolangantie") aikataulu-ennen-testia))
+            vastaus-kun-merkittu-valmiiksi (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                           :merkitse-kohde-valmiiksi-tiemerkintaan +kayttaja-jvh+
+                                                           {:tiemerkintapvm tiemerkintapvm
+                                                            ;; Tässä simuloidaan tilanne, että käyttäjä käyttöliittymästä valitsee tietyn urakan
+                                                            ;; henkilöt joille sähköposti menee. Tällöin FIM-rajapinnasta ei enää sen jälkeen haeta käyttäjiä
+                                                            ;; roolien perusteella. Jos :vastaanottajat avainta ei olisi, menisi maili FIM:n yhteistiedoissa
+                                                            ;; käyttäjäroolien perusteella
+                                                            :vastaanottajat #{"hannu.esimerkki@example.com"
+                                                                              "fanni.esimerkki@example.com"}
+                                                            :kopio-itselle? true
+                                                            :kohde-id puolangantie-id
+                                                            :urakka-id urakka-id
+                                                            :sopimus-id sopimus-id
+                                                            :vuosi vuosi})
+            puolangantie-testin-jalkeen (kohde-nimella vastaus-kun-merkittu-valmiiksi "Puolangantie")
+            muut-kohteet-testin-jalkeen (first (filter #(not= (:nimi %) "Puolangantie") vastaus-kun-merkittu-valmiiksi))
+            integraatio-sahkopostit (hae-ulos-lahtevat-integraatiotapahtumat)]
+        ;; Varmistetaan että kaikille kolmelle on lähtenyt sähköposti (Hannu, Fanni ja kopio itselle)
+        (is (= 3 (count integraatio-sahkopostit)) "Sähköposti lähetettiin")
+        (is (some #(clj-str/includes? (:sisalto %) "<vastaanottaja>hannu.esimerkki@example.com</vastaanottaja>")
+                  integraatio-sahkopostit))
+        (is (some #(clj-str/includes? (:sisalto %) "<vastaanottaja>fanni.esimerkki@example.com</vastaanottaja>")
+                  integraatio-sahkopostit))
+        (is (some #(clj-str/includes? (:sisalto %) "<vastaanottaja>jalmari@example.com</vastaanottaja>")
+                  integraatio-sahkopostit))
+        (is (every? #(clj-str/includes? (:sisalto %) "<lahettaja>harja-ala-vastaa@vayla.fi</lahettaja>") integraatio-sahkopostit))
+        (is (every? #(clj-str/includes? (:sisalto %) "Kohteen 'Puolangantie' tiemerkinnän voi aloittaa 23.05.2023") integraatio-sahkopostit))
+        (is (every? #(clj-str/includes? (:sisalto %) "<table><tr><td><b>Kohde</b></td><td>Puolangantie</td></tr><tr><td><b>TR-osoite</b></td><td>837 / 2 / 0 / 2 / 1000</td></tr><tr><td><b>Ajoradat</b></td><td>0</td></tr><tr><td><b>Kaistat</b></td><td>11</td></tr><tr><td><b>Pituus</b></td><td>1000</td></tr><tr><td><b>Päällysteet</b></td><td></td></tr><tr><td><b>Toimenpiteet</b></td><td></td></tr><tr><td><b>Valmis tiemerkintään</b></td><td>23.05.2023</td></tr><tr><td><b>Tiemerkintäurakka</b></td><td>Oulun tiemerkinnän palvelusopimus 2017-2024</td></tr><tr><td><b>Merkitsijä</b></td><td>Jalmari Järjestelmävastuuhenkilö (org. Liikennevirasto)</td></tr><tr><td><b>Merkitsijän urakka</b></td><td>Utajärven päällystysurakka</td></tr></table>") integraatio-sahkopostit))
+
+
+
+        ;; Valmiiksi merkitsemisen jälkeen tilanne on sama kuin ennen merkintää, sillä erotuksella, että
+        ;; valittu kohde merkittiin valmiiksi tiemerkintään
+        (is (= muut-kohteet-ennen-testia muut-kohteet-testin-jalkeen))
+        (is (= (dissoc puolangantie-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)
+               (dissoc puolangantie-ennen-testia
+                       :aikataulu-tiemerkinta-takaraja
+                       :tiemerkintaurakan-voi-vaihtaa?)))
+        (is (nil? (:aikataulu-tiemerkinta-takaraja puolangantie-ennen-testia)))
+        (is (= (pvm/->pvm "3.3.2023") (:valmis-tiemerkintaan puolangantie-ennen-testia)))
+        (is (nil? (:aikataulu-tiemerkinta-takaraja puolangantie-testin-jalkeen)))
+        (is (some? (:valmis-tiemerkintaan puolangantie-testin-jalkeen)))))))
+
 (deftest yllapitokohteen-suorittavan-tiemerkintaurakan-vaihto-ei-toimi-jos-kirjauksia
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         sopimus-id (hae-muhoksen-paallystysurakan-paasopimuksen-id)
