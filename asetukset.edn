@@ -93,7 +93,7 @@
  :tierekisteri {:url ""
                 :uudelleenlahetys-aikavali-minuutteina nil}
 
- :digiroad {:url "https://api.testivaylapilvi.fi/digiroad/externalApi/"
+ :digiroad {:url "https://api.vaylapilvi.fi/digiroad/externalApi/"
             ;; Testipalvelimen avain projektin salaisuuksien jakamiseen tarkoitetussa paikassa
             :api-key #=(eval (some->
                                  (slurp "../.harja/digiroad-api-key")

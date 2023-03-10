@@ -46,9 +46,7 @@
                                          :tr-alkuetaisyys :tr-alkuetaisyys
                                          :tr-loppuosa :tr-loppuosa
                                          :tr-loppuetaisyys :tr-loppuetaisyys}}
-                            ;; TODO: Kaistavalidointi disabloitu, kunnes Digiroad-aineisto on saatu kunnolla käyttöön
-                            ;;       validoinnin tueksi
-                            #_{:fn pot2-yhteinen/validoi-kaistavalinta
+                            {:fn pot2-yhteinen/validoi-kaistavalinta
                              :sarakkeet {:tr-kaista :tr-kaista}}]
                      :taulukko [{:fn (r/partial paallystekerros/kohde-toisten-kanssa-paallekkain-validointi true)
                                  :sarakkeet {:tr-numero :tr-numero
@@ -72,9 +70,7 @@
                                 :tr-alkuetaisyys :tr-alkuetaisyys
                                 :tr-loppuosa :tr-loppuosa
                                 :tr-loppuetaisyys :tr-loppuetaisyys}}
-                   ;; TODO: Kaistavalidointi disabloitu, kunnes Digiroad-aineisto on saatu kunnolla käyttöön
-                   ;;       validoinnin tueksi
-                   #_{:fn pot2-yhteinen/validoi-kaistavalinta
+                   {:fn pot2-yhteinen/validoi-kaistavalinta
                     :sarakkeet {:tr-kaista :tr-kaista}}]
             :taulukko [{:fn (constantly :default) ;; no-op
                         :sarakkeet {:tr-numero :tr-numero
