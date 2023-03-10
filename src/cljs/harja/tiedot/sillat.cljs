@@ -27,7 +27,11 @@
   [silta]
   (or (some? (:loppupvm silta))
       (some? (:lakkautuspvm silta))
-      (:kunnan-vastuulla silta)))
+      (:kunnan-vastuulla? silta)))
+
+(defn ei-urakan-vastuulla? [silta]
+  (or (on-poistettu? silta)
+    (not (:urakan-vastuulla? silta))))
 
 (defn- varita-silta [silta]
   ;; Värittää sillan vihreäksi mikäli se on tarkastettu tämän hoitokauden aikana
@@ -36,7 +40,7 @@
       (assoc-in [:alue :fill] true)
       (assoc-in [:alue :color] (cond
                                  (on-tarkastettu-hoitokautena? silta) (:tarkistettu silta-varit)
-                                 (on-poistettu? silta) (:poistettu silta-varit)
+                                 (ei-urakan-vastuulla? silta) (:poistettu silta-varit)
                                  :else (:ei-tarkistettu silta-varit)))))
 
 (defn- hae-urakan-siltalistaus [urakka listaus]
@@ -74,11 +78,11 @@
                             (some on-tarkastettu-hoitokautena? sillat)
                             (conj {:vari   (:tarkistettu silta-varit)
                                    :teksti "Silta on tarkastettu kuluvalla hoitokaudella"})
-                            (some on-poistettu? sillat)
+                            (some ei-urakan-vastuulla? sillat)
                             (conj {:vari   (:poistettu silta-varit)
                                    :teksti "Silta ei enää ole urakan vastuulla"})
                             (some #(and (not (on-tarkastettu-hoitokautena? %))
-                                        (not (on-poistettu? %)))
+                                        (not (ei-urakan-vastuulla? %)))
                                   sillat)
                             (conj {:vari   (:ei-tarkistettu silta-varit)
                                    :teksti "Siltaa ei ole tarkastettu kuluvalla hoitokaudella"}))]

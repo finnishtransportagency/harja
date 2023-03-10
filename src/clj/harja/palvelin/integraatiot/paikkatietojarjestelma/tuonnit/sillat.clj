@@ -1,16 +1,14 @@
 (ns harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.sillat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [clojure.set :as clj-set]
+            [clojure.string :as str]
+            [clojure.set :as set]
             [harja.pvm :as pvm]
             [harja.kyselyt.sillat :as q-sillat]
             [harja.kyselyt.urakat :as q-urakka]
             [harja.kyselyt.integraatioloki :as q-integraatioloki]
-            [harja.tyokalut.functor :as functor]
-            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile]
-            [clj-time.coerce :as c])
-  (:import [java.sql BatchUpdateException]
-           [org.postgresql.util PSQLException]))
+            [harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.shapefile :as shapefile])
+  (:import [org.postgresql.util PSQLException]))
 
 (defn string-intiksi [str]
   (if (string? str)
@@ -30,219 +28,135 @@
                   [k (float-intiksi v)])
                 m)))
 
-(def elytunnuksen-laani
-  {"Uud" "U"                                                ;; uusimaa
-   "Var" "T"                                                ;; varsinais-suomi
-   "Kas" "KaS"                                              ;; kaakkois-suomi
-   "Pir" "H"                                                ;; pirkanmaa
-   "Pos" "SK"                                               ;; pohjois-savo
-   "Kes" "KeS"                                              ;; keskis-suomi
-   "Epo" "V"                                                ;; etelä-pohjanmaa
-   "Pop" "O"                                                ;; pohjois-pohjanmaa
-   "Lap" "L"                                                ;; lappi
-   })
-
-(defn logita-virhe-sillan-tuonnissa [db jira-viesti tekstikentta]
-  (let [tapahtuma-id (q-integraatioloki/hae-uusin-integraatiotapahtuma-id db {:jarjestelma "ptj"
-                                                                              :nimi "sillat-haku"})
-        integraatio-log-params {:tapahtuma-id tapahtuma-id
-                                :alkanut (pvm/pvm->iso-8601 (pvm/nyt-suomessa))
-                                :valittu-jarjestelma "ptj"
-                                :valittu-integraatio "sillat-haku"}]
-    (log/error "[SILLAT]"
-               {:fields [{:title "Linkit"
-                          :value (str "<|||ilog" integraatio-log-params "ilog||||Harja integraatioloki> | "
-                                      "<|||glogglog||||Graylog> | "
-                                      "<|||jira" jira-viesti "jira||||JIRA>")}]
-                :tekstikentta tekstikentta})))
-
-(defn kasittele-kunnalle-kuuluva-silta
-  "HARJA:n kantaan on tallennettu kunnalle kuuluvia siltoja.
-   Pyritään niistä pois, niin tulevaisuudessa tätä funktiota ei edes välttämättä
-   tarvi."
-  [db urakkatiedot sql-parametrit]
-  (let [silta-kannassa? (not (empty? urakkatiedot))
-        silta-taulun-id  (:silta-taulun-id (first urakkatiedot))]
-    (when silta-kannassa?
-      (if (some :siltatarkastuksia? urakkatiedot)
-        ;; Jos on tarkastuksia, annetaan olla kannassa ja logitetaan
-        (do (q-sillat/paivita-silta! db (assoc sql-parametrit :kunnan-vastuulla true))
-            (logita-virhe-sillan-tuonnissa db
-                                           "Kunnan hoitamalle sillalle merkattu tarkastuksia"
-                                           (str "Silta " silta-taulun-id
-                                                " on merkattu kunnan hoitamaksi, mutta sillä on siltatarkastuksia.")))
-        ;; Merkataan silta poistetuksi, jos ei ole tarkastuksia
-        (q-sillat/merkkaa-kunnan-silta-poistetuksi! db {:silta-id silta-taulun-id})))))
-
+(defn- silta-kuuluu-kunnalle? [silta]
+  (let [kunnossapitaja (str/lower-case (:nykyinenku silta))]
+    (or (str/includes? kunnossapitaja "yksityinen")
+      (str/includes? kunnossapitaja "kaupunki")
+      (str/includes? kunnossapitaja "kunta")
+      (str/includes? kunnossapitaja "tieyhtiö")
+      (str/includes? kunnossapitaja "ruotsi")
+      (str/includes? kunnossapitaja "hkl")
+      (str/includes? kunnossapitaja "sairaanhoitopiiri"))))
 
 (defn luo-tai-paivita-silta [db silta-floateilla]
   (let [silta (mapin-floatit-inteiksi silta-floateilla)
-        aineistovirhe (:loc_error silta)
-        tyyppi (:rakennety silta)
-        siltanumero (:siltanro silta)
-        nimi (:siltanimi silta)
-        geometria (if (= aineistovirhe "NO ERROR") (.toString (:the_geom silta)) nil) ;; Jos sillan geometria ei ole validi, jätetään se tallentamatta, mutta tallennetaan muut tiedot sillasta. Poistetuilta silloilta puuttuu sijainti, mutta tiedon poistosta täytyy siirtyä.
-        tie (:tie silta)
-        alkuosa (:aosa silta)
-        alkuetaisyys (:aet silta)
-        ely-lyhenne (:ely_lyhenn silta)
-        ely-numero (:ely silta)
-        loppupvm_str (:loppupvm silta)
-        loppupvm (when (> (count loppupvm_str) 0) (c/to-date (str (subs loppupvm_str 0 4) "-" (subs loppupvm_str 4 6) "-" (subs loppupvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä
-        lakkautuspvm_str (:lakkautpvm silta)
-        lakkautuspvm (when (> (count lakkautuspvm_str) 0) (c/to-date (str (subs lakkautuspvm_str 0 4) "-" (subs lakkautuspvm_str 4 6) "-" (subs lakkautuspvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
-        muutospvm_str (:muutospvm silta)
-        muutospvm (when (> (count muutospvm_str) 0) (c/to-date (str (subs muutospvm_str 0 4) "-" (subs muutospvm_str 4 6) "-" (subs muutospvm_str 6 8)))) ;; päivämäärä saadaan avasta muodossa 19940411000000, voi olla tyhjä'
-        ;; uudessa rajapinnassa statuskenttä puuttuu. Tuotannossa suurin osa statuksella 1, joten siihen fallback
-        status (int (or (:status silta) 1))
-        laani-lyhenne (get elytunnuksen-laani ely-lyhenne)
-        tunnus (when (not-empty laani-lyhenne)
-                 (str laani-lyhenne "-" siltanumero))
-        kunnan-numerot ["400" "481"]
-        alueurakka (str (:ualue silta))
-        urakka-id (when-not (or (empty? alueurakka)
-                                (some #(= % alueurakka) kunnan-numerot))
-                    (q-urakka/hae-urakka-id-alueurakkanumerolla db {:alueurakka alueurakka}))
-        _ (when (and (nil? urakka-id) (not (some #(= % alueurakka) kunnan-numerot)) (= aineistovirhe "NO ERROR"))
-            (log/debug "[SILLAT]" "---> e: " silta-floateilla)
-            (logita-virhe-sillan-tuonnissa db "Virhe shapefilessä: Sillalle ei ole merkattu urakkaa"
-                                           (str "Sillalle " (:siltanimi silta)
-                                                " (" siltanumero ") "
-                                                " ei ole merkattu alueurakkaa. Tai on tullut uusi kuntanumero.")))
-        trex-oid (when-not (empty? (:trex_oid silta))
-                   (:trex_oid silta))
-        siltaid (string-intiksi (:silta_id silta))
-        urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltaid siltaid :siltatunnus tunnus :siltanimi nimi})
-        urakat (into []
-                     ;; Poistetaan mahdolliset nil arvot vektorista
-                     (keep identity)
-                     (cond
-                       ;; Ei löydetty urakkaa tai kunta hoitaa, palautetaan ne urakat, jotka jo merkattu.
-                       (nil? urakka-id) (mapv :urakka-id urakkatiedot)
-                       ;; Siltaa ei ole kannassa
-                       (empty? urakkatiedot) [urakka-id]
-                       ;; Silta on kannassa ja urakka on jo merkattu sillalle
-                       (some #(= (:urakka-id %) urakka-id) urakkatiedot)(mapv :urakka-id urakkatiedot)
-                       ;; Urakkaa ei ole merkattu sillalle, joten täytyy tarkistaa onko silta jo toisessa aktiivisessa
-                       ;; urakassa. Varmaankin mahdollista vain, jos esim. tr:ssä ollaan päivitetty urakkatietoja.
-                       (some #(pvm/ennen? (pvm/nyt) (:loppupvm %)) urakkatiedot)
-                       (let [vaarat-urakat (filter #(pvm/ennen? (pvm/nyt) (:loppupvm %)) urakkatiedot)
-                             ;; Jos väärissä urakoissa on jo siltatarkastuksia, ei tehdä muuta kuin logitetaan virhe.
-                             ;; Jos taasen väärään urakkaan ei olla merkattu siltatarkastuksia, otetaan väärä urakka pois ja
-                             ;; laitetaan silta oikeaan urakkaan.
-                             urakat-vaarassa-sillassa (into #{}
-                                                            (keep identity)
-                                                            (for [vaara-urakka vaarat-urakat]
-                                                              (if (:siltatarkastuksia? vaara-urakka)
-                                                                (do
-                                                                  (logita-virhe-sillan-tuonnissa db "Silta väärässä urakassa"
-                                                                                                 (str "Siltaan " (:silta-taulun-id  vaara-urakka) " (trex-oid: " trex-oid ")"
-                                                                                                      " on merkattu väärä urakka " (:urakka-id vaara-urakka) " (alueurakka: " alueurakka ")"
-                                                                                                      "! :bridge_at_night:|||"
-                                                                                                      "Silta on urakan " urakka-id " vastuulla"))
-                                                                  (:urakka-id vaara-urakka))
-                                                                (do (q-sillat/poista-urakka-sillalta! db (select-keys vaara-urakka #{:urakka-id :silta-taulun-id})) nil))))
-                             poistetut-urakat (clj-set/difference (into #{} (map :urakka-id vaarat-urakat))
-                                                                  urakat-vaarassa-sillassa)]
-                         (if (empty? urakat-vaarassa-sillassa)
-                           (do
-                             (log/debug "Kaikki virheellisesti siltaan ( trex-oid:" trex-oid ", silta-id: " siltaid ") liitetyt urakat (" (mapv :urakka-id vaarat-urakat) ") saatiin poistettua sillan tiedoista.")
-                             (conj (reduce (fn [urakat {urakka-id :urakka-id}]
-                                             (if (poistetut-urakat urakka-id)
-                                               urakat (conj urakat urakka-id)))
-                                           [] urakkatiedot)
-                                   urakka-id))
-                           (do
-                             (log/debug "Kaikkia käsiteltyyn siltaan ( trex-oid:" trex-oid ", silta-id: " siltaid ") virheellisesti liitettyjä urakoita (" urakat-vaarassa-sillassa ") ei saatu poistettua sillan tiedoista. "
-                                        "Ei lisätä oikeaa urakkaa ( alueurakka:" alueurakka ", urakka: " urakka-id ") listaan. Siltaan virheellisesti liitetyt urakat olivat poistetut mukaan lukien: " (mapv :urakka-id vaarat-urakat))
-                             (reduce (fn [urakat {urakka-id :urakka-id}]
-                                       (if (poistetut-urakat urakka-id)
-                                         urakat (conj urakat urakka-id)))
-                                     [] urakkatiedot))))
-                       ;; Muuten silta on kannassa, mutta urakkaa ei ole merkattu sille
-                       :else (conj (mapv :urakka-id urakkatiedot) urakka-id)))
+        ;; Parsitaan sillan tyyppi rakennetyypeistä. Sillalla voi olla useampi rakennetyyppi
+        ;; On mahdollista, että tämä ei ota oikeaa, mutta riskin pitäisi olla pieni, sillä siltatyyppiä ei käytetä mihinkään tärkeään
+        tyyppi (when-not (empty? (:janteet silta))
+                 (second (re-find #"rakennetyypit:nimi:([^,]*)" (:janteet silta))))
+        tunnus (:tunnus silta)
+        siltanumero (string-intiksi (last (str/split tunnus #"-")))
+        nimi (:nimi silta)
+        geometria (:the_geom silta)
+        geometria-str (.toString geometria)
+        tie (string-intiksi (get-in silta [:tieosoite :tr_numero]))
+        alkuosa (string-intiksi (get-in silta [:tieosoite :tr_alkuosa]))
+        alkuetaisyys (string-intiksi (get-in silta [:tieosoite :tr_alkuetaisyys]))
+        muutospvm (:paivitetty silta)
+        trex-oid (when-not (empty? (:oid silta))
+                   (:oid silta))
+        tila (:tila silta)
+        kaytossa? (= "kaytossa" tila)
+        urakkatiedot (q-sillat/hae-sillan-tiedot db {:trex-oid trex-oid :siltatunnus tunnus :siltanimi nimi})
+
+        ;; Jos urakkatietoa on muokattu käsin, ei päivitetä sillan urakkoja.
+        urakkatieto-kasin-muokattu? (:urakkatieto_kasin_muokattu (first urakkatiedot))
+
+        urakat-sijainnilla (->> (loop [threshold 0]
+                                 (let [urakat (q-urakka/hae-urakka-sijainnilla db {:x (.getX geometria) :y (.getY geometria)
+                                                                                   :urakkatyyppi "hoito" :threshold threshold})]
+                                   (if (and (empty? urakat) (< threshold 1000))
+                                     (recur (+ threshold 100))
+                                     urakat)))
+                             (sort-by :alkupvm)
+                             reverse)
+
+        urakka-id (:id (first urakat-sijainnilla))
+
+        _ (when (and (> (count urakat-sijainnilla) 1)
+                  (not urakkatieto-kasin-muokattu?))
+            (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: ["
+              (str/join ", " (map :id urakat-sijainnilla)) "]."
+              "Vastuu-urakaksi merkitään " urakka-id))
+
+        ;; Jätetään vanha urakka sillalle jos urakka ei ole päättynyt ja sillä on siltatarkastuksia
+        aktiiviset-urakat-joilla-tarkastuksia (filter (fn [silta]
+                                                        (and (:siltatarkastuksia? silta)
+                                                          (pvm/ennen? (pvm/nyt) (:loppupvm silta))
+                                                          (not= urakka-id (:urakka-id silta)))) urakkatiedot)
+
+        sillalla-tarkastuksia? (or (seq aktiiviset-urakat-joilla-tarkastuksia)
+                                 (some #(and (= urakka-id (:urakka-id %))
+                                          (:siltatarkastuksia? %)) urakkatiedot))
+
+        sillan-vanhat-urakat (concat aktiiviset-urakat-joilla-tarkastuksia
+                               ;; Jätetään talteen myös sillalle merkityt päättyneet urakat.
+                               (filter (fn [silta]
+                                         (pvm/ennen? (:loppupvm silta) (pvm/nyt))) urakkatiedot))
+
+        ;; Silta siirtyy löydetylle urakalle, paitsi jos se on asetettu käsin.
+        vastuu-urakka (if urakkatieto-kasin-muokattu?
+                        (:vastuu_urakka (first urakkatiedot))
+                        urakka-id)
+
+        urakka-idt (distinct (keep identity (cond-> (map :urakka-id sillan-vanhat-urakat)
+                                              (not urakkatieto-kasin-muokattu?)
+                                              (conj urakka-id))))
+
+        silta-kuuluu-kunnalle? (silta-kuuluu-kunnalle? silta)
+
+        ;; Merkitään silta kokonaan poistetuksi, jos sen tila ei ole käytössä tai se kuuluu kunnalle,
+        ;; eikä sille ole aktiivisissa urakoissa tehtyjä tarkastuksia.
+        poistetaan? (boolean (and
+                               (or (not kaytossa?)
+                                 silta-kuuluu-kunnalle?)
+                               (not sillalla-tarkastuksia?)))
+
         sql-parametrit {:tyyppi tyyppi
                         :siltanro siltanumero
                         :siltanimi nimi
-                        :geometria geometria
+                        :geometria geometria-str
                         :numero tie
                         :aosa alkuosa
                         :aet alkuetaisyys
                         :tunnus tunnus
-                        :siltaid siltaid
                         :trex-oid trex-oid
-                        :loppupvm loppupvm
-                        :lakkautuspvm lakkautuspvm
                         :muutospvm muutospvm
-                        :urakat urakat
-                        :status status
-                        :poistettu false
-                        :kunnan-vastuulla false}]
+                        :loppupvm (when-not kaytossa? muutospvm)
+                        :poistettu poistetaan?
+                        :urakat urakka-idt
+                        :vastuu-urakka vastuu-urakka
+                        :kunnan-vastuulla silta-kuuluu-kunnalle?}]
 
     ;; AINEISTOON LIITTYVÄT HUOMIOT
 
-    ; Ensimmäinen Harjassa tehty siltatarkastus: 2016-09-28 => Suodatetaan aineistosta mukaan vain ne sillat,
-    ; joissa ei ole loppupäivämäärää tai joiden loppupäivämäärä on Harjan käyttöönoton jälkeen.
-    ; Päivitettävä silta etsitään vanhalla Siltarekisterin siltaid:llä tai siltatunnuksella tai uudella Taitorakennerekisterin tunnuksella
-
-    ; Loppupäivämäärä: Tietty ominaisuus, päätös tai asian tila päättyy tieverkolla sen loppupäivämääränä.   
-    ; Lakkautuspäivämäärä: Lakkautuspäivämäärä on vain ja ainoastaan ajorataa ja tietä koskeva termi. Ajorataosuus on poistunut lakkautuspäivänä yleiseltä tieverkolta. Tämänkin hetken jälkeen tie saattaaa jäädä olemaan ja sille voidaan myöhemmin muuttaa ainakin teoriassa ominaisuuksia.  
-    ; Kun ajorataosuus lakkautetaan, geometria poistuu tierekisteristä (=> aineistovirhe). Jotta geometria säilyy Harjassa, päivitetään lakkautetuista tieosuuksista ainoastaan lakkautuspäivämäärä.
-
-    ; Silta_id on vanhan Siltarekisterin tunniste, nykyinen Taitorakennerekisteri yksilöi trex-oid-tiedolla. Silta_id voi siis jatkossa puuttua sillalta.
-    ; Siltanumero on molempien id:n kanssa relevantti => Otetaan aineistoon mukaan vain sillat, joissa siltanumero on annettu.
-    ; Jos sekä siltaid että trex-oid puuttuvat, ei viedä siltaa kantaan.
+    ; HOX! Aineiston rakenne muuttunut 2022 lopulla huomattavasti, muutokset tehty 2023 alkupuolella.
+    ;
+    ; Uudessa aineistossa saadaan tieto vain siitä, onko silta päättynyt, lakkautettu, täytetty tms. Jos sillan tila
+    ; on mitä tahansa muuta kuin käytössä, merkitän sen loppumispäiväksi sen edellisen päivityksen pvm.
+    ;
+    ; Jos silta siirtyy urakalta toiselle, ja sillalle on tehty siltatarkastuksia toisessa aktiivisessa urakassa,
+    ; nostetaan virhe lokille eikä siirretä siltaa.
+    ;
+    ; Uusille silloille tätä ei pitäisi tapahtua, koska ainoa tilanne, jossa silta siirtyy toiselle urakalle, pitäisi
+    ; olla kun urakka päättyy ja uusi alkaa. Vanhan aineiston mukana on kuitenkin tullut alueurakkaid, jonka takia
+    ; kannassa saattaa olla urakoita, jotka kuuluvat eri urakalle kuin sillan sijainti antaa ymmärtää.
+    ;
+    ; Päättyneen urakan ID jätetään sillalle, koska sitä tarvitaan ainakin siltatarkastusraporteissa
+    ;
+    ; Ei tallenneta siltoja ollenkaan, joista puuttuu siltanumero tai trex-oid
+    ; Ei myöskään luoda siltaa, jos se ei ole käytössä tai kuuluu kunnalle.
 
     (when-not (or (nil? siltanumero)
-                  (and (nil? siltaid) (nil? trex-oid)))
-      (if (some #(= % alueurakka) kunnan-numerot)
-        (kasittele-kunnalle-kuuluva-silta db urakkatiedot sql-parametrit)
-        (if-not (empty? urakkatiedot)
-          (q-sillat/paivita-silta! db sql-parametrit)
-          (if (or (nil? loppupvm)
-                  (pvm/ennen? (pvm/->pvm "28.9.2016") loppupvm))
-            (q-sillat/luo-silta<! db sql-parametrit)))))))
+                (nil? trex-oid))
+      (if-not (empty? urakkatiedot)
+        (q-sillat/paivita-silta! db sql-parametrit)
+        (when (and kaytossa? (not silta-kuuluu-kunnalle?))
+          (q-sillat/luo-silta<! db sql-parametrit))))))
+
 
 (defn vie-silta-entry [db silta]
   (luo-tai-paivita-silta db silta))
-
-(defn voimassaolevat-sillat
-  "Silta on voimassa, kun sillä on osuus, jossa ei ole asetettu lopetus- eikä lakkautuspäivämäärää.
-  Jos silta ei ole voimassa, se on purettu, sillä liikennöinti on lakkautettu tai sen ylläpito on siirretty pois valtiolta.
-  Harjan kannalta ei-voimassaoleva silta on sama kuin poistettu.
-  Funktio palauttaa vektorin, jossa poistettavien siltojen trex-oid (yksilöivä tunnus Taitorakennerekisterissä)."
-  [kaikki-sillat]
-        (map #(:trex_oid %)
-             (filter #(and
-                        (= "" (:loppupvm %))
-                        (= "" (:lakkautpvm %))) kaikki-sillat)))
-
-(defn merkitse-siltojen-voimassaolostatus
-  [voimassaolevat-sillat kaikki-sillat]
-  (map (fn[silta]
-         (if (some (fn[id](= (:trex_oid silta) id)) (vec voimassaolevat-sillat))
-           (assoc silta :voimassa true)
-           (assoc silta :voimassa false))) kaikki-sillat))
-
-
-; Aineistossa tulee joskus koulutuksessa käytettyjä siltoja, poistetaan ne ennen käsittelyä.
-(defn karsi-testisillat [sillat]
-  (remove #(= true
-              (boolean
-                (re-find #"TENTTI_" (:nimi %))))
-          sillat))
-
-(defn karsi-voimassaolevien-siltojen-poistetut-osuudet
-  "Ei viedä tietoja poistetuista osuuksista Harjaan, jos silta on vielä voimassa. Karsitaan ne aineistosta.
-  Voimassa olevista osuuksista tallentuu yhden siltatietueen tiedot, vaikka osuuksia olisi useampia.
-  Kokonaan poistetuista silloista samoin. Viimeisen käsiteltävän tietueen tiedot jäävät silloin Harjaan."
-  [sillat-aineistosta]
-    (remove #(and (= true (:voimassa %))
-                  (or (not= "" (:loppupvm %)) (not= "" (:lakkautpvm %))))
-            (sort-by (juxt :trex_oid :muutospvm)
-                     (merkitse-siltojen-voimassaolostatus
-                       (voimassaolevat-sillat sillat-aineistosta)
-                       sillat-aineistosta))))
 
 ; Jotta ei tule tallennuksessa ongelmia yksilöivien avainten kanssa + suorituskyvyn parantamiseksi, jätetään tallennettavaan
 ; aineistoon ainoastaan yksi rivi per voimassaoleva silta.
@@ -252,17 +166,38 @@
                 (lazy-seq
                   ((fn [[f :as kaikki-siltarivit] valitut-siltarivit]
                      (when-let [sillat (seq kaikki-siltarivit)]
-                       (if (contains? valitut-siltarivit (:trex_oid f))
+                       (if (contains? valitut-siltarivit (:oid f))
                          (recur (rest sillat) valitut-siltarivit)
-                         (cons f (erottele (rest sillat) (conj valitut-siltarivit (:trex_oid f)))))))
+                         (cons f (erottele (rest sillat) (conj valitut-siltarivit (:oid f)))))))
                     kaikki-siltarivit valitut-siltarivit)))]
      (erottele kaikki-siltarivit #{}))))
+
+(defn parsi-tieosoitteet [sillat]
+  (map (fn [silta]
+         (assoc silta :tieosoite
+                      ;; Sillassa saattaa olla useampi tieosoite, esim. sekä ajoväylä että kävelyteitä.
+                      ;; Parsitaan näistä ensimmäinen regexillä. Tämä ei ole täysin pomminvarma, joten virheitä saattaa tulla.
+                      ;; Tämän ei kuitenkaan pitäisi haitata, sillä sillan tr-osoitetta ei käytetä mihinkään tärkeään.
+                      (when-let [tieosoitteet (:tieosoitte silta)]
+                        {:tr_numero (second (re-find #"tienumero:(.*?(?=,))" tieosoitteet))
+                         :tr_alkuosa (second (re-find #"tieosa:(.*?(?=,))" tieosoitteet))
+                         :tr_alkuetaisyys (second (re-find #"etaisyys:(.*?(?=,))" tieosoitteet))})))
+    sillat))
+
+(defn- suodata-sillat [sillat]
+  (filter #(and
+             (:nykyinen_o %)
+             (str/includes? (:nykyinen_o %) "Väylävirasto")
+             (:vaylanpito %)
+             (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko")) sillat))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile
     (let [siltatietueet-shapefilesta (shapefile/tuo shapefile)
-          tallennettavat-siltatietueet (jarjesta-voimassaolevat-sillat-yksittaisille-riveille
-                                         (karsi-testisillat (karsi-voimassaolevien-siltojen-poistetut-osuudet siltatietueet-shapefilesta)))]
+          tallennettavat-siltatietueet (-> siltatietueet-shapefilesta
+                                         suodata-sillat
+                                         jarjesta-voimassaolevat-sillat-yksittaisille-riveille
+                                         parsi-tieosoitteet)]
       (log/debug (str "Tuodaan sillat kantaan tiedostosta " shapefile))
       (try (jdbc/with-db-transaction [db db]
              (doseq [silta tallennettavat-siltatietueet]
