@@ -32,8 +32,6 @@
   Listaus parametri määrittelee minkä haun mukaan sillat haetaan:
 
   :kaikki    hakee kaikki sillat (ei kohteita mukana)
-  :puutteet  hakee sillat, joilla on viimeisimmässä tarkastuksessa puutteuta
-             mukana :kohteet avaimella kohteet, joissa puutteuta
   :korjatut  hakee sillat, joilla on ollut puutteita ja jotka on korjattu"
 
   [db user urakka-id listaus]
@@ -41,8 +39,9 @@
   (case listaus
     :kaikki
     (into []
-          (geo/muunna-pg-tulokset :alue)
-          (q/hae-urakan-sillat db urakka-id))
+      (comp (geo/muunna-pg-tulokset :alue)
+        (map konv/alaviiva->rakenne))
+      (q/hae-urakan-sillat db urakka-id))
 
     :urakan-korjattavat
     (into []
@@ -65,14 +64,6 @@
                 (filter #(and (not= (:rikki-ennen %) 0)
                               (= (:rikki-nyt %) 0))))
           (q/hae-urakan-sillat-korjatut db urakka-id))
-
-    ;; DEPRECATED
-    :puutteet
-    (into []
-          (comp (geo/muunna-pg-tulokset :alue)
-                kohteet-xf
-                (filter #(not (empty? (:kohteet %)))))
-          (q/hae-urakan-sillat-puutteet db urakka-id))
 
     :korjatut
     (into []
