@@ -559,7 +559,7 @@
         [:button
          {:type "submit"
           :disabled (not voi-suorittaa?)
-          :style {"margin-left" "16px"}
+          :style {:margin-left "16px"}
           :class #{"nappi-toissijainen" "pull-right"}
           :on-click #(aseta-parametrit! id)}
          ikoni " " teksti]])]))

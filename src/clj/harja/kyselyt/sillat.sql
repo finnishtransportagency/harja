@@ -38,6 +38,7 @@ SELECT
   s.trex_oid AS "trex-oid",
   s.poistettu,
   s.vastuu_urakka,
+  s.urakkatieto_kasin_muokattu,
   EXISTS(SELECT 1 FROM siltatarkastus st WHERE st.urakka=u.id AND st.silta=s.id AND st.poistettu = false) AS "siltatarkastuksia?"
 FROM silta s
   LEFT OUTER JOIN urakka u ON ARRAY[u.id] :: INT[] <@ s.urakat

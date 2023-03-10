@@ -49,9 +49,9 @@
         nimi (:nimi silta)
         geometria (:the_geom silta)
         geometria-str (.toString geometria)
-        tie (string-intiksi (:tr_numero (:tieosoite silta)))
-        alkuosa (string-intiksi (:tr_alkuosa (:tieosoite silta)))
-        alkuetaisyys (string-intiksi (:tr_alkuetaisyys (:tieosoite silta)))
+        tie (string-intiksi (get-in silta [:tieosoite :tr_numero]))
+        alkuosa (string-intiksi (get-in silta [:tieosoite :tr_alkuosa]))
+        alkuetaisyys (string-intiksi (get-in silta [:tieosoite :tr_alkuetaisyys]))
         muutospvm (:paivitetty silta)
         trex-oid (when-not (empty? (:oid silta))
                    (:oid silta))
@@ -73,7 +73,7 @@
 
         urakka-id (:id (first urakat-sijainnilla))
 
-        _ (when (and (< 1 (count urakat-sijainnilla))
+        _ (when (and (> (count urakat-sijainnilla) 1)
                   (not urakkatieto-kasin-muokattu?))
             (log/warn "Sillalle " trex-oid "löytyi useita urakoita! Urakka-id:t: ["
               (str/join ", " (map :id urakat-sijainnilla)) "]."
@@ -96,7 +96,7 @@
 
         ;; Silta siirtyy löydetylle urakalle, paitsi jos se on asetettu käsin.
         vastuu-urakka (if urakkatieto-kasin-muokattu?
-                        (:vastuu-urakka (first urakkatiedot))
+                        (:vastuu_urakka (first urakkatiedot))
                         urakka-id)
 
         urakka-idt (distinct (keep identity (cond-> (map :urakka-id sillan-vanhat-urakat)
@@ -181,14 +181,15 @@
                       (when-let [tieosoitteet (:tieosoitte silta)]
                         {:tr_numero (second (re-find #"tienumero:(.*?(?=,))" tieosoitteet))
                          :tr_alkuosa (second (re-find #"tieosa:(.*?(?=,))" tieosoitteet))
-                         :tr_alkuetaisyys (second (re-find #"tieosa:(.*?(?=,))" tieosoitteet))
-                         :tr_ajorata (second (re-find #"ajorata:(.*?(?=,))" tieosoitteet))})))
+                         :tr_alkuetaisyys (second (re-find #"etaisyys:(.*?(?=,))" tieosoitteet))})))
     sillat))
 
 (defn- suodata-sillat [sillat]
   (filter #(and
+             (:nykyinen_o %)
              (str/includes? (:nykyinen_o %) "Väylävirasto")
-             (and (seq (:vaylanpito %)) (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko"))) sillat))
+             (:vaylanpito %)
+             (str/includes? (str/lower-case (:vaylanpito %)) "tieverkko")) sillat))
 
 (defn vie-sillat-kantaan [db shapefile]
   (if shapefile

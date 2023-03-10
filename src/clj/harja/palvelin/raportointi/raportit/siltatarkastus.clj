@@ -295,7 +295,6 @@
         jarjesta-ryhmien-sisallot (fn [tila-ja-rivit]
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
-                           (println (group-by (juxt :tarkastamaton? :virhe? :siirretty?) rivit))
                            (let [jarjestys (fn [a b] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
                                                                    [false true] 1
                                                                    [false false] 2}

@@ -145,7 +145,7 @@
                                                :ulkoinen_id "123"
                                                :lahde "harja-ui"})
 
-      (println "Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan")
+      ;; Siirrä silta toiseen urakkaan kun sillalle on merkattu tarkastuksia entiseen urakkaan
       (let [paivita-silta (vie-silta-urakalle ds silta-tuonti oulu-aktiivinen-u-id)
             hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                         (update :alue #(geo/pg->clj %))
@@ -161,17 +161,19 @@
         (is (= sillat-ennen sillat-jalkeen))))
 
     (testing "Merkitse sillan urakan käsin asetetuksi"
+      (u (str "UPDATE silta SET urakkatieto_kasin_muokattu = TRUE, vastuu_urakka = '" kajaani-aktiivinen-u-id "' WHERE trex_oid = '" (:oid silta-tuonti) "'"))
       (let [paivita-silta (vie-silta-urakalle ds silta-tuonti oulu-aktiivinen-u-id)
             hae-silta (-> (first (q-map (str "SELECT * FROM silta WHERE trex_oid = '" (:oid silta-tuonti) "'")))
                         (update :alue #(geo/pg->clj %))
                         (update :urakat #(into #{} (konv/pgarray->vector %)))
                         (dissoc :luotu :muokattu :id))]
         (is (= paivita-silta 1))
-        (is hae-silta (-> odotettu-vastaus
-                        (assoc :urakat (into #{} [oulun-au-id kajaani-aktiivinen-u-id oulu-aktiivinen-u-id])
-                               :muokkaaja 1
-                               :vastuu_urakka kajaani-aktiivinen-u-id)
-                        (dissoc :muokattu))) "Sillan vastuu-urakan ei pitäisi vaihtua, koska se on käsin asetettu."))))
+        (is (= hae-silta (-> odotettu-vastaus
+                           (assoc :urakat (into #{} [oulun-au-id kajaani-aktiivinen-u-id])
+                                  :muokkaaja 1
+                                  :vastuu_urakka kajaani-aktiivinen-u-id
+                                  :urakkatieto_kasin_muokattu true)
+                           (dissoc :muokattu)))) "Sillan vastuu-urakan ei pitäisi vaihtua, koska se on käsin asetettu."))))
 
 (deftest kasittele-poistettu-silta
   (testing "Ei poisteta siltaa, jos sillä on siltatarkastus aktiivisessa urakassa"
@@ -226,6 +228,7 @@
             sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE poistettu IS NOT TRUE;"))]
         (is (nil? lisaa-silta))
         (is (= sillat-ennen sillat-jalkeen))))
+
     (testing "Sillan siirtyminen kunnalle"
       (let [silta-tuonti (assoc silta-tuonti :oid "35234525" :tunnus "O-234")
             lisaa-silta (vie-silta-urakalle ds silta-tuonti (:id aktiivinen-urakka))
