@@ -35,13 +35,17 @@
                     (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi))]
     (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys) false)))
 
+
 (defn kohde-toisten-kanssa-paallekkain-validointi
   [alikohde? _ rivi taulukko]
   (let [toiset-alikohteet (keep (fn [[indeksi kohdeosa]]
                                   (when (and (:tr-alkuosa kohdeosa) (:tr-alkuetaisyys kohdeosa)
                                              (:tr-loppuosa kohdeosa) (:tr-loppuetaisyys kohdeosa)
                                              (not= kohdeosa rivi))
-                                    kohdeosa))
+                                    ;; Lisää muihin alikohteisiin taulukon riviin viittava indeksiluku, jotta siihen
+                                    ;; voidaan viitata validoinnin virheviestissä.
+                                    (assoc kohdeosa
+                                      :rivi-indeksi indeksi)))
                                 taulukko)
         paallekkyydet (filter #(yllapitokohteet-domain/tr-valit-paallekkain? rivi %)
                               toiset-alikohteet)]
@@ -52,23 +56,34 @@
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
   [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat] :as app}
-   {:keys [massat materiaalikoodistot validointi virheet-atom]} kohdeosat-atom]
+   {:keys [massat materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [voi-muokata? (not= :lukittu (:tila perustiedot))
-        ohjauskahva (:paallystekerros ohjauskahvat)]
+        ohjauskahva (:paallystekerros ohjauskahvat)
+        on-rivi-blur (fn [rivi]
+                       (let [{:keys [tr-ajorata]} rivi]
+                         (e! (paallystys/->HaeKaistat
+                               (select-keys rivi tr/paaluvali-avaimet)
+                               tr-ajorata))))]
     [grid/muokkaus-grid
      {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
       :voi-muokata? voi-muokata? :voi-lisata? false
       :voi-kumota? false
       :muutos #(e! (pot2-tiedot/->Pot2Muokattu))
+      ;; TODO: Digiroad-kaistojen haku disabloitu, kunnes Digiroad-rajapinnan käyttö ja kaista-aineiston hyödyntäminen
+      ;;       on suunniteltu kuntoon validointia ajatellen
+      #_#_:on-rivi-blur on-rivi-blur
       :custom-toiminto {:teksti "Lisää toimenpide"
                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
                         :opts {:ikoni (ikonit/livicon-plus)
                                :luokka "nappi-toissijainen"}}
       :ohjaus ohjauskahva :validoi-alussa? true
       :virheet virheet-atom
+      :varoitukset varoitukset-atom
       :piilota-toiminnot? true
-      :rivi-validointi (:rivi validointi)
-      :taulukko-validointi (:taulukko validointi)
+      ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
+      ;; Backendin puolella suoritetaan validointi, kun lomake merkitetään tarkastettavaksi ja tallennetaan.
+      :rivi-varoitus (:rivi validointi)
+      :taulukko-varoitus (:taulukko validointi)
       :tyhja (if (nil? @kohdeosat-atom)
                [ajax-loader "Haetaan kohdeosia..."]
                [yleiset/vihje "Aloita painamalla Lisää toimenpide -painiketta."])}

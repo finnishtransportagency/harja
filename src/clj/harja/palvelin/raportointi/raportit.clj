@@ -11,6 +11,7 @@
   [harja.palvelin.raportointi.raportit.ilmoitus]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu]
+  [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa]
   [harja.palvelin.raportointi.raportit.tehtavamaarat]
   [harja.palvelin.raportointi.raportit.vemtr]
   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
@@ -77,7 +78,16 @@
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "urakka"}
     :kuvaus       "Laskutusyhteenveto"
+    :kuvaus-tarkenne "Laskutusyhteenveto (tuotekohtainen)"
     :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu/suorita
+    :urakkatyyppi #{:teiden-hoito}}
+   
+   {:nimi         :laskutusyhteenveto-tyomaa
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"hallintayksikko" "urakka"}
+    :kuvaus       "Laskutusyhteenveto"
+    :kuvaus-tarkenne "Laskutusyhteenveto (työmaakokous)"
+    :suorita      #'harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi :tehtavamaarat
