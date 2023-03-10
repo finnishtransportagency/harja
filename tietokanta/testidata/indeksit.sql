@@ -219,9 +219,6 @@ DO $$
             END LOOP;
     END $$;
 
-SELECT round(10.12345, 2);
-
-
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
   ('paallystys'::urakkatyyppi, 'Platts: testiindeksi XYZ', 'TESTIKOODI', 'bitumi');

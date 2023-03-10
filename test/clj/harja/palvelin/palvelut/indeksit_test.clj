@@ -60,6 +60,7 @@
     (is (some #(= "MAKU 2005" (:indeksinimi %)) hoito))
     (is (some #(= "MAKU 2010" (:indeksinimi %)) hoito))
     (is (some #(= "MAKU 2015" (:indeksinimi %)) hoito))
+    (is (some #(= "MAKU 2020" (:indeksinimi %)) hoito))
     (is (not (some #(= "MAKU 2008" (:indeksinimi %)) hoito))) ;tällaista ei käytetä
     (is (some #(= "MAKU 2010" (:indeksinimi %)) tiemerkinta))
     (is (some #(= "Platts: FO 3,5%S CIF NWE Cargo" (:indeksinimi %)) paallystys))
@@ -347,3 +348,7 @@
           "Indeksilaskennan perusluku on urakan alkupvm:ää edeltävän vuoden syys-, loka- ja marraskuun keskiarvo")
       (is (= summa (kiinteahintainen-tyo-summa-indeksikorjattu kiinteahintainen-tyo))
           "Vahvistettua indeksikorjattua summaa ei saa muuttaa"))))
+
+(deftest maku-2020-laitetaan-2023-urakalle
+  (let [urakka (first (q-map "SELECT * FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'"))]
+    (is (= (:indeksi urakka) "MAKU 2020"))))

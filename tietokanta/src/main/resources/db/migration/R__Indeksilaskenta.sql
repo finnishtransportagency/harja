@@ -166,7 +166,7 @@ BEGIN
       NEW.indeksi := 'MAKU 2005';
     ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2018 THEN
       NEW.indeksi := 'MAKU 2010';
-    ELSIF EXTRACT(year FROM NEW.alkupvm) < 2022 THEN
+    ELSIF EXTRACT(year FROM NEW.alkupvm) < 2023 THEN
       NEW.indeksi := 'MAKU 2015';
     ELSE
       NEW.indeksi := 'MAKU 2020';
