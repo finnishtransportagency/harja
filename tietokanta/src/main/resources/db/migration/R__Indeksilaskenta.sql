@@ -135,6 +135,34 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
+    urakan_alkuvuosi INTEGER,
+    indeksi_vuosi INTEGER,
+    indeksinimi VARCHAR,
+    summa      NUMERIC,
+    perusluku  NUMERIC,
+    pyorista_kerroin BOOLEAN)
+
+    RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+    indeksi_kk INTEGER;
+BEGIN
+    -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta
+    indeksi_kk = 9;
+
+    -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
+    if urakan_alkuvuosi = 2023 THEN
+        indeksi_kk = 8;
+    END IF;
+
+    RETURN laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kk, indeksinimi, summa,
+        perusluku, pyorista_kerroin);
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Tätä käytetään tällä hetkellä vain sanktion_indeksikorotus stored proceduressa
 CREATE OR REPLACE FUNCTION kuukauden_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER)
   RETURNS NUMERIC(10,2) AS $$
 DECLARE
@@ -153,7 +181,6 @@ BEGIN
   RETURN (vertailuluku / perusluku) * summa;
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 -- Urakan oletusindeksin asettaminen
