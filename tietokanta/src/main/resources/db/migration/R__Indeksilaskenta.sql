@@ -242,6 +242,9 @@ BEGIN
     arvo := (SELECT i.arvo
                FROM indeksi i
               WHERE i.vuosi = vertailuvuosi
+                -- TODO: Yleisesti vertailukuukautena on käytetty aina syyskuuta, mutta urakoilla jotka alkavat 2023
+                --       käytetäänkin vertailukuukautena elokuuta. Lisää tähän automaattinen valinta vertailukuukaudelle
+                --       käyttäen urakan alkuvuotta.
                 AND i.kuukausi = 9
                 AND nimi = indeksin_nimi);
 
