@@ -203,26 +203,35 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
             (if (empty? o)
               res
               ;; Uniikkien :talvitieluokka/:soratieluokka -arvojen lasku kertoo, kuinka monta hoitoluokkakohtaista riviä on.
-              (let [nykyiset-lapset-cnt (count (into #{}
+              (let [materiaali-rivit (second (first o))
+                    nykyiset-lapset-cnt (count (into #{}
                                                  (keep
                                                    #(or (:talvitieluokka %) (:soratieluokka %))
-                                                   (second (first o)))))]
+                                                   materiaali-rivit)))
+                    materiaali (:materiaali (ffirst o))
+                    ;; Näytetään poikkeamarivi, talvisuolalle ja formiaatille vaikka ei olisi hoitoluokkakohtaisia rivejä
+                    ;; kunhan materiaalilla on yhtään toteumaa, kunhan ei olla yhteenvetorivillä.
+                    avattava-rivi? (and
+                                     (not (:yht-rivi materiaali))
+                                     (seq materiaali-rivit)
+                                     (or (not (zero? nykyiset-lapset-cnt))
+                                          (#{"talvisuola" "formiaatti"} (:tyyppi materiaali))))]
                 (recur
                   ;; Lisätään hoitoluokkakohtaisten rivien määrä indeksiin ja poikkeamarivin takia yksi lisärivi
                   ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
                   ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
                   ;; materiaaliin.
                   (+ (inc idx)
-                    (if (zero? nykyiset-lapset-cnt)
-                      0
-                      (inc nykyiset-lapset-cnt)))
+                    (if avattava-rivi?
+                      (inc nykyiset-lapset-cnt)
+                      0))
                   (rest o)
-                  (if (= 0 nykyiset-lapset-cnt)
-                    res
-                    ;; Ja jos materiaalilla on hoitoluokkakohtaisia rivejä, lisätään se avattavat-rivit-
-                    ;; vektoriin. Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
+                  (if avattava-rivi?
+                    ;; jos rivillä on avattavia rivejä, lisätään se avattavat-rivit-vektoriin.
+                    ;; Tämä on vektori, koska myöhemmin halutaan hakea siitä indeksin
                     ;; perusteella tavaraa, esim. (get avattavat-rivit 0).
-                    (conj res idx)))))))
+                    (conj res idx)
+                    res))))))
 
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
@@ -260,14 +269,22 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
               suunniteltu (when-not (empty? suunnitellut)
                             (reduce + suunnitellut))
               luokitellut (filter #(or (:talvitieluokka %) (:soratieluokka %)) rivit)
-              ;; Jos materiaalilla on hoitoluokkakohtaisia rivejä, nostetaan isantarivin-indeksiä yhdellä
+              yhteenvetorivi? (:yht-rivi materiaali)
+              talvisuola-tai-formiaatti? (#{"talvisuola" "formiaatti"} (:tyyppi materiaali))
+              avattava? (and
+                          (not yhteenvetorivi?)
+                          (seq rivit)
+                          (or (seq luokitellut)
+                           talvisuola-tai-formiaatti?))
+              ;; Jos materiaalilla on avattavia rivejä, nostetaan isantarivin-indeksiä yhdellä
               ;; koska materiaalit, joilla ei ole niitä, ei löydy myöskään avattavat-rivit-vektorista.
-              _ (when (seq luokitellut) (swap! isantarivi-indeksi inc))
+              _ (when avattava? (swap! isantarivi-indeksi inc))
               kk-rivit (kk-rivit rivit)
               kk-arvot (kk-arvot kk-rivit materiaali yksikot-soluissa?)
               kk-arvot-yht (yhteensa-arvo (vals kk-arvot))
               poikkeamat (into {} (map (fn [[kk materiaalit]]
-                                         (let [kk-arvo (apply + (map :maara (kk-rivit kk)))
+                                         (let [materiaalit (filter #(or (:talvitieluokka %) (:soratieluokka %)) materiaalit)
+                                               kk-arvo (apply + (map :maara (kk-rivit kk)))
                                                erotus (- (apply + (map :maara materiaalit)) kk-arvo)
                                                prosentti (if (zero? kk-arvo)
                                                            0
@@ -278,8 +295,7 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                                  :desimaalien-maara 2
                                                  :ryhmitelty? true
                                                  :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
-                                    (group-by :kk luokitellut)))
-              yhteenvetorivi? (:yht-rivi materiaali)
+                                    (group-by :kk rivit)))
               yhteensa-kentta (fn [arvot nayta-aina?]
                                 (let [yht (yhteensa-arvo arvot)]
                                   (when (or (> yht 0) nayta-aina?)
@@ -386,12 +402,11 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                                    [(yhteensa-kentta (vals kk-arvot) true)
                                     nil nil]
                                    [(yhteensa-kentta (vals kk-arvot) true)])))}))
-              (sort-by first (if (or (= "Talvisuolat" otsikko)
-                                   (= "Formiaatit" otsikko))
+              (sort-by first (if talvisuola-tai-formiaatti?
                                (group-by :talvitieluokka luokitellut)
                                (group-by :soratieluokka luokitellut))))
               ;; Ja loppuun erotusrivi
-              (when (seq luokitellut)
+              (when avattava?
                 [{:lihavoi? false
                   :isanta-rivin-id (nth avattavat-rivit @isantarivi-indeksi)
                   :rivi (into []
