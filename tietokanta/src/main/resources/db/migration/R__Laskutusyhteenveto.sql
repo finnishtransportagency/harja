@@ -31,7 +31,6 @@ CREATE OR REPLACE FUNCTION laskutusyhteenveto(
 DECLARE
   t                                      RECORD;
   ind VARCHAR; -- hoitourakassa käytettävä indeksi
-  urakan_alkupvm DATE;
   perusluku NUMERIC; -- urakan indeksilaskennan perusluku (urakkasopimusta edeltävän vuoden joulukuusta 3kk ka)
 
   kaikki_paitsi_kht_laskutettu_ind_korotus NUMERIC;
@@ -164,7 +163,7 @@ BEGIN
   cache := ARRAY[]::laskutusyhteenveto_rivi[];
 
   perusluku := indeksilaskennan_perusluku(ur);
-  SELECT indeksi, alkupvm FROM urakka WHERE id = ur INTO ind, urakan_alkupvm;
+  SELECT indeksi FROM urakka WHERE id = ur INTO ind;
 
   -- Loopataan urakan toimenpideinstanssien läpi
   FOR t IN SELECT
@@ -185,21 +184,11 @@ BEGIN
     -- Hoitokaudella ennen aikaväliä laskutetut kokonaishintaisten töiden kustannukset, myös indeksitarkistuksen kanssa
     FOR khti IN SELECT
                   (SELECT korotus
-                   FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, kht.vuosi,ind,
-                                                       kht.summa, perusluku,
-                       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-                       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-                       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-                       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-                       false)) AS ind,
+                   FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
+                                                       kht.summa, perusluku)) AS ind,
                   (SELECT korotettuna
-                   FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, kht.vuosi, ind,
-                                                       kht.summa, perusluku,
-                       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-                       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-                       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-                       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-                       false)) AS kor,
+                   FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
+                                                       kht.summa, perusluku)) AS kor,
                   kht.summa                                        AS kht_summa
                 FROM kokonaishintainen_tyo kht
                 WHERE toimenpideinstanssi = t.tpi
@@ -220,21 +209,11 @@ BEGIN
 
     FOR khti_laskutetaan IN SELECT
                               (SELECT korotus
-                               FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, kht.vuosi, ind,
-                                                                   kht.summa, perusluku,
-                                   -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-                                   --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-                                   --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-                                   --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-                                   false)) AS ind,
+                               FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
+                                                                   kht.summa, perusluku)) AS ind,
                               (SELECT korotettuna
-                               FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, kht.vuosi, ind,
-                                                                   kht.summa, perusluku,
-                                   -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-                                   --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-                                   --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-                                   --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-                                   false)) AS kor,
+                               FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
+                                                                   kht.summa, perusluku)) AS kor,
                               kht.summa                                        AS kht_summa
                             FROM kokonaishintainen_tyo kht
                             WHERE toimenpideinstanssi = t.tpi
@@ -283,13 +262,9 @@ BEGIN
       IF yhti.indeksi THEN
         -- Indeksi käytössä, lasketaan korotus
         SELECT *
-        FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, (SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
-                                            ind, yhti.yht_summa, perusluku,
-            -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-            --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-            --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-            --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-            false)
+        FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
+                                            (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut) :: INTEGER),
+                                            ind, yhti.yht_summa, perusluku)
         INTO yht_rivi;
       ELSE
         -- Indeksi ei käytössä, annetaan summa sellaisenaan
@@ -441,13 +416,9 @@ BEGIN
     LOOP
       IF mhti.indeksi = TRUE THEN
         SELECT *
-          FROM laske_kuukauden_indeksikorotus_mhu(urakan_alkupvm, (SELECT EXTRACT(YEAR FROM mhti.tot_alkanut) :: INTEGER),
-                                              ind, mhti.mht_summa, perusluku,
-              -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-              --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-              --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-              --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tässä oikeasti.
-              false)
+          FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti.tot_alkanut) :: INTEGER),
+                                              (SELECT EXTRACT(MONTH FROM mhti.tot_alkanut) :: INTEGER),
+                                              ind, mhti.mht_summa, perusluku)
           INTO muutostyot_rivi;
       ELSE
         SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0::NUMERIC as korotus
