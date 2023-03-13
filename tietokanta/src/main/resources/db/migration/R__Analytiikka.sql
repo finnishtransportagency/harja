@@ -32,7 +32,9 @@ BEGIN
                t.tyokonetyyppi                                                            as tyokone_tyokonetyyppi,
                t.tyokonetunniste                                                          as tyokone_tunnus,
                t.urakka                                                                   as urakkaid,
-               t.poistettu                                                                as poistettu
+               t.poistettu                                                                as poistettu,
+               tm.luotu                                                                   as toteuma_materiaali_luotu,
+               tm.muokattu                                                                as toteuma_materiaali_muokattu
         FROM toteuma t
                  LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
                  LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
@@ -40,7 +42,7 @@ BEGIN
                  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                  JOIN urakka u on t.urakka = u.id
         WHERE (t.luotu BETWEEN ajankohta - '1 day'::interval AND ajankohta) OR (tm.luotu BETWEEN ajankohta - '1 day'::interval AND ajankohta)
-        GROUP BY t.id, t.luotu, u.id
+        GROUP BY t.id, t.luotu, u.id, tm.luotu, tm.muokattu
         ORDER BY t.luotu ASC
     )
     ON CONFLICT DO NOTHING;
@@ -71,7 +73,9 @@ BEGIN
                t.tyokonetyyppi                                                            as tyokone_tyokonetyyppi,
                t.tyokonetunniste                                                          as tyokone_tunnus,
                t.urakka                                                                   as urakkaid,
-               t.poistettu                                                                as poistettu
+               t.poistettu                                                                as poistettu,
+               tm.luotu                                                                   as toteuma_materiaali_luotu,
+               tm.muokattu                                                                as toteuma_materiaali_muokattu
         FROM toteuma t
                  LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
                  LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
@@ -79,7 +83,7 @@ BEGIN
                  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                  JOIN urakka u on t.urakka = u.id
         WHERE (t.muokattu BETWEEN ajankohta - '1 day'::interval AND ajankohta) OR (tm.muokattu BETWEEN ajankohta - '1 day'::interval AND ajankohta)
-        GROUP BY t.id, t.luotu, u.id
+        GROUP BY t.id, t.luotu, u.id, tm.luotu, tm.muokattu
         LOOP
         -- Käytetään poista - lisää uuusiksi, menetelmää, koska update lauseessa ei voi käyttää group by komentoa
         -- tehtävien ja materiaalien lisäämiseksi.
@@ -111,7 +115,9 @@ BEGIN
                        t.tyokonetyyppi                                                            as tyokone_tyokonetyyppi,
                        t.tyokonetunniste                                                          as tyokone_tunnus,
                        t.urakka                                                                   as urakkaid,
-                       t.poistettu                                                                as poistettu
+                       t.poistettu                                                                as poistettu,
+                       tm.luotu                                                                   as toteuma_materiaali_luotu,
+                       tm.muokattu                                                                as toteuma_materiaali_muokattu
                 FROM toteuma t
                          LEFT JOIN toteuma_tehtava tt ON tt.toteuma = t.id
                          LEFT JOIN toimenpidekoodi tkoodi ON tkoodi.id = tt.toimenpidekoodi
@@ -119,7 +125,7 @@ BEGIN
                          LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                          JOIN urakka u on t.urakka = u.id
                 WHERE t.id = muuttunut_toteuma.toteuma_tunniste_id
-                GROUP BY t.id, t.luotu, u.id);
+                GROUP BY t.id, t.luotu, u.id, tm.luotu, tm.muokattu);
         END LOOP;
 
 END;
