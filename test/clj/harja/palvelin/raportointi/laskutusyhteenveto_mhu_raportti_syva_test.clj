@@ -49,7 +49,7 @@
                              {:trace false})
   (let [vastaus (op/post-kutsu
                   :suorita-raportti
-                  {:nimi       :laskutusyhteenveto-mhu
+                  {:nimi       :laskutusyhteenveto-tuotekohtainen
                    :konteksti  "urakka"
                    :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
                    :parametrit {:urakkatyyppi :teiden-hoito

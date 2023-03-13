@@ -7,7 +7,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
-
+            [harja.pvm :as pvm]
             [harja.tiedot.raportit :as raportit]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
@@ -35,12 +35,19 @@
   {:tyomaakokous "Työmaakokous"
    :tuotekohtainen "Tuotekohtainen"})
 
+(def valittu-yhteenveto-aikarajaus (atom :hoitokausi))
+
+(defonce aikarajaus-valinnat
+  {:hoitokausi "Hoitokauden mukaan"
+   :kalenterivuosi "Kalenterivuoden mukaan"
+   :valittu-aikakvali "Valittu aikaväli"})
+
 (defn raportin-nimi-avain [urakkatyyppi]
   (cond (and
          ;; MHU / HJU -urakoille näytetään työmaakokous ja tuotekohtainen yhteenveto
          ;; Tuotekohtainen
          (= :teiden-hoito urakkatyyppi)
-         (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-mhu
+         (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tuotekohtainen
 
         (and
          ;; Työmaakokous
@@ -79,23 +86,39 @@
            raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
 
        [:span.laskutusyhteenveto
-        [:div.flex-row.alkuun
+        [:div.flex-row.alkuun 
          
          ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
          (when (= :teiden-hoito (:tyyppi ur))
+           [:div {:class "mhu-radio"}
            [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Laskutusyhteenvedon muoto"
             [:div {:style {:margin-right "60px" :margin-top "-10px" :margin-bottom "40px"}}
-             
+
              [kentat/tee-kentta {:tyyppi :radio-group
                                  :space-valissa? true
                                  :vaihtoehdot [:tyomaakokous :tuotekohtainen]
                                  :vayla-tyyli? true
                                  :nayta-rivina? true
                                  :vaihtoehto-nayta yhteenvedeon-valinnat}
-              valittu-yhteenveto-muoto]]])
+              valittu-yhteenveto-muoto]]]
+
+             [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Aikarajaus"
+
+               [kentat/tee-kentta {:tyyppi :radio-group
+                                   :vaihtoehdot [:hoitokausi :kalenterivuosi :valittu-aikakvali]
+                                   :vayla-tyyli? true
+                                   :nayta-rivina? false
+                                   :vaihtoehto-nayta aikarajaus-valinnat}
+                valittu-yhteenveto-aikarajaus]]]
+           )
          
          [valinnat/urakan-hoitokausi ur]
-         [valinnat/hoitokauden-kuukausi]
+         
+         [valinnat/hoitokauden-kuukausi
+          (pvm/aikavalin-kuukausivalit @u/valittu-hoitokausi)
+          u/valittu-hoitokauden-kuukausi
+          u/valitse-hoitokauden-kuukausi!
+          "Kuukausi"]
 
          (when-let [p @laskutusyhteenvedon-parametrit]
            [upotettu-raportti/raportin-vientimuodot p])]
