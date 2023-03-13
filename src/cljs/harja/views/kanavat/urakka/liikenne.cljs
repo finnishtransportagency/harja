@@ -151,7 +151,10 @@
        :tasaa :keskita
        :komponentti (fn [rivi]
                       (let [suunta (::lt-alus/suunta rivi)
-                            valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)]
+                            valittu-suunta (:valittu-suunta valittu-liikennetapahtuma)
+                            toiminnot #{(::toiminto/toimenpide (first (::lt/toiminnot valittu-liikennetapahtuma)))  
+                                       (::toiminto/toimenpide (second (::lt/toiminnot valittu-liikennetapahtuma)))}
+                            toiminto-sulutus? (contains? toiminnot :sulutus)]
                         [napit/yleinen-toissijainen
                          (suunta->str suunta)
                          #(e! (tiedot/->VaihdaSuuntaa rivi suunta))
@@ -160,7 +163,7 @@
                                        (= :ei-suuntaa suunta) (ikonit/livicon-minus)
                                        :else (ikonit/livicon-question))
                           :luokka "nappi-grid"
-                          :disabled (some? (#{:ylos :alas :ei-suuntaa} valittu-suunta))}]))
+                          :disabled (or toiminto-sulutus? (some? (#{:ylos :alas :ei-suuntaa} valittu-suunta)))}]))
        :leveys 1}
       {:otsikko "Nimi"
        :tyyppi :string

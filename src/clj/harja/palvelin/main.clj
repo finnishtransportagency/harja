@@ -144,7 +144,6 @@
     [harja.palvelin.ajastetut-tehtavat.laskutusyhteenvedot :as laskutusyhteenvedot]
     [harja.palvelin.ajastetut-tehtavat.api-yhteysvarmistus :as api-yhteysvarmistus]
     [harja.palvelin.ajastetut-tehtavat.tyokoneenseuranta-puhdistus :as tks-putsaus]
-    [harja.palvelin.ajastetut-tehtavat.vaylien-geometriat :as vaylien-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kanavasiltojen-geometriat :as kanavasiltojen-geometriat]
     [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]
     [harja.palvelin.ajastetut-tehtavat.analytiikan-toteumat :as analytiikan-toteumat]
@@ -718,15 +717,6 @@
                        :integraatioloki :integraatioloki
                        :api-sahkoposti :api-sahkoposti
                        :labyrintti :labyrintti})
-
-      :vaylien-geometriahaku
-      (component/using
-        (let [asetukset (:vaylat asetukset)]
-          (vaylien-geometriat/->VaylienGeometriahaku
-            (:geometria-url asetukset)
-            (:paivittainen-tarkistusaika asetukset)
-            (:paivitysvali-paivissa asetukset)))
-        [:db  :http-palvelin :integraatioloki])
 
       :kanavasiltojen-geometriahaku
       (component/using

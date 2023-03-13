@@ -53,12 +53,28 @@
   (log/info (format "Vastaanotettiin tekstiviesti Labyrintin SMS Gatewaystä: %s" kutsu))
   (let [url (:remote-addr kutsu)
         otsikot (:headers kutsu)
-        parametrit (:params kutsu)
+        ;; Jostain syystä parametrit katoavat, jos ne ovat form-enkoodattuna. Puretaan ne käsin bodystä.
+        ;; Tämä on tarkoitettu alustavaksi testiksi teksiviesti-ongelmien korjaamiseen.
+        ;; FIXME: Selvitä juurisyy form-enkoodattujen parametrien katoamiseen ja korjaa se.
+        ;; Ongelman saa näkyviin, jos pistää debuggerin kiinni ring.middleware.params riville 44 ja ajetaan kutsu
+        ;; paikalliseen ympäristöön esim. postmanilla. Nähdään, että form-parametrit ovat löydettävissä aluksi, mutta
+        ;; kun debuggerin päästää eteenpäin, se pysähtyy samalle riville kolmesti ja viimeisellä kerralla parametrit
+        ;; ovat kadonneet. Epäilys on, että jokin, mitä me tehdään reitityksessä tai middlewareissa, rikkoo
+        ;; ringin wrap-params - middlewaren. / JLu, 27.2.2022
+        parametrit (-> kutsu
+                      :body
+                      .bytes
+                      (String.)
+                      ring.util.codec/form-decode)
         viesti (integraatioloki/tee-rest-lokiviesti "sisään" url nil nil otsikot (str parametrit))
         tapahtuma-id (integraatioloki/kirjaa-alkanut-integraatio integraatioloki "labyrintti" "vastaanota" nil viesti)
         numero (get parametrit "source")
         viesti (get parametrit "text")]
     (try
+      ;; jos numero tai viesti on nil, tunnistetaan virhe ja heitetään poikkeus
+      (when (or (nil? numero) (nil? viesti))
+        (throw+ {:type :puhelinnumero-tai-viesti-puuttuu
+                 :message (str "numero: " numero ", viesti: " viesti)}))
       (let [vastaukset (mapv #(% numero viesti) @kuuntelijat)
             vastausdata (if (empty? vastaukset) "" (str "text=" (string/join ", " vastaukset)))
             vastausviesti (integraatioloki/tee-rest-lokiviesti "ulos" url nil vastausdata nil nil)]

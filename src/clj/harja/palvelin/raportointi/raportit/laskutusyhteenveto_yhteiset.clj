@@ -131,15 +131,26 @@
 
 (def varoitus-vain-jvh-voi-muokata-tietoja "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan.")
 
+(defn formatoi-urakan-pvm [kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id]
+  (kysely-fn db
+             (konv/sql-date hk-alkupvm)
+             (konv/sql-date hk-loppupvm)
+             (konv/sql-date alkupvm)
+             (konv/sql-date loppupvm)
+             urakka-id))
+
+(defn hae-alku-ja-loppupvm [alkupvm loppupvm]
+  (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
+    ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
+    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
+    (pvm/paivamaaran-hoitokausi alkupvm)
+    [alkupvm loppupvm]))
+
 (defn hae-laskutusyhteenvedon-tiedot
   [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot}]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-  (let [[hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                         (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
-                                   ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
-                                   ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
-                                   (pvm/paivamaaran-hoitokausi alkupvm)
-                                   [alkupvm loppupvm])
+  (let [[hk-alkupvm hk-loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm)
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
                     laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)
@@ -148,11 +159,12 @@
                       toimenpidekoodit/tuotteen-jarjestys)
         tulos (vec
                 (sort-by (juxt (comp jarjesta-fn :tuotekoodi) :nimi)
-                         (into []
-                               (kysely-fn db
-                                          (konv/sql-date hk-alkupvm)
-                                          (konv/sql-date hk-loppupvm)
-                                          (konv/sql-date alkupvm)
-                                          (konv/sql-date loppupvm)
-                                          urakka-id))))]
+                         (into [] (formatoi-urakan-pvm kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id))))]
+    tulos))
+
+(defn hae-tyomaa-laskutusyhteenvedon-tiedot
+  [db _ {:keys [urakka-id alkupvm loppupvm]}]
+  (let [[hk-alkupvm hk-loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm)
+        kysely-fn laskutus-q/hae-tyomaakokous-laskutusyhteenveto
+        tulos (vec (into [] (formatoi-urakan-pvm kysely-fn db hk-alkupvm hk-loppupvm alkupvm loppupvm urakka-id)))]
     tulos))

@@ -191,7 +191,7 @@
         [:th {:style {:width (:toteuma leveydet)}} "Toteuma nyt"]
         [:th {:style {:width (:suunniteltu leveydet)}} "Suunniteltu"]
         [:th {:style {:width (:prosentti leveydet)}} "%"]]]
-      (if (:toimenpiteet-lataa app)
+      (if (:toteutuneet-maarat-lataa app)
         [:tbody
          [:tr
           [:td {:colSpan "5"} [yleiset/ajax-loader "Haetaan..."]]]]
@@ -247,7 +247,7 @@
       [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
        [napit/uusi
         "Lisää toteuma"
-        (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (:valittu-toimenpide app))))
+        (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
         {:vayla-tyyli? true
          :luokka "suuri"}]]]
      [:div.flex-row

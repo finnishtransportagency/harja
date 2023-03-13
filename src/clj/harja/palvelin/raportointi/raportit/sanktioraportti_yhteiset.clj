@@ -171,14 +171,15 @@
        (when-not yllapito?
          (luo-rivi-kaikki-yht "Sanktiot yht. (indeksikorjattu) " rivit alueet {:yhteensa-sarake? yhteensa-sarake?}))])))
 
-(defn koosta-taulukko [otsikko {:keys [raportin-otsikot nimi osamateriaalit sheet-nimi]}]
+(defn koosta-taulukko [otsikko {:keys [raportin-otsikot osamateriaalit sheet-nimi lisaa-excel-valiotsikot]}]
 
   [:taulukko {:otsikko otsikko
               :sheet-nimi sheet-nimi
               :sivuttain-rullattava? true
               :esta-tiivis-grid? true
               :ensimmainen-sarake-sticky? false
-              :samalle-sheetille? true}
+              :samalle-sheetille? true
+              :lisaa-excel-valiotsikot lisaa-excel-valiotsikot}
 
    ;; Muodostaa taulukon urakka otsikot
    (into [] (concat
@@ -537,6 +538,7 @@
                    "Sakot ja bonukset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Sakot ja bonukset")
+                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit paallystysurakan-rivit)))]
                 [:raportti {:nimi raportin-nimi :orientaatio :landscape}
                  [:otsikko otsikko]
@@ -546,6 +548,7 @@
                    "Sanktiot"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Sanktiot")
+                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit sanktioiden-rivit)))
 
                  ;; Bonustaulukko
@@ -553,6 +556,7 @@
                    "Bonukset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Bonukset")
+                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit bonusten-rivit)))
 
                  ;; Arvonvähennystaulukko
@@ -560,6 +564,7 @@
                    "Arvonvähennykset"
                    (-> taulukon-tiedot
                      (assoc :sheet-nimi "Arvonvähennykset")
+                     (assoc :lisaa-excel-valiotsikot :true)
                      (assoc :osamateriaalit arvonvahennys-rivit)))])]
     (if info-teksti
       (conj runko [:teksti info-teksti])

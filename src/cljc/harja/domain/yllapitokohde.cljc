@@ -734,10 +734,12 @@ yllapitoluokkanimi->numero
 
 (def paallekkaisyys-virhetekstit
   {:alikohde         {:paakohteen-ulkopuolella                      "Alikohde ei voi olla pääkohteen ulkopuolella"
-                      :alikohteet-paallekkain                       (fn [nimi]
+                      :alikohteet-paallekkain                       (fn [rivi-indeksi]
                                                                       (str "Kohteenosa on päällekkäin "
-                                                                           (if (empty? nimi) "toisen osan" (str "osan \"" nimi "\""))
-                                                                           " kanssa"))
+                                                                        (if rivi-indeksi
+                                                                          (str "rivin " rivi-indeksi)
+                                                                          "toisen osan")
+                                                                        " kanssa"))
                       :toisen-kohteen-alikohteen-kanssa-paallekkain (fn [validoitu-alikohde paallekkainen-kohde]
                                                                       (let [paallekkaisen-kohteen-nimi (:paakohteen-nimi paallekkainen-kohde)
                                                                             paallekkaisen-alikohteen-nimi (:yllapitokohteen-nimi paallekkainen-kohde)]
@@ -762,10 +764,10 @@ yllapitoluokkanimi->numero
                                                      (if (empty? nimi) "toisen kohteen" (str "kohteen \"" nimi "\""))
                                                      " kanssa"))}
    :muukohde         {:paakohteen-sisapuolella "Muukohde ei voi olla pääkohteen kanssa samalla tiellä"}
-   :alustatoimenpide {:alustatoimenpiteet-paallekkain (fn [nimi]
+   :alustatoimenpide {:alustatoimenpiteet-paallekkain (fn [rivi-indeksi]
                                                         (str "Alustatoimenpide on päällekkäin "
-                                                             (if (empty? nimi) "toisen osan" (str "osan \"" nimi "\""))
-                                                             " kanssa"))}})
+                                                          (str "rivin " rivi-indeksi)
+                                                          " kanssa"))}})
 
 (defn validoidun-paikan-teksti [validoitu-paikka paakohde?]
   ;; TODO Olisi hyvä, jos validointifunktio tallentaisi kohteen tietoihin havaitsemansa ongelman nimen ja tässä vain mäpättäisiin ongelman nimi ja kohteen tiedot virheilmoitukseen.
@@ -955,17 +957,17 @@ yllapitoluokkanimi->numero
                                           (:paakohteen-nimi %) ((get-in paallekkaisyys-virhetekstit [:alikohde :toisen-kohteen-alikohteen-kanssa-paallekkain])
                                                                  (:alikohde (meta validoitu-kohde))
                                                                  %)
-                                          :else ((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %)))
+                                          :else ((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %)))
                                        alikohde-paallekkyys))
         paakohde-paallekkain (when paallekkyys
                                (mapv #((get-in paallekkaisyys-virhetekstit [:paakohde :paakohteet-paallekkain]) (:nimi %))
                                      paallekkyys))
         muutkohteet-paallekkain (when muukohde-paallekkyys
                                   ;; Otetaan alikohteesta, koska sama teksti
-                                  (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
+                                  (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %))
                                         muukohde-paallekkyys))
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
-                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:nimi %))
+                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alikohde :alikohteet-paallekkain]) (:rivi-indeksi %))
                                                alustatoimenpide-paallekkyys))]
     (into {}
           (keep (fn [[k v]]
@@ -1022,7 +1024,7 @@ yllapitoluokkanimi->numero
   (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
         {:keys [alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
-                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:nimi %))
+                                         (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:rivi-indeksi %))
                                                alustatoimenpide-paallekkyys))
         lisaa-paallekkaisyysteksti (fn [kohdetekstit avain]
                                      (update kohdetekstit avain #(concat % alustatoimenpiteet-paallekkain)))]
@@ -1120,6 +1122,7 @@ yllapitoluokkanimi->numero
             kohteen-tiedot (q-tieverkko/hae-trpisteiden-valinen-tieto-yhdistaa db (select-keys tr-osoite #{:tr-numero :tr-alkuosa :tr-loppuosa}))
             alikohteet (filter #(= (:tr-numero %) (:tr-numero tr-osoite))
                                ali-ja-muut-kohteet)
+            ;; Jos tienumero on eri kuin pääkohteella, niin silloin kohde menee muihin kohteisiin
             muutkohteet (filter #(not= (:tr-numero %) (:tr-numero tr-osoite))
                                 ali-ja-muut-kohteet)
             yhden-vuoden-muut-kohteet (map #(q-yllapitokohteet/hae-yhden-vuoden-muut-kohdeosat db {:vuosi vuosi :tr-numero (:tr-numero %)})

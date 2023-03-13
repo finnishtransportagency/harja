@@ -96,6 +96,7 @@
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
                                                               AND tk.aluetieto = false
+                                                              AND tk.ensisijainen = true
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2019'::INT
                                                               AND urakka = " urakka-id)))
@@ -104,6 +105,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2020'::INT
@@ -113,6 +115,7 @@
                                                               FROM urakka_tehtavamaara ut, toimenpidekoodi tk
                                                               WHERE ut.tehtava = tk.id
                                                               AND tk.taso = 4
+                                                              AND tk.ensisijainen = true
                                                               AND tk.aluetieto = false
                                                               AND tk.tehtavaryhma is not null
                                                               AND \"hoitokauden-alkuvuosi\" = '2021'::INT
@@ -124,49 +127,52 @@
 ;; Hae kaikki määrien toteumat tehtäväryhmän mukaan - tehtäväryhmä = ui:lla toimenpide
 (deftest maarien-toteumat-listaus-tehtavaryhmalle
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        liikenneympariston-hoito-tr-id (hae-tehtavaryhman-id "Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen")
+        liikenneympariston-hoito-tr "2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen"
         maarien-toteumat-21 (vain-suunnitellut-maarat
                               (kutsu-palvelua (:http-palvelin jarjestelma)
                                               :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                               {:urakka-id urakka-id
-                                               :tehtavaryhma liikenneympariston-hoito-tr-id
+                                               :tehtavaryhma liikenneympariston-hoito-tr
                                                :hoitokauden-alkuvuosi 2020})
                               true)
-        muut-liik-ymp-hoito-tr-id (hae-tehtavaryhman-id "Muut liik.ymp.hoitosasiat")
+        muut-tr "8 MUUTA"
         maarien-toteumat-muuta (kutsu-palvelua (:http-palvelin jarjestelma)
                                                :hae-toimenpiteen-tehtava-yhteenveto +kayttaja-jvh+
                                                {:urakka-id urakka-id
-                                                :tehtavaryhma muut-liik-ymp-hoito-tr-id
+                                                :tehtavaryhma muut-tr
                                                 :hoitokauden-alkuvuosi 2020})
         oulun-mhu-urakan-maarien-toteuma-21 (q (str "SELECT *
                                                        FROM
                                                             urakka_tehtavamaara ut,
                                                             toimenpidekoodi tk,
-                                                            tehtavaryhma tr,
-                                                            tehtavaryhma valitaso,
-                                                            tehtavaryhma ylataso
+                                                            tehtavaryhma tr
                                                        WHERE tk.id = ut.tehtava
                                                          AND tr.id = tk.tehtavaryhma
-                                                         AND tr.emo = valitaso.id
-                                                         AND valitaso.emo = ylataso.id
                                                          AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                         AND ylataso.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
+                                                         AND tr.otsikko = '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen'
                                                          AND ut.urakka = " urakka-id))
         oulun-mhu-urakan-maarien-toteuma-muuta (q (str "SELECT *
-                                                         FROM
-                                                              urakka_tehtavamaara ut,
-                                                              toimenpidekoodi tk,
+                                                         FROM toimenpidekoodi tk,
                                                               tehtavaryhma tr,
-                                                              tehtavaryhma valitaso,
-                                                              tehtavaryhma ylataso
-                                                         WHERE tk.id = ut.tehtava
-                                                           AND tr.id = tk.tehtavaryhma
-                                                           AND tr.emo = valitaso.id
-                                                           AND valitaso.emo = ylataso.id
-                                                           AND ylataso.otsikko = '8 MUUTA'
-                                                           AND ut.\"hoitokauden-alkuvuosi\" = 2020
-                                                           AND ut.poistettu IS NOT TRUE
-                                                           AND ut.urakka = " urakka-id))]
+                                                              urakka u
+                                                         WHERE tk.tehtavaryhma = tr.id
+                                                           AND tk.ensisijainen = true
+                                                           AND tk.kasin_lisattava_maara = true
+                                                           AND (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+                                                           AND tr.otsikko = '8 MUUTA'
+                                                           AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+                                                           AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
+                                                           AND ((tk.suunnitteluyksikko IS not null AND tk.suunnitteluyksikko != 'euroa') OR
+                                                                 tk.yksiloiva_tunniste IN ('1f12fe16-375e-49bf-9a95-4560326ce6cf',
+                                                                                           '1ed5d0bb-13c7-4f52-91ee-5051bb0fd974',
+                                                                                           'd373c08b-32eb-4ac2-b817-04106b862fb1',
+                                                                                           '49b7388b-419c-47fa-9b1b-3797f1fab21d',
+                                                                                           '63a2585b-5597-43ea-945c-1b25b16a06e2',
+                                                                                           'b3a7a210-4ba6-4555-905c-fef7308dc5ec',
+                                                                                           'e32341fc-775a-490a-8eab-c98b8849f968',
+                                                                                           '0c466f20-620d-407d-87b0-3cbb41e8342e',
+                                                                                           'c058933e-58d3-414d-99d1-352929aa8cf9'))
+                                                           AND u.id = " urakka-id))]
     ;; FIXME: edellisissä testeissä pitäisi tuo otsikko korvata jollain muulla hakutermillä, koska otsikot voi muuttua
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))

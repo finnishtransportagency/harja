@@ -126,6 +126,20 @@
               :lihavoi? false}]))
         kohteet))))
 
+(defn muodosta-excelrivit [kohteet]
+  (let [kohteet (rivita-kohteet kohteet)
+        ensimmainen-rivi-jossa-kustannuksia 5
+        yhteenvetorivi [[nil nil nil nil nil nil nil nil nil nil nil nil
+                         "Yhteensä:" [:kaava {:kaava :summaa-yllaolevat
+                                              :alkurivi ensimmainen-rivi-jossa-kustannuksia
+                                              :loppurivi (+ (count kohteet)
+                                                           (- ensimmainen-rivi-jossa-kustannuksia 1))}]
+                         nil]]]
+    (concat
+      (when (> (count kohteet) 0)
+        kohteet)
+      yhteenvetorivi)))
+
 (defn vie-paikkauskohteet-exceliin
   [db workbook user tiedot]
   (let [urakka (first (q-urakat/hae-urakka db (:urakka-id tiedot)))
@@ -156,7 +170,7 @@
                    {:otsikko "Kustannusarvio" :tasaa :oikea}
                    {:otsikko "Lisätiedot"}]
 
-        rivit (rivita-kohteet kohteet)
+        rivit (muodosta-excelrivit kohteet)
         optiot {:nimi "Paikkauskohteet"
                 :sheet-nimi "Paikkauskohteet"
                 :tyhja (if (empty? kohteet) "Ei paikkauskohteita.")
