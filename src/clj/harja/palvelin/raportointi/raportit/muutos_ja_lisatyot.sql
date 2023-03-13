@@ -17,6 +17,7 @@ SELECT
    FROM laske_kuukauden_indeksikorotus_mhu(
        u.alkupvm,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
+       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
          THEN (SELECT indeksi
                FROM urakka
@@ -82,6 +83,7 @@ SELECT
    FROM laske_kuukauden_indeksikorotus_mhu(
        u.alkupvm,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
+       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
          THEN (SELECT indeksi
                FROM urakka
@@ -143,6 +145,7 @@ SELECT
        FROM laske_kuukauden_indeksikorotus_mhu(
            u.alkupvm,
            (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
+           (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
            CASE WHEN tt.indeksi IS TRUE
              THEN (SELECT indeksi
                    FROM urakka

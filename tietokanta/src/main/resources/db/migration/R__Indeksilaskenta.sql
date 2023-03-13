@@ -135,9 +135,12 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+-- TODO: Nimeä sprocci paremmin. Tätä käytetäänkin myös muilla urakkatyypeillä esimerkiksi muutos- ja lisätyöt raportilla.
 CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
     urakan_alkupvm DATE,
     indeksi_vuosi INTEGER,
+    indeksi_kk_ INTEGER,
     indeksinimi VARCHAR,
     summa      NUMERIC,
     perusluku  NUMERIC,
@@ -148,15 +151,26 @@ DECLARE
     urakan_alkuvuosi INTEGER;
     indeksi_kk INTEGER;
 BEGIN
-    urakan_alkuvuosi := EXTRACT(YEAR FROM urakan_alkupvm);
+    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_alkupvm)::INTEGER);
+
+    RAISE NOTICE 'Urakan alkuvuosi %', urakan_alkuvuosi;
 
     -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta
-    indeksi_kk := 9;
+    --indeksi_kk := 9;
+    -- TODO: Kuukaudeksi voi tulla periaatteessa mitä vain esimerkiksi alueurakoilta.
+    --       mm. muutos-ja lisätyöt raportilla käytetään yhteisesti tätä sproccia alueurakoilla ja mh-urakoilla
+    --       Ulkopuolelta on hankala nähdä mitä arvoja kk parametriin tulee, joten tätä ei voi
+    --       kaikille urakkatyypeille ainakaan kovakoodata syyskuuksi.
+    --       Pitänee varmaan ottaa parametrina urakan_alkupvm sijasta urakan id ja urakan tyypin perusteella
+    --       päättää käytetäänkö parametrina annettua kk:ta vai kovakoodattua syyskuuta (mhu)
+      indeksi_kk := indeksi_kk_;
 
     -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
     if urakan_alkuvuosi = 2023 THEN
         indeksi_kk := 8;
     END IF;
+
+    RAISE NOTICE 'indeksi_kk =  %', indeksi_kk;
 
     RETURN laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kk, indeksinimi, summa,
         perusluku, pyorista_kerroin);
