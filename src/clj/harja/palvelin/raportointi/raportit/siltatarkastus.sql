@@ -21,12 +21,19 @@ SELECT
     l.id AS liite_id,
     l.tyyppi AS liite_tyyppi,
     l.koko AS liite_koko,
-    l.nimi AS liite_nimi
-  FROM silta s
-           LEFT JOIN LATERAL (SELECT id, tarkastusaika, tarkastaja
+    l.nimi AS liite_nimi,
+    ((s.vastuu_urakka = :urakka) AND
+     (s.loppupvm IS NULL OR now() > s.loppupvm) AND
+     (s.lakkautuspvm IS NULL OR NOW() > s.lakkautuspvm) AND
+     s.kunnan_vastuulla IS FALSE) AS "silta-urakan-vastuulla?",
+    (SELECT nimi FROM urakka WHERE id = s.vastuu_urakka) AS "vastuu-urakka-nimi",
+    s.kunnan_vastuulla AS "kunnan-vastuulla?"
+FROM silta s
+           LEFT JOIN LATERAL (SELECT id, tarkastusaika, tarkastaja, urakka
                                 FROM siltatarkastus st
                                WHERE st.silta = s.id
                                      AND EXTRACT(YEAR FROM tarkastusaika) = :vuosi
+                                     AND st.urakka = :urakka
                                      AND st.poistettu = FALSE
                                ORDER BY tarkastusaika DESC
                                LIMIT 1) st on TRUE
@@ -217,5 +224,6 @@ SELECT
                 FROM siltatarkastus st
                 WHERE st.silta = s.id AND
                       EXTRACT(YEAR FROM tarkastusaika) = :vuosi AND
+                      st.urakka = :urakka AND
                       st.poistettu = FALSE
                 LIMIT 1)) AS "tarkastukset-lkm";
