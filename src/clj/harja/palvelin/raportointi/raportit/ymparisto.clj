@@ -212,7 +212,10 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
                   ;; Jos niitä ei ole, siirrytään seuraavaan materiaaliin
                   ;; Molemmissa tapauksissa inkrementoidaan indeksiä yhdellä, kun siirrytään seuraavaan
                   ;; materiaaliin.
-                  (+ (inc idx) (inc nykyiset-lapset-cnt))
+                  (+ (inc idx)
+                    (if (zero? nykyiset-lapset-cnt)
+                      0
+                      (inc nykyiset-lapset-cnt)))
                   (rest o)
                   (if (= 0 nykyiset-lapset-cnt)
                     res
