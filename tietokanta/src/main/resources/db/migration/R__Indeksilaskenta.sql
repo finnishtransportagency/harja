@@ -136,7 +136,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
-    urakan_alkuvuosi INTEGER,
+    urakan_alkupvm DATE,
     indeksi_vuosi INTEGER,
     indeksinimi VARCHAR,
     summa      NUMERIC,
@@ -145,14 +145,17 @@ CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
 
     RETURNS kuukauden_indeksikorotus_rivi AS $$
 DECLARE
+    urakan_alkuvuosi INTEGER;
     indeksi_kk INTEGER;
 BEGIN
+    urakan_alkuvuosi := EXTRACT(YEAR FROM urakan_alkupvm);
+
     -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta
-    indeksi_kk = 9;
+    indeksi_kk := 9;
 
     -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
     if urakan_alkuvuosi = 2023 THEN
-        indeksi_kk = 8;
+        indeksi_kk := 8;
     END IF;
 
     RETURN laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kk, indeksinimi, summa,
