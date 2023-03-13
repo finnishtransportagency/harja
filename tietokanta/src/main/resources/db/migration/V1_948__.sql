@@ -11,7 +11,7 @@ BEGIN
     INSERT INTO analytiikka_toteumat (
         SELECT t.id                                                                       as toteuma_tunniste_id,
                t.sopimus                                                                  as toteuma_sopimus_id,
-               t.luotu                                                                    as toteuma_luotu,
+               t.alkanut                                                                  as toteuma_alkanut,
                t.paattynyt                                                                as toteuma_paattynyt,
                u.urakkanro                                                                AS toteuma_alueurakkanumero,
                t.suorittajan_ytunnus                                                      as toteuma_suorittaja_ytunnus,
@@ -39,9 +39,9 @@ BEGIN
                  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                  JOIN urakka u on t.urakka = u.id
-        WHERE (t.luotu BETWEEN ajankohta - '1 day'::interval AND ajankohta) OR (tm.luotu BETWEEN ajankohta - '1 day'::interval AND ajankohta)
-        GROUP BY t.id, t.luotu, u.id
-        ORDER BY t.luotu ASC
+        WHERE (t.alkanut BETWEEN ajankohta - '1 day'::interval AND ajankohta)
+        GROUP BY t.id, t.alkanut, u.id
+        ORDER BY t.alkanut ASC
     )
     ON CONFLICT DO NOTHING;
 
@@ -50,7 +50,7 @@ BEGIN
     FOR muuttunut_toteuma IN
         SELECT t.id                                                                       as toteuma_tunniste_id,
                t.sopimus                                                                  as toteuma_sopimus_id,
-               t.luotu                                                                    as toteuma_luotu,
+               t.alkanut                                                                  as toteuma_alkanut,
                t.paattynyt                                                                as toteuma_paattynyt,
                u.urakkanro                                                                AS toteuma_alueurakkanumero,
                t.suorittajan_ytunnus                                                      as toteuma_suorittaja_ytunnus,
@@ -78,8 +78,8 @@ BEGIN
                  LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.id
                  LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                  JOIN urakka u on t.urakka = u.id
-        WHERE (t.muokattu BETWEEN ajankohta - '1 day'::interval AND ajankohta) OR (tm.muokattu BETWEEN ajankohta - '1 day'::interval AND ajankohta)
-        GROUP BY t.id, t.luotu, u.id
+        WHERE (t.muokattu BETWEEN ajankohta - '1 day'::interval AND ajankohta)
+        GROUP BY t.id, t.alkanut, u.id
         LOOP
         -- Käytetään poista - lisää uuusiksi, menetelmää, koska update lauseessa ei voi käyttää group by komentoa
         -- tehtävien ja materiaalien lisäämiseksi.
@@ -90,7 +90,7 @@ BEGIN
             INSERT INTO analytiikka_toteumat (
                 SELECT t.id                                                                       as toteuma_tunniste_id,
                        t.sopimus                                                                  as toteuma_sopimus_id,
-                       t.luotu                                                                    as toteuma_luotu,
+                       t.alkanut                                                                  as toteuma_alkanut,
                        t.paattynyt                                                                as toteuma_paattynyt,
                        u.urakkanro                                                                AS toteuma_alueurakkanumero,
                        t.suorittajan_ytunnus                                                      as toteuma_suorittaja_ytunnus,
@@ -119,7 +119,7 @@ BEGIN
                          LEFT JOIN materiaalikoodi mk ON tm.materiaalikoodi = mk.id
                          JOIN urakka u on t.urakka = u.id
                 WHERE t.id = muuttunut_toteuma.toteuma_tunniste_id
-                GROUP BY t.id, t.luotu, u.id);
+                GROUP BY t.id, t.alkanut, u.id);
         END LOOP;
 
 END;
