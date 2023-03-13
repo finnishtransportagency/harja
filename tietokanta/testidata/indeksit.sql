@@ -159,6 +159,7 @@ INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennus
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 8, 106.2);
 INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2010 Maarakennuskustannukset, kokonaisindeksi', 2017, 9, 106.2);
 
+-- Maku 2015
 DO $$
 DECLARE
   indeksin_aloitus_vuosi INTEGER := 2018;
@@ -188,6 +189,35 @@ BEGIN
   END LOOP;
 END $$;
 
+-- Maku 2020
+DO $$
+    DECLARE
+        indeksin_aloitus_vuosi INTEGER := 2020;
+        indeksi_vuoteen_asti INTEGER;
+        vuosi_ INTEGER;
+        kuluva_kk INTEGER;
+        arvo_ NUMERIC;
+    BEGIN
+        indeksi_vuoteen_asti = (SELECT date_part('year', now()));
+        kuluva_kk = (SELECT date_part('month', now()));
+        FOR vuosi_ IN indeksin_aloitus_vuosi..indeksi_vuoteen_asti
+            LOOP
+                IF (vuosi_ = indeksi_vuoteen_asti)
+                THEN
+                    FOR kk IN 1..kuluva_kk
+                        LOOP
+                            arvo_ = (SELECT 100 + (vuosi_ - indeksin_aloitus_vuosi) * 10 + kk + (kk::DECIMAL / 12));
+                            INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2020', vuosi_, kk, round(arvo_, 1));
+                        END LOOP;
+                ELSE
+                    FOR kk IN 1..12
+                        LOOP
+                            arvo_ = (SELECT 100 + (vuosi_ - indeksin_aloitus_vuosi) * 10 + kk + (kk::DECIMAL / 12));
+                            INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo) VALUES ('MAKU 2020', vuosi_, kk, round(arvo_, 1));
+                        END LOOP;
+                END IF;
+            END LOOP;
+    END $$;
 
 INSERT INTO urakkatyypin_indeksi(urakkatyyppi, indeksinimi, koodi, raakaaine)
 VALUES
