@@ -1477,14 +1477,8 @@ SELECT t.toteuma_tunniste_id,
 FROM analytiikka_toteumat t
          LEFT JOIN toteuman_reittipisteet tr ON tr.toteuma = t.toteuma_tunniste_id
          LEFT JOIN LATERAL unnest(tr.reittipisteet) AS rp ON true
-         LEFT JOIN toteuma_materiaali tm ON tm.toteuma = t.toteuma_tunniste_id
-
 WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
     OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))
-
-OR ((tm.muokattu IS NOT NULL AND tm.muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)
-    OR (tm.muokattu IS NULL AND tm.luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))
-
 group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
