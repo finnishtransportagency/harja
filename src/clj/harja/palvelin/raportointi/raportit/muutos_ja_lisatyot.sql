@@ -14,9 +14,9 @@ SELECT
   mht.yksikkohinta                                       AS tehtava_yksikkohinta,
   COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS tehtava_summa,
   (SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
+   FROM laske_kuukauden_indeksikorotus_mhu(
+       u.alkupvm,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
          THEN (SELECT indeksi
                FROM urakka
@@ -25,7 +25,12 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id)))    AS korotus,
+       indeksilaskennan_perusluku(u.id),
+       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
+       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
+       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
+       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
+       false))    AS korotus,
   u.id                                                   AS urakka_id,
   u.nimi                                                 AS urakka_nimi,
   hy.id                                                  AS hallintayksikko_id,
@@ -74,9 +79,9 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
+   FROM laske_kuukauden_indeksikorotus_mhu(
+       u.alkupvm,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-       (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
          THEN (SELECT indeksi
                FROM urakka
@@ -85,7 +90,13 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id))))   AS korotus,
+       indeksilaskennan_perusluku(u.id),
+       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
+       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
+       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
+       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
+       false
+       )))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
   lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
@@ -129,9 +140,9 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-       FROM laske_kuukauden_indeksikorotus(
+       FROM laske_kuukauden_indeksikorotus_mhu(
+           u.alkupvm,
            (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
-           (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
            CASE WHEN tt.indeksi IS TRUE
              THEN (SELECT indeksi
                    FROM urakka
@@ -140,7 +151,12 @@ SELECT
              NULL
            END,
            COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-           indeksilaskennan_perusluku(u.id))))   AS korotus,
+           indeksilaskennan_perusluku(u.id),
+           -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
+           --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
+           --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
+           --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
+           false)))   AS korotus,
   u.id                                                  AS hallintayksikko_id, -- PARDON, kutsutaan hallintayksiköksi mutta on urakkaid ja nimi, koska raportti toimii sukkana mitään muuttamatta
   u.nimi                                                AS hallintayksikko_nimi
 FROM toteuma_tehtava tt
