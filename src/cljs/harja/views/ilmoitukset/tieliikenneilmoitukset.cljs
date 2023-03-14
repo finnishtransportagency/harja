@@ -247,6 +247,10 @@
       (when kuittaa-monta-nyt
         [kuittaukset/kuittaa-monta-lomake e! kuittaa-monta])
 
+      [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
+             (when @nav/valittu-urakka (str " Urakassa " (:nimi @nav/valittu-urakka))))]
+
+
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
