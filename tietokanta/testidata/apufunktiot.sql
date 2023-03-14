@@ -1,4 +1,5 @@
 -- Testidatan generointia varten halutaan helppo tapa indeksikorjata MHU:iden kuluja.
+-- Kopioitu R__indeksilaskenta.sql
 CREATE OR REPLACE FUNCTION testidata_indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER,
                                                    urakka_id INTEGER)
     RETURNS NUMERIC AS
@@ -6,27 +7,45 @@ $$
 DECLARE
     -- Perusluku on urakalle sama riippumatta kuluvasta hoitokaudesta
     perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
-    indeksin_nimi  TEXT    := (SELECT indeksi
-                               FROM urakka u
-                               WHERE u.id = urakka_id);
-    -- Indeksikerroin pyöristetään kolmeen desimaaliin.
+    indeksin_nimi  TEXT;
+    urakan_alkuvuosi INTEGER;
+    arvo NUMERIC;
+    vertailuvuosi INTEGER;
+    vertailukk INTEGER;
     indeksikerroin NUMERIC;
 BEGIN
+    SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
+      FROM urakka u
+     WHERE u.id = urakka_id
+      INTO indeksin_nimi, urakan_alkuvuosi;
+
     -- Indeksikerroin on hoitokausikohtainen, katsotaan aina edellisen hoitokauden syyskuun indeksiä.
-    IF kuukausi_ BETWEEN 1 AND 9 THEN
-        indeksikerroin := (SELECT round((arvo / perusluku), 3)
-                           FROM indeksi i
-                           WHERE i.vuosi = vuosi_ - 1
-                             AND i.kuukausi = 9
-                             AND nimi = indeksin_nimi);
+    IF kuukausi_ BETWEEN 1 AND 9
+    THEN
+        vertailuvuosi := vuosi_ - 1;
     ELSE
-        indeksikerroin := (SELECT round((arvo / perusluku), 3)
-                           FROM indeksi i
-                           WHERE i.vuosi = vuosi_
-                             AND i.kuukausi = 9
-                             AND nimi = indeksin_nimi);
+        vertailuvuosi := vuosi_;
     END IF;
-    -- Ja tallennettava arvo kuuteen.
+
+    -- Käytetään vertailukuukauden default-arvona syyskuuta.
+    vertailukk := 9;
+    -- 2023 alkaville urakoille vertailuukausi on elokuu (VHAR-6948)
+    IF urakan_alkuvuosi = 2023 THEN
+        vertailukk := 8;
+    END IF;
+
+
+    arvo := (SELECT i.arvo
+               FROM indeksi i
+              WHERE i.vuosi = vertailuvuosi
+                AND i.kuukausi = vertailukk
+                AND nimi = indeksin_nimi);
+
+    -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
+    indeksikerroin := round((arvo / perusluku), 3);
+
+    --RAISE NOTICE 'vuosi: %, kuukausi: %, arvo: %, indeksikerroin: %, korjattava arvo: %', vuosi_, kuukausi_, arvo, indeksikerroin, korjattava_arvo;
+
     return round(korjattava_arvo * indeksikerroin, 6);
 END ;
 $$ language plpgsql;
