@@ -161,11 +161,11 @@
         kyseessa-kk-vali? (if vuoden-kk? false kyseessa-kk-vali?)
         ;; Vaihdetaan "Hoitokauden alusta"- teksti jos näytetään tiettyä kuukautta
         laskutettu-teksti (if vuoden-kk? (str "Laskutetaan " (pvm/kuukausi-ja-vuosi (first valittu-kk))) laskutettu-teksti)
-        ;; Jos näytetään tietyn vuoden dataa, sarakkeen otsikko on vain "Määrä"
-        laskutettu-teksti (if koko-vuosi? "Määrä" laskutettu-teksti)
-
-        ;; _ (println "\n \n koko-vuosi?" koko-vuosi? " kyseessa-kk-vali?" kyseessa-kk-vali?)
-
+        ;; Käytetäänkö omaa aikaväliä
+        valittu-aikavali? (= aikarajaus :valittu-aikakvali)
+        ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
+        laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
+        
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
                         hallintayksikko-id :hallintayksikko
@@ -195,7 +195,7 @@
                                                   :urakka-nimi (:urakka-nimi urakan-parametrit)
                                                   :indeksi (:indeksi urakan-parametrit)
                                                   :urakkatyyppi (:urakkatyyppi urakan-parametrit))
-                                          (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk?)))
+                                          (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk? valittu-aikavali?)))
                                   urakoiden-parametrit)
 
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)

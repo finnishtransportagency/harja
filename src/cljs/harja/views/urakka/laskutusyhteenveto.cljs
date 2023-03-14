@@ -6,9 +6,11 @@
             [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.yleiset :refer [vihje]]
             [harja.ui.kentat :as kentat]
             [harja.pvm :as pvm]
             [harja.tiedot.raportit :as raportit]
+            [harja.views.raportit :as raportit-ui]
             [harja.tiedot.urakka :as u]
             [harja.tiedot.navigaatio :as nav]
             [harja.ui.upotettu-raportti :as upotettu-raportti]
@@ -34,6 +36,7 @@
 
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
 (defonce vapaa-aikavali? (atom false))
+(defonce vapaa-aikavali (atom [nil nil]))
 (defonce valittu-kuukausi (reaction-writable @u/valittu-hoitokauden-kuukausi))
 
 (def valittu-yhteenveto-muoto (atom :tyomaakokous))
@@ -81,7 +84,7 @@
                               (first @valittu-kuukausi)
                               (pvm/vuoden-eka-pvm @valittu-vuosi))
 
-                            :else nil)
+                            :else (first @vapaa-aikavali))
 
                   loppupvm (cond
 
@@ -94,7 +97,7 @@
                                (second @valittu-kuukausi)
                                (pvm/vuoden-viim-pvm @valittu-vuosi))
 
-                             :else nil)
+                             :else (second @vapaa-aikavali))
                   
                   _ (println "ALKU " alkupvm)
                   _ (println "LOPPU" loppupvm)
@@ -125,6 +128,14 @@
                                                hk (pvm/aikavalin-kuukausivalit hk)
                                                vuosi (pvm/vuoden-kuukausivalit vuosi)
                                                :else []))))))
+
+(defn suorita-raportti [raportin-nimi]
+  (if-let [tiedot @laskutusyhteenvedon-tiedot]
+    [muodosta-html
+     (-> tiedot
+         (assoc-in [1 :tunniste] raportin-nimi)
+         (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
+    [yleiset/ajax-loader "Raporttia suoritetaan..."]))
 
 (defn laskutusyhteenveto
   []
@@ -192,7 +203,13 @@
                                    :disabloi-tulevat-kk? true}
              @kuukaudet u/valittu-hoitokauden-kuukausi]]
 
-           :else [:div])
+           ;; Valittuna kustomi aikaväli
+           :else
+           [:div
+            [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
+                                                  :validointi :korkeintaan-kuluva-paiva}]
+            ;; Käytetään täälläkin rajaa samoin kun raporttien puolella, niin ei mene queryt tukkoon
+            [vihje (str "Raportin pisin sallittu aikaväli on " raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])
 
          (when-let [p @laskutusyhteenvedon-parametrit]
            [upotettu-raportti/raportin-vientimuodot p])]
@@ -200,9 +217,19 @@
         ;; Jos hoitokautta ei ole valittuna, näytä viesti
         (if (and (= @valittu-yhteenveto-aikarajaus :hoitokausi) (nil? @u/valittu-hoitokausi))
           [:div "Valitse hoitokausi"]
-          (if-let [tiedot @laskutusyhteenvedon-tiedot]
-            [muodosta-html
-             (-> tiedot
-                 (assoc-in [1 :tunniste] raportin-nimi)
-                 (assoc-in [1 :yhteenvetotyyppi] @valittu-yhteenveto-muoto))]
-            [yleiset/ajax-loader "Raporttia suoritetaan..."]))]))))
+
+          (if (= @valittu-yhteenveto-aikarajaus :valittu-aikakvali) 
+            ;; Jos käytetään kustomi aikaväliä, katsotaan että molemmat arvot ovat olemassa
+            (let [alku (first @vapaa-aikavali)
+                  loppu (second @vapaa-aikavali)]
+              
+              (if (and alku loppu)
+                (suorita-raportti raportin-nimi)
+                [:div "Valitse aikaväli"]
+                )
+              
+              )
+            
+            (suorita-raportti raportin-nimi)
+            )
+          )]))))
