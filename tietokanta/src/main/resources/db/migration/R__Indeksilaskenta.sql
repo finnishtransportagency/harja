@@ -136,9 +136,8 @@ END;
 $$ LANGUAGE plpgsql;
 
 
--- TODO: Nimeä sprocci paremmin. Tätä käytetäänkin myös muilla urakkatyypeillä esimerkiksi muutos- ja lisätyöt raportilla.
-CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
-    urakan_alkupvm DATE,
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_urakalle(
+    urakka_id INTEGER,
     indeksi_vuosi INTEGER,
     indeksi_kk_ INTEGER,
     indeksinimi VARCHAR,
@@ -149,22 +148,33 @@ CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_mhu(
     RETURNS kuukauden_indeksikorotus_rivi AS $$
 DECLARE
     urakan_alkuvuosi INTEGER;
+    urakan_tyyppi VARCHAR;
     indeksi_kk INTEGER;
 BEGIN
-    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_alkupvm)::INTEGER);
-    -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta
-    --indeksi_kk := 9;
+    SELECT EXTRACT(YEAR FROM alkupvm), tyyppi
+      FROM urakka u
+     WHERE u.id = urakka_id
+      INTO urakan_alkuvuosi, urakan_tyyppi;
+
+
     -- TODO: Kuukaudeksi voi tulla periaatteessa mitä vain esimerkiksi alueurakoilta.
     --       mm. muutos-ja lisätyöt raportilla käytetään yhteisesti tätä sproccia alueurakoilla ja mh-urakoilla
-    --       Ulkopuolelta on hankala nähdä mitä arvoja kk parametriin tulee, joten tätä ei voi
-    --       kaikille urakkatyypeille ainakaan kovakoodata syyskuuksi.
-    --       Pitänee varmaan ottaa parametrina urakan_alkupvm sijasta urakan id ja urakan tyypin perusteella
-    --       päättää käytetäänkö parametrina annettua kk:ta vai kovakoodattua syyskuuta (mhu)
+    --       Ei ole täyttä varmuutta tuleeko mh-urakoilla aina ulkopuolelta kuukaudeksi syyskuu
+    --       Alueurakoita varten tämä täytyy jättää tähän ja kovakoodaataan indeksi_kk vain MH-urakoille
       indeksi_kk := indeksi_kk_;
 
-    -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
-    if urakan_alkuvuosi = 2023 THEN
-        indeksi_kk := 8;
+    IF urakan_tyyppi = 'teiden-hoito'
+    THEN
+        -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta MH-urakoilla.
+        -- Ei ole vielä täyttä varmuutta tuleeko kaikissa tämän sprocin kutsuissa mh-urakoilla 'indeksi_kk_'-parametrin
+        -- arvoksi syyskuu, joten tätä kovakoodausta ei ole vielä siksi aktivoitu.
+        --indeksi_kk := 9;
+
+        -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
+        IF urakan_alkuvuosi = 2023
+        THEN
+            indeksi_kk := 8;
+        END IF;
     END IF;
 
     RETURN laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kk, indeksinimi, summa,
@@ -266,7 +276,6 @@ BEGIN
     IF urakan_alkuvuosi = 2023 THEN
         vertailukk := 8;
     END IF;
-
 
     arvo := (SELECT i.arvo
                FROM indeksi i

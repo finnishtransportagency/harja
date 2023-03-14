@@ -14,8 +14,8 @@ SELECT
   mht.yksikkohinta                                       AS tehtava_yksikkohinta,
   COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS tehtava_summa,
   (SELECT korotus
-   FROM laske_kuukauden_indeksikorotus_mhu(
-       u.alkupvm,
+   FROM laske_kuukauden_indeksikorotus_urakalle(
+       u.id,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
        (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
@@ -80,8 +80,8 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-   FROM laske_kuukauden_indeksikorotus_mhu(
-       u.alkupvm,
+   FROM laske_kuukauden_indeksikorotus_urakalle(
+       u.id,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
        (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
@@ -142,8 +142,8 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-       FROM laske_kuukauden_indeksikorotus_mhu(
-           u.alkupvm,
+       FROM laske_kuukauden_indeksikorotus_urakalle(
+           u.id,
            (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
            (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
            CASE WHEN tt.indeksi IS TRUE
