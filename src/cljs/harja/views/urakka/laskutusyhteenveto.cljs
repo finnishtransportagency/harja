@@ -71,8 +71,6 @@
   (reaction (let [ur @nav/valittu-urakka
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
 
-                  _ (println "Valittu KK : " valittu-kuukausi)
-
                   alkupvm (cond
 
                             ;; Jos ""koko hoitokausi"" on valittuna, käytetään valitun hoitokauden päivämääriä
@@ -98,9 +96,6 @@
                                (pvm/vuoden-viim-pvm @valittu-vuosi))
 
                              :else (second @vapaa-aikavali))
-                  
-                  _ (println "ALKU " alkupvm)
-                  _ (println "LOPPU" loppupvm)
 
                   nakymassa? @laskutusyhteenveto-nakyvissa?
                   raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
@@ -167,11 +162,15 @@
             [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Aikarajaus"
 
              [kentat/tee-kentta {:tyyppi :radio-group
-                                 :vaihtoehdot [:hoitokausi :kalenterivuosi :valittu-aikakvali]
+                                 :vaihtoehdot (cond 
+                                                ;; Työmaakokoukselle ei anneta vuosivalintaa
+                                                (= @valittu-yhteenveto-muoto :tyomaakokous) [:hoitokausi :valittu-aikakvali]
+                                                :else [:hoitokausi :kalenterivuosi :valittu-aikakvali])
                                  :vayla-tyyli? true
                                  :nayta-rivina? false
                                  ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
                                  :valitse-fn #(do
+                                                (reset! u/valittu-hoitokauden-kuukausi nil)
                                                 (reset! u/valittu-hoitokausi nil)
                                                 (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
                                                 (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
@@ -195,6 +194,7 @@
              vuosi-eka vuosi-vika valittu-vuosi
              #(do
                 (reset! valittu-vuosi %)
+                (reset! u/valittu-hoitokauden-kuukausi nil)
                 (reset! u/valittu-hoitokausi nil)
                 (reset! valittu-kuukausi nil))]
 
@@ -218,18 +218,14 @@
         (if (and (= @valittu-yhteenveto-aikarajaus :hoitokausi) (nil? @u/valittu-hoitokausi))
           [:div "Valitse hoitokausi"]
 
-          (if (= @valittu-yhteenveto-aikarajaus :valittu-aikakvali) 
+          (if (= @valittu-yhteenveto-aikarajaus :valittu-aikakvali)
+            
             ;; Jos käytetään kustomi aikaväliä, katsotaan että molemmat arvot ovat olemassa
             (let [alku (first @vapaa-aikavali)
                   loppu (second @vapaa-aikavali)]
-              
+
               (if (and alku loppu)
                 (suorita-raportti raportin-nimi)
-                [:div "Valitse aikaväli"]
-                )
-              
-              )
-            
-            (suorita-raportti raportin-nimi)
-            )
-          )]))))
+                [:div "Valitse aikaväli"]))
+
+            (suorita-raportti raportin-nimi)))]))))

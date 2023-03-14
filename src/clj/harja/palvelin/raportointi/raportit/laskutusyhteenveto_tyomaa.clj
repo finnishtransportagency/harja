@@ -172,11 +172,14 @@
      
      rivit]))
 
-(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus] :as parametrit}]
   (log/debug "TYOMAA PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+
+        ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
+        laskutettu-teksti (if (= aikarajaus :valittu-aikakvali) "Määrä" laskutettu-teksti)
 
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
