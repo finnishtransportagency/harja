@@ -45,11 +45,12 @@
 (defn- vastaanottajien-tiedot [oman-urakan-id urakka-idt]
   (komp/luo
     (komp/sisaan-ulos
-      #(tiedot/hae-urakoiden-kayttajat-rooleissa oman-urakan-id urakka-idt)
+      #(when (> (count urakka-idt) 0)
+         (tiedot/hae-urakoiden-kayttajat-rooleissa oman-urakan-id urakka-idt))
 
       #(tiedot/tyhjenna-kayttajatiedot))
 
-    (fn [urakka-id]
+    (fn [_]
       (when @tiedot/fimista-haetut-vastaanottajatiedot
         [:div.email-vastaanottajat
          [grid/muokkaus-grid
@@ -58,9 +59,11 @@
            :tyhja (if (nil? @tiedot/fimista-haetut-vastaanottajatiedot)
                     "Haetaan urakan henkilötietoja Väyläviraston palvelusta."
                     "Ulkoisesta palvelusta ei löytynyt vastaanottajien tietoja.")
-           :jarjesta :roolit :tunniste :sahkoposti}
+           :jarjesta (comp :urakka-nimi :roolit) :tunniste :sahkoposti}
 
           [{:otsikko " " :nimi :valittu? :tasaa :keskita :tyyppi :checkbox :leveys 1 :vayla-tyyli? true}
+           {:otsikko "Urakka" :nimi :urakka-nimi :leveys 8
+            :muokattava? (constantly false) :tyyppi :string}
            {:otsikko "Vastaanottaja" :nimi :sahkoposti :leveys 8
             :muokattava? (constantly false) :tyyppi :string}
            {:otsikko "Rooli" :nimi :roolit :leveys 7
@@ -136,8 +139,9 @@
    Kohteet on vector mappeja, joilla kohteen :id, :nimi ja :valmis-pvm"
   []
   (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
-                nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data]
-
+                nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data
+        paallystysurakoiden-idt (into #{}
+                                      (map :paallystysurakka-id kohteet))]
     [modal/modal
      {:otsikko (if (= (count kohteet) 1)
                  (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (if-let [valmis-pvm (:valmis-pvm (first kohteet))]
@@ -175,7 +179,8 @@
                              (str "valmistuspäivänä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
                            ".")])]
        "vihje-hento-korostus" 16]
-      [vastaanottajien-tiedot @nav/valittu-urakka-id #{urakka-id}]
+      ;; Tiemerkintä voi teoriassa valmistua yhtaikaa useamman päällystysurakan kohteille.
+      [vastaanottajien-tiedot @nav/valittu-urakka-id (conj paallystysurakoiden-idt urakka-id)]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
@@ -710,27 +715,26 @@
                 ;; Näytä dialogi, mikäli arvoa muutetaan
                 (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
                                (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
-                  (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
-                        ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
-                        aiemmat-sahkopostitiedot (merge
-                                                   (:sahkopostitiedot rivi)
-                                                   (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
-                    (reset! tiedot/tiemerkinta-valmis-modal-data
-                            {:nakyvissa? true
-                             :muutos-taulukosta? true
-                             :valmis-fn (fn [lomakedata]
-                                          (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                                 {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
-                                                  :saate (:saate lomakedata)
-                                                  :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                             :kohteet [{:id (:id rivi)
-                                        :nimi (:nimi rivi)
-                                        :valmis-pvm arvo}]
-                             :urakka-id urakka-id
-                             :vuosi vuosi
-
-                             :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                          :saate (:saate aiemmat-sahkopostitiedot)}})))
+                  (reset! tiedot/tiemerkinta-valmis-modal-data
+                          {:nakyvissa? true
+                           :muutos-taulukosta? true
+                           :valmis-fn (fn [lomakedata]
+                                        (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                               {:urakka-vastaanottajat (keep #(when (and (:valittu? %) (:sahkoposti %))
+                                                                         [(:urakka-id %) (:sahkoposti %)])
+                                                                      (vals @tiedot/fimista-haetut-vastaanottajatiedot))
+                                                :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                                       (:muut-vastaanottajat lomakedata))
+                                                :saate (:saate lomakedata)
+                                                :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                           :kohteet [{:id (:id rivi)
+                                      :nimi (:nimi rivi)
+                                      :valmis-pvm arvo
+                                      :paallystysurakka-id (:paallystysurakka-id rivi)}]
+                           :urakka-id urakka-id
+                           :vuosi vuosi
+                           :lomakedata {:kopio-itselle? true
+                                        :saate ""}}))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku

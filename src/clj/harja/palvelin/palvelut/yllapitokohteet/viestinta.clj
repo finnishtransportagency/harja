@@ -167,17 +167,36 @@
                                                 :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                                  :tiemerkinta-valmis (get (valmistumispvmt kohteet) (:id eka-kohde))
                                  :ilmoittaja ilmoittaja}))))
+        ;; API:sta kutsuttaessa ei rivejä luoda kantaan, joten kopio-lahettajalle? on aina nil (käliltä false tai true)
+        kutsu-apista? (every? #(nil? (get-in % [:sahkopostitiedot :kopio-lahettajalle?])) yhden-urakan-kohteet)
+        ;; valitaan tässä kohti vain joko päällystyksen tai tiemerkinnän vastaanottajat, koska funktiota kutsutaan kerran molempien urakoiden osalta
+        urakan-vastaanottajat (into #{}
+                                    (mapcat #(let [uvt (get-in % [:sahkopostitiedot :urakka-vastaanottajat])]
+                                             (keep (fn [uv]
+                                                     (when
+                                                       (= (:urakka_id uv)
+                                                          (if (= nakokulma :paallystys)
+                                                            (:paallystysurakka-id %)
+                                                            (:tiemerkintaurakka-id %)))
+                                                       (:email uv))) uvt))
+                                          yhden-urakan-kohteet))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:sahkopostitiedot :muut-vastaanottajat]) yhden-urakan-kohteet))]
-
-
+    ;; 2023 alkaen käyttöliittymältä valitaan etukäteen FIM-vastaanottajat, eikä enää tässä kohti lähdetään tekemään hakua roolien mukaan
+    ;; Vain API:sta tulevan muutoksen jäljiltä käytetään yhä FIM-hakua tässä kohti.
     ;; Laitetaan viesti valmistuneista kohteista FIM-käyttäjille.
-    (viestinta/laheta-sposti-fim-kayttajarooleille
-      {:fim fim
-       :email email
-       :urakka-sampoid urakka-sampo-id
-       :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
-       :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
-       :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
+    (if kutsu-apista?
+      (viestinta/laheta-sposti-fim-kayttajarooleille
+       {:fim fim
+        :email email
+        :urakka-sampoid urakka-sampo-id
+        :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
+        :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
+        :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
+      (viestinta/laheta-sposti-sahkopostiosoitteille
+        {:email email
+         :vastaanottajat urakan-vastaanottajat
+         :viesti-otsikko viestin-otsikko
+         :viesti-body viestin-vartalo}))
 
     ;; Muut vastaanottajat voivat periaatteessa olla keitä tahansa. Laitetaan viesti tiemerkinnän näkökulmasta.
     ;; Laita yksi maili per vastaanottaja ja kerää siihen kaikki ne kohteet, joista tulee informoida ko. osoitetta
@@ -210,12 +229,14 @@
                                           (get-in kohde [:sahkopostitiedot :kopio-lahettajalle?]))
                                         yhden-urakan-kohteet)]
         (when (not (empty? kopio-maili-kohteet))
-          (viestinta/laheta-sahkoposti-itselle
-            {:email email
-             :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
-             :sahkoposti (:sahkoposti ilmoittaja)
-             :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
-             :viesti-body (viestin-vartalo kopio-maili-kohteet)}))))))
+          (if (:sahkoposti ilmoittaja)
+            (viestinta/laheta-sahkoposti-itselle
+             {:email email
+              :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
+              :sahkoposti (:sahkoposti ilmoittaja)
+              :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
+              :viesti-body (viestin-vartalo kopio-maili-kohteet)})
+            (log/warn (format "Ei voitu lähettää sähköpostia itselle, koska sähköpostiosoite puuttuu viestistä jonka otsikko on %s" (viestin-otsikko kopio-maili-kohteet)))))))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja

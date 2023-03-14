@@ -212,8 +212,8 @@ kohteiden-sahkopostitiedot (atom nil))
 
 (defn- lisaa-kohteille-sahkopostilahetystiedot [kohteet]
   (mapv (fn [kohde]
-         (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
-       kohteet))
+          (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
+        kohteet))
 
 (defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
   (tallenna-yllapitokohteiden-aikataulu

@@ -18,7 +18,8 @@
             [harja.pvm :as pvm]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.fmt :as fmt])
+            [harja.fmt :as fmt]
+            [clojure.set :as clj-set])
   (:import (java.sql Date)))
 
 (defn hae-urakan-kayttajat [db fim urakka-id]
@@ -41,6 +42,8 @@
                   concat
                   (for [u urakka-idt
                         :let [urakka (first (uq/hae-urakan-nimi db u))
+                              urakka (clj-set/rename-keys urakka {:id :urakka-id
+                                                                  :nimi :urakka-nimi})
                               kayttajat (fim/hae-urakan-kayttajat-jotka-roolissa fim
                                                                                  (:sampoid urakka)
                                                                                  fim-kayttajaroolit)]]

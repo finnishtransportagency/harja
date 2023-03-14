@@ -78,7 +78,10 @@
                                    ;; Lisätään modalissa kirjoitetut mailitiedot kaikille muokatuille kohteille
                                    (doseq [kohde-id (map #(first (::aikajana/drag %)) tiemerkinnan-valmistumiset)]
                                      (swap! tiedot/kohteiden-sahkopostitiedot assoc kohde-id
-                                            {:muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                            {:urakka-vastaanottajat (keep #(when (and (:valittu? %) (:sahkoposti %))
+                                                                             [(:urakka-id %) (:sahkoposti %)])
+                                                                          (vals @tiedot/fimista-haetut-vastaanottajatiedot))
+                                             :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
                                                                     (:muut-vastaanottajat lomakedata))
                                              :saate (:saate lomakedata)
                                              :kopio-itselle? (:kopio-itselle? lomakedata)}))
