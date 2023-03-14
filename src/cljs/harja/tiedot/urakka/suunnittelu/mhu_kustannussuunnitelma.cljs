@@ -484,10 +484,11 @@
 (defn summaa-omat-jjhk-toimenkuvan-tunnit [toimenkuva korvaukset tuntipalkka-avain]
   (if toimenkuva
     (mapv (fn [hoitokauden-arvot]
-            ;; Hae tuntipalkka hoitovuoden kuukauden tiedoista, jossa tuntipalkka on määritelty.
-            (let [tuntipalkka (some tuntipalkka-avain hoitokauden-arvot)]
-              (* (summaa-mapin-arvot hoitokauden-arvot :tunnit)
-                tuntipalkka)))
+            (reduce (fn [summa {:keys [tunnit] :as kuukausi}]
+                      (+ summa
+                        (* tunnit (tuntipalkka-avain kuukausi))))
+              0
+              hoitokauden-arvot))
       korvaukset)
     (vec (repeat 5 :ei-aseteta))))
 

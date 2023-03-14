@@ -91,9 +91,9 @@
                   (let [arvioidut-kohteet-yhteensa (reduce + 0 ((juxt :a :b :c :d) tarkastus))]
                     [(:siltanro tarkastus)
                      (:siltanimi tarkastus)
-                     (if (:tarkastusaika tarkastus)
-                       (:tarkastusaika tarkastus)
-                       tarkastamatta-info)
+                     (cond (:tarkastusaika tarkastus) (:tarkastusaika tarkastus)
+                           (not (:silta-urakan-vastuulla? tarkastus)) "Silta ei ole urakan vastuulla"
+                           :else tarkastamatta-info)
                      (or (:tarkastaja tarkastus)
                          "-")
                      [:arvo-ja-osuus {:arvo (:a tarkastus)
@@ -108,7 +108,8 @@
                      [:arvo-ja-osuus {:arvo (:d tarkastus)
                                       :osuus (Math/round (math/osuus-prosentteina
                                                            (:d tarkastus) arvioidut-kohteet-yhteensa))}]
-                     [:liitteet (:liitteet tarkastus)]]))
+                     [:liitteet (:liitteet tarkastus)]
+                     (not (:silta-urakan-vastuulla? tarkastus))]))
                 tarkastukset)
         rivit+yhteensa (conj rivit (siltojen-yhteensa-rivit tarkastukset))]
     rivit+yhteensa))
@@ -265,11 +266,19 @@
                                false)
                            (liita rivi :tarkastamaton? true)
                            (liita rivi :tarkastamaton? false)))
+        siirtynyt? (fn [rivi]
+                     (let [silta-urakan-vastuulla? (kentta-indeksilla rivi 9)]
+                       (liita (assoc rivi :rivi (subvec (:rivi rivi) 0 9)) :siirtynyt? silta-urakan-vastuulla?)))
 
         lihavoi (fn [rivi]
                   (if (:tarkastamaton? rivi) (liita rivi :lihavoi? true) (liita rivi :lihavoi? false)))
         korosta (fn [rivi]
                   (if (:virhe? rivi) (liita rivi :korosta? true) (liita rivi :korosta? false)))
+        korosta-harmaa (fn [rivi]
+                  (if (:siirtynyt? rivi) (-> rivi
+                                           (liita :korosta-harmaa? true)
+                                           (liita :korosta? false))
+                                         (liita rivi :korosta-harmaa? false)))
         jarjesta (fn [rivit]
                    (let [indeksi (fn [i] #(nth (:rivi %) i))]
                      (vec (sort-by
@@ -287,10 +296,12 @@
                                     (vec (apply concat (mapv (comp jarjesta val) tila-ja-rivit))))
         jarjesta-ryhmiin (fn [rivit]
                            (let [jarjestys (fn [a b] (let [arvo {[true false] 0 ;; kts. alla oleva juxt
-                                                                 [false true] 1
-                                                                 [false false] 2}]
-                                                       (< (arvo a) (arvo b))))]
-                             (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe?) rivit))))
+                                                                   [false true] 1
+                                                                   [false false] 2}
+                                                             arvo #(if (last %) (+ 3 (arvo (butlast %)))
+                                                                         (arvo (butlast %)))]
+                                                         (< (arvo a) (arvo b))))]
+                             (into (sorted-map-by jarjestys) (group-by (juxt :tarkastamaton? :virhe? :siirretty?) rivit))))
         otsikko (case konteksti
                   :urakka
                   (if (= silta-id :kaikki)
@@ -322,7 +333,9 @@
                         butlast
                         (map virhe?)
                         (map tarkastamaton?)
+                        (map siirtynyt?)
                         (map korosta)
+                        (map korosta-harmaa)
                         (map lihavoi)
                         jarjesta-ryhmiin
                         jarjesta-ryhmien-sisallot))

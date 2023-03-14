@@ -719,7 +719,7 @@
 
 (defmethod tee-kentta :radio-group [{:keys [vaihtoehdot vaihtoehto-nayta vaihtoehto-arvo nayta-rivina?
                                             oletusarvo vayla-tyyli? disabloitu? valitse-fn radio-luokka
-                                            kaari-flex-row? vaihtoehto-opts]}
+                                            kaari-flex-row? vaihtoehto-opts space-valissa?]}
                                     data]
   (let [vaihtoehto-nayta (or vaihtoehto-nayta
                              #(clojure.string/capitalize (name %)))
@@ -768,7 +768,7 @@
                                                           (reset! data vaihtoehdon-arvo)))}]
                                  (vaihtoehto-nayta vaihtoehto)]])))]
        (if nayta-rivina?
-         [:div {:style {:display "flex" :flex-direction "row" :flex-wrap "wrap"
+         [:div {:style {:gap (if space-valissa? "22px" "0px") :display "flex" :flex-direction "row" :flex-wrap "wrap"
                         :justify-content "flex-start"}}
           (map-indexed (fn [i cb]
                          ^{:key (str "radio-button-" i)}

@@ -121,14 +121,15 @@
                         [:kustomi desimaalien-maara]))])
 
 (defmethod muodosta-solu :erotus-ja-prosentti [[_ {:keys [arvo prosentti desimaalien-maara lihavoi? korosta?
-                                                          korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
+                                                          korosta-hennosti? ala-korosta? korosta-harmaa?
+                                                          varoitus?]}] solun-tyyli]
   (let [etuliite (cond
                    (neg? arvo) "- "
                    (zero? arvo) ""
                    :else "+ ")
         arvo (Math/abs (float arvo))
         prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -148,8 +149,9 @@
 ;; Säädä yksittäisestä solusta haluttu. Solun tyyli saadaan raporttielementilla esim. näin:
 ;; [:arvo-ja-yksikko-korostettu {:arvo yht :korosta-hennosti? true :yksikko "%" :desimaalien-maara 2}]
 (defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
-                                                                 korosta-hennosti? ala-korosta? varoitus?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+                                                                 korosta-hennosti? korosta-harmaa? ala-korosta?
+                                                                 varoitus?]}] solun-tyyli]
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -226,23 +228,26 @@
 
 (defn tyyli-format-mukaan
   "Antaa Excel-soluille erityyppisiä formattereita, kuten raha, kokonaisluku tai pvm."
-  [fmt voi-muokata? tyyli]
+  [workbook fmt voi-muokata? tyyli]
   ;; voi-muokata? vaikuttaa vain, jos sheet on asetettu protected arvoon,
   ;; joka enabloidaan lipulla :varjele-sheet-muokkauksilta?)
   (.setLocked tyyli (not voi-muokata?))
-  (case fmt
+  
+  ;; Lisätty tyyliformaatti euroille
+  (let [raha-formaatti (luo-data-formaatti workbook "€#,##0.00_);[Red](€#,##0.00)")]
+    (case fmt
     ;; .setDataFormat hakee indeksillä tyylejä.
     ;; Tyylejä voi määritellä itse (https://poi.apache.org/apidocs/org/apache/poi/xssf/usermodel/XSSFDataFormat.html)
     ;; tai voimme käyttää valmiita, sisäänrakennettuja tyylejä.
     ;; http://poi.apache.org/apidocs/org/apache/poi/ss/usermodel/BuiltinFormats.html
-    :kokonaisluku (.setDataFormat tyyli 1)
-    :raha (.setDataFormat tyyli 8)
-    :prosentti (.setDataFormat tyyli 10)
-    :numero (.setDataFormat tyyli 2)
-    :numero-3desim (.setDataFormat tyyli 3)
-    :pvm (.setDataFormat tyyli 14)
-    :pvm-aika (.setDataFormat tyyli 22)
-    nil))
+      :kokonaisluku (.setDataFormat tyyli 1)
+      :raha (.setDataFormat tyyli raha-formaatti)
+      :prosentti (.setDataFormat tyyli 10)
+      :numero (.setDataFormat tyyli 2)
+      :numero-3desim (.setDataFormat tyyli 3)
+      :pvm (.setDataFormat tyyli 14)
+      :pvm-aika (.setDataFormat tyyli 22)
+      nil)))
 
 (defn- tee-raportin-tiedot-rivi  
   [sheet {:keys [nolla raportin-nimi alkupvm urakka loppupvm tyyli
@@ -318,11 +323,121 @@
 
 (def puskuririvien-maara-ennen-rivi-jalkeen 5)
 
-(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot viimeinen-rivi-yhteenveto? lista-tyyli?
-                                                sheet-nimi samalle-sheetille? rivi-ennen rivi-jalkeen] :as optiot}
+(defn hoitokausi-kuukausi-arvotaulukko [tiedot workbook sarakkeet]
+  ;; Käytetään hoitokauden & valitun kuukauden raha-arvojen näyttöön 
+  ;; Sarakkeet pitää sisältää hoitokauden & valitun kuukauden otsikot, esim: (Hoitokauden alusta, Laskutetaan 09/20)
+  ;; Tiedoissa on raha-arvot desimaaleina (BigDecimal) ja niiden selitykset (str), esim: (Muut kustannukset yhteensä, 700.369M 0.0M)
+  ;; Mikäli selityksen jälkeen on 2 desimaalia, funktio generoi <Hoitokausi> & <valittu kk> -otsikot joiden alla näkyy arvot
+  ;; Mikäli selityksen jälkeen on vain 1 desimaali, ei erillisiä otsikkoja tehdä, vaan näytetään pelkästään <selitys: > <arvo>
+
+  ;; Esimerkki 1: 
+  ;; OTSIKOT:  ()
+  ;; ARVOT:  (Hankinnat ja hoidonjohto yhteensä 123.123M)
+  ;; Näytetään seuraavasti: "Hankinnat ja hoidonjohto yhteensä: 123.123 €"
+
+  ;; Esimerkki 2: 
+  ;; OTSIKOT: (Hoitokauden alusta Laskutetaan 09/20)
+  ;; ARVOT: (Toteutuneet kustannukset 123.123M 0.0M)
+  ;; Näytetään seuraavasti: "Toteutuneet kustannukset:  Hoitokauden alusta   Laskutetaan 09/20
+  ;;                                                       123.123 €              0.0 €       "
+
+  (let [aiempi-sheet (last (excel/sheet-seq workbook))
+        [sheet rivi-nro] [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
+
+        tyyli-tiedot {:font {:color :black :size 12 :name "Aria"}}
+        tyyli-normaali (excel/create-cell-style! workbook tyyli-tiedot)
+        tyyli-otsikko (excel/create-cell-style! workbook (assoc-in tyyli-tiedot [:font :bold] true))
+
+        rivi (.createRow sheet rivi-nro)
+        _ (.createCell rivi 0)
+
+        ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+        laskutus-otsikot (raportti-domain/hoitokausi-kuukausi-laskutus-otsikot sarakkeet)
+        hoitokauden-otsikko (first laskutus-otsikot)
+        valittu-pvm-otsikko (second laskutus-otsikot)
+
+        ;; Hakee taulukon arvot, selitys on string jonka perässä laskutus arvot raha desimaaleina
+        arvot (raportti-domain/hoitokausi-kuukausi-arvot tiedot decimal?)
+        koko (dec (count arvot))]
+
+    ;; Haetaan selitysten arvot
+    ;; Jos arvo sisältää 2 desimaali-muuttujaa, tälle tulee hoitokausi/laskutetaan otsikot
+    (doseq [[n elem] (map-indexed #(vector %1 %2) arvot)]
+
+      ;; Alkaa aina otsikolla joka on string
+      (when (string? elem)
+        (if (>= koko (+ n 2))
+          (let [hoitokauden-arvo (nth arvot (inc n))
+                laskutetaan-arvo (nth arvot (+ n 2))]
+
+            (if (decimal? laskutetaan-arvo)
+
+              ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
+              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    rivin-solu (.createCell rivi 0)
+                    hoitokausi-solu (.createCell rivi 1)
+                    laskutetaan-solu (.createCell rivi 2)
+
+                    rivi-arvot (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    solu-hoitokausi (.createCell rivi-arvot 1)
+                    solu-valittu-aika (.createCell rivi-arvot 2)]
+
+                ;; Ensimmäinen solu (selitys)
+                (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
+
+                ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
+                (raportti-domain/tee-solu hoitokausi-solu hoitokauden-otsikko tyyli-otsikko)
+                (raportti-domain/tee-solu laskutetaan-solu valittu-pvm-otsikko tyyli-otsikko)
+
+                ;; Laskutus-arvot
+                (raportti-domain/tee-solu solu-hoitokausi (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)
+                (raportti-domain/tee-solu solu-valittu-aika (str (fmt/euro laskutetaan-arvo)) tyyli-normaali)
+                ;; Tehdään yksi tyhjä rivi
+                (.createRow sheet (inc (.getLastRowNum aiempi-sheet))))
+
+              ;; Seuraava muuttuja on string, eli selityksellä vain 1 arvo
+              (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                    rivin-otsikko (.createCell rivi 0)
+                    rivin-arvo (.createCell rivi 1)]
+
+                (raportti-domain/tee-solu rivin-otsikko (str elem ":") tyyli-otsikko)
+                (raportti-domain/tee-solu rivin-arvo (str (fmt/euro hoitokauden-arvo)) tyyli-normaali))))
+
+          ;; Muuttujia ei ole kun 2, eli selityksellä vain 1 arvo
+          (let [rivi (.createRow sheet (inc (.getLastRowNum aiempi-sheet)))
+                rivin-solu (.createCell rivi 0)
+                hoitokausi-solu (.createCell rivi 1)
+                hoitokauden-arvo (nth arvot (inc n))]
+
+            (raportti-domain/tee-solu rivin-solu (str elem ":") tyyli-otsikko)
+            (raportti-domain/tee-solu hoitokausi-solu (str (fmt/euro hoitokauden-arvo)) tyyli-normaali)))))))
+
+
+(defn taulukon-valiotsikko [otsikko workbook]
+  ;; Tekee väliotsikon exceliin mikäli tämä puuttuu, annetaan raportin taulukon parametreissa 
+  (let [aiempi-sheet (last (excel/sheet-seq workbook))
+        [sheet rivi-numero] [aiempi-sheet (inc (.getLastRowNum aiempi-sheet))]
+        tyyli-tiedot {:border-bottom :thin :background :grey_25_percent :font {:bold true :color :black :size 12 :name "Aria"}}
+        tyyli (excel/create-cell-style! workbook tyyli-tiedot)
+
+        rivi (.createRow sheet rivi-numero)
+        rivin-solu (.createCell rivi 0)
+        harmaa-sivu (.createCell rivi 1)]
+    (raportti-domain/tee-solu rivin-solu otsikko tyyli)
+    (raportti-domain/tee-solu harmaa-sivu nil tyyli)
+    rivi-numero))
+
+(defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko raportin-tiedot 
+                                                viimeinen-rivi-yhteenveto? lista-tyyli?
+                                                sheet-nimi samalle-sheetille? 
+                                                rivi-ennen rivi-jalkeen hoitokausi-arvotaulukko?
+                                                lisaa-excel-valiotsikot] :as optiot}
                                       sarakkeet data] workbook]
   (try
-    (let [viimeinen-rivi (last data)
+    (if hoitokausi-arvotaulukko? 
+      (hoitokausi-kuukausi-arvotaulukko data workbook sarakkeet)
+    (let [
+          viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
           [sheet nolla] (if (and (nil? sheet-nimi)
                               (or samalle-sheetille? (nil? nimi))
@@ -380,7 +495,11 @@
       (dorun
        (map-indexed
         (fn [rivi-nro rivi]
-          (let [rivi-nro (+ nolla 1 rivi-nro)
+          ;; Lisää väliotsikot mikäli nämä puuttuvat 
+          (let [lisatty-otsikko (when (and (:otsikko rivi) lisaa-excel-valiotsikot)
+                               (taulukon-valiotsikko (:otsikko rivi) workbook))
+                rivi-nro (+ nolla 1 rivi-nro)
+                rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
                 [data optiot] (if (map? rivi)
                                 [(:rivi rivi) rivi]
                                 [rivi {}])
@@ -394,6 +513,7 @@
                                          (= rivi viimeinen-rivi)))
                        korosta? (:korosta? optiot)
                        korosta-hennosti? (:korosta-hennosti? optiot)
+                       korosta-harmaa? (:korosta-harmaa? optiot)
                        arvo-datassa (nth data sarake-nro)
                        ;; ui.yleiset/totuus-ikonin tuki toistaiseksi tämä
                        arvo-datassa (if (= [:span.livicon-check] arvo-datassa)
@@ -404,7 +524,7 @@
                                   (:fmt (second arvo-datassa)))
                        formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
-                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti?)
+                       oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa?)
                        [naytettava-arvo solun-tyyli formaatti]
                        (if (and (raportti-domain/raporttielementti? arvo-datassa)
                              (not (raportti-domain/excel-kaava? arvo-datassa)))
@@ -419,11 +539,10 @@
                                       (partial tyyli-kustom-format-mukaan (second formaatti) workbook)
 
                                       formaatti
-                                      (partial tyyli-format-mukaan formaatti nil)
+                                      (partial tyyli-format-mukaan workbook formaatti nil)
 
                                       formatoi-solu?
-                                      (partial tyyli-format-mukaan (or solu-fmt sarake-fmt)
-                                        (:voi-muokata? sarake))
+                                      (partial tyyli-format-mukaan workbook (or solu-fmt sarake-fmt) (:voi-muokata? sarake))
 
                                       :default
                                       (constantly nil))
@@ -473,7 +592,7 @@
                                     sheet
                                     workbook
                                     false
-                                    false)))
+                                    false))))
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa"))))
 
@@ -485,6 +604,9 @@
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
+(defmethod muodosta-excel :otsikko [[_ _] _] nil)
+(defmethod muodosta-excel :otsikko-heading [[_ _] _] nil)
+(defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
   (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)

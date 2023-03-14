@@ -451,15 +451,6 @@
             :takuu {:loppupvm loppupvm}}
            nil true))
 
-(def urakassa-kaytetty-indeksi
-  (reaction (when-let [ur @nav/valittu-urakka]
-              (when (= :hoito (:tyyppi ur))
-                (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm ur))]
-                  (cond
-                    (< urakan-alkuvuosi 2017) "MAKU 2005"
-                    (< urakan-alkuvuosi 2019) "MAKU 2010"
-                    :default "MAKU 2015"))))))
-
 (defn lukitse-urakan-yha-sidonta! [urakka-id]
   (when (= @nav/valittu-urakka-id urakka-id)
     (nav/paivita-urakan-tiedot! @nav/valittu-urakka-id assoc-in [:yhatiedot :sidonta-lukittu?] true)))

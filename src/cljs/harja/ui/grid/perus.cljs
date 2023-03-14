@@ -194,9 +194,10 @@
 (defn- nayttorivi [{:keys [luokka rivi-klikattu rivi-valinta-peruttu ohjaus id infolaatikko-nakyvissa?
                            vetolaatikot tallenna piilota-toiminnot? nayta-toimintosarake? valittu-rivi
                            mahdollista-rivin-valinta? rivin-infolaatikko solun-luokka infolaatikon-tila-muuttui
-                           data esta-tiivis-grid? avattavat-rivit isanta-rivin-id] :as rivin-data}
+                           data esta-tiivis-grid? piilota-border? avattavat-rivit isanta-rivin-id] :as rivin-data}
                    skeema rivi index]
-  [:tr {:class (str luokka
+  [:tr {:class (str luokka 
+                (when piilota-border? " valiotsikko ")
                 (when (= id @valittu-rivi)
                   " rivi-valittu ")
                 ;; Avattavia rivejä ei näytetä, mikäli niitä ei ole avattu. Eli rivit on olemassa,
@@ -219,7 +220,7 @@
    (doall (map-indexed
             (fn [i {:keys [nimi hae fmt tasaa tyyppi komponentti komponentti-args
                            solu-klikattu solun-luokka huomio
-                           pakota-rivitys? reunus luokka]}]
+                           pakota-rivitys? reunus luokka solun-tooltip]}]
               (let [kentan-skeema (get skeema i)
                     haettu-arvo (if hae
                                   (hae rivi)
@@ -261,37 +262,50 @@
                                    (luokka rivi)
                                    luokka))}
                    ;; Solun sisältö
-                   [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
+                   [yleiset/tooltip {:tooltip-disabloitu? (when-not solun-tooltip true)}
+                    [:div (when (and (:oikealle? rivi) ((:oikealle? rivi) nimi)) {:style {:float "right"}})
                     ;; Sijoitetaan infolaatikko suhteessa viimeiseen soluun.
                     ;; Semanttisesti sen kuuluisi olla suhteessa riviin (koska laatikko kuvaa rivin lisätietoa).
                     ;; mutta HTML:n säännöt kieltävät div-elementit suoraan tr:n lapsena
-                    (when (and
-                            (= id @valittu-rivi)
-                            (= (inc i) (count skeema))
-                            rivin-infolaatikko
-                            @infolaatikko-nakyvissa?)
-                      [rivin-infolaatikko* rivin-infolaatikko rivi data])
-                    (cond
-                      (= tyyppi :komponentti) (apply komponentti rivi {:index index
-                                                                       :muokataan? false}
-                                                     komponentti-args)
-                      (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
-                                                                                      :muokataan? false}]
-                                                                   komponentti-args))
-                      :else
-                      (if fmt
-                        (fmt haettu-arvo)
-                        [nayta-arvo kentan-skeema (vain-luku-atomina haettu-arvo)]))
-                    (when huomio
-                      (when-let [huomion-tiedot (huomio rivi)]
-                        (let [ikoni (case (:tyyppi huomion-tiedot)
-                                      :varoitus (ui-ikonit/livicon-warning-sign)
-                                      (ui-ikonit/livicon-info))
-                              teksti (:teksti huomion-tiedot)]
-                          [yleiset/tooltip {} [:span {:class (str "grid-huomio-"
+                     (when (and
+                             (= id @valittu-rivi)
+                             (= (inc i) (count skeema))
+                             rivin-infolaatikko
+                             @infolaatikko-nakyvissa?)
+                       [rivin-infolaatikko* rivin-infolaatikko rivi data])
+                     (cond
+                       (= tyyppi :komponentti) (apply komponentti rivi {:index index
+                                                                        :muokataan? false}
+                                                 komponentti-args)
+                       (= tyyppi :reagent-komponentti) (vec (concat [komponentti rivi {:index index
+                                                                                       :muokataan? false}]
+                                                              komponentti-args))
+                       :else
+                       (if fmt
+                         (fmt haettu-arvo)
+                         [nayta-arvo kentan-skeema (vain-luku-atomina haettu-arvo)]))
+                     (when huomio
+                       (when-let [huomion-tiedot (huomio rivi)]
+                         (let [ikoni (case (:tyyppi huomion-tiedot)
+                                       :varoitus (ui-ikonit/livicon-warning-sign)
+                                       :info (ui-ikonit/livicon-info-circle)
+                                       (ui-ikonit/livicon-info))
+                               teksti (:teksti huomion-tiedot)]
+                           (when teksti
+                             [yleiset/tooltip {} [:span {:style {:margin-left "3px"}
+                                                         :class (str "grid-huomio-"
                                                                   (name (:tyyppi huomion-tiedot)))}
-                                               ikoni]
-                           teksti])))]])))
+                                                  ikoni]
+                              teksti]))))]
+                    (when solun-tooltip
+                      (when-let [solun-tooltip-tiedot (solun-tooltip rivi)]
+                        (let [teksti (:teksti solun-tooltip-tiedot)
+                              tooltip-tyyppi (:tooltip-tyyppi solun-tooltip-tiedot)
+                              tooltip-komponentti (:tooltip-komponentti solun-tooltip-tiedot)]
+                          (cond
+                            (= tooltip-tyyppi :komponentti) tooltip-komponentti
+                            :else
+                            (or teksti "-")))))]])))
             (if (:colspan rivi)
               (filter #(contains? (:colspan rivi) (:nimi %)) skeema)
               skeema)))
@@ -604,7 +618,7 @@
                                      piilotetut-valiotsikot
                                      rivi-valinta-peruttu mahdollista-rivin-valinta? piilota-toiminnot?
                                      nayta-toimintosarake? skeema vetolaatikot-auki salli-valiotsikoiden-piilotus?
-                                     esta-tiivis-grid? avattavat-rivit]}]
+                                     esta-tiivis-grid? piilota-border? avattavat-rivit]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
     (if (empty? rivit)
       [:tr.tyhja [:td {:col-span colspan} tyhja]]
@@ -659,7 +673,8 @@
                                          :mahdollista-rivin-valinta? mahdollista-rivin-valinta?
                                          :piilota-toiminnot? piilota-toiminnot?
                                          :nayta-toimintosarake? nayta-toimintosarake?
-                                         :esta-tiivis-grid? esta-tiivis-grid?}
+                                         :esta-tiivis-grid? esta-tiivis-grid?
+                                         :piilota-border? piilota-border?}
                              skeema rivi i]
                              (vetolaatikko-rivi vetolaatikot vetolaatikot-auki id vetolaatikko-colspan)]))))
                     rivit-jarjestetty)))))))
@@ -718,6 +733,12 @@
                                         Saa sarakkeen skeema.
   :komponentti                          Jos sarakkeen tyyppi on :komponentti, tämän avaimen takana tulee olla
                                         komponentin määrittävä funktio.
+  :solun-tooltip                        Koko solulle näytettävä tooltip. Arvona funktio joka palauttaa mapin jossa sallittuja 
+                                        arvoja ovat :teksti, :tooltip-tyyppi ja :tooltip-komponentti. Voit antaa siis teksti arvon tai 
+                                        määritellä tyypiksi komponentin.
+  :huomio                               Solun sisällön jälkeen renderöidään ikoni jossa tooltip. Arvona funktio joka palauttaa mapin 
+                                        jossa sallittuja arvoja ovat :teksti ja :tyyppi. Tyyppi arvo määrittää ikonin ja teksti arvo 
+                                        tooltipin tekstin. 
 
   Tyypin mukaan voi olla lisäavaimia, jotka määrittelevät tarkemmin kentän validoinnin.
 
@@ -776,6 +797,7 @@
   :rivi-jalkeen-fn                       viimeisen rivin jälkeinen näytettävä rivi. Funktio,
                                         joka saa muokkaustiedot parametrina ja palauttaa
                                         sekvenssin mäppejä kuten :rivi-ennen
+  :piilota-border?                      piilottaa taulukon sarakkeiden borderit
 
   :id                                   mahdollinen DOM noden id, gridin pääelementille
   :tyhja                                Jos rivejä ei ole, mitä näytetään taulukon paikalla?
@@ -797,7 +819,7 @@
            ei-footer-muokkauspaneelia? ennen-muokkausta voi-muokata-rivia?
            nollaa-muokkaustiedot-tallennuksen-jalkeen? tallennus-ei-mahdollinen-tooltip
            aloitussivu rivi-validointi rivi-varoitus rivi-huomautus
-           taulukko-validointi taulukko-varoitus taulukko-huomautus] :as opts} skeema tiedot]
+           taulukko-validointi taulukko-varoitus taulukko-huomautus piilota-border?] :as opts} skeema tiedot]
   (assert (not (and max-rivimaara sivuta)) "Gridille annettava joko :max-rivimaara tai :sivuta, tai ei kumpaakaan.")
   (let [komponentti-id (do (swap! seuraava-grid-id inc) (str "harja-grid-" @seuraava-grid-id))
         muokatut (atom nil) ;; muokattu datajoukko
@@ -1218,7 +1240,8 @@
                                          :skeema skeema
                                          :vetolaatikot-auki vetolaatikot-auki
                                          :avattavat-rivit-auki avattavat-rivit-auki
-                                         :esta-tiivis-grid? esta-tiivis-grid?}))
+                                         :esta-tiivis-grid? esta-tiivis-grid?
+                                         :piilota-border? piilota-border?}))
                 (when-let [rivi-jalkeen (and (:rivi-jalkeen-fn opts)
                                              ((:rivi-jalkeen-fn opts)
                                                (if muokataan

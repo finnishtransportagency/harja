@@ -9,7 +9,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.maaramuutokset :as maaramuutokset]
             [slingshot.slingshot :refer [throw+ try+]]
-            [cheshire.core :as cheshire]))
+            [cheshire.core :as cheshire]
+            [clojure.string :as str]))
 
 (def +virhe-kaistojen-haussa+ ::digiroad-virhe-kaistojen-haussa)
 
@@ -21,6 +22,32 @@
 
 (defprotocol DigiroadHaku
   (hae-kaistat [this tr-osoite ajorata]))
+
+
+(defn kasittele-hae-kaistat-virheet [virheet]
+  (let [viestit-str (str/join ";" (map :viesti virheet))
+        virhe-sisaltaa-tekstin? (fn [teksti]
+                                  (str/includes? viestit-str teksti))]
+
+    (cond
+      ;; Niputetaan kaikki kaistoihin liittyvät HTTP 400 alla tulevat virheet
+      ;;       400 Bad Request -> Virheellinen parametri (ajorata, tr-osoite) TAI olematon ajorata TAI olematon tieosoite
+      ;;                           TAI haussa tehty liian monta automaattista uudelleenyritystä.
+      ;; TODO: Harjan http integraatiopiste palauttaa kaikki virheet ja koodit tekstinä. Yleisesti voisi parantaa
+      ;;      integraatiopisteiden virheidenhallintaa, jotta olisi mahdollista napata myös koodit erikseen ulkopuolelta.
+      ;;      Ratkaisematta on vielä tilanne, että mitä tehdään kun haun maksimiyritysten määrä on ylittynyt.
+      ;;       -> Yrittäisikö Harjan Digiroad integraatio hakua itsenäisesti uudelleen vai pitääkö käyttäjän muokata
+      ;;          lomakkeella jotakin riviä, jotta kaistojen hakua yritetään uudelleen?
+      (virhe-sisaltaa-tekstin? "palautti statuskoodin: 400")
+      {:koodi +virhe-kaistojen-haussa+
+       :onnistunut? false
+       :virheet virheet}
+
+      ;; Tuntematon virhe. Esimerkiksi ongelma Digiroadin puolella.
+      :else
+      {:koodi virheet/+ulkoinen-kasittelyvirhe-koodi+
+       :onnistunut? false
+       :virheet virheet})))
 
 (defn kasittele-kaistat-vastaus [body headers]
   (cheshire/decode body true))
@@ -67,8 +94,8 @@
                 {body :body headers :headers}
                 (integraatiotapahtuma/laheta konteksti :http http-asetukset)]
             (kasittele-kaistat-vastaus body headers))))
-      (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-        (log/error "Kaistojen haku Digiroadista epäonnistui:" virheet)))))
+      (catch  [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
+        (kasittele-hae-kaistat-virheet virheet)))))
 
 (defrecord Digiroad [asetukset]
   component/Lifecycle

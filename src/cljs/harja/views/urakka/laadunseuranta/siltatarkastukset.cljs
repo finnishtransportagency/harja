@@ -4,12 +4,10 @@
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :refer [ajax-loader linkki livi-pudotusvalikko]]
+            [harja.ui.yleiset :as yleiset :refer [ajax-loader livi-pudotusvalikko]]
             [harja.ui.viesti :as viesti]
             [harja.ui.komponentti :as komp]
-            [harja.ui.yleiset :as yleiset]
             [harja.ui.modal :as modal]
-            [harja.ui.tierekisteri :refer [tieosoite]]
             [harja.ui.debug :refer [debug]]
 
             [harja.tiedot.navigaatio :as nav]
@@ -18,21 +16,20 @@
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.views.kartta :as kartta]
             [harja.ui.lomake :as lomake :refer [lomake]]
-            [harja.loki :refer [log logt tarkkaile!]]
+            [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-            [cljs.core.async :refer [<! >! chan]]
-            [harja.asiakas.tapahtumat :as tapahtumat]
+            [cljs.core.async :refer [<! ]]
             [harja.ui.napit :as napit]
             [harja.domain.siltatarkastus :as siltadomain]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tyokalut.functor :refer [fmap]]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.tyokalut.local-storage :as local-storage]
-            [taoensso.timbre :as log])
+            [harja.ui.varmista-kayttajalta :as varmista-kayttajalta])
   (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]
-                   [harja.atom :refer [reaction<!]]))
+                   [reagent.ratom :refer [reaction]]))
 
 
 (defonce muokattava-tarkastus (local-storage/local-storage-atom :muokattava-siltatarkastus
@@ -97,17 +94,25 @@
     (reset! st/valittu-silta paivitetty-silta)
     (sillat/paivita-silta! silta-id (constantly paivitetty-silta))))
 
+(defn- siirtynyt-urakkaan-info []
+  [yleiset/tooltip {:suunta :alas :leveys :levea}
+   [ikonit/harja-icon-status-info]
+   [:div (str "Mikäli epäilet tämän tiedon olevan virheellistä, olethan yhteydessä sivun "
+           "ylälaidassa olevan palautelomakkeen kautta. Sisällytä viestiin ainakin sillan "
+           "nimi, tunnus ja tieto siitä, missä urakassa sen pitäisi olla.")]])
+
 (defn sillan-perustiedot [silta]
-  (let [on-poistettu? (sillat/on-poistettu? silta)]
+  (let [on-poistettu? (sillat/on-poistettu? silta)
+        urakan-vastuulla? (:urakan-vastuulla? silta)]
     [:div
-     [:h3 {:class (when on-poistettu? "poistettu") } (:siltanimi silta)]
+     [:h3 {:class (when (or on-poistettu? (not urakan-vastuulla?)) "poistettu")} (:siltanimi silta)]
      [yleiset/tietoja {}
       "Sillan tunnus: " (:siltatunnus silta)
       "Poistettu: " (when on-poistettu? (pvm/pvm (or (:loppupvm silta) (:lakkautuspvm silta))))
+      "Siirtynyt urakkaan:" (when-not urakan-vastuulla?
+                              [:span (:vastuu-urakka-nimi silta) " " [siirtynyt-urakkaan-info]])
       "Edellinen tarkastus: " (tarkastuksen-tekija-ja-aika silta)
-      "Tieosoite: " [tieosoite
-                     (:tr_numero silta) (:tr_alkuosa silta) (:tr_alkuetaisyys silta)
-                     (:tr_loppuosa silta) (:tr_loppuetaisyys silta)]]]))
+      "Tieosoite: " [tierekisteri/tierekisteriosoite-tekstina (:tr silta) {:teksti-tie? false}]]]))
 
 (defn kohdesarake [kohteet vika-korjattu]
   [:ul.puutekohdelista {:style {:padding-left "20px"}}
@@ -120,7 +125,7 @@
 
 (defn jarjesta-sillat [sillat]
   (sort-by
-    (juxt #(if (sillat/on-poistettu? %) 1 0)
+    (juxt #(if (sillat/ei-urakan-vastuulla? %) 1 0)
           (fn [silta]
             (case @sillat/jarjestys
               :nimi (:siltanimi silta)
@@ -128,10 +133,7 @@
                             siltatunnus-numerona (js/parseInt
                                                    (apply str
                                                           (filter #(#{\0, \1, \2, \3, \4, \5, \6, \7, \8, \9} %) siltatunnus)))]
-                        siltatunnus-numerona)
-
-
-              )))
+                        siltatunnus-numerona))))
     sillat))
 
 (defn sillat []
@@ -169,7 +171,7 @@
            [:nimi :tunnus]]]
          [grid/grid
           {:otsikko       "Sillat"
-           :rivin-luokka  #(when (sillat/on-poistettu? %) "poistettu-silta")
+           :rivin-luokka  #(when (sillat/ei-urakan-vastuulla? %) "poistettu-silta")
            :tyhja         (if (nil? @urakan-sillat)
                             [ajax-loader "Siltoja haetaan..."]
                             "Ei siltoja annetuilla kriteereillä.")
@@ -339,7 +341,10 @@
                                                 (siltatarkastusten-rivit tark muut)
                                                 []))))
             tarkastus-kuuluu-urakkaan? (tarkastus-kuuluu-nykyiseen-urakkaan? @st/valittu-tarkastus
-                                                                             (:id @nav/valittu-urakka))]
+                                         (:id @nav/valittu-urakka))
+            silta-ei-urakan-vastuulla? (sillat/ei-urakan-vastuulla? @st/valittu-silta)
+            uusi-tarkastus-fn #(uusi-tarkastus! (conj @muut-tarkastukset
+                                                  @st/valittu-tarkastus))]
         [:div.siltatarkastukset
          [napit/takaisin "Takaisin siltaluetteloon" #(reset! st/valittu-silta nil)]
 
@@ -348,38 +353,45 @@
          [:div.siltatarkastus-kontrollit
           [:div.label-ja-alasveto.alasveto-sillan-tarkastaja
            [:span.alasvedon-otsikko "Tarkastus"]
-           [livi-pudotusvalikko {:valinta    @st/valittu-tarkastus
+           [livi-pudotusvalikko {:valinta @st/valittu-tarkastus
                                  ;;\u2014 on väliviivan unikoodi
-                                 :format-fn  #(tarkastuksen-tekija-ja-aika %)
+                                 :format-fn #(tarkastuksen-tekija-ja-aika %)
                                  :valitse-fn #(reset! st/valittu-tarkastus %)}
             @st/valitun-sillan-tarkastukset]]
 
           [:span (when (not tarkastus-kuuluu-urakkaan?) {:title "Tarkastus ei kuulu tähän urakkaan."})
            [:button.nappi-ensisijainen {:on-click #(muokkaa-tarkastusta! @st/valittu-tarkastus)
                                         :disabled (or (empty? @siltatarkastusrivit)
-                                                      (not tarkastus-kuuluu-urakkaan?))}
+                                                    (not tarkastus-kuuluu-urakkaan?))}
             (ikonit/livicon-pen) " Muokkaa tarkastusta"]]
           [:span (when (not tarkastus-kuuluu-urakkaan?) {:title "Tarkastus ei kuulu tähän urakkaan."})
            [:button.nappi-kielteinen {:on-click varmista-siltatarkastuksen-poisto
                                       :disabled (or (empty? @siltatarkastusrivit)
-                                                    (not tarkastus-kuuluu-urakkaan?))}
+                                                  (not tarkastus-kuuluu-urakkaan?))}
             (ikonit/livicon-trash) " Poista tarkastus"]]
-          [napit/uusi "Uusi tarkastus" #(uusi-tarkastus! (conj @muut-tarkastukset
-                                                               @st/valittu-tarkastus))]]
+          [napit/uusi "Uusi tarkastus"
+           (if silta-ei-urakan-vastuulla?
+             #(varmista-kayttajalta/varmista-kayttajalta
+                {:otsikko "Uusi tarkastus"
+                 :sisalto "Silta ei näyttäisi olevan urakan vastuulla. Oletko varma, että haluat tehdä tarkastuksen?"
+                 :hyvaksy "Uusi tarkastus"
+                 :napit [:uusi :peruuta]
+                 :toiminto-fn uusi-tarkastus-fn})
+             uusi-tarkastus-fn)]]
 
          [grid/grid
-          {:otsikko            (if @st/valittu-tarkastus
-                                 (str "Sillan tarkastus "
-                                      (pvm/pvm (:tarkastusaika @st/valittu-tarkastus))
-                                      " (" (:tarkastaja @st/valittu-tarkastus) ")")
-                                 "Sillan tarkastus")
-           :tyhja              (if (nil? @siltatarkastusrivit)
-                                 [ajax-loader "Ladataan..."]
-                                 "Sillasta ei ole tarkastuksia Harjassa")
+          {:otsikko (if @st/valittu-tarkastus
+                      (str "Sillan tarkastus "
+                        (pvm/pvm (:tarkastusaika @st/valittu-tarkastus))
+                        " (" (:tarkastaja @st/valittu-tarkastus) ")")
+                      "Sillan tarkastus")
+           :tyhja (if (nil? @siltatarkastusrivit)
+                    [ajax-loader "Ladataan..."]
+                    "Sillasta ei ole tarkastuksia Harjassa")
            :piilota-toiminnot? true
-           :tunniste           :kohdenro
-           :voi-lisata?        false
-           :voi-poistaa?       (constantly false)}
+           :tunniste :kohdenro
+           :voi-lisata? false
+           :voi-poistaa? (constantly false)}
 
           ;; sarakkeet
           @siltatarkastussarakkeet
