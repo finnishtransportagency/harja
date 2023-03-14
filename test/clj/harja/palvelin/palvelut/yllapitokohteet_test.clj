@@ -1300,7 +1300,11 @@
             aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
             kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :urakka-vastaanottajat [[urakka-id "erkki.esimerkki@example.com"]]
+                                         :muut-vastaanottajat #{}
+                                         :saate ""}}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-yllapitokohteiden-aikataulu
                               +kayttaja-jvh+
@@ -1327,7 +1331,8 @@
             aikataulu-tiemerkinta-loppu (pvm/->pvm "28.5.2017")
             kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu
+                      }
                      {:id oulun-ohitusramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
@@ -1931,7 +1936,7 @@
    :kaistat "11, 12" :ajoradat "1"
    :paallysteet "AB16, AN14; SMA16, AN7"
    :toimenpiteet "MPK; MPKJ"
-   :sahkopostitiedot {:kopio-lahettajalle? nil, :muut-vastaanottajat #{}, :saate nil}})
+   :sahkopostitiedot {:kopio-lahettajalle? nil, :muut-vastaanottajat #{}, :saate nil :urakka-vastaanottajat []}})
 
 (deftest yllapitokohteiden-tiedot-sahkopostilahestykseen
   (let [kohteen-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
