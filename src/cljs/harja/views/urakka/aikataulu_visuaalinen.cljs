@@ -14,6 +14,46 @@
             [harja.pvm :as pvm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn- aikajanan-otsikko-ja-vihjeet []
+  [leijuke/otsikko-ja-vihjeleijuke 6 "Aikajana"
+   {:otsikko "Visuaalisen muokkauksen ohje"}
+   [leijuke/multipage-vihjesisalto
+    [:div
+     [:h6 "Aikajanan alun / lopun venytys"]
+     [:figure
+      [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"
+             ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
+             :style {:height "200px"}}]
+      [:figcaption
+       [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
+    [:div
+     [:h6 "Aikajanan siirtäminen"]
+     [:figure
+      [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"
+             :style {:height "200px"}}]
+      [:figcaption
+       [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
+    [:div
+     [:h6 "Usean aikajanan siirtäminen"]
+     [:figure
+      [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus3.gif"
+             :style {:height "200px"}}]
+      [:figcaption
+       [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Siirrä aikajanaa normaalisti, jolloin kaikki aikajanat liikkuvat samaan suuntaan yhtä paljon."]
+       [:p "Voit perua janan valinnan CTRL-klikkaamalla sitä uudestaan. Voit perua kaikkien janojen valinnan klikkaamalla tyhjään alueeseen. Valinnat poistuvat myös sivua vaihtamalla."]]]]
+    [:div
+     [:h6 "Usean aikajanan alun / lopun venytys"]
+     [:figure
+      [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus4.gif"
+             :style {:height "200px"}}]
+      [:figcaption
+       [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]])
+
+(defn paallystysurakka-id-aikataulurivista [aikataulurivit ypk-id]
+  (:paallystysurakka-id
+    (first (filter #(= ypk-id (:id %))
+                   aikataulurivit))))
+
 (defn visuaalinen-aikataulu
   [{:keys [urakka-id sopimus-id aikataulurivit aikajana? optiot
            vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
@@ -29,39 +69,7 @@
                                                                            (reset! tiedot/aikataulurivit vastaus)
                                                                            (kumottu-fn)))))
                                :sulje-fn kumousboksi/ala-ehdota-kumoamista!}]
-     [leijuke/otsikko-ja-vihjeleijuke 6 "Aikajana"
-      {:otsikko "Visuaalisen muokkauksen ohje"}
-      [leijuke/multipage-vihjesisalto
-       [:div
-        [:h6 "Aikajanan alun / lopun venytys"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"
-                ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
-       [:div
-        [:h6 "Aikajanan siirtäminen"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
-       [:div
-        [:h6 "Usean aikajanan siirtäminen"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus3.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Siirrä aikajanaa normaalisti, jolloin kaikki aikajanat liikkuvat samaan suuntaan yhtä paljon."]
-          [:p "Voit perua janan valinnan CTRL-klikkaamalla sitä uudestaan. Voit perua kaikkien janojen valinnan klikkaamalla tyhjään alueeseen. Valinnat poistuvat myös sivua vaihtamalla."]]]]
-       [:div
-        [:h6 "Usean aikajanan alun / lopun venytys"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus4.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]]
+    [aikajanan-otsikko-ja-vihjeet]
      [aikajana/aikajana
       {:ennen-muokkausta
        (fn [drag valmis! peru!]
@@ -91,20 +99,14 @@
                       :kohteet (map (fn [raahaus]
                                       (-> {:id (first (::aikajana/drag raahaus))
                                            :nimi (::aikajana/kohde-nimi raahaus)
-                                           :valmis-pvm (::aikajana/loppu raahaus)}))
+                                           :valmis-pvm (::aikajana/loppu raahaus)
+                                           :paallystysurakka-id (paallystysurakka-id-aikataulurivista aikataulurivit
+                                                                                                      (first (::aikajana/drag raahaus)))}))
                                     drag)
                       :urakka-id urakka-id
                       :vuosi vuosi
-                      ;; Ota olemassa olevat sähköpostitiedot ja "yhdistä" ne koskemaan kaikkia
-                      ;; muokattuja kohteita.
-                      :lomakedata {:kopio-itselle? (or (some :kopio-lahettajalle? (map ::aikajana/sahkopostitiedot tiemerkinnan-valmistumiset))
-                                                       true)
-                                   :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                                (map #(-> {:sahkoposti %})
-                                                                     (set (mapcat (fn [jana] (get-in jana [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
-                                                                                  tiemerkinnan-valmistumiset))))
-                                   :saate (str/join " " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
-                                                             tiemerkinnan-valmistumiset))}})
+                      :lomakedata {:kopio-itselle? true
+                                   :saate ""}})
              ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
              (valmis!))))
        :muuta! (fn [drag]
