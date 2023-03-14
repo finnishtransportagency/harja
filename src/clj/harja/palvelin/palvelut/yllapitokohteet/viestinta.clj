@@ -195,8 +195,8 @@
       (viestinta/laheta-sposti-sahkopostiosoitteille
         {:email email
          :vastaanottajat urakan-vastaanottajat
-         :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo}))
+         :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
+         :viesti-body (viestin-vartalo yhden-urakan-kohteet)}))
 
     ;; Muut vastaanottajat voivat periaatteessa olla keitä tahansa. Laitetaan viesti tiemerkinnän näkökulmasta.
     ;; Laita yksi maili per vastaanottaja ja kerää siihen kaikki ne kohteet, joista tulee informoida ko. osoitetta
@@ -232,7 +232,7 @@
           (if (:sahkoposti ilmoittaja)
             (viestinta/laheta-sahkoposti-itselle
              {:email email
-              :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
+              :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta valituille vastaanottajille."
               :sahkoposti (:sahkoposti ilmoittaja)
               :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
               :viesti-body (viestin-vartalo kopio-maili-kohteet)})
