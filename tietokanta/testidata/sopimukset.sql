@@ -23,6 +23,7 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Lapin ti
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Kempeleen valaistuksen pääsopimus', '2007-03-01','2012-05-30','9H05224/01', (SELECT id FROM urakka WHERE nimi='Kempeleen valaistusurakka'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tampereen alueurakka pääsopimus','2017-10-01','2022-09-30','6A16339/01', (SELECT id FROM urakka WHERE nimi='Tampereen alueurakka 2017-2022'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tampereen MHU 22 pääsopimus','2022-10-01','2027-09-30','8ASEGE39/01', (SELECT id FROM urakka WHERE nimi = 'Tampereen MHU 2022-2026'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Raahen MHU 23 pääsopimus','2023-10-01','2028-09-30', '2FSD6HO4/01', (SELECT id FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'));
 
 -- Kajaanin pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)

@@ -1855,37 +1855,23 @@ BEGIN
 
 END $$;
 
--- Ivalon MHU-urakka
---'Hallinnolliset toimenpiteet TP'
+-- Uudempien MHU:iden toimenpideinstanssit
 DO $$
 DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
-  urakan_nimi TEXT := 'Ivalon MHU testiurakka (uusi)';
-  urakan2_nimi TEXT := 'Iin MHU 2021-2026';
-  urakan3_nimi TEXT := 'Tampereen MHU 2022-2026';
+  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'Raahen MHU 2023-2028'];
+  urakan_nimi TEXT;
   i INTEGER;
 BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
-  FOR i IN 1..7 LOOP
-    INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
-               urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
-               (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-  END LOOP;
-
-  FOR i IN 1..7 LOOP
-          INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan2_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
-                  urakan2_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan2_nimi),
-                  (SELECT loppupvm FROM urakka WHERE nimi=urakan2_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
-  END LOOP;
-  
-  FOR i IN 1..7 LOOP
-          INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
-          VALUES ((SELECT id FROM urakka WHERE nimi=urakan3_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
-                  urakan3_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan3_nimi),
-                  (SELECT loppupvm FROM urakka WHERE nimi=urakan3_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+  FOREACH urakan_nimi SLICE 0 IN ARRAY urakat LOOP
+      FOR i IN 1..7 LOOP
+        INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku)
+           VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpidekoodi WHERE koodi=toimenpidekoodit[i]),
+                   urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
+                   (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku');
+      END LOOP;
   END LOOP;
 END $$;
 
