@@ -11,6 +11,7 @@
               +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
               kuittaustyypin-selite kuittaustyypin-lyhenne kuittaustyypin-otsikko
               tilan-selite vaikutuksen-selite] :as domain]
+            [harja.ui.dom :as dom]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
@@ -201,12 +202,21 @@
 
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
-    [:div {:class tyyppi} tyyppi]))
+    [:div {:class [tyyppi "text-nowrap"]} tyyppi]))
 
 (defn tunniste-tooltip [tunniste]
   [:div
    [:div.harmaa-teksti "Tunniste"]
    [:span (or tunniste "-")]])
+
+(defn- sisallon-pituus
+  "Ottaa vastaan DOMin juurielementin leveyden ja antaa lisätieto-kentän halutun
+   tekstin pituuden."
+  [leveys]
+  (condp >= leveys
+    1300 30
+    1500 50
+    100))
 
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
@@ -268,45 +278,47 @@
                                                                       (nil? pikakuittaus))
                                                              #(valitse-ilmoitus! rivi))}
                               (boolean (valitut-ilmoitukset rivi))]]))
-           :leveys 2})
-        {:otsikko "Urakka" :nimi :urakkanimi :leveys 7
-         :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)}
-        {:otsikko "Lisätietoja" :nimi :lisatieto :leveys 6
-         :hae #(leikkaa-sisalto-pituuteen 30 (:lisatieto %)) 
-         :solun-tooltip (fn [rivi]
-                          {:teksti (:lisatieto rivi)})}
-        {:otsikko "Tiedotettu urakkaan" :nimi :valitetty-urakkaan
-         :hae (comp pvm/pvm-aika :valitetty-urakkaan) 
-         :leveys 6
+           :leveys "40px"})
+        (when-not @nav/valittu-urakka
+          {:otsikko "Urakka" :otsikkorivi-luokka "urakka" :leveys "" :nimi :urakkanimi
+           :hae (comp fmt/lyhennetty-urakan-nimi :urakkanimi)})
+        {:otsikko "Saapunut" :nimi :valitetty-urakkaan
+         :hae (comp pvm/pvm-aika :valitetty-urakkaan)
+         :otsikkorivi-luokka "saapunut" :leveys ""
          :solun-tooltip (fn [rivi]
                           {:tooltip-tyyppi :komponentti
                            :tooltip-komponentti (tunniste-tooltip (:tunniste rivi))})}
         {:otsikko "Tyyppi" :nimi :ilmoitustyyppi
          :tyyppi :komponentti
          :komponentti #(ilmoitustyypin-selite (:ilmoitustyyppi %))
-         :leveys 2}
-        {:otsikko "Sijainti" :nimi :tierekisteri
-         :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %))
-         :tyyppi :string
-         :leveys 5}
-
-        {:otsikko "Selitteet" :nimi :selitteet
+         :otsikkorivi-luokka "tyyppi" :leveys ""}
+        {:otsikko "Selite" :nimi :selitteet
          :tyyppi :komponentti
          :komponentti it/selitelista
-         :leveys 6}
+         :otsikkorivi-luokka "selite" :leveys ""}
+        {:otsikko "Lisätieto" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
+         :leveys ""
+         :hae #(leikkaa-sisalto-pituuteen (sisallon-pituus @dom/leveys) (:lisatieto %))
+         :solun-tooltip (fn [rivi]
+                          {:teksti (:lisatieto rivi)})}
+
+        {:otsikko "Tie" :nimi :tierekisteri
+         :hae #(tr-domain/tierekisteriosoite-tekstina (:tr %) {:teksti-tie? false})
+         :tyyppi :string
+         :otsikkorivi-luokka "tie" :leveys ""}
         {:otsikko "Kuittaukset" :nimi :kuittaukset
          :tyyppi :komponentti
          :komponentti (partial kuittauslista e! pikakuittaus)
-         :leveys 8}
-
-        {:otsikko "Tila" :nimi :tila :leveys 5
-           :hae #(let [selite (tilan-selite (:tila %))]
+         :otsikkorivi-luokka "kuittaukset" :leveys ""}
+        {:otsikko "Tila" :nimi :tila :otsikkorivi-luokka "tila"
+         :leveys ""
+         :hae #(let [selite (tilan-selite (:tila %))]
                  (if (:aiheutti-toimenpiteita %)
                    (str selite " (Toimenpitein)")
                    selite))}
         {:otsikko "Toimenpiteet aloitettu" :nimi :toimenpiteet-aloitettu
          :tyyppi :pvm :fmt pvm/pvm-aika
-         :leveys 6}]
+         :otsikkorivi-luokka "aloitettu" :leveys ""}]
        (mapv #(merge %
                      (when (:yhteydenottopyynto %)
                        {:lihavoi true})
