@@ -67,7 +67,7 @@
   [:div
    [:span
     [:div.margin-vertical-16
-     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta))]]
+     [napit/takaisin "Listaa ilmoitukset" #(e! (v/->PoistaIlmoitusValinta)) {:luokka "nappi-reunaton"} ]]
     [it/ilmoitus e! ilmoitus]]])
 
 (defn- kuittaus-tooltip [{:keys [kuittaustyyppi kuitattu kuittaaja] :as kuittaus} napin-kuittaustyypi kuitattu? oikeus?]
