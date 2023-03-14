@@ -34,7 +34,9 @@
        [bs/panel {}
         (ilmoitustyypin-nimi (:ilmoitustyyppi ilmoitus))
         [:span
-         [yleiset/tietoja {}
+         [yleiset/tietoja {:piirra-viivat? true
+                           :class "body-text"
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
           "Urakka " (:urakkanimi ilmoitus)
           "Id " (:ilmoitusid ilmoitus)
           "Tunniste " (:tunniste ilmoitus)
@@ -46,13 +48,15 @@
           "Otsikko " (:otsikko ilmoitus)
           "Paikan kuvaus " (:paikankuvaus ilmoitus)
           "Lisatieto " (when (:lisatieto ilmoitus)
-                           [yleiset/pitka-teksti (:lisatieto ilmoitus)])
+                            (:lisatieto ilmoitus))
           "Selitteet " [selitelista ilmoitus]
           "Toimenpiteet aloitettu " (when (:toimenpiteet-aloitettu ilmoitus)
                                        (pvm/pvm-aika-sek (:toimenpiteet-aloitettu ilmoitus)))
           "Aiheutti toimenpiteitä " (if (:aiheutti-toimenpiteita ilmoitus) "Kyllä" "Ei")]
          [:br]
-         [yleiset/tietoja {}
+         [yleiset/tietoja {:piirra-viivat? true
+                           :class "body-text"
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
           "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
                               tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
                           (if (and henkilo tyyppi)
@@ -62,11 +66,13 @@
           "Sähköposti " (get-in ilmoitus [:ilmoittaja :sahkoposti])]
 
          [:br]
-         [yleiset/tietoja {}
+         [yleiset/tietoja {:piirra-viivat? true
+                           :class "body-text"
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
           "Lähettäjä " (nayta-henkilo (:lahettaja ilmoitus))
           "Puhelinnumero " (parsi-puhelinnumero (:lahettaja ilmoitus))
           "Sähköposti " (get-in ilmoitus [:lahettaja :sahkoposti])]
-
+         
          [:br]
          (when (and
                  (:ilmoitusid ilmoitus)
@@ -99,9 +105,10 @@
                   (ikonit/livicon-plus) " Uusi kuittaus"]
                  [yleiset/vihje tiedot/vihje-liito]))))
 
-         [harja.ui.kentat/tee-kentta {:tyyppi :checkbox
-                                      :teksti "Näytä välitysviestit"
-                                      :nayta-rivina? true} nayta-valitykset?]
+         [:div.margin-vertical-16
+          [harja.ui.kentat/tee-kentta {:tyyppi :checkbox
+                                       :teksti "Näytä välitysviestit"
+                                       :nayta-rivina? true} nayta-valitykset?]]
 
          (when-not (empty? (:kuittaukset ilmoitus))
            [:div
