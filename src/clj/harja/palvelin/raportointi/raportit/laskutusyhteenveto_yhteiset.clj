@@ -148,9 +148,10 @@
     [alkupvm loppupvm]))
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot}]
+  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot} koko-vuosi? vuoden-kk?]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-  (let [[hk-alkupvm hk-loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm)
+  (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk?) [alkupvm loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm))
+        _ (println "ALKU; " hk-alkupvm " LOPPU; " hk-loppupvm)
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
                     laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)

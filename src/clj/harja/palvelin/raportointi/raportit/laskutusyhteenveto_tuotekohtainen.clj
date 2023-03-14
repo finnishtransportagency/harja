@@ -145,11 +145,26 @@
 
 
 
-(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
-  (log/debug "TYOMAA PARAMETRIT: " (pr-str parametrit))
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus valittu-kk] :as parametrit}]
+  (log/debug "\n Tuotekoht PARAMETRIT: " (pr-str parametrit))
+  ;; (println "calling suorita " aikarajaus valittu-kk)
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
+
+        ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
+        ;; Halutaanko näyttää tietyn vuoden data
+        koko-vuosi? (and (= aikarajaus :kalenterivuosi) (nil? valittu-kk))
+        ;; Halutaanko näyttää tietyn vuoden tietty kk
+        vuoden-kk? (and (= aikarajaus :kalenterivuosi) (not (nil? valittu-kk)))
+        ;; Ei näytetä kahta saraketta jos halutaan näyttää tietyn vuoden kuukausi
+        kyseessa-kk-vali? (if vuoden-kk? false kyseessa-kk-vali?)
+        ;; Vaihdetaan "Hoitokauden alusta"- teksti jos näytetään tiettyä kuukautta
+        laskutettu-teksti (if vuoden-kk? (str "Laskutetaan " (pvm/kuukausi-ja-vuosi (first valittu-kk))) laskutettu-teksti)
+        ;; Jos näytetään tietyn vuoden dataa, sarakkeen otsikko on vain "Määrä"
+        laskutettu-teksti (if koko-vuosi? "Määrä" laskutettu-teksti)
+
+        ;; _ (println "\n \n koko-vuosi?" koko-vuosi? " kyseessa-kk-vali?" kyseessa-kk-vali?)
 
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
@@ -175,11 +190,12 @@
 
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
+                                    ;; (println "\n params: " urakan-parametrit)
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
                                                   :urakka-nimi (:urakka-nimi urakan-parametrit)
                                                   :indeksi (:indeksi urakan-parametrit)
                                                   :urakkatyyppi (:urakkatyyppi urakan-parametrit))
-                                          (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit)))
+                                          (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot db user urakan-parametrit koko-vuosi? vuoden-kk?)))
                                   urakoiden-parametrit)
 
         tiedot-tuotteittain (fmap #(group-by :nimi %) laskutusyhteenvedot)
