@@ -177,7 +177,9 @@
     ;; Vaaditaan vain kuluvaa kuukautta ennen olevat kuukaudet
     (filter #(or
                (nil? kuluva-kuukausi)                       ; Ei määritelty, ei suodateta
-               (hoitokuukausi-ennen? % kuluva-kuukausi)))
+               (hoitokuukausi-ennen? % kuluva-kuukausi)
+               ;; VHAR-5911 Myös kuluvalle kuukaudelle on vaadittava vastausta
+               (= % kuluva-kuukausi)))
     set))
 
 (defn puuttuvat-vastauskuukaudet [{:keys [lupaustyyppi joustovara-kkta kirjaus-kkt paatos-kk vastaukset] :as lupaus}
