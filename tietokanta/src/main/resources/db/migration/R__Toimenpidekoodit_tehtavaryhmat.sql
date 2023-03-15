@@ -389,6 +389,11 @@ UPDATE toimenpidekoodi set emo = (select id from toimenpidekoodi where koodi = '
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Maakivien (>1m3) poisto', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'jm',	130, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1270;
 
+INSERT INTO toimenpidekoodi (nimi, emo, taso, luotu, luoja, yksikko, jarjestys, hinnoittelu, api_seuranta, api_tunnus, tehtavaryhma, ensisijainen, suunnitteluyksikko, voimassaolo_alkuvuosi)
+VALUES ('Reunantäyttö km', (select id from toimenpidekoodi where koodi = '23116'), 4, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'jkm', 1160, '{kokonaishintainen}', TRUE, 7067, (select id from tehtavaryhma where nimi = 'Sorapientareet (O)'), FALSE, 'jkm', 2019)
+ON CONFLICT(nimi, emo) DO NOTHING;
+
+
 -- MHU Ylläpito
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Avo-ojitus/päällystetyt tiet' , (select id from tehtavaryhma where nimi = 'Avo-ojitus, päällystetyt tiet (X)'), 'jm', 139, (select id from toimenpidekoodi where nimi = 'Avo-ojitus / päällystetyt tiet' and emo = (select id from toimenpidekoodi where koodi = '20112')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Avo-ojitus, päällystetyt tiet (X)'), jarjestys = 1390;
@@ -1396,10 +1401,15 @@ UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = T
 
 -- Päällystettyjen teiden sorapientareen täyttö-tehtävää ei käytetä MH-urakoissa
 UPDATE toimenpidekoodi
-    SET voimassaolo_loppuvuosi = 2018 --
+    SET voimassaolo_loppuvuosi = 2018 -- Hyvinkään HJU:n toteuman jäävät ohjautumaan tälle tehtävälle
 WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
 
--- Reunantäyttö on tehtävä, joka korvaa Päällystettyjen teiden sorapientareen täyttö-tehtävän MH-urakoissa
+-- Reunantäyttö on tehtävä, joka korvaa Päällystettyjen teiden sorapientareen täyttö-tehtävän MH-urakoissa.
+-- Siitä on kaksi versiota: käsin kirjattava (yksikkö tonni) ja koneellisesti kirjattava (yksikkö jkm).
+-- Materiaalikirjaukset on nykyään ohjeistettu tehtäväksi materiaalitoteumana myös käsin kirjattaessa.
 UPDATE toimenpidekoodi
-   SET api_seuranta = TRUE, api_tunnus = 7067, voimassaolo_alkuvuosi = 2019
+   SET api_seuranta = FALSE, api_tunnus = NULL, voimassaolo_alkuvuosi = 2019
 WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi
+SET api_seuranta = TRUE, api_tunnus = 7067, voimassaolo_alkuvuosi = 2019
+WHERE nimi = 'Reunantäyttö km' AND tehtavaryhma IS NOT NULL;
