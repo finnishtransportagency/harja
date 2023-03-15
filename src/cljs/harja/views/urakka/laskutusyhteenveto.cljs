@@ -72,7 +72,6 @@
                   [alkupvm loppupvm] @u/valittu-hoitokauden-kuukausi
 
                   alkupvm (cond
-
                             ;; Jos ""koko hoitokausi"" on valittuna, käytetään valitun hoitokauden päivämääriä
                             (= @valittu-yhteenveto-aikarajaus :hoitokausi)
                             (if (nil? alkupvm) (first @u/valittu-hoitokausi) alkupvm)
@@ -85,7 +84,6 @@
                             :else (first @vapaa-aikavali))
 
                   loppupvm (cond
-
                              ;; Jos ""koko hoitokausi"" on valittuna, käytetään valitun hoitokauden päivämääriä
                              (= @valittu-yhteenveto-aikarajaus :hoitokausi)
                              (if (nil? loppupvm) (second @u/valittu-hoitokausi) loppupvm)
@@ -148,18 +146,21 @@
          ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
          (when (= :teiden-hoito (:tyyppi ur))
            [:div {:class "mhu-radio"}
-            [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Laskutusyhteenvedon muoto"
-             [:div {:style {:margin-right "60px" :margin-top "-10px" :margin-bottom "40px"}}
+            [:div {:class "laskutus-yhteensa"} "Laskutusyhteenvedon muoto"
+             [:div {:class "kentta"}
 
               [kentat/tee-kentta {:tyyppi :radio-group
                                   :space-valissa? true
                                   :vaihtoehdot [:tyomaakokous :tuotekohtainen]
                                   :vayla-tyyli? true
                                   :nayta-rivina? true
+                                  :valitse-fn #(do
+                                                 (reset! valittu-yhteenveto-aikarajaus :hoitokausi))
                                   :vaihtoehto-nayta yhteenvedeon-valinnat}
                valittu-yhteenveto-muoto]]]
 
-            [:div {:class "laskutus-yhteensa" :style {:font-weight "normal" :margin-top "20px"}} "Aikarajaus"
+            [:div {:class "laskutus-yhteensa"} "Aikarajaus"
+             [:div {:class "kentta"}
 
              [kentat/tee-kentta {:tyyppi :radio-group
                                  :vaihtoehdot (cond 
@@ -175,7 +176,7 @@
                                                 (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
                                                 (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
                                  :vaihtoehto-nayta aikarajaus-valinnat}
-              valittu-yhteenveto-aikarajaus]]])
+              valittu-yhteenveto-aikarajaus]]]])
 
          (cond
            ;; Hoitokausi valittuna

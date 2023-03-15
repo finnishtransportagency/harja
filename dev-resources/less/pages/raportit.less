@@ -231,19 +231,27 @@
 .tyomaakokous-footer {
     margin-top: 30px;
     display: grid;
-    grid-template-columns: repeat(1, 0.45fr);
     justify-content: right;
 
     .sisalto {
         display: grid;
         align-items: start;
         grid-template-columns: repeat(2, 3.3fr);
+        column-gap: 60px;
     }
 }
 
 .laskutus-yhteensa {
     color: @black-light;
     font-weight: bold;
+    font-weight: normal;
+    margin-top: 20px;
+
+    .kentta {
+        margin-right: 60px;
+        margin-top: -10px;
+        margin-bottom: 40px;
+    }
 }
 
 .mhu-radio {

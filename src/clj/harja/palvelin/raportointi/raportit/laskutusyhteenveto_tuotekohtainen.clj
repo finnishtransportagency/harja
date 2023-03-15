@@ -143,8 +143,6 @@
 
      rivit]))
 
-
-
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus valittu-kk] :as parametrit}]
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
@@ -163,6 +161,8 @@
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
         laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
+        ;; Hoitokausi valittuna?
+        hoitokausi? (= aikarajaus :hoitokausi)
         
         ;; Konteksti ja urakkatiedot
         konteksti (cond urakka-id :urakka
@@ -244,9 +244,10 @@
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?})
-
-     (toteutuneet-taulukko {:data (second koostettu-yhteenveto)
-                            :otsikko ""
-                            :laskutettu-teksti "Tavoitehinta"
-                            :laskutetaan-teksti "Budjettia jäljellä"
-                            :kyseessa-kk-vali? true})]))
+     ;; Näytetään nämä vain jos hoitokausi valittuna
+     (when hoitokausi?
+       (toteutuneet-taulukko {:data (second koostettu-yhteenveto)
+                              :otsikko ""
+                              :laskutettu-teksti "Tavoitehinta"
+                              :laskutetaan-teksti "Budjettia jäljellä"
+                              :kyseessa-kk-vali? true}))]))
