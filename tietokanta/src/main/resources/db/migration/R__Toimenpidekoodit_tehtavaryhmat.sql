@@ -1394,4 +1394,12 @@ UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = T
                                                                        'Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)',
                                                                        'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)');
 
+-- Päällystettyjen teiden sorapientareen täyttö-tehtävää ei käytetä MH-urakoissa
+UPDATE toimenpidekoodi
+    SET voimassaolo_loppuvuosi = 2018 --
+WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
 
+-- Reunantäyttö on tehtävä, joka korvaa Päällystettyjen teiden sorapientareen täyttö-tehtävän MH-urakoissa
+UPDATE toimenpidekoodi
+   SET api_seuranta = TRUE, api_tunnus = 7067, voimassaolo_alkuvuosi = 2019
+WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
