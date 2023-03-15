@@ -226,24 +226,24 @@
      ;; Data on vectorina järjestyksessä, käytetään 'otsikot' indeksiä oikean datan näyttämiseen  
      (concat (for [x otsikot]
                (do
-                 (let [tiedot-indeksi (.indexOf otsikot x)]
-                   (try
-                     (taulukko {:data (nth (first laskutusyhteenvedot) tiedot-indeksi)
-                                :otsikko x
-                                :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
-                                :laskutettu-teksti laskutettu-teksti
-                                :laskutetaan-teksti laskutetaan-teksti
-                                :kyseessa-kk-vali? kyseessa-kk-vali?})
-                     (catch Throwable t
-                       (println "Tuotekohtainen - " x "tietoja ei löytynyt.")))))))
+                 (let [tiedot-indeksi (.indexOf otsikot x)
+                       data (try
+                              (nth (first laskutusyhteenvedot) tiedot-indeksi)
+                              (catch Throwable t
+                                (println "Tuotekohtainen - " x "tietoja ei löytynyt.")
+                                lyv-yhteiset/dataa-ei-loytynyt))]
+                   (taulukko {:data data
+                              :otsikko x
+                              :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                              :laskutettu-teksti laskutettu-teksti
+                              :laskutetaan-teksti laskutetaan-teksti
+                              :kyseessa-kk-vali? kyseessa-kk-vali?})))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"
                             :laskutettu-teksti laskutettu-teksti
                             :laskutetaan-teksti laskutetaan-teksti
                             :kyseessa-kk-vali? kyseessa-kk-vali?})
-
-     [:jakaja ""]
 
      (toteutuneet-taulukko {:data (second koostettu-yhteenveto)
                             :otsikko ""

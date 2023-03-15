@@ -17,6 +17,39 @@
             [clojure.string :as str]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
+(def dataa-ei-loytynyt
+  ;; Mikäli laskutusyhteenvedon dataa ei ole, näytetään nämä nolla arvot
+  {:bonukset_laskutetaan 0.0M
+   :maksuera_numero 0M
+   :kaikki_laskutetaan 0.0M
+   :kaikki_laskutettu 0.0M
+   :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan 0.0M
+   :hj_palkkio_laskutettu 0.0M
+   :urakka-id 35
+   :lisatyot_laskutettu 0.0M
+   :bonukset_laskutettu 0.0M
+   :sakot_laskutetaan 0.0M
+   :hj_erillishankinnat_laskutetaan 0.0M
+   :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan 0.0M
+   :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu 0.0M
+   :johto_ja_hallinto_laskutetaan 0.0M
+   :hankinnat_laskutettu 0.0M
+   :nimi "MHU ja HJU hoidon johto"
+   :indeksi "MAKU 2015"
+   :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan 0.0M
+   :lisatyot_laskutetaan 0.0M
+   :perusluku 0.0M
+   :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu 0.0M
+   :hankinnat_laskutetaan 0.0M
+   :indeksi_puuttuu true
+   :tavoitehintaiset_laskutettu 0.0M
+   :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu 0.0M
+   :hj_erillishankinnat_laskutettu 0.0M
+   :johto_ja_hallinto_laskutettu 0.0M
+   :hj_palkkio_laskutetaan 0.0M
+   :sakot_laskutettu 0.0M
+   :tavoitehintaiset_laskutetaan 0.0M
+   :urakkatyyppi "teiden-hoito"})
 
 (defn kustannuslajin-kaikki-kentat [kentan-kantanimi]
   [(keyword (str kentan-kantanimi "_laskutettu"))
@@ -148,7 +181,7 @@
     [alkupvm loppupvm]))
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot} koko-vuosi? vuoden-kk? valittu-aikavali?]
+  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot} & [koko-vuosi? vuoden-kk? valittu-aikavali?]]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
   ;; Jos valittuna tietty vuosi, vuoden kuukausi, tai oma aikaväli, käytetään annettua alku/loppupvm
