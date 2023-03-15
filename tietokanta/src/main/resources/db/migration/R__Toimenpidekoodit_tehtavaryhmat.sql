@@ -934,8 +934,8 @@ UPDATE toimenpidekoodi SET jarjestys = 1110	WHERE nimi = 'Reunapalkin ja pääll
 UPDATE toimenpidekoodi SET jarjestys = 1120	WHERE nimi = 'Reunapalkin liikuntasauman tiivistäminen' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden sr-pientareen täyttö' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden pientareiden täyttö' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = TRUE WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = FALSE WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = FALSE 	WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1170, kasin_lisattava_maara = TRUE WHERE nimi = 'Päällystettyjen teiden palteiden poisto' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1180	WHERE nimi = 'Reunapalteen poisto kaiteen alta' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1200	WHERE nimi = 'Muut päällystettyjen teiden sorapientareiden kunnossapitoon liittyvät työt' AND tehtavaryhma IS NOT NULL;
@@ -948,11 +948,11 @@ UPDATE toimenpidekoodi SET jarjestys = 1255	WHERE nimi = 'Sorateiden pinnan hoit
 UPDATE toimenpidekoodi SET jarjestys = 1260	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270	WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1280	WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1290, kasin_lisattava_maara = TRUE	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1290, kasin_lisattava_maara = FALSE	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL; -- Materiaalimäärät kirjataan materiaalitoteumine
 UPDATE toimenpidekoodi SET jarjestys = 1290	WHERE nimi = 'Sorastus km' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270, kasin_lisattava_maara = TRUE WHERE nimi = 'Maakivien (>1m3) poisto' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1310, kasin_lisattava_maara = TRUE WHERE nimi = 'Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1320, kasin_lisattava_maara = TRUE WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1320, kasin_lisattava_maara = FALSE WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND tehtavaryhma IS NOT NULL; -- Materiaalimäärät kirjataan materiaalitoteumina
 UPDATE toimenpidekoodi SET jarjestys = 1340	WHERE nimi = 'Muut Sorateiden hoitoon liittyvät tehtävät' AND tehtavaryhma IS NOT NULL;
 -- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä. Pitääkö nöille tehdä jotakin?
 UPDATE toimenpidekoodi SET jarjestys = 1350 where nimi = 'Äkillinen hoitotyö (talvihoito)';
@@ -1385,8 +1385,7 @@ UPDATE toimenpidekoodi SET nimi = 'Meluesteiden siisteydestä huolehtiminen' WHE
 -- Ei nykyisellään aluetietoja
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE WHERE nimi IN ('Nopeusnäyttötaulujen ylläpito, käyttö ja siirto',
                                                                                                    'Nopeusnäyttötaulun hankinta',
-                                                                                                   'Meluesteiden siisteydestä huolehtiminen',
-                                                                                                   'Päällystettyjen teiden sorapientareen täyttö');
+                                                                                                   'Meluesteiden siisteydestä huolehtiminen');
 -- Aluetietoja
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE  WHERE nimi IN ('Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus',
                                                                        'Reunapaalujen kunnossapito',
