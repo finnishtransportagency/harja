@@ -455,7 +455,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                            (not (jata-kaventamatta otsikko)))
                                      {:style {:margin-bottom "0.5em"}}))
               [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-              [:span.tietoarvo.max-width-4 arvo]
+              [:span.tietoarvo.max-width-3 arvo]
               (when (tyhja-rivi-otsikon-jalkeen otsikko)
                 [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
