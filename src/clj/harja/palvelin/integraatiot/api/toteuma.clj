@@ -154,7 +154,7 @@
       (doseq [tehtava (:tehtavat toteuma)]
              (log/debug "Luodaan tehtävä.")
              (let [tehtava-id (q-toimenpidekoodi/hae-tehtava-apitunnisteella db
-                                (get-in tehtava [:tehtava :id]))]
+                                (get-in tehtava [:tehtava :id]) urakka-id)]
                   (q-toteumat/luo-toteuma_tehtava<!
                     db
                     toteuma-id
