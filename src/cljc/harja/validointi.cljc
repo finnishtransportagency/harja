@@ -21,8 +21,10 @@
         :clj
         (<= alaraja numero ylaraja)))
 
+(def email-regexp #"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$")
+
 (defn validoi-email
   "Yksinkertainen emailosoitteen-validaattori, joka toimii paremmin kuin string?"
   [email]
   (when email
-    (re-matches #".+\@.+\..+" email)))
+    (re-matches email-regexp email)))
