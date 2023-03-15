@@ -173,7 +173,7 @@
      rivit]))
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus] :as parametrit}]
-  (log/debug "TYOMAA PARAMETRIT: " (pr-str parametrit))
+  (log/debug "Työmaakokous PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
@@ -194,8 +194,6 @@
                 db {:alkupvm alkupvm :loppupvm loppupvm
                     :hallintayksikkoid hallintayksikko-id :urakkaid urakka-id
                     :urakkatyyppi (name (:urakkatyyppi parametrit))})
-
-        hoitokausi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm (first urakat)) alkupvm)
 
         urakoiden-parametrit (mapv #(assoc parametrit :urakka-id (:id %)
                                            :urakka-nimi (:nimi %)

@@ -146,12 +146,10 @@
 
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id aikarajaus valittu-kk] :as parametrit}]
-  (log/debug "\n Tuotekoht PARAMETRIT: " (pr-str parametrit))
-  ;; (println "calling suorita " aikarajaus valittu-kk)
+  (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
-
         ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
         ;; Halutaanko näyttää tietyn vuoden data
         koko-vuosi? (and (= aikarajaus :kalenterivuosi) (nil? valittu-kk))
@@ -212,16 +210,9 @@
         tavoite (koosta-tavoite tiedot urakka-tavoite)
         koostettu-yhteenveto (conj [] yhteenveto tavoite)
 
-        [hk-alkupvm hk-loppupvm] (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                         (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
-                                   ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
-                                   ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
-                                   (pvm/paivamaaran-hoitokausi alkupvm)
-                                   [alkupvm loppupvm])
-
         sheet-nimi "Työmaakokous"
         otsikot ["Talvihoito"
-                 "Liikenneympäristön hoito",
+                 "Liikenneympäristön hoito"
                  "Soratien hoito"
                  "Päällyste"
                  "MHU Ylläpito"
