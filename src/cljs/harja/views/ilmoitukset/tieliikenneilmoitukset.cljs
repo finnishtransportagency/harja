@@ -1,25 +1,18 @@
 (ns harja.views.ilmoitukset.tieliikenneilmoitukset
   "Tieliikenneilmoituksien pääsivu."
-  (:require [reagent.core :refer [atom] :as r]
-            [clojure.string :refer [capitalize]]
-            [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
+  (:require [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tiedot]
             [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tietyoilmoitukset-tiedot]
             [harja.domain.tieliikenneilmoitukset :refer
-             [kuittausvaatimukset-str +ilmoitustyypit+ ilmoitustyypin-nimi
-              ilmoitustyypin-lyhenne ilmoitustyypin-lyhenne-ja-nimi
-              +ilmoitustilat+ nayta-henkilo parsi-puhelinnumero
-              +ilmoitusten-selitteet+ parsi-selitteet kuittaustyypit
-              kuittaustyypin-selite kuittaustyypin-lyhenne kuittaustyypin-otsikko
+             [kuittausvaatimukset-str ilmoitustyypin-lyhenne-ja-nimi
+              +ilmoitusten-selitteet+ kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite vaikutuksen-selite] :as domain]
-            [harja.ui.dom :as dom]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [harja.ui.kentat :refer [tee-kentta] :as kentat]
-            [harja.loki :refer [log tarkkaile!]]
+            [harja.ui.kentat :as kentat]
             [harja.tiedot.istunto :as istunto]
-            [harja.ui.napit :refer [palvelinkutsu-nappi] :as napit]
+            [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
             [harja.fmt :as fmt]
@@ -32,12 +25,10 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.notifikaatiot :as notifikaatiot]
-            [tuck.core :refer [tuck send-value! send-async!]]
+            [tuck.core :refer [tuck]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.ui.debug :as debug]
-            [harja.loki :as loki])
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -195,11 +186,6 @@
                              arvo))})]
    valinnat-nyt])
 
-(defn leikkaa-sisalto-pituuteen [pituus sisalto]
-  (if (> (count sisalto) pituus)
-    (str (fmt/leikkaa-merkkijono pituus sisalto) "...")
-    sisalto))
-
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
   (let [tyyppi (domain/ilmoitustyypin-lyhenne ilmoitustyyppi)]
     [:div {:class [tyyppi "text-nowrap"]} tyyppi]))
@@ -208,15 +194,6 @@
   [:div
    [:div.harmaa-teksti "Tunniste"]
    [:span (or tunniste "-")]])
-
-(defn- sisallon-pituus
-  "Ottaa vastaan DOMin juurielementin leveyden ja antaa lisätieto-kentän halutun
-   tekstin pituuden."
-  [leveys]
-  (condp >= leveys
-    1300 30
-    1500 50
-    100))
 
 (defn ilmoitusten-paanakyma
   [e! {valinnat-nyt :valinnat
