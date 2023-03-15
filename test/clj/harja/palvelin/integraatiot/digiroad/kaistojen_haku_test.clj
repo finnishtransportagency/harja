@@ -21,11 +21,11 @@
 (use-fixtures :each jarjestelma-fixture)
 
 (deftest tarkista-kaistojen-haku
-  (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-kaistojen-hakuvastaus+ true)
+  (let [odotettu-vastaus (cheshire/decode tyokalut/+onnistunut-digiroad-kaistojen-hakuvastaus+ true)
         url tyokalut/+kaistojen-haku-url+
         tr-osoite {:tie 4 :aosa 101 :aet 0 :losa 101 :let 100}
         ajorata 1]
-    (with-fake-http [url tyokalut/+onnistunut-kaistojen-hakuvastaus+]
+    (with-fake-http [url tyokalut/+onnistunut-digiroad-kaistojen-hakuvastaus+]
       (let [vastaus (digiroad-integraatio/hae-kaistat (:digiroad-integraatio jarjestelma) tr-osoite ajorata)]
         (is (= odotettu-vastaus vastaus))))))
 

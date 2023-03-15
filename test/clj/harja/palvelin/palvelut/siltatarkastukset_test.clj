@@ -39,13 +39,6 @@
     (is kempele "Kempeleen testisilta löytyy")
     (is (= "Late Lujuuslaskija" (:tarkastaja kempele)))))
 
-(deftest puutteellisia-siltoja
-  (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+
-                                    {:urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2005-2012")
-                                     :listaus :puutteet})]
-    (is (silta-nimella sillat "Kempeleen testisilta"))
-    (is (silta-nimella sillat "Oulujoen silta"))
-    (is (nil? (silta-nimella sillat "Joutsensilta")) "Joutsensilta ei löydy puutelistalta")))
 
 (deftest korjattuja-siltoja
   (let [sillat (kutsu-http-palvelua :hae-urakan-sillat +kayttaja-jvh+

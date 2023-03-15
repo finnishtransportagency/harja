@@ -6,8 +6,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]))
 
-(defn varmista-kayttajalta [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
-  "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
+(defn varmista-kayttajalta "Suorittaa annetun toiminnon vain, jos käyttäjä hyväksyy sen.
 
   Parametrimap:
   :otsikko = dialogin otsikko
@@ -16,6 +15,7 @@
   :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
+  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
   (let [napit (or napit [:hyvaksy :peruuta])]
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
@@ -41,6 +41,10 @@
                                                           (toiminto-fn))
                                                {:ikoni (ikonit/harja-icon-action-save)
                                                 :luokka "pull-left"}]
+                                    :uusi [napit/uusi hyvaksy #(do
+                                                                 (modal/piilota!)
+                                                                 (toiminto-fn))
+                                           {:luokka "pull-left"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
                    :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}
