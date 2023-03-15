@@ -318,7 +318,7 @@
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
-           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta valituille vastaanottajille."
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
            :viesti-body viestin-vartalo})))))
