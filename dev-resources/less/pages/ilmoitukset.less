@@ -60,6 +60,16 @@
     }
   }
 
+  // Huonosti dokumentoitu, mutta uusimpien selainten tukema toiminnallisuus,
+  // jolla saa rivin leikkaantumaan tietyn rivimäärän jälkeen.
+  .lisatieto-rivi > div {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
+  }
+
   .tie {
     width: 73px;
   }

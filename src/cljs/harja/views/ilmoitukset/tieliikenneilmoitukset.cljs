@@ -302,7 +302,7 @@
          :otsikkorivi-luokka "selite" :leveys ""}
         {:otsikko "Lisätieto" :nimi :lisatieto :otsikkorivi-luokka "lisatieto"
          :leveys ""
-         :hae #(leikkaa-sisalto-pituuteen (sisallon-pituus @dom/leveys) (:lisatieto %))
+         :luokka "lisatieto-rivi"
          :solun-tooltip (fn [rivi]
                           {:teksti (:lisatieto rivi)})}
 
