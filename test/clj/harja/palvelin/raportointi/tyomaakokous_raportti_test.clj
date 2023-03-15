@@ -49,21 +49,17 @@
                                  :parametrit parametrit})
         raportin-nimi (-> vastaus second :nimi)
         raportit (nth vastaus 2)
-        laskutusyhteenveto (take 14 raportit)
-        laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 13)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 16) second :otsikko)
-        sanktioraportin-otsikko (-> (nth raportit 18) second :otsikko)]
+        laskutusyhteenveto (take 15 raportit)
+        laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 9)
+        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 13) second :otsikko)
+        _ (println "ots: "  (nth raportit 16))
+        sanktioraportin-otsikko (second (nth raportit 16))]
+    
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= 252.20M (-> laskutusyhteenveto-hoidon-johto-arvo
-                   last
-                   first
-                   second
-                   second
-                   :arvo)))
-    (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki"
-           muutos-ja-lisatoiden-raportin-otsikko))
-    (is (= "Oulun MHU 2019-2024, Sanktioiden yhteenveto tammikuussa 2021") sanktioraportin-otsikko)))
+    (is (= 252.20M (:arvo (last (nth (first  (last laskutusyhteenveto-hoidon-johto-arvo)) 2)))))
+    (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki" muutos-ja-lisatoiden-raportin-otsikko))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))))
 
 
 (deftest tyomaakokousraportin-suoritus-vanhalle-hoitourakalle-toimii

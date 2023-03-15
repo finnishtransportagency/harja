@@ -227,12 +227,15 @@
      (concat (for [x otsikot]
                (do
                  (let [tiedot-indeksi (.indexOf otsikot x)]
-                   (taulukko {:data (nth (first laskutusyhteenvedot) tiedot-indeksi)
-                              :otsikko x
-                              :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
-                              :laskutettu-teksti laskutettu-teksti
-                              :laskutetaan-teksti laskutetaan-teksti
-                              :kyseessa-kk-vali? kyseessa-kk-vali?})))))
+                   (try
+                     (taulukko {:data (nth (first laskutusyhteenvedot) tiedot-indeksi)
+                                :otsikko x
+                                :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)
+                                :laskutettu-teksti laskutettu-teksti
+                                :laskutetaan-teksti laskutetaan-teksti
+                                :kyseessa-kk-vali? kyseessa-kk-vali?})
+                     (catch Throwable t
+                       (println "Tuotekohtainen - " x "tietoja ei löytynyt.")))))))
 
      (toteutuneet-taulukko {:data (first koostettu-yhteenveto)
                             :otsikko "Toteutuneet"

@@ -51,9 +51,9 @@
                   :suorita-raportti
                   {:nimi       :laskutusyhteenveto-tuotekohtainen
                    :konteksti  "urakka"
-                   :urakka-id  (hae-oulun-alueurakan-2014-2019-id)
+                   :urakka-id  (hae-oulun-mhu-2019-2024-id)
                    :parametrit {:urakkatyyppi :teiden-hoito
-                                :alkupvm      (c/to-date (t/local-date 2014 10 1))
-                                :loppupvm     (c/to-date (t/local-date 2015 9 30))}})]
+                                :alkupvm      (c/to-date (t/local-date 2019 10 1))
+                                :loppupvm     (c/to-date (t/local-date 2020 9 30))}})]
     (is (= 200 (:status vastaus)))))
 

@@ -786,6 +786,11 @@
                    FROM   urakka
                    WHERE  nimi = 'Oulun alueurakka 2014-2019'"))))
 
+(defn hae-oulun-mhu-2019-2024-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun MHU 2019-2024'"))))
+
 (defn hae-tampereen-alueurakan-2017-2022-id []
   (ffirst (q (str "SELECT id
                    FROM   urakka
