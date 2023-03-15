@@ -51,9 +51,8 @@
         raportit (nth vastaus 2)
         laskutusyhteenveto (take 15 raportit)
         laskutusyhteenveto-hoidon-johto-arvo (nth laskutusyhteenveto 9)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 13) second :otsikko)
-        _ (println "ots: "  (nth raportit 16))
-        sanktioraportin-otsikko (second (nth raportit 16))]
+        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 12) second :otsikko)
+        sanktioraportin-otsikko (second (nth raportit 15))]
     
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))

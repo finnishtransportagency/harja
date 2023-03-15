@@ -258,7 +258,7 @@
         laskutusyhteenveto-hoito-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
                                                                                         +kayttaja-jvh+
                                                                                         tiedot-hoito)]
-    (is (= "Laskutusyhteenveto MHU"
+    (is (= "Laskutusyhteenveto (01.01.2022 - 31.01.2022)"
            (-> laskutusyhteenveto-tuotekohtainen-raportti
                second
                :nimi)) "On MHU-tyypin laskutusyhteenveto")

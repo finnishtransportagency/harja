@@ -188,7 +188,6 @@
   (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk? valittu-aikavali?) 
                                    [alkupvm loppupvm] 
                                    (hae-alku-ja-loppupvm alkupvm loppupvm))
-        _ (println "ALKU; " hk-alkupvm " LOPPU; " hk-loppupvm)
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
                     laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)
