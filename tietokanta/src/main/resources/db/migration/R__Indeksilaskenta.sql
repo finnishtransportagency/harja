@@ -170,8 +170,8 @@ BEGIN
         -- arvoksi syyskuu, joten tätä kovakoodausta ei ole vielä siksi aktivoitu.
         --indeksi_kk := 9;
 
-        -- Poikkeuksellisesti, 2023 alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
-        IF urakan_alkuvuosi = 2023
+        -- 2023 tai sen jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
+        IF urakan_alkuvuosi >= 2023
         THEN
             indeksi_kk := 8;
         END IF;
@@ -272,8 +272,8 @@ BEGIN
 
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
-    -- 2023 alkaville urakoille vertailuukausi on elokuu (VHAR-6948)
-    IF urakan_alkuvuosi = 2023 THEN
+    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu (VHAR-6948)
+    IF urakan_alkuvuosi >= 2023 THEN
         vertailukk := 8;
     END IF;
 
