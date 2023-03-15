@@ -1324,6 +1324,7 @@
        {:url "http://localhost:8084/harja/api/sahkoposti/xml" :method :post} (onnistunut-sahkopostikuittaus viesti-id)]
       (let [urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
             sopimus-id (hae-oulun-tiemerkintaurakan-paasopimuksen-id)
+            muhos-urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
             oulun-ohitusramppi-id (hae-yllapitokohteen-id-nimella "Oulun ohitusramppi")
             nakkilan-ramppi-id (hae-yllapitokohteen-id-nimella "Nakkilan ramppi")
             vuosi 2017
@@ -1332,10 +1333,18 @@
             kohteet [{:id nakkilan-ramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
                       :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :urakka-vastaanottajat [[muhos-urakka-id "vastuuhenkilo@example.com"]]
+                                         :muut-vastaanottajat #{}
+                                         :saate "Tiemerkkaus valmis!"}
                       }
                      {:id oulun-ohitusramppi-id
                       :aikataulu-tiemerkinta-alku aikataulu-tiemerkinta-alku
-                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu}]
+                      :aikataulu-tiemerkinta-loppu aikataulu-tiemerkinta-loppu
+                      :sahkopostitiedot {:kopio-itselle? true
+                                         :urakka-vastaanottajat [[muhos-urakka-id "vastuuhenkilo@example.com"]]
+                                         :muut-vastaanottajat #{}
+                                         :saate "Tiemerkkaus valmis!"}}]
             _ (kutsu-palvelua (:http-palvelin jarjestelma)
                               :tallenna-yllapitokohteiden-aikataulu
                               +kayttaja-jvh+
