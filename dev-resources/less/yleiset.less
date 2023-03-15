@@ -559,67 +559,6 @@ button > .ajax-loader {
     flex-direction:column;
 }
 
-.flex-row {
-  display:flex;
-  flex-direction:row;
-  justify-content: space-between;
-  align-items:center;
-  width:100%;
-  &.lapsille-nolla-margin {
-      & > * {
-          margin:0;
-      }
-  }
-  &.sisallon-leveys {
-    width:auto;
-  }
-  &.alkuun {
-    justify-content: flex-start;
-  }
-  &.keskita {
-    justify-content: center;
-  }
-  &.loppuun {
-      justify-content: flex-end;
-  }
-  &.tasaa-alas {
-    align-items: flex-end;
-  }
-  &.tasaa-alkuun {
-    align-items: flex-start;
-  }
-  &.venyta {
-    align-items: stretch;
-  }
-  &.poista-leveys {
-      width: unset;
-  }
-  &.valistys48 {
-      .valistys(@valistys-48);
-  }
-  &.valistys16 {
-      .valistys(@valistys-16);
-  }
-  .col-mimic {
-// it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
-    padding: 0 15px;
-  }
-
-  &.padding16 {
-      padding: 16px;
-  }
-
-  & > * {
-      &.oikealle {
-          margin-left:auto;
-      }
-  }
-}
-
-.flex-wrap {
-  flex-flow: wrap;
-}
-
 .map-lista {
   display: flex;
   flex-direction: row;
@@ -639,6 +578,7 @@ button > .ajax-loader {
     }
   }
 }
+
 
 .placeholder {
   color: @harmaa5;
