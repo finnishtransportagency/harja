@@ -1,0 +1,37 @@
+/* -------- Utility CSS - Luokat jotka tekevät vain yhden asian ala Tailwind ----- */
+/*-------------------------------------------*\ 
+Periaatteet:
+- Wrappaa #app tai käytä !important jotta utilityllä on viimeinen sana
+- Utility tekee vain yhden asian jotta se on yhdisteltävissä muiden utilityjen kanssa
+\*-------------------------------------------*/
+ 
+ /* ----- Flexbox ---- */
+ #app {
+     .display-flex {
+         display: flex;
+     }
+
+     .flex-wrap {
+         flex-wrap: wrap;
+     }
+
+     .flex-col {
+         flex-direction: column;
+     }
+
+     .flex-grow {
+         flex-grow: 1;
+     }
+
+     .justify-between {
+         justify-content: space-between;
+     }
+
+     .justify-center {
+         justify-content: center;
+     }
+
+     .items-center {
+         align-items: center;
+     }
+ }

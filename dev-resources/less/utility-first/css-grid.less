@@ -1,0 +1,21 @@
+/* -------- Utility CSS - Luokat jotka tekevät vain yhden asian ala Tailwind ----- */
+/*-------------------------------------------*\ 
+Periaatteet:
+- Wrappaa #app tai käytä !important jotta utilityllä on viimeinen sana
+- Utility tekee vain yhden asian jotta se on yhdisteltävissä muiden utilityjen kanssa
+\*-------------------------------------------*/
+
+/* ----- CSS Grid ---- */
+#app {
+    .css-grid {
+        display: grid;
+    }
+
+    .css-grid-colums-1-9 {
+        grid-template-columns: 1fr 9fr;
+    }
+
+    .css-grid-colums-1-2 {
+        grid-template-columns: 1fr 2fr;
+    }
+}
