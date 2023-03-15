@@ -134,9 +134,14 @@ LIMIT 1;
 
 -- name: hae-tehtava-apitunnisteella
 -- single?: true
-SELECT id
-FROM toimenpidekoodi
-WHERE api_tunnus = :apitunnus;
+SELECT tpk4.id
+FROM toimenpidekoodi tpk4,
+     urakka u
+WHERE api_tunnus = :apitunnus
+  AND u.id = :urakka
+  AND (tpk4.voimassaolo_alkuvuosi IS NULL OR tpk4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
+  AND (tpk4.voimassaolo_loppuvuosi IS NULL OR tpk4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER);
+
 
 -- name: hae-hinnoittelu
 -- Suljetaan pois tehtävät, joille ei saa kirjata toteumia.
