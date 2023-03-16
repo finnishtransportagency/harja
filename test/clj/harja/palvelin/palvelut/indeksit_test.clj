@@ -52,6 +52,22 @@
  (2016, 10, 'MAKU 2005', 387800, 135.4, false);")))]
     (is (=marginaalissa? korotus 1145.64))))
 
+(deftest kuukauden-indeksikorotuksen-laskenta-urakalle
+  ;; Testataan, että tuleeko eri korotukset, jos urakan alkuvuosi muuttuu. Pidetään muut parametrit samoina.
+  (testing "Ennen 2023 alkaneet urakat (käytetään vertailukuukautena syyskuuta)"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          korotus (ffirst (q (str
+                               "SELECT korotus from laske_kuukauden_indeksikorotus_urakalle("
+                               urakka-id ", 2023, 10, 'MAKU 2020', 1000, 135.4, false);")))]
+      (is (=marginaalissa? korotus 39.88))))
+
+  (testing "2023 ja sen jälkeen alkaneet urakat (käytetään vertailukuukautena elokuuta)"
+    (let [urakka-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
+          korotus (ffirst (q (str
+                               "SELECT korotus from laske_kuukauden_indeksikorotus_urakalle("
+                               urakka-id ", 2023, 10, 'MAKU 2020', 1000, 135.4, false);")))]
+      (is (=marginaalissa? korotus 24.37)))))
+
 (deftest urakkatyypin-indeksien-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :urakkatyypin-indeksit +kayttaja-jvh+)
