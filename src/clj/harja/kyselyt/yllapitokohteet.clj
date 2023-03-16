@@ -51,9 +51,20 @@
           (assoc kohde :kohdeosat kohteen-kohdeosat)))
       kohteet)))
 
+(def muunna-urakka-vastaanottajat
+  (comp (fn [rivi]
+          (update rivi :sahkopostitiedot_urakka-vastaanottajat
+                  (fn [uv-lista]
+                    (mapv #(if %
+                             (konv/pgobject->map % :urakka_id :long :email :string)
+                             %)
+                          uv-lista))))
+        #(konv/array->vec % :sahkopostitiedot_urakka-vastaanottajat)))
+
 (defn yllapitokohteiden-tiedot-sahkopostilahetykseen [db kohde-idt]
   (let [tiedot (into []
                      (comp
+                       (map muunna-urakka-vastaanottajat)
                        (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                        (map konv/alaviiva->rakenne))
                      (hae-yllapitokohteiden-tiedot-sahkopostilahetykseen db {:idt kohde-idt}))]

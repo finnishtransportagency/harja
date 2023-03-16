@@ -125,6 +125,7 @@
   (log/debug (prn-str "*************** hae-tiemerkintaurakan-aikataulu" urakka-id  vuosi))
   (let [aikataulu (into []
                         (comp
+                          (map q/muunna-urakka-vastaanottajat)
                           (map #(konv/array->set % :sahkopostitiedot_muut-vastaanottajat))
                           (map konv/alaviiva->rakenne))
                         (q/hae-tiemerkintaurakan-aikataulu db {:suorittava_tiemerkintaurakka urakka-id
@@ -169,7 +170,7 @@
    Palauttaa päivitetyt kohteet aikataulunäkymään"
   [db fim email user
    {:keys [urakka-id sopimus-id vuosi tiemerkintapvm
-           kopio-itselle? saate kohde-id muut-vastaanottajat] :as tiedot}]
+           kopio-itselle? saate kohde-id vastaanottajat] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-aikataulu user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id kohde-id)
   (if tiemerkintapvm
@@ -201,7 +202,7 @@
                                       :tiemerkintapvm   tiemerkintapvm
                                       :kopio-itselle?   kopio-itselle?
                                       :saate            saate
-                                      :muut-vastaanottajat muut-vastaanottajat
+                                      :vastaanottajat   vastaanottajat
                                       :kayttaja         user})))
 
                                (hae-urakan-aikataulu db user {:urakka-id  urakka-id
@@ -278,7 +279,9 @@
                                          (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi (:aikataulu-tiemerkinta-loppu %))))
                                       valmistuneet-kohteet)]
 
-     (doseq [kohde kohteet]
+     (doseq [kohde kohteet
+             :let [urakka-vastaanottajat
+                   (konv/seq->pg-object-literal (get-in kohde [:sahkopostitiedot :urakka-vastaanottajat]))]]
         (q/tallenna-tiemerkintakohteen-aikataulu!
           db
           {:aikataulu_tiemerkinta_alku (:aikataulu-tiemerkinta-alku kohde)
@@ -301,10 +304,12 @@
         ;; Näin siksi, että toteutus olisi yhtenäinen riippumatta siitä, lähetetäänkö viesti
         ;; heti, vai myöhemmin.
         (q/poista-valmistuneen-tiemerkinnan-sahkopostitiedot! db {:yllapitokohde_id (:id kohde)})
-        (q/tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
+
+       (q/tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
           db
           {:yllapitokohde_id (:id kohde)
-           :vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
+           :urakka-vastaanottajat urakka-vastaanottajat
+           :muut-vastaanottajat (konv/seq->array (get-in kohde [:sahkopostitiedot :muut-vastaanottajat]))
            :saate (get-in kohde [:sahkopostitiedot :saate])
            :kopio_lahettajalle (boolean (get-in kohde [:sahkopostitiedot :kopio-itselle?]))}))
 
