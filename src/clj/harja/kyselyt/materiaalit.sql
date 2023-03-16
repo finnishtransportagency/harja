@@ -8,6 +8,28 @@ SELECT
   kohdistettava
 FROM materiaalikoodi;
 
+-- name: listaa-materiaalikoodit
+-- Hakee kaikki järjestelmän materiaalikoodit
+SELECT
+    id,
+    nimi,
+    yksikko,
+    urakkatyyppi,
+    kohdistettava,
+    materiaalityyppi,
+    jarjestys,
+    materiaaliluokka_id
+FROM materiaalikoodi;
+
+-- name: hae-materiaaliluokat
+-- Hakee kaikki järjestelmän materiaaliluokat
+SELECT
+    id,
+    nimi,
+    yksikko,
+    materiaalityyppi
+FROM materiaaliluokka;
+
 -- name: hae-materiaalikoodit-ilman-talvisuolaa
 -- Hakee kaikki paitsi talvisuola tyyppiset materiaalikoodit (erityisalue lasketaan talvisuolaksi)
 SELECT
