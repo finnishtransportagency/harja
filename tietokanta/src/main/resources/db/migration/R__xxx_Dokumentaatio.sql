@@ -226,7 +226,8 @@ COMMENT ON TABLE kayttaja_anti_csrf_token IS E'Sisältää käyttäjän anti-CSR
 COMMENT ON TABLE yllapitokohteen_sahkopostitiedot IS
 E'Sisältää ylläpitokohteen sähköpostilähetystiedot.';
 COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.kopio_lahettajalle IS 'Mailin aikaansaaneen käyttäjän s-posti, johon lähetetään kopio viestistä (tai NULL)';
-COMMENT ON COLUMN yllapitokohteen_sahkopostitiedot.vastaanottajat IS 'Vastaanottajat, joille viesti tulisi ainakin lähettää. Viesti saattaa tyypistä riippuen sisältää myös muita vastaanottajia, joille viesti laitetaan aina (esim. tiemerkinnän valmistuminen ilmoitetaan tietyille FIM-käyttäjille)';
+COMMENT ON column yllapitokohteen_sahkopostitiedot.urakka_vastaanottajat IS 'Ylläpitourakoissa sähköposteja valitaan käyttöliittymän kautta FIM:n käyttäjätietojen pohjalta. Näiden osalta halutaan tietää email-osoitteen lisäksi urakan id, jotta mm. tiemerkinnän valmistuessa osataan valita viestin näkökulma oikein.';
+COMMENT ON column yllapitokohteen_sahkopostitiedot.muut_vastaanottajat IS 'Ylläpitourakoissa sähköposteja valitaan käyttöliittymän kautta FIM:n käyttäjätietojen pohjalta. Näiden lisäksi käyttäjä voi vapaasti kirjata mitä vain sähköpostiosoitteita ns. muiksi vastaanottajiksi. Näiden osalta ei tarvitse säilyttää urakkatietoa.';
 
 COMMENT ON TABLE kan_tyo IS
 E'Kun kanavaurakoiden toimenpiteitä hinnoitellaan, hinta koostuu vapaamuotoisista hinnoista, ja hintaluettelon perusteella koottavista työhinnoista. Suunnittelunäkymästä määritellään, kuinka monta euroa työnjohto maksaa tunnissa, ja täällä rivillä viitataan siihen tietoon, ja annetaan määrä.';

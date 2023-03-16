@@ -15,7 +15,10 @@
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.yllapito :as yllapito-tiedot]
             [harja.tyokalut.local-storage :as local-storage]
-            [harja.ui.viesti :as viesti])
+            [harja.ui.viesti :as viesti]
+            [harja.domain.roolit :as roolit]
+            [clojure.set :as clj-set]
+            [clojure.string :as str])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
@@ -53,19 +56,42 @@
 (defn hae-tiemerkinnan-suorittavat-urakat [urakka-id]
   (k/post! :hae-tiemerkinnan-suorittavat-urakat {:urakka-id urakka-id}))
 
+(def fimista-haetut-vastaanottajatiedot (atom nil))
+
 (defn merkitse-kohde-valmiiksi-tiemerkintaan [{:keys [kohde-id tiemerkintapvm kopio-itselle? saate
                                                       urakka-id sopimus-id vuosi muut-vastaanottajat]}]
-  (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
-                                                    :tiemerkintapvm tiemerkintapvm
-                                                    :kopio-itselle? kopio-itselle?
-                                                    :saate saate
-                                                    :muut-vastaanottajat muut-vastaanottajat
-                                                    :urakka-id urakka-id
-                                                    :sopimus-id sopimus-id
-                                                    :vuosi vuosi}))
+  (let [vastaanottajat (keep #(when (:valittu? %) (:sahkoposti %))
+                             (vals @fimista-haetut-vastaanottajatiedot))
+        kaikki-vastaanottajat (clj-set/union
+                                (into #{} vastaanottajat) muut-vastaanottajat)]
+    (k/post! :merkitse-kohde-valmiiksi-tiemerkintaan {:kohde-id kohde-id
+                                                      :tiemerkintapvm tiemerkintapvm
+                                                      :kopio-itselle? kopio-itselle?
+                                                      :saate saate
+                                                      :vastaanottajat kaikki-vastaanottajat
+                                                      :urakka-id urakka-id
+                                                      :sopimus-id sopimus-id
+                                                      :vuosi vuosi})))
 
 (def ^{:doc "Tähän säilötään modal-dialogista kohteelle asetettavat sähköpostitiedot palvelimelle tallennusta varten."}
 kohteiden-sahkopostitiedot (atom nil))
+
+(defn hae-urakoiden-kayttajat-rooleissa [oman-urakan-id urakka-idt]
+  (go
+    (let [tiedot (<! (k/post! :hae-urakoiden-kayttajat-rooleissa
+                              {:oman-urakan-id oman-urakan-id
+                               :urakka-idt urakka-idt
+                               :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit}))
+          tiedot (map #(assoc % :roolit (when (:roolit %)
+                                          (str/join ", " (:roolit %)))
+                                :valittu? true)
+                      tiedot)
+          muokkausgridin-muodossa (into (sorted-map)
+                                       (zipmap (iterate inc 1) tiedot))]
+      (reset! fimista-haetut-vastaanottajatiedot muokkausgridin-muodossa))))
+
+(defn tyhjenna-kayttajatiedot []
+  (reset! fimista-haetut-vastaanottajatiedot nil))
 
 (def aikataulurivit
   (reaction<! [valittu-urakka-id (:id @nav/valittu-urakka)
@@ -186,8 +212,8 @@ kohteiden-sahkopostitiedot (atom nil))
 
 (defn- lisaa-kohteille-sahkopostilahetystiedot [kohteet]
   (mapv (fn [kohde]
-         (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
-       kohteet))
+          (assoc kohde :sahkopostitiedot (get @kohteiden-sahkopostitiedot (:id kohde))))
+        kohteet))
 
 (defn tallenna-aikataulu [urakka-id sopimus-id vuosi kohteet onnistui-fn]
   (tallenna-yllapitokohteiden-aikataulu
