@@ -258,7 +258,6 @@
     margin-right: 60px;
     display: flex;
     flex-direction: row;
-    margin-bottom: 60px;
 }
 
 // Special case laskutusyhteenvedossa
@@ -271,10 +270,10 @@
 // Säädetty tallenna napit nätimmäksi MHU yhteenvedossa
 .laskutusyhteenveto .upotettu-raporttitallennus-mhu {
     margin-top: 15px;
-    margin-left: 35px;
+    margin-left: auto;
 
     /* Tallenna- napit näkyvät vielä hieman pienemmällä resolla */
-    @media only screen and (max-width: 965px) {
+    @media only screen and (max-width: 1035px) {
         gap: 15px;
         flex-direction: column;
     }

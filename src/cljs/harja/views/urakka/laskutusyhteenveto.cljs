@@ -155,6 +155,7 @@
                                   :vayla-tyyli? true
                                   :nayta-rivina? true
                                   :valitse-fn #(do
+                                                 (reset! u/valittu-hoitokauden-kuukausi nil)
                                                  (reset! valittu-yhteenveto-aikarajaus :hoitokausi))
                                   :vaihtoehto-nayta yhteenvedeon-valinnat}
                valittu-yhteenveto-muoto]]]
