@@ -838,7 +838,7 @@ FROM urakka
 WHERE id = :urakka;
 
 -- name: hae-urakan-nimi
-SELECT id, nimi
+SELECT id, nimi, sampoid
 FROM urakka
 WHERE id = :urakka;
 
