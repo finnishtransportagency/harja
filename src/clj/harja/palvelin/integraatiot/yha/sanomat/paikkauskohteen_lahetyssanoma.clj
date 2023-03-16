@@ -47,7 +47,7 @@
     (cheshire/encode sanomasisalto)))
 
 (defn muodosta [db urakka-id kohde-id]
-  (let [urakka (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id}))
+  (let [urakka (select-keys (first (q-urakka/hae-urakan-nimi db {:urakka urakka-id})) [:id :nimi])
         kohde (first (q-paikkaus/hae-paikkauskohteet db {::paikkaus/id kohde-id
                                                          :harja.domain.paikkaus/urakka-id urakka-id
                                                          :harja.domain.muokkaustiedot/poistettu? false}))

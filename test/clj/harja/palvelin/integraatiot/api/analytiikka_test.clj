@@ -26,7 +26,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-yit
     :api-analytiikka (component/using
-                       (api-analytiikka/->Analytiikka)
+                       (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)

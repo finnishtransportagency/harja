@@ -982,11 +982,11 @@ VALUES
     WHERE nimi = 'Puolangalle menevä (EI SAA NÄKYÄ)'), NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
   ((SELECT id
     FROM yllapitokohde
-    WHERE nimi = 'Puolangantie'), make_date((SELECT date_part('year', now())::INT), 6, 14),
-   make_date((SELECT date_part('year', now())::INT), 6, 19), make_date((SELECT date_part('year', now())::INT), 6, 21), NULL, NULL, NULL, (SELECT id
+    WHERE nimi = 'Puolangantie'), make_date(2023, 6, 14),
+   make_date(2023, 6, 19), make_date(2023, 6, 21), NULL, NULL, NULL, (SELECT id
                   FROM kayttaja
                   WHERE kayttajanimi = 'jvh'), NOW(),
-   make_date((SELECT date_part('year', now())::INT), 3, 3), NULL),
+   make_date(2023, 3, 3), NULL),
   ((SELECT id
     FROM yllapitokohde
     WHERE nimi = 'Ouluntie 2'), make_date((SELECT date_part('year', now())::INT), 5, 16),
