@@ -581,6 +581,8 @@
 (def kemin-alueurakan-2019-2023-id (atom nil))
 (def iin-maanteiden-hoitourakan-2021-2026-id (atom nil))
 (def iin-maanteiden-hoitourakan-lupaussitoutumisen-id (atom nil))
+(def raahen-maanteiden-hoitourakan-2023-2028-id (atom nil))
+(def raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
 (def kemin-aluerakennus-id (atom nil))
@@ -805,6 +807,10 @@
   (ffirst (q (str "SELECT id
                    FROM   urakka
                    WHERE  nimi = 'Oulun MHU 2019-2024'"))))
+(defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Oulun MHU 2019-2024')"))))
 
 (defn hae-iin-maanteiden-hoitourakan-2021-2026-id []
   (ffirst (q (str "SELECT id
@@ -816,10 +822,18 @@
                    FROM   lupaus_sitoutuminen
                    WHERE  \"urakka-id\" = (SELECT id FROM urakka where nimi = 'Iin MHU 2021-2026')"))))
 
-(defn hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id []
+
+(defn hae-raahen-maanteiden-hoitourakan-2023-2028-id []
+  (ffirst (q (str "SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'Raahen MHU 2023-2028'"))))
+
+(defn hae-raahen-maanteiden-hoitourakan-2023-2028-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
-                   WHERE  nimi = 'Oulun MHU 2019-2024')"))))
+                   WHERE  nimi = 'Raahen MHU 2023-2028')"))))
+
+
 
 (defn hae-oulun-maanteiden-hoitourakan-toimenpideinstanssi [toimenpidekoodi]
   (ffirst (q (str "SELECT id from toimenpideinstanssi where urakka = (select id FROM urakka WHERE  nimi = 'Oulun MHU 2019-2024') AND
@@ -1200,7 +1214,9 @@
   (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
   (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat))
   (reset! iin-maanteiden-hoitourakan-2021-2026-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
-  (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)))
+  (reset! iin-maanteiden-hoitourakan-lupaussitoutumisen-id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id))
+  (reset! raahen-maanteiden-hoitourakan-2023-2028-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id))
+  (reset! raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (hae-raahen-maanteiden-hoitourakan-2023-2028-sopimus-id)))
 
 (defn urakkatieto-lopetus! []
   (reset! oulun-alueurakan-2005-2010-id nil)
