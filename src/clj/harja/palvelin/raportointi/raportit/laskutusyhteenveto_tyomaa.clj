@@ -178,6 +178,14 @@
         laskutettu-teksti (str "Hoitokauden alusta")
         laskutetaan-teksti (str "Laskutetaan " (pvm/kuukausi-ja-vuosi alkupvm))
 
+        ;; Hoitokausi valittuna?
+        hoitokausi? (= aikarajaus :hoitokausi)
+        ;; Käytetäänkö omaa aikaväliä
+        valittu-aikavali? (= aikarajaus :valittu-aikakvali)
+        ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
+        kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
+
+
         ;; Jos käytetään valittua aikaväliä, näytetään vain "Määrä" -otsikko
         laskutettu-teksti (if (= aikarajaus :valittu-aikakvali) "Määrä" laskutettu-teksti)
 
@@ -266,8 +274,8 @@
                                      :laskutettu-teksti laskutettu-teksti
                                      :laskutetaan-teksti laskutetaan-teksti
                                      :kyseessa-kk-vali? kyseessa-kk-vali?})
-
-     [:tyomaa-laskutusyhteenveto-yhteensa (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
+     
+     [:tyomaa-laskutusyhteenveto-yhteensa kyseessa-kk-vali? (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_hoitokausi_yht rivitiedot))
       (fmt/formatoi-arvo-raportille (:yhteensa_kaikki_val_aika_yht rivitiedot))
       laskutettu-teksti laskutetaan-teksti]]))

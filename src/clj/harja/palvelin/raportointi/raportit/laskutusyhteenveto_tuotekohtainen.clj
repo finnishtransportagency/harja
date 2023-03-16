@@ -159,6 +159,8 @@
         laskutettu-teksti (if vuoden-kk? (str "Laskutetaan " (pvm/kuukausi-ja-vuosi (first valittu-kk))) laskutettu-teksti)
         ;; Käytetäänkö omaa aikaväliä
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
+        ;; Ei käytetä kk-väliä jos oma aikaväli valittuna
+        kyseessa-kk-vali? (if valittu-aikavali? false kyseessa-kk-vali?)
         ;; Jos näytetään tietyn vuoden dataa, tai omaa aikaväliä, sarakkeen otsikko on vain "Määrä"
         laskutettu-teksti (if (or koko-vuosi? valittu-aikavali?) "Määrä" laskutettu-teksti)
         ;; Hoitokausi valittuna?
@@ -188,7 +190,6 @@
 
         ;; Datan nostaminen tietokannasta urakoittain, hyödyntää cachea
         laskutusyhteenvedot (mapv (fn [urakan-parametrit]
-                                    ;; (println "\n params: " urakan-parametrit)
                                     (mapv #(assoc % :urakka-id (:urakka-id urakan-parametrit)
                                                   :urakka-nimi (:urakka-nimi urakan-parametrit)
                                                   :indeksi (:indeksi urakan-parametrit)

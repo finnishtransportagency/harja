@@ -329,7 +329,7 @@
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
      (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 
-(defn arvotaulukko-valittu-aika [otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+(defn arvotaulukko-valittu-aika [kyseessa-kk-vali? otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
 
   [:fo:table {:font-size "9pt" :margin-bottom "12px"}
    [:fo:table-column {:column-width "56%"}]
@@ -343,13 +343,15 @@
      [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
      ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
      [:fo:table-cell [:fo:block {:font-weight "bold"} hoitokauden-otsikko]]
-     [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]]]
+     (when kyseessa-kk-vali?
+       [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]])]
 
     ;; Arvot rahana
     [:fo:table-row
      [:fo:table-cell [:fo:block ""]]
      [:fo:table-cell [:fo:block hoitokauden-arvo]]
-     [:fo:table-cell [:fo:block laskutetaan-arvo]]]]])
+     (when kyseessa-kk-vali?
+       [:fo:table-cell [:fo:block laskutetaan-arvo]])]]])
 
 (defn arvotaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
   [:fo:table {:font-size "9pt"}
@@ -401,6 +403,7 @@
 
               ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
               (arvotaulukko-valittu-aika
+               true
                (str elem ":")
                (str hoitokauden-otsikko)
                (str valittu-pvm-otsikko)

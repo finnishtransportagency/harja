@@ -8,7 +8,7 @@
             [harja.palvelin.raportointi.excel :as excel-raportointi])
   (:import (org.apache.poi.ss.util CellRangeAddress)))
 
-(defmethod excel-raportointi/muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
+(defmethod excel-raportointi/muodosta-excel :tyomaa-laskutusyhteenveto-yhteensa [[_ kyseessa-kk-vali? hoitokausi laskutettu laskutetaan laskutettu-str laskutetaan-str] workbook]
   ;; Muodostaa työmaakokouksen laskutusyhteenvedolle "Laskutus yhteensä" -yhteenvedon 
   ;; Näihin tulee Hoitokauden & Valitun kuukauden otsikot joiden alle arvot annettujen parametrien perusteella
 
@@ -26,14 +26,16 @@
 
     (tee-solu rivin-solu (str "Laskutus yhteensä " hoitokausi) tyyli-otsikko)
     (tee-solu solu-laskutettu laskutettu-str tyyli-otsikko)
-    (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko)
+    (when kyseessa-kk-vali?
+      (tee-solu solu-laskutetaan laskutetaan-str tyyli-otsikko))
 
     (let [rivi-nro (+ 1 rivi-nro)
           rivi (.createRow sheet rivi-nro)
           solu-laskutettu (.createCell rivi 1)
           solu-laskutetaan (.createCell rivi 2)]
       (tee-solu solu-laskutettu (str (fmt/euro laskutettu)) tyyli-normaali)
-      (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali)
+      (when kyseessa-kk-vali?
+        (tee-solu solu-laskutetaan (str (fmt/euro laskutetaan)) tyyli-normaali))
       
       (dotimes [i 2]
         (.autoSizeColumn sheet i)))))
