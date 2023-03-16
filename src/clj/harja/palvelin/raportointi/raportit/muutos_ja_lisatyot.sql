@@ -27,10 +27,6 @@ SELECT
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
        indeksilaskennan_perusluku(u.id),
-       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
        false))    AS korotus,
   u.id                                                   AS urakka_id,
   u.nimi                                                 AS urakka_nimi,
@@ -93,12 +89,7 @@ SELECT
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
        indeksilaskennan_perusluku(u.id),
-       -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-       --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-       --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-       --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
-       false
-       )))   AS korotus,
+       false)))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
   lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
@@ -155,10 +146,6 @@ SELECT
            END,
            COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
            indeksilaskennan_perusluku(u.id),
-           -- TODO: Alunperin oli käytetty vanhaa duplikaattia versiota laske_kuukauden_indeksikorotus sprocista
-           --       jossa ei ollut pyorista_kerroin parametria mukana ollenkaan.
-           --       Ohjataan nyt sproc-kutsu uudempaan versioon, mutta annetaan pyorista_kerroin falsena.
-           --       --> Täytyy kuitenkin selvittää täytyisikö indeksikerroin pyöristää tälle raportille.
            false)))   AS korotus,
   u.id                                                  AS hallintayksikko_id, -- PARDON, kutsutaan hallintayksiköksi mutta on urakkaid ja nimi, koska raportti toimii sukkana mitään muuttamatta
   u.nimi                                                AS hallintayksikko_nimi
