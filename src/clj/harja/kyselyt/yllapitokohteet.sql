@@ -710,7 +710,9 @@ SELECT
   ypk.yllapitoluokka,
   tti.id                    AS "tietyoilmoitus-id",
   paallystysurakka.nimi     AS paallystysurakka,
-  sposti.vastaanottajat         AS "sahkopostitiedot_muut-vastaanottajat",
+  paallystysurakka.id       AS "paallystysurakka-id",
+  sposti.urakka_vastaanottajat  AS "sahkopostitiedot_urakka-vastaanottajat",
+  sposti.muut_vastaanottajat    AS "sahkopostitiedot_muut-vastaanottajat",
   sposti.saate                  AS sahkopostitiedot_saate,
   sposti.kopio_lahettajalle     AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
@@ -927,7 +929,8 @@ SELECT
   tu.id                     AS "tiemerkintaurakka-id",
   tu.nimi                   AS "tiemerkintaurakka-nimi",
   tu.sampoid                AS "tiemerkintaurakka-sampo-id",
-  sposti.vastaanottajat     AS "sahkopostitiedot_muut-vastaanottajat",
+  sposti.urakka_vastaanottajat   AS "sahkopostitiedot_urakka-vastaanottajat",
+  sposti.muut_vastaanottajat     AS "sahkopostitiedot_muut-vastaanottajat",
   sposti.saate              AS sahkopostitiedot_saate,
   sposti.kopio_lahettajalle AS "sahkopostitiedot_kopio-lahettajalle?"
 FROM yllapitokohde ypk
@@ -946,9 +949,9 @@ WHERE
   ypka.tiemerkinta_loppu :: DATE = now() :: DATE;
 
 -- name: tallenna-valmistuneen-tiemerkkinnan-sahkopostitiedot<!
-INSERT INTO yllapitokohteen_sahkopostitiedot (tyyppi, yllapitokohde_id, vastaanottajat, saate, kopio_lahettajalle)
+INSERT INTO yllapitokohteen_sahkopostitiedot (tyyppi, yllapitokohde_id, urakka_vastaanottajat, muut_vastaanottajat, saate, kopio_lahettajalle)
     VALUES ('tiemerkinta_valmistunut'::yllapitokohteen_sahkopostitiedot_tyyppi, :yllapitokohde_id,
-            :vastaanottajat::TEXT[], :saate, :kopio_lahettajalle);
+            (SELECT ARRAY[:urakka-vastaanottajat]::urakka_email[]), :muut-vastaanottajat::TEXT[], :saate, :kopio_lahettajalle);
 
 -- name: poista-valmistuneen-tiemerkinnan-sahkopostitiedot!
 DELETE FROM yllapitokohteen_sahkopostitiedot WHERE yllapitokohde_id IN (:yllapitokohde_id) AND tyyppi = 'tiemerkinta_valmistunut'::yllapitokohteen_sahkopostitiedot_tyyppi;

@@ -16,7 +16,8 @@
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]
             [harja.pvm :as pvm]
             [clj-time.coerce :as c]
-            [harja.kyselyt.konversio :as konv])
+            [harja.kyselyt.konversio :as konv]
+            [harja.domain.roolit :as roolit])
   (:use [slingshot.slingshot :only [try+ throw+]])
   (:import (java.util Date)))
 
@@ -166,17 +167,36 @@
                                                 :tr-loppuetaisyys (:tr-loppuetaisyys eka-kohde)}
                                  :tiemerkinta-valmis (get (valmistumispvmt kohteet) (:id eka-kohde))
                                  :ilmoittaja ilmoittaja}))))
+        ;; API:sta kutsuttaessa ei rivejä luoda kantaan, joten kopio-lahettajalle? on aina nil (käliltä false tai true)
+        kutsu-apista? (every? #(nil? (get-in % [:sahkopostitiedot :kopio-lahettajalle?])) yhden-urakan-kohteet)
+        ;; valitaan tässä kohti vain joko päällystyksen tai tiemerkinnän vastaanottajat, koska funktiota kutsutaan kerran molempien urakoiden osalta
+        urakan-vastaanottajat (into #{}
+                                    (mapcat #(let [uvt (get-in % [:sahkopostitiedot :urakka-vastaanottajat])]
+                                             (keep (fn [uv]
+                                                     (when
+                                                       (= (:urakka_id uv)
+                                                          (if (= nakokulma :paallystys)
+                                                            (:paallystysurakka-id %)
+                                                            (:tiemerkintaurakka-id %)))
+                                                       (:email uv))) uvt))
+                                          yhden-urakan-kohteet))
         muut-vastaanottajat-set (set (mapcat #(get-in % [:sahkopostitiedot :muut-vastaanottajat]) yhden-urakan-kohteet))]
-
-
+    ;; 2023 alkaen käyttöliittymältä valitaan etukäteen FIM-vastaanottajat, eikä enää tässä kohti lähdetään tekemään hakua roolien mukaan
+    ;; Vain API:sta tulevan muutoksen jäljiltä käytetään yhä FIM-hakua tässä kohti.
     ;; Laitetaan viesti valmistuneista kohteista FIM-käyttäjille.
-    (viestinta/laheta-sposti-fim-kayttajarooleille
-      {:fim fim
-       :email email
-       :urakka-sampoid urakka-sampo-id
-       :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
-       :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
-       :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
+    (if kutsu-apista?
+      (viestinta/laheta-sposti-fim-kayttajarooleille
+       {:fim fim
+        :email email
+        :urakka-sampoid urakka-sampo-id
+        :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
+        :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
+        :viesti-body (viestin-vartalo yhden-urakan-kohteet)})
+      (viestinta/laheta-sposti-sahkopostiosoitteille
+        {:email email
+         :vastaanottajat urakan-vastaanottajat
+         :viesti-otsikko (viestin-otsikko yhden-urakan-kohteet)
+         :viesti-body (viestin-vartalo yhden-urakan-kohteet)}))
 
     ;; Muut vastaanottajat voivat periaatteessa olla keitä tahansa. Laitetaan viesti tiemerkinnän näkökulmasta.
     ;; Laita yksi maili per vastaanottaja ja kerää siihen kaikki ne kohteet, joista tulee informoida ko. osoitetta
@@ -209,12 +229,14 @@
                                           (get-in kohde [:sahkopostitiedot :kopio-lahettajalle?]))
                                         yhden-urakan-kohteet)]
         (when (not (empty? kopio-maili-kohteet))
-          (viestinta/laheta-sahkoposti-itselle
-            {:email email
-             :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle, rakennuttajakonsultille sekä valituille muille vastaanottajille."
-             :sahkoposti (:sahkoposti ilmoittaja)
-             :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
-             :viesti-body (viestin-vartalo kopio-maili-kohteet)}))))))
+          (if (:sahkoposti ilmoittaja)
+            (viestinta/laheta-sahkoposti-itselle
+             {:email email
+              :kopio-viesti "Tiedoksenne, että seuraavista valmistuneista tiemerkintäkohteita on välitetty sähköposti-ilmoitus Harjasta valituille vastaanottajille."
+              :sahkoposti (:sahkoposti ilmoittaja)
+              :viesti-otsikko (viestin-otsikko kopio-maili-kohteet)
+              :viesti-body (viestin-vartalo kopio-maili-kohteet)})
+            (log/warn (format "Ei voitu lähettää sähköpostia itselle, koska sähköpostiosoite puuttuu viestistä jonka otsikko on %s" (viestin-otsikko kopio-maili-kohteet)))))))))
 
 (defn- laheta-sposti-tiemerkinta-valmis
   "Käy kohteet läpi päällystys- sekä tiemerkintäurakkakohtaisesti ja
@@ -246,7 +268,7 @@
    ylläpitokohteen valmiudesta tiemerkintään tai tiedon valmiuden perumisesta jos tiemerkintapvm nil.
 
    Ilmoittaja on map, jossa ilmoittajan etunimi, sukunimi, puhelinnumero ja organisaation tiedot."
-  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate muut-vastaanottajat ilmoittaja]}]
+  [{:keys [fim email kohteen-tiedot tiemerkintapvm kopio-itselle? saate vastaanottajat ilmoittaja]}]
   (let [{:keys [kohde-nimi tr-numero tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys
                 tiemerkintaurakka-sampo-id paallystysurakka-nimi
                 tiemerkintaurakka-nimi ajoradat kaistat pituus paallysteet toimenpiteet]} kohteen-tiedot
@@ -277,29 +299,26 @@
         viestin-vartalo (viesti-kohde-valmis-merkintaan-tai-valmius-peruttu viestin-params)]
     (when tiemerkintaurakka-sampo-id ;; Kohteella ei välttämättä ole tiemerkintäurakkaa
       (log/debug (format "Lähetetään sähköposti: ylläpitokohde %s valmis tiemerkintään %s" kohde-nimi tiemerkintapvm))
-      (viestinta/laheta-sposti-fim-kayttajarooleille
-        {:fim fim
-         :email email
-         :urakka-sampoid tiemerkintaurakka-sampo-id
-         :fim-kayttajaroolit #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"}
-         :viesti-otsikko viestin-otsikko
-         :viesti-body viestin-vartalo})
-      (doseq [muu-vastaanottaja muut-vastaanottajat]
-        (try
-          (sahkoposti/laheta-viesti!
-            email
-            (sahkoposti/vastausosoite email)
-            muu-vastaanottaja
-            (str "Harja: " viestin-otsikko)
-            viestin-vartalo
-            {})
-          (catch Exception e
-            (log/error (format "Sähköpostin lähetys muulle vastaanottajalle %s epäonnistui. Virhe: %s"
-                               muu-vastaanottaja (pr-str e))))))
+      ;; 2023 alkaen käyttöliittymällä resolvataan sähköpostiosoitteet jo ennen lähetystä, tällöin vastaanottajat ei ole nil
+      ;; vaan joko tyhjä collection tai sisältää osoitteita
+      (if vastaanottajat
+        (viestinta/laheta-sposti-sahkopostiosoitteille
+         {:email email
+          :vastaanottajat vastaanottajat
+          :viesti-otsikko viestin-otsikko
+          :viesti-body viestin-vartalo})
+        ;; Rajapinnan kautta voi tulla yhä tilanteita, että täytyy välillää FIM-roolien perusteella, jatketaan sen tukemista
+        (viestinta/laheta-sposti-fim-kayttajarooleille
+          {:fim fim
+           :email email
+           :urakka-sampoid tiemerkintaurakka-sampo-id
+           :fim-kayttajaroolit roolit/aikataulunakyman-sahkopostiviestinnan-roolit
+           :viesti-otsikko viestin-otsikko
+           :viesti-body viestin-vartalo}))
       (when (and kopio-itselle? (:sahkoposti ilmoittaja))
         (viestinta/laheta-sahkoposti-itselle
           {:email email
-           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta urakanvalvojalle, urakoitsijan vastuuhenkilölle ja rakennuttajakonsultille."
+           :kopio-viesti "Tämä viesti on kopio sähköpostista, joka lähettiin Harjasta valituille vastaanottajille."
            :sahkoposti (:sahkoposti ilmoittaja)
            :viesti-otsikko viestin-otsikko
            :viesti-body viestin-vartalo})))))
@@ -353,13 +372,13 @@
 (defn valita-tieto-kohteen-valmiudesta-tiemerkintaan
   "Välittää tiedon kohteen valmiudesta tiemerkintään tai valmiuden perumisesta."
   [{:keys [fim email kohteen-tiedot tiemerkintapvm
-           kopio-itselle? saate kayttaja muut-vastaanottajat]}]
+           kopio-itselle? saate kayttaja vastaanottajat]}]
   (laheta-sposti-kohde-valmis-merkintaan-tai-valmius-peruttu
     {:fim fim :email email :kohteen-tiedot kohteen-tiedot
      :tiemerkintapvm tiemerkintapvm
      :kopio-itselle? kopio-itselle?
      :saate saate
-     :muut-vastaanottajat muut-vastaanottajat
+     :vastaanottajat vastaanottajat
      :ilmoittaja kayttaja}))
 
 
