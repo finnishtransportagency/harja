@@ -3,7 +3,7 @@
   (:require [reagent.core :refer [atom] :as r]
             [harja.loki :refer [log]]
             [harja.pvm :as pvm]
-
+            [harja.validointi :as validointi-yhteiset]
             [cljs.core.async :refer [<! put! chan]]
             [clojure.string :as str-clj]
             [harja.pvm :as pvm]
@@ -242,7 +242,7 @@
     (when-not
       (or (empty? data)
           (every?
-            #(re-matches #"^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$" (str-clj/trim %))
+            #(re-matches validointi-yhteiset/email-regexp (str-clj/trim %))
             osat))
       (or viesti "Kirjoita sähköpostitiedot pilkulla eroteltuna loppuun asti."))))
 

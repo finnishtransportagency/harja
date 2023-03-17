@@ -135,6 +135,56 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION laske_kuukauden_indeksikorotus_urakalle(
+    urakka_id INTEGER,
+    indeksi_vuosi INTEGER,
+    indeksi_kk_ INTEGER,
+    indeksinimi VARCHAR,
+    summa      NUMERIC,
+    perusluku  NUMERIC,
+    pyorista_kerroin BOOLEAN)
+
+    RETURNS kuukauden_indeksikorotus_rivi AS $$
+DECLARE
+    urakan_alkuvuosi INTEGER;
+    urakan_tyyppi VARCHAR;
+    indeksi_kk INTEGER;
+BEGIN
+    SELECT EXTRACT(YEAR FROM alkupvm), tyyppi
+      FROM urakka u
+     WHERE u.id = urakka_id
+      INTO urakan_alkuvuosi, urakan_tyyppi;
+
+
+    -- TODO: Kuukaudeksi voi tulla periaatteessa mitä vain esimerkiksi alueurakoilta.
+    --       mm. muutos-ja lisätyöt raportilla käytetään yhteisesti tätä sproccia alueurakoilla ja mh-urakoilla
+    --       Ei ole täyttä varmuutta tuleeko mh-urakoilla aina ulkopuolelta kuukaudeksi syyskuu
+    --       Alueurakoita varten tämä täytyy jättää tähän ja kovakoodaataan indeksi_kk vain MH-urakoille
+      indeksi_kk := indeksi_kk_;
+
+    IF urakan_tyyppi = 'teiden-hoito'
+    THEN
+        -- Yleisesti indeksin tarkastelukuukautena (vertailulukua varten) on käytetty syyskuuta MH-urakoilla.
+        -- Ei ole vielä täyttä varmuutta tuleeko kaikissa tämän sprocin kutsuissa mh-urakoilla 'indeksi_kk_'-parametrin
+        -- arvoksi syyskuu, joten tätä kovakoodausta ei ole vielä siksi aktivoitu.
+        --indeksi_kk := 9;
+
+        -- 2023 tai sen jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
+        IF urakan_alkuvuosi >= 2023
+        THEN
+            indeksi_kk := 8;
+        END IF;
+    END IF;
+
+    RETURN laske_kuukauden_indeksikorotus(indeksi_vuosi, indeksi_kk, indeksinimi, summa,
+        perusluku, pyorista_kerroin);
+END;
+$$ LANGUAGE plpgsql;
+
+
+
+-- Tätä käytetään tällä hetkellä vain sanktion_indeksikorotus stored proceduressa
 CREATE OR REPLACE FUNCTION kuukauden_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER)
   RETURNS NUMERIC(10,2) AS $$
 DECLARE
@@ -153,7 +203,6 @@ BEGIN
   RETURN (vertailuluku / perusluku) * summa;
 END;
 $$ LANGUAGE plpgsql;
-
 
 
 -- Urakan oletusindeksin asettaminen
@@ -190,6 +239,59 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+-- Testidatan indeksikorjaus-sproc on testidata_indeksikorjaa (testidata/apufunktiot.sql)
+-- Muista kopioida tähän funktioon tehdyt muutokset myös sinne.
+CREATE OR REPLACE FUNCTION indeksikorjaa(korjattava_arvo NUMERIC, vuosi_ INTEGER, kuukausi_ INTEGER,
+                                         urakka_id INTEGER)
+    RETURNS NUMERIC AS
+$$
+DECLARE
+    -- Perusluku on urakalle sama riippumatta kuluvasta hoitokaudesta
+    perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
+    indeksin_nimi  TEXT;
+    urakan_alkuvuosi INTEGER;
+    arvo NUMERIC;
+    vertailuvuosi INTEGER;
+    vertailukk INTEGER;
+    indeksikerroin NUMERIC;
+BEGIN
+    SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
+      FROM urakka u
+     WHERE u.id = urakka_id
+      INTO indeksin_nimi, urakan_alkuvuosi;
+
+    -- Indeksikerroin on hoitokausikohtainen, katsotaan aina edellisen hoitokauden syyskuun indeksiä.
+    IF kuukausi_ BETWEEN 1 AND 9
+    THEN
+        vertailuvuosi := vuosi_ - 1;
+    ELSE
+        vertailuvuosi := vuosi_;
+    END IF;
+
+    -- Käytetään vertailukuukauden default-arvona syyskuuta.
+    vertailukk := 9;
+    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu (VHAR-6948)
+    IF urakan_alkuvuosi >= 2023 THEN
+        vertailukk := 8;
+    END IF;
+
+    arvo := (SELECT i.arvo
+               FROM indeksi i
+              WHERE i.vuosi = vertailuvuosi
+                AND i.kuukausi = vertailukk
+                AND nimi = indeksin_nimi);
+
+    -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
+    indeksikerroin := round((arvo / perusluku), 3);
+
+    --RAISE NOTICE 'vuosi: %, kuukausi: %, arvo: %, indeksikerroin: %, korjattava arvo: %', vuosi_, kuukausi_, arvo, indeksikerroin, korjattava_arvo;
+
+    -- Tallennettava arvo pyöristetään 6 desimaaliin CLJ-puolella (budjettisuunnittelu/indeksikorjaa)
+    return round(korjattava_arvo * indeksikerroin, 6);
+END ;
+$$ language plpgsql;
 
 
 CREATE OR REPLACE FUNCTION sanktion_indeksikorotus(pvm date, indeksinimi varchar, summa NUMERIC, urakka_id INTEGER, sanktiolaji sanktiolaji)
