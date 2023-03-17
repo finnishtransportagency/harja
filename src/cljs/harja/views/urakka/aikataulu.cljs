@@ -9,7 +9,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tiemerkinta :as tm-domain]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
 
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
@@ -38,9 +37,39 @@
 
             [harja.views.urakka.valinnat :as valinnat]
             [harja.views.urakka.tarkka-aikataulu :as tarkka-aikataulu]
+            [harja.views.urakka.aikataulu-visuaalinen :as vis]
             [harja.views.urakka.yllapitokohteet :as yllapitokohteet-view]
             [harja.views.urakka.yllapitokohteet.yhteyshenkilot :as yllapito-yhteyshenkilot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(defn- vastaanottajien-tiedot [oman-urakan-id urakka-idt]
+  (komp/luo
+    (komp/sisaan-ulos
+      #(when (> (count urakka-idt) 0)
+         (tiedot/hae-urakoiden-kayttajat-rooleissa oman-urakan-id urakka-idt))
+
+      #(tiedot/tyhjenna-kayttajatiedot))
+
+    (fn [_]
+      (when @tiedot/fimista-haetut-vastaanottajatiedot
+        [:div.email-vastaanottajat
+         [grid/muokkaus-grid
+          {:otsikko "Valitse vastaanottajat" :voi-poistaa? (constantly false)
+           :piilota-toiminnot? true :voi-lisata? false :voi-kumota? false
+           :tyhja (if (nil? @tiedot/fimista-haetut-vastaanottajatiedot)
+                    "Haetaan urakan henkilötietoja Väyläviraston palvelusta."
+                    "Ulkoisesta palvelusta ei löytynyt vastaanottajien tietoja.")
+           :jarjesta (comp :urakka-nimi :roolit) :tunniste :sahkoposti}
+
+          [{:otsikko " " :nimi :valittu? :tasaa :keskita :tyyppi :checkbox :leveys 1 :vayla-tyyli? true}
+           {:otsikko "Urakka" :nimi :urakka-nimi :leveys 8
+            :muokattava? (constantly false) :tyyppi :string}
+           {:otsikko "Vastaanottaja" :nimi :sahkoposti :leveys 8
+            :muokattava? (constantly false) :tyyppi :string}
+           {:otsikko "Rooli" :nimi :roolit :leveys 7
+            :muokattava? (constantly false) :tyyppi :string}]
+
+          tiedot/fimista-haetut-vastaanottajatiedot]]))))
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
@@ -59,16 +88,10 @@
       :nakyvissa? nakyvissa?
       :sulje-fn #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)
       :footer [:div
-               [napit/peruuta
-                (if valmis-tiemerkintaan-lomake?
-                  "Peruuta"
-                  "Älä perukaan")
-                #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)]
-
                [napit/palvelinkutsu-nappi
                 (if valmis-tiemerkintaan-lomake?
-                  "Merkitse"
-                  "Vahvista peruutus")
+                  "Merkitse valmiiksi ja lähetä viesti"
+                  "Vahvista peruutus ja lähetä viesti")
                 #(tiedot/merkitse-kohde-valmiiksi-tiemerkintaan
                    {:kohde-id kohde-id
                     :tiemerkintapvm (:valmis-tiemerkintaan lomakedata)
@@ -80,25 +103,34 @@
                     :sopimus-id (first @u/valittu-sopimusnumero)
                     :vuosi vuosi})
                 {:disabled (not valmis-tallennettavaksi?)
-                 :luokka "nappi-myonteinen"
-                 :ikoni (ikonit/check)
+                 :luokka "nappi-ensisijainen pull-left"
                  :virheviesti "Lähetys epäonnistui. Yritä myöhemmin uudelleen."
                  :kun-onnistuu (fn [vastaus]
                                  (reset! tiedot/aikataulurivit vastaus)
-                                 (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]]}
+                                 (swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false))}]
+               [napit/peruuta
+                (if valmis-tiemerkintaan-lomake?
+                  "Peruuta"
+                  "Älä perukaan")
+                #(swap! tiedot/valmis-tiemerkintaan-modal-data assoc :nakyvissa? false)]]}
      [:div
       [vihje (if valmis-tiemerkintaan-lomake?
-               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle."
-               "Kohteen tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle.")]
+               "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista."
+               "Tiemerkintävalmiuden perumisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista.")
+       "vihje-hento-korostus" 16]
+      [vastaanottajien-tiedot @nav/valittu-urakka-id #{(:suorittava-urakka-id data)}]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/valmis-tiemerkintaan-modal-data (merge data {:lomakedata uusi-data})))}
-       [(when valmis-tiemerkintaan-lomake?
+       [varmista-kayttajalta/modal-muut-vastaanottajat
+        varmista-kayttajalta/modal-sahkopostikopio
+        {:otsikko "" :tyyppi :komponentti :palstoja 3
+         :komponentti (fn []
+                        [:div.viestin-tiedot.fontti-16-vahvempi "Viestin tiedot"])}
+        (when valmis-tiemerkintaan-lomake?
           {:otsikko "Tiemerkinnän saa aloittaa"
            :nimi :valmis-tiemerkintaan :pakollinen? true :tyyppi :pvm})
-        varmista-kayttajalta/modal-muut-vastaanottajat
-        varmista-kayttajalta/modal-saateviesti
-        varmista-kayttajalta/modal-sahkopostikopio]
+        varmista-kayttajalta/modal-saateviesti]
        lomakedata]]]))
 
 (defn tiemerkinta-valmis
@@ -107,8 +139,9 @@
    Kohteet on vector mappeja, joilla kohteen :id, :nimi ja :valmis-pvm"
   []
   (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
-                nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data]
-
+                nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data
+        paallystysurakoiden-idt (into #{}
+                                      (map :paallystysurakka-id kohteet))]
     [modal/modal
      {:otsikko (if (= (count kohteet) 1)
                  (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (if-let [valmis-pvm (:valmis-pvm (first kohteet))]
@@ -138,22 +171,22 @@
      [:div
       [vihje-elementti
        [:span
-        [:span
-         [:span "Kohteen tiemerkinnän valmistumisen asettamisesta tai muuttamisesta lähetetään sähköpostilla tieto päällystys- ja tiemerkintäurakan urakanvalvojalle, rakennuttajakonsultille ja vastuuhenkilölle, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään valmistumispäivänä."]
-         (if muutos-taulukosta?
-           [:span.bold (str " Tämän kohteen sähköposti lähetetään "
-                            (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
-                              "heti, kun tallennat muutokset taulukosta"
-                              (str "valmistuspäivämääränä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
-                            ".")])]
-        [:br] [:br]
-        [:span "Halutessasi voit lisätä lähetettävään sähköpostiin ylimääräisiä vastaanottajia sekä vapaaehtoisen saateviestin."]]]
+        [:span "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista. Viesti lähetetään heti, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään merkittynä valmistumispäivänä."]
+        (if muutos-taulukosta?
+          [:span.bold (str " Tämän kohteen sähköposti lähetetään "
+                           (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
+                             "heti, kun tallennat muutokset taulukosta"
+                             (str "valmistuspäivänä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
+                           ".")])]
+       "vihje-hento-korostus" 16]
+      ;; Tiemerkintä voi teoriassa valmistua yhtaikaa useamman päällystysurakan kohteille.
+      [vastaanottajien-tiedot @nav/valittu-urakka-id (conj paallystysurakoiden-idt urakka-id)]
       [lomake/lomake {:otsikko ""
                       :muokkaa! (fn [uusi-data]
                                   (reset! tiedot/tiemerkinta-valmis-modal-data (merge data {:lomakedata uusi-data})))}
        [varmista-kayttajalta/modal-muut-vastaanottajat
-        varmista-kayttajalta/modal-saateviesti
-        varmista-kayttajalta/modal-sahkopostikopio]
+        varmista-kayttajalta/modal-sahkopostikopio
+        varmista-kayttajalta/modal-saateviesti]
        lomakedata]]]))
 
 (defn- paallystys-aloitettu-validointi
@@ -282,117 +315,6 @@
     :paallystys
     (:suorittava-tiemerkintaurakka rivi)
     true))
-
-(defn visuaalinen-aikataulu
-  [{:keys [urakka-id sopimus-id aikataulurivit aikajana? optiot
-           vuosi voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
-  (when aikajana?
-    [:div
-     [kumousboksi/kumousboksi {:nakyvissa? (kumousboksi/ehdotetaan-kumamomista?)
-                               :nakyvissa-sijainti {:top "250px" :right 0 :bottom "auto" :left "auto"}
-                               :piilossa-sijainti {:top "250px" :right "-170px" :bottom "auto" :left "auto"}
-                               :kumoa-fn #(kumousboksi/kumoa-muutos! (fn [edellinen-tila kumottu-fn]
-                                                                       (tiedot/tallenna-aikataulu
-                                                                         urakka-id sopimus-id vuosi edellinen-tila
-                                                                         (fn [vastaus]
-                                                                           (reset! tiedot/aikataulurivit vastaus)
-                                                                           (kumottu-fn)))))
-                               :sulje-fn kumousboksi/ala-ehdota-kumoamista!}]
-     [leijuke/otsikko-ja-vihjeleijuke 6 "Aikajana"
-      {:otsikko "Visuaalisen muokkauksen ohje"}
-      [leijuke/multipage-vihjesisalto
-       [:div
-        [:h6 "Aikajanan alun / lopun venytys"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus.gif"
-                ;; Kuva ei lataudu heti -> leijukkeen korkeus määrittyy väärin -> avautumissuunta määrittyy väärin -> asetetaan height
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Tartu hiiren kursorilla kiinni janan alusta tai lopusta, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
-       [:div
-        [:h6 "Aikajanan siirtäminen"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus2.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Tartu hiiren kursorilla kiinni janan keskeltä, raahaa eteen- tai taaksepäin pitämällä nappia pohjassa ja päästämällä irti. Muutos tallennetaan heti."]]]]
-       [:div
-        [:h6 "Usean aikajanan siirtäminen"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus3.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Siirrä aikajanaa normaalisti, jolloin kaikki aikajanat liikkuvat samaan suuntaan yhtä paljon."]
-          [:p "Voit perua janan valinnan CTRL-klikkaamalla sitä uudestaan. Voit perua kaikkien janojen valinnan klikkaamalla tyhjään alueeseen. Valinnat poistuvat myös sivua vaihtamalla."]]]]
-       [:div
-        [:h6 "Usean aikajanan alun / lopun venytys"]
-        [:figure
-         [:img {:src "images/yllapidon_aikataulu_visuaalisen_muokkauksen_ohje_raahaus4.gif"
-                :style {:height "200px"}}]
-         [:figcaption
-          [:p "Paina CTRL-painike pohjaan ja klikkaa aikajanaa valitakseksi sen. Venytä aikajanaa normaalisti alusta tai lopusta, jolloin kaikki aikajanat venyvät samaan suuntaan yhtä paljon."]]]]]]
-     [aikajana/aikajana
-      {:ennen-muokkausta
-       (fn [drag valmis! peru!]
-         ;; Näytä modal jos raahattujen joukossa oli tiemerkinnän valmistumispvm, muuten tallenna suoraan
-         (let [tiemerkinnan-valmistumiset (filter #(and (= (second (::aikajana/drag %)) :tiemerkinta)
-                                                        (not (pvm/sama-pvm? (::aikajana/loppu %) (::aikajana/alkup-loppu %))))
-                                                  drag)]
-           (if (not (empty? tiemerkinnan-valmistumiset))
-             ;; Tehdään muokaus modalin kautta.
-             ;; Mikäli siirrettiin useampaa kohdetta, niin modalilla on tarkoitus antaa samat
-             ;; mailitiedot kaikille muokatuille kohteille.
-             (reset! tiedot/tiemerkinta-valmis-modal-data
-                     {:valmis-fn (fn [lomakedata]
-                                   ;; Lisätään modalissa kirjoitetut mailitiedot kaikille muokatuille kohteille
-                                   (doseq [kohde-id (map #(first (::aikajana/drag %)) tiemerkinnan-valmistumiset)]
-                                     (swap! tiedot/kohteiden-sahkopostitiedot assoc kohde-id
-                                            {:muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
-                                                                    (:muut-vastaanottajat lomakedata))
-                                             :saate (:saate lomakedata)
-                                             :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                                   (valmis!))
-                      :peru-fn peru!
-                      :nakyvissa? true
-                      :kohteet (map (fn [raahaus]
-                                      (-> {:id (first (::aikajana/drag raahaus))
-                                           :nimi (::aikajana/kohde-nimi raahaus)
-                                           :valmis-pvm (::aikajana/loppu raahaus)}))
-                                    drag)
-                      :urakka-id urakka-id
-                      :vuosi vuosi
-                      ;; Ota olemassa olevat sähköpostitiedot ja "yhdistä" ne koskemaan kaikkia
-                      ;; muokattuja kohteita.
-                      :lomakedata {:kopio-itselle? (or (some :kopio-lahettajalle? (map ::aikajana/sahkopostitiedot tiemerkinnan-valmistumiset))
-                                                       true)
-                                   :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                                (map #(-> {:sahkoposti %})
-                                                                     (set (mapcat (fn [jana] (get-in jana [::aikajana/sahkopostitiedot :muut-vastaanottajat]))
-                                                                                  tiemerkinnan-valmistumiset))))
-                                   :saate (str/join " " (map #(get-in % [::aikajana/sahkopostitiedot :saate])
-                                                             tiemerkinnan-valmistumiset))}})
-             ;; Ei muokattujen tiemerkintöjen valmistumisia, tallenna suoraan
-             (valmis!))))
-       :muuta! (fn [drag]
-                 (go (let [paivitetty-aikataulu (aikataulu/raahauksessa-paivitetyt-aikataulurivit aikataulurivit drag)
-                           paivitetyt-aikataulu-idt (set (map :id paivitetty-aikataulu))
-                           paivitettyjen-vanha-tila (filter #(paivitetyt-aikataulu-idt (:id %)) @tiedot/aikataulurivit)]
-
-                       (if (aikataulu/aikataulu-validi? paivitetty-aikataulu)
-                         (when (not (empty? paivitetty-aikataulu)) ; Tallenna ja ehdota kumoamista vain jos muutoksia
-                           (<! (tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi paivitetty-aikataulu
-                                                          (fn [vastaus]
-                                                            (reset! tiedot/aikataulurivit vastaus)
-                                                            (kumousboksi/ehdota-kumoamista! paivitettyjen-vanha-tila)))))
-                         (viesti/nayta! "Virheellistä päällystysajankohtaa ei voida tallentaa!" :danger)))))}
-      (some->> aikataulurivit
-        (map #(aikataulu/aikataulurivi-jana % {:nakyma (:nakyma optiot)
-                                              :urakka-id urakka-id
-                                              :voi-muokata-paallystys? voi-muokata-paallystys?
-                                              :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?
-                                              :nayta-tarkka-aikajana? @tiedot/nayta-tarkka-aikajana?
-                                              :nayta-valitavoitteet? @tiedot/nayta-valitavoitteet?}))
-               (filter #(not (empty? (:harja.ui.aikajana/ajat %)))))]]))
 
 (defn- paallystysurakan-tarkka-aikataulu
   [urakka-id sopimus-id rivi vuosi nakyma voi-muokata-paallystys? voi-muokata-tiemerkinta?]
@@ -608,8 +530,7 @@
     [grid/grid
      {:otsikko [:span
                 [:div.inline-block
-                 "Kohteiden aikataulu"
-                 [yleiset/tietyoilmoitus-siirtynyt-toast]]
+                 "Kohteiden aikataulu"]
                 [yllapitokohteet-view/vasta-muokatut-vinkki]]
       :rivi-ennen (taulukon-ryhmittely-header (:nakyma optiot))
       :voi-poistaa? (constantly false)
@@ -756,6 +677,7 @@
                                             :vuosi vuosi
                                             :paallystys-valmis? (some? (:aikataulu-paallystys-loppu rivi))
                                             :suorittava-urakka-annettu? (some? (:suorittava-tiemerkintaurakka rivi))
+                                            :suorittava-urakka-id (:suorittava-tiemerkintaurakka rivi)
                                             :lomakedata {:kopio-itselle? true}}]
                         [valmis-tiemerkintaan-sarake rivi {:muokataan? muokataan?
                                                            :paallystys-valmis? paallystys-valmis?
@@ -793,30 +715,26 @@
                 ;; Näytä dialogi, mikäli arvoa muutetaan
                 (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
                                (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
-                  (let [;; Näytetään modalissa aiemmat sähköpostitiedot, jos on (joko palvelimen palauttamat, tulevaisuudessa
-                        ;; lähetettävät postit, tai ennen gridin tallennusta tehdyt muokkaukset).
-                        aiemmat-sahkopostitiedot (merge
-                                                   (:sahkopostitiedot rivi)
-                                                   (get @tiedot/kohteiden-sahkopostitiedot (:id rivi)))]
-                    (reset! tiedot/tiemerkinta-valmis-modal-data
-                            {:nakyvissa? true
-                             :muutos-taulukosta? true
-                             :valmis-fn (fn [lomakedata]
-                                          (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                                 {:muut-vastaanottajat (set (map :sahkoposti (vals (:muut-vastaanottajat lomakedata))))
-                                                  :saate (:saate lomakedata)
-                                                  :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                             :kohteet [{:id (:id rivi)
-                                        :nimi (:nimi rivi)
-                                        :valmis-pvm arvo}]
-                             :urakka-id urakka-id
-                             :vuosi vuosi
-
-                             :lomakedata {:kopio-itselle? (or (:kopio-itselle? aiemmat-sahkopostitiedot) true)
-                                          :muut-vastaanottajat (zipmap (iterate inc 1)
-                                                                       (map #(-> {:sahkoposti %})
-                                                                            (:muut-vastaanottajat aiemmat-sahkopostitiedot)))
-                                          :saate (:saate aiemmat-sahkopostitiedot)}})))
+                  (reset! tiedot/tiemerkinta-valmis-modal-data
+                          {:nakyvissa? true
+                           :muutos-taulukosta? true
+                           :valmis-fn (fn [lomakedata]
+                                        (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                               {:urakka-vastaanottajat (keep #(when (and (:valittu? %) (:sahkoposti %))
+                                                                         [(:urakka-id %) (:sahkoposti %)])
+                                                                      (vals @tiedot/fimista-haetut-vastaanottajatiedot))
+                                                :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                                       (:muut-vastaanottajat lomakedata))
+                                                :saate (:saate lomakedata)
+                                                :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                           :kohteet [{:id (:id rivi)
+                                      :nimi (:nimi rivi)
+                                      :valmis-pvm arvo
+                                      :paallystysurakka-id (:paallystysurakka-id rivi)}]
+                           :urakka-id urakka-id
+                           :vuosi vuosi
+                           :lomakedata {:kopio-itselle? true
+                                        :saate ""}}))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
@@ -867,15 +785,15 @@
             paallystys? (= (:nakyma optiot) :paallystys)]
         [:div.aikataulu
          [valinnat ur paallystys?]
-         [visuaalinen-aikataulu {:urakka-id urakka-id
-                                 :aikajana? aikajana?
-                                 :sopimus-id sopimus-id
-                                 :aikataulurivit aikataulurivit
-                                 :urakkatyyppi urakkatyyppi
-                                 :vuosi vuosi
-                                 :optiot optiot
-                                 :voi-muokata-paallystys? voi-muokata-paallystys?
-                                 :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
+         [vis/visuaalinen-aikataulu {:urakka-id urakka-id
+                                     :aikajana? aikajana?
+                                     :sopimus-id sopimus-id
+                                     :aikataulurivit aikataulurivit
+                                     :urakkatyyppi urakkatyyppi
+                                     :vuosi vuosi
+                                     :optiot optiot
+                                     :voi-muokata-paallystys? voi-muokata-paallystys?
+                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}]
          [:div.aikataulu-spacer]
          [aikataulu-grid {:urakka-id urakka-id
                           :urakka urakka

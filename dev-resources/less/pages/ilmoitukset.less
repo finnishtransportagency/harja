@@ -21,6 +21,86 @@
   .boolean > .checkbox {
     padding-top: 0;
   }
+
+  // Pisteitä, joissa pienennetään muita kenttiä, jotta saadaan
+  // fluidille selite-sarakkeelle lisää tilaa tarvittaessa.
+  @taulukko-breakpointit: 1400px, 1250px, 1200px, 1150px, 1050px, 1000px, 900px;
+
+  .urakka {
+    width: 140px;
+
+    @media (max-width: extract(@taulukko-breakpointit, 6)) {
+      width: 120px;
+    }
+  }
+
+  .saapunut {
+    width: 125px;
+
+    @media (max-width: extract(@taulukko-breakpointit, 4)) {
+      width: 96px;
+    }
+  }
+
+  .tyyppi {
+    width: 70px;
+  }
+
+  .selite {
+    width: 200px;
+
+    @media (max-width: extract(@taulukko-breakpointit, 3)) {
+      width: 150px;
+    }
+
+    @media (max-width: extract(@taulukko-breakpointit, 5)) {
+      width: 100px;
+    }
+  }
+
+  .lisatieto {
+    @media (max-width:  extract(@taulukko-breakpointit, 7)) {
+      width: 100px;
+    }
+  }
+
+  // Huonosti dokumentoitu, mutta uusimpien selainten tukema toiminnallisuus,
+  // jolla saa rivin leikkaantumaan tietyn rivimäärän jälkeen.
+  .lisatieto-rivi > div {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 3;
+  }
+
+  .tie {
+    width: 73px;
+  }
+
+  .kuittaukset {
+    width: 248px;
+
+    @media (max-width: extract(@taulukko-breakpointit, 1)) {
+      width: 140px;
+    }
+
+    @media (max-width: extract(@taulukko-breakpointit, 2)) {
+      width: 104px;
+    }
+  }
+
+  .tila {
+    width: 126px;
+  }
+
+  .aloitettu {
+    width: 125px;
+
+    @media (max-width: extract(@taulukko-breakpointit, 4)) {
+      width: 96px;
+    }
+  }
 }
 
 .kuittauslista {
