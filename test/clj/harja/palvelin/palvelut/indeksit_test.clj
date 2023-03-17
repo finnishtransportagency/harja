@@ -52,6 +52,7 @@
  (2016, 10, 'MAKU 2005', 387800, 135.4, false);")))]
     (is (=marginaalissa? korotus 1145.64))))
 
+;; VHAR-6948
 (deftest kuukauden-indeksikorotuksen-laskenta-urakalle
   ;; Testataan, että tuleeko eri korotukset, jos urakan alkuvuosi muuttuu. Pidetään muut parametrit samoina.
   (testing "Ennen 2023 alkaneet urakat (käytetään vertailukuukautena syyskuuta)"
@@ -67,6 +68,19 @@
                                "SELECT korotus from laske_kuukauden_indeksikorotus_urakalle("
                                urakka-id ", 2023, 10, 'MAKU 2020', 1000, 135.4, false);")))]
       (is (=marginaalissa? korotus 24.37)))))
+
+(deftest indeksikorjaa-apufunktio
+  (testing "Ennen 2023 alkaneet urakat (käytetään vertailukuukautena syyskuuta)"
+    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+          korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))
+          testidata-korotettu (ffirst (q (str "SELECT * FROM testidata_indeksikorjaa(1, 2023, 9, " urakka-id ")")))]
+      (is (= 1.352M korotettu testidata-korotettu))))
+  ;; VHAR-6948
+  (testing "2023 ja sen jälkeen alkaneet urakat (käytetään vertailukuukautena elokuuta)"
+    (let [urakka-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
+          korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))
+          testidata-korotettu (ffirst (q (str "SELECT * FROM testidata_indeksikorjaa(1, 2023, 9, " urakka-id ")")))]
+      (is (= 0.984M korotettu testidata-korotettu)))))
 
 (deftest urakkatyypin-indeksien-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
