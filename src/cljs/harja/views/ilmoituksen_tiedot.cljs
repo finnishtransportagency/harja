@@ -36,7 +36,7 @@
         [:span
          [yleiset/tietoja {:piirra-viivat? true
                            :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
           "Urakka " (:urakkanimi ilmoitus)
           "Id " (:ilmoitusid ilmoitus)
           "Tunniste " (:tunniste ilmoitus)
@@ -56,7 +56,7 @@
          [:br]
          [yleiset/tietoja {:piirra-viivat? true
                            :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
           "Ilmoittaja " (let [henkilo (nayta-henkilo (:ilmoittaja ilmoitus))
                               tyyppi (capitalize (name (get-in ilmoitus [:ilmoittaja :tyyppi])))]
                           (if (and henkilo tyyppi)
@@ -68,7 +68,7 @@
          [:br]
          [yleiset/tietoja {:piirra-viivat? true
                            :class "body-text"
-                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-1-9"}
+                           :tietorivi-luokka "padding-8 css-grid css-grid-colums-12rem-9"}
           "Lähettäjä " (nayta-henkilo (:lahettaja ilmoitus))
           "Puhelinnumero " (parsi-puhelinnumero (:lahettaja ilmoitus))
           "Sähköposti " (get-in ilmoitus [:lahettaja :sahkoposti])]
