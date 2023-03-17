@@ -16,7 +16,8 @@
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.tuck-remoting.ilmoitukset-ohjain :as i])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
@@ -25,9 +26,18 @@
    [:div.row
     [df/DataFriskShell app]]])
 
+(defn ws-testi* [e! app]
+  (fn [e! app]
+    )
+  )
+
+(defn ws-testi []
+  [tuck.core/tuck i/tila ws-testi*])
+
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
+  (e! (i/->YhdistaWS))
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]
@@ -50,6 +60,7 @@
       [:span.tietyoilmoitus-container
        [kartta/kartan-paikka]
        [yleiset/tietyoilmoitus-siirtynyt-toast]
+       [ws-testi]
        (if valittu-ilmoitus
          [tietyoilmoituslomake/lomake e! app tallennus-kaynnissa? valittu-ilmoitus kayttajan-urakat]
          [tietyoilmoitushakulomake/hakulomake e! app])])))

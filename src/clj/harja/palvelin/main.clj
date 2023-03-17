@@ -19,6 +19,7 @@
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.liitteet :as liitteet-komp]
+    [harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -174,6 +175,9 @@
     [harja.palvelin.palvelut.vesivaylat.turvalaitteet :as vv-turvalaitteet]
     [harja.palvelin.palvelut.vesivaylat.alukset :as vv-alukset]
 
+    ;; Websocket-ilmoitukset
+    [harja.tuck-remoting.ilmoitukset-palvelu :as ilmoitukset-palvelu]
+
     ;; Kanavat
     [harja.palvelin.palvelut.kanavat.kohteet :as kan-kohteet]
 
@@ -212,7 +216,12 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
                        [:todennus :metriikka :db])
-
+      :tuck-remoting (component/using
+                       (tuck-remoting/luo-tuck-remoting)
+                       [:http-palvelin])
+      :ilmoitukset-palvelu (component/using
+                             (ilmoitukset-palvelu/tee-ilmoitusws)
+                             [:tuck-remoting])
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
                     [:http-palvelin])
