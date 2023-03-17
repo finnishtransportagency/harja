@@ -218,10 +218,10 @@
                        [:todennus :metriikka :db])
       :tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting)
-                       [:http-palvelin])
+                       [:http-palvelin :db])
       :ilmoitukset-palvelu (component/using
                              (ilmoitukset-palvelu/tee-ilmoitusws)
-                             [:tuck-remoting])
+                             [:tuck-remoting :db])
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
                     [:http-palvelin])

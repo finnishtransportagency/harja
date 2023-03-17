@@ -10,9 +10,16 @@
   (log/debug (format "Kuunnellaan urakan id: %s ilmoituksia." urakka-id))
   (tapahtuma-apurit/tapahtuman-kuuntelija! (kanavan-nimi urakka-id) callback))
 
-(defn ilmoita-saapuneesta-ilmoituksesta [urakka-id ilmoitus-id]
-  (log/debug (format "Ilmoitetaan urakan id: %s uudesta ilmoituksesta id: %s." urakka-id ilmoitus-id))
-  (tapahtuma-apurit/julkaise-tapahtuma (kanavan-nimi urakka-id) ilmoitus-id))
+(defn kuuntele-kaikkia-ilmoituksia [callback]
+  (tapahtuma-apurit/tapahtuman-kuuntelija! "kaikki-ilmoitus-tapahtumat" callback))
+
+(defn ilmoita-saapuneesta-ilmoituksesta
+  ([ilmoitus-id]
+   (log/debug (format "Ilmoitetaan ilmoituksesta id: %s." ilmoitus-id)
+     (tapahtuma-apurit/julkaise-tapahtuma "kaikki-ilmoitus-tapahtumat" ilmoitus-id)))
+  ([urakka-id ilmoitus-id]
+   (log/debug (format "Ilmoitetaan urakan id: %s uudesta ilmoituksesta id: %s." urakka-id ilmoitus-id))
+   (tapahtuma-apurit/julkaise-tapahtuma (kanavan-nimi urakka-id) ilmoitus-id)))
 
 (defn- valityskanavan-nimi [ilmoitus-id]
   (str "ilmoitus_" ilmoitus-id "_valitetty"))

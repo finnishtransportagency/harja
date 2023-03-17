@@ -5,8 +5,6 @@
 
 (defonce tila (atom {:ilmoitukset []}))
 
-
-
 (defrecord YhdistaWS [])
 
 (extend-protocol t/Event
@@ -19,14 +17,10 @@
   (process-event [_ app]
     (if (:ws-yhteys app)
       app
-      (assoc app :ws-yhteys
-                 (tr/connect!
-                   (str "ws://" js/window.location.host "/_/ws")
-                   tila
-                   #(println "yhdistetty!")
-                   )
-                 )
-      )
-    )
-
-  )
+      (let [e! (t/current-send-function)]
+        (assoc app :ws-yhteys
+                   (tr/connect!
+                     (str "ws://" js/window.location.host "/_/ws?")
+                     tila
+                     #(do (println "yhdistetty!")
+                          (e! (eventit/->KuunteleIlmoituksia {:urakka-id 666})))))))))
