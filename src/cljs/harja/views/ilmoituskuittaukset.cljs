@@ -241,8 +241,7 @@
            :label-luokka "pienempi-margin"
            :palstoja 2
            ::lomake/col-luokka ""})
-        {:tyyppi :text
-         :koko [80 5]
+        {:tyyppi :string
          :nimi :vapaateksti
          :otsikko "Vapaateksti" :palstoja 2
          ::lomake/col-luokka ""}
@@ -254,6 +253,5 @@
 (defn pikakuittaus [e! pikakuittaus]
   [leijuke/leijuke
    {:otsikko "Kuittaa"
-    :luokka "min-width-s"
     :sulje! #(e! (v/->PeruutaPikakuittaus))}
    [pikakuittauslomake e! pikakuittaus]])
