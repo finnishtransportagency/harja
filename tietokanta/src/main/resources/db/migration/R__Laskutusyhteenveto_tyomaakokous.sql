@@ -48,6 +48,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     lisatyo_yllapito_val_aika_yht         NUMERIC,
     lisatyo_korvausinv_hoitokausi_yht     NUMERIC,
     lisatyo_korvausinv_val_aika_yht       NUMERIC,
+    lisatyo_hoidonjohto_hoitokausi_yht    NUMERIC,
+    lisatyo_hoidonjohto_val_aika_yht      NUMERIC,
     lisatyot_hoitokausi_yht               NUMERIC,
     lisatyot_val_aika_yht                 NUMERIC,
     bonukset_hoitokausi_yht               NUMERIC,
@@ -163,6 +165,7 @@ DECLARE
     lisatyo_paallyste_rivi                RECORD;
     lisatyo_yllapito_rivi                 RECORD;
     lisatyo_korvausinv_rivi               RECORD;
+    lisatyo_hoidonjohto_rivi              RECORD;
     lisatyo_talvihoito_hoitokausi_yht     NUMERIC;
     lisatyo_talvihoito_val_aika_yht       NUMERIC;
     lisatyo_lyh_hoitokausi_yht            NUMERIC;
@@ -175,6 +178,8 @@ DECLARE
     lisatyo_yllapito_val_aika_yht         NUMERIC;
     lisatyo_korvausinv_hoitokausi_yht     NUMERIC;
     lisatyo_korvausinv_val_aika_yht       NUMERIC;
+    lisatyo_hoidonjohto_hoitokausi_yht    NUMERIC;
+    lisatyo_hoidonjohto_val_aika_yht      NUMERIC;
     lisatyot_hoitokausi_yht               NUMERIC;
     lisatyot_val_aika_yht                 NUMERIC;
 
@@ -293,6 +298,12 @@ BEGIN
     WHERE tpi.urakka = ur
     into korvausinv_tpi_id;
 
+    select tpi.id
+    from toimenpideinstanssi tpi
+             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23151' AND tpk.taso = 3
+    WHERE tpi.urakka = ur
+    into hoidonjohto_tpi_id;
+
     -- Alustetaan hankinta-arvoja
     talvihoito_hoitokausi_yht := 0.0;
     talvihoito_val_aika_yht := 0.0;
@@ -324,6 +335,8 @@ BEGIN
     lisatyo_yllapito_val_aika_yht := 0.0;
     lisatyo_korvausinv_hoitokausi_yht := 0.0;
     lisatyo_korvausinv_val_aika_yht := 0.0;
+    lisatyo_hoidonjohto_hoitokausi_yht := 0.0;
+    lisatyo_hoidonjohto_val_aika_yht := 0.0;
 
     RAISE NOTICE '*** HAETAAN talvihoito tpi: % ', talvihoito_tpi_id;
     FOR rivi IN SELECT summa AS kht_summa, l.erapaiva AS erapaiva, tpi.id as toimenpideinstanssi_id, lk.maksueratyyppi
@@ -333,7 +346,7 @@ BEGIN
                               ON lk.toimenpideinstanssi = tpi.id AND tpi.id in
                                                                      (talvihoito_tpi_id, lyh_tpi_id, sora_tpi_id,
                                                                       paallyste_tpi_id, yllapito_tpi_id,
-                                                                      korvausinv_tpi_id)
+                                                                      korvausinv_tpi_id, hoidonjohto_tpi_id)
                      -- Äkillisethoitotyöt ja vahingonkorvaukset niputetaan erikseen omiin laareihinsa, joten jätetään ne tässä pois
                 WHERE lk.maksueratyyppi != 'akillinen-hoitotyo'
                   AND lk.maksueratyyppi != 'muu'
@@ -464,7 +477,7 @@ BEGIN
                 RAISE NOTICE 'korvausinv_rivi.summa: %', korvausinv_rivi.summa;
             END IF;
 
-            -- Kohdista MHU korvausinvestointeihin liittyvät lisätyö rivit korvausinv_rivi:lle
+            -- Kohdista MHU korvausinvestointeihin liittyvät lisätyö rivit lisatyo_korvausinv_rivi:lle
             IF rivi.toimenpideinstanssi_id = korvausinv_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
                 SELECT rivi.kht_summa AS summa,
                        rivi.kht_summa AS korotettuna,
@@ -473,6 +486,17 @@ BEGIN
 
                 RAISE NOTICE 'lisatyo_korvausinv_rivi: % ', lisatyo_korvausinv_rivi;
                 RAISE NOTICE 'lisatyo_korvausinv_rivi.summa: %', lisatyo_korvausinv_rivi.summa;
+            END IF;
+
+            -- Kohdista MHU Hoindojohto liittyvät lisätyö rivit lisatyo_hoidonjohto_rivi:lle
+            IF rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+                SELECT rivi.kht_summa AS summa,
+                       rivi.kht_summa AS korotettuna,
+                       0::NUMERIC     AS korotus
+                INTO lisatyo_hoidonjohto_rivi;
+
+                RAISE NOTICE 'lisatyo_hoidonjohto_rivi: % ', lisatyo_hoidonjohto_rivi;
+                RAISE NOTICE 'lisatyo_hoidonjohto_rivi.summa: %', lisatyo_hoidonjohto_rivi.summa;
             END IF;
 
 
@@ -614,6 +638,19 @@ BEGIN
                                 lisatyo_korvausinv_val_aika_yht + COALESCE(lisatyo_korvausinv_rivi.summa, 0.0);
                     END IF;
                 END IF;
+                -- Hoidonjohdon lisätyöt. Hoidon johdon muut kulut haetaan alempana
+                IF rivi.toimenpideinstanssi_id = hoidonjohto_tpi_id AND rivi.maksueratyyppi = 'lisatyo' THEN
+                    lisatyo_hoidonjohto_hoitokausi_yht :=
+                            lisatyo_hoidonjohto_hoitokausi_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
+                    RAISE NOTICE 'rivi.erapaiva <= aikavali_loppupvm && hoidonjohto_tpi AND lisätyö  THEN: %', lisatyo_hoidonjohto_hoitokausi_yht;
+
+                    IF rivi.erapaiva >= aikavali_alkupvm AND
+                       rivi.erapaiva <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        lisatyo_hoidonjohto_val_aika_yht :=
+                                lisatyo_hoidonjohto_val_aika_yht + COALESCE(lisatyo_hoidonjohto_rivi.summa, 0.0);
+                    END IF;
+                END IF;
             END IF;
         END LOOP;
 
@@ -654,12 +691,6 @@ BEGIN
     -- HOIDON JOHTO, tpk 23150.
 
     -- MHU ja HJU Hoidon johto
-    select tpi.id
-    from toimenpideinstanssi tpi
-             join toimenpidekoodi tpk on tpk.id = tpi.toimenpide AND tpk.koodi = '23151' AND tpk.taso = 3
-    WHERE tpi.urakka = ur
-    into hoidonjohto_tpi_id;
-
     johtojahallinto_rivi :=
         (SELECT hoidon_johto_yhteenveto(hk_alkupvm, aikavali_alkupvm, aikavali_loppupvm, '23150'::TEXT,
                                         hoidonjohto_tpi_id::INTEGER,
@@ -806,11 +837,11 @@ BEGIN
     lisatyot_hoitokausi_yht :=
             lisatyot_hoitokausi_yht + lisatyo_talvihoito_hoitokausi_yht + lisatyo_lyh_hoitokausi_yht +
             lisatyo_sora_hoitokausi_yht + lisatyo_paallyste_hoitokausi_yht + lisatyo_yllapito_hoitokausi_yht +
-            lisatyo_korvausinv_hoitokausi_yht;
+            lisatyo_korvausinv_hoitokausi_yht + lisatyo_hoidonjohto_hoitokausi_yht;
     lisatyot_val_aika_yht :=
             lisatyot_val_aika_yht + lisatyo_talvihoito_val_aika_yht + lisatyo_lyh_val_aika_yht +
             lisatyo_sora_val_aika_yht + lisatyo_paallyste_val_aika_yht + lisatyo_yllapito_val_aika_yht +
-            lisatyo_korvausinv_val_aika_yht;
+            lisatyo_korvausinv_val_aika_yht + lisatyo_hoidonjohto_val_aika_yht;
 
 
     -----------------------------------------------------------------------------------------------------------
@@ -1041,6 +1072,8 @@ BEGIN
               lisatyo_yllapito_hoitokausi_yht, lisatyo_yllapito_val_aika_yht,
         -- Lisätyö korvausinvestoinnit
               lisatyo_korvausinv_hoitokausi_yht, lisatyo_korvausinv_val_aika_yht,
+        -- Lisätyö hoidonjohto
+              lisatyo_hoidonjohto_hoitokausi_yht, lisatyo_hoidonjohto_val_aika_yht,
         -- Lisätyöt yhteensä
               lisatyot_hoitokausi_yht, lisatyot_val_aika_yht,
         --- Muut kustannukset
