@@ -14,7 +14,8 @@ SELECT
   mht.yksikkohinta                                       AS tehtava_yksikkohinta,
   COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta) AS tehtava_summa,
   (SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
+   FROM laske_kuukauden_indeksikorotus_urakalle(
+       u.id,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
        (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
@@ -25,7 +26,8 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id)))    AS korotus,
+       indeksilaskennan_perusluku(u.id),
+       false))    AS korotus,
   u.id                                                   AS urakka_id,
   u.nimi                                                 AS urakka_nimi,
   hy.id                                                  AS hallintayksikko_id,
@@ -74,7 +76,8 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-   FROM laske_kuukauden_indeksikorotus(
+   FROM laske_kuukauden_indeksikorotus_urakalle(
+       u.id,
        (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
        (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
        CASE WHEN tt.indeksi IS TRUE
@@ -85,7 +88,8 @@ SELECT
          NULL
        END,
        COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-       indeksilaskennan_perusluku(u.id))))   AS korotus,
+       indeksilaskennan_perusluku(u.id),
+       false)))   AS korotus,
   hy.id                                                  AS hallintayksikko_id,
   hy.nimi                                                AS hallintayksikko_nimi,
   lpad(cast(hy.elynumero as varchar), 2, '0')            AS hallintayksikko_elynumero
@@ -129,7 +133,8 @@ SELECT
   t.tyyppi,
   sum(COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta)) AS tehtava_summa,
   sum((SELECT korotus
-       FROM laske_kuukauden_indeksikorotus(
+       FROM laske_kuukauden_indeksikorotus_urakalle(
+           u.id,
            (SELECT EXTRACT(YEAR FROM t.alkanut) :: INTEGER),
            (SELECT EXTRACT(MONTH FROM t.alkanut) :: INTEGER),
            CASE WHEN tt.indeksi IS TRUE
@@ -140,7 +145,8 @@ SELECT
              NULL
            END,
            COALESCE(tt.paivan_hinta, tt.maara * mht.yksikkohinta),
-           indeksilaskennan_perusluku(u.id))))   AS korotus,
+           indeksilaskennan_perusluku(u.id),
+           false)))   AS korotus,
   u.id                                                  AS hallintayksikko_id, -- PARDON, kutsutaan hallintayksiköksi mutta on urakkaid ja nimi, koska raportti toimii sukkana mitään muuttamatta
   u.nimi                                                AS hallintayksikko_nimi
 FROM toteuma_tehtava tt

@@ -185,10 +185,10 @@ BEGIN
     FOR khti IN SELECT
                   (SELECT korotus
                    FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                       kht.summa, perusluku)) AS ind,
+                                                       kht.summa, perusluku, false)) AS ind,
                   (SELECT korotettuna
                    FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                       kht.summa, perusluku)) AS kor,
+                                                       kht.summa, perusluku, false)) AS kor,
                   kht.summa                                        AS kht_summa
                 FROM kokonaishintainen_tyo kht
                 WHERE toimenpideinstanssi = t.tpi
@@ -210,10 +210,10 @@ BEGIN
     FOR khti_laskutetaan IN SELECT
                               (SELECT korotus
                                FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                                   kht.summa, perusluku)) AS ind,
+                                                                   kht.summa, perusluku, false)) AS ind,
                               (SELECT korotettuna
                                FROM laske_kuukauden_indeksikorotus(kht.vuosi, kht.kuukausi, ind,
-                                                                   kht.summa, perusluku)) AS kor,
+                                                                   kht.summa, perusluku, false)) AS kor,
                               kht.summa                                        AS kht_summa
                             FROM kokonaishintainen_tyo kht
                             WHERE toimenpideinstanssi = t.tpi
@@ -264,7 +264,7 @@ BEGIN
         SELECT *
         FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM yhti.tot_alkanut) :: INTEGER),
                                             (SELECT EXTRACT(MONTH FROM yhti.tot_alkanut) :: INTEGER),
-                                            ind, yhti.yht_summa, perusluku)
+                                            ind, yhti.yht_summa, perusluku, false)
         INTO yht_rivi;
       ELSE
         -- Indeksi ei käytössä, annetaan summa sellaisenaan
@@ -418,7 +418,7 @@ BEGIN
         SELECT *
           FROM laske_kuukauden_indeksikorotus((SELECT EXTRACT(YEAR FROM mhti.tot_alkanut) :: INTEGER),
                                               (SELECT EXTRACT(MONTH FROM mhti.tot_alkanut) :: INTEGER),
-                                              ind, mhti.mht_summa, perusluku)
+                                              ind, mhti.mht_summa, perusluku, false)
           INTO muutostyot_rivi;
       ELSE
         SELECT mhti.mht_summa AS summa, mhti.mht_summa AS korotettuna, 0::NUMERIC as korotus
