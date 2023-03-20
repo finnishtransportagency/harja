@@ -3,6 +3,7 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
             [compojure.core :refer [GET]]
+            [harja.pvm :as pvm]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
@@ -15,6 +16,8 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [clojure.string :as str]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit])
   (:import (java.text SimpleDateFormat))
@@ -201,6 +204,114 @@
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
 
+(defn palauta-urakan-suunnitellut-materiaalimaarat
+  "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
+  [db {:keys [urakka-id] :as parametrit} kayttaja]
+  (let [_ (println "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+        urakka-id (if (integer? urakka-id)
+                    urakka-id
+                    (Integer/parseInt urakka-id))
+        ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (:loppupvm urakan-tiedot)
+        hoitokaudet (range (pvm/vuosi alkupvm) (inc (pvm/vuosi loppupvm)))
+        urakantyyppi (:tyyppi urakan-tiedot)
+
+        ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta
+        suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto db urakka-id)
+        ;; Kootaan tulokset vuosittain
+        vuosittainen-suunniteltu-materialimaara (if (not (nil? suunniteltu-materialimaara))
+                                                  (reduce (fn [tulos vuosi]
+                                                            (let [tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                                                              :suunnitellut-materiaalit suunniteltu-materialimaara}]
+                                                              (conj tulos tama-vuosi)))
+                                                    [] hoitokaudet)
+                                                  suunniteltu-materialimaara)
+
+        ;; MH-urakoiden suunnitellut materiaalitiedot tulee urakka_tehtavamaarat taulusta, mutta HJU urakoille on suunniteltu niitä myös materiaalin_kayttotauluun
+        ;; Joten molempia hakuja on käytettävä.
+        suunniteltu-tehtava-materiaalimaara (tehtavamaarat-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista db urakka-id)
+
+        vuosittainen-suunniteltu-tehtava-materiaalimaara (reduce (fn [tulos vuosi]
+                                                                   (let [vuoden-suunnitelmat (filter #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                                                        %) suunniteltu-tehtava-materiaalimaara)
+                                                                         tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                                                                     :suunnitellut-materiaalit vuoden-suunnitelmat}]
+                                                                     (conj tulos tama-vuosi)))
+                                                           [] hoitokaudet)
+
+        ;; Suolan suunniteltu käyttö
+        ;; Alueurakoille se haetaan suolasakko -taulusta - MH-urakoille suolan suunnittelu tulee muiden materiaalien mukana urakka_tehtavamaara -taulusta
+        alueurakan-suolasuunnitelma (suolarajoitus-kyselyt/hae-suunniteltu-suolan-kaytto-hoitovuosittain-alueurakalle db {:urakka-id urakka-id})
+
+        ;; Määritellään suolasta niin tarkat tiedot, kuin voidaan ilman, että määritellään sitä materiaaliksi, koska suolaus on laajempi trempi
+        suolamateriaali (merge (first (materiaalit-kyselyt/hae-talvisuolan-materiaaliluokka db))
+                          {:materiaali_id nil
+                           :materiaali nil
+                           :materiaali_yksikko nil
+                           :materiaali_tyyppi nil})
+
+        tulos (reduce (fn [tulos vuosi]
+                             (let [vuoden-tehtavat-mat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                %) vuosittainen-suunniteltu-tehtava-materiaalimaara)
+
+                                   vuoden-kaytto-materiaalit (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                      %) vuosittainen-suunniteltu-materialimaara)
+                                   ;; Loopataan kaikki urakka_tehtavamaaran materiaalit yhdelle vuodelle läpi ja
+                                   ;; etsitään vastaavaa materiaalia materiaalin_kaytto -taulusta saadusta materiaalilistasta
+                                   yhd-materiaalit (reduce (fn [tulos tehtava_mat]
+                                                             (let [sama-materiaali (some #(when (=
+                                                                                                  (:materiaali_id tehtava_mat)
+                                                                                                  (:materiaali_id %))
+                                                                                            %)
+                                                                                     (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
+                                                                   uusi-maara (when sama-materiaali
+                                                                                (+ (:maara sama-materiaali) (:maara tehtava_mat)))
+                                                                   uusi-tehtava-mat (if uusi-maara
+                                                                                      (assoc tehtava_mat :maara uusi-maara)
+                                                                                      tehtava_mat)]
+                                                               (conj tulos uusi-tehtava-mat)))
+                                                     [] (:suunnitellut-materiaalit vuoden-tehtavat-mat))
+                                   loput-materiaalit (keep
+                                                       (fn [vkm]
+                                                         (let [onko-jo-lisatty? (some #(when (=
+                                                                                              (:materiaali_id vkm)
+                                                                                              (:materiaali_id %))
+                                                                                        vkm)
+                                                                                 yhd-materiaalit)]
+                                                           (when-not onko-jo-lisatty? vkm)))
+                                                       (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
+
+                                   vuoden-suolat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                          (merge suolamateriaali
+                                                            {:maara (:talvisuolaraja %)}))
+                                                   alueurakan-suolasuunnitelma)
+                                   vuoden-suolat (if vuoden-suolat (conj [] vuoden-suolat) [])
+                                   lopulliset-yhd-materiaalit (concat yhd-materiaalit loput-materiaalit vuoden-suolat)
+                                   tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                               :suunnitellut-materiaalit lopulliset-yhd-materiaalit}]
+                               (conj tulos tama-vuosi)))
+                     [] hoitokaudet)]
+    tulos))
+
+(defn palauta-suunnitellut-materiaalimaarat
+  "Palautetaan suunnitellut materiaalimaarat hoitovuosittain."
+  [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
+  (let [_ (println "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+        ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta, paitsi, että suola suunnitellaan eri paikkaan.
+        ;; Haetaan siis alueurakoille kaikki muu, paitsi suola materiaalin_kaytto taulusta
+        ;; Alueurakoille ei ole voinut suunnitella vuosikohtaisesti mitään, joten täytetään jokaiselle vuodelle samat luvut
+        urakan-suunnitellut-materiaalit (materiaalit-kyselyt/hae-urakan-materiaalit db urakka-id)
+
+        ]))
+
+
+(defn palauta-suunnitellut-tehtavamaarat
+  "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
+  [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
+  (let []))
+
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db-replica integraatioloki :integraatioloki :as this}]
@@ -213,6 +324,37 @@
             (palauta-toteumat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+
+    (julkaise-reitti
+      http :analytiikka-suunnitellut-materiaalit
+      (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-suunnitellut-materiaalimaarat request
+          (fn [parametrit kayttaja db]
+            (palauta-suunnitellut-materiaalimaarat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
+
+    (julkaise-reitti
+      http :analytiikka-suunnitellut-materiaalit
+      (GET "/api/analytiikka/suunnitellut-materiaalit/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-suunnitellut-materiaalimaarat request
+          (fn [parametrit kayttaja db]
+            (palauta-urakan-suunnitellut-materiaalimaarat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
+
+    (julkaise-reitti
+      http :analytiikka-suunnitellut-tehtavamaarat
+      (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-suunnitellut-tehtavamaarat request
+          (fn [parametrit kayttaja db]
+            (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
+
     (julkaise-reitti
       http :analytiikka-materiaalit
       (GET "/api/analytiikka/materiaalit" request
@@ -222,6 +364,7 @@
             (palauta-materiaalit db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+
     (julkaise-reitti
       http :analytiikka-tehtavat
       (GET "/api/analytiikka/tehtavat" request
@@ -231,6 +374,7 @@
             (palauta-tehtavat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+
     (julkaise-reitti
       http :analytiikka-urakat
       (GET "/api/analytiikka/urakat" request
@@ -240,6 +384,7 @@
             (palauta-urakat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
+
     (julkaise-reitti
       http :analytiikka-organisaatiot
       (GET "/api/analytiikka/organisaatiot" request
