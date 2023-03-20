@@ -223,22 +223,21 @@
 (deftest indeksikertoimien-haku
   (let [rovaniemi-urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
         ivalo-urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
-        pellon-urakka-id (hae-urakan-id-nimella "Pellon MHU testiurakka (3. hoitovuosi)")
-        ;; Indeksi lyödään automaagisesti urakalle, josta syystä Pellolla saattaa olla vanha indeksi käytössä
-        _ (u (str "UPDATE urakka SET indeksi = 'MAKU 2015' WHERE id = " pellon-urakka-id ";"))
-        kuluvan-hoitokauden-aloitusvuosi (-> (pvm/nyt) pvm/paivamaaran-hoitokausi first pvm/vuosi)
-
+        raahen-mhu-2023-id (hae-raahen-maanteiden-hoitourakan-2023-2028-id)
         db (:db jarjestelma)
 
         rovaniemen-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id rovaniemi-urakka-id})
         ivalon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ivalo-urakka-id})
-        pellon-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id pellon-urakka-id})]
+        ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
+        raahen-mhu-2023-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raahen-mhu-2023-id})]
     (is (= rovaniemen-indeksit ivalon-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
 
     ;; Hae Rovaniemen ensimmäisen hoitovuoden indeksi apurilla
-    ;; TODO: Tarkasta meneekö tämä assert läpi aina vaikka urakat muuttuu testidatassa dynaamisesti taustalla?
     ;; Korjattu olettaen, että koodi toimii. Tämä hajosi, kun Rovaniemen urakka alkoi, eli 1.10.2022
-    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))))
+    (is (= 1.064 (bs/indeksikerroin rovaniemen-indeksit 1)))
+
+    ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
+    (is (= 1.06 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))
