@@ -98,9 +98,8 @@ SELECT
     MAX(t.id)               as id,
     t.urakka           as urakka_id,
     t.sopimus          as sopimus_id,
-    MIN(t.alkanut)          as alkanut,
-    MAX(t.paattynyt)        as paattynyt,
-    t.luotu::DATE            as luotu,
+    t.alkanut::DATE    as alkanut,
+    MAX(t.paattynyt)   as paattynyt,
     t.tyyppi           as tyyppi,
     tm.materiaalikoodi as materiaalikoodi,
     SUM(tm.maara)           as materiaalimaara,
@@ -114,7 +113,7 @@ FROM
         LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.poistettu = FALSE,
     organisaatio o
 WHERE o.id = u.hallintayksikko
-GROUP BY t.luotu::DATE, t.urakka, t.sopimus, t.tyyppi, tm.materiaalikoodi, tt.toimenpidekoodi, o.id
+GROUP BY t.alkanut::DATE, t.urakka, t.sopimus, t.tyyppi, tm.materiaalikoodi, tt.toimenpidekoodi, o.id
 WITH NO DATA;
 
 -- Lisätään muutama indeksi
