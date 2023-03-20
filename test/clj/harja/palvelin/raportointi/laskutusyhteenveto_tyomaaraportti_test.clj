@@ -89,22 +89,24 @@
          :lisatyo_yllapito_val_aika_yht (nth raportti 40)
          :lisatyo_korvausinv_hoitokausi_yht (nth raportti 41)
          :lisatyo_korvausinv_val_aika_yht (nth raportti 42)
-         :lisatyot_hoitokausi_yht (nth raportti 43)
-         :lisatyot_val_aika_yht (nth raportti 44)
-         :bonukset_hoitokausi_yht (nth raportti 45)
-         :bonukset_val_aika_yht (nth raportti 46)
-         :sanktiot_hoitokausi_yht (nth raportti 47)
-         :sanktiot_val_aika_yht (nth raportti 48)
-         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 49)
-         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 50)
-         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 51)
-         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 52)
-         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 53)
-         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 54)
-         :muut_kustannukset_hoitokausi_yht (nth raportti 55)
-         :muut_kustannukset_val_aika_yht (nth raportti 56)
-         :yhteensa_kaikki_hoitokausi_yht (nth raportti 57)
-         :yhteensa_kaikki_val_aika_yht (nth raportti 58)}]
+         :lisatyo_hoindonjohto_hoitokausi_yht (nth raportti 43)
+         :lisatyo_hoidonjohto_val_aika_yht (nth raportti 44)
+         :lisatyot_hoitokausi_yht (nth raportti 45)
+         :lisatyot_val_aika_yht (nth raportti 46)
+         :bonukset_hoitokausi_yht (nth raportti 47)
+         :bonukset_val_aika_yht (nth raportti 48)
+         :sanktiot_hoitokausi_yht (nth raportti 49)
+         :sanktiot_val_aika_yht (nth raportti 50)
+         :paatos_tavoitepalkkio_hoitokausi_yht (nth raportti 51)
+         :paatos_tavoitepalkkio_val_aika_yht (nth raportti 52)
+         :paatos_tavoiteh_ylitys_hoitokausi_yht (nth raportti 53)
+         :paatos_tavoiteh_ylitys_val_aika_yht (nth raportti 54)
+         :paatos_kattoh_ylitys_hoitokausi_yht (nth raportti 55)
+         :paatos_kattoh_ylitys_val_aika_yht (nth raportti 56)
+         :muut_kustannukset_hoitokausi_yht (nth raportti 57)
+         :muut_kustannukset_val_aika_yht (nth raportti 58)
+         :yhteensa_kaikki_hoitokausi_yht (nth raportti 59)
+         :yhteensa_kaikki_val_aika_yht (nth raportti 60)}]
     tulos))
 
 (defn luo-kulu [urakka-id tyyppi erapaiva suoritushetki koontilaskun-kuukausi summa toimenpideinstanssi-id tehtavaryhma-id]
@@ -147,7 +149,7 @@
         vastaus (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 59) "Raportilla on 59 riviä")))
+    (is (= (count (first vastaus)) 61) "Raportilla on 59 riviä")))
 
 ;; Oulun MHU:n toimenpideinstanssit ja toimenpidekoodi taulun koodit
 ;Oulu MHU Talvihoito TP,23104
@@ -395,6 +397,8 @@
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        _ (println "raportti: " (pr-str raportti))
 
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
