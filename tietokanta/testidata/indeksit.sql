@@ -198,7 +198,7 @@ DO $$
         kuluva_kk INTEGER;
         arvo_ NUMERIC;
     BEGIN
-        indeksi_vuoteen_asti = (SELECT date_part('year', now()));
+        indeksi_vuoteen_asti = (SELECT date_part('year', now())) + 1;
         kuluva_kk = (SELECT date_part('month', now()));
         FOR vuosi_ IN indeksin_aloitus_vuosi..indeksi_vuoteen_asti
             LOOP

@@ -1,0 +1,98 @@
+@import "../yleiset.less";
+
+/* -------- Utility CSS - Luokat jotka tekevät vain yhden asian ala Tailwind ----- */
+/*-------------------------------------------*\ 
+Periaatteet:
+- Wrappaa #app tai käytä !important jotta utilityllä on viimeinen sana
+- Utility tekee vain yhden asian jotta se on yhdisteltävissä muiden utilityjen kanssa
+\*-------------------------------------------*/
+ 
+ /* ----- Flexbox ---- */
+ #app {
+     .display-flex {
+         display: flex;
+     }
+
+     .flex-wrap {
+         flex-wrap: wrap;
+     }
+
+     .flex-col {
+         flex-direction: column;
+     }
+
+     .flex-grow {
+         flex-grow: 1;
+     }
+
+     .justify-between {
+         justify-content: space-between;
+     }
+
+     .justify-center {
+         justify-content: center;
+     }
+
+     .items-center {
+         align-items: center;
+     }
+
+      /* ----- Flex-row  ---- */
+
+     .flex-row {
+        display:flex;
+        flex-direction:row;
+        justify-content: space-between;
+        align-items:center;
+        width:100%;
+        &.lapsille-nolla-margin {
+            & > * {
+                margin:0;
+            }
+        }
+        &.sisallon-leveys {
+          width:auto;
+        }
+        &.alkuun {
+          justify-content: flex-start;
+        }
+        &.keskita {
+          justify-content: center;
+        }
+        &.loppuun {
+            justify-content: flex-end;
+        }
+        &.tasaa-alas {
+          align-items: flex-end;
+        }
+        &.tasaa-alkuun {
+          align-items: flex-start;
+        }
+        &.venyta {
+          align-items: stretch;
+        }
+        &.poista-leveys {
+            width: unset;
+        }
+        &.valistys48 {
+            .valistys(@valistys-48);
+        }
+        &.valistys16 {
+            .valistys(@valistys-16);
+        }
+        .col-mimic {
+        // it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
+          padding: 0 15px;
+        }
+      
+        &.padding16 {
+            padding: 16px;
+        }
+      
+        & > * {
+            &.oikealle {
+                margin-left:auto;
+            }
+        }
+      }
+ }
