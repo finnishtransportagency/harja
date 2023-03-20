@@ -248,3 +248,26 @@ WHERE tehtavaryhma IS NOT NULL
   and yksikko is not null
   AND poistettu IS NOT TRUE
   AND piilota IS NOT TRUE;
+
+-- name: hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista
+-- Hakee materiaalien suunnittelutiedot urakalle.
+-- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
+SELECT
+    mk.id as materiaali_id,
+    mk.nimi as materiaali,
+    mk.yksikko AS materiaali_yksikko,
+    mk.materiaalityyppi AS materiaali_tyyppi,
+    ml.nimi as materiaaliluokka,
+    ml.yksikko AS materiaaliluokka_yksikko,
+    ml.materiaalityyppi AS materiaaliluokka_tyyppi,
+    ut."hoitokauden-alkuvuosi",
+    SUM(ut.maara) as maara
+FROM urakka_tehtavamaara ut
+         JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
+         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+         JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
+         LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
+         JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
+WHERE ut.poistettu IS NOT TRUE
+  AND u.id = :urakka
+GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko,ml.materiaalityyppi;
