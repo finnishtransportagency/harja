@@ -1,6 +1,10 @@
 -- Työmaakokousta varten räätälöityyn laskutusyhteenvetoon liittyvät tietokantahaut on pakattu
 -- tässä yhden funktion alle.
 
+-- Siivotaan ensin vanhat pois, niin uudet voi toimia
+DROP FUNCTION IF EXISTS ly_raportti_tyomaakokous(DATE, DATE, DATE, DATE, INTEGER);
+DROP TYPE IF EXISTS LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
+
 -- Ensin määritellään TYPE, joka on ikäänkuin se objekti/rivi, jonka funktio palauttaa.
 -- Tähän on sisällytetty kaikki yksittäiset tulokset, jotta koodiin ei jää enää yhtään laskutehtävää tehtäväksi.
 CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
