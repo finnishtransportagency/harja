@@ -427,9 +427,10 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   :otsikot-omalla-rivilla?      jos true, otsikot ovat blockeja (oletus false)
   :otsikot-samalla-rivilla      Setti otsikoita, jotka ovat samalla rivillä
   :tyhja-rivi-otsikon-jalkeen   Setti otsikoita, joiden jälkeen tyhjä rivi
-  :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)"
+  :piirra-viivat?               Piirtää viivat otsikoiden ja arvojen alle (oletus true)
+  :tietorivi-luokka             Aseta lisäluokka tietoriville"
   [{:keys [class otsikot-omalla-rivilla? otsikot-samalla-rivilla piirra-viivat?
-           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys]} & otsikot-ja-arvot]
+           tyhja-rivi-otsikon-jalkeen kavenna? jata-kaventamatta tietokentan-leveys tietorivi-luokka]} & otsikot-ja-arvot]
   (let [tyhja-rivi-otsikon-jalkeen (or tyhja-rivi-otsikon-jalkeen #{})
         otsikot-samalla-rivilla (or otsikot-samalla-rivilla #{})
         jata-kaventamatta (or jata-kaventamatta #{})
@@ -447,13 +448,14 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                      {:style {:display "auto"}})]
              ^{:key (str i otsikko)}
              [:div.tietorivi (merge
-                               (when-not piirra-viivat?
-                                 {:class "tietorivi-ilman-alaviivaa"})
-                               (when (and kavenna?
-                                          (not (jata-kaventamatta otsikko)))
-                                 {:style {:margin-bottom "0.5em"}}))
+                                   {:class tietorivi-luokka}
+                                   (when-not piirra-viivat?
+                                     {:class (str tietorivi-luokka " tietorivi-ilman-alaviivaa")})
+                                   (when (and kavenna?
+                                           (not (jata-kaventamatta otsikko)))
+                                     {:style {:margin-bottom "0.5em"}}))
               [:span.tietokentta (merge tietokentta-attrs rivin-attribuutit) otsikko]
-              [:span.tietoarvo arvo]
+              [:span.tietoarvo.max-width-3 arvo]
               (when (tyhja-rivi-otsikon-jalkeen otsikko)
                 [:span [:br] [:br]])])))
        (partition 2 otsikot-ja-arvot))]))
@@ -649,7 +651,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-teksti (ikonit/nelio-info ikonin-koko) teksti)]]))
+     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:div.vihjeteksti teksti]]]))
 
 (defn toast-viesti
   "Näyttää toast-viestin. Teksti voi olla Reagent-komponentti tai string"
@@ -683,12 +686,14 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    [toast-viesti tietyoilmoitus-siirtynyt-txt]])
 
 (defn vihje-elementti
-  ([elementti] (vihje-elementti elementti nil))
-  ([elementti luokka]
+  ([elementti] (vihje-elementti elementti nil 24))
+  ([elementti luokka] (vihje-elementti elementti nil 24))
+  ([elementti luokka ikonin-koko]
    [:div {:class
           (str "yleinen-pikkuvihje " (or luokka ""))}
     [:div.vihjeen-sisalto
-     (ikonit/ikoni-ja-elementti (ikonit/nelio-info) elementti)]]))
+     [:div.vihjeikoni (ikonit/nelio-info ikonin-koko)]
+     [:div.vihjeteksti elementti]]]))
 
 (defn keltainen-vihjelaatikko
   ([e]
