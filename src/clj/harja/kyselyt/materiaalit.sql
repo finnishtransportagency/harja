@@ -474,7 +474,9 @@ SELECT m.id                as materiaali_id,
        ml.nimi             as materiaaliluokka,
        ml.yksikko          as materiaaliluokka_yksikko,
        ml.materiaalityyppi as materiaaliluokka_tyyppi,
-       mk.maara
+       mk.maara,
+       mk.muokattu,
+       mk.luotu
   FROM materiaalin_kaytto mk
        LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
        LEFT JOIN materiaaliluokka ml ON m.materiaaliluokka_id = ml.id

@@ -261,7 +261,9 @@ SELECT
     ml.yksikko AS materiaaliluokka_yksikko,
     ml.materiaalityyppi AS materiaaliluokka_tyyppi,
     ut."hoitokauden-alkuvuosi",
-    SUM(ut.maara) as maara
+    SUM(ut.maara) as maara,
+    ut.muokattu,
+    ut.luotu
 FROM urakka_tehtavamaara ut
          JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
          JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
@@ -270,4 +272,4 @@ FROM urakka_tehtavamaara ut
          JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
 WHERE ut.poistettu IS NOT TRUE
   AND u.id = :urakka
-GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko,ml.materiaalityyppi;
+GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu;
