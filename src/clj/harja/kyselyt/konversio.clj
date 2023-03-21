@@ -157,7 +157,10 @@
 (defn konvertoi->int [arvo]
   (when-not (nil? arvo)
     (if (string? arvo)
-      (Integer/parseInt arvo)
+      (try
+        (Integer/parseInt arvo)
+        (catch NumberFormatException e
+          nil))
       (int arvo))))
 
 (defn seq->array
