@@ -1,24 +1,14 @@
 (ns harja.palvelin.integraatiot.api.analytiikka-materiaalit-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
-            [clj-time
-             [core :as t]
-             [format :as df]]
-            [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]
-            [com.stuartsierra.component :as component]
-            [clojure.data.json :as json]
-            [harja.testi :refer :all]
-            [harja.jms-test :refer [feikki-jms]]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
-            [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
-            [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
-            [cheshire.core :as cheshire]
-            [harja.palvelin.integraatiot.api.analytiikka :as api-analytiikka]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
-  (:import (java.text SimpleDateFormat)
-           (java.util Date)))
+  (:require
+    [clojure.string :as str]
+    [clojure.test :refer [deftest is use-fixtures]]
+    [cheshire.core :as cheshire]
+    [com.stuartsierra.component :as component]
+    [harja.pvm :as pvm]
+    [harja.testi :refer :all]
+    [harja.kyselyt.urakat :as urakat-kyselyt]
+    [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
+    [harja.palvelin.integraatiot.api.analytiikka :as api-analytiikka]))
 
 (def kayttaja-yit "yit-rakennus")
 (def kayttaja-analytiikka "analytiikka-testeri")
@@ -134,7 +124,6 @@
     (is (= 200 (:status materiaalivastaus)))
     (is (= odotetut-materiaalitiedot materiaalitiedot))))
 
-;;TODO: Lisää vielä suolat
 (deftest hae-suunnitellut-materiaalimaarat-alueurakalle-onnistuu-test
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (luo-valiaikainen-kayttaja)
@@ -188,6 +177,22 @@
     (is (= "talvisuola" (:materiaaliluokka_tyyppi (second ensimmainen-hoitovuosi))))
     (is (= talvisuolaraja (:maara (second ensimmainen-hoitovuosi))))))
 
+(deftest hae-suunnitellut-materiaalimaarat-alueurakalle-epaonnistuu-test
+  (let [vastaus-urakka-id-puuttuu (try
+                                    (api-analytiikka/palauta-urakan-suunnitellut-materiaalimaarat (:db jarjestelma)
+                                      {:ei "mitään"} kayttaja-analytiikka)
+                                    (catch Exception e
+                                      e))
+        vastaus-alkuvuosi-vaarin (try
+                                   (api-analytiikka/palauta-urakan-suunnitellut-materiaalimaarat (:db jarjestelma)
+                                     {:urakka-id 1
+                                      :alkuvuosi "mitään"} kayttaja-analytiikka)
+                                   (catch Exception e
+                                     e))]
+    (is (str/includes? vastaus-urakka-id-puuttuu "Urakka-id puuttuu"))
+    (is (str/includes? vastaus-alkuvuosi-vaarin "Anna muodossa: 2015 ja varmista, että se on pienempi"))))
+
+
 (deftest hae-suunnitellut-materiaalimaarat-MH-urakalle-onnistuu-test
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (luo-valiaikainen-kayttaja)
@@ -238,7 +243,6 @@
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
-        _ (println "body: " (pr-str encoodattu-body))
         ensimmainen-hoitovuosi (:suunnitellut-materiaalit (first encoodattu-body))
         ;; Järjestetään materiaalit id:n mukaan
         ensimmainen-hoitovuosi (sort-by :materiaali_id ensimmainen-hoitovuosi)]
@@ -254,3 +258,42 @@
     (is (= "murske" (:materiaali_tyyppi (nth ensimmainen-hoitovuosi 2))))
     (is (= "t" (:materiaali_yksikko (second ensimmainen-hoitovuosi))))
     (is (= maara (:maara (second ensimmainen-hoitovuosi))))))
+
+(deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-epaonnistuu-vaara-osoite
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+        alkuvuosi 2021
+        ;; Hae suunnitellut materiaalit
+        vastaus (try
+                  (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/" alkuvuosi)] kayttaja-analytiikka portti)
+                  (catch Exception e
+                    e))]
+
+    (is (= 403 (:status vastaus)))
+    (is (str/includes? vastaus "Todennusvirhe"))))
+
+(deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-epaonnistuu-vaarat-vuodet
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+        alkuvuosi 2030
+        loppuvuosi 2022
+        ;; Hae suunnitellut materiaalit
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+
+    (is (= 400 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))))
+
+(deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-onnistuu
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+        alkuvuosi 2021
+        loppuvuosi 2022
+        ;; Hae suunnitellut materiaalit
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Pitäisi olla useamman urakan tiedot
+    (is (> (count encoodattu-body) 30))))
