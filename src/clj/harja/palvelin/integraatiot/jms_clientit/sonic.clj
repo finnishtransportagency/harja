@@ -23,7 +23,9 @@
     ;; Fault tolerant –asetuksen pois kytkeminen puolestaan johtuu siitä, että jos se on käytössä, client vastaanottaa JMS-”palvelimelta” tiedon siitä,
     ;; mitä osoitteita ja portteja on käytössä samassa klusterissa – ja ainakin aiemmin Sonja oli konfiguroitu siten, että se antoi täsmälleen yhden osoitteen,
     ;; johon yhteyden katketessa pantiin sitten hanskat tiskiin.
-    (.setFaultTolerant false)
+    ;; Pyritään saamaan yhteyden uudelleenmuodostuminen käyttöön asettamalla faultTolerant trueksi. Vaatinee myös
+    ;; setConnectionURLs asettamista, joka toistaiseksi tekemättä
+    (.setFaultTolerant true)
     ;; Pingillä pyritään pitämään hengissä olemassa olevaa yhteyttä, vaikka siellä ei varsinaisesti liikettä olisikaan.
     (.setPingInterval (int 30))
     ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
