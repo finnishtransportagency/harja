@@ -290,3 +290,18 @@
                                                         :konteksti  "urakka"
                                                         :urakka-id  8234759283495
                                                         :parametrit {:loppupvm (c/to-date (t/local-date 2017 10 1))}})) "Parametreja puuttuu"))))
+
+(defn- hae-urakan-toimenpiteen-tehtavamaarat [urakka-id tpk-id pvm]
+  (ffirst (q (str (format "select tehtavamaara from raportti_toteuma_maarat where urakka_id = %s and toimenpidekoodi = %s and alkanut = '%s';" urakka-id tpk-id pvm)))))
+
+
+;; VHAR-7356 vian korjaus: aiemmin materialized view raportti_toteuma_maarat virheellisesti ryhmitteli t.luotu perusteella (kantaan kirjoittamishetki),
+;; kun täytyy ryhmitellä t.alkanut perusteella (toteuman alkamishetki)
+(deftest tehtavamaara-raportti-ryhmittelee-toteuman-alkanut-kentan-perusteella
+  (let [oulun-mhu-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        tpk-id (hae-toimenpidekoodin-id "Pysäkkikatosten puhdistus" "23104")
+        tehtavamaara-alkanut-2020-11-11 (hae-urakan-toimenpiteen-tehtavamaarat oulun-mhu-id tpk-id "2020-11-11")
+        tehtavamaara-alkanut-2021-01-11 (hae-urakan-toimenpiteen-tehtavamaarat oulun-mhu-id tpk-id "2021-01-11") ]
+    (is (= 15M tehtavamaara-alkanut-2020-11-11) "15 kpl pysäkkikatosten puhdistusta")
+    (is (= 15M tehtavamaara-alkanut-2021-01-11) "15 kpl pysäkkikatosten puhdistusta")))
+
