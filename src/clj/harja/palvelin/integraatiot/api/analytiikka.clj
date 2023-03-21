@@ -375,6 +375,20 @@
                                    urakat)]
     suunnitellut-materiaalit))
 
+
+(defn palauta-urakan-suunnitellut-tehtavamaarat
+  "Palautetaan suunnitellut tehtavamaarat yhdelle urakalle."
+  [db {:keys [urakka-id] :as parametrit} kayttaja]
+  (let [_ (log/debug "palauta-urakan-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
+        urakka-id (if (integer? urakka-id)
+                    urakka-id
+                    (Integer/parseInt urakka-id))
+        ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (:loppupvm urakan-tiedot)
+        hoitokaudet (range (pvm/vuosi alkupvm) (inc (pvm/vuosi loppupvm)))]))
+
 (defn palauta-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
@@ -415,11 +429,21 @@
 
     (julkaise-reitti
       http :analytiikka-suunnitellut-tehtavamaarat
-      (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
+      (GET "/api/analytiikka/suunnitellut-tehtavat/:alkuvuosi/:loppuvuosi" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-suunnitellut-tehtavamaarat request
           (fn [parametrit kayttaja db]
             (palauta-suunnitellut-tehtavamaarat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
+
+    (julkaise-reitti
+      http :analytiikka-suunnitellut-tehtavamaarat
+      (GET "/api/analytiikka/suunnitellut-tehtavat/:urakka-id" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki
+          :analytiikka-hae-suunnitellut-tehtavamaarat request
+          (fn [parametrit kayttaja db]
+            (palauta-urakan-suunnitellut-tehtavamaarat db parametrit kayttaja))
           ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
           (not kehitysmoodi?))))
 
