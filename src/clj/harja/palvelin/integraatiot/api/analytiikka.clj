@@ -127,47 +127,47 @@
                                                                        :koordinaattimuutos koordinaattimuutos})
         toteumat (->> toteumat
                    (map (fn [toteuma]
-                           (-> toteuma
-                             (update :reitti konversio/jsonb->clojuremap)
-                             (update :toteumatehtavat konversio/jsonb->clojuremap)
-                             (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+                          (-> toteuma
+                            (update :reitti konversio/jsonb->clojuremap)
+                            (update :toteumatehtavat konversio/jsonb->clojuremap)
+                            (update :toteumamateriaalit konversio/jsonb->clojuremap))))
                    (map #(update % :toteumatehtavat
-                            (fn [rivit]
-                              (keep
-                                (fn [r]
-                                  (-> r
-                                    (clojure.set/rename-keys db-tehtavat->avaimet)
-                                    (konversio/alaviiva->rakenne)))
-                                rivit))))
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (-> r
+                                   (clojure.set/rename-keys db-tehtavat->avaimet)
+                                   (konversio/alaviiva->rakenne)))
+                               rivit))))
                    (map #(update % :toteumamateriaalit
-                            (fn [rivit]
-                              (keep
-                                (fn [r]
-                                  (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
-                                    (-> r
-                                      (clojure.set/rename-keys db-materiaalit->avaimet)
-                                      (konversio/alaviiva->rakenne))))
-                                rivit))))
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+                                   (-> r
+                                     (clojure.set/rename-keys db-materiaalit->avaimet)
+                                     (konversio/alaviiva->rakenne))))
+                               rivit))))
                    (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
-                                                      :toteumatehtavat :toteuma_tehtavat}))
+                                                     :toteumatehtavat :toteuma_tehtavat}))
                    (map #(update % :reitti
-                            (fn [rivit]
-                              (keep
-                                (fn [r]
-                                  (let [r
-                                        (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
-                                          (clojure.set/rename-keys r db-reitti->avaimet))
-                                        ;; Muokkaa reittipisteen nimet oikein
-                                        r (-> r
-                                            (konversio/alaviiva->rakenne)
-                                            (rakenna-reittipiste-sijainti koordinaattimuutos)
-                                            (rakenna-reittipiste-tehtavat)
-                                            (rakenna-reittipiste-materiaalit materiaalikoodit))]
-                                    r))
-                                rivit)))))
+                           (fn [rivit]
+                             (keep
+                               (fn [r]
+                                 (let [r
+                                       (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+                                         (clojure.set/rename-keys r db-reitti->avaimet))
+                                       ;; Muokkaa reittipisteen nimet oikein
+                                       r (-> r
+                                           (konversio/alaviiva->rakenne)
+                                           (rakenna-reittipiste-sijainti koordinaattimuutos)
+                                           (rakenna-reittipiste-tehtavat)
+                                           (rakenna-reittipiste-materiaalit materiaalikoodit))]
+                                   r))
+                               rivit)))))
         toteumat {:reittitoteumat
                   (map (fn [toteuma]
-                          (konversio/alaviiva->rakenne toteuma))
+                         (konversio/alaviiva->rakenne toteuma))
                     toteumat)}]
     toteumat))
 
@@ -195,8 +195,7 @@
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db _ _]
-  (let [_ (println "(not (ominaisuus-kaytossa? :toteumatyokalu))" (not (ominaisuus-kaytossa? :toteumatyokalu)))
-        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+  (let [urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
         vastaus {:urakat urakat}]
     vastaus))
 
@@ -238,20 +237,24 @@
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Urakka-id väärässä muodossa: %s Anna muodossa: 1234" (:urakka-id parametrit))}))))
+
 (defn palauta-urakan-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
-  [db {:keys [urakka-id] :as parametrit} kayttaja]
-  (let [_ (println "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+  [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
   (tarkista-parametrit-usm parametrit)
+  (let [_ (log/debug "palauta-urakan-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+        alkuvuosi (when-not (nil? alkuvuosi)
+                    (Integer/parseInt alkuvuosi))
+        loppuvuosi (when-not (nil? loppuvuosi)
+                    (Integer/parseInt loppuvuosi))
         urakka-id (if (integer? urakka-id)
                     urakka-id
                     (Integer/parseInt urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        alkupvm (:alkupvm urakan-tiedot)
-        loppupvm (:loppupvm urakan-tiedot)
-        hoitokaudet (range (pvm/vuosi alkupvm) (inc (pvm/vuosi loppupvm)))
-        urakantyyppi (:tyyppi urakan-tiedot)
+        ;; Jos parametrina on annettu vuodet, niin käytetään niitä
+        hoitokaudet (range (or alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
+                      (inc (or loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))))
 
         ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta
         suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto db urakka-id)
@@ -288,46 +291,46 @@
                            :materiaali_tyyppi nil})
 
         tulos (reduce (fn [tulos vuosi]
-                             (let [vuoden-tehtavat-mat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
-                                                                %) vuosittainen-suunniteltu-tehtava-materiaalimaara)
+                        (let [vuoden-tehtavat-mat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                           %) vuosittainen-suunniteltu-tehtava-materiaalimaara)
 
-                                   vuoden-kaytto-materiaalit (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
-                                                                      %) vuosittainen-suunniteltu-materialimaara)
-                                   ;; Loopataan kaikki urakka_tehtavamaaran materiaalit yhdelle vuodelle läpi ja
-                                   ;; etsitään vastaavaa materiaalia materiaalin_kaytto -taulusta saadusta materiaalilistasta
-                                   yhd-materiaalit (reduce (fn [tulos tehtava_mat]
-                                                             (let [sama-materiaali (some #(when (=
-                                                                                                  (:materiaali_id tehtava_mat)
-                                                                                                  (:materiaali_id %))
-                                                                                            %)
-                                                                                     (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
-                                                                   uusi-maara (when sama-materiaali
-                                                                                (+ (:maara sama-materiaali) (:maara tehtava_mat)))
-                                                                   uusi-tehtava-mat (if uusi-maara
-                                                                                      (assoc tehtava_mat :maara uusi-maara)
-                                                                                      tehtava_mat)]
-                                                               (conj tulos uusi-tehtava-mat)))
-                                                     [] (:suunnitellut-materiaalit vuoden-tehtavat-mat))
-                                   loput-materiaalit (keep
-                                                       (fn [vkm]
-                                                         (let [onko-jo-lisatty? (some #(when (=
-                                                                                              (:materiaali_id vkm)
-                                                                                              (:materiaali_id %))
-                                                                                        vkm)
-                                                                                 yhd-materiaalit)]
-                                                           (when-not onko-jo-lisatty? vkm)))
-                                                       (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
+                              vuoden-kaytto-materiaalit (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                 %) vuosittainen-suunniteltu-materialimaara)
+                              ;; Loopataan kaikki urakka_tehtavamaaran materiaalit yhdelle vuodelle läpi ja
+                              ;; etsitään vastaavaa materiaalia materiaalin_kaytto -taulusta saadusta materiaalilistasta
+                              yhd-materiaalit (reduce (fn [tulos tehtava_mat]
+                                                        (let [sama-materiaali (some #(when (=
+                                                                                             (:materiaali_id tehtava_mat)
+                                                                                             (:materiaali_id %))
+                                                                                       %)
+                                                                                (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
+                                                              uusi-maara (when sama-materiaali
+                                                                           (+ (:maara sama-materiaali) (:maara tehtava_mat)))
+                                                              uusi-tehtava-mat (if uusi-maara
+                                                                                 (assoc tehtava_mat :maara uusi-maara)
+                                                                                 tehtava_mat)]
+                                                          (conj tulos uusi-tehtava-mat)))
+                                                [] (:suunnitellut-materiaalit vuoden-tehtavat-mat))
+                              loput-materiaalit (keep
+                                                  (fn [vkm]
+                                                    (let [onko-jo-lisatty? (some #(when (=
+                                                                                          (:materiaali_id vkm)
+                                                                                          (:materiaali_id %))
+                                                                                    vkm)
+                                                                             yhd-materiaalit)]
+                                                      (when-not onko-jo-lisatty? vkm)))
+                                                  (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
 
-                                   vuoden-suolat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
-                                                          (merge suolamateriaali
-                                                            {:maara (:talvisuolaraja %)}))
-                                                   alueurakan-suolasuunnitelma)
-                                   vuoden-suolat (if vuoden-suolat (conj [] vuoden-suolat) [])
-                                   lopulliset-yhd-materiaalit (concat yhd-materiaalit loput-materiaalit vuoden-suolat)
-                                   tama-vuosi {:hoitokauden-alkuvuosi vuosi
-                                               :suunnitellut-materiaalit lopulliset-yhd-materiaalit}]
-                               (conj tulos tama-vuosi)))
-                     [] hoitokaudet)]
+                              vuoden-suolat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                     (merge suolamateriaali
+                                                       {:maara (:talvisuolaraja %)}))
+                                              alueurakan-suolasuunnitelma)
+                              vuoden-suolat (if vuoden-suolat (conj [] vuoden-suolat) [])
+                              lopulliset-yhd-materiaalit (concat yhd-materiaalit loput-materiaalit vuoden-suolat)
+                              tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                          :suunnitellut-materiaalit lopulliset-yhd-materiaalit}]
+                          (conj tulos tama-vuosi)))
+                [] hoitokaudet)]
     tulos))
 
 (defn- tarkista-parametrit-sm [parametrit]
@@ -355,16 +358,22 @@
 
 (defn palauta-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain."
-  [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
-  (let [_ (println "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
-        ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta, paitsi, että suola suunnitellaan eri paikkaan.
-        ;; Haetaan siis alueurakoille kaikki muu, paitsi suola materiaalin_kaytto taulusta
-        ;; Alueurakoille ei ole voinut suunnitella vuosikohtaisesti mitään, joten täytetään jokaiselle vuodelle samat luvut
-        urakan-suunnitellut-materiaalit (materiaalit-kyselyt/hae-urakan-materiaalit db urakka-id)
-
-        ]))
-
+  [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
   (tarkista-parametrit-sm parametrit)
+  (let [_ (log/debug "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        suunnitellut-materiaalit (mapv (fn [urakka]
+                                         {:urakka (:nimi urakka)
+                                          :urakka-id (:id urakka)
+                                          :vuosittaiset-suunnitelmat
+                                          (palauta-urakan-suunnitellut-materiaalimaarat db
+                                            {:alkuvuosi alkuvuosi
+                                             :loppuvuosi loppuvuosi
+                                             ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                             :urakka-id (str (:id urakka))}
+                                            kayttaja)})
+                                   urakat)]
+    suunnitellut-materiaalit))
 
 (defn palauta-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
