@@ -23,6 +23,9 @@
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
+(s/def ::alkuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
+(s/def ::loppuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
+(s/def ::urakka-id #(and (string? %) (pos? (Integer/parseInt %))))
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
@@ -204,10 +207,42 @@
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
 
+(defn- tarkista-parametrit-usm [parametrit]
+  (let [pakolliset {:urakka-id "Urakka-id puuttuu"}
+        alkuvuosi (if (string? (:alkuvuosi parametrit))
+                    (konv/konvertoi->int (:alkuvuosi parametrit))
+                    (:alkuvuosi parametrit))
+        loppuvuosi (if (string? (:loppuvuosi parametrit))
+                     (konv/konvertoi->int (:alkuvuosi parametrit))
+                     (:loppuvuosi parametrit))]
+    (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
+    (when (or (and
+                (not (nil? (:alkuvuosi parametrit)))
+                (not (s/valid? ::alkuvuosi (:alkuvuosi parametrit))))
+            (and
+              (not (nil? (:alkuvuosi parametrit)))
+              (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2015 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
+    (when (or (and
+                (not (nil? (:loppuvuosi parametrit)))
+                (not (s/valid? ::loppuvuosi (:loppuvuosi parametrit))))
+            (and
+              (not (nil? (:loppuvuosi parametrit)))
+              (and (not (nil? alkuvuosi)) (not (nil? loppuvuosi)) (> alkuvuosi loppuvuosi))))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Loppuvuodessa: '%s' virhe. Anna muodossa: 2023 ja varmista, että se on suurempi, kuin alkuvuosi" (:loppuvuosi parametrit))}))
+    (when (not (s/valid? ::urakka-id (:urakka-id parametrit)))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Urakka-id väärässä muodossa: %s Anna muodossa: 1234" (:urakka-id parametrit))}))))
 (defn palauta-urakan-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
   [db {:keys [urakka-id] :as parametrit} kayttaja]
   (let [_ (println "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
+  (tarkista-parametrit-usm parametrit)
         urakka-id (if (integer? urakka-id)
                     urakka-id
                     (Integer/parseInt urakka-id))
@@ -295,6 +330,29 @@
                      [] hoitokaudet)]
     tulos))
 
+(defn- tarkista-parametrit-sm [parametrit]
+  (let [pakolliset {:alkuvuosi "Alkuvuosi puuttuu"
+                    :loppuvuosi "Lopppuvuosi puuttuu"}
+        alkuvuosi (if (string? (:alkuvuosi parametrit))
+                    (Integer/parseInt (:alkuvuosi parametrit))
+                    (:alkuvuosi parametrit))
+        loppuvuosi (if (string? (:loppuvuosi parametrit))
+                     (Integer/parseInt (:loppuvuosi parametrit))
+                     (:loppuvuosi parametrit))]
+    (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
+    (when (or
+            (not (s/valid? ::alkuvuosi (:alkuvuosi parametrit)))
+            (> alkuvuosi loppuvuosi))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Alkuvuodessa: '%s' virhe. Anna muodossa: 2015 ja varmista, että se on pienempi, kuin loppuvuosi." (:alkuvuosi parametrit))}))
+    (when (or
+            (not (s/valid? ::loppuvuosi (:loppuvuosi parametrit)))
+            (> alkuvuosi loppuvuosi))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti (format "Loppuvuodessa: '%s' virhe. Anna muodossa: 2023 ja varmista, että se on suurempi, kuin alkuvuosi" (:loppuvuosi parametrit))}))))
+
 (defn palauta-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
@@ -306,6 +364,7 @@
 
         ]))
 
+  (tarkista-parametrit-sm parametrit)
 
 (defn palauta-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
