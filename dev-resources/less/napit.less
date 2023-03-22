@@ -150,9 +150,9 @@
   .nappi-alasveto;
   .pull-right;
   width: 26px;
-  height: @input-korkeus - 1;
+  height: @input-korkeus + 3;
   position: relative;
-  top: -@input-korkeus;
+  top: -@input-korkeus - 3;
   left: -1px;
 }
 
@@ -161,6 +161,12 @@
   width: 22px;
   height: 22px;
   top: -22px;
+}
+
+.livi-grid .leijuke .nappi-hakualasveto {
+    width: 26px;
+    height: @input-korkeus + 3;
+    top: -@input-korkeus - 3;
 }
 
 .inlinenappi:active {
