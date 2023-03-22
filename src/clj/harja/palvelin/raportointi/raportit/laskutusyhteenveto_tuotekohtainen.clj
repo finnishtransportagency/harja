@@ -63,9 +63,9 @@
   [tp-rivi kyseessa-kk-vali? valiotsikko avain_hoitokausi avain_yht lihavoi?]
   (rivi
    [:varillinen-teksti {:arvo (str valiotsikko) :lihavoi? lihavoi?}] 
-   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}]
+   [:varillinen-teksti {:arvo (or (avain_hoitokausi tp-rivi) (summa-fmt 0.00M)) :fmt :raha :lihavoi? lihavoi?}]
    (when kyseessa-kk-vali?
-     [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt nil)) :fmt :raha :lihavoi? lihavoi?}])))
+     [:varillinen-teksti {:arvo (or (avain_yht tp-rivi) (summa-fmt 0.00M)) :fmt :raha :lihavoi? lihavoi?}])))
 
 (defn- taulukko [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
                          kyseessa-kk-vali? sheet-nimi]}]
@@ -232,7 +232,7 @@
                               (nth (first laskutusyhteenvedot) tiedot-indeksi)
                               (catch Throwable t
                                 (println "Tuotekohtainen - " x "tietoja ei löytynyt.")
-                                lyv-yhteiset/dataa-ei-loytynyt))]
+                                nil))]
                    (taulukko {:data data
                               :otsikko x
                               :sheet-nimi (when (= (.indexOf otsikot x) 0) sheet-nimi)

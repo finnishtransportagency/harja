@@ -48,7 +48,7 @@
                                 +kayttaja-jvh+
                                 {:nimi       :laskutusyhteenveto-tuotekohtainen
                                  :konteksti  "urakka"
-                                 :urakka-id  (hae-oulun-mhu-2019-2024-id)
+                                 :urakka-id  (hae-urakan-id-nimella "Oulun MHU 2019-2024")
                                  :parametrit {:urakkatyyppi :teiden-hoito
                                               :alkupvm      (c/to-date (t/local-date 2019 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2020 9 30))}})
@@ -65,10 +65,8 @@
         mhu-bonukset (-> (nth laskutusyhteenveto 6) (nth 3) (nth 3) second second :arvo)]
 
     (is (= raportin-nimi "Laskutusyhteenveto (01.10.2019 - 30.09.2020)"))
-
     (is (= talvihoito-yhteensa 5411.791430M))
     (is (= liikenneymp-yhteensa 6251.487630M))
-
     (is (= soratiet-yhteensa 8801.94M))
     (is (= paallyste-yhteensa 11001.94M))
     (is (= mhu-yllapito-yhteensa 15401.94M))
