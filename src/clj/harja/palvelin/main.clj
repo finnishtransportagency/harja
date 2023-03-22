@@ -19,6 +19,7 @@
     [harja.palvelin.komponentit.kehitysmoodi :as kehitysmoodi]
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.liitteet :as liitteet-komp]
+    [harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -212,6 +213,9 @@
                        (http-palvelin/luo-http-palvelin http-palvelin
                                                         kehitysmoodi)
                        [:todennus :metriikka :db])
+      :tuck-remoting (component/using
+                       (tuck-remoting/luo-tuck-remoting)
+                       [:http-palvelin :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
