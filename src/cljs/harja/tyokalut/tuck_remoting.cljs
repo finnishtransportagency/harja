@@ -5,18 +5,18 @@
             [tuck.remoting :as t-remoting]))
 
 
-(defrecord YhdistaWS [yhteys-onnistui-fn])
+(defrecord YhdistaWS [tila-atom yhteys-onnistui-fn])
 (defrecord KatkaiseWS[])
 
 (extend-protocol t/Event
   YhdistaWS
-  (process-event [{:keys [yhteys-onnistui-fn]} app]
+  (process-event [{:keys [tila-atom yhteys-onnistui-fn]} app]
     (if (:ws-yhteys app)
       app
       (assoc app :ws-yhteys
                  (t-remoting/connect!
                    (str "ws://" js/window.location.host "/_/ws?")
-                   app
+                   tila-atom
                    #(do
                       (log/info "WebSocket-yhteys aloitettu")
                       (when (fn? yhteys-onnistui-fn)

@@ -11,12 +11,14 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.ui.notifikaatiot :as notifikaatiot]
+            [taoensso.timbre :as log]
             [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
+            [harja.tyokalut.spec-apurit :as spec-apurit]
+            [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws])
   (:require-macros
     [cljs.core.async.macros :refer [go]]))
 
@@ -28,6 +30,9 @@
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
+  ;; TODO: Lisättävä toiminnallisuus, jolla WS-yhteys katkaistaan, mikäli ilmoitusnäkymästä poistutaan.
+  ;;       Tämä vaatii lisätoiminnallisuuksia tuck-remoting kirjastoon.
+  (e! (ilmoitukset-ws/->YhdistaWS))
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]

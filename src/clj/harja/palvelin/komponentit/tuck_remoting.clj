@@ -71,6 +71,7 @@
           (on-receive kanava
             (fn [data]
               (let [{::tr/keys [event-id] :as msg} (lue-viesti data)
+                    _ (println "### msg" msg)
                     event (tr/map->event msg)]
                 (tr/process-event event {::tr/client-id client-id
                                          ::tr/e! (e!-fn event-id)
