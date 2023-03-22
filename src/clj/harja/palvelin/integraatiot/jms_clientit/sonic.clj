@@ -18,17 +18,15 @@
      (catch Throwable ~'t
        (taoensso.timbre/error "JMS eval EPÄONNISTUI: " (.getMessage ~'t) "\nStackTrace: " (.getStackTrace ~'t)))))
 
-(defn konfiguroi-sonic-jms-connection-factory [connection-factory]
+(defn konfiguroi-sonic-jms-connection-factory [connection-factory url]
   (doto connection-factory
-    ;; Fault tolerant –asetuksen pois kytkeminen puolestaan johtuu siitä, että jos se on käytössä, client vastaanottaa JMS-”palvelimelta” tiedon siitä,
-    ;; mitä osoitteita ja portteja on käytössä samassa klusterissa – ja ainakin aiemmin Sonja oli konfiguroitu siten, että se antoi täsmälleen yhden osoitteen,
-    ;; johon yhteyden katketessa pantiin sitten hanskat tiskiin.
-    ;; Pyritään saamaan yhteyden uudelleenmuodostuminen käyttöön asettamalla faultTolerant trueksi. Vaatinee myös
-    ;; setConnectionURLs asettamista, joka toistaiseksi tekemättä
+    ;; Otetaan yhteyden uudelleenmuodostuminen käyttöön asettamalla faultTolerant trueksi
     (.setFaultTolerant true)
+    ;; Fault Tolerancen käyttö vaatii myös setConnectionURLs asettamista, eli minne reconnect tehdään
+    (.setConnectionURLs url)
     ;; Pingillä pyritään pitämään hengissä olemassa olevaa yhteyttä, vaikka siellä ei varsinaisesti liikettä olisikaan.
     (.setPingInterval (int 30))
-    ;; Yrittää reconnectata loputtomiin. Pitää wrapata intiin, jotta tyypiksi tulee Integer, eikä Float
+    ;; 0 = ei aikakatkaisua, eli yrittää reconnectia loputtomiin
     (.setFaultTolerantReconnectTimeout (int 0))
     ;; Configuroidaan niin, että lähetykset tapahtuu asyncisti. Tämä on ok, sillä vastauksia jäädään muutenkin
     ;; odottamaan eri jonoon. Asyncisti sen takia, että JMS-säije ei blokkaa lähetykseen. Mahdolliset virheet
@@ -40,7 +38,7 @@
                                Class/forName
                                (.getConstructor (into-array Class [String]))
                                (.newInstance (into-array Object [url])))]
-    (konfiguroi-sonic-jms-connection-factory connection-factory)))
+    (konfiguroi-sonic-jms-connection-factory connection-factory url)))
 
 (defn tee-sonic-jms-tilamuutoskuuntelija [jms-connection-tila]
   (let [lokita-tila #(case %
