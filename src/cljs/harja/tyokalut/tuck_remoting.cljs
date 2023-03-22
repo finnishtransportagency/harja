@@ -19,7 +19,8 @@
                    app
                    #(do
                       (log/info "WebSocket-yhteys aloitettu")
-                      (yhteys-onnistui-fn))))))
+                      (when (fn? yhteys-onnistui-fn)
+                        (yhteys-onnistui-fn)))))))
 
   KatkaiseWS
   (process-event [_ app]
