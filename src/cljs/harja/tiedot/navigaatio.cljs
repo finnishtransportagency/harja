@@ -318,12 +318,10 @@
   (valitse-urakka-id! (:id ur))
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
-(defn valitse-ilmoitus-id! [id]
-  (reset! valittu-ilmoitus-id id)
-  (paivita-url))
 
 (defn valitse-ilmoitus! [id]
-  (valitse-ilmoitus-id! id)
+  (reset! valittu-ilmoitus-id id)
+  (paivita-url)
   (log "VALITTIIN ILMOITUS: " (pr-str id)))
 
 (defonce urakka-klikkaus-kuuntelija
