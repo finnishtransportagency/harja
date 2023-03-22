@@ -8,6 +8,7 @@
             [clojure.core.match :refer [match]]
             [harja.palvelin.integraatiot.sahkoposti :as sahkoposti]
             [hiccup.core :refer [html]]
+            [harja.validointi :as validointi]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.integraatiot.labyrintti.sms :as sms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet])
@@ -16,6 +17,7 @@
 (defn laheta-sahkoposti-itselle
   "Lähettää sähköpostivahvistuksen itse käyttäjälle joka sai aikaan mailin lähetyksen Harjasta."
   [{:keys [kopio-viesti email sahkoposti viesti-otsikko viesti-body liite tiedostonimi]}]
+  (log/info (format "Lähetetään sähköposti itselle %s. Aihe: %s" sahkoposti viesti-otsikko))
   (let [lahetys-fn (if liite
                      sahkoposti/laheta-viesti-ja-liite!
                      sahkoposti/laheta-viesti!)
@@ -33,6 +35,26 @@
         (log/error (format "Sähköpostin lähetys osoitteeseen %s epäonnistui. Virhe: %s"
                            (pr-str sahkoposti) (pr-str e)))))))
 
+(defn laheta-sposti-sahkopostiosoitteille [{:keys [email vastaanottajat viesti-otsikko viesti-body]}]
+  (log/info (format "Lähetetään sähköposti sähköpostiosoitteille %s. Aihe: %s" vastaanottajat viesti-otsikko))
+  (try
+    (if (empty? vastaanottajat)
+      (log/warn (format "Ei annettu yhtään henkilöä, jolle lähettää sähköposti otsikolla: %s" viesti-otsikko))
+      (doseq [v vastaanottajat]
+        (if (validointi/validoi-email v)
+          (sahkoposti/laheta-viesti!
+            email
+            (sahkoposti/vastausosoite email)
+            v
+            (str "Harja: " viesti-otsikko)
+            viesti-body
+            {})
+          (log/error "Sähköpostiosoite väärässä muodossa: " v))))
+    (catch Exception e
+      (log/error (format "Sähköpostia %s ei voitu lähettää vastaanottajille %s. Virhe: %s"
+                         viesti-otsikko vastaanottajat (pr-str e)))
+      {:onnistui? false :viesti "Sähköpostia ei voitu lähettää" :virhe e})))
+
 (defn laheta-sposti-fim-kayttajarooleille
   "Yrittää lähettää sähköpostin annetun urakan FIM-käyttäjille, jotka ovat
    annetussa roolissa. Jos viestin lähetys epäonnistuu, logittaa virheen.
@@ -46,7 +68,7 @@
    viesti-otsikko         Sähköpostiviestin otsikko, johon lisätään prefix 'Harja: '
    viesti-body            Sähköpostiviestin body"
   [{:keys [fim email urakka-sampoid fim-kayttajaroolit viesti-otsikko viesti-body]}]
-  (log/debug (format "Lähetetään sähköposti FIM-käyttäjille %s. Aihe: %s" fim-kayttajaroolit viesti-otsikko))
+  (log/info (format "Lähetetään sähköposti FIM-käyttäjille %s. Aihe: %s" fim-kayttajaroolit viesti-otsikko))
   (try
     (let [viestin-saajat (fim/hae-urakan-kayttajat-jotka-roolissa fim urakka-sampoid fim-kayttajaroolit)]
       (if (empty? viestin-saajat)

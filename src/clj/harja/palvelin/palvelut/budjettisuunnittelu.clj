@@ -284,10 +284,16 @@
                                                                                        {::ur/id urakka-id}))
                                   urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+                                  vertailu-kk-mhu (fn [urakan-akuvuosi]
+                                                    (cond
+                                                      ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta (VHAR-6948)
+                                                      (>= urakan-akuvuosi 2023) 8
+                                                      ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta
+                                                      :else 9))
                                   perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
                                   indeksiluvut-urakan-aikana (sequence
                                                                (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                                               (and (= 9 kuukausi)
+                                                                               (and (= (vertailu-kk-mhu urakan-alkuvuosi) kuukausi)
                                                                                     (>= vuosi urakan-alkuvuosi))))
                                                                      (remove (fn [{:keys [vuosi]}]
                                                                                (>= vuosi urakan-loppuvuosi)))

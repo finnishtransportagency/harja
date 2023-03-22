@@ -65,7 +65,8 @@
                              (.preventDefault e)
                              (e! (lupaus-tiedot/->AvaaLupausvastaus lupaus kuukausi vuosi))))}))
      (cond
-       odottaa-kannanottoa?
+       (or odottaa-kannanottoa?
+           (and vastauskuukausi? (= :kuluva-kuukausi nykyhetkeen-verrattuna)))
        [odottaa-vastausta]
 
        ;; Tälle kuukaudelle ei voi antaa vastausta ollenkaan

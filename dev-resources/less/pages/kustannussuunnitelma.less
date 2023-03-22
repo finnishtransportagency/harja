@@ -1,4 +1,5 @@
 @import "../yleiset.less";
+@import "../utility-first/flexbox.less";
 @import "../vayla/colors.less";
 @import "../vayla/typography.less";
 @import "../styles.less";
@@ -357,7 +358,7 @@
   }
 
   .osion-yhteenveto-rivi {
-    .flex-row();
+    #app.flex-row();
     display: flex;
     flex-flow: column;
     width: 100%;
