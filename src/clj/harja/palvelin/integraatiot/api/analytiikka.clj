@@ -3,8 +3,8 @@
   (:require [com.stuartsierra.component :as component]
             [clojure.spec.alpha :as s]
             [compojure.core :refer [GET]]
+            [taoensso.timbre :as log]
             [harja.pvm :as pvm]
-            [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu]]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
@@ -15,7 +15,6 @@
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
-            [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [clojure.string :as str]
@@ -185,7 +184,7 @@
   [db _ _]
   (let [tehtavat (toimenpidekoodi-kyselyt/listaa-tehtavat db)
         tehtavat (map
-                   #(update % :hinnoittelu konv/pgarray->vector)
+                   #(update % :hinnoittelu konversio/pgarray->vector)
                    tehtavat)
         tehtavaryhmat (toimenpidekoodi-kyselyt/listaa-tehtavaryhmat db)
         vastaus {:tehtavat tehtavat
@@ -206,13 +205,13 @@
         vastaus {:organisaatiot organisaatiot}]
     vastaus))
 
-(defn- tarkista-parametrit-usm [parametrit]
+(defn- tarkista-parametrit-urakka-aikavali [parametrit]
   (let [pakolliset {:urakka-id "Urakka-id puuttuu"}
         alkuvuosi (if (string? (:alkuvuosi parametrit))
-                    (konv/konvertoi->int (:alkuvuosi parametrit))
+                    (konversio/konvertoi->int (:alkuvuosi parametrit))
                     (:alkuvuosi parametrit))
         loppuvuosi (if (string? (:loppuvuosi parametrit))
-                     (konv/konvertoi->int (:alkuvuosi parametrit))
+                     (konversio/konvertoi->int (:alkuvuosi parametrit))
                      (:loppuvuosi parametrit))]
     (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
     (when (or (and
@@ -241,12 +240,12 @@
 (defn palauta-urakan-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
   [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
-  (tarkista-parametrit-usm parametrit)
+  (tarkista-parametrit-urakka-aikavali parametrit)
   (let [_ (log/debug "palauta-urakan-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
         alkuvuosi (when-not (nil? alkuvuosi)
                     (Integer/parseInt alkuvuosi))
         loppuvuosi (when-not (nil? loppuvuosi)
-                    (Integer/parseInt loppuvuosi))
+                     (Integer/parseInt loppuvuosi))
         urakka-id (if (integer? urakka-id)
                     urakka-id
                     (Integer/parseInt urakka-id))
@@ -333,14 +332,14 @@
                 [] hoitokaudet)]
     tulos))
 
-(defn- tarkista-parametrit-sm [parametrit]
+(defn- tarkista-parametrit-aikavali [parametrit]
   (let [pakolliset {:alkuvuosi "Alkuvuosi puuttuu"
                     :loppuvuosi "Lopppuvuosi puuttuu"}
         alkuvuosi (if (string? (:alkuvuosi parametrit))
-                    (Integer/parseInt (:alkuvuosi parametrit))
+                    (konversio/konvertoi->int (:alkuvuosi parametrit))
                     (:alkuvuosi parametrit))
         loppuvuosi (if (string? (:loppuvuosi parametrit))
-                     (Integer/parseInt (:loppuvuosi parametrit))
+                     (konversio/konvertoi->int (:loppuvuosi parametrit))
                      (:loppuvuosi parametrit))]
     (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
     (when (or
@@ -359,7 +358,7 @@
 (defn palauta-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
-  (tarkista-parametrit-sm parametrit)
+  (tarkista-parametrit-aikavali parametrit)
   (let [_ (log/debug "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
         suunnitellut-materiaalit (mapv (fn [urakka]
@@ -378,7 +377,8 @@
 
 (defn palauta-urakan-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat yhdelle urakalle."
-  [db {:keys [urakka-id] :as parametrit} kayttaja]
+  [db {:keys [alkuvuosi loppuvuosi urakka-id] :as parametrit} kayttaja]
+  (tarkista-parametrit-urakka-aikavali parametrit)
   (let [_ (log/debug "palauta-urakan-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
         urakka-id (if (integer? urakka-id)
                     urakka-id
