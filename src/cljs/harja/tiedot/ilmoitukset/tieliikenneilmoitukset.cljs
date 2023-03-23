@@ -190,7 +190,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
              :taustahaku? taustahaku?}))))
     (if taustahaku?
       app
-      (assoc app :ilmoitukset nil)))
+      (assoc app :ilmoitukset nil))) 
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
@@ -206,22 +206,17 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                                   (:taustahaku? tulokset)
                                   (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
                                   true
-                                  (jarjesta-ilmoitukset))
-
-             ;; Jos on valittuna ilmoitus joka ei ole haetuissa, perutaan valinta
-             :valittu-ilmoitus (if (some #(= (:ilmoitusid valittu) %)
-                                         (map :ilmoitusid (:ilmoitukset tulokset)))
-                                 valittu
-                                 nil))
+                                  (jarjesta-ilmoitukset)))
            taustahaun-viive-ms
            true)))
 
   v/ValitseIlmoitus
-  (process-event [{ilmoitus :ilmoitus} app]
-    (let [tulos (t/send-async! v/->IlmoituksenTiedot)]
+  (process-event [{id :ilmoitus} app]
+    (let [tulos (t/send-async! v/->IlmoituksenTiedot)
+          _ (nav/valitse-ilmoitus! id)]
       (go
-        (tulos (<! (k/post! :hae-ilmoitus (:id ilmoitus))))))
-    (assoc app :ilmoituksen-haku-kaynnissa? true))
+        (tulos (<! (k/post! :hae-ilmoitus id)))))
+    (assoc app :ilmoituksen-haku-kaynnissa? true)) 
 
   v/IlmoituksenTiedot
   (process-event [{ilmoitus :ilmoitus} app]
@@ -231,6 +226,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/PoistaIlmoitusValinta
   (process-event [_ app]
+    (nav/valitse-ilmoitus! nil)
     (assoc app :valittu-ilmoitus nil))
 
   ;; Valitun ilmoituksen uuden kuittauksen teko
