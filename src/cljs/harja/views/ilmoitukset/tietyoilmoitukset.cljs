@@ -30,9 +30,7 @@
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
-  ;; TODO: Lisättävä toiminnallisuus, jolla WS-yhteys katkaistaan, mikäli ilmoitusnäkymästä poistutaan.
-  ;;       Tämä vaatii lisätoiminnallisuuksia tuck-remoting kirjastoon.
-  (e! (ilmoitukset-ws/->YhdistaWS))
+
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]
@@ -45,10 +43,16 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
                                                          (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
-                                             :teksti "Valitse ilmoitus"}}))
+                                             :teksti "Valitse ilmoitus"}})
+
+                         ;; Aloita uusien ilmoituksien kuuntely WebSocketin kautta
+                         (e! (ilmoitukset-ws/->AloitaKuuntelu)))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+
+                         ;; Lopeta uusien ilmoitusten kuuntelu WebSocketin kautta
+                         (e! (ilmoitukset-ws/->LopetaKuuntelu))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus
              tallennus-kaynnissa? :tallennus-kaynnissa?
              kayttajan-urakat :kayttajan-urakat :as app}]
