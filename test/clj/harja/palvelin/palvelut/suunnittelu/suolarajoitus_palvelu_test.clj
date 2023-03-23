@@ -385,7 +385,17 @@
                       urakka-id
                       (:id t/+kayttaja-jvh+)
                       {:tie 25 :aosa 1 :aet 1030 :losa 1 :let 1224}
-                      hk-alkuvuosi))]
+                      hk-alkuvuosi))
+
+        rajoitus5 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :tallenna-suolarajoitus
+                    t/+kayttaja-jvh+
+                    (suolarajoitus-pohja
+                      urakka-id
+                      (:id t/+kayttaja-jvh+)
+                      {:tie 12 :aosa 219 :aet 5862 :losa 221 :let 445}
+                      hk-alkuvuosi))
+        ]
 
     (testing "Varmistetaan, että samaa tierekisteriosoitetta ei voi käyttää muissa rajoituksissa"
       (let [tr-sama {:tie 25 :aosa 2 :aet 200 :losa 4 :let 2000}
@@ -422,13 +432,29 @@
             suolarajoitus-alku-sama4 (merge perusrajoitus tr-alku-sama4)
             tr-tiedot-alku-sama4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                    :tierekisterin-tiedot
-                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama4)]
+                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama4)
+
+            tr-loppu-eri {:tie 12 :aosa 219 :aet 151 :losa 219 :let 1492}
+            suolarajoitus-loppu-eri (merge perusrajoitus tr-loppu-eri)
+            tr-tiedot-loppu-eri (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                  :tierekisterin-tiedot
+                                  t/+kayttaja-jvh+ suolarajoitus-loppu-eri)
+
+            tr-loppu-sama {:tie 12 :aosa 219 :aet 1500 :losa 221 :let 100}
+            suolarajoitus-loppu-sama (merge perusrajoitus tr-loppu-sama)
+            tr-tiedot-loppu-sama (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                  :tierekisterin-tiedot
+                                  t/+kayttaja-jvh+ suolarajoitus-loppu-sama)
+
+            ]
         (is (= 400 (:status tr-tiedot-sama)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= 400 (:status tr-tiedot-sama2)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa tallentaa.")
         (is (= 5511 (:pituus tr-tiedot-alku-sama2)) "Alku sama, mutta saa tallentaa.")
         (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, mutta saa tallentaa.")
-        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, mutta saa tallentaa.")))
+        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, mutta saa tallentaa.")
+        (is (= 1341 (:pituus tr-tiedot-loppu-eri)) "Alku myöhemmin, loppuu eri osaan, saa tallentaa.")
+        (is (= 400 (:status tr-tiedot-loppu-sama)) "Tierekisteriosoitteessa on jo rajoitus")))
 
     (testing "Tierekisteri on olemassa olevan välissä"
       (let [ tr {:tie 25 :aosa 3 :aet 200 :losa 3 :let 2000}
@@ -537,6 +563,11 @@
        :kopioidaan-tuleville-vuosille? true})
     (poista-suolarajoitus
       {:rajoitusalue_id (:rajoitusalue_id rajoitus4)
+       :hoitokauden-alkuvuosi hk-alkuvuosi
+       :urakka_id urakka-id
+       :kopioidaan-tuleville-vuosille? true})
+    (poista-suolarajoitus
+      {:rajoitusalue_id (:rajoitusalue_id rajoitus5)
        :hoitokauden-alkuvuosi hk-alkuvuosi
        :urakka_id urakka-id
        :kopioidaan-tuleville-vuosille? true})))
