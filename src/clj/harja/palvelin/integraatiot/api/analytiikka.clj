@@ -385,14 +385,60 @@
                     (Integer/parseInt urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
-        alkupvm (:alkupvm urakan-tiedot)
-        loppupvm (:loppupvm urakan-tiedot)
-        hoitokaudet (range (pvm/vuosi alkupvm) (inc (pvm/vuosi loppupvm)))]))
+
+        alkuvuosi (when-not (nil? alkuvuosi)
+                    (Integer/parseInt alkuvuosi))
+        loppuvuosi (when-not (nil? loppuvuosi)
+                     (Integer/parseInt loppuvuosi))
+
+        alkupvm (if alkuvuosi
+                  (konversio/sql-date (pvm/luo-pvm-dec-kk alkuvuosi 10 01))
+                  (:alkupvm urakan-tiedot))
+        loppupvm (if loppuvuosi
+                   (konversio/sql-date (pvm/luo-pvm-dec-kk loppuvuosi 9 30))
+                   (:loppupvm urakan-tiedot))
+        hoitokaudet (range (or alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
+                      (inc (or loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))))
+
+        ;; Urakan tyyppi vaikuttaa siihen, mihin tehtävien määrät suunnitellaan
+        suunnitellut-tehtavat (if (= "teiden-hoito" (:tyyppi urakan-tiedot))
+                                (tehtavamaarat-kyselyt/hae-mhurakan-suunnitellut-tehtavamaarat
+                                  db
+                                  {:urakka-id urakka-id
+                                   :hoitokauden-alkuvuodet hoitokaudet})
+                                (tehtavamaarat-kyselyt/hae-alueurakan-suunnitellut-tehtavamaarat
+                                  db
+                                  {:urakka-id urakka-id
+                                   :alkupvm alkupvm
+                                   :loppupvm loppupvm}))
+
+        vuosittaiset-suunnittelut (reduce (fn [tulos vuosi]
+                                            (let [vuoden-tehtavat (filter #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                             %) suunnitellut-tehtavat)
+                                                  tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                                              :suunnitellut-tehtavat vuoden-tehtavat}]
+                                              (conj tulos tama-vuosi)))
+                                    [] hoitokaudet)]
+    vuosittaiset-suunnittelut))
 
 (defn palauta-suunnitellut-tehtavamaarat
   "Palautetaan suunnitellut tehtavamaarat hoitovuosittain."
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
-  (let []))
+  (tarkista-parametrit-aikavali parametrit)
+  (let [_ (log/debug "palauta-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
+        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        suunnitellut-tehtavat (mapv (fn [urakka]
+                                         {:urakka (:nimi urakka)
+                                          :urakka-id (:id urakka)
+                                          :vuosittaiset-suunnitelmat
+                                          (palauta-urakan-suunnitellut-tehtavamaarat db
+                                            {:alkuvuosi alkuvuosi
+                                             :loppuvuosi loppuvuosi
+                                             ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                             :urakka-id (str (:id urakka))}
+                                            kayttaja)})
+                                   urakat)]
+    suunnitellut-tehtavat))
 
 (defrecord Analytiikka [kehitysmoodi?]
   component/Lifecycle
