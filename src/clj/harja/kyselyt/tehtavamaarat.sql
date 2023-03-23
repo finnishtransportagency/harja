@@ -273,3 +273,33 @@ FROM urakka_tehtavamaara ut
 WHERE ut.poistettu IS NOT TRUE
   AND u.id = :urakka
 GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu;
+
+-- name: hae-alueurakan-suunnitellut-tehtavamaarat
+select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", MAX(yt.luotu) as luotu,
+       MAX(yt.muokattu) as muokattu, EXTRACT(YEAR FROM yt.alkupvm)::int as "hoitokauden-alkuvuosi"
+from yksikkohintainen_tyo yt
+     join toimenpidekoodi tk on yt.tehtava = tk.id
+where yt.urakka = :urakka-id
+  -- Yksikköhintainen työ taulussa tehtävät on suunniteltu erikseen hoitokauden alkuosalle ja loppuosalle
+  -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
+  -- aikavälistä osuu annettuun ajankohtaan.
+  and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
+group by yt.urakka, yt.tehtava, tk.id, yt.alkupvm;
+
+-- name: hae-mhurakan-suunnitellut-tehtavamaarat
+-- Hakee materiaalien suunnittelutiedot urakalle.
+-- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
+SELECT
+    SUM(ut.maara) as maara,
+    tk.nimi as tehtava,
+    tk.id as "tehtava-id",
+    ut."hoitokauden-alkuvuosi",
+    ut.muokattu,
+    ut.luotu
+FROM urakka_tehtavamaara ut
+         JOIN toimenpidekoodi tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
+         JOIN sopimuksen_tehtavamaarat_tallennettu stt on ut.urakka = stt.urakka AND stt.tallennettu IS TRUE
+WHERE ut.poistettu IS NOT TRUE
+  AND ut.urakka = :urakka-id
+  AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
+GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu;
