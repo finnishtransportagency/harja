@@ -28,7 +28,8 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.views.ilmoitukset.ilmoitukset-raportti :as ilmoitukset-raportti])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -228,7 +229,8 @@
       [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
              (when @nav/valittu-urakka (str " Urakassa " (:nimi @nav/valittu-urakka))))]
 
-
+      [ilmoitukset-raportti/ilmoitukset_raportti]
+      
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
