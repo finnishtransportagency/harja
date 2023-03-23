@@ -297,3 +297,176 @@
     (is (not (nil? encoodattu-body)))
     ;; Pitäisi olla useamman urakan tiedot
     (is (> (count encoodattu-body) 30))))
+
+(deftest hae-suunnitellut-tehtavamaarat-alueurakalle-onnistuu
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+
+        ;; Ota hoitourakka (alueurakka)
+        urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (pvm/ajan-muokkaus alkupvm true 1 :vuosi)
+        loppupvm (pvm/ajan-muokkaus loppupvm false 1 :paiva)
+
+        ;; Poista suunnitellut tehtävät
+        _ (u (format "DELETE from yksikkohintainen_tyo where urakka = %s" urakka-id))
+
+        ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
+        soratie-tehtava "Sorateiden kaventaminen"
+        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" soratie-tehtava))))
+        sorateiden-maara 800
+        _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
+                      VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
+               alkupvm loppupvm sorateiden-maara sorateiden-kaventaminen-tehtava-id urakka-id sopimus-id))
+
+        ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
+        kelirikko-tehtava "Kelirikon hoito ja routaheitt. tas. mursk."
+        kelirikon-hoito-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" kelirikko-tehtava))))
+        kelirikon-maara 234
+        _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
+                      VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
+               alkupvm loppupvm kelirikon-maara kelirikon-hoito-tehtava-id urakka-id sopimus-id))
+
+        ;; Haetaan apista tulokset
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        ekan-vuoden-suunnitelmat (sort-by :maara (:suunnitellut-tehtavat (first encoodattu-body)))]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Kelirikko on ensin
+    (is (= kelirikon-maara (:maara (first ekan-vuoden-suunnitelmat))))
+    (is (= kelirikko-tehtava (:tehtava (first ekan-vuoden-suunnitelmat))))
+    ;; Soratie toisena
+    (is (= sorateiden-maara (:maara (second ekan-vuoden-suunnitelmat))))
+    (is (= soratie-tehtava (:tehtava (second ekan-vuoden-suunnitelmat))))))
+
+(deftest hae-suunnitellut-tehtavamaarat-mhurakalle-onnistuu
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+
+        ;; Ota hoitourakka (alueurakka)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
+        alkupvm (:alkupvm urakan-tiedot)
+        loppupvm (pvm/ajan-muokkaus alkupvm true 1 :vuosi)
+        loppupvm (pvm/ajan-muokkaus loppupvm false 1 :paiva)
+
+        ;; Poista suunnitellut määrät urakka_tehtavamaara -taulusta
+        _ (u (format "DELETE from urakka_tehtavamaara where urakka = %s" urakka-id))
+
+        ;; Lisää suunniteltu tehtävä
+        pysakkimaara 12
+        pysakki-tehtava "Pysäkkikatosten puhdistus"
+        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" pysakki-tehtava))))
+        _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
+        (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) pysakkitehtava-id pysakkimaara))
+
+        ;; Lisää suunniteltu tehtävä
+        ajoratamaara 80000
+        ajorata1-tehtava "Ise 2-ajorat."
+        ajkoratatehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" ajorata1-tehtava))))
+        _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
+        (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) ajkoratatehtava-id ajoratamaara))
+
+        ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
+        _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" urakka-id))
+
+        ;; Haetaan apista tulokset
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        ekan-vuoden-suunnitelmat (sort-by :maara (:suunnitellut-tehtavat (first encoodattu-body)))]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Pysäkit ensin
+    (is (= pysakkimaara (:maara (first ekan-vuoden-suunnitelmat))))
+    (is (= pysakki-tehtava (:tehtava (first ekan-vuoden-suunnitelmat))))
+    ;; Ajorata toisena
+    (is (= ajoratamaara (:maara (second ekan-vuoden-suunnitelmat))))
+    (is (= ajorata1-tehtava (:tehtava (second ekan-vuoden-suunnitelmat))))))
+
+(deftest hae-suunnitellut-tehtavamaarat-ajanjaksolle-onnistuu
+  (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+
+        ;; Ota hoitourakka (alueurakka)
+        oulu-urakka-id (hae-urakan-id-nimella "Aktiivinen Oulu Testi")
+        oulu-urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id oulu-urakka-id}))
+        oulu-sopimus-id (hae-annetun-urakan-paasopimuksen-id oulu-urakka-id)
+        oulu-alkupvm (:alkupvm oulu-urakan-tiedot)
+        oulu-loppupvm (pvm/ajan-muokkaus oulu-alkupvm true 1 :vuosi)
+        oulu-loppupvm (pvm/ajan-muokkaus oulu-loppupvm false 1 :paiva)
+        ;; Ota MHurakka
+        ii-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ii-urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id ii-urakka-id}))
+        ii-alkupvm (:alkupvm ii-urakan-tiedot)
+        ;; Tämä saattaa jossain vaiheessa hajota, kun Aktiivinen oulu testin päivämääriä voidaan muokata, mutta Iin urakan päiviä ei.
+        ;; Niinpä vuodet tulevat menemään joskus ristiin. Tähän ratkaisuna on silloin vaihtaa Iin urakan päivät tuoreenpiin
+        ;; tai vaihtaa tähän Iin urakan tilalle, joku toinen urakka.
+        haku-alkaa (pvm/vuosi oulu-alkupvm)
+        haku-paattyy (inc haku-alkaa)
+
+        ;; Poista suunnitellut tehtävät
+        _ (u (format "DELETE from yksikkohintainen_tyo where urakka = %s" oulu-urakka-id))
+        _ (u (format "DELETE from urakka_tehtavamaara where urakka = %s" ii-urakka-id))
+
+        ;; Luo tehtavan suunnittelua yksikkohintainen_tyo tauluun
+        soratie-tehtava "Sorateiden kaventaminen"
+        sorateiden-kaventaminen-tehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s';" soratie-tehtava))))
+        sorateiden-maara 800
+        _ (u (format "INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, tehtava, urakka, sopimus, luotu, muokattu)
+                      VALUES ('%s'::DATE, '%s'::DATE, %s, 'tonni', '8', %s, %s, %s, NOW(), NOW())"
+               oulu-alkupvm oulu-loppupvm sorateiden-maara sorateiden-kaventaminen-tehtava-id oulu-urakka-id oulu-sopimus-id))
+
+        ;; Lisää suunniteltu tehtävä ii:n urakalle
+        pysakkimaara 12
+        pysakki-tehtava "Pysäkkikatosten puhdistus"
+        pysakkitehtava-id (:id (first (q-map (format "SELECT id FROM toimenpidekoodi WHERE nimi = '%s'" pysakki-tehtava))))
+        _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
+        (%s, %s, %s, %s)" ii-urakka-id
+               ;; Aseta vuosi oulun urakalta, jotta saadaan hausta nätti. Tämä tosi hajoaa, jos iin urakan vuodet loppuu joskus kesken
+               (pvm/vuosi oulu-alkupvm)
+               pysakkitehtava-id pysakkimaara))
+
+        ;; Merkataan vielä, että tarjouksen tiedot on tallennettu
+        _ (u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s, TRUE)" ii-urakka-id))
+
+        ;; Haetaan apista tulokset
+        vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" haku-alkaa haku-paattyy )] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        ;; Jätetään vain tässä luotujen urakoiden tehtävät
+        urakoiden-tehtavat (filter
+                             #(when (or (= oulu-urakka-id (:urakka-id %))
+                                      (= ii-urakka-id (:urakka-id %)))
+                                %)
+                             encoodattu-body)]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? encoodattu-body)))
+    ;; Pysäkki on ensin
+    (is (= pysakki-tehtava (:tehtava (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (first urakoiden-tehtavat))))))))
+    (is (= pysakkimaara (:maara (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (first urakoiden-tehtavat))))))))
+
+    ;; Soratie toisena
+    (is (= soratie-tehtava (:tehtava (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (second urakoiden-tehtavat))))))))
+    (is (= sorateiden-maara (:maara (first (:suunnitellut-tehtavat (first (:vuosittaiset-suunnitelmat (second urakoiden-tehtavat))))))))))
+
+(deftest hae-suunnitellut-tehtavamaarat-epaonnistuu
+  (let [;; Haetaan apista tulokset
+        uri-error-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" " haku-paattyy")] kayttaja-analytiikka portti)
+        uri-virhe (:error uri-error-vastaus)
+
+        virheellinen-kayttaja-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "haku-alkaa" "haku-paattyy")] kayttaja-analytiikka portti)
+
+        ; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+
+        vaara-vuodet-vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-tehtavat/%s/%s" "l" 200)] kayttaja-analytiikka portti)]
+    (is (not (nil? uri-virhe)))
+    (is (str/includes? uri-virhe "java.net.URISyntaxException"))
+    (is (str/includes? virheellinen-kayttaja-vastaus "tuntematon-kayttaja"))
+    (is (str/includes? vaara-vuodet-vastaus "puutteelliset-parametrit"))))
