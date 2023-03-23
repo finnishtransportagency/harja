@@ -284,7 +284,8 @@ reittitiedot ja kokonaismateriaalimäärät raportoidaan eri tavalla."])
               kk-arvot-yht (yhteensa-arvo (vals kk-arvot))
               poikkeamat (into {} (map (fn [[kk materiaalit]]
                                          (let [materiaalit (filter #(or (:talvitieluokka %) (:soratieluokka %)) materiaalit)
-                                               kk-arvo (apply + (map :maara (kk-rivit kk)))
+                                               kk-arvot (keep identity (map :maara (kk-rivit kk)))
+                                               kk-arvo (or (apply + kk-arvot) 0M)
                                                erotus (- (apply + (map :maara materiaalit)) kk-arvo)
                                                prosentti (if (zero? kk-arvo)
                                                            0
