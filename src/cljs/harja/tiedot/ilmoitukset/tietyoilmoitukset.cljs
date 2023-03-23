@@ -254,7 +254,8 @@
                                                 false)))
               (::t/id ilmoitus)))))
 
-
+;; TODO: Hankkiudu eroon pollaukseksta, vastaanotetaan uudet ilmoitukset ws-yhteyden kautta sen jälkeen kun
+;;       kaikki ilmoitukset on haettu HTTP-kutsulla näkymään tultaessa
 (defn- hae-ilmoitukset [{valinnat :valinnat haku :ilmoitushaku-id :as app}]
   (when haku
     (.clearTimeout js/window haku))

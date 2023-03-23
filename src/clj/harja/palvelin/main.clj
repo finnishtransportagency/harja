@@ -20,6 +20,7 @@
     [harja.palvelin.komponentit.komponenttien-tila :as komponenttien-tila]
     [harja.palvelin.komponentit.liitteet :as liitteet-komp]
     [harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
+    [harja.palvelin.palvelut.tuck-remoting.ilmoitukset :as ilmoitukset-ws]
 
     ;; Integraatiokomponentit
     [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
@@ -216,6 +217,11 @@
       :tuck-remoting (component/using
                        (tuck-remoting/luo-tuck-remoting)
                        [:http-palvelin :db])
+
+      ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
+      :ilmoitukset-ws-palvelu (component/using
+                                (ilmoitukset-ws/luo-ilmoitukset-ws)
+                                [:tuck-remoting :db])
 
       :pdf-vienti (component/using
                     (pdf-vienti/luo-pdf-vienti)
