@@ -87,6 +87,14 @@
                               [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                               
+                               ;; Jos ideoita miten molemmat rivit saadaan yhden whenin alle niin saa toimia
+                               (when (or (= "Talvihoito" otsikko) (= "Liikenneympäristön hoito" otsikko) (= "Soratien hoito" otsikko))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Äkilliset hoitotyöt" :akilliset_laskutettu :akilliset_laskutetaan false))
+
+                               (when (or (= "Talvihoito" otsikko) (= "Liikenneympäristön hoito" otsikko) (= "Soratien hoito" otsikko))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Vahinkojen korjaukset" :vahingot_laskutettu :vahingot_laskutetaan false))
+
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
