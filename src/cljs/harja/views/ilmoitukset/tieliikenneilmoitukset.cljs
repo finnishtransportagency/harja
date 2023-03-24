@@ -6,6 +6,7 @@
              [kuittausvaatimukset-str ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitusten-selitteet+ kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite vaikutuksen-selite] :as domain]
+            [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
@@ -326,10 +327,16 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
                                                    (e! (v/->ValitseIlmoitus ilmoitus-infopaneelista)))
-                                       :teksti "Valitse ilmoitus"}}))
+                                       :teksti "Valitse ilmoitus"}})
+
+                         ;; Aloita uusien ilmoituksien kuuntely WebSocketin kautta
+                         (e! (ilmoitukset-ws/->AloitaKuuntelu)))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+
+                         ;; Lopeta uusien ilmoitusten kuuntelu WebSocketin kautta
+                         (e! (ilmoitukset-ws/->LopetaKuuntelu))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]

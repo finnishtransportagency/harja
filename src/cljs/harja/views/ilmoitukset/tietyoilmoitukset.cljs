@@ -43,16 +43,10 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:tietyoilmoitus {:toiminto (fn [tietyoilmoitus-infopaneelista]
                                                          (e! (tiedot/->ValitseIlmoitus tietyoilmoitus-infopaneelista)))
-                                             :teksti "Valitse ilmoitus"}})
-
-                         ;; Aloita uusien ilmoituksien kuuntely WebSocketin kautta
-                         (e! (ilmoitukset-ws/->AloitaKuuntelu)))
+                                             :teksti "Valitse ilmoitus"}}))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-
-                         ;; Lopeta uusien ilmoitusten kuuntelu WebSocketin kautta
-                         (e! (ilmoitukset-ws/->LopetaKuuntelu))))
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus
              tallennus-kaynnissa? :tallennus-kaynnissa?
              kayttajan-urakat :kayttajan-urakat :as app}]
