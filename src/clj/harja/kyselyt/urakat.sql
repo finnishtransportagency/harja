@@ -767,7 +767,7 @@ WHERE (CASE
                FROM siltapalvelusopimus sps
                WHERE sps.urakkanro = u.urakkanro
                  AND st_dwithin(sps.alue, st_makepoint(:x, :y), :threshold))))
-ORDER BY etaisyys ASC;
+ORDER BY etaisyys ASC, u.alkupvm DESC;
 
 -- name: hae-hoito-urakka-tr-pisteelle
 SELECT id
