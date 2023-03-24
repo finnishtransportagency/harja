@@ -211,7 +211,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
            true)))
 
   v/ValitseIlmoitus
-  (process-event [{id :ilmoitus} app]
+  (process-event [{id :id} app]
     (let [tulos (t/send-async! v/->IlmoituksenTiedot)
           _ (nav/valitse-ilmoitus! id)]
       (go
@@ -338,13 +338,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/ToimenpiteidenAloitusTallennettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden aloitus kirjattu" :success)
-    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    ((t/send-async! v/->ValitseIlmoitus) (get-in app [:valittu-ilmoitus :id]))
     (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
 
   v/ToimenpiteidenAloituksenPeruutusTallennettu
   (process-event [_ app]
     (viesti/nayta! "Toimenpiteiden aloitus peruutettu" :success)
-    ((t/send-async! v/->ValitseIlmoitus) (:valittu-ilmoitus app))
+    ((t/send-async! v/->ValitseIlmoitus) (get-in app [:valittu-ilmoitus :id]))
     (assoc-in app [:toimenpiteiden-aloitus :tallennus-kaynnissa?] false))
 
   v/TallennaToimenpiteidenAloitusMonelle
