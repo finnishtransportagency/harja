@@ -78,9 +78,20 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "HJ-palkkio" :hj_palkkio_laskutettu :hj_palkkio_laskutetaan false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Bonukset" :bonukset_laskutettu :bonukset_laskutetaan false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
-                               ;; Hoitovuoden päättäminen / Tavoitepalkkio
-                               ;; Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä
-                               ;; Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä (?)
+
+                               ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa 
+                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Tavoitepalkkio"
+                                                  :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
+
+                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+                                                  :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
+
+                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu))
+                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
+                                                  :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
+
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
                               :else
