@@ -29,7 +29,7 @@
   ([parametrit]
    ;; Säädetty tallenna- napit MHU urakoille etteivät ole rumasti
    (let [class (cond
-                 (= (:nimi parametrit) :laskutusyhteenveto-mhu)
+                 (= (:nimi parametrit) :laskutusyhteenveto-tuotekohtainen)
                  "upotettu-raporttitallennus-mhu"
                  (= (:nimi parametrit) :laskutusyhteenveto-tyomaa)
                  "upotettu-raporttitallennus-mhu"
