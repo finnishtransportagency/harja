@@ -12,7 +12,8 @@
 
 (defn ws-yhteys-onnistui-kasittelija [e!]
   (log/info "Ilmoitukset: WS-yhteys aloitettu. Seurataan uusia ilmoituksia WS:n kautta.")
-  (e! (eventit/->KuunteleIlmoituksia {:urakka-id 666})))
+  ;; TODO: Kuunnellaan kovakoodatusti Oulun MHU urakkaa (35), ota käyttöliittmältä parametrina
+  (e! (eventit/->KuunteleIlmoituksia {:urakka-id 35})))
 
 (defn ws-yhteys-katkaistu-kasittelija [koodi syy suljettu-puhtaasti?]
   (if suljettu-puhtaasti?

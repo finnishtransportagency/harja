@@ -18,18 +18,20 @@
   (process-event [_ {::tr/keys [e! client-id] :keys [kayttaja] :as client}
                   {asiakkaat ::asiakkaat
                    yhdistaessa-hookit ::yhdistaessa-hookit}]
-    ;; TODO: Poista debug-lokitus
-    (println "### Tuck-remoting Yhdistetty! Asiakas-id:" client-id)
     (swap! asiakkaat assoc client-id {:e! e!
                                       :kayttaja kayttaja})
+    ;; TODO: Poista debug-lokitus
+    (println "### Tuck-remoting Yhdistetty! Asiakas-id:" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))
+
     (doseq [hook (vals yhdistaessa-hookit)]
       (hook client)))
 
   Katkaistu
   (process-event [{tila :tila} {::tr/keys [client-id]} {asiakkaat ::asiakkaat}]
+    (swap! asiakkaat dissoc client-id)
+
     ;; TODO: Poista debug-lokitus
-    (println "### Tuck remoting yhteys asiakkaaseen katkesi. Asiakas-id" client-id)
-    (swap! asiakkaat dissoc client-id)))
+    (println "### Tuck remoting yhteys asiakkaaseen katkesi. Asiakas-id" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))))
 
 (defn kasittelija [tr-kasittelija]
   (fn [req]
