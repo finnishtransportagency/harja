@@ -10,5 +10,5 @@
 (defrecord KuunteleIlmoituksia [opts])
 (define-server-event KuunteleIlmoituksia {})
 
-(defrecord LopetaIlmoitustenKuuntelu [opts])
+(defrecord LopetaIlmoitustenKuuntelu [])
 (define-server-event LopetaIlmoitustenKuuntelu {})

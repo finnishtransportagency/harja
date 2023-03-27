@@ -23,8 +23,8 @@
 (extend-protocol tuck/Event
   eventit/Ilmoitus
   (process-event [{:keys [ilmoitus]} app]
-    ;; TODO: Poista debug-lokitus
-    (log/info "Ilmoitus (WS):" ilmoitus)
+    (log/info "Uusi ilmoitus (WS):" ilmoitus)
+
     (update app :ilmoitukset conj ilmoitus))
 
   AloitaKuuntelu
@@ -42,5 +42,7 @@
   (process-event [_ app]
     (tuck/action!
       (fn [e!]
+        ;; Lopeta ilmoitusten kuuntelu ja katkaise WS-yhteys
+        (e! (eventit/->LopetaIlmoitustenKuuntelu))
         (e! (tr-tyokalut/->KatkaiseWS))))
     app))

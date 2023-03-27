@@ -37,28 +37,34 @@
 
 
 (defn kuuntele-ilmoituksia [db e! kayttaja client-id opts]
-  (let [kuuntelija (if (:urakka-id opts)
-                     (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka-id opts)
-                       (fn [{ilmoitus-id :payload}]
-                         (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
-                           (println "### Kuuntele urakan ilmoituksia, ilmoitus:" (pr-str ilmoitus))
+  (let [lopeta-kuuntelu-fn (if (:urakka-id opts)
+                             (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka-id opts)
+                               (fn [{ilmoitus-id :payload}]
+                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                   (println "### Kuuntele urakan ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 
-                           (laheta-ilmoitus! e! ilmoitus))))
+                                   (laheta-ilmoitus! e! ilmoitus))))
 
-                     (notifikaatiot/kuuntele-kaikkia-ilmoituksia
-                       ;; TODO: Filtteröi ilmoituksen lähetys käyttäjän ja optioiden perusteella (Jeren kommentti)
-                       (fn [{ilmoitus-id :payload}]
-                         (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
-                           (println "### Kuuntele kaikkia ilmoituksia, ilmoitus:" (pr-str ilmoitus))
+                             (notifikaatiot/kuuntele-kaikkia-ilmoituksia
+                               ;; TODO: Filtteröi ilmoituksen lähetys käyttäjän ja optioiden perusteella (Jeren kommentti)
+                               (fn [{ilmoitus-id :payload}]
+                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                   (println "### Kuuntele kaikkia ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 
-                           (laheta-ilmoitus! e! ilmoitus)))))]
+                                   (laheta-ilmoitus! e! ilmoitus)))))]
     (swap! kuuntelijat assoc client-id {:kayttaja kayttaja
                                         :e! e!
                                         :opts opts
-                                        :lopeta-fn kuuntelija})))
+                                        :lopeta-fn lopeta-kuuntelu-fn})))
 
-(defn lopeta-ilmoitusten-kuuntelu []
-  (println "### todo"))
+(defn lopeta-ilmoitusten-kuuntelu [client-id]
+  (log/info "Lopetetaan ilmoitusten kuuntelu asiakkaalle: " client-id)
+
+  (let [kuuntelija (get-in @kuuntelijat [client-id])
+        lopeta-fn (:lopeta-fn kuuntelija)]
+    (lopeta-fn)
+
+    (swap! kuuntelijat dissoc client-id)))
 
 (defrecord IlmoituksetWS []
   component/Lifecycle
@@ -70,13 +76,13 @@
         app)
 
       LopetaIlmoitustenKuuntelu
-      (process-event [_ app]
-        ;; TODO: Lopeta kuuntelijat tässä
-        (lopeta-ilmoitusten-kuuntelu)
+      (process-event [_ {::tr/keys [client-id]} app]
+        (lopeta-ilmoitusten-kuuntelu client-id)
         app)))
+
   (stop [this]
-    ;; TODO: Lopeta kuuntelijat myös tässä
-    (lopeta-ilmoitusten-kuuntelu)))
+    (doseq [client-id (keys @kuuntelijat)]
+      (lopeta-ilmoitusten-kuuntelu client-id))))
 
 (defn luo-ilmoitukset-ws []
   (->IlmoituksetWS))
