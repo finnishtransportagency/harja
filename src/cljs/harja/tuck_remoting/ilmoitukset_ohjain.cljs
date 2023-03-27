@@ -22,10 +22,10 @@
 
 (extend-protocol tuck/Event
   eventit/Ilmoitus
-  (process-event [{opts :opts} app]
+  (process-event [{:keys [ilmoitus]} app]
     ;; TODO: Poista debug-lokitus
-    (println "### saatiin ilmoitus!!!" opts)
-    (update app :ilmoitukset conj opts))
+    (log/info "Ilmoitus (WS):" ilmoitus)
+    (update app :ilmoitukset conj ilmoitus))
 
   AloitaKuuntelu
   (process-event [_ app]

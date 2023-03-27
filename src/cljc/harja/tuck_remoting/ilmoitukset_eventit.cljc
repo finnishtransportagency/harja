@@ -4,7 +4,7 @@
                :cljs
                [tuck.remoting :refer-macros [define-server-event define-client-event]])))
 
-(defrecord Ilmoitus [opts])
+(defrecord Ilmoitus [ilmoitus])
 (define-client-event Ilmoitus)
 
 (defrecord KuunteleIlmoituksia [opts])
