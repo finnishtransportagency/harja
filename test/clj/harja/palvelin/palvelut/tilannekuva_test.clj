@@ -17,7 +17,8 @@
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.komponentit.fim :as fim]
             [harja.transit :as transit]
-            [clojure.core.async :refer [<!!]])
+            [clojure.core.async :refer [<!!]]
+            [harja.pvm :as pvm])
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -504,3 +505,25 @@
   (let [vastaus (<!! (hae-paallystysten-sijainnit-kartalle (:db harja.palvelin.main/harja-jarjestelma)
                                                            +kayttaja-jvh+
                                                            haku-params-vhar-1815))]))
+
+
+(deftest laatupoikkeama-ei-saa-nakya-eri-urakoitsijalle
+  (let [laatupoikkeaman-kuvaus "Sanktion sisältävä laatupoikkeama Iin MHU"
+        laatupoikkeama-id (ffirst (q (str (format "Select id FROM laatupoikkeama where kuvaus = '%s';" laatupoikkeaman-kuvaus))))
+        parametrit (merge parametrit-laaja-nykytilanne
+                          {:alku (pvm/->pvm "6.9.2022")
+                           :loppu (pvm/->pvm "10.9.2022")})
+        lpt-iin-urakoitsijan-vastuuhenkilo (:laatupoikkeamat (hae-tk (iin-2021-urakan-urakoitsijan-urakkavastaava) parametrit))
+        lpt-iin-urakoitsijan-paakayttaja (:laatupoikkeamat (hae-tk (iin-2021-urakan-urakoitsijan-paakayttaja) parametrit))
+        lpt-raahen-urakoitsija (:laatupoikkeamat (hae-tk (raahen-2023-urakan-urakoitsijan-urakkavastaava) parametrit))
+        lpt-raahen-rakennuttajakonsultti  (:laatupoikkeamat (hae-tk (raahen-2023-urakan-rakennuttajakonsultti) parametrit))
+        lpt-raahen-urakanvalvoja (:laatupoikkeamat (hae-tk (raahen-2023-urakan-tilaajan-urakanvalvoja) parametrit))
+        lpt-jvh (:laatupoikkeamat (hae-tk +kayttaja-jvh+ parametrit))]
+    (is (= (:id (first lpt-iin-urakoitsijan-vastuuhenkilo)) laatupoikkeama-id) "Oikea laatupoikkeama palautuu")
+    (is (= (:kuvaus (first lpt-iin-urakoitsijan-vastuuhenkilo)) laatupoikkeaman-kuvaus) "Oikea laatupoikkeama palautuu")
+    (is (= (count lpt-iin-urakoitsijan-vastuuhenkilo) 1) "Iin urakoitsijan vastuuhenkilö näkee oman urakkansa laatupoikkeaman")
+    (is (= (count lpt-iin-urakoitsijan-paakayttaja) 2) "Iin urakoitsijan pääkäyttäjä näkee oman urakkansa laatupoikkeaman lisäksi Oulun urakan poikkeaman (sama urakoitsija)")
+    (is (= (count lpt-raahen-rakennuttajakonsultti) 0) "Raahen rakennuttajakonsultti ei näe Iin eikä Oulun urakan laatupoikkeamia.")
+    (is (= (count lpt-raahen-urakoitsija) 0) "Raahen urakoitsija ei näe Iin eikä Oulun urakan laatupoikkeamia (eri urakoitsija)")
+    (is (= (count lpt-raahen-urakanvalvoja) 2) "Tilaaja näkee kaikki urakat, siksi sekä Iin että Oulun urakan laatupoikkeamatkin")
+    (is (= (count lpt-jvh) 2) "Järjestelmävastaava näkee kaikki urakat, siksi sekä Iin että Oulun urakan laatupoikkeamatkin")))
