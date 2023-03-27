@@ -31,7 +31,13 @@
 (defn hae-urakka [db {:keys [urakkatyyppi sijainti]}]
   (let [ilmoituksen-urakkatyyppi (ilmoitus/urakkatyyppi urakkatyyppi)
         hae-urakka (fn [urakkatyyppi]
-                     (when-let [urakka-id (urakkapalvelu/hae-lahin-urakka-id-sijainnilla db urakkatyyppi sijainti)]
+                     (when-let [urakka-id
+                                (if (#{"teiden-hoito" "hoito"} urakkatyyppi)
+                                  ;; Ilmoituksia vastaanottavalla hoidon urakalla pitäisi aina olla rivi alueurakka-taulussa.
+                                  ;; Jos näin ei kuitenkaan jostain syystä ole, otetaan fallbackina lähin, viimeisenpä alkanut urakka
+                                  (or (:id (first (urakat/hae-lahin-hoidon-alueurakka db (:x sijainti) (:y sijainti) 10000)))
+                                    (urakkapalvelu/hae-lahin-urakka-id-sijainnilla db urakkatyyppi sijainti))
+                                  (urakkapalvelu/hae-lahin-urakka-id-sijainnilla db urakkatyyppi sijainti))]
                        (first (urakat/hae-urakka db urakka-id))))
         urakka (hae-urakka ilmoituksen-urakkatyyppi)]
 

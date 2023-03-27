@@ -238,7 +238,7 @@
         :rivi-klikattu (when (and (not ilmoituksen-haku-kaynnissa?)
                                   (nil? pikakuittaus))
                          (or valitse-ilmoitus!
-                             #(e! (v/->ValitseIlmoitus %))))
+                             #(e! (v/->ValitseIlmoitus (:id %)))))
         :piilota-toiminnot true
         :max-rivimaara 500
         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
@@ -316,7 +316,7 @@
 
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
-    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus i))))
+    (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
     (komp/watcher tiedot/valinnat (fn [_ _ uusi]
                                     (e! (v/->YhdistaValinnat uusi))))
     (komp/sisaan-ulos #(do
@@ -324,9 +324,11 @@
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
                          (nav/vaihda-kartan-koko! :M)
                          (nav/vaihda-urakkatyyppi! {:nimi "Kaikki" :arvo :kaikki})
+                         (when @nav/valittu-ilmoitus-id
+                           (e! (v/->ValitseIlmoitus @nav/valittu-ilmoitus-id)))
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
-                                                   (e! (v/->ValitseIlmoitus ilmoitus-infopaneelista)))
+                                                   (e! (v/->ValitseIlmoitus (:id ilmoitus-infopaneelista))))
                                        :teksti "Valitse ilmoitus"}})
 
                          ;; Aloita uusien ilmoituksien kuuntely WebSocketin kautta
@@ -340,7 +342,7 @@
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]
-       (if valittu-ilmoitus
+       (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
          [ilmoituksen-tiedot e! valittu-ilmoitus]
          [ilmoitusten-paanakyma e! ilmoitukset])])))
 

@@ -139,6 +139,7 @@
                  (mapcat (fn [x]
                            (map (fn [y]
                                   (let [arvo (:arvo (second y))
+                                        arvo (if (= arvo 0) 0.0M arvo)
                                         koko (if (decimal? arvo) 1 (count arvo))]
                                     (if (> koko 0) arvo nil))) x)) tiedot))))
 

@@ -10,9 +10,6 @@
 .alasveto-urakoitsija {
   .livi-alasveto(160px, 160px);
 }
-.alasveto-vuosi {
-  .livi-alasveto(85px, 85px);
-}
 
 .nappi-ensisijainen.alle-marginia {
   margin-bottom: 10px;
@@ -208,6 +205,14 @@ tr.uusitehtavakoodi td {
   }
   &.kuukausi {
     .livi-alasveto(@alasvedon-leveys-kk);
+  }
+  &.vuosi {
+    min-width: 90px !important;
+    max-width: 90px !important;
+
+    .alasveto-vuosi {
+        .livi-alasveto(85px, 85px);
+      }
   }
   &.toimenpide {
     .livi-alasveto(@alasvedon-leveys-tp);

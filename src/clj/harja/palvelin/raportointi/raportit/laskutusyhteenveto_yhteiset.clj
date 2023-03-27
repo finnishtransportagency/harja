@@ -17,7 +17,6 @@
             [clojure.string :as str]
             [harja.domain.toimenpidekoodi :as toimenpidekoodit]))
 
-
 (defn kustannuslajin-kaikki-kentat [kentan-kantanimi]
   [(keyword (str kentan-kantanimi "_laskutettu"))
    (keyword (str kentan-kantanimi "_laskutettu_ind_korotus"))
@@ -148,9 +147,13 @@
     [alkupvm loppupvm]))
 
 (defn hae-laskutusyhteenvedon-tiedot
-  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot}]
+  [db user {:keys [urakka-id alkupvm loppupvm urakkatyyppi] :as tiedot} & [koko-vuosi? vuoden-kk? valittu-aikavali?]]
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
-  (let [[hk-alkupvm hk-loppupvm] (hae-alku-ja-loppupvm alkupvm loppupvm)
+
+  ;; Jos valittuna tietty vuosi, vuoden kuukausi, tai oma aikaväli, käytetään annettua alku/loppupvm
+  (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk? valittu-aikavali?) 
+                                   [alkupvm loppupvm] 
+                                   (hae-alku-ja-loppupvm alkupvm loppupvm))
         kysely-fn (if (= "teiden-hoito" urakkatyyppi)
                     laskutus-q/hae-laskutusyhteenvedon-tiedot-teiden-hoito
                     laskutus-q/hae-laskutusyhteenvedon-tiedot)
