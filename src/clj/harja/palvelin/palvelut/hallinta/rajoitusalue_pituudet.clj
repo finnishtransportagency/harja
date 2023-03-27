@@ -15,12 +15,13 @@
                                         (let [_ (log/debug "Käsittelyssä " @numero "/" (count rajoitusalueet))
                                               _ (reset! numero (inc @numero))
                                               tiedot (suolarajoitus-palvelu/hae-tierekisterin-tiedot db user rajoitusalue)]
-                                          (when (not= (:pituus-kannasta rajoitusalue) (:pituus tiedot))
+                                          (when (or
+                                                  (not= (:pituus-kannasta rajoitusalue) (:pituus tiedot))
+                                                  (not= (:ajoradan-pituus-kannasta rajoitusalue) (:ajoratojen_pituus tiedot)))
                                             (merge rajoitusalue {:pituus-laskettu (:pituus tiedot)
                                                                  :ajoradan-pituus-laskettu (:ajoratojen_pituus tiedot)
                                                                  :pohjavesialueet (:pohjavesialueet tiedot)
-                                                                 :ei-tasmaa (when (not= (:pituus-kannasta rajoitusalue) (:pituus tiedot))
-                                                                              true)}))))
+                                                                 :ei-tasmaa "true"}))))
                                       rajoitusalueet)
         _ (log/debug "eri mittaisia rajoitusalueita löydettiin: " uudelleen-lasketut-pituudet " kpl")]
     uudelleen-lasketut-pituudet))

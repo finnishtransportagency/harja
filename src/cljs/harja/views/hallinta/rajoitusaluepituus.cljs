@@ -53,7 +53,7 @@
                 :tyyppi :numero
                 :nimi :ajoradan-pituus-laskettu
                 :leveys 0.5}
-               {:otsikko "Ajoradan pituus laskettu"
+               {:otsikko "Korjattava?"
                 :tyyppi :string
                 :nimi :ei-tasmaa
                 :leveys 0.5}]
