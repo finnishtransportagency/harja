@@ -4,6 +4,7 @@
             [clj-time
              [core :as t]
              [format :as df]]
+            [harja.kyselyt.konversio :as konv]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
@@ -19,6 +20,7 @@
             [harja.pvm :as pvm])
   (:import (java.net URLEncoder)
            (java.text SimpleDateFormat)
+           (java.util TimeZone)
            (java.util Date)))
 
 (def kayttaja "yit-rakennus")
@@ -219,6 +221,16 @@
   (%s, %s, '%s' , '%s', 'sisaan'::viestisuunta);" ilmoituksen-id ilmoitusid kuittaustyyppi db-timestamp)]
     (u sql-str)))
 
+(defn str-timestamp->json-ajaksi
+  "Anna timestamp str muodossa: 'yyyy-MM-dd HH:mm:ss.SSS' palauttaa utc ajassa -> 'yyyy-MM-dd HH:mm:ssZ'"
+  [aika-str]
+  (let [dateformat (SimpleDateFormat. "yyyy-MM-dd HH:mm:ss.SSS")
+        _ (.setTimeZone dateformat (TimeZone/getTimeZone "Europe/Helsinki"))
+        konvertoitu (.parse dateformat aika-str)
+        iso-basic (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssZ") konvertoitu)
+        json-aika (df/unparse (df/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") (pvm/iso8601-basic->suomen-aika iso-basic))]
+    json-aika))
+
 (deftest hae-ilmoitukset-ytunnuksella-onnistuu-vaikka-haetaan-vain-kuittauksen-ajankohdasta
   (let [;; Luo uusi ilmoitus ja pari kuittausta
         y-tunnus "1565583-5"
@@ -247,12 +259,9 @@
     (is (= 200 (:status vastaus)))
     (is (= 3 kuittausten-maara))
     ;; Tarkista kuittauksen kuittausaika
-    (is (= (pvm/iso-8601->aika vastaanotto-kuitattu)
-          (pvm/psql-timestamp->aika (get (first kuittaukset) "kuitattu"))))
-    (is (= (pvm/iso-8601->aika aloitus-kuitattu)
-          (pvm/psql-timestamp->aika (get (second kuittaukset) "kuitattu"))))
-    (is (= (pvm/iso-8601->aika lopetus-kuitattu)
-          (pvm/psql-timestamp->aika (get (nth kuittaukset 2) "kuitattu"))))))
+    (is (= (str-timestamp->json-ajaksi vastaanotto-kuitattu) (get (first kuittaukset) "kuitattu")))
+    (is (= (str-timestamp->json-ajaksi aloitus-kuitattu) (get (second kuittaukset) "kuitattu")))
+    (is (= (str-timestamp->json-ajaksi lopetus-kuitattu) (get (nth kuittaukset 2) "kuitattu")))))
 (deftest hae-ilmoitukset-ytunnuksella-epaonnistuu-ei-kayttoikeutta
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
         loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))

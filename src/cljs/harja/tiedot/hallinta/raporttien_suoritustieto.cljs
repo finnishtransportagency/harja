@@ -41,7 +41,7 @@
 ;; järjestetty tuotantodatan yleisyyden mukaan
 (def +mahdolliset-raportit+
   [[nil "Kaikki"]
-   ["laskutusyhteenveto-mhu" "Laskutusyhteenveto MHU"]
+   ["laskutusyhteenveto-tuotekohtainen" "Laskutusyhteenveto MHU"]
    ["laskutusyhteenveto" "Laskutusyhteenveto alueurakat"]
    ["ymparistoraportti" "Ympäristöraportti"]
    ["ilmoitusraportti" "Ilmoitusraportti"]

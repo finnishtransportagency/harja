@@ -494,6 +494,11 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     hankinnat_laskutetaan                                       NUMERIC,
     sakot_laskutettu                                            NUMERIC,
     sakot_laskutetaan                                           NUMERIC,
+    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+    akilliset_laskutettu                                        NUMERIC,
+    akilliset_laskutetaan                                       NUMERIC,
+    vahingot_laskutettu                                         NUMERIC,
+    vahingot_laskutetaan                                        NUMERIC,
     -- MHU ja HJU Hoidon johto
     johto_ja_hallinto_laskutettu                                NUMERIC,
     johto_ja_hallinto_laskutetaan                               NUMERIC,
@@ -538,6 +543,14 @@ DECLARE
     sakot_laskutettu                      NUMERIC;
     sakot_laskutetaan                     NUMERIC;
     sanktiorivi                           RECORD;
+   
+    -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+    akilliset_laskutettu                   NUMERIC;
+    akilliset_laskutetaan                  NUMERIC;
+    akilliset_rivi                         RECORD;
+    akilliset                              RECORD;
+    vahingot_laskutettu                    NUMERIC;
+    vahingot_laskutetaan                   NUMERIC;
 
     -- Hoidon johto
     h_rivi                                RECORD;
@@ -671,11 +684,66 @@ BEGIN
                     END IF;
                     RAISE NOTICE 'lisatyo: %', lisatyo;
                 END LOOP;
+            
+            
+            -- Äkilliset hoitotyöt ja Vahinkojen korjaukset
+            akilliset_laskutettu := 0.0;
+            akilliset_laskutetaan := 0.0;
+            vahingot_laskutettu := 0.0;
+            vahingot_laskutetaan := 0.0;
+
+            FOR akilliset_rivi IN SELECT summa AS akilliset_summa, l.erapaiva AS erapaiva, lk.maksueratyyppi
+                                     FROM kulu l
+                                              JOIN kulu_kohdistus lk ON lk.kulu = l.id
+                                              JOIN toimenpideinstanssi tpi
+                                                   ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
+                                     WHERE lk.maksueratyyppi IN ('akillinen-hoitotyo', 'muu')
+                                       AND lk.poistettu IS NOT TRUE
+                                       AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
+                LOOP
+	                
+	                -- Äkilliset hoitotyöt
+	                IF akilliset_rivi.maksueratyyppi = 'akillinen-hoitotyo' THEN
+	                
+	                    SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
+	                    RAISE NOTICE 'akilliset_rivi - hoitotyöt: %', akilliset;
+	                   
+	                    IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+	                        -- Hoitokauden alusta
+	                        akilliset_laskutettu := akilliset_laskutettu + COALESCE(akilliset.summa, 0.0);
+	
+	                        IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
+	                           akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+	                            -- Laskutetaan nyt
+	                            akilliset_laskutetaan := akilliset_laskutetaan + COALESCE(akilliset.summa, 0.0);
+	                        END IF;
+	                    END IF;
+	                    RAISE NOTICE 'Äkilliset: %', akilliset;
+                   END if;
+                   
+                   -- Vahingot
+                   IF akilliset_rivi.maksueratyyppi = 'muu' THEN
+                   
+	                    SELECT akilliset_rivi.akilliset_summa AS summa, 0::NUMERIC AS korotus INTO akilliset;
+	                    RAISE NOTICE 'akilliset_rivi - vahingot: %', akilliset;
+	                   
+	                    IF akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+	                        -- Hoitokauden alusta
+	                        vahingot_laskutettu := vahingot_laskutettu + COALESCE(akilliset.summa, 0.0);
+	
+	                        IF akilliset_rivi.erapaiva >= aikavali_alkupvm AND
+	                           akilliset_rivi.erapaiva <= aikavali_loppupvm THEN
+	                            -- Laskutetaan nyt
+	                            vahingot_laskutetaan := vahingot_laskutetaan + COALESCE(akilliset.summa, 0.0);
+	                        END IF;
+	                    END IF;
+	                    RAISE NOTICE 'Vahingot: %', akilliset;
+                   END IF;
+                END LOOP;
 
 
             -- Hoitokaudella ennen aikaväliä ja aikavälillä laskutetut hankinnat työt
             -- Paitsi hoidon johdon hankinnat, jotka on erillishankintoja ja ne on otettu huomioon eri kohdassa
-
             hankinnat_laskutettu := 0.0;
             hankinnat_laskutetaan := 0.0;
 
@@ -685,7 +753,7 @@ BEGIN
                                                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
                                                 JOIN toimenpideinstanssi tpi
                                                      ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
-                                       WHERE lk.maksueratyyppi != 'lisatyo' -- TODO: Sisältää kiinteähintaiset, kustannusarvioidut ja yksikkohintaiset työt
+                                       WHERE lk.maksueratyyppi NOT IN ('akillinen-hoitotyo', 'muu', 'lisatyo')
                                          AND lk.poistettu IS NOT TRUE
                                          AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
                     LOOP
@@ -1001,12 +1069,12 @@ BEGIN
             kaikki_laskutettu := 0.0;
             kaikki_laskutetaan := 0.0;
             kaikki_laskutettu := sakot_laskutettu + bonukset_laskutettu +
-                                 hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu +
+                                 hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + akilliset_laskutettu + vahingot_laskutettu +
                                  hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                                  hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu;
 
             kaikki_laskutetaan := sakot_laskutetaan + bonukset_laskutetaan +
-                                  hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan +
+                                  hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + akilliset_laskutetaan + vahingot_laskutetaan +
                                   hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                                   hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan;
 
@@ -1064,6 +1132,8 @@ LASKUTETAAN AIKAVÄLILLÄ % - %:', aikavali_alkupvm, aikavali_loppupvm;
                      lisatyot_laskutettu, lisatyot_laskutetaan,
                      hankinnat_laskutettu, hankinnat_laskutetaan,
                      sakot_laskutettu, sakot_laskutetaan,
+                     akilliset_laskutettu, akilliset_laskutetaan,
+                     vahingot_laskutettu, vahingot_laskutetaan,
                      johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
                      bonukset_laskutettu, bonukset_laskutetaan,
                      hj_palkkio_laskutettu, hj_palkkio_laskutetaan,

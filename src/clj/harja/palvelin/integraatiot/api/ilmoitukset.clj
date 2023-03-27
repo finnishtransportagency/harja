@@ -12,7 +12,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.ilmoitusnotifikaatiot :as notifikaatiot]
-            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
+            [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date sql-timestamp-str->utc-timestr]]
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.sanomat.ilmoitus-sanomat :as sanomat]
@@ -239,8 +239,8 @@
                                    (fn [r]
                                      ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
                                      (when (not (nil? (:f1 r)))
-                                       (let [r (-> r
-                                                 (clojure.set/rename-keys db-kuittaus->avaimet))]
+                                       (let [r (-> r (clojure.set/rename-keys db-kuittaus->avaimet))
+                                             r (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r)))]
                                          r)))
                                    rivit)]
                        tulos)))))

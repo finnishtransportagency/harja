@@ -7,7 +7,7 @@
     [harja.palvelin.raportointi.raportit.erilliskustannukset :as erilliskustannukset]
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
-    [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu :as laskutusyhteenveto-mhu]
+    [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto-tuotekohtainen]
     [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot :as muutos-ja-lisatyot]
     [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitus]
     [harja.palvelin.raportointi.raportit.sanktio :as sanktiot]
@@ -27,7 +27,7 @@
   "Ohjaa laskutusyhteenvedon oikeaan paikkaan urakkatyypin mukaisesti"
   [db user tiedot]
   (if (= :teiden-hoito (:urakkatyyppi tiedot))
-    (laskutusyhteenveto-mhu/suorita db user tiedot)
+    (laskutusyhteenveto-tuotekohtainen/suorita db user tiedot)
     (laskutusyhteenveto/suorita db user tiedot)))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as tiedot}]

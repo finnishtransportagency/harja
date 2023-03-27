@@ -231,21 +231,42 @@
 .tyomaakokous-footer {
     margin-top: 30px;
     display: grid;
-    grid-template-columns: repeat(1, 0.45fr);
     justify-content: right;
 
     .sisalto {
         display: grid;
         align-items: start;
         grid-template-columns: repeat(2, 3.3fr);
+        column-gap: 60px;
+    }
+
+    .sisalto-ei-kk-vali {
+        display: grid;
+        align-items: start;
+        grid-template-columns: repeat(1, 3.3fr);
+        margin-left: auto;
+        column-gap: 60px;
     }
 }
 
 .laskutus-yhteensa {
     color: @black-light;
     font-weight: bold;
+    font-weight: normal;
+    margin-top: 20px;
+
+    .kentta {
+        margin-right: 60px;
+        margin-top: -10px;
+        margin-bottom: 40px;
+    }
 }
 
+.mhu-radio {
+    margin-right: 60px;
+    display: flex;
+    flex-direction: row;
+}
 
 // Special case laskutusyhteenvedossa
 .laskutusyhteenveto .upotettu-raporttitallennus,
@@ -257,10 +278,10 @@
 // Säädetty tallenna napit nätimmäksi MHU yhteenvedossa
 .laskutusyhteenveto .upotettu-raporttitallennus-mhu {
     margin-top: 15px;
-    margin-left: 35px;
+    margin-left: auto;
 
     /* Tallenna- napit näkyvät vielä hieman pienemmällä resolla */
-    @media only screen and (max-width: 915px) {
+    @media only screen and (max-width: 1035px) {
         gap: 15px;
         flex-direction: column;
     }
