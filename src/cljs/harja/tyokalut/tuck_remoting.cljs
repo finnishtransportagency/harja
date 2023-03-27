@@ -16,60 +16,88 @@
 
 ;; ---- Tuck-remoting kirjaston parannuksia, TODO: Teen virallisen PR:n myöhemmin tuck-remoteen! (siksi koodi englanniksi)
 
-(def ws-opts {:reconn-interval 4000
-              :max-reconn-attempts 20
-              :heartbeat-interval 5000
-              :heartbeat-timeout 10000})
+(declare disconnect!)
 
+(def ws-opts {:reconn-interval-ms (* 4 1000)
+              ;:max-reconn-attempts 20
+              :heartbeat-interval-ms (* 20 1000)
+              ;; Timeout set to 60 seconds in case Chrome throttles timers aggressively.
+              ;; In that case, Chrome will run timers every minute. So, the heartbeat timeout must be minimum 60s.
+              :heartbeat-timeout-ms (* 60 1000)})
+
+;; 3004 - A custom close code that we use to indicate a need to reconnect after disconnect
+;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
+(def closed-unclean-code 3004)
 (def heartbeat-state (atom {:timer-id nil
-                            :timestamp nil}))
+                            :timeout-timer-id nil}))
+
+(defn start-heartbeat-timeout-timer! []
+  (let [timer-id (js/setTimeout
+                   (fn []
+                     ;; Disconnect and a request connection restart
+                     (disconnect! closed-unclean-code))
+                   (:heartbeat-timeout-ms ws-opts))]
+    (swap! heartbeat-state assoc :timeout-timer-id timer-id)))
 
 (defn send-heartbeat! []
+  ;; Stop timeout timer if a new ping heartbeat is about to be sent
+  (when (:timeout-timer-id @heartbeat-state)
+    (js/clearTimeout (:timeout-timer-id @heartbeat-state)))
+
   (let [conn @tr/connection
         timer-id (js/setTimeout
                    (fn []
-                     (when conn
+                     ;; Send a heartbeat only if connection is alive and not in closed/closing state
+                     (when (and conn (not (#{(.-CLOSED conn) (.-CLOSING conn)} (.-readyState conn))))
                        (.send conn (transit/clj->transit {:tuck.remoting/event-type :ping}))
-                       (swap! heartbeat-state assoc :timestamp (js/Date.now))))
-          (:heartbeat-interval ws-opts))]
+                       (start-heartbeat-timeout-timer!)))
+          (:heartbeat-interval-ms ws-opts))]
     (swap! heartbeat-state assoc :timer-id timer-id)))
 
 (defn stop-heartbeat! []
   (let [state @heartbeat-state]
     (when (:timer-id state)
-      (js/clearTimeout (:timer-id state))
-      (reset! heartbeat-state {:timer-id nil
-                               :timestamp nil}))))
+      (js/clearTimeout (:timer-id state)))
+    (when (:timeout-timer-id @heartbeat-state)
+      (js/clearTimeout (:timeout-timer-id @heartbeat-state)))
+
+    (reset! heartbeat-state {:timer-id nil
+                             :timeout-timer-id nil})))
 
 (defn connect!* [channel ws-url app-atom on-connect on-disconnect reconnect?]
   ;; Prevent creating a new WebSocket object, unless reconnecting
   (when (or (not @tr/connection) reconnect?)
     (let [conn (js/WebSocket. ws-url)]
       (set! (.-onopen conn) (fn [_]
-                              (when (fn? on-connect) (on-connect))
+                              ;; Stop any ongoing heartbeat timer and reset the heartbeat-state
+                              (stop-heartbeat!)
                               ;; Send the first ping-heartbeat on connect
                               (send-heartbeat!)
 
+                              (when (fn? on-connect) (on-connect))
                               (put! channel :opened)))
       (set! (.-onmessage conn) (fn [event]
                                  (when event
                                    ;; Handling ping/pong heartbeat-events outside normal Tuck-event processing
                                    (let [event-data (transit/transit->clj (.-data event))]
-                                     ;; If receivied a :pong response from the server, respond with another ping
-                                     ;;  after :heartbeat-interval ms.
+                                     ;; If recieved a :pong response from the server, respond with another ping
+                                     ;;  after :heartbeat-interval-ms ms.
                                      (if (= :pong (:tuck.remoting/event-type event-data))
                                        (send-heartbeat!)
                                        ;; Otherwise, handle a normal Tuck-event
                                        (tr/receive app-atom event))))))
       (set! (.-onclose conn) (fn [event]
-                               (.log js/console (str "Tuck-remoting: WebSocket closed. WasClean? " (.-wasClean event)))
+                               (.info js/console (str "Tuck-remoting: WebSocket closed. WasClean? " (.-wasClean event)
+                                                   (when (= (.-code event) closed-unclean-code)
+                                                    ", Heartbeat timeout? true")))
                                (when (fn? on-disconnect)
                                  (on-disconnect (.-code event) (.-reason event) (.-wasClean event)))
 
                                ;; Stop the heartbeat timer and reset the heartbeat-state
                                (stop-heartbeat!)
 
-                               (put! channel (if-not (.-wasClean event)
+                               ;; Trigger reconnect (:closed-dirty) if close was unclean or a custom close code was used
+                               (put! channel (if (or (not (.-wasClean event)) (= closed-unclean-code (.-code event)))
                                                :closed-dirty
                                                :closed))))
       (reset! tr/connection conn))))
@@ -85,8 +113,8 @@
           (reset! conn-attempts-count 0))
 
         (when (= :closed-dirty state)
-              (let [timeout-ms (+ (:reconn-interval ws-opts) (* @conn-attempts-count 5000))]
-                (.log js/console (str "Tuck-remoting: Trying to reconnect the WebSocket connection in " (/ timeout-ms 1000) " seconds..."))
+              (let [timeout-ms (+ (:reconn-interval-ms ws-opts) (* @conn-attempts-count 5000))]
+                (.info js/console (str "Tuck-remoting: Trying to reconnect the WebSocket connection in " (/ timeout-ms 1000) " seconds..."))
                 (<! (timeout timeout-ms))
 
                 (swap! conn-attempts-count inc)
@@ -95,13 +123,16 @@
         (when-not (= :closed state)
           (recur))))))
 
-(defn disconnect! []
-  (let [conn @tr/connection]
-    (when conn
-      ;; 1000 - normal closure
-      ;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
-      (.close conn 1000)
-      (reset! tr/connection nil))))
+(defn disconnect!
+  ([] (disconnect! 1000))
+  ([close-code]
+   (let [conn @tr/connection
+         ;; 1000 - normal closure
+         ;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
+         close-code (if (int? close-code) close-code 1000)]
+     (when conn
+       (.close conn close-code)
+       (reset! tr/connection nil)))))
 
 ;; ---- END --- Tuck-remoting kirjaston parannuksia,
 
