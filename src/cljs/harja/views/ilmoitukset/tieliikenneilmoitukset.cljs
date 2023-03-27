@@ -8,6 +8,7 @@
               tilan-selite vaikutuksen-selite] :as domain]
             [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
+            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -210,6 +211,7 @@
         pikakuittaus-ilmoitus-id (when pikakuittaus
                                    (get-in pikakuittaus [:ilmoitus :id]))]
     [:span.ilmoitukset
+     [debug/debug ilmoitukset]
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
      [:div
