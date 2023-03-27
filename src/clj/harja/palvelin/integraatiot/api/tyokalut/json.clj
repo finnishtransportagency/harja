@@ -3,10 +3,12 @@
   (:require [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]
             [clj-time.format :as format]
+            [clj-time.core :as t]
             [taoensso.timbre :as log]
-            [clj-time.coerce :as coerce]
+            [harja.pvm :as pvm]
             [clj-time.coerce :as c])
-  (:import (java.text SimpleDateFormat)))
+  (:import (java.text SimpleDateFormat)
+           (java.util TimeZone)))
 
 (defn aika-string->java-sql-date [paivamaara]
   (when paivamaara
@@ -23,6 +25,11 @@
 (defn aika-string->joda-time [paivamaara]
   (when paivamaara
     (c/from-date (aika-string->java-util-date paivamaara))))
+
+(defn sql-timestamp-str->utc-timestr
+  "Anna timestamp str muodossa: 'yyyy-MM-dd'T'HH:mm:ss' palauttaa tuloksen UTC ajassa: 'yyyy-MM-dd'T'HH:mm:ssZ'"
+  [aika-str]
+  (format/unparse (format/formatter "yyyy-MM-dd'T'HH:mm:ss'Z'") (pvm/iso8601-basic->suomen-aika aika-str)))
 
 (defn pvm-string->java-sql-date [paivamaara]
   (when paivamaara
