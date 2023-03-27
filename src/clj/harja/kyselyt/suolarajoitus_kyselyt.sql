@@ -477,3 +477,11 @@ where pk.tunnus = pa.tunnus
   and pt.urakka = :urakkaid
   and pk.talvisuolaraja is not null
   and pk.rajoituksen_alkuvuosi = pt.hoitokauden_alkuvuosi;
+
+-- name: hae-rajoitusalueiden-pituudet
+SELECT u.id as "urakka-id", u.nimi as urakka_nimi, ra.id, (ra.tierekisteriosoite).tie, (ra.tierekisteriosoite).aosa,
+       (ra.tierekisteriosoite).aet, (ra.tierekisteriosoite).losa, (ra.tierekisteriosoite).let,
+       ra.pituus as "pituus-kannasta", ra.ajoratojen_pituus as "ajoradan-pituus-kannasta"
+FROM rajoitusalue ra
+     JOIN urakka u on ra.urakka_id = u.id
+order by urakka_id;
