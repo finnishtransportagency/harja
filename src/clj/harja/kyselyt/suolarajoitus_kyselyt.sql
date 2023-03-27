@@ -383,7 +383,7 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
          (:aosa != :losa
            AND (
                  -- Loppuosa selkeästi välissä
-                 (:losa > (ra.tierekisteriosoite).aosa AND :losa < (ra.tierekisteriosoite).losa)
+                 (:losa > (ra.tierekisteriosoite).aosa AND :losa <= (ra.tierekisteriosoite).losa)
                   -- Loppuosa välissä, mutta alkuosa edestä ulkona selkeästi
                   OR (:aosa < (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa  AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
                   -- Loppuosa välissä, mutta alkuosa edestä ulkona vain vähän
@@ -396,25 +396,12 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
                  (:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
                  OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu väliin ja loppuosa menee yli
-                 -- FIXME: tämä rivi antaa false positiven joskus
-                 /*
-                  1. aosa täsmää
-                  2. alkuetäisyys on pienempi tai yhtäsuuri kuin loppuetäisyys -1
-                  3. loppuetäisyys on suusempi tai yhtäsuuri kuin loppuetäisyys
-                  => Feilaa jos toisen rajoituksen loppuosa on eri.
-                  */
                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet <= (ra.tierekisteriosoite).let-1 AND :let >= (ra.tierekisteriosoite).let)
-                 -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
+                 -- Erikoistapaukset, jossa verrataan aosa = losa ja vertailtavissa rajoitusaluiessa on myös aosa = losa
                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let AND :aet >= (ra.tierekisteriosoite).aet)
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
-                 -- FIXME: tämä rivi antaa false positiven joskus
-                 /*
-                  1. aosa täsmää
-                  2. aet on pienempi kuin aet
-                  3. let on suurempi kuin toinen et
-                  => Feilaa jos losa on eri kuin toisen losa
-                  */
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :losa = (ra.tierekisteriosoite).losa AND :let >= (ra.tierekisteriosoite).let)
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).aet AND :let >= (ra.tierekisteriosoite).let)
+                 -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
+                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
              )));
 
 
