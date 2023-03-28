@@ -391,16 +391,18 @@
 (defn aikavalivalitsin
   ([otsikko aikavalit valinnat-nyt] (aikavalivalitsin otsikko aikavalit valinnat-nyt nil))
   ([otsikko aikavalit valinnat-nyt kenttien-nimet] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet false))
-  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm]
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm {}))
+  ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm vakio-aikavalikentta-skeema]
    (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:vakioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
          alkuaika (:alkuaika valinnat-nyt)
-         vakio-aikavalikentta {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
-                               :otsikko otsikko
-                               :fmt :nimi
-                               :tyyppi :valinta
-                               :valinnat aikavalit
-                               :valinta-nayta :nimi
-                               :alasveto-luokka "aikavalinta"}
+         vakio-aikavalikentta (merge {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
+                                      :otsikko otsikko
+                                      :fmt :nimi
+                                      :tyyppi :valinta
+                                      :valinnat aikavalit
+                                      :valinta-nayta :nimi
+                                      :alasveto-luokka "aikavalinta" 
+                                      :palstoja 1} vakio-aikavalikentta-skeema)
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
@@ -409,17 +411,15 @@
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
-                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
+                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}] 
 
      (if vapaa-aikavali?
        (lomake/ryhma
          {:rivi? true}
          vakio-aikavalikentta
          alkuaikakentta
-         loppuaikakentta)
-       (lomake/ryhma
-         {:rivi? true}
-         vakio-aikavalikentta)))))
+         loppuaikakentta) 
+         vakio-aikavalikentta))))
 
 (defn vaylatyyppi
   [valittu-vaylatyyppi-atom vaylatyypit format-fn]
