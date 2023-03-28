@@ -24,7 +24,7 @@
 
 (s/def ::alkuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
 (s/def ::loppuvuosi #(and (string? %) (= (count %) 4) (number? (Integer/parseInt %)) (pos? (Integer/parseInt %))))
-(s/def ::urakka-id #(and (string? %) (pos? (Integer/parseInt %))))
+(s/def ::urakka-id #(and (string? %) (not (nil? (konversio/konvertoi->int %))) (pos? (konversio/konvertoi->int %))))
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (inst? (.parse (SimpleDateFormat. parametrit/pvm-aika-muoto) %))))
 
@@ -207,12 +207,8 @@
 
 (defn- tarkista-parametrit-urakka-aikavali [parametrit]
   (let [pakolliset {:urakka-id "Urakka-id puuttuu"}
-        alkuvuosi (if (string? (:alkuvuosi parametrit))
-                    (konversio/konvertoi->int (:alkuvuosi parametrit))
-                    (:alkuvuosi parametrit))
-        loppuvuosi (if (string? (:loppuvuosi parametrit))
-                     (konversio/konvertoi->int (:alkuvuosi parametrit))
-                     (:loppuvuosi parametrit))]
+        alkuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))
+        loppuvuosi (konversio/konvertoi->int (:alkuvuosi parametrit))]
     (parametrivalidointi/tarkista-parametrit parametrit pakolliset)
     (when (or (and
                 (not (nil? (:alkuvuosi parametrit)))
@@ -232,10 +228,10 @@
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
          :viesti (format "Loppuvuodessa: '%s' virhe. Anna muodossa: 2023 ja varmista, että se on suurempi, kuin alkuvuosi" (:loppuvuosi parametrit))}))
-    (when (not (s/valid? ::urakka-id (:urakka-id parametrit)))
+    (when (or (nil? (:urakka-id parametrit)) (not (s/valid? ::urakka-id (:urakka-id parametrit))))
       (virheet/heita-viallinen-apikutsu-poikkeus
         {:koodi virheet/+puutteelliset-parametrit+
-         :viesti (format "Urakka-id väärässä muodossa: %s Anna muodossa: 1234" (:urakka-id parametrit))}))))
+         :viesti (format "Urakka-id väärässä muodossa: '%s' Anna muodossa: 1234" (:urakka-id parametrit))}))))
 
 (defn palauta-urakan-suunnitellut-materiaalimaarat
   "Palautetaan suunnitellut materiaalimaarat hoitovuosittain annetulle urakalle."
@@ -243,12 +239,12 @@
   (tarkista-parametrit-urakka-aikavali parametrit)
   (let [_ (log/debug "palauta-urakan-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
         alkuvuosi (when-not (nil? alkuvuosi)
-                    (Integer/parseInt alkuvuosi))
+                    (konversio/konvertoi->int alkuvuosi))
         loppuvuosi (when-not (nil? loppuvuosi)
-                     (Integer/parseInt loppuvuosi))
+                     (konversio/konvertoi->int loppuvuosi))
         urakka-id (if (integer? urakka-id)
                     urakka-id
-                    (Integer/parseInt urakka-id))
+                    (konversio/konvertoi->int urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         ;; Jos parametrina on annettu vuodet, niin käytetään niitä
@@ -281,8 +277,7 @@
         ;; Suolan suunniteltu käyttö
         ;; Alueurakoille se haetaan suolasakko -taulusta - MH-urakoille suolan suunnittelu tulee muiden materiaalien mukana urakka_tehtavamaara -taulusta
         alueurakan-suolasuunnitelma (suolarajoitus-kyselyt/hae-suunniteltu-suolan-kaytto-hoitovuosittain-alueurakalle db {:urakka-id urakka-id})
-
-        ;; Määritellään suolasta niin tarkat tiedot, kuin voidaan ilman, että määritellään sitä materiaaliksi, koska suolaus on laajempi trempi
+        ;; Määritellään suolasta niin tarkat tiedot, kuin voidaan ilman, että määritellään sitä materiaaliksi, koska suolaus on laajempi materiaaliluokka
         suolamateriaali (merge (first (materiaalit-kyselyt/hae-talvisuolan-materiaaliluokka db))
                           {:materiaali_id nil
                            :materiaali nil
@@ -292,7 +287,6 @@
         tulos (reduce (fn [tulos vuosi]
                         (let [vuoden-tehtavat-mat (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
                                                            %) vuosittainen-suunniteltu-tehtava-materiaalimaara)
-
                               vuoden-kaytto-materiaalit (some #(when (= vuosi (:hoitokauden-alkuvuosi %))
                                                                  %) vuosittainen-suunniteltu-materialimaara)
                               ;; Loopataan kaikki urakka_tehtavamaaran materiaalit yhdelle vuodelle läpi ja
@@ -382,14 +376,14 @@
   (let [_ (log/debug "palauta-urakan-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
         urakka-id (if (integer? urakka-id)
                     urakka-id
-                    (Integer/parseInt urakka-id))
+                    (konversio/konvertoi->int urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
 
         alkuvuosi (when-not (nil? alkuvuosi)
-                    (Integer/parseInt alkuvuosi))
+                    (konversio/konvertoi->int alkuvuosi))
         loppuvuosi (when-not (nil? loppuvuosi)
-                     (Integer/parseInt loppuvuosi))
+                     (konversio/konvertoi->int loppuvuosi))
 
         alkupvm (if alkuvuosi
                   (konversio/sql-date (pvm/luo-pvm-dec-kk alkuvuosi 10 01))
@@ -454,7 +448,7 @@
           (not kehitysmoodi?))))
 
     (julkaise-reitti
-      http :analytiikka-suunnitellut-materiaalit
+      http :analytiikka-suunnitellut-materiaalit-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-materiaalit/:alkuvuosi/:loppuvuosi" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-suunnitellut-materiaalimaarat request
@@ -464,7 +458,7 @@
           (not kehitysmoodi?))))
 
     (julkaise-reitti
-      http :analytiikka-suunnitellut-materiaalit
+      http :analytiikka-suunnitellut-materiaalit-urakka
       (GET "/api/analytiikka/suunnitellut-materiaalit/:urakka-id" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-suunnitellut-materiaalimaarat request
@@ -474,7 +468,7 @@
           (not kehitysmoodi?))))
 
     (julkaise-reitti
-      http :analytiikka-suunnitellut-tehtavamaarat
+      http :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
       (GET "/api/analytiikka/suunnitellut-tehtavat/:alkuvuosi/:loppuvuosi" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-suunnitellut-tehtavamaarat request
@@ -484,7 +478,7 @@
           (not kehitysmoodi?))))
 
     (julkaise-reitti
-      http :analytiikka-suunnitellut-tehtavamaarat
+      http :analytiikka-suunnitellut-tehtavamaarat-urakka
       (GET "/api/analytiikka/suunnitellut-tehtavat/:urakka-id" request
         (kasittele-kevyesti-get-kutsu db integraatioloki
           :analytiikka-hae-suunnitellut-tehtavamaarat request
@@ -540,5 +534,9 @@
       :analytiikka-materiaalit
       :analytiikka-tehtavat
       :analytiikka-urakat
-      :analytiikka-organisaatiot)
+      :analytiikka-organisaatiot
+      :analytiikka-suunnitellut-materiaalit-hoitovuosi
+      :analytiikka-suunnitellut-materiaalit-urakka
+      :analytiikka-suunnitellut-tehtavamaarat-hoitovuosi
+      :analytiikka-suunnitellut-tehtavamaarat-urakka)
     this))
