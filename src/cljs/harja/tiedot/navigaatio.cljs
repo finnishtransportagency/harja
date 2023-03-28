@@ -201,6 +201,9 @@
                                  nil)))
                            oletus-urakkatyyppi))))
 
+;; Jos ilmoitus valitaan id:n perusteella (url parametrilla), asetetaan se tänne
+(defonce valittu-ilmoitus-id (atom nil))
+
 (defn vaihda-urakkatyyppi!
   "Vaihtaa urakkatyypin ja resetoi valitun urakoitsijan, jos kyseinen urakoitsija ei
    löydy valitun tyyppisten urakoitsijain listasta."
@@ -315,6 +318,12 @@
   (valitse-urakka-id! (:id ur))
   (log "VALITTIIN URAKKA: " (pr-str (dissoc ur :alue))))
 
+
+(defn valitse-ilmoitus! [id]
+  (reset! valittu-ilmoitus-id id)
+  (paivita-url)
+  (log "VALITTIIN ILMOITUS: " (pr-str id)))
+
 (defonce urakka-klikkaus-kuuntelija
          (t/kuuntele! :urakka-klikattu
                       (fn [urakka]
@@ -327,10 +336,11 @@
                     h))
 
 (defn nykyinen-url []
-  (str (reitit/muodosta-polku @reitit/url-navigaatio)
-       "?"
-       (when-let [hy @valittu-hallintayksikko-id] (str "&hy=" hy))
-       (when-let [u @valittu-urakka-id] (str "&u=" u))))
+   (str (reitit/muodosta-polku @reitit/url-navigaatio)
+    "?"
+    (when-let [hy @valittu-hallintayksikko-id] (str "&hy=" hy))
+    (when-let [u @valittu-urakka-id] (str "&u=" u))
+    (when-let [i @valittu-ilmoitus-id] (str "&i=" i))))
 
 (defonce ^{:doc "Tämä lippu voi estää URL tokenin päivittämisen, käytetään siirtymissä, joissa
  halutaan tehdä useita muutoksia ilman että välissä pävitetään URLia keskeneräisenä."}
@@ -417,6 +427,7 @@
           parametrit (.getQueryData uri)]
       (reset! valittu-hallintayksikko-id (some-> parametrit (.get "hy") js/parseInt))
       (reset! valittu-urakka-id (some-> parametrit (.get "u") js/parseInt))
+      (reset! valittu-ilmoitus-id (some-> parametrit (.get "i") js/parseInt))
       ;; Kun ollaan aloitusikkunassa, katsotaan mikä on käyttäjän perusurakkatyyppi, jotta voidaan näyttää oikean
       ;; väylämuodon hallintayksiköt
       (when (= polku "urakat/yleiset")

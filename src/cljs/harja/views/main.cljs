@@ -171,7 +171,7 @@
                         "hairioilmoitin-tyyppi-hairio")]
     [:div.hairioilmoitin {:class tyyppi-luokka}
      [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]
-     [:div (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+     [:div.margin-right-32 (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
                 (::hairio/viesti hairiotiedot))]]))
 
 (defn paasisalto [sivu korkeus]

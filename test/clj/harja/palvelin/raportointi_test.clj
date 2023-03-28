@@ -252,14 +252,14 @@
         hoito-oulu-urakka-id (hae-oulun-alueurakan-2014-2019-id)
         tiedot-mhu  {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id mhu-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :teiden-hoito}
         tiedot-hoito {:laskutusyhteenveto true, :tiestotarkastusraportti false, :urakka-id hoito-oulu-urakka-id, :loppupvm #inst "2022-01-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2021-12-31T22:00:00.000-00:00", :muutos-ja-lisatyot false, :urakkatyyppi :hoito}
-        laskutusyhteenveto-mhu-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
+        laskutusyhteenveto-tuotekohtainen-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
                                                                                       +kayttaja-jvh+
                                                                                       tiedot-mhu)
         laskutusyhteenveto-hoito-raportti (tyomaakokous/urakkatyypin-laskutusyhteenveto (:db jarjestelma)
                                                                                         +kayttaja-jvh+
                                                                                         tiedot-hoito)]
-    (is (= "Laskutusyhteenveto MHU"
-           (-> laskutusyhteenveto-mhu-raportti
+    (is (= "Laskutusyhteenveto (01.01.2022 - 31.01.2022)"
+           (-> laskutusyhteenveto-tuotekohtainen-raportti
                second
                :nimi)) "On MHU-tyypin laskutusyhteenveto")
     (is (= "Laskutusyhteenveto"
