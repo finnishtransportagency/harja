@@ -214,7 +214,7 @@
                          (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
                          lomake)
         muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
-        disabled? (or (not (get-in app [:lomake ::tila/validi?])) (not saa-muokata?))]
+        disabled? (or (not (get-in app [:lomake ::tila/validi?]))  (:hae-tiedot-kaynnissa? app) (not saa-muokata?))]
     [:div.lomake-rajoitusalue
        #_ [debug/debug (:lomake app)]
      [lomake/lomake
