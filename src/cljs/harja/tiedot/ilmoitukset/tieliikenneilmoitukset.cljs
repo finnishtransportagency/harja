@@ -267,7 +267,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (let [kuittaus (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
                      (:uusi-kuittaus valittu-ilmoitus)
                      (dissoc kuittaa-monta :ilmoitukset))
-          ilmoitukset (or (and valittu-ilmoitus [valittu-ilmoitus])
+          ilmoitukset (or (and @nav/valittu-ilmoitus-id valittu-ilmoitus [valittu-ilmoitus])
                           (:ilmoitukset kuittaa-monta))
           tulos! (t/send-async! v/->KuittaaVastaus)]
       (go
