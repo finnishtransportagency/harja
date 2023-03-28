@@ -168,10 +168,11 @@
   (let [otsikko (hairio/tyyppi-fmt (::hairio/tyyppi hairiotiedot))
         tyyppi-luokka (case (::hairio/tyyppi hairiotiedot)
                         :tiedote "hairioilmoitin-tyyppi-tiedote"
-                        "hairioilmoitin-tyyppi-hairio")]
+                        "hairioilmoitin-tyyppi-hairio")
+        hairio-pvm (pvm/pvm-opt (or (::hairio/alkuaika hairiotiedot) (::hairio/pvm hairiotiedot)))]
     [:div.hairioilmoitin {:class tyyppi-luokka}
      [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]
-     [:div.margin-right-32 (str otsikko " " (pvm/pvm-opt (::hairio/pvm hairiotiedot)) ": "
+     [:div.margin-right-32 (str otsikko " " hairio-pvm ": "
                 (::hairio/viesti hairiotiedot))]]))
 
 (defn paasisalto [sivu korkeus]

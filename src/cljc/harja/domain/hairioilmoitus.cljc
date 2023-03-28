@@ -22,6 +22,14 @@
 
 (def sarakkeet #{::id ::viesti ::pvm ::voimassa? ::tyyppi ::alkuaika ::loppuaika})
 
+(defn tuleva-hairio [hairiot]
+   (->> hairiot
+     (filter #(and
+                (::voimassa? %)
+                (pvm/ennen? (pvm/nyt) (::alkuaika %))))
+     (sort-by ::pvm)
+     first))
+
 (defn voimassaoleva-hairio
   ([hairiot]
    (voimassaoleva-hairio hairiot (pvm/nyt)))
