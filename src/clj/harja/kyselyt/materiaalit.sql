@@ -467,16 +467,17 @@ WHERE rp.pohjavesialue = :pohjavesialue
 -- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
 -- Jätetaan materiaalityypiltään talvisuola tyyppiset materiaalit pois. Eli talvisuola ja erityisalue
 -- niille on oma hakunsa
-SELECT m.id                as materiaali_id,
-       m.nimi              AS materiaali,
-       m.yksikko           AS materiaali_yksikko,
-       m.materiaalityyppi  as materiaali_tyyppi,
-       ml.nimi             as materiaaliluokka,
-       ml.yksikko          as materiaaliluokka_yksikko,
-       ml.materiaalityyppi as materiaaliluokka_tyyppi,
+SELECT m.id                               AS materiaali_id,
+       m.nimi                             AS materiaali,
+       m.yksikko                          AS materiaali_yksikko,
+       m.materiaalityyppi                 AS materiaali_tyyppi,
+       ml.nimi                            AS materiaaliluokka,
+       ml.yksikko                         AS materiaaliluokka_yksikko,
+       ml.materiaalityyppi                AS materiaaliluokka_tyyppi,
        mk.maara,
        mk.muokattu,
-       mk.luotu
+       mk.luotu,
+       EXTRACT(YEAR from mk.alkupvm)::int AS "hoitokauden-alkuvuosi"
   FROM materiaalin_kaytto mk
        LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
        LEFT JOIN materiaaliluokka ml ON m.materiaaliluokka_id = ml.id
