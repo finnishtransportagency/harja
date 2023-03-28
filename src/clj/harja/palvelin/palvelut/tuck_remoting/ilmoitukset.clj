@@ -7,7 +7,7 @@
     [harja.kyselyt.konversio :as konversio]
     [taoensso.timbre :as log]
     [tuck.remoting :as tr]
-    [harja.palvelin.komponentit.tuck-remoting :as tuck-remoting]
+    [harja.palvelin.komponentit.tuck-remoting :as tr-komponentti]
     [harja.tuck-remoting.ilmoitukset-eventit :as eventit]
     [com.stuartsierra.component :as component]
     [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitus-q]
@@ -41,6 +41,7 @@
                              (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka-id opts)
                                (fn [{ilmoitus-id :payload}]
                                  (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                   ;; TODO: Poista debug-lokitus
                                    (println "### Kuuntele urakan ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 
                                    (laheta-ilmoitus! e! ilmoitus))))
@@ -49,6 +50,7 @@
                                ;; TODO: Filtteröi ilmoituksen lähetys käyttäjän ja optioiden perusteella (Jeren kommentti)
                                (fn [{ilmoitus-id :payload}]
                                  (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                   ;; TODO: Poista debug-lokitus
                                    (println "### Kuuntele kaikkia ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 
                                    (laheta-ilmoitus! e! ilmoitus)))))]
@@ -58,17 +60,26 @@
                                         :lopeta-fn lopeta-kuuntelu-fn})))
 
 (defn lopeta-ilmoitusten-kuuntelu [client-id]
-  (log/info "Lopetetaan ilmoitusten kuuntelu asiakkaalle: " client-id)
-
   (let [kuuntelija (get-in @kuuntelijat [client-id])
         lopeta-fn (:lopeta-fn kuuntelija)]
-    (lopeta-fn)
+
+    (when (fn? lopeta-fn)
+      (log/info "Lopetetaan ilmoitusten kuuntelu ws-asiakkaalle: " client-id)
+      (lopeta-fn))
 
     (swap! kuuntelijat dissoc client-id)))
 
 (defrecord IlmoituksetWS []
   component/Lifecycle
   (start [{tuck-remoting :tuck-remoting db :db :as this}]
+    ;; Varmista, että lopetataan ilmoitusten kuuntelu yksittäiselle asiakkaalle, kun asiakkaan WS-yhteys katkeaa.
+    ;; Asiakkaan täytyy muodostaa yhteys uudelleen ja pyytää sen jälkeen kuuntelun aloittamista uudestaan
+    (assoc this ::poista-yhteys-poikki-hook
+                (tr-komponentti/rekisteroi-yhteys-poikki-hook!
+                  tuck-remoting
+                  (fn [{::tr/keys [e! client-id] :as client}]
+                    (lopeta-ilmoitusten-kuuntelu client-id))))
+
     (extend-protocol tr/ServerEvent
       KuunteleIlmoituksia
       (process-event [{opts :opts} {::tr/keys [e! client-id] :keys [kayttaja]} app]
@@ -80,7 +91,11 @@
         (lopeta-ilmoitusten-kuuntelu client-id)
         app)))
 
-  (stop [this]
+  (stop [{poista-yhteys-poikki-hook ::poista-yhteys-poikki-hook :as this}]
+    ;; Poista Tuck-remoting yhteys-poikki hookin rekisteröinti
+    (poista-yhteys-poikki-hook)
+
+    ;; Poista kaikkien clienttien kuuntelijat
     (doseq [client-id (keys @kuuntelijat)]
       (lopeta-ilmoitusten-kuuntelu client-id))))
 

@@ -333,14 +333,14 @@
                                                    (e! (v/->ValitseIlmoitus (:id ilmoitus-infopaneelista))))
                                        :teksti "Valitse ilmoitus"}})
 
-                         ;; Aloita uusien ilmoituksien kuuntely WebSocketin kautta
-                         (e! (ilmoitukset-ws/->AloitaKuuntelu)))
+                         ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
+                         (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu)))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
 
-                         ;; Lopeta uusien ilmoitusten kuuntelu WebSocketin kautta
-                         (e! (ilmoitukset-ws/->LopetaKuuntelu))))
+                         ;; Katkaise WS-yhteys ja lopeta samalla uusien ilmoitusten kuuntelu WebSocketin kautta
+                         (e! (ilmoitukset-ws/->KatkaiseYhteys))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]

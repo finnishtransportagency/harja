@@ -146,6 +146,8 @@
         app)
       (assoc app :ws-yhteys
                  (connect!
+                   ;; TODO: Tuotannossa pitäisi käyttää wss-urlia, mutta kehittäessä ws-urlia
+                   ;; TODO: WSS-yhteyden toiminta varmistettava tuotannossa
                    (str "ws://" js/window.location.host "/_/ws?")
                    tila-atom
                    yhteys-onnistui-fn

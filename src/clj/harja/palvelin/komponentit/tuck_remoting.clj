@@ -20,18 +20,20 @@
                    yhdistaessa-hookit ::yhdistaessa-hookit}]
     (swap! asiakkaat assoc client-id {:e! e!
                                       :kayttaja kayttaja})
-    ;; TODO: Poista debug-lokitus
-    (println "### Tuck-remoting Yhdistetty! Asiakas-id:" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))
+    (log/info "Tuck-remoting yhdistetty! Asiakas-id:" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))
 
     (doseq [hook (vals yhdistaessa-hookit)]
       (hook client)))
 
   Katkaistu
-  (process-event [{tila :tila} {::tr/keys [client-id]} {asiakkaat ::asiakkaat}]
+  (process-event [{tila :tila} {::tr/keys [client-id] :as client} {asiakkaat ::asiakkaat
+                                                                   yhteys-poikki-hookit ::yhteys-poikki-hookit}]
     (swap! asiakkaat dissoc client-id)
 
-    ;; TODO: Poista debug-lokitus
-    (println "### Tuck remoting yhteys asiakkaaseen katkesi. Asiakas-id" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))))
+    (log/info "Tuck remoting yhteys asiakkaaseen katkesi. Asiakas-id" client-id ", asiakkaiden lukumäärä: " (count @asiakkaat))
+
+    (doseq [hook (vals yhteys-poikki-hookit)]
+      (hook client))))
 
 (defn kasittelija [tr-kasittelija]
   (fn [req]
@@ -101,7 +103,8 @@
 
 (defn luo-tuck-remoting []
   (->TuckRemoting (atom {::asiakkaat (atom {})
-                         ::yhdistaessa-hookit {}})))
+                         ::yhdistaessa-hookit {}
+                         ::yhteys-poikki-hookit {}})))
 
 (defn merge-konteksti! [tuck-remoting konteksti]
   (swap! (:konteksti-atomi tuck-remoting) merge konteksti))
@@ -117,3 +120,8 @@
   (let [id (gensym)]
     (swap! konteksti update ::yhdistaessa-hookit assoc id yhdistaessa-fn)
     #(swap! konteksti update ::yhdistaessa-hookit dissoc id)))
+
+(defn rekisteroi-yhteys-poikki-hook! [{konteksti :konteksti-atomi} yhteys-poikki-fn]
+  (let [id (gensym)]
+    (swap! konteksti update ::yhteys-poikki-hookit assoc id yhteys-poikki-fn)
+    #(swap! konteksti update ::yhteys-poikki-hookit dissoc id)))
