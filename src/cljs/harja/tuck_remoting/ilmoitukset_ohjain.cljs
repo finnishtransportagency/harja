@@ -4,7 +4,8 @@
     [tuck.core :as tuck]
     [harja.tyokalut.tuck-remoting :as tr-tyokalut]
     [harja.tuck-remoting.ilmoitukset-eventit :as eventit]
-    [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tieliikenneilmoitukset]))
+    [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tieliikenneilmoitukset]
+    [harja.tiedot.ilmoitukset.viestit :as v]))
 
 (defrecord AloitaYhteysJaKuuntelu [])
 (defrecord AloitaKuuntelu [opts])
@@ -72,6 +73,13 @@
 
   ;; -- Tuck-remoting eventtien käsittely --
   eventit/Ilmoitus
-  (process-event [{:keys [ilmoitus-id]} app]
-    (log/info "Uusi ilmoitus saatavilla (WS): " ilmoitus-id)
-    (update app :ws-ilmoitukset conj ilmoitus-id)))
+  (process-event [{:keys [ilmoitus]} app]
+    (log/info "Uusi ilmoitus saatavilla (WS): " (:ilmoitus-id ilmoitus) ". Laukaistaan ilmoitusten haku.")
+
+    ;; Laukaise ilmoitushaku, kun saadaan ilmoitus uudesta ilmoituksesta
+    (tuck/action!
+      (fn [e!]
+        (e! (v/->HaeIlmoitukset))))
+
+    ;; Laita talteen uusimman ilmoituksen ID
+    (assoc-in app [:ws-uusin-ilmoitus] (:ilmoitus-id ilmoitus))))
