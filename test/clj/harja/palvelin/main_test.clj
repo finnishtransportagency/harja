@@ -158,7 +158,8 @@
     :yleiset-ajastukset
     :suolarajoitukset
     :api-sampo
-    :harja-status})
+    :harja-status
+    :rajoitusalue-pituudet})
 
 (def ei-statusta
   #{:metriikka
@@ -224,7 +225,8 @@
     :suolarajoitukset
     :api-sampo
     :harja-status
-    :info})
+    :info
+    :rajoitusalue-pituudet})
 
 (def hidas-ok-status #{:itmf})
 
