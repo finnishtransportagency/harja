@@ -99,12 +99,16 @@
   [:fo:inline
    [:fo:inline (str arvo (when selite (str " (" selite ")")))]])
 
-(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt]}]]
-  [:fo:inline
-   [:fo:inline {:color (or itsepaisesti-maaritelty-oma-vari
-                           (raportti-domain/virhetyylit tyyli)
-                           "black")}
-    (if fmt (fmt arvo) arvo)]])
+(defmethod muodosta-pdf :varillinen-teksti [[_ {:keys [arvo tyyli itsepaisesti-maaritelty-oma-vari fmt lihavoi?]}]]
+  (let [tyyli {:color (or itsepaisesti-maaritelty-oma-vari
+                          (raportti-domain/virhetyylit tyyli)
+                          "black")}
+        tyyli (if lihavoi?
+                (merge tyyli {:font-weight "bold"})
+                tyyli)]
+    [:fo:inline
+     [:fo:inline tyyli
+      (if fmt (fmt arvo) arvo)]]))
 
 (defmethod muodosta-pdf :teksti-ja-info [[_ {:keys [arvo]}]] arvo)
 
@@ -501,15 +505,21 @@
    [:fo:table-column {:column-width "75%"}]
    [:fo:table-body
     (for [[otsikko arvo] otsikot-ja-arvot]
-      [:fo:table-row
-       [:fo:table-cell
-        [:fo:block {:text-align "right" :font-weight "bold"}
-         (let [otsikko (str/trim (str otsikko))]
-           (if (.endsWith otsikko ":")
-             otsikko
-             (str otsikko ":")))]]
-       [:fo:table-cell
-        [:fo:block {:margin-left "5mm"} (str arvo)]]])]])
+      (let [arvo (if (and
+                      (= arvo nil)
+                      (= otsikko "Urakka")) "Kaikki" arvo)
+            arvo (if (and
+                      (= arvo nil)
+                      (= otsikko "Urakoitsija")) "-" arvo)]
+        [:fo:table-row
+         [:fo:table-cell
+          [:fo:block {:text-align "right" :font-weight "bold"}
+           (let [otsikko (str/trim (str otsikko))]
+             (if (.endsWith otsikko ":")
+               otsikko
+               (str otsikko ":")))]]
+         [:fo:table-cell
+          [:fo:block {:margin-left "5mm"} (str arvo)]]]))]])
 
 (defn- luo-header [raportin-nimi]
   (let [nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
@@ -537,6 +547,17 @@
             (fo/checkbox koko vaihtoehto)
             " " otsikko]])]]])
 
+(defn generoi-sisalto [sisalto]
+  (keep identity
+        (mapcat #(when %
+                   (if (seq? %)
+                     (map muodosta-pdf %)
+                     [(muodosta-pdf %)]))
+                sisalto)))
+
+(defmethod muodosta-pdf :piilota-html [[_ & sisalto]]
+  (generoi-sisalto sisalto))
+
 (defmethod muodosta-pdf :raportti [[_ raportin-tunnistetiedot & sisalto]]
   ;; Muodosta header raportin-tunnistetiedoista!
   (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
@@ -548,12 +569,7 @@
                    (when-let [tiedot (:tietoja raportin-tunnistetiedot)]
                      [:fo:block {:padding "1mm 0" :border "solid 0.2mm black" :margin-bottom "2mm"}
                       (muodosta-pdf [:yhteenveto tiedot])])]
-            (keep identity
-              (mapcat #(when %
-                         (if (seq? %)
-                           (map muodosta-pdf %)
-                           [(muodosta-pdf %)]))
-                sisalto))
+            (generoi-sisalto sisalto)
             #_[[:fo:block {:id "raportti-loppu"}]])))
       {:tiedostonimi (str tiedoston-nimi ".pdf")})))
 

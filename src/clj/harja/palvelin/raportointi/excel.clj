@@ -174,10 +174,13 @@
 (defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
   [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
 
-(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
-  [arvo
-   (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
-   fmt])
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi?]}] solun-tyyli]
+  (let [solun-tyyli (if lihavoi?
+                      (merge solun-tyyli {:font {:bold true}})
+                      solun-tyyli)]
+    [arvo
+     (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
+     fmt]))
 
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
@@ -256,9 +259,11 @@
     (let [rivi (.createRow sheet nolla)
           solu (.createCell rivi 0)]
       (excel/set-cell! solu (or
-                              custom-ylin-rivi
-                              (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
-                                                               (str " - " alkupvm "-" loppupvm)))))
+                             custom-ylin-rivi
+                             (str raportin-nimi
+                                  (when urakka (str ", " urakka))
+                                  (when (and alkupvm (not loppupvm)) (str ", " alkupvm))
+                                  (when (and alkupvm loppupvm) (str ", " alkupvm "-" loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.
@@ -612,10 +617,21 @@
 (defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
-        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
-    (doseq [elementti (remove nil? sisalto)]
-      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+  (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
+    (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
+      (doseq [elementti (remove nil? sisalto)]
+
+        (try
+          ;; Voi olla äkkiseltään haastava hahmottaa mitä tässä tehdään
+          ;; Eli jätetään :piilota-html pois, ja muodostetaan kaikki elementit sen sisällä
+          ;; piilota-html on tehty jos halutaan piilottaa html muodostus mutta tehdään silti excel
+          (if (= (first elementti) :piilota-html)
+            (doseq [x (vec (rest elementti))]
+              (muodosta-excel (liita-yleiset-tiedot x raportin-tunnistetiedot) workbook))
+            (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
+          
+          (catch Throwable t
+            (log/error t "Virhe Excel muodostamisessa (raportti)")))))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]

@@ -234,7 +234,20 @@
   "Tietoja ei löytynyt valitulta aikaväliltä.")
 
 (defn raportti-tiedostonimi [raportin-tunnistetiedot]
-  (str/join ", "
-    ((juxt :raportin-nimi :urakka (fn [rivi]
-                                    (str (:alkupvm rivi) "-" (:loppupvm rivi))))
-     (:raportin-yleiset-tiedot raportin-tunnistetiedot))))
+  (let [urakka (:urakka (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        alkupvm (:alkupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        loppupvm (:loppupvm (:raportin-yleiset-tiedot raportin-tunnistetiedot))
+        raportin-nimi (:raportin-nimi (:raportin-yleiset-tiedot raportin-tunnistetiedot))]
+
+    (cond
+      (and urakka raportin-nimi alkupvm loppupvm)
+      (str urakka ", " raportin-nimi ", " (str alkupvm " - " loppupvm))
+
+      (and (not urakka) raportin-nimi alkupvm (not loppupvm))
+      (str raportin-nimi ", " alkupvm)
+
+      (and (not urakka) raportin-nimi alkupvm loppupvm)
+      (str raportin-nimi ", " alkupvm " - " alkupvm)
+
+      :else
+      (str raportin-nimi))))

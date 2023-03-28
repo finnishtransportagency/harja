@@ -218,6 +218,7 @@
        tiedot/aanimerkki-uusista-ilmoituksista?]
 
       [vihjeet]
+      [ilmoitukset-raportti/ilmoitukset_raportti haetut-ilmoitukset @tiedot/ilmoitukset]
 
       (when-not kuittaa-monta-nyt
         [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
@@ -228,8 +229,6 @@
 
       [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
              (when @nav/valittu-urakka (str " Urakassa " (:nimi @nav/valittu-urakka))))]
-
-      [ilmoitukset-raportti/ilmoitukset_raportti]
       
       [grid
        {:tyhja (if haetut-ilmoitukset

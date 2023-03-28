@@ -327,8 +327,13 @@
    ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
      (cond
-       (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+       (and
+        (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+        (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
        [:h1 (:nimi raportin-tunnistetiedot)]
+
+       (= (:piilota-otsikko? raportin-tunnistetiedot) true)
+       [:span]
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))
@@ -342,6 +347,11 @@
                              sisalto
                              [sisalto]))
                          sisalto))])
+
+(defmethod muodosta-html :piilota-html [[_ & _]]
+  ;; Jos halutaan säilyttää frontin oma html, ja generoida vain excel/pdf raportti
+  (log "Muodostetaan piilotettu html raportti")
+  nil)
 
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
