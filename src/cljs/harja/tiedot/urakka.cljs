@@ -45,7 +45,8 @@
   (reset! valittu-sopimusnumero [nil "Kaikki"]))
 
 (defonce urakan-toimenpideinstanssit
-  (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               _ @istunto/kayttaja]
               {:nil-kun-haku-kaynnissa? true}
               (when (and urakka-id
                          (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
@@ -375,8 +376,10 @@
 (defonce urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat
   (reaction<! [urakka-id (:id @nav/valittu-urakka)
                ;; pitää hakea uudelleen jos toimenpidekoodeja muokataan
-               _ @toimenpidekoodit/koodit]
+               _ @toimenpidekoodit/koodit
+               _ @istunto/kayttaja]
               {:nil-kun-haku-kaynnissa? true}
+
               (when (and urakka-id
                          (oikeudet/voi-lukea? oikeudet/urakat urakka-id @istunto/kayttaja))
                 (urakan-toimenpiteet/hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat urakka-id))))
