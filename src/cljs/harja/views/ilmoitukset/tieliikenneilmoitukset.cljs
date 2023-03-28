@@ -110,25 +110,30 @@
 
 (defn ilmoitusten-hakuehdot [e! valinnat-nyt]
   [lomake/lomake
-   {:luokka :horizontal
+   {:luokka "css-grid sm-css-grid-colums-4x1"
     :muokkaa! #(e! (v/->AsetaValinnat %))}
    [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
-                               tiedot/aikavalit
-                               valinnat-nyt
-                               {:vakioaikavali :valitetty-urakkaan-vakioaikavali
-                                :alkuaika      :valitetty-urakkaan-alkuaika
-                                :loppuaika     :valitetty-urakkaan-loppuaika})
+      tiedot/aikavalit
+      valinnat-nyt
+      {:vakioaikavali :valitetty-urakkaan-vakioaikavali
+       :alkuaika      :valitetty-urakkaan-alkuaika
+       :loppuaika     :valitetty-urakkaan-loppuaika}
+      false
+      {::lomake/col-luokka"col-xs-12"})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
-                               tiedot/toimenpiteiden-aikavalit
-                               valinnat-nyt
-                               {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
-                                :alkuaika :toimenpiteet-aloitettu-alkuaika
-                                :loppuaika :toimenpiteet-aloitettu-loppuaika})
+      tiedot/toimenpiteiden-aikavalit
+      valinnat-nyt
+      {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
+       :alkuaika :toimenpiteet-aloitettu-alkuaika
+       :loppuaika :toimenpiteet-aloitettu-loppuaika}
+      false
+      {::lomake/col-luokka "col-xs-12"})
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
      :pituus-max 64
-     :palstoja 1}
+     :palstoja 1
+     ::lomake/col-luokka "col-xs-12"}
     {:nimi :selite
      :palstoja 1
      :otsikko "Selite"
@@ -136,55 +141,64 @@
      :tyyppi :haku
      :hae-kun-yli-n-merkkia 0
      :nayta second :fmt second
-     :lahde selitehaku}
+     :lahde selitehaku
+     ::lomake/col-luokka "col-xs-12"}
     {:nimi :tr-numero
      :palstoja 1
      :otsikko "Tienumero"
      :placeholder "Rajaa tienumerolla"
-     :tyyppi :positiivinen-numero :kokonaisluku? true}
+     :tyyppi :positiivinen-numero :kokonaisluku? true
+     ::lomake/col-luokka"col-xs-12"}
     {:nimi :tunniste
      :palstoja 1
      :otsikko "Tunniste"
      :placeholder "Rajaa tunnisteella"
-     :tyyppi :string}
+     :tyyppi :string
+     ::lomake/col-luokka "col-xs-12"}
     {:nimi :ilmoittaja-nimi
-     :palstoja 1
      :otsikko "Ilmoittajan nimi"
      :placeholder "Rajaa ilmoittajan nimellä"
-     :tyyppi :string}
+     :tyyppi :string
+     ::lomake/col-luokka "col-xs-12"}
     {:nimi :ilmoittaja-puhelin
      :palstoja 1
      :otsikko "Ilmoittajan puhelinnumero"
      :placeholder "Rajaa ilmoittajan puhelinnumerolla"
-     :tyyppi :puhelin}
-
-    (lomake/ryhma
-      {:rivi? true}
-      {:nimi :tilat
-       :otsikko "Tila"
-       :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/tila-filtterit
-       :vaihtoehto-nayta tilan-selite}
-      {:nimi :tyypit
-       :otsikko "Tyyppi"
-       :tyyppi :checkbox-group
-       :vaihtoehdot [:toimenpidepyynto :tiedoitus :kysely]
-       :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
-      {:nimi :vaikutukset
-       :otsikko "Vaikutukset"
-       :tyyppi :checkbox-group
-       :vaihtoehdot tiedot/vaikutukset-filtterit
-       :vaihtoehto-nayta vaikutuksen-selite
-       :vihje kuittausvaatimukset-str}
-      {:nimi :aloituskuittauksen-ajankohta
-       :otsikko "Aloituskuittaus annettu"
-       :tyyppi :radio-group
-       :vaihtoehdot [:kaikki :alle-tunti :myohemmin]
-       :vaihtoehto-nayta (fn [arvo]
-                           ({:kaikki "Älä rajoita aloituskuittauksella"
-                             :alle-tunti "Alle tunnin kuluessa"
-                             :myohemmin "Yli tunnin päästä"}
-                             arvo))})]
+     :tyyppi :puhelin
+     ::lomake/col-luokka "col-xs-12"}
+    {:nimi :tilat
+     :otsikko "Tila"
+     :tyyppi :checkbox-group
+     :vaihtoehdot tiedot/tila-filtterit
+     :palstoja 2
+     ::lomake/col-luokka "col-xs-12"
+     :vaihtoehto-nayta tilan-selite}
+    {:nimi :tyypit
+     :otsikko "Tyyppi"
+     :tyyppi :checkbox-group
+     :palstoja 2
+     ::lomake/col-luokka "col-xs-12"
+     :vaihtoehdot [:toimenpidepyynto :tiedoitus :kysely]
+     :vaihtoehto-nayta ilmoitustyypin-lyhenne-ja-nimi}
+    {:nimi :vaikutukset
+     :otsikko "Vaikutukset"
+     :tyyppi :checkbox-group
+     :palstoja 1
+     ::lomake/col-luokka "col-xs-12"
+     :vaihtoehdot tiedot/vaikutukset-filtterit
+     :vaihtoehto-nayta vaikutuksen-selite
+     :vihje kuittausvaatimukset-str}
+    {:nimi :aloituskuittauksen-ajankohta
+     :otsikko "Aloituskuittaus annettu"
+     :tyyppi :radio-group
+     :palstoja 2
+     ::lomake/col-luokka "col-xs-12"
+     :vaihtoehdot [:kaikki :alle-tunti :myohemmin]
+     :vaihtoehto-nayta (fn [arvo]
+                         ({:kaikki "Älä rajoita aloituskuittauksella"
+                           :alle-tunti "Alle tunnin kuluessa"
+                           :myohemmin "Yli tunnin päästä"}
+                          arvo))}]
    valinnat-nyt])
 
 (defn ilmoitustyypin-selite [ilmoitustyyppi]
