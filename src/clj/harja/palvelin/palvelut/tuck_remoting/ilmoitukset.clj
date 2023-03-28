@@ -23,7 +23,7 @@
 (defonce kuuntelijat (atom {}))
 
 ;; TODO: Tutki voiko harja.transit read/write optioita ottaa käyttöön tuck-remoten transit-toteutuksessa.
-(defn muodosta-ilmoitus-vastaus
+#_(defn muodosta-ilmoitus-vastaus
   "Harja.transit read/write optiot eivät ole käytössä tuck-remoten omassa transit-toteutuksessa, joten muunnetaan
   ilmoitus-vastaus sellaiseksi, että se menee tuck-remoten läpi clientille."
   [ilmoitus]
@@ -31,7 +31,7 @@
     (update-in [:sijainti] #(when % (geo/pg->clj %)))
     (update-in [:selitteet] #(when % (konversio/pgarray->vector %)))))
 
-(defn hae-ilmoitus [db ilmoitus-id]
+#_(defn hae-ilmoitus [db ilmoitus-id]
   (let [ilmoitus (first (tieliikenneilmoitus-q/hae-ilmoitukset-ilmoitusidlla db [ilmoitus-id]))]
     (muodosta-ilmoitus-vastaus ilmoitus)))
 
@@ -40,7 +40,12 @@
   (let [lopeta-kuuntelu-fn (if (:urakka-id opts)
                              (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka-id opts)
                                (fn [{ilmoitus-id :payload}]
-                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                 ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
+                                 ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
+                                 ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
+                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})
+
+                                 #_(let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
                                    ;; TODO: Poista debug-lokitus
                                    (println "### Kuuntele urakan ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 
@@ -49,7 +54,12 @@
                              (notifikaatiot/kuuntele-kaikkia-ilmoituksia
                                ;; TODO: Filtteröi ilmoituksen lähetys käyttäjän ja optioiden perusteella (Jeren kommentti)
                                (fn [{ilmoitus-id :payload}]
-                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                 ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
+                                 ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
+                                 ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
+                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})
+
+                                 #_(let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
                                    ;; TODO: Poista debug-lokitus
                                    (println "### Kuuntele kaikkia ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
 

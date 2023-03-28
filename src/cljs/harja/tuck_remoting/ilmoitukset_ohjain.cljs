@@ -3,10 +3,8 @@
     [taoensso.timbre :as log]
     [tuck.core :as tuck]
     [harja.tyokalut.tuck-remoting :as tr-tyokalut]
-    [harja.tuck-remoting.ilmoitukset-eventit :as eventit]))
-
-(defonce tila-atom (atom {:ws-ilmoitukset []
-                          :ws-yhteyden-tila :suljettu}))
+    [harja.tuck-remoting.ilmoitukset-eventit :as eventit]
+    [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tieliikenneilmoitukset]))
 
 (defrecord AloitaYhteysJaKuuntelu [])
 (defrecord AloitaKuuntelu [opts])
@@ -28,10 +26,6 @@
     (log/info "Ilmoitukset: WS-yhteys katkesi. Yritetään muodostaa yhteys uudelleen.")))
 
 (extend-protocol tuck/Event
-  AsetaYhteydenTila
-  (process-event [{tila :tila} app]
-    (assoc-in app [:ws-yhteyden-tila] tila))
-
   ;; Aloittaa WS-yhteyden ja lähettää kuuntelun aloittamisen käynnistävän viestin palvelimelle
   ;; ws-yhteys-onnistui-kasittelija -käsittelijässä.
   AloitaYhteysJaKuuntelu
@@ -39,13 +33,17 @@
     (tuck/action!
       (fn [e!]
         (e! (tr-tyokalut/->YhdistaWS
-              tila-atom
-              ;; Testataan suoraan tilan muuttamistan tieliikenneilmoitukset-atomiin
-              #_tieliikenneilmoitukset/ilmoitukset
+              ;; TODO: Testataan suoraan tilan muuttamistan tieliikenneilmoitukset-atomiin
+              tieliikenneilmoitukset/ilmoitukset
               (partial ws-yhteys-onnistui-kasittelija e!)
               (partial ws-yhteys-katkaistu-kasittelija e!)))))
 
     app)
+
+  AsetaYhteydenTila
+  (process-event [{tila :tila} app]
+    ;; Huom. tämä asetetaan suoraan tuck-remotingille annettuun tila-atomiin
+    (assoc-in app [:ws-yhteyden-tila] tila))
 
   AloitaKuuntelu
   (process-event [{opts :opts} app]
@@ -72,7 +70,8 @@
         (e! (tr-tyokalut/->KatkaiseWS))))
     app)
 
+  ;; -- Tuck-remoting eventtien käsittely --
   eventit/Ilmoitus
-  (process-event [{:keys [ilmoitus]} app]
-    (log/info "Uusi ilmoitus (WS):" ilmoitus)
-    (update app :ws-ilmoitukset conj ilmoitus)))
+  (process-event [{:keys [ilmoitus-id]} app]
+    (log/info "Uusi ilmoitus saatavilla (WS): " ilmoitus-id)
+    (update app :ws-ilmoitukset conj ilmoitus-id)))
