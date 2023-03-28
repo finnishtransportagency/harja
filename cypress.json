@@ -1,5 +1,6 @@
 {
 	"baseUrl": "http://localhost:3000",
 	"watchForFileChanges": false,
-    "experimentalStudio": false
+    "experimentalStudio": false,
+    "videoUploadOnPasses": false
 }
