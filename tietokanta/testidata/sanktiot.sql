@@ -665,7 +665,7 @@ INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelyta
                             luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus,
                             tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys)
 VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '',
-        'hylatty'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2022-09-07 06:06.37',
+        'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei tässä ole mitään järkeä', 123, 1, NOW(), '2022-09-07 06:06.37',
         '2022-09-08 06:06.37', FALSE, FALSE, (SELECT id FROM urakka WHERE nimi = 'Iin MHU 2021-2026'),
         'Sanktion sisältävä laatupoikkeama Iin MHU', 1, 2, 3, 4, POINT(418237, 7207744)::GEOMETRY, 5);
 INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,

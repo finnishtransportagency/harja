@@ -2,7 +2,7 @@
   (:require [clojure.test :refer :all]
             [taoensso.timbre :as log]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-mhu :as laskutusyhteenveto]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
 
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]

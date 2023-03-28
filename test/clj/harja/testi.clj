@@ -585,6 +585,7 @@
 (def raahen-maanteiden-hoitourakan-2023-2028-sopimus-id (atom nil))
 
 (def yit-rakennus-id (atom nil))
+(def destia-id (atom nil))
 (def kemin-aluerakennus-id (atom nil))
 
 (def paikkauskohde-tyomenetelmat (atom nil))
@@ -851,6 +852,9 @@
 
 (defn hae-yit-rakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'YIT Rakennus Oy'"))))
+
+(defn hae-destia-id []
+  (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Destia Oy'"))))
 
 (defn hae-kemin-aluerakennus-id []
   (ffirst (q (str "SELECT id FROM organisaatio WHERE nimi = 'Kemin Alueurakoitsija Oy'"))))
@@ -1211,6 +1215,7 @@
   (reset! kajaanin-alueurakan-2014-2019-paasopimuksen-id (hae-kajaanin-alueurakan-2014-2019-paasopimuksen-id))
   (reset! pudasjarven-alueurakan-id (hae-urakan-id-nimella "Pudasjärven alueurakka 2007-2012"))
   (reset! yit-rakennus-id (hae-yit-rakennus-id))
+  (reset! destia-id (hae-destia-id))
   (reset! kemin-aluerakennus-id (hae-kemin-aluerakennus-id))
   (reset! paikkauskohde-tyomenetelmat (hae-paikkauskohde-tyomenetelmat))
   (reset! iin-maanteiden-hoitourakan-2021-2026-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
@@ -1299,6 +1304,46 @@
    :organisaation-urakat #{@kemin-alueurakan-2019-2023-id}
    :organisaatioroolit {}
    :urakkaroolit {@kemin-alueurakan-2019-2023-id #{"Paakayttaja"}}})
+
+(defn iin-2021-urakan-urakoitsijan-urakkavastaava []
+  {:sahkoposti "seppo.sankarih@example.org", :kayttajanimi "yit_uuvh", :puhelin 43363123, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Yitin",
+   :organisaatio {:id @yit-rakennus-id, :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@iin-maanteiden-hoitourakan-2021-2026-id}
+   :organisaatioroolit {}
+   :urakkaroolit {(hae-urakan-id-nimella "Iin MHU 2021-2026") #{"vastuuhenkilo"}}})
+
+(defn iin-2021-urakan-urakoitsijan-paakayttaja []
+  {:sahkoposti "ismo.isokenkainen@example.com", :kayttajanimi "IinPaa", :puhelin 123125123, :sukunimi "Isokenkäinen",
+   :roolit #{"Paakayttaja"}, :id 85, :etunimi "Ismo",
+   :organisaatio {:id @yit-rakennus-id :nimi "YIT Rakennus Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@iin-maanteiden-hoitourakan-2021-2026-id @oulun-maanteiden-hoitourakan-2019-2024-id}
+   :organisaatioroolit {@yit-rakennus-id #{"Paakayttaja"}}
+   :urakkaroolit {}})
+
+(defn raahen-2023-urakan-urakoitsijan-urakkavastaava []
+  {:sahkoposti "ulle.urakoitisja@example.org", :kayttajanimi "ulle", :puhelin 4324214, :sukunimi "Urakkavastaava",
+   :roolit #{}, :id 17, :etunimi "Destian",
+   :organisaatio {:id @destia-id, :nimi "Destia Oy", :tyyppi "urakoitsija"},
+   :organisaation-urakat #{@raahen-maanteiden-hoitourakan-2023-2028-id}
+   :organisaatioroolit {}
+   :urakkaroolit {(hae-urakan-id-nimella "Raahen MHU 2023-2028") #{"vastuuhenkilo"}}})
+
+(defn raahen-2023-urakan-rakennuttajakonsultti []
+  {:sahkoposti "Kimmo.Konsultti@example.org", :kayttajanimi "kipe", :puhelin 2144234, :sukunimi "Konsultti",
+   :roolit #{}, :id 117, :etunimi "Kimmo",
+   :organisaatio {:id 14, :nimi "Tiekyylät Oy", :tyyppi "tilaajan-konsultti"}
+   :organisaation-urakat #{}
+   :organisaatioroolit {}
+   :urakkaroolit {(hae-urakan-id-nimella "Raahen MHU 2023-2028") #{"Rakennuttajakonsultti"}}})
+
+(defn raahen-2023-urakan-tilaajan-urakanvalvoja []
+  {:sahkoposti "Usko.urakanvalvoja@example.org", :kayttajanimi "tero", :puhelin 2144234, :sukunimi "Valvoja",
+   :roolit #{}, :id 17, :etunimi "Urakan",
+   :organisaatio {:id 12, :nimi "Pohjois-Pohjanmaa", :tyyppi "hallintayksikko"}
+   :organisaation-urakat #{@iin-maanteiden-hoitourakan-2021-2026-id @raahen-maanteiden-hoitourakan-2023-2028-id}
+   :organisaatioroolit {}
+   :urakkaroolit {(hae-urakan-id-nimella "Raahen MHU 2023-2028") #{"ELY_Urakanvalvoja"}}})
 
 (defn lapin-paallystyskohteiden-tilaaja []
   {:sahkoposti "tilaaja@example.org", :kayttajanimi "tilaaja",
