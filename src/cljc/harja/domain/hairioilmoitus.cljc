@@ -20,10 +20,25 @@
   {:hairio "Häiriöilmoitus"
    :tiedote "Tiedote"})
 
-(def sarakkeet #{::id ::viesti ::pvm ::voimassa? ::tyyppi})
+(def sarakkeet #{::id ::viesti ::pvm ::voimassa? ::tyyppi ::alkuaika ::loppuaika})
 
-(defn tuorein-voimassaoleva-hairio [hairiot]
-  (->> hairiot
-       (filter #(true? (::voimassa? %)))
-       (sort-by ::pvm)
-       (first)))
+(defn voimassaoleva-hairio
+  ([hairiot]
+   (voimassaoleva-hairio hairiot (pvm/nyt)))
+  ([hairiot aika]
+   (->> hairiot
+     (filter #(and
+                (::voimassa? %)
+                (cond
+                  (and (::alkuaika %) (::loppuaika %))
+                  (pvm/valissa? aika (::alkuaika %) (::loppuaika %) false)
+
+                  (::alkuaika %)
+                  (pvm/sama-tai-jalkeen? aika (::alkuaika %) false)
+
+                  (::loppuaika %)
+                  (pvm/sama-tai-ennen? aika (::loppuaika %) false)
+
+                  :else true)))
+     (sort-by ::pvm)
+     first)))
