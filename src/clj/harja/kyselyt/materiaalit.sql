@@ -461,4 +461,30 @@ FROM tr_valin_suolatoteumat(:urakka::integer, :tie::integer, :alkuosa::integer, 
 SELECT sum(rp.maara) AS maara_yhteensa
 FROM suolatoteuma_reittipiste rp
 WHERE rp.pohjavesialue = :pohjavesialue
-  AND rp.aika BETWEEN :alkupvm AND :loppupvm
+  AND rp.aika BETWEEN :alkupvm AND :loppupvm;
+
+-- name: hae-urakan-suunniteltu-materiaalin-kaytto
+-- Hakee kaikki materiaalit, ja palauttaa materiaalin suunnittelutiedot, jos materiaalia on urakkaan suunniteltu.
+-- Jätetaan materiaalityypiltään talvisuola tyyppiset materiaalit pois. Eli talvisuola ja erityisalue
+-- niille on oma hakunsa
+SELECT m.id                               AS materiaali_id,
+       m.nimi                             AS materiaali,
+       m.yksikko                          AS materiaali_yksikko,
+       m.materiaalityyppi                 AS materiaali_tyyppi,
+       ml.nimi                            AS materiaaliluokka,
+       ml.yksikko                         AS materiaaliluokka_yksikko,
+       ml.materiaalityyppi                AS materiaaliluokka_tyyppi,
+       mk.maara,
+       mk.muokattu,
+       mk.luotu,
+       EXTRACT(YEAR from mk.alkupvm)::int AS "hoitokauden-alkuvuosi"
+  FROM materiaalin_kaytto mk
+       LEFT JOIN materiaalikoodi m ON mk.materiaali = m.id
+       LEFT JOIN materiaaliluokka ml ON m.materiaaliluokka_id = ml.id
+ WHERE mk.urakka = :urakka
+   AND mk.poistettu = FALSE
+   AND m.materiaalityyppi NOT IN ('talvisuola' :: MATERIAALITYYPPI, 'erityisalue' :: MATERIAALITYYPPI);
+
+-- name: hae-talvisuolan-materiaaliluokka
+SELECT nimi as materiaaliluokka, yksikko as materiaaliluokka_yksikko, materiaalityyppi as materiaaliluokka_tyyppi
+  FROM materiaaliluokka where nimi = 'Talvisuola';
