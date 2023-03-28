@@ -1079,9 +1079,19 @@ WHERE u.tyyppi = :urakkatyyppi :: urakkatyyppi
 -- name: hae-urakan-hoitokaudet
 SELECT alkupvm, loppupvm FROM urakan_hoitokaudet(:urakka_id);
 
--- name: listaa-urakat-analytiikalle
+-- name: listaa-urakat-analytiikalle-hoitovuosittain
 -- Haetaan kaikki urakat ilman geometriatietoja
+-- jos vuodet on annettu, niin rajaa haku voimassaolon perusteella
 SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
   FROM urakka
+  WHERE (:alkuvuosi::INT IS NULL OR (alkupvm, loppupvm) OVERLAPS (concat(:alkuvuosi::text,'-10-01')::DATE, concat(:loppuvuosi::text,'-10-01')::DATE))
  ORDER BY alkupvm ASC;
+
+-- name: listaa-kaikki-urakat-analytiikalle
+-- Haetaan kaikki urakat ilman geometriatietoja
+-- jos vuodet on annettu, niin rajaa haku voimassaolon perusteella
+SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke, sopimustyyppi, indeksi,
+       urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
+FROM urakka
+ORDER BY alkupvm ASC;
