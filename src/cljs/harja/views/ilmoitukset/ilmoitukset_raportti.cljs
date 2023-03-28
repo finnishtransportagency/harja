@@ -48,6 +48,6 @@
   (reset! filtterit valitut-filtterit)
 
   (when-let [p @raportin-parametrit]
-    [:div
-     [upotettu-raportti/raportin-vientimuodot p]
-     (suorita-raportti :ilmoitukset-raportti)]))
+    [:span
+      [upotettu-raportti/raportin-vientimuodot p]
+      (suorita-raportti :ilmoitukset-raportti)]))

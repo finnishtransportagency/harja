@@ -28,11 +28,15 @@
            [napit/tallenna (str otsikko) (constantly true) {:ikoni (ikonit/harja-icon-action-download) :type "submit" :vayla-tyyli? true :esta-prevent-default? true}]])))])
   ([parametrit]
    ;; Säädetty tallenna- napit MHU urakoille etteivät ole rumasti
+   (println "Nimi: (:nimi parametrit)" (:nimi parametrit))
    (let [class (cond
-                 (= (:nimi parametrit) :laskutusyhteenveto-tuotekohtainen)
+                 (or (= (:nimi parametrit) :laskutusyhteenveto-tyomaa)
+                     (= (:nimi parametrit) :laskutusyhteenveto-tuotekohtainen))
                  "upotettu-raporttitallennus-mhu"
-                 (= (:nimi parametrit) :laskutusyhteenveto-tyomaa)
-                 "upotettu-raporttitallennus-mhu"
+
+                 (= (:nimi parametrit) :ilmoitukset-raportti)
+                 "upotettu-raporttitallennus-ilmoitukset"
+
                  :else
                  "upotettu-raporttitallennus")]
 
