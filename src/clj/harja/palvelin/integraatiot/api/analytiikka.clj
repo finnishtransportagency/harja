@@ -194,7 +194,7 @@
 (defn palauta-urakat
   "Haetaan urakat ja palautetaan ne json muodossa"
   [db _ _]
-  (let [urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+  (let [urakat (urakat-kyselyt/listaa-kaikki-urakat-analytiikalle db)
         vastaus {:urakat urakat}]
     vastaus))
 
@@ -249,18 +249,20 @@
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         ;; Jos parametrina on annettu vuodet, niin käytetään niitä
         hoitokaudet (range (or alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
-                      (inc (or loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))))
+                      (inc (or loppuvuosi (dec (pvm/vuosi (:loppupvm urakan-tiedot))))))
 
         ;; Alueurakoille saadaan suunnitellut materiaalit materiaalin_kaytto taulusta
         suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto db urakka-id)
         ;; Kootaan tulokset vuosittain
-        vuosittainen-suunniteltu-materialimaara (if (not (nil? suunniteltu-materialimaara))
-                                                  (reduce (fn [tulos vuosi]
-                                                            (let [tama-vuosi {:hoitokauden-alkuvuosi vuosi
-                                                                              :suunnitellut-materiaalit suunniteltu-materialimaara}]
-                                                              (conj tulos tama-vuosi)))
-                                                    [] hoitokaudet)
-                                                  suunniteltu-materialimaara)
+        vuosittainen-suunniteltu-materialimaara (reduce (fn [tulos vuosi]
+                     (let [vuoden-materiaalit (filter
+                                                #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                   %)
+                                                suunniteltu-materialimaara)
+                           tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                       :suunnitellut-materiaalit vuoden-materiaalit}]
+                       (conj tulos tama-vuosi)))
+             [] hoitokaudet)
 
         ;; MH-urakoiden suunnitellut materiaalitiedot tulee urakka_tehtavamaarat taulusta, mutta HJU urakoille on suunniteltu niitä myös materiaalin_kayttotauluun
         ;; Joten molempia hakuja on käytettävä.
@@ -298,7 +300,7 @@
                                                                                        %)
                                                                                 (:suunnitellut-materiaalit vuoden-kaytto-materiaalit))
                                                               uusi-maara (when sama-materiaali
-                                                                           (+ (:maara sama-materiaali) (:maara tehtava_mat)))
+                                                                           (+ (or (:maara sama-materiaali) 0) (or (:maara tehtava_mat) 0)))
                                                               uusi-tehtava-mat (if uusi-maara
                                                                                  (assoc tehtava_mat :maara uusi-maara)
                                                                                  tehtava_mat)]
@@ -354,7 +356,9 @@
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
   (tarkista-parametrit-aikavali parametrit)
   (let [_ (log/debug "palauta-suunnitellut-materiaalimaarat :: parametrit" (pr-str parametrit))
-        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        ;; Haetaan vain ne urakat, jotka ovat olleet voimassa valittuna vuosina
+        urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
+                                                                               :loppuvuosi loppuvuosi})
         suunnitellut-materiaalit (mapv (fn [urakka]
                                          {:urakka (:nimi urakka)
                                           :urakka-id (:id urakka)
@@ -420,7 +424,8 @@
   [db {:keys [alkuvuosi loppuvuosi] :as parametrit} kayttaja]
   (tarkista-parametrit-aikavali parametrit)
   (let [_ (log/debug "palauta-suunnitellut-tehtavamaarat :: parametrit" (pr-str parametrit))
-        urakat (urakat-kyselyt/listaa-urakat-analytiikalle db)
+        urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
+                                                                               :loppuvuosi loppuvuosi})
         suunnitellut-tehtavat (mapv (fn [urakka]
                                          {:urakka (:nimi urakka)
                                           :urakka-id (:id urakka)
