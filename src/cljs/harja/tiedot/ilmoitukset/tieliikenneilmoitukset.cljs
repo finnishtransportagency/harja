@@ -257,22 +257,22 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
   v/AsetaKuittausTiedot
   (process-event [{tiedot :tiedot} {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
-    (if valittu-ilmoitus
+    (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
       (update-in app [:valittu-ilmoitus :uusi-kuittaus] merge tiedot)
       (update-in app [:kuittaa-monta] merge tiedot)))
 
   ;; Kuittaa joko monta tai valitun ilmoituksen kuittaus
   v/Kuittaa
   (process-event [_ {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
-    (let [kuittaus (if valittu-ilmoitus
+    (let [kuittaus (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
                      (:uusi-kuittaus valittu-ilmoitus)
                      (dissoc kuittaa-monta :ilmoitukset))
-          ilmoitukset (or (and valittu-ilmoitus [valittu-ilmoitus])
+          ilmoitukset (or (and @nav/valittu-ilmoitus-id valittu-ilmoitus [valittu-ilmoitus])
                           (:ilmoitukset kuittaa-monta))
           tulos! (t/send-async! v/->KuittaaVastaus)]
       (go
         (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset! ilmoitukset kuittaus)))))
-    (if valittu-ilmoitus
+    (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
       (assoc-in app [:valittu-ilmoitus :uusi-kuittaus :tallennus-kaynnissa?] true)
       (assoc-in app [:kuittaa-monta :tallennus-kaynnissa?] true)))
 
@@ -282,7 +282,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (when v
       (viesti/nayta! "Kuittaus lähetetty Tieliikennekeskukseen." :success))
     (hae
-      (if valittu-ilmoitus
+      (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
         (-> app
             (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
             (update-in [:valittu-ilmoitus :kuittaukset]
