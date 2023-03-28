@@ -159,7 +159,7 @@
     (if (string? arvo)
       (try
         (Integer/parseInt arvo)
-        (catch NumberFormatException e
+        (catch Exception e
           nil))
       (int arvo))))
 
