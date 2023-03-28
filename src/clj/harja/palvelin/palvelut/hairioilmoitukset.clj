@@ -40,8 +40,8 @@
      ::hairio/pvm (c/to-sql-date (t/now))
      ::hairio/voimassa? true
      ::hairio/tyyppi (or tyyppi :hairio)
-     ::hairio/alkuaika (c/to-sql-time alkuaika)
-     ::hairio/loppuaika (c/to-sql-time loppuaika)})
+     ::hairio/alkuaika alkuaika
+     ::hairio/loppuaika loppuaika})
   (hae-kaikki-hairioilmoitukset db user false))
 
 (defrecord Hairioilmoitukset []

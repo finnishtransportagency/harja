@@ -9,7 +9,8 @@
             [harja.loki :refer [log]]
             [harja.fmt :as fmt]
             [harja.ui.napit :as napit]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.kentat :as kentat]
+            [harja.ui.lomake :as lomake])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- listaa-hairioilmoitus [hairio]
@@ -30,29 +31,36 @@
           [:li (listaa-hairioilmoitus hairio)]))])])
 
 (defn- aseta-hairioilmoitus []
-  ;; TODO Jos tähän tulee vielä lisää kenttiä, voisi muuttaa käyttään lomake-komponenttia
   [:div
-   [:div
-    [kentat/tee-otsikollinen-kentta {:otsikko "Viesti"
-                                     :kentta-params {:tyyppi :text :nimi :viesti
-                                                     :pituus-max 1024
-                                                     :koko [80 5]}
-                                     :arvo-atom (r/wrap (:teksti @tiedot/tuore-hairioilmoitus)
-                                                        #(swap! tiedot/tuore-hairioilmoitus assoc :teksti %))}]]
-   [:div
-    [kentat/tee-otsikollinen-kentta {:otsikko "Tyyppi"
-                                    :kentta-params {:tyyppi :valinta
-                                                    :valinnat [:hairio :tiedote]
-                                                    :valinta-nayta hairio/tyyppi-fmt}
-                                    :arvo-atom (r/wrap (:tyyppi @tiedot/tuore-hairioilmoitus)
-                                                       #(swap! tiedot/tuore-hairioilmoitus assoc :tyyppi %))}]]
-   [:br]
-   [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
-    {:disabled @tiedot/tallennus-kaynnissa?}]
-   [napit/peruuta
-    #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
-         (reset! tiedot/tuore-hairioilmoitus {:tyyppi :hairio
-                                              :teksti nil}))]])
+   [lomake/lomake
+    {:muokkaa! (fn [data]
+                 (reset! tiedot/tuore-hairioilmoitus data))
+     :footer [:<>
+              [napit/tallenna "Aseta" #(tiedot/aseta-hairioilmoitus @tiedot/tuore-hairioilmoitus)
+               {:disabled @tiedot/tallennus-kaynnissa?}]
+              [napit/peruuta
+               #(do (reset! tiedot/asetetaan-hairioilmoitus? false)
+                    (reset! tiedot/tuore-hairioilmoitus {:tyyppi :hairio
+                                                         :teksti nil}))]]}
+    [{:otsikko "Viesti"
+      :tyyppi :text
+      :nimi :teksti
+      :pituus-max 1024
+      :palstoja 2
+      :koko [80 5]}
+     {:otsikko "Tyyppi"
+      :tyyppi :valinta
+      :nimi :tyyppi
+      :valinnat [:hairio :tiedote]
+      :valinta-nayta hairio/tyyppi-fmt}
+     (lomake/rivi
+       {:otsikko "Alkamisaika"
+        :tyyppi :pvm-aika
+        :nimi :alkuaika}
+       {:otsikko "Päättymisaika"
+        :tyyppi :pvm-aika
+        :nimi :loppuaika})]
+    @tiedot/tuore-hairioilmoitus]])
 
 (defn- tuore-hairioilmoitus [tuore-hairio]
   [:div
@@ -80,7 +88,7 @@
     (komp/sisaan tiedot/hae-hairiot)
     (fn []
       (let [hairiotilmoitukset @tiedot/hairiot
-            tuorein-voimassaoleva-hairio (hairio/tuorein-voimassaoleva-hairio hairiotilmoitukset)]
+            tuorein-voimassaoleva-hairio (hairio/voimassaoleva-hairio hairiotilmoitukset)]
         (if (nil? hairiotilmoitukset)
           [ajax-loader "Haetaan..."]
 
