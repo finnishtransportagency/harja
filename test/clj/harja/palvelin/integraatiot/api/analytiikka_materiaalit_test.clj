@@ -188,9 +188,14 @@
                                      {:urakka-id 1
                                       :alkuvuosi "mitään"} kayttaja-analytiikka)
                                    (catch Exception e
-                                     e))]
+                                     e))
+        ; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
+        _ (luo-valiaikainen-kayttaja)
+        vastaus-urakka-vaarin (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s" "mitään")] kayttaja-analytiikka portti)]
+
     (is (str/includes? vastaus-urakka-id-puuttuu "Urakka-id puuttuu"))
-    (is (str/includes? vastaus-alkuvuosi-vaarin "Anna muodossa: 2015 ja varmista, että se on pienempi"))))
+    (is (str/includes? vastaus-alkuvuosi-vaarin "Anna muodossa: 2015 ja varmista, että se on pienempi"))
+    (is (str/includes? vastaus-urakka-vaarin "Urakka-id väärässä muodossa"))))
 
 
 (deftest hae-suunnitellut-materiaalimaarat-MH-urakalle-onnistuu-test
@@ -284,7 +289,7 @@
     (is (= 400 (:status vastaus)))
     (is (not (nil? encoodattu-body)))))
 
-(deftest hae-suunnitellut-materiaalimaarat-kaikille-urakoille-onnistuu
+(deftest hae-suunnitellut-materiaalimaarat-kaikille-voimassaoleville-urakoille-onnistuu
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
         _ (luo-valiaikainen-kayttaja)
         alkuvuosi 2021
@@ -296,7 +301,7 @@
     (is (= 200 (:status vastaus)))
     (is (not (nil? encoodattu-body)))
     ;; Pitäisi olla useamman urakan tiedot
-    (is (> (count encoodattu-body) 30))))
+    (is (> (count encoodattu-body) 15))))
 
 (deftest hae-suunnitellut-tehtavamaarat-alueurakalle-onnistuu
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan
