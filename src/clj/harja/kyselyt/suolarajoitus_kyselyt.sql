@@ -340,7 +340,8 @@ FROM suolasakko s
      JOIN urakka u on s.urakka = u.id AND u.tyyppi = 'hoito'
 WHERE s.urakka = :urakka-id
   AND s.tyyppi = 'kokonaismaara'::suolasakko_tyyppi
-  and s.kaytossa = true;
+  and s.kaytossa = true
+ORDER BY s.hoitokauden_alkuvuosi asc;
 
 -- name: paivita-rajoitusalueen-suolasanktio!
 UPDATE suolasakko SET maara = :sanktio_ylittavalta_tonnilta,
