@@ -10,7 +10,8 @@
             [harja.domain.hairioilmoitus :as hairio]
             [specql.core :as specql]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [harja.pvm :as pvm]))
 
 (defn- hae-kaikki-hairioilmoitukset [db user tarkista-oikeus?]
   (when tarkista-oikeus?
@@ -22,7 +23,7 @@
 (defn- hae-tuorein-voimassaoleva-hairioilmoitus [db user]
   (oikeudet/ei-oikeustarkistusta!) ;; Kuka vaan saa hakea tuoreimman häiriön
   {:hairioilmoitus (-> (hae-kaikki-hairioilmoitukset db user false)
-                       (hairio/tuorein-voimassaoleva-hairio))})
+                     (hairio/voimassaoleva-hairio))})
 
 (defn- aseta-kaikki-hairioilmoitukset-pois [db user]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
@@ -31,14 +32,16 @@
                   {::hairio/voimassa? true})
   (hae-kaikki-hairioilmoitukset db user false))
 
-(defn- aseta-hairioilmoitus [db user tiedot]
+(defn- aseta-hairioilmoitus [db user {::hairio/keys [viesti tyyppi alkuaika loppuaika]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-hairioilmoitukset user)
   (aseta-kaikki-hairioilmoitukset-pois db user)
   (specql/insert! db ::hairio/hairioilmoitus
-                  {::hairio/viesti (::hairio/viesti tiedot)
-                   ::hairio/pvm (c/to-sql-date (t/now))
-                   ::hairio/voimassa? true
-                   ::hairio/tyyppi (or (::hairio/tyyppi tiedot) :hairio)})
+    {::hairio/viesti viesti
+     ::hairio/pvm (c/to-sql-date (t/now))
+     ::hairio/voimassa? true
+     ::hairio/tyyppi (or tyyppi :hairio)
+     ::hairio/alkuaika alkuaika
+     ::hairio/loppuaika loppuaika})
   (hae-kaikki-hairioilmoitukset db user false))
 
 (defrecord Hairioilmoitukset []
