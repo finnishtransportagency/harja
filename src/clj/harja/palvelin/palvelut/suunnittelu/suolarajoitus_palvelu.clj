@@ -34,7 +34,7 @@
     (int? aet)
     (int? let)))
 
-(defn- tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
+(defn tierekisterin-tiedot [db {:keys [urakka-id hoitokauden-alkuvuosi] :as suolarajoitus}]
   (log/debug "tierekisterin-tiedot :: suolarajoitus: " suolarajoitus)
   (let [validaatiovirheet nil
         tierekisteri-valid? (pituuden-laskennan-data-validi? suolarajoitus)
@@ -75,7 +75,11 @@
                                                           :ajoratojen-maara (count (keep #(when (and (not= (:ajorata %) 0) (= (:osa %) osa)) %) ajoratojen-pituudet)) ;; Määritellään ajoratojen määrä (yleensa ajoratoja on 0,1,2) joten tähän tulisi arvo 2
                                                           }
                                            ;; Lasketaan vielä yhteen kokonaispituus, koska siitä pitää päätellä paljon asioita laskennassa
-                                           ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) (or (:ajoratojen-pituus ajoratatiedot) 0)))]
+                                           ajoratojen-kokonaispituus (if (and (:ajoratojen-pituus ajoratatiedot)
+                                                                           (> (:ajoratojen-maara ajoratatiedot) 0))
+                                                                       (* (:ajoratojen-pituus ajoratatiedot) (:ajoratojen-maara ajoratatiedot))
+                                                                       0)
+                                           ajoratatiedot (assoc ajoratatiedot :kokonaispituus (+ (:pituus ajoratatiedot) ajoratojen-kokonaispituus))]
                                        ajoratatiedot))
                                ;; Yhdistaä mahdolliset ajoradata samaan mäppiin
                                (group-by :osa ajoratojen-pituudet))

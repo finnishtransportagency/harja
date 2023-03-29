@@ -392,7 +392,7 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
          (:aosa != :losa
            AND (
                  -- Loppuosa selkeästi välissä
-                 (:losa > (ra.tierekisteriosoite).aosa AND :losa < (ra.tierekisteriosoite).losa)
+                 (:losa > (ra.tierekisteriosoite).aosa AND :losa <= (ra.tierekisteriosoite).losa)
                   -- Loppuosa välissä, mutta alkuosa edestä ulkona selkeästi
                   OR (:aosa < (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa  AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
                   -- Loppuosa välissä, mutta alkuosa edestä ulkona vain vähän
@@ -405,11 +405,12 @@ SELECT ra.id as rajoitusalue_id, rr.id as rajoitus_id, rr.suolarajoitus, rr.hoit
                  (:aosa > (ra.tierekisteriosoite).aosa AND :aosa < (ra.tierekisteriosoite).losa)
                  OR (:aosa > (ra.tierekisteriosoite).aosa AND :aosa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu väliin ja loppuosa menee yli
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet <= (ra.tierekisteriosoite).let-1 AND :let >= (ra.tierekisteriosoite).let)
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet <= (ra.tierekisteriosoite).let-1 AND :let >= (ra.tierekisteriosoite).let)
+                 -- Erikoistapaukset, jossa verrataan aosa = losa ja vertailtavissa rajoitusaluiessa on myös aosa = losa
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).let AND :aet >= (ra.tierekisteriosoite).aet)
+                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :losa = (ra.tierekisteriosoite).losa AND :aet < (ra.tierekisteriosoite).aet AND :let >= (ra.tierekisteriosoite).let)
                  -- Alkuosa osuu osittain kannassa olevien aosan ja losan väliin
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).let AND :aet >= (ra.tierekisteriosoite).aet)
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
-                 OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let >= (ra.tierekisteriosoite).let)
+                  OR (:aosa = (ra.tierekisteriosoite).aosa AND :aet < (ra.tierekisteriosoite).aet AND :let > (ra.tierekisteriosoite).aet AND :let <= (ra.tierekisteriosoite).let)
              )));
 
 
@@ -485,3 +486,11 @@ where pk.tunnus = pa.tunnus
   and pt.urakka = :urakkaid
   and pk.talvisuolaraja is not null
   and pk.rajoituksen_alkuvuosi = pt.hoitokauden_alkuvuosi;
+
+-- name: hae-rajoitusalueiden-pituudet
+SELECT u.id as "urakka-id", u.nimi as urakka_nimi, ra.id, (ra.tierekisteriosoite).tie, (ra.tierekisteriosoite).aosa,
+       (ra.tierekisteriosoite).aet, (ra.tierekisteriosoite).losa, (ra.tierekisteriosoite).let,
+       ra.pituus as "pituus-kannasta", ra.ajoratojen_pituus as "ajoradan-pituus-kannasta"
+FROM rajoitusalue ra
+     JOIN urakka u on ra.urakka_id = u.id
+order by urakka_id;
