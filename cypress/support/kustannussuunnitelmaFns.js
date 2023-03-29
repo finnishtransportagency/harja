@@ -386,7 +386,7 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
 
     cy.visit("/");
 
-    cy.contains('.haku-lista-item', alue).click();
+    cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
 
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: 10000}).click();

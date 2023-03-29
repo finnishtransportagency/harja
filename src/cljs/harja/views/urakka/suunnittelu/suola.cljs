@@ -214,7 +214,7 @@
                          (assoc lomake :hoitokauden-alkuvuosi valittu-hoitovuosi)
                          lomake)
         muokkaustila? (boolean (:rajoitusalue_id rajoituslomake))
-        disabled? (or (not (get-in app [:lomake ::tila/validi?])) (not saa-muokata?))]
+        disabled? (or (not (get-in app [:lomake ::tila/validi?]))  (:hae-tiedot-kaynnissa? app) (not saa-muokata?))]
     [:div.lomake-rajoitusalue
        #_ [debug/debug (:lomake app)]
      [lomake/lomake
@@ -469,13 +469,13 @@
 
 (defn taulukko-rajoitusalueet
   "Rajoitusalueiden taulukko."
-  [e! rajoitukset voi-muokata?]
+  [e! rajoitukset app]
   [grid/grid {:tunniste :rajoitusalue_id
               :piilota-muokkaus? true
               ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
               ;; taulukon sarakemääriä muutettaessa. Tyylejä säädetty toteumat.less tiedostossa.
               :esta-tiivis-grid? true
-              :tyhja (if (nil? rajoitukset)
+              :tyhja (if (:suolarajoitukset-haku-kaynnissa? app)
                        [yleiset/ajax-loader "Rajoitusalueita haetaan..."]
                        "Ei Rajoitusalueita")
               :rivi-klikattu #(e! (suolarajoitukset-tiedot/->AvaaTaiSuljeSivupaneeli true
@@ -592,7 +592,7 @@
             [:div.overlay-oikealla {:style {:width "570px" :overflow "auto"}}
              [lomake-rajoitusalue e! app urakka]])
 
-          [taulukko-rajoitusalueet e! rajoitusalueet saa-muokata?]]]))))
+          [taulukko-rajoitusalueet e! rajoitusalueet app]]]))))
 
 (defn urakan-suolarajoitukset []
   (tuck/tuck tila/suunnittelu-suolarajoitukset urakan-suolarajoitukset*))
