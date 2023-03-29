@@ -22,6 +22,9 @@
 (defn ws-yhteys-katkaistu-kasittelija [e! koodi syy suljettu-puhtaasti?]
   (e! (->AsetaYhteydenTila :suljettu))
 
+  ;; Laukaise ilmoitushaku ja automaattinen ilmoitusten HTTP-pollaus, jos WS-yhteys katkeaa
+  (e! (v/->HaeIlmoitukset))
+
   (if suljettu-puhtaasti?
     (log/info "Ilmoitukset: WS-yhteys katkaistu. Uusien ilmoitusten seuraaminen lopetettu.")
     (log/info "Ilmoitukset: WS-yhteys katkesi. Yritetään muodostaa yhteys uudelleen.")))
@@ -76,7 +79,7 @@
   (process-event [{:keys [ilmoitus]} app]
     (log/info "Uusi ilmoitus saatavilla (WS): " (:ilmoitus-id ilmoitus) ". Laukaistaan ilmoitusten haku.")
 
-    ;; Laukaise ilmoitushaku, kun saadaan ilmoitus uudesta ilmoituksesta
+    ;; Laukaise yksittäinen ilmoitushaku, kun saadaan ilmoitus uudesta ilmoituksesta
     (tuck/action!
       (fn [e!]
         (e! (v/->HaeIlmoitukset))))
