@@ -176,67 +176,67 @@
      [napit/sulje-ruksi hairiotiedot/piilota-hairioilmoitus! {:style {:margin "0px"}}]]))
 
 (defn paasisalto [sivu korkeus]
-  [:div
-   [debug/df-shell-kaikki]
-   (cond
-     @k/istunto-vanhentunut?
-     [yleinen-varoituspalkki
-      "Istunto on vanhentunut."
-      {:linkki "Lataa sivu uudelleen"
-       :linkki-fn #(.reload js/location)}]
+  (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
+    [:div
+     [debug/df-shell-kaikki]
+     (cond
+       @k/istunto-vanhentunut?
+       [yleinen-varoituspalkki
+        "Istunto on vanhentunut."
+        {:linkki "Lataa sivu uudelleen"
+         :linkki-fn #(.reload js/location)}]
 
-     @k/yhteys-katkennut?
-     [yleinen-varoituspalkki
-      "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
-      {:nayta-pisteanimaatio? true}]
+       @k/yhteys-katkennut?
+       [yleinen-varoituspalkki
+        "Yhteys Harjaan on katkennut! Yritetään yhdistää uudelleen"
+        {:nayta-pisteanimaatio? true}]
 
-     (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
-     [yhteys-palautunut-ilmoitus])
+       (and (not @k/yhteys-katkennut?) @k/yhteys-palautui-hetki-sitten)
+       [yhteys-palautunut-ilmoitus])
 
-   [:div.container
-    [header sivu]]
+     [:div.container
+      [header sivu]]
 
-   [:div.container
-    [murupolku/murupolku]]
+     [:div.container
+      [murupolku/murupolku]]
 
-   (let [hairiotiedot (:hairioilmoitus @hairiotiedot/tuore-hairioilmoitus)]
      (when (and hairiotiedot @hairiotiedot/nayta-hairioilmoitus?)
-       [hairioilmoitus hairiotiedot]))
+       [hairioilmoitus hairiotiedot])
 
-   ^{:key "harjan-paasisalto"}
-   [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
-    [:div.row.row-sisalto
-     [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
-      (case sivu
-        :urakat [urakat/urakat]
-        :raportit [raportit/raportit]
-        :info [info/info]
-        :ilmoitukset [ilmoitukset/ilmoitukset]
-        :tienpidon-luvat [tieluvat/tieluvat]
-        :hallinta [hallinta/hallinta]
-        :tilannekuva [tilannekuva/tilannekuva]
-        :about [about/about]
-        :tr [tierekisteri/tierekisteri]
+     ^{:key "harjan-paasisalto"}
+     [:div.container.sisalto {:style {:min-height (max 200 (- @dom/korkeus 220))}} ; contentin minimikorkeus pakottaa footeria alemmas
+      [:div.row.row-sisalto
+       [:div {:class (when-not (= sivu :tilannekuva) "col-sm-12")}
+        (case sivu
+          :urakat [urakat/urakat]
+          :raportit [raportit/raportit]
+          :info [info/info]
+          :ilmoitukset [ilmoitukset/ilmoitukset]
+          :tienpidon-luvat [tieluvat/tieluvat]
+          :hallinta [hallinta/hallinta]
+          :tilannekuva [tilannekuva/tilannekuva]
+          :about [about/about]
+          :tr [tierekisteri/tierekisteri]
 
-        ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
-        [urakat/urakat])]]]
-   [modal/modal-container]
-   [viesti-container]
-   [toast-viesti-container]
-   (when @nav/kartta-nakyvissa?
-     [kartta-layers korkeus])
+          ;; jos käyttäjä kirjoittaa selaimeen invalidin urlin, estetään räsähdys
+          [urakat/urakat])]]]
+     [modal/modal-container]
+     [viesti-container]
+     [toast-viesti-container]
+     (when @nav/kartta-nakyvissa?
+       [kartta-layers korkeus])
 
-   ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
-   ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
-   ;; se asemoidaan mountin jälkeen
-   ^{:key "kartta-container"}
-   [:div#kartta-container {:style {:position "absolute"
-                                   :top (- korkeus)
-                                   ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
-                                   :overflow (if @nav/kartta-nakyvissa?
-                                               "hidden"
-                                               "visible")}}
-    [kartta/kartta]]])
+     ;; kartta luodaan ja liitetään DOM:iin tässä. Se asemoidaan muualla #kartan-paikka divin avulla
+     ;; asetetaan alkutyyli siten, että kartta on poissa näkyvistä, jos näkymässä on kartta,
+     ;; se asemoidaan mountin jälkeen
+     ^{:key "kartta-container"}
+     [:div#kartta-container {:style {:position "absolute"
+                                     :top (- korkeus)
+                                     ;; Estetään asioiden vuotaminen ulos kartalta kun kartta on avattu
+                                     :overflow (if @nav/kartta-nakyvissa?
+                                                 "hidden"
+                                                 "visible")}}
+      [kartta/kartta]]]))
 
 (defn varoita-jos-vanha-ie []
   (if dom/ei-tuettu-ie?
