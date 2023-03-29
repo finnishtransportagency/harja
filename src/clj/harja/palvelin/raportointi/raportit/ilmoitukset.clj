@@ -87,7 +87,7 @@
   (let [valitetty-urakkaan-vakioaikavali (str (:nimi valitetty-urakkaan-vakioaikavali))
         toimenpiteet-aloitettu-vakioaikavali (str (:nimi toimenpiteet-aloitettu-vakioaikavali))
         hakuehto (filtteri-selitys-str hakuehto)
-        selite (str (second selite))
+        selite (filtteri-selitys-str (second selite))
         tr-numero (filtteri-selitys-str tr-numero)
         tunniste (filtteri-selitys-str tunniste)
         ilmoittaja-nimi (filtteri-selitys-str ilmoittaja-nimi)
