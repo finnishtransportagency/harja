@@ -51,7 +51,7 @@
       #(tiedot/tyhjenna-kayttajatiedot))
 
     (fn [_]
-      (when @tiedot/fimista-haetut-vastaanottajatiedot
+      (if @tiedot/fimista-haetut-vastaanottajatiedot
         [:div.email-vastaanottajat
          [grid/muokkaus-grid
           {:otsikko "Valitse vastaanottajat" :voi-poistaa? (constantly false)
@@ -69,7 +69,8 @@
            {:otsikko "Rooli" :nimi :roolit :leveys 7
             :muokattava? (constantly false) :tyyppi :string}]
 
-          tiedot/fimista-haetut-vastaanottajatiedot]]))))
+          tiedot/fimista-haetut-vastaanottajatiedot]]
+        [yleiset/ajax-loader "Haetaan vastaanottajien yhteystietoja Väyläviraston palvelusta..."]))))
 
 (defn valmis-tiemerkintaan-modal
   "Modaali, jossa joko merkitään kohde valmiiksi tiemerkintään tai perutaan aiemmin annettu valmius."
