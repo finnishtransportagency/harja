@@ -3,8 +3,6 @@
   client-puolelta WebSocketin yli.
   Palvelu lähettää myös WS client-eventtejä palvelimelta clientille WebSocketin yli."
   (:require
-    [harja.geo :as geo]
-    [harja.kyselyt.konversio :as konversio]
     [taoensso.timbre :as log]
     [tuck.remoting :as tr]
     [harja.palvelin.komponentit.tuck-remoting :as tr-komponentti]
@@ -22,20 +20,6 @@
 
 (defonce kuuntelijat (atom {}))
 
-;; TODO: Tutki voiko harja.transit read/write optioita ottaa käyttöön tuck-remoten transit-toteutuksessa.
-#_(defn muodosta-ilmoitus-vastaus
-  "Harja.transit read/write optiot eivät ole käytössä tuck-remoten omassa transit-toteutuksessa, joten muunnetaan
-  ilmoitus-vastaus sellaiseksi, että se menee tuck-remoten läpi clientille."
-  [ilmoitus]
-  (-> ilmoitus
-    (update-in [:sijainti] #(when % (geo/pg->clj %)))
-    (update-in [:selitteet] #(when % (konversio/pgarray->vector %)))))
-
-#_(defn hae-ilmoitus [db ilmoitus-id]
-  (let [ilmoitus (first (tieliikenneilmoitus-q/hae-ilmoitukset-ilmoitusidlla db [ilmoitus-id]))]
-    (muodosta-ilmoitus-vastaus ilmoitus)))
-
-
 (defn kuuntele-ilmoituksia [db e! kayttaja client-id opts]
   (let [lopeta-kuuntelu-fn (if (:urakka-id opts)
                              (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka-id opts)
@@ -43,13 +27,7 @@
                                  ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
                                  ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
                                  ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
-                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})
-
-                                 #_(let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
-                                   ;; TODO: Poista debug-lokitus
-                                   (println "### Kuuntele urakan ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
-
-                                   (laheta-ilmoitus! e! ilmoitus))))
+                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})))
 
                              (notifikaatiot/kuuntele-kaikkia-ilmoituksia
                                ;; TODO: Filtteröi ilmoituksen lähetys käyttäjän ja optioiden perusteella (Jeren kommentti)
@@ -57,13 +35,7 @@
                                  ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
                                  ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
                                  ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
-                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})
-
-                                 #_(let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
-                                   ;; TODO: Poista debug-lokitus
-                                   (println "### Kuuntele kaikkia ilmoituksia, saatiin ilmoitus:" (pr-str ilmoitus))
-
-                                   (laheta-ilmoitus! e! ilmoitus)))))]
+                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id}))))]
     (swap! kuuntelijat assoc client-id {:kayttaja kayttaja
                                         :e! e!
                                         :opts opts
