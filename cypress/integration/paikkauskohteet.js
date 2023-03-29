@@ -146,9 +146,9 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Tilaa kohde
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa', {timeout: clickTimeout}).click({force: true})
         // Vahvista tilaus
-        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-ensisijainen', 'Tilaa kohde', {timeout: clickTimeout}).click({force: true})
         cy.wait('@tilaus', {timeout: 60000})
 
     })
@@ -163,7 +163,7 @@ describe('Paikkauskohteet latautuu oikein', function () {
         // Varmistetaan, että sivupaneeli aukesi
         cy.get('.overlay-oikealla', {timeout: clickTimeout}).should('be.visible')
         // Avaa toteuman lisäys paneeli
-        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timout: clickTimeout}).click({force: true})
+        cy.get('button').contains('.nappi-toissijainen', 'Lisää toteuma', {timeout: clickTimeout}).click({force: true})
         // Varmistetaan, että nyt on 2 sivupaneelia auki
         cy.get('div').find('.overlay-oikealla').should('have.length', 2)
 

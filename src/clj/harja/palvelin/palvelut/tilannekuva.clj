@@ -103,6 +103,13 @@
         (map (comp :nimi tk/suodattimet-idlla))
         s))
 
+(defn- oman-organisaation-urakat-joihin-lukuoikeus
+  "Palauttaa käyttäjän oman organisaation urakat joihin on lukuoikeus"
+  [db user oikeus-nakyma]
+  (filter
+    #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
+    (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})))
+
 (defn- rajaa-urakat-hakuoikeudella [db user hakuargumentit]
   (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
   (let [oikeus-nakyma (if (:nykytilanne? hakuargumentit)
@@ -119,9 +126,7 @@
                                (roolit/urakoitsija? user)
                                ;; Haetaan urakoitsijan organisaation urakat, ja otetaan listaan ne,
                                ;; joihin tällä käyttäjällä on lukuoikeus
-                               (let [urakat (filter
-                                              #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
-                                              (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])}))]
+                               (let [urakat (oman-organisaation-urakat-joihin-lukuoikeus db user oikeus-nakyma)]
                                  (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
                                    ;; Jos käyttäjällä on johonkin urakkaan rooli, jolla on oman-urakan-ely oikeus,
                                    ;; filtteröidään kaikista urakoista ne urakat, otetaan niiden urakoiden
@@ -291,9 +296,17 @@
               0))]))
 
 (defn- hae-laatupoikkeamat
+  "Hakee laatupoikkeamat tilannekuvaan."
   [db user {:keys [toleranssi alku loppu laatupoikkeamat nykytilanne?]} urakat]
   (when-not (empty? urakat)
-    (let [haettavat (haettavat laatupoikkeamat)]
+    (let [haettavat (haettavat laatupoikkeamat)
+          ;; laatupoikkeamat erikoistapaus, koska ne eivät saa näkyä urakoitsijoiden välillä. Jos käyttäjä ei ole tilaaja,
+          ;; rajataan vain niihin oman organisaation urakoihin joihin ko. käyttäjällä on lukuoikeus
+          urakat (if-not (roolit/tilaajan-kayttaja? user)
+                   (set (map :id (oman-organisaation-urakat-joihin-lukuoikeus db user (if nykytilanne?
+                                                                                        oikeudet/tilannekuva-nykytilanne
+                                                                                        oikeudet/tilannekuva-historia))))
+                   urakat)]
       (when-not (empty? haettavat)
         (into []
               (comp
