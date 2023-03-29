@@ -13,6 +13,8 @@
   [tiedot lihavoi?]
   (let [ilmoitustyyppi (domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi tiedot))
         tietojen-selitteet-koko (count (:selitteet tiedot))
+        ;; Rivittää lisätieto-kentän joka 90. kirjaimen seuraavalle riville, jos lisätiedossa paljon tekstiä 
+        lisatieto-rivitetty (clojure.string/replace (str (:lisatieto tiedot)) #"(.{90})(?!$)" "$1\n")
         ;; Käydään läpi selitteet, lisää pilkun jos enemmän selitteitä olemassa
         ;; "Savea tiellä, Vettä tiellä"
         tietojen-selitteet (map (fn [x]
@@ -29,7 +31,7 @@
      ;; Selite
      [:varillinen-teksti {:arvo (apply str tietojen-selitteet) :lihavoi? lihavoi?}]
      ;; Lisätieto 
-     [:varillinen-teksti {:arvo (:lisatieto tiedot) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo lisatieto-rivitetty :lihavoi? lihavoi?}]
      ;; Tie 
      [:varillinen-teksti {:arvo (tr-domain/tierekisteriosoite-tekstina (:tr tiedot) {:teksti-tie? false}) :lihavoi? lihavoi?}]
      ;; Tila 
