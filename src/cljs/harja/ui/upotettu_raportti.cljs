@@ -46,10 +46,10 @@
               :action (k/excel-url :raportointi)}
        [:input {:type "hidden" :name "parametrit"
                 :value (t/clj->transit parametrit)}]
-       [napit/tallenna "Tallenna Excel" (constantly true) {:ikoni (ikonit/livicon-download) :luokka napin-luokka :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]
+       [napit/tallenna "Tallenna Excel" (constantly true) {:ikoni (ikonit/harja-icon-action-download) :luokka napin-luokka :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]
       ^{:key "raporttipdf"}
       [:form {:target "_blank" :method "POST"
               :action (k/pdf-url :raportointi)}
        [:input {:type "hidden" :name "parametrit"
                 :value (t/clj->transit parametrit)}]
-       [napit/tallenna "Tallenna PDF" (constantly true) {:ikoni [ikonit/livicon-download] :luokka napin-luokka :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]])))
+       [napit/tallenna "Tallenna PDF" (constantly true) {:ikoni (ikonit/harja-icon-action-download) :luokka napin-luokka :type "submit" :vayla-tyyli? false :esta-prevent-default? true}]]])))
