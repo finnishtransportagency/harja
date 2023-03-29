@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.hairioilmoitukset-test
   (:require [clojure.test :refer :all]
             [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ ilmoitustyypin-nimi +ilmoitustilat+]]
+            [harja.domain.hairioilmoitus :as hairio]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
             [harja.pvm :as pvm]
@@ -38,3 +39,56 @@
                   {})]
   (is (map? vastaus))
   (is (= (first (keys vastaus)) :hairioilmoitus))))
+
+(deftest ajastetut-hairioilmoitukset-toimii
+  (testing "Päättyvä häiriöilmoitus näkyy"
+    (let [_tee-paattyva-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                         :aseta-hairioilmoitus
+                                         +kayttaja-jvh+
+                                         {::hairio/viesti "test 1"
+                                          ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 1)))})
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    +kayttaja-tero+
+                    {})]
+      (is (= (get-in vastaus [:hairioilmoitus ::hairio/viesti]) "test 1"))))
+
+  (testing "Päättynyt häiriöilmoitus ei näy"
+    (let [_tee-paattynyt-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                          :aseta-hairioilmoitus
+                                          +kayttaja-jvh+
+                                          {::hairio/viesti "test 2"
+                                           ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days -1)))})
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    +kayttaja-tero+
+                    {})]
+      (is (= (get-in vastaus [:hairioilmoitus]) nil))))
+
+  (testing "Tuleva häiriöilmoitus ei näy"
+    (let [_tee-alkava-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                       :aseta-hairioilmoitus
+                                       +kayttaja-jvh+
+                                       {::hairio/viesti "test 3"
+                                        ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))})
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    +kayttaja-tero+
+                    {})]
+      (is (= (get-in vastaus [:hairioilmoitus]) nil))))
+
+  (testing "Ajastettuna alkava häiriöilmoitus näkyy"
+    (let [_tee-alkanut-hairioilmoitus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                        :aseta-hairioilmoitus
+                                        +kayttaja-jvh+
+                                        {::hairio/viesti "test 4"
+                                         ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days -1)))})
+          vastaus (kutsu-palvelua
+                    (:http-palvelin jarjestelma)
+                    :hae-tuorein-voimassaoleva-hairioilmoitus
+                    +kayttaja-tero+
+                    {})]
+      (is (= (get-in vastaus [:hairioilmoitus ::hairio/viesti]) "test 4")))))
