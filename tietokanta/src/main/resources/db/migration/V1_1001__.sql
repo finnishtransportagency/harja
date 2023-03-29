@@ -11,3 +11,4 @@ UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluok
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola') WHERE nimi = 'Talvisuolaliuos CaCl2';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola') WHERE nimi = 'Talvisuolaliuos NaCl';
 UPDATE materiaalikoodi SET materiaaliluokka_id  = (SELECT id FROM materiaaliluokka WHERE nimi = 'Talvisuola') WHERE nimi = 'Talvisuola, rakeinen NaCl';
+
