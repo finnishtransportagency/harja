@@ -67,8 +67,6 @@
    [grid/grid
     {:otsikko "Varustetoteumat"
      :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
-     :virhe-viesti (when (some :lahetysvirhe toteumat)
-                     [:div "Tierekisterin palauttamat validontivirheet on korjattava kirjauksen viimeistelemiseksi. Valitse varuste, jonka lähetys on epäonnistunut, nähdäksesi virheen syy."])
      :tunniste :id
      :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}

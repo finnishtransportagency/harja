@@ -106,7 +106,6 @@
 
    "Tarkista rajoitusalueiden pituudet"
    :rajoitusaluepituus
-   (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
-           (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+   (when (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
      ^{:key ":rajoitusaluepituus"}
      [rajoitusaluepituus/rajoitusaluepituus-nakyma])])
