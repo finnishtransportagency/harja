@@ -3,6 +3,8 @@
   client-puolelta WebSocketin yli.
   Palvelu lähettää myös WS client-eventtejä palvelimelta clientille WebSocketin yli."
   (:require
+    [harja.domain.oikeudet :as oikeudet]
+    [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
     [taoensso.timbre :as log]
     [tuck.remoting :as tr]
     [harja.palvelin.komponentit.tuck-remoting :as tr-komponentti]
@@ -48,8 +50,25 @@
 
                              (notifikaatiot/kuuntele-kaikkia-ilmoituksia
                                (fn [{ilmoitus-id :payload}]
-                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)
+                                       _ (println (:urakoitsija suodattimet) (:urakkatyyppi suodattimet)(:hallintayksikko suodattimet))
+                                       kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                                                          db kayttaja (fn [urakka-id kayttaja]
+                                                                        (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                                          urakka-id
+                                                                          kayttaja))
+                                                          nil (:urakoitsija suodattimet)
+                                                          (case (:urakkatyyppi suodattimet)
+                                                            :kaikki nil
+                                                            ; Ao. vesivayla-käsittely estää kantapoikkeuksen. Jos väylävalitsin tulee, tämä voidaan ehkä poistaa
+                                                            :vesivayla :vesivayla-hoito
+                                                            (:urakkatyyppi suodattimet))
+                                                          (:hallintayksikko suodattimet)
+                                                          nil nil)]
+
+                                   (println "### Kayttajan urakat: " (pr-str kayttajan-urakat))
                                    ;; TODO: Päättele valittujen suodattimien avulla lähetetäänkö ilmoitus vai ei.
+                                   (println "####" (with-out-str (clojure.pprint/pprint ilmoitus)))
                                    ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
                                    ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
                                    ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
