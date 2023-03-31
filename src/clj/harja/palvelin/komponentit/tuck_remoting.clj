@@ -1,13 +1,15 @@
 (ns harja.palvelin.komponentit.tuck-remoting
-  (:require [tuck.remoting :as tr]
-            [tuck.remoting.server :as server]
-            [org.httpkit.server :refer [with-channel on-close send! on-receive]]
-            [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :as http]
-            [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [hae-kayttaja]]
-            [tuck.remoting.transit :as transit]
-            [clojure.string :as str])
+  (:require
+    [harja.palvelin.komponentit.todennus :as todennus]
+    [tuck.remoting :as tr]
+    [tuck.remoting.server :as server]
+    [org.httpkit.server :refer [with-channel on-close send! on-receive]]
+    [com.stuartsierra.component :as component]
+    [harja.palvelin.komponentit.http-palvelin :as http]
+    [taoensso.timbre :as log]
+    [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [hae-kayttaja]]
+    [tuck.remoting.transit :as transit]
+    [clojure.string :as str])
   (:import (java.util UUID)))
 
 (defrecord Yhdistetty [])
@@ -53,7 +55,8 @@
   (fn tuck-remoting-handler [request]
     (let [konteksti @konteksti-atomi
           client-id (str (UUID/randomUUID))
-          kayttaja (hae-kayttaja db (get (:headers request) "oam_remote_user"))]
+          ;; TODO: Välitä oikeudet, joilla voi ohittaa OAM_* headerit tietylle käyttäjille
+          kayttaja (todennus/koka->kayttajatiedot db (:headers request) nil)]
       (with-channel request kanava
         (on-close kanava (fn [status]
                            (tr/process-event (->Katkaistu status)
