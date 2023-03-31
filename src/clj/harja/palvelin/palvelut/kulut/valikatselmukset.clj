@@ -200,7 +200,7 @@
           (not (nil? (:erilliskustannus_id paatos))))
         (toteumat-palvelu/poista-erilliskustannus db kayttaja
           {:id (::valikatselmus/erilliskustannus-id paatos) :urakka-id urakka-id})))
-    (valikatselmus-q/poista-paatokset db hoitokauden-alkuvuosi (:id kayttaja))))
+    (valikatselmus-q/poista-paatokset db urakka-id hoitokauden-alkuvuosi (:id kayttaja))))
 
 (defn tarkista-kattohinnan-ylitys [tiedot urakka]
   (do
