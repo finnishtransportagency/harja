@@ -394,6 +394,7 @@
   ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm] (aikavalivalitsin otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm {}))
   ([otsikko aikavalit valinnat-nyt kenttien-nimet vain-pvm vakio-aikavalikentta-skeema]
    (let [vapaa-aikavali? (get-in valinnat-nyt [(or (:vakioaikavali kenttien-nimet) :vakioaikavali) :vapaa-aikavali])
+         palstoita-vapaa-aikavali? (:palstoita-vapaa-aikavali? valinnat-nyt)
          alkuaika (:alkuaika valinnat-nyt)
          vakio-aikavalikentta (merge {:nimi (or (:vakioaikavali kenttien-nimet) :vakioaikavali)
                                       :otsikko otsikko
@@ -411,15 +412,22 @@
                           :otsikko "Loppu"
                           :tyyppi (if vain-pvm :pvm :pvm-aika)
                           :validoi [[:ei-tyhja "Anna loppuaika"]
-                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}] 
+                                    [:pvm-toisen-pvmn-jalkeen alkuaika "Loppuajan on oltava alkuajan jälkeen"]]}]
 
      (if vapaa-aikavali?
-       (lomake/ryhma
-         {:rivi? true}
-         vakio-aikavalikentta
-         alkuaikakentta
-         loppuaikakentta) 
-         vakio-aikavalikentta))))
+       (if palstoita-vapaa-aikavali?
+         (lomake/palstat
+           {}
+           {:otsikko nil}
+           [vakio-aikavalikentta
+            alkuaikakentta
+            loppuaikakentta])
+         (lomake/ryhma
+           {:rivi? true}
+           vakio-aikavalikentta
+           alkuaikakentta
+           loppuaikakentta))
+       vakio-aikavalikentta))))
 
 (defn vaylatyyppi
   [valittu-vaylatyyppi-atom vaylatyypit format-fn]
