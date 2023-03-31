@@ -7,7 +7,7 @@
 (defrecord Ilmoitus [ilmoitus])
 (define-client-event Ilmoitus)
 
-(defrecord KuunteleIlmoituksia [opts])
+(defrecord KuunteleIlmoituksia [suodattimet])
 (define-server-event KuunteleIlmoituksia {})
 
 (defrecord LopetaIlmoitustenKuuntelu [])

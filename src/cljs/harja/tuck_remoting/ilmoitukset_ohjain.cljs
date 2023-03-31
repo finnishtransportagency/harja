@@ -7,17 +7,17 @@
     [harja.tiedot.ilmoitukset.tieliikenneilmoitukset :as tieliikenneilmoitukset]
     [harja.tiedot.ilmoitukset.viestit :as v]))
 
-(defrecord AloitaYhteysJaKuuntelu [])
-(defrecord AloitaKuuntelu [opts])
+(defrecord AloitaYhteysJaKuuntelu [suodattimet])
+(defrecord AloitaKuuntelu [suodattimet])
 (defrecord LopetaKuuntelu [])
 (defrecord KatkaiseYhteys [])
 (defrecord AsetaYhteydenTila [tila])
 
-(defn ws-yhteys-onnistui-kasittelija [e!]
+(defn ws-yhteys-onnistui-kasittelija [e! kuuntelu-suodattimet]
   (log/info "Ilmoitukset: WS-yhteys aloitettu. Seurataan uusia ilmoituksia WS:n kautta.")
   (e! (->AsetaYhteydenTila :aktiivinen))
   ;; TODO: Kuunnellaan kovakoodatusti Oulun MHU urakkaa (35), ota käyttöliittmältä parametrina
-  (e! (->AloitaKuuntelu {:urakka-id 35})))
+  (e! (->AloitaKuuntelu kuuntelu-suodattimet)))
 
 (defn ws-yhteys-katkaistu-kasittelija [e! koodi syy suljettu-puhtaasti?]
   (e! (->AsetaYhteydenTila :suljettu))
@@ -33,13 +33,13 @@
   ;; Aloittaa WS-yhteyden ja lähettää kuuntelun aloittamisen käynnistävän viestin palvelimelle
   ;; ws-yhteys-onnistui-kasittelija -käsittelijässä.
   AloitaYhteysJaKuuntelu
-  (process-event [_ app]
+  (process-event [{suodattimet :suodattimet} app]
     (tuck/action!
       (fn [e!]
         (e! (tr-tyokalut/->YhdistaWS
               ;; TODO: Testataan suoraan tilan muuttamistan tieliikenneilmoitukset-atomiin
               tieliikenneilmoitukset/ilmoitukset
-              (partial ws-yhteys-onnistui-kasittelija e!)
+              (partial ws-yhteys-onnistui-kasittelija e! suodattimet)
               (partial ws-yhteys-katkaistu-kasittelija e!)))))
 
     app)
@@ -49,11 +49,15 @@
     ;; Huom. tämä asetetaan suoraan tuck-remotingille annettuun tila-atomiin
     (assoc-in app [:ws-yhteyden-tila] tila))
 
+  ;; Kuuntelun aloittamisen yhteydessä annetaan suodattimet, joilla rajoitetaan WebSocketin kautta välitettäviä ilmoituksia.
   AloitaKuuntelu
-  (process-event [{opts :opts} app]
+  (process-event [{suodattimet :suodattimet} app]
     (tuck/action!
       (fn [e!]
-        (e! (eventit/->KuunteleIlmoituksia opts))))
+        ;; Käytetään palvelinpuolen ilmoitusten kuuntelun suodattamisessa vain ns. "perussuodattimia".
+        ;; Käyttöliittymän puolella voi asettaa tarkempia rajoituksia suodatukselle.
+        (let [suodattimet (select-keys suodattimet [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
+          (e! (eventit/->KuunteleIlmoituksia suodattimet)))))
 
     app)
 

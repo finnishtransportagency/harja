@@ -312,15 +312,22 @@
 
              haetut-ilmoitukset)]]]))
 
-(defn- ilmoitukset* [e! ilmoitukset]
+(defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (v/->YhdistaValinnat uusi))))
+    (komp/watcher tiedot/valinnat (fn [_ vanhat-valinnat uudet-valinnat]
+                                    (e! (v/->YhdistaValinnat uudet-valinnat))
+                                    ;; Aloita WS-ilmoitusten kuuntelu uudestaan, mikäli valinnat muuttuvat.
+                                    ;; Tarkkaillaan valinnoista vain "perussuodattiemien" muutoksia, jotta palvelinta
+                                    ;; ei kuormiteta liikaa muutoksilla palvelinpuolen kuuntelijoihin.
+                                    (let [vanhat (select-keys vanhat-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])
+                                          uudet (select-keys uudet-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
+                                      (when (not= vanhat uudet)
+                                        (e! (ilmoitukset-ws/->AloitaKuuntelu uudet-valinnat))))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -334,7 +341,9 @@
                                        :teksti "Valitse ilmoitus"}})
 
                          ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
-                         (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu)))
+                         ;; Kuuntelun aloittamisen yhteydessä annetaan käyttöliittymästä optioksi "valinnat",
+                         ;; jotka toimivat suodattimina WebSocketin kautta vastaanotettaville ilmoituksille
+                         (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat)))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
