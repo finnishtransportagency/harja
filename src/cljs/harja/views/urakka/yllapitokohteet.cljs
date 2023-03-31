@@ -292,7 +292,7 @@
                         :tayta-alas? tayta-alas?-fn
                         :tayta-fn tayta-massamaara-fn
                         :tayta-sijainti :ylos
-                        :tayta-tooltip "Kopioi sama massamäärä alla oleville riveille"
+                        :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
                         :tayta-alas-toistuvasti? tayta-alas?-fn
                         :tayta-toistuvasti-fn tayta-massamaara-toistuvasti-fn})
                      (when-not (contains? dissoc-cols :toimenpide)

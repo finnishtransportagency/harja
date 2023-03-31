@@ -24,7 +24,7 @@
       #(reset! tiedot/nakymassa? false))
     (fn [e! app]
       (let [rajoitusalueet (:rajoitusalueet app)]
-        (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu)
+        (if (oikeudet/voi-kirjoittaa? oikeudet/hallinta-koulutusvideot)
           (when @tiedot/nakymassa?
             [:div
              [grid {:otsikko "Rajoitusalueiden pituudet"}
