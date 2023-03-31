@@ -28,7 +28,8 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot])
+            [harja.tiedot.kartta :as kartta-tiedot]
+            [harja.ui.debug :as debug])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
@@ -114,28 +115,30 @@
     :muokkaa! #(e! (v/->AsetaValinnat %))}
    [(valinnat/aikavalivalitsin "Tiedotettu urakkaan aikavälillä"
       tiedot/aikavalit
-      valinnat-nyt
+      (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
       {:vakioaikavali :valitetty-urakkaan-vakioaikavali
        :alkuaika      :valitetty-urakkaan-alkuaika
        :loppuaika     :valitetty-urakkaan-loppuaika}
       false
-      {::lomake/col-luokka"col-xs-12"})
+      {::lomake/col-luokka"col-xs-12"
+       :palstoja 2})
     (valinnat/aikavalivalitsin "Toimenpiteet aloitettu"
       tiedot/toimenpiteiden-aikavalit
-      valinnat-nyt
+      (merge valinnat-nyt {:palstoita-vapaa-aikavali? true})
       {:vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
        :alkuaika :toimenpiteet-aloitettu-alkuaika
        :loppuaika :toimenpiteet-aloitettu-loppuaika}
       false
-      {::lomake/col-luokka "col-xs-12"})
+      {::lomake/col-luokka "col-xs-12"
+       :palstoja 2}) 
     {:nimi :hakuehto :otsikko "Hakusana"
      :placeholder "Hae tekstillä..."
      :tyyppi :string
      :pituus-max 64
-     :palstoja 1
+     :palstoja 2
      ::lomake/col-luokka "col-xs-12"}
     {:nimi :selite
-     :palstoja 1
+     :palstoja 2
      :otsikko "Selite"
      :placeholder "Hae ja valitse selite"
      :tyyppi :haku
@@ -144,13 +147,13 @@
      :lahde selitehaku
      ::lomake/col-luokka "col-xs-12"}
     {:nimi :tr-numero
-     :palstoja 1
+     :palstoja 2
      :otsikko "Tienumero"
      :placeholder "Rajaa tienumerolla"
      :tyyppi :positiivinen-numero :kokonaisluku? true
      ::lomake/col-luokka"col-xs-12"}
     {:nimi :tunniste
-     :palstoja 1
+     :palstoja 2
      :otsikko "Tunniste"
      :placeholder "Rajaa tunnisteella"
      :tyyppi :string
@@ -161,7 +164,7 @@
      :tyyppi :string
      ::lomake/col-luokka "col-xs-12"}
     {:nimi :ilmoittaja-puhelin
-     :palstoja 1
+     :palstoja 2
      :otsikko "Ilmoittajan puhelinnumero"
      :placeholder "Rajaa ilmoittajan puhelinnumerolla"
      :tyyppi :puhelin
