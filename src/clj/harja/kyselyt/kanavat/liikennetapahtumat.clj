@@ -66,12 +66,13 @@
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
   (->>
-    tapahtumat
-    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
-    (suodata-liikennetapahtuma-aluksen-nimella tiedot)
-    (liita-kohteen-urakkatiedot urakkatiedot-fn)
-    (map (partial urakat-idlla urakka-idt))
-    (remove (comp empty? ::kohde/urakat ::lt/kohde))))
+   tapahtumat
+   (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
+   ;; Halutaan näyttää myös tapahtumat ilman aluksia, jätetty kommentti pahan päivän varalle
+   ;;(suodata-liikennetapahtuma-aluksen-nimella tiedot)
+   (liita-kohteen-urakkatiedot urakkatiedot-fn)
+   (map (partial urakat-idlla urakka-idt))
+   (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
 (def ilman-poistettuja-aluksia (map #(update % ::lt/alukset (partial remove ::m/poistettu?))))
 
@@ -155,16 +156,18 @@
                         {::lt/aika (op/between alku loppu)})
                       (when kohde-id
                         {::lt/kohde-id kohde-id})
+                     (when (or suunta (not (empty? aluslajit)))
+                       {::lt/alukset (op/and
+                                      (when suunta
+                                        {::lt-alus/suunta suunta})
+                                      {::lt-alus/laji (if (empty? aluslajit)
+                                                        (op/in (map name lt-alus/aluslajit))
+                                                        (op/in (map name aluslajit)))})})
+                     
                       (op/and
                         {::m/poistettu? false
                          ::lt/urakka-id (op/in urakka-idt)}
-                        (when (or suunta aluslajit)
-                          {::lt/alukset (op/and
-                                          (when suunta
-                                            {::lt-alus/suunta suunta})
-                                          {::lt-alus/laji (if (empty? aluslajit)
-                                                            (op/in (map name lt-alus/aluslajit))
-                                                            (op/in (map name aluslajit)))})}))))
+                        )))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]

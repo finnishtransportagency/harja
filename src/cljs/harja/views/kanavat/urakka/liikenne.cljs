@@ -301,7 +301,7 @@
               {:otsikko (osa/fmt-kohteenosa osa)
                :rivi? true}
               {:otsikko "Toimenpide"
-               :nimi (str i "-toimenpide")
+               :nimi (str "Toimenpide - " (::kohde/nimi (::lt/kohde valittu-liikennetapahtuma)) )
                :pakollinen? true
                :tyyppi :radio-group
                :vaihtoehdot (lt/toimenpide-vaihtoehdot osa)

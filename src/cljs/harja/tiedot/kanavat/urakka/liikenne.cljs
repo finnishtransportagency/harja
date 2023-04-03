@@ -121,7 +121,7 @@
 
 (defn toimenpide->str [tapahtuma]
   (str/join ", "
-            (into #{} (sort (keep (comp lt/sulku-toimenpide->str
+            (into #{} (sort (keep (comp lt/kaikki-toimenpiteet->str
                                         ::toiminto/toimenpide)
                                   (::lt/toiminnot tapahtuma))))))
 
@@ -172,29 +172,47 @@
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
   ;; Eli käydään läpi ja lasketaan tapahtumat joilla parametrien mukainen toiminto/suunta/muoto
-  ;; Palautetaan integer (Long) montako tapahtumaa löytyi
-  (let [yhteensa (filter
-                  (fn [tapahtuma]
-                    (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                          palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot tapahtuma)))
-                          suuntia-olemassa (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta)]
+  ;; Tapahtumilla voi olla useita kohteenosia, eli useita toimenpiteitä/palvelumuotoja, jotka otettu myös huomioon
+  ;; Palautetaan integer (Long) montako toimenpidettä/palvelumuotoa löytyi
+  (let [yhteensa (atom 0)]
+    (doall (map
+            (fn [tapahtuma]
+              (let [suuntia-olemassa (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta)
 
-                      (or
-                       ;; Lasketaan sulutuksia
-                       (> suuntia-olemassa 0)
+                    _ (dorun (remove nil?
+                                     ;; Käy läpi tapahtumien toimenpiteet
+                                     (for [x (::lt/toiminnot tapahtuma)]
+                                       (do
+                                         ;; Lasketaan joko haluttua suuntaa tai pelkästään haluttua toimintoa
+                                         ;; Jos kohteilla useita toimenpiteitä, lasketaan kaikki
+                                         (when (or
+                                                (and
+                                                 (> suuntia-olemassa 0)
+                                                 (= haluttu-toiminto (::toiminto/toimenpide x)))
 
-                       ;; Lasketaan annettua toimenpidettä 
-                       (and
-                        (= haluttu-suunta nil)
-                        (= toiminto haluttu-toiminto))
+                                                (and
+                                                 haluttu-toiminto
+                                                 (= haluttu-toiminto (::toiminto/toimenpide x))
+                                                 (= haluttu-suunta nil)))
 
-                       ;; Lasketaan annettua palvelumuotoa
-                       (and
-                        (= haluttu-suunta nil)
-                        (= haluttu-toiminto nil)
-                        (= palvelumuoto haluttu-palvelumuoto))))) tapahtumat)]
+                                           (swap! yhteensa inc @yhteensa))
+                                         (::toiminto/toimenpide x)))))
 
-    (count yhteensa)))
+                    _ (dorun (remove nil?
+                                     ;; Käydään läpi tapahtumien palvelumuodot
+                                     ;; Jos kohteilla useita palvelumuotoja, lasketaan kaikki
+                                     (for [x (::lt/toiminnot tapahtuma)]
+                                       (do
+                                         (when (and
+                                                haluttu-palvelumuoto
+                                                (= haluttu-palvelumuoto (::toiminto/palvelumuoto x))
+                                                (= haluttu-suunta nil)
+                                                (= haluttu-toiminto nil))
+
+                                           (swap! yhteensa inc @yhteensa))
+                                         (::toiminto/palvelumuoto x)))))]))
+            tapahtumat))
+    @yhteensa))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
@@ -206,18 +224,14 @@
         itsepalvelut (laske-yhteenveto tulos nil nil :itse)
         muut (laske-yhteenveto tulos nil nil :muu)
 
-        ;; Lasketaan toimenpiteet mitkä kuuluvat yhteenvetoon (kaikki paitsi :ei-avausta)
-        tapahtumat-joilla-toimenpide (count (filter
-                                             (fn [tapahtuma]
-                                               ;; Käydään läpi tapahtumat, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
-                                               (let [toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))]
-                                                 (not= toimenpide :ei-avausta))) tulos))
-
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa tapahtumat-joilla-toimenpide}
+                      :yhteensa (+ sulutukset-ylos 
+                                   sulutukset-alas 
+                                   sillan-avaukset 
+                                   tyhjennykset)}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
                       :kaukopalvelu kaukopalvelut
@@ -300,8 +314,7 @@
   (let [alukset (remove :poistettu (::lt/alukset t))]
     (boolean
      (and (not (:grid-virheita? t))
-          (every? #(some? (::lt-alus/lkm %))
-                  alukset)
+          (every? #(some? (::lt-alus/lkm %)) alukset)
 
          ; Jos toimenpide ei ole tyhjennys niin alus laji ei saa olla "Ei alusta" eikä nil
           (every? #(if
@@ -319,8 +332,13 @@
                   alukset)
           (or
            (not-empty alukset)
-           (every? #(or (= :itse (::toiminto/palvelumuoto %))
-                        (= :ei-avausta (::toiminto/toimenpide %))) (::lt/toiminnot t)))))))
+           ;; Sallitaan tallennus myös jos aluksia ei ole
+           (every? #(and 
+                     (not (nil? (::toiminto/palvelumuoto %)))
+                     (not (nil? (:arvo @lt/toimenpide-atom)))
+                     ) (::lt/toiminnot t))))
+                        
+                        )))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä
