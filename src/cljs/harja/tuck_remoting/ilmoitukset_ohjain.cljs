@@ -79,8 +79,14 @@
   (process-event [_ app]
     (log/info "IlmoitustenKuunteluEpaonnistui")
 
-    (assoc-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?] false)
-    (update-in [:ws-ilmoitusten-kuuntelu] dissoc :kuuntele-ilmoituksia-tapahtuma-id))
+    ;; Laukaise ilmoitushaku ja automaattinen ilmoitusten HTTP-pollaus, jos kuuntelun käynnistäminen epäonnistuu
+    (tuck/action!
+      (fn [e!]
+        (e! (v/->HaeIlmoitukset))))
+
+    (-> app
+      (assoc-in [:ws-ilmoitusten-kuuntelu :aktiivinen?] false)
+      (update-in [:ws-ilmoitusten-kuuntelu] dissoc :kuuntele-ilmoituksia-tapahtuma-id)))
 
   LopetaKuuntelu
   (process-event [_ app]

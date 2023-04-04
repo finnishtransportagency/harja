@@ -157,12 +157,12 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
        (when haku
          (.clearTimeout js/window haku))
        (-> app
-         ;; Käynnistä automaattinen ilmoitusten HTTP-pollaus (taustahaku) jos WS-yhteys ei ole aktiivinen.
-         ;; Vanhanmallinen HTTP-pollaus toimii varakeinona ilmoitustietojen hakemiseen, mikäli WS-yhteys ei jostakin syystä toimi.
+         ;; Käynnistä automaattinen ilmoitusten HTTP-pollaus (taustahaku) jos WS-ilmoitusten kuuntelu ei ole aktiivinen
+         ;; Vanhanmallinen HTTP-pollaus toimii varakeinona ilmoitustietojen hakemiseen, mikäli WS-yhteys/kuuntelu ei jostakin syystä toimi.
          ;; Sallitaan kuitenkin aina muun tyyppiset käyttäjän toimesta käynnistetyt ilmoitusten haut (eli, ei taustahaut)
            (assoc :ilmoitushaku-id (when (or
                                            (not taustahaku?)
-                                           (not (= :aktiivinen (get-in app [:ws-yhteyden-tila]))))
+                                           (not (get-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?])))
                                      (.setTimeout js/window
                                            (t/send-async! v/->HaeIlmoitukset)
                                            timeout)))
