@@ -402,8 +402,7 @@
                                       :tyyppi :valinta
                                       :valinnat aikavalit
                                       :valinta-nayta :nimi
-                                      :alasveto-luokka "aikavalinta" 
-                                      :palstoja 1} vakio-aikavalikentta-skeema)
+                                      :alasveto-luokka "aikavalinta"} vakio-aikavalikentta-skeema)
          alkuaikakentta {:nimi (or (:alkuaika kenttien-nimet) :alkuaika)
                          :otsikko "Alku"
                          :tyyppi (if vain-pvm :pvm :pvm-aika)
