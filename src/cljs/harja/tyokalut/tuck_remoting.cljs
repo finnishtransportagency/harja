@@ -1,10 +1,12 @@
 (ns harja.tyokalut.tuck-remoting
   "Tuck-remoting apurit"
-  (:require [taoensso.timbre :as log]
-            [cljs.core.async :refer [<! >! timeout chan alts! pub sub unsub unsub-all put! close!]]
-            [tuck.core :as t]
-            [tuck.remoting :as tr]
-            [tuck.remoting.transit :as transit])
+  (:require
+    [harja.asiakas.kommunikaatio :as k]
+    [taoensso.timbre :as log]
+    [cljs.core.async :refer [<! >! timeout chan alts! pub sub unsub unsub-all put! close!]]
+    [tuck.core :as t]
+    [tuck.remoting :as tr]
+    [tuck.remoting.transit :as transit])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 
@@ -146,9 +148,11 @@
         app)
       (assoc app :ws-yhteys
                  (connect!
-                   ;; TODO: Tuotannossa pitäisi käyttää wss-urlia, mutta kehittäessä ws-urlia
-                   ;; TODO: WSS-yhteyden toiminta varmistettava tuotannossa
-                   (str "ws://" js/window.location.host "/_/ws?")
+                   ;; Käytetään localhost-kehityksessä WS-protokollaa ja muualla WSS
+                   ;; Testipalvelimilla (ja tuotannossa) pitäisi olla normaalisti HTTPS-sertifikaatti käytössä, joten
+                   ;; WSS-protokollaa pitää käyttää niissä.
+                   (let [protokolla (if (k/kehitysymparistossa-localhost?) "ws://" "wss://")]
+                     (str protokolla js/window.location.host "/_/ws?"))
                    tila-atom
                    yhteys-onnistui-fn
                    yhteys-katkaistu-fn))))

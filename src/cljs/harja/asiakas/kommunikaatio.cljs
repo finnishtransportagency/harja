@@ -31,19 +31,29 @@
     (swap! yhteyskatkokset conj {:aika (pvm/nyt)
                                  :palvelu palvelu})))
 
+(defn kehitysymparistossa-localhost?* [host]
+  (#{"localhost" "localhost:3000" "localhost:8000"} host))
+
 (defn kehitysymparistossa-yhteiset?
   [host]
   (or (gstr/startsWith host "10.")
     (gstr/contains host "googleusercontent")
     (gstr/contains host "harja-gc")
-    (#{"localhost" "localhost:3000" "localhost:8000" 
-       "harja-test.solitaservices.fi"} host)))
+    (kehitysymparistossa-localhost?* host)
+    (#{"harja-test.solitaservices.fi"} host)))
 
-(defn kehitysymparistossa? []
+(defn kehitysymparistossa?
   "Tarkistaa ollaanko kehitysympäristössä"
+  []
   (let [host (.-host js/location)]
     (or (kehitysymparistossa-yhteiset? host)
         (#{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"} host))))
+
+(defn kehitysymparistossa-localhost?
+  "Tarkistaa ollaanko localhost-kehitysympäristössä"
+  []
+  (let [host (.-host js/location)]
+    (kehitysymparistossa-localhost?* host)))
 
 (def +polku+ (let [host (.-host js/location)]
                (if (kehitysymparistossa-yhteiset? host)
