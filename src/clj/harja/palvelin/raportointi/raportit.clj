@@ -53,8 +53,7 @@
 ;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
 
 (def raportit
-  [
-   {:nimi         :ilmoitukset-raportti
+  [{:nimi         :ilmoitukset-raportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Ilmoitukset"
     :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}

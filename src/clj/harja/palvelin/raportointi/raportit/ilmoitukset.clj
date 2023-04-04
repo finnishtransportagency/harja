@@ -154,9 +154,9 @@
         valittu-ely (try (get ely/elynumero->nimi (Long/parseLong (:elynumero hallintayksikko))) (catch Throwable _ nil))
 
         otsikko (if-not (:nimi urakka)
-                  (str "Ilmoitus raportti, " valittu-ely) "Ilmoitus raportti")
+                  (str "Ilmoitukset, " valittu-ely) "Ilmoitukset")
 
-        otsikko (if (and (not (:nimi urakka)) (not valittu-ely)) (str "Ilmoitus raportti, Koko maa") otsikko)
+        otsikko (if (and (not (:nimi urakka)) (not valittu-ely)) (str "Ilmoitukset, Koko maa") otsikko)
 
         valinnat (:valinnat filtterit)
         alkuaika (:valitetty-urakkaan-alkuaika valinnat)

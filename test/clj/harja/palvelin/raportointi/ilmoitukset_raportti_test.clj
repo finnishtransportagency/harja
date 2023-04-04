@@ -59,7 +59,7 @@
       
       ;; Raportti ei sisällä dataa, data annetaan parametreina 
       (is (= taulukon-otsikko "Käytetyt filtterit"))
-      (is (= raportin-nimi "Ilmoitus raportti, Koko maa")))
+      (is (= raportin-nimi "Ilmoitukset, Koko maa")))
 
     (catch Throwable t
       (log/error t "Virhe testissä ilmoitukset-raportti-toimii"))))
