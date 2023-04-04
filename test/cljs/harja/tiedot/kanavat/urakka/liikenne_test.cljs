@@ -65,22 +65,22 @@
                         ::toiminto/lkm 150}]}))))
 
 (deftest toimenpide-gridiin
-  (is (= "Sulutus"
+  (is (= "Sillan avaus, Sulutus"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :sulutus}
                                              {::toiminto/toimenpide :avaus}]})))
 
-  (is (= "Tyhjennys"
+  (is (= "Ei avausta, Tyhjennys"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
                                              {::toiminto/toimenpide :ei-avausta}]})))
-  (is (= "Sulutus, Tyhjennys"
+  (is (= "Ei avausta, Sulutus, Tyhjennys"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :tyhjennys}
                                                   {::toiminto/toimenpide :sulutus}
                                                   {::toiminto/toimenpide :ei-avausta}]})))
 
-  (is (= ""
+  (is (= "Sillan avaus"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :avaus}]})))
 
-  (is (= ""
+  (is (= "Ei avausta"
          (tiedot/toimenpide->str {::lt/toiminnot [{::toiminto/toimenpide :ei-avausta}]}))))
 
 (deftest tapahtumarivit
@@ -169,7 +169,7 @@
                                      ::lt/alukset [{::lt-alus/suunta :ylos
                                                     ::lt-alus/lkm 1
                                                     ::lt-alus/laji :HUV}]})))
-  (is (true? (tiedot/voi-tallentaa? {:grid-virheita? false
+  (is (not (tiedot/voi-tallentaa? {:grid-virheita? false
                                      ::lt/alukset []
                                      ::lt/toiminnot [{::toiminto/palvelumuoto :itse}]})))
 
@@ -528,16 +528,8 @@
                                  :parametrit {:alkupvm nil 
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, 
-                                                                          :sulutukset-alas 0, 
-                                                                          :sillan-avaukset 0, 
-                                                                          :tyhjennykset 0, 
-                                                                          :yhteensa 2}, 
-                                                           :palvelumuoto {:paikallispalvelu 2, 
-                                                                          :kaukopalvelu 2, 
-                                                                          :itsepalvelu 2, 
-                                                                          :muu 2, 
-                                                                          :yhteensa 8}}}}}
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0, :yhteensa 0}, 
+                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 0, :itsepalvelu 0, :muu 0, :yhteensa 0}}}}}
            (e! (tiedot/->LiikennetapahtumatHaettu [tapahtuma1 tapahtuma2]))))))
 
 (deftest tapahtumia-ei-haettu
@@ -747,16 +739,8 @@
                                  :parametrit {:alkupvm nil
                                               :loppupvm nil
                                               :urakkatyyppi :vesivayla-kanavien-hoito
-                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, 
-                                                                          :sulutukset-alas 0, 
-                                                                          :sillan-avaukset 0, 
-                                                                          :tyhjennykset 0, 
-                                                                          :yhteensa 2}, 
-                                                           :palvelumuoto {:paikallispalvelu 2, 
-                                                                          :kaukopalvelu 2, 
-                                                                          :itsepalvelu 2, 
-                                                                          :muu 2, 
-                                                                          :yhteensa 8}}}}}
+                                              :yhteenveto {:toimenpiteet {:sulutukset-ylos 0, :sulutukset-alas 0, :sillan-avaukset 0, :tyhjennykset 0, :yhteensa 0}, 
+                                                           :palvelumuoto {:paikallispalvelu 0, :kaukopalvelu 0, :itsepalvelu 0, :muu 0, :yhteensa 0}}}}}
            (e! (tiedot/->TapahtumaTallennettu [tapahtuma1 tapahtuma2])))))
 
   (is (false? (:nakyvissa? @modal/modal-sisalto))))

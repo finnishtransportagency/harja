@@ -68,8 +68,7 @@
   (->>
    tapahtumat
    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
-   ;; Halutaan näyttää myös tapahtumat ilman aluksia, jätetty kommentti pahan päivän varalle
-   ;;(suodata-liikennetapahtuma-aluksen-nimella tiedot)
+   (suodata-liikennetapahtuma-aluksen-nimella tiedot)
    (liita-kohteen-urakkatiedot urakkatiedot-fn)
    (map (partial urakat-idlla urakka-idt))
    (remove (comp empty? ::kohde/urakat ::lt/kohde))))
