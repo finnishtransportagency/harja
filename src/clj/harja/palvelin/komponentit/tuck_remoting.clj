@@ -57,6 +57,7 @@
           client-id (str (UUID/randomUUID))
           ;; TODO: Välitä oikeudet, joilla voi ohittaa OAM_* headerit tietylle käyttäjille
           kayttaja (todennus/koka->kayttajatiedot db (:headers request) nil)]
+      ;; https://http-kit.github.io/server.html#websocket
       (with-channel request kanava
         (on-close kanava (fn [status]
                            (tr/process-event (->Katkaistu status)

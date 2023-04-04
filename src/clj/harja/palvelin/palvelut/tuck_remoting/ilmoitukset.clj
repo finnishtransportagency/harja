@@ -107,7 +107,12 @@
     (extend-protocol tr/ServerEvent
       KuunteleIlmoituksia
       (process-event [{suodattimet :suodattimet} {::tr/keys [e! client-id] :keys [kayttaja]} app]
-        (kuuntele-ilmoituksia db e! kayttaja client-id suodattimet)
+        (try
+          (kuuntele-ilmoituksia db e! kayttaja client-id suodattimet)
+          (e! (eventit/->IlmoitustenKuunteluOnnistui))
+          (catch Exception e
+            (log/error e (str "Ilmoitusten kuuntelijan käynnistäminen epäonnistui asiakkaalle: " client-id, ", kayttajanimi: " (:kayttajanimi kayttaja)))
+            (e! (eventit/->IlmoitustenKuunteluEpaonnistui))))
         app)
 
       LopetaIlmoitustenKuuntelu

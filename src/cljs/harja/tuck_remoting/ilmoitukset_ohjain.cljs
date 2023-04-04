@@ -47,7 +47,9 @@
   AsetaYhteydenTila
   (process-event [{tila :tila} app]
     ;; Huom. tämä asetetaan suoraan tuck-remotingille annettuun tila-atomiin
-    (assoc-in app [:ws-yhteyden-tila] tila))
+    (cond-> (assoc-in app [:ws-yhteyden-tila] tila)
+      ;; Poista :ws-ilmoitusten kuuntelun tila, mikäli yhteys on suljettu
+      (= :suljettu tila) (dissoc :ws-ilmoitusten-kuuntelu)))
 
   ;; Kuuntelun aloittamisen yhteydessä annetaan suodattimet, joilla rajoitetaan WebSocketin kautta välitettäviä ilmoituksia.
   AloitaKuuntelu
@@ -56,10 +58,29 @@
       (fn [e!]
         ;; Käytetään palvelinpuolen ilmoitusten kuuntelun suodattamisessa vain ns. "perussuodattimia".
         ;; Käyttöliittymän puolella voi asettaa tarkempia rajoituksia suodatukselle.
-        (let [suodattimet (select-keys suodattimet [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
-          (e! (eventit/->KuunteleIlmoituksia suodattimet)))))
+        ;; FIXME: ServerEventin event-id:n tallentamiseksi app-tilaa varten täytyy irroittaa event-kutsu
+        ;;        konteksista setTimeoutin avulla, jotta app-tila päivittyy oikein.
+        ;;        Jos tiedät Tuckilla paremman tavan tähän, niin tämän kikkailun voisi muuttaa.
+        (js/setTimeout
+          #(let [suodattimet (select-keys suodattimet [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
+            (e! (eventit/->KuunteleIlmoituksia suodattimet)))
+          0)))
 
-    app)
+    (assoc-in app [:ws-ilmoitusten-kuuntelu] {:aktiivinen? false}))
+
+  eventit/IlmoitustenKuunteluOnnistui
+  (process-event [_ app]
+    (log/info "IlmoitustenKuunteluOnnistui")
+
+    (-> app
+      (assoc-in [:ws-ilmoitusten-kuuntelu :aktiivinen?] true)))
+
+  eventit/IlmoitustenKuunteluEpaonnistui
+  (process-event [_ app]
+    (log/info "IlmoitustenKuunteluEpaonnistui")
+
+    (assoc-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?] false)
+    (update-in [:ws-ilmoitusten-kuuntelu] dissoc :kuuntele-ilmoituksia-tapahtuma-id))
 
   LopetaKuuntelu
   (process-event [_ app]

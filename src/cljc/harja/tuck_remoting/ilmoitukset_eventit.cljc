@@ -8,7 +8,13 @@
 (define-client-event Ilmoitus)
 
 (defrecord KuunteleIlmoituksia [suodattimet])
-(define-server-event KuunteleIlmoituksia {})
+;; Tallenna app-tilaan WS kautta lähetetyn KuunteleIlmoituksia-tapahtuman ID
+(define-server-event KuunteleIlmoituksia {:event-id-path [:ws-ilmoitusten-kuuntelu :kuuntele-ilmoituksia-tapahtuma-id]})
+
+(defrecord IlmoitustenKuunteluOnnistui [])
+(define-client-event IlmoitustenKuunteluOnnistui)
+(defrecord IlmoitustenKuunteluEpaonnistui [])
+(define-client-event IlmoitustenKuunteluEpaonnistui)
 
 (defrecord LopetaIlmoitustenKuuntelu [])
 (define-server-event LopetaIlmoitustenKuuntelu {})
