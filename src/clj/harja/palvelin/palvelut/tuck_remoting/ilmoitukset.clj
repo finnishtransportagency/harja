@@ -23,7 +23,7 @@
   (e! (eventit/->Ilmoitus opts)))
 
 (defn hae-ilmoitus [db ilmoitus-id]
-  (let [ilmoitus (tieliikenneilmoitus-q/hae-ilmoitukset-ilmoitusidlla db [ilmoitus-id])]
+  (let [ilmoitus (tieliikenneilmoitus-q/hae-ilmoitus-ilmoitus-idlla db ilmoitus-id)]
     (first ilmoitus)))
 
 (defn lopeta-ilmoitusten-kuuntelu [client-id]
@@ -41,38 +41,50 @@
   (lopeta-ilmoitusten-kuuntelu client-id)
 
   (let [lopeta-kuuntelu-fn (if (:urakka suodattimet)
-                             (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka suodattimet)
-                               (fn [{ilmoitus-id :payload}]
-                                 ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
-                                 ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
-                                 ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
-                                 (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})))
+                             (let [;; Käytetään harja.palvelin.palvelut.ilmoitukset/hae-ilmoitukset käyttämää apufunktiota
+                                   kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                                                      db kayttaja (fn [urakka-id kayttaja]
+                                                                    (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                                      urakka-id
+                                                                      kayttaja))
+                                                      (:urakka suodattimet) nil nil nil nil nil)]
+                               (notifikaatiot/kuuntele-urakan-ilmoituksia (:urakka suodattimet)
+                                 (fn [{ilmoitus-id :payload}]
+                                   (let [ilmoitus (hae-ilmoitus db ilmoitus-id)
+                                         ilmoituksen-urakka (:urakka ilmoitus)
+                                         laheta? (some (set kayttajan-urakat) #{ilmoituksen-urakka})]
 
-                             (notifikaatiot/kuuntele-kaikkia-ilmoituksia
-                               (fn [{ilmoitus-id :payload}]
-                                 (let [ilmoitus (hae-ilmoitus db ilmoitus-id)
-                                       _ (println (:urakoitsija suodattimet) (:urakkatyyppi suodattimet)(:hallintayksikko suodattimet))
-                                       kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
-                                                          db kayttaja (fn [urakka-id kayttaja]
-                                                                        (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
-                                                                          urakka-id
-                                                                          kayttaja))
-                                                          nil (:urakoitsija suodattimet)
-                                                          (case (:urakkatyyppi suodattimet)
-                                                            :kaikki nil
-                                                            ; Ao. vesivayla-käsittely estää kantapoikkeuksen. Jos väylävalitsin tulee, tämä voidaan ehkä poistaa
-                                                            :vesivayla :vesivayla-hoito
-                                                            (:urakkatyyppi suodattimet))
-                                                          (:hallintayksikko suodattimet)
-                                                          nil nil)]
+                                     ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
+                                     ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
+                                     ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
+                                     (when laheta?
+                                       (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id}))))))
 
-                                   (println "### Kayttajan urakat: " (pr-str kayttajan-urakat))
-                                   ;; TODO: Päättele valittujen suodattimien avulla lähetetäänkö ilmoitus vai ei.
-                                   (println "####" (with-out-str (clojure.pprint/pprint ilmoitus)))
-                                   ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
-                                   ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
-                                   ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
-                                   (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})))))]
+                             (let [;; Käytetään harja.palvelin.palvelut.ilmoitukset/hae-ilmoitukset käyttämää apufunktiota
+                                   kayttajan-urakat (kayttajatiedot/kayttajan-urakka-idt-aikavalilta
+                                                      db kayttaja (fn [urakka-id kayttaja]
+                                                                    (oikeudet/voi-lukea? oikeudet/ilmoitukset-ilmoitukset
+                                                                      urakka-id
+                                                                      kayttaja))
+                                                      nil (:urakoitsija suodattimet)
+                                                      (case (:urakkatyyppi suodattimet)
+                                                        :kaikki nil
+                                                        ; Ao. vesivayla-käsittely estää kantapoikkeuksen. Jos väylävalitsin tulee, tämä voidaan ehkä poistaa
+                                                        :vesivayla :vesivayla-hoito
+                                                        (:urakkatyyppi suodattimet))
+                                                      (:hallintayksikko suodattimet)
+                                                      nil nil)]
+                               (notifikaatiot/kuuntele-kaikkia-ilmoituksia
+                                 (fn [{ilmoitus-id :payload}]
+                                   (let [ilmoitus (hae-ilmoitus db ilmoitus-id)
+                                         ilmoituksen-urakka (:urakka ilmoitus)
+                                         laheta? (some (set kayttajan-urakat) #{ilmoituksen-urakka})]
+
+                                     ;; Lähetetään asiakkaalle pelkkä uuden ilmoituksen ID.
+                                     ;; Tämä toimii push-notifikaationa asiakkaalle, joka tekee päätöksen datan hakemisen
+                                     ;; käynnistämisestä monimutkaisemman HTTP-rajapinnan kautta.
+                                     (when laheta?
+                                       (laheta-ilmoitus! e! {:ilmoitus-id ilmoitus-id})))))))]
     (swap! kuuntelijat assoc client-id {:kayttaja kayttaja
                                         :e! e!
                                         :suodattimet suodattimet
