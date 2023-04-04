@@ -9,6 +9,26 @@ Periaatteet:
  /* ----- Kokojen asettaminen ---- */
  #app {
  /* --- Max width -- */
+    .max-width-xs {
+       max-width: 20rem;
+       /* 320px */
+    }
+
+    .max-width-s {
+        max-width: 24rem;
+        /* 384px */
+    }
+
+    .max-width-m {
+        max-width: 28rem;
+         /* 448px */
+    }
+
+    .max-width-l {
+        max-width: 32rem;
+        /* 512px */
+    }
+
     .max-width-1 {
         max-width: 36rem;
         /* 576px */
@@ -33,4 +53,22 @@ Periaatteet:
         max-width: 64rem;
         /* 1024px */
     }
+     /* --- Min width -- */
+     .min-width-xs {
+        min-width: 16rem;
+    }
+
+     .min-width-s {
+        min-width: 24rem;
+        /* 384px */
+    }
+     /* --- Responsive Min width -- */
+     @media (min-width: @screen-sm-min) {
+        .sm-min-width-s {
+            min-width: 24rem;
+            /* 384px */
+        }
+    }
+
+
 }

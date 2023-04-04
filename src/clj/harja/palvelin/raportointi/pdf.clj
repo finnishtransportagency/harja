@@ -329,7 +329,7 @@
      (taulukko-rivit sarakkeet data viimeinen-rivi optiot)
      (taulukko-alaosa rivien-maara sarakkeet viimeinen-rivi-yhteenveto?)]))
 
-(defn arvotaulukko-valittu-aika [otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
+(defn arvotaulukko-valittu-aika [kyseessa-kk-vali? otsikko hoitokauden-otsikko valittu-pvm-otsikko hoitokauden-arvo laskutetaan-arvo]
 
   [:fo:table {:font-size "9pt" :margin-bottom "12px"}
    [:fo:table-column {:column-width "56%"}]
@@ -343,13 +343,15 @@
      [:fo:table-cell [:fo:block {:font-weight "bold"} otsikko]]
      ;; "Hoitokauden alusta" & "Laskutetaan 0x/0x"
      [:fo:table-cell [:fo:block {:font-weight "bold"} hoitokauden-otsikko]]
-     [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]]]
+     (when kyseessa-kk-vali?
+       [:fo:table-cell [:fo:block {:font-weight "bold"} valittu-pvm-otsikko]])]
 
     ;; Arvot rahana
     [:fo:table-row
      [:fo:table-cell [:fo:block ""]]
      [:fo:table-cell [:fo:block hoitokauden-arvo]]
-     [:fo:table-cell [:fo:block laskutetaan-arvo]]]]])
+     (when kyseessa-kk-vali?
+       [:fo:table-cell [:fo:block laskutetaan-arvo]])]]])
 
 (defn arvotaulukko-ei-valittua-aikaa [otsikko hoitokauden-arvo]
   [:fo:table {:font-size "9pt"}
@@ -401,6 +403,7 @@
 
               ;; Jos otsikolla on 2 desimaali-muuttujaa, tehdään 2 otsikkoa lisää ja annetaan niiden alle arvot
               (arvotaulukko-valittu-aika
+               true
                (str elem ":")
                (str hoitokauden-otsikko)
                (str valittu-pvm-otsikko)
@@ -490,42 +493,6 @@
                }
               pylvaat)]
    [:fo:block {:space-after "1em"}]])
-
-(defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
-  (str (avain (get arvot tyyppi))))
-
-(defmethod muodosta-pdf :liikenneyhteenveto [[_ yhteenveto]]
-  [:fo:table {:font-size otsikon-fonttikoko}
-   [:fo:table-column {:column-width "8%"}]
-   [:fo:table-column {:column-width "18%"}]
-   [:fo:table-column {:column-width "18%"}]
-   [:fo:table-column {:column-width "18%"}]
-   [:fo:table-column {:column-width "18%"}]
-   [:fo:table-column {:column-width "18%"}]
-
-   (let [saraketyyli-yla {:margin-left "8mm" :margin-top "30px" :font-weight "bold"}
-         sivusarakkeet-yla {:margin-left "14mm" :margin-top "30px" :font-weight "bold"}
-         saraketyyli-ala {:margin-left "8mm" :margin-top "6px" :font-weight "bold"}
-         sivusarakkeet-ala {:margin-left "14mm" :margin-top "6px" :font-weight "bold"}]
-
-     [:fo:table-body
-      [:fo:table-row
-       [:fo:table-cell [:fo:block {:margin-top "30px"} "Toimenpiteet"]]
-
-       [:fo:table-cell [:fo:block sivusarakkeet-yla "Sulutukset ylös: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sulutukset-ylos)]]
-       [:fo:table-cell [:fo:block saraketyyli-yla "Sulutukset alas: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sulutukset-alas)]]
-       [:fo:table-cell [:fo:block saraketyyli-yla "Sillan avaukset: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :sillan-avaukset)]]
-       [:fo:table-cell [:fo:block saraketyyli-yla "Tyhjennykset: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :tyhjennykset)]]
-       [:fo:table-cell [:fo:block sivusarakkeet-yla "Yhteensä: " (liikenneyhteenveto-arvo-str yhteenveto :toimenpiteet :yhteensa)]]]
-      
-      [:fo:table-row
-       [:fo:table-cell [:fo:block {:margin-top "6px"} "Palvelumuoto"]]
-
-       [:fo:table-cell [:fo:block sivusarakkeet-ala "Paikallispalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :paikallispalvelu)]]
-       [:fo:table-cell [:fo:block saraketyyli-ala "Kaukopalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :kaukopalvelu)]]
-       [:fo:table-cell [:fo:block saraketyyli-ala "Itsepalvelu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :itsepalvelu)]]
-       [:fo:table-cell [:fo:block saraketyyli-ala "Muu: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :muu)]]
-       [:fo:table-cell [:fo:block sivusarakkeet-ala "Yhteensä: " (liikenneyhteenveto-arvo-str yhteenveto :palvelumuoto :yhteensa)]]]])])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)

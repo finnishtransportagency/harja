@@ -430,7 +430,8 @@
            :validoi [[:ei-tyhja "Anna yhteyshenkilön nimi"]]}
           {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
           {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 12 :pituus 16}
-          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22}]
+          {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 22
+           :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]}]
          @yhteyshenkilot]))))
 
 (defn alukset [ur]

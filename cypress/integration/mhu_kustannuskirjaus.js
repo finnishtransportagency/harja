@@ -1,6 +1,6 @@
 let avaaKulujenKohdistus = (urakanNimi) => {
     cy.visit('/');
-    let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]')
+    let hakupalkki = cy.get('.haku-input[placeholder="Hae Harjasta"]', {timeout: 30000})
     hakupalkki.type(urakanNimi);
     hakupalkki.siblings().contains(urakanNimi).click();
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();

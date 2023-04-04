@@ -1,28 +1,26 @@
 .hairioilmoitin {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  z-index: 10000;
+  position: relative;
   width: 100%;
-  padding: 5px;
+  padding: @valistys-8;
   text-align: center;
-  background-color: @varoitus;
-  color: @white-default;
 
   button.close {
     position: absolute;
     float: none;
-    right: 3px;
-    top: 3px;
+    right: @valistys-8;
+    top: 0;
+    bottom: 0;
   }
 }
 
 .hairioilmoitin-tyyppi-hairio {
-  background-color: @varoitus;
+  background-color: @red-lighter;
+  border: 1px solid @red-light;
   color: @black-default;
 }
 
 .hairioilmoitin-tyyppi-tiedote {
-  background-color: @sininen1;
-  color: @white-default;
+  background-color: @blue-lighter;
+  border: 1px solid @blue-light;
+  color: @black-default;
 }

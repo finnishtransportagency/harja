@@ -230,6 +230,7 @@
     (fn [e! {:keys [tyyppi tallennus-kaynnissa?] :as pikakuittaus}]
       [lomake/lomake {:muokkaa! #(e! (v/->PaivitaPikakuittaus %))
                       :otsikko (apurit/kuittaustyypin-selite tyyppi)
+                      :footer-luokka "padding-x-0"
                       :footer-fn (fn [data]
                                    [napit/tallenna "Kuittaa"
                                     #(e! (v/->TallennaPikakuittaus))
@@ -241,7 +242,8 @@
            :label-luokka "pienempi-margin"
            :palstoja 2
            ::lomake/col-luokka ""})
-        {:tyyppi :string
+        {:tyyppi :text
+         :koko [80 5]
          :nimi :vapaateksti
          :otsikko "Vapaateksti" :palstoja 2
          ::lomake/col-luokka ""}
@@ -253,5 +255,6 @@
 (defn pikakuittaus [e! pikakuittaus]
   [leijuke/leijuke
    {:otsikko "Kuittaa"
+    :luokka "min-width-xs sm-min-width-s"
     :sulje! #(e! (v/->PeruutaPikakuittaus))}
    [pikakuittauslomake e! pikakuittaus]])
