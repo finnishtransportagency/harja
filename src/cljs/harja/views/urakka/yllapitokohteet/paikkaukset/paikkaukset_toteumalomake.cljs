@@ -175,7 +175,7 @@
           ::lomake/col-luokka "col-sm-3"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
          (when (not urem?)
-           {:otsikko "Massamäärä"
+           {:otsikko "Massamenekki"
             :tyyppi :positiivinen-numero
             :nimi :massamaara
             :yksikko "kg/m2"

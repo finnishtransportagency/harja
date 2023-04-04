@@ -135,6 +135,54 @@
     (is (= 999 (:pituus paivitetty-rajoitus)) "Pituuden päivitys onnistui")
     (is (= 1234 (:ajoratojen_pituus paivitetty-rajoitus)) "Ajoratojen pituuden päivitys onnistui")))
 
+(deftest paivita-suolarajoitus2-onnistuu-test
+  (let [hk-alkuvuosi 2022
+        urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Luodaan uusi rajoitusalue, jonka olemassaolo voi sotkea muokattavan rajoitusalueen varmistusta
+        suolarajoitus-este (suolarajoitus-pohja urakka-id (:id t/+kayttaja-jvh+)
+                             {:tie 12, :aosa 219, :aet 5862, :losa 221, :let 455}
+                             hk-alkuvuosi)
+        suolarajoitus-este (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                             :tallenna-suolarajoitus
+                             t/+kayttaja-jvh+
+                             suolarajoitus-este)
+
+        ;; Luodaan itse muokattava rajoitus
+        muokattava-rajoitus (suolarajoitus-pohja urakka-id (:id t/+kayttaja-jvh+)
+                              {:tie 12, :aosa 219, :aet 151, :losa 219, :let 1492}
+                              hk-alkuvuosi)
+        muokattava-rajoitus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                             :tallenna-suolarajoitus
+                             t/+kayttaja-jvh+
+                              muokattava-rajoitus)
+
+        rajoitukset (hae-suolarajoitukset {:urakka-id urakka-id :hoitokauden-alkuvuosi hk-alkuvuosi})
+        _ (println "rajoitukset:" rajoitukset)
+
+        ;; Kovakoodatusti juuri luotu alue
+        paivitetty-rajoitus (-> (first rajoitukset)
+                              (assoc :let 1493)
+                              (assoc :pituus 1343)
+                              (assoc :ajoratojen_pituus 1343))
+        paivitetty-rajoitus (t/kutsu-palvelua (:http-palvelin t/jarjestelma) :tallenna-suolarajoitus t/+kayttaja-jvh+
+                              paivitetty-rajoitus)
+        ;; Siivotaan kanta
+        _ (poista-suolarajoitus
+            {:rajoitusalue_id (:rajoitusalue_id suolarajoitus-este)
+             :hoitokauden-alkuvuosi hk-alkuvuosi
+             :urakka_id urakka-id
+             :kopioidaan-tuleville-vuosille? true})
+        _ (poista-suolarajoitus
+            {:rajoitusalue_id (:rajoitusalue_id muokattava-rajoitus)
+             :hoitokauden-alkuvuosi hk-alkuvuosi
+             :urakka_id urakka-id
+             :kopioidaan-tuleville-vuosille? true})]
+
+    (is (not= paivitetty-rajoitus muokattava-rajoitus) "Päivitys onnistui")
+    (is (= 1 (:pituus suolarajoitus-este)) "Pituuden päivitys onnistui")
+    (is (= 1343 (:pituus paivitetty-rajoitus)) "Pituuden päivitys onnistui")
+    (is (= 1343 (:ajoratojen_pituus paivitetty-rajoitus)) "Ajoratojen pituuden päivitys onnistui")))
+
 (deftest poista-suolarajoitus-tulevilta-vuosilta-onnistuu-test
   (let [hk-alkuvuosi 2022
         urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -277,6 +325,17 @@
     (is (= pituus (:pituus vastaus)))
     (is (= ajoradan-pituus (:ajoratojen_pituus vastaus)))))
 
+
+(deftest laske-tierekisteriosoitteelle-pituus7-onnistuu-test
+  (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 12 :aosa 219 :aet 151 :losa 219 :let 1492}
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
+        pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                   :tierekisterin-tiedot
+                   t/+kayttaja-jvh+ suolarajoitus)]
+    (is (= 1341 (:pituus pituudet)))
+    (is (= 1341 (:ajoratojen_pituus pituudet)))))
+
 ;; Lasketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
 ;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa
 (deftest laske-kahdelle-osalle-pituus-onnistuu-test
@@ -385,7 +444,20 @@
                       urakka-id
                       (:id t/+kayttaja-jvh+)
                       {:tie 25 :aosa 1 :aet 1030 :losa 1 :let 1224}
-                      hk-alkuvuosi))]
+                      hk-alkuvuosi))
+
+        ;; Simuloidaan tilannetta, jossa alkuosaltaan samalle rajoitusalueelle tehdään hyvin lähelle toinen
+        ;; rajoitusalue. Tästä oli tuotannossa bugi. Eli tässä tehdään rajoitusalue, joka alkaa aosa 219 + aet 5862,
+        ;; ja varmistetaan, että aosa 219 voi tallentaa rajoitusaluee, kunhan sen let ei ole 5862 isompi.
+        rajoitus5 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                    :tallenna-suolarajoitus
+                    t/+kayttaja-jvh+
+                    (suolarajoitus-pohja
+                      urakka-id
+                      (:id t/+kayttaja-jvh+)
+                      {:tie 12 :aosa 219 :aet 5862 :losa 221 :let 445}
+                      hk-alkuvuosi))
+        ]
 
     (testing "Varmistetaan, että samaa tierekisteriosoitetta ei voi käyttää muissa rajoituksissa"
       (let [tr-sama {:tie 25 :aosa 2 :aet 200 :losa 4 :let 2000}
@@ -422,13 +494,29 @@
             suolarajoitus-alku-sama4 (merge perusrajoitus tr-alku-sama4)
             tr-tiedot-alku-sama4 (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
                                    :tierekisterin-tiedot
-                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama4)]
+                                   t/+kayttaja-jvh+ suolarajoitus-alku-sama4)
+
+            ;; Varmistaa rajoitus5:sen toiminnan, kun tierekisteriosoitteet on samat
+            tr-loppu-eri {:tie 12 :aosa 219 :aet 151 :losa 219 :let 1492}
+            suolarajoitus-loppu-eri (merge perusrajoitus tr-loppu-eri)
+            tr-tiedot-loppu-eri (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                  :tierekisterin-tiedot
+                                  t/+kayttaja-jvh+ suolarajoitus-loppu-eri)
+
+            ;; Tämän tallennus ei saa onnistua, koska rajoitus5 on tälle päällekäinen
+            tr-loppu-sama {:tie 12 :aosa 219 :aet 1500 :losa 221 :let 100}
+            suolarajoitus-loppu-sama (merge perusrajoitus tr-loppu-sama)
+            tr-tiedot-loppu-sama (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                                  :tierekisterin-tiedot
+                                  t/+kayttaja-jvh+ suolarajoitus-loppu-sama)]
         (is (= 400 (:status tr-tiedot-sama)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= 400 (:status tr-tiedot-sama2)) "Tierekisteriosoitteessa on jo rajoitus.")
         (is (= {:pituus 1, :ajoratojen_pituus 1, :pohjavesialueet ()} tr-tiedot-alku-sama) "Alku sama, mutta saa tallentaa.")
         (is (= 5511 (:pituus tr-tiedot-alku-sama2)) "Alku sama, mutta saa tallentaa.")
         (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama3) "Alku sama, mutta saa tallentaa.")
-        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, mutta saa tallentaa.")))
+        (is (= {:pituus 0, :ajoratojen_pituus 0, :pohjavesialueet ()} tr-tiedot-alku-sama4) "Alku sama, mutta saa tallentaa.")
+        (is (= 1341 (:pituus tr-tiedot-loppu-eri)) "Alku myöhemmin, loppuu eri osaan, saa tallentaa.")
+        (is (= 400 (:status tr-tiedot-loppu-sama)) "Tierekisteriosoitteessa on jo rajoitus")))
 
     (testing "Tierekisteri on olemassa olevan välissä"
       (let [ tr {:tie 25 :aosa 3 :aet 200 :losa 3 :let 2000}
@@ -537,6 +625,11 @@
        :kopioidaan-tuleville-vuosille? true})
     (poista-suolarajoitus
       {:rajoitusalue_id (:rajoitusalue_id rajoitus4)
+       :hoitokauden-alkuvuosi hk-alkuvuosi
+       :urakka_id urakka-id
+       :kopioidaan-tuleville-vuosille? true})
+    (poista-suolarajoitus
+      {:rajoitusalue_id (:rajoitusalue_id rajoitus5)
        :hoitokauden-alkuvuosi hk-alkuvuosi
        :urakka_id urakka-id
        :kopioidaan-tuleville-vuosille? true})))

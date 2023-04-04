@@ -257,6 +257,8 @@ jobs:
             cd /tmp/cypress-run && npx cypress run
       - store_artifacts:
           path: /tmp/cypress-run/cypress/screenshots
+      - store_artifacts:
+          path: /tmp/cypress-run/cypress/videos 
 
 workflows:
   version: 2

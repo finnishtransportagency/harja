@@ -12,7 +12,7 @@
 
 
 ;; Valitsee ilmoituksen tarkasteltavaksi
-(defrecord ValitseIlmoitus [ilmoitus])
+(defrecord ValitseIlmoitus [id])
 
 ;; Palvelimelta palautuneet ilmoituksen tiedot
 (defrecord IlmoituksenTiedot [ilmoitus])

@@ -355,9 +355,10 @@
           #(reset! valittu-vuosi-atom %)))
   ([{:keys [disabled kaanteinen-jarjestys? kaikki-valinta? vayla-tyyli?] :as optiot}
     ensimmainen-vuosi viimeinen-vuosi valittu-vuosi-atom valitse-fn]
-   [:span.label-ja-aikavali-lyhyt
-    [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} "Vuosi"]
-    [livi-pudotusvalikko (merge 
+   [:div.label-ja-alasveto.vuosi
+    [:span.label-ja-aikavali-lyhyt
+     [:label {:class (str "alasvedon-otsikko" (when vayla-tyyli? "-vayla"))} "Vuosi"]
+     [livi-pudotusvalikko (merge
                            {:valinta @valittu-vuosi-atom
                             :disabled disabled
                             :valitse-fn valitse-fn
@@ -368,14 +369,14 @@
                             :class "alasveto-vuosi"
                             :data-cy "valinnat-vuosi"}
                            (when vayla-tyyli? {:vayla-tyyli? vayla-tyyli?}))
-     (let [vuodet (range ensimmainen-vuosi (inc viimeinen-vuosi))
-           vuodet (if kaanteinen-jarjestys?
-                    (reverse vuodet)
-                    vuodet)
-           vuodet (if kaikki-valinta?
-                    (concat [:kaikki] vuodet)
-                    vuodet)]
-       vuodet)]]))
+      (let [vuodet (range ensimmainen-vuosi (inc viimeinen-vuosi))
+            vuodet (if kaanteinen-jarjestys?
+                     (reverse vuodet)
+                     vuodet)
+            vuodet (if kaikki-valinta?
+                     (concat [:kaikki] vuodet)
+                     vuodet)]
+        vuodet)]]]))
 
 (defn varustetoteuman-tyyppi
   [valittu-varustetoteumatyyppi-atom]
