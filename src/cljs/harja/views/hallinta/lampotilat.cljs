@@ -26,9 +26,9 @@
 (defn yhdista-lampotilat [vanha uusi]
   (assoc vanha
          :keskilampotila (or (:keskilampotila uusi) (:keskilampotila vanha))
-         :pitkakeskilampotila (or (:pitkakeskilampotila uusi) (:pitkakeskilampotila vanha))
-         :pitkakeskilampotila_vanha (or (:pitkakeskilampotila_vanha uusi)
-                                        (:pitkakeskilampotila_vanha vanha))))
+         :keskilampotila-1981-2010 (or (:keskilampotila-1991-2020 uusi) (:keskilampotila-1991-2020 vanha))
+         :keskilampotila-1981-2010 (or (:keskilampotila-1981-2010 uusi) (:keskilampotila-1981-2010 vanha))
+         :keskilampotila-1971-2000 (or (:keskilampotila-1971-2000 uusi) (:keskilampotila-1971-2000 vanha))))
 
 (defn lampotilat
   "Lämpötilojen pääkomponentti"
@@ -65,14 +65,20 @@
              :validoi           [[:lampotila]]
              :muokattava?       (constantly true)
              :tyyppi            :numero}
+            {:otsikko           "Vertailu\u00ADjakso 1991-2020 (\u2103)"
+             :nimi :keskilampotila-1991-2020 :leveys 1
+             :desimaalien-maara 1
+             :validoi           [[:lampotila]]
+             :muokattava?       (constantly true)
+             :tyyppi            :numero}
             {:otsikko           "Vertailu\u00ADjakso 1981-2010 (\u2103)"
-             :nimi :pitkakeskilampotila :leveys 1
+             :nimi :keskilampotila-1981-2010 :leveys 1
              :desimaalien-maara 1
              :validoi           [[:lampotila]]
              :muokattava?       (constantly true)
              :tyyppi            :numero}
             {:otsikko           "Vertailu\u00ADjakso 1971-2000 (\u2103)"
-             :nimi :pitkakeskilampotila_vanha :leveys 1
+             :nimi :keskilampotila-1971-2000 :leveys 1
              :desimaalien-maara 1
              :validoi           [[:lampotila]]
              :muokattava?       (constantly true)

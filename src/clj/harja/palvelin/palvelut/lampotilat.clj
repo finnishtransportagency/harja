@@ -26,27 +26,35 @@
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url)
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
                                                 (str/replace url "tieindeksi2" "tieindeksi"))
+        hoidon-urakoiden-lampotilat-1991-2020 nil #_(hae-urakoiden-lampotilat
+                                                ;; TODO: Odota vastaus spostiin, mistä saadaan nämä.
+                                                (str/replace url "???" "tieindeksi"))
         hoidon-urakka-ja-alueurakkanro-avaimet
         (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
         tulos (into {}
                     (comp
                       (map (fn [urakka]
                              (merge urakka
-                                    ;; Urakan tiedot löytyvät usein vain toisesta result setistä minkä FMI API palauttaa.
-                                    ;; Otetaan kaikki kentät siitä mikä löytyy,
-                                    ;; sekä varmistetaan vielä erikseen että uuden vertailukauden ka on avaimessa :pitkakeskilampotila
-                                    ;; ja vanhan vertailukauden avaimessa :pitkakeskilampotila_vanha
-                                    (or
-                                      (get hoidon-urakoiden-lampotilat-1981-2010
-                                          (:alueurakkanro urakka))
-                                      (get hoidon-urakoiden-lampotilat-1971-2000
-                                           (:alueurakkanro urakka)))
-                                    {:pitkakeskilampotila (:pitkakeskilampotila
+                               ;; Urakan tiedot löytyvät usein vain toisesta result setistä minkä FMI API palauttaa.
+                               ;; Otetaan kaikki kentät siitä mikä löytyy,
+                               ;; sekä varmistetaan vielä erikseen että uuden vertailukauden ka on avaimessa :keskilampotila-1981-2010
+                               ;; ja vanhan vertailukauden avaimessa :keskilampotila-1971-2000
+                               (or
+                                 (get hoidon-urakoiden-lampotilat-1981-2010
+                                   (:alueurakkanro urakka))
+                                 (get hoidon-urakoiden-lampotilat-1971-2000
+                                   (:alueurakkanro urakka))
+                                 (get hoidon-urakoiden-lampotilat-1991-2020
+                                   (:alueurakkanro urakka)))
+                               {:keskilampotila-1981-2010 (:pitkakeskilampotila
                                                             (get hoidon-urakoiden-lampotilat-1981-2010
-                                                                 (:alueurakkanro urakka)))}
-                                    {:pitkakeskilampotila_vanha (:pitkakeskilampotila
-                                                                  (get hoidon-urakoiden-lampotilat-1971-2000
-                                                                       (:alueurakkanro urakka)))})))
+                                                              (:alueurakkanro urakka)))}
+                               {:keskilampotila-1971-2000 (:pitkakeskilampotila
+                                                            (get hoidon-urakoiden-lampotilat-1971-2000
+                                                              (:alueurakkanro urakka)))}
+                               {:keskilampotila-1991-2020 (:pitkakeskilampotila
+                                                            (get hoidon-urakoiden-lampotilat-1991-2020
+                                                              (:alueurakkanro urakka)))})))
                       (map (juxt :id identity)))
                     hoidon-urakka-ja-alueurakkanro-avaimet)]
     (log/debug "VASTAUS: " (pr-str tulos))
@@ -69,8 +77,9 @@
       (let [id (:lampotilaid lt)
             parametrit [(:urakka lt) (:alkupvm lt) (:loppupvm lt)
                         (:keskilampotila lt)
-                        (:pitkakeskilampotila lt)
-                        (:pitkakeskilampotila_vanha lt)]]
+                        (:keskilampotila-1991-2020 lt)
+                        (:keskilampotila-1981-2010 lt)
+                        (:keskilampotila-1971-2000 lt)]]
         (if id
           (apply q/paivita-lampotila<! db (concat parametrit [id]))
           (apply q/uusi-lampotila<! db parametrit))))
@@ -81,17 +90,17 @@
   (log/debug "hae-urakan-suolasakot-ja-lampotilat")
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-suola user urakka-id)
   (let [pitkakeskilampotila (if (<= (urakat/hae-urakan-alkuvuosi db urakka-id) 2014)
-                              :pitkakeskilampotila_vanha
-                              :pitkakeskilampotila)]
+                              :keskilampotila-1971-2000
+                              :keskilampotila-1981-2010)]
     {:suolasakot (into []
                        (map #(konv/decimal->double % :maara))
                        (q/hae-urakan-suolasakot db urakka-id))
      :lampotilat (into []
                        (comp
-                        (map #(assoc % :pitkakeskilampotila
+                        (map #(assoc % :keskilampotila-1981-2010
                                      (get % pitkakeskilampotila)))
                         (map #(konv/decimal->double % :keskilampotila))
-                        (map #(konv/decimal->double % :pitkakeskilampotila)))
+                        (map #(konv/decimal->double % :keskilampotila-1981-2010)))
                        (q/hae-urakan-lampotilat db urakka-id))
      :pohjavesialueet (into []
                             (geo/muunna-pg-tulokset :alue)

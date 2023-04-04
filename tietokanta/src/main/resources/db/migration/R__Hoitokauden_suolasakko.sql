@@ -49,9 +49,11 @@ BEGIN
         AND alkupvm = hk_alkupvm AND loppupvm = hk_loppupvm;
 
   IF urakan_alkuvuosi <= 2014 THEN
-    vertailu := lampotilat.pitka_keskilampotila_vanha;
+      vertailu := lampotilat.keskilampotila_1971_2000;
+  ELSIF urakan_alkuvuosi <= 2022 THEN
+      vertailu := lampotilat.keskilampotila_1981_2010;
   ELSE
-    vertailu := lampotilat.pitka_keskilampotila;
+      vertailu := lampotilat.keskilampotila_1991_2020;
   END IF;
 
   IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR vertailu IS NULL)
