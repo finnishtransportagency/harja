@@ -4,6 +4,7 @@
    [harja.palvelin.raportointi.raportit.yleinen :as yleinen :refer [rivi]]
    [harja.domain.ely :as ely]
    [harja.domain.tierekisteri :as tr-domain]
+   [clojure.string :as str]
    [harja.pvm :as pvm]
    [taoensso.timbre :as log]
    [harja.domain.tieliikenneilmoitukset :refer
@@ -12,15 +13,12 @@
 (defn- rivi-taulukolle
   [tiedot lihavoi?]
   (let [ilmoitustyyppi (domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi tiedot))
-        tietojen-selitteet-koko (count (:selitteet tiedot))
         ;; Rivittää lisätieto-kentän joka 90. kirjaimen seuraavalle riville, jos lisätiedossa paljon tekstiä 
-        lisatieto-rivitetty (clojure.string/replace (str (:lisatieto tiedot)) #"(.{90})(?!$)" "$1\n")
+        lisatieto-rivitetty (str/replace (str (:lisatieto tiedot)) #"(.{90})(?!$)" "$1\n")
         ;; Käydään läpi selitteet, lisää pilkun jos enemmän selitteitä olemassa
         ;; "Savea tiellä, Vettä tiellä"
-        tietojen-selitteet (map (fn [x]
-                                  (let [indeksi (.indexOf (:selitteet tiedot) x)
-                                        valittaja (when (not= (+ indeksi 1) tietojen-selitteet-koko) ", ")]
-                                    (str (x +ilmoitusten-selitteet+) valittaja))) (:selitteet tiedot))]
+        kasittelija #(str (% +ilmoitusten-selitteet+) )
+        tietojen-selitteet (str/join ", " (map kasittelija (:selitteet tiedot)))]
     (rivi
      ;; Urakka
      [:varillinen-teksti {:arvo (str (:urakkanimi tiedot)) :lihavoi? lihavoi?}]
@@ -47,8 +45,9 @@
 
     [:taulukko {:viimeinen-rivi-yhteenveto? false}
      (let [testets (map (fn [x]
+                          (let [leveys (if (= x "Lisätieto") 56 36)]
                           {:otsikko x
-                           :leveys 36}) otsikot)]
+                           :leveys leveys})) otsikot)]
 
        ;; TODO en tiedä voiko tätä jotenkin nätimmin tehdä
        (rivi
