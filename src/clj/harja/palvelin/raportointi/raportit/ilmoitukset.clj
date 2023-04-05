@@ -44,21 +44,12 @@
                               (rivi-taulukolle x true))))]
 
     [:taulukko {:viimeinen-rivi-yhteenveto? false}
-     (let [testets (map (fn [x]
-                          (let [leveys (if (= x "Lisätieto") 56 36)]
-                          {:otsikko x
-                           :leveys leveys})) otsikot)]
+     (let [taulukon-rivit (map (fn [x]
+                                 (let [leveys (if (= x "Lisätieto") 56 36)]
+                                   {:otsikko x
+                                    :leveys leveys})) otsikot)]
 
-       ;; TODO en tiedä voiko tätä jotenkin nätimmin tehdä
-       (rivi
-        (first testets)
-        (second testets)
-        (nth testets 2)
-        (nth testets 3)
-        (nth testets 4)
-        (nth testets 5)
-        (nth testets 6)
-        (nth testets 7))) rivit]))
+       (apply rivi taulukon-rivit)) rivit]))
 
 (defn- filtterit-rivi
   ([o1 o2 o3 o4 lihavoi?]
