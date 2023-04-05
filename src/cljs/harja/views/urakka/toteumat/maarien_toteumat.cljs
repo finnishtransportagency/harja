@@ -18,7 +18,7 @@
             [cljs.core.async :refer [<! timeout]]
             [harja.ui.protokollat :refer [Haku hae]]
             [harja.domain.skeema :refer [+tyotyypit+]]
-
+            [goog.string :as gstring]
             [tuck.core :as tuck]
             [harja.ui.debug :as debug]
             [harja.views.urakka.toteumat.maarien-toteuma-lomake :as toteuma-lomake]
@@ -227,8 +227,11 @@
     [:div.maarien-toteumat
 
      [debug/debug app]
-     [:div {:style {:padding-top "1rem"}} [:p "Taulukossa toimenpiteittäin ne määrämitattavat tehtävät, joiden toteumaa urakassa seurataan." [:br]
-                                           "Määrät, äkilliset hoitotyöt, yms. varaukset sekä lisätyöt."]]
+     [:div
+      [yleiset/info-laatikko :vahva-ilmoitus "Ohje: tehtävämäärien, materiaalien ja rahavarausten kirjaaminen"
+       (gstring/unescapeEntities "&ensp;&#x2022;&ensp; Kirjaa tällä välilehdellä vain sellaisten tehtävien toteumat, jotka eivät ole materiaaleja (liikennemerkkien kappale- ja neliömäärät, rumpujen metrit jne.) \t
+       &ensp;&#x2022;&ensp; Materiaalien toteumat tuodaan Harjaan rajapinnan kautta tai kirjataan käsin Muut materiaalit-välilehdeltä. \t
+       &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta-välilehdellä \t") "70%"]]
      [:div.row
       [:div.col-xs-12.col-md-6 {:style {:margin-left "-15px"}}
        [:label.alasvedon-otsikko-vayla "Toimenpide"]

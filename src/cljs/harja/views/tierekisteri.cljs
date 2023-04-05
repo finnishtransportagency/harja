@@ -15,13 +15,17 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.ui.yleiset :as yleiset]
             [harja.pvm :as pvm]
+            [harja.tiedot.kartta :as tiedot-kartta]
             [clojure.walk :as walk])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defonce tr (r/atom {}))
 (defonce sijainti (atom nil))
 
+(defonce kannan-geometria (atom nil))
+
 (defonce koordinaatti (r/atom {:x nil :y nil}))
+(defonce koordinaatti2 (r/atom {:x nil :y nil}))
 (defonce koordinaatin-osoite (r/atom nil))
 
 (defonce valitse-kartalla? (r/atom false))
@@ -115,7 +119,7 @@
 
 (defn- piirra-reitti
   [reitti]
-  (let [tyyppi (:tyyppi @tarkasteltava-asia)]
+  (let [_ (js/console.log "piirrä-reitti :: reitti " (pr-str reitti))]
     (tasot/nayta-geometria! :tarkasteltava-reitti
                             {:alue (assoc reitti
                                      :fill "black"
@@ -229,6 +233,112 @@
      [:button.nappi-ensisijainen.btn-xs {:on-click hae-ja-nayta-reittipisteet
                                          :disabled (when (nil? (:id @tarkasteltava-asia)) "disabled")}
       "Piirrä reitti"]]))
+
+(defn geometrian-piirto
+  "Tarjoaa kälin jolla haetaan reitillisen asian pisteet id:llä"
+  []
+  (let []
+    [:div.geometrian-piirto
+     [:h5 "Anna geometria: "]
+
+     [:textarea {:rows 10
+                 :cols 80
+                 :placeholder "Liitä ST_AsGeoJSON funkkarilla saatu geometria tähän. Toimii vain Multiline- ja LineStringien kanssa tällä hetkellä."
+                 :value @kannan-geometria
+                 :on-change #(let [v (-> % .-target .-value)]
+                               (reset! kannan-geometria v))}]
+     [:button.nappi-ensisijainen.btn-xs {:on-click
+                                         #(do
+                                            (let [annettu-geo (js->clj (js/JSON.parse @kannan-geometria))
+                                                  type (get annettu-geo "type")
+                                                  coordinates (get annettu-geo "coordinates")
+                                                  geo {:type (cond (= "MultiLineString" type) :multiline
+                                                                  (= "LineString" type) :line
+                                                                  :else :multiline)}
+                                                  geo (merge geo
+                                                       (cond (= "MultiLineString" type)
+                                                             {:lines (map (fn [c]
+                                                                            {:type :line,
+                                                                             :points c}) coordinates)}
+
+                                                             (= "LineString" type)
+                                                             {:points coordinates}))]
+                                              (piirra-reitti geo)))
+                                         :disabled (when (nil? @kannan-geometria) "disabled")}
+      "Piirrä reitti"]]))
+
+(defonce piirrettava-piste1 (r/atom nil))
+(defonce piirrettava-piste2 (r/atom nil))
+(defn pisteen-piirto
+  "Tarjoaa kälin jolla piirretään yksittäinen piste kartalle"
+  []
+  (let []
+    [:div.pisteen-piirto
+     [:table
+      [:thead [:tr [:th "X"] [:th "Y"]]]
+      [:tbody
+       [:tr
+        [:td
+         [:input {:type :text
+                  :value (:x @koordinaatti2)
+                  :on-change #(swap! koordinaatti2 assoc :x (-> % .-target .-value js/parseFloat))}]]
+        [:td
+         [:input {:type :text
+                  :value (:y @koordinaatti2)
+                  :on-change #(swap! koordinaatti2 assoc :y (-> % .-target .-value js/parseFloat))}]]
+
+        [:td
+         [:button {:on-click #(do
+                                (let [p {:type :point
+                                          :coordinates [(:x @koordinaatti2) (:y @koordinaatti2)]}
+                                      ;; Lisää piirrettävä piste atomiin, jotta ne saadaan piirrettyä kaikki kartalle
+                                      _ (reset! piirrettava-piste1 p)]
+                                  (tasot/nayta-geometria! :piste-kartalle1
+                                    {:type :piste-kartalle2
+                                     :nimi "Piste kartalle"
+                                     :alue (assoc p
+                                             :fill "red"
+                                             :radius 4
+                                             :stroke {:color "blue"
+                                                      :width 3})})
+                                  (tiedot-kartta/keskita-kartta-alueeseen!
+                                    (harja.geo/extent-monelle [p @piirrettava-piste2]))))}
+          "Piirrä piste"]]]]]]))
+
+(defn pisteen-piirto2
+  "Tarjoaa kälin jolla piirretään yksittäinen piste kartalle"
+  []
+  (let []
+    [:div.pisteen-piirto
+     [:table
+      [:thead [:tr [:th "X"] [:th "Y"]]]
+      [:tbody
+       [:tr
+        [:td
+         [:input {:type :text
+                  :value (:x @koordinaatti)
+                  :on-change #(swap! koordinaatti assoc :x (-> % .-target .-value js/parseFloat))}]]
+        [:td
+         [:input {:type :text
+                  :value (:y @koordinaatti)
+                  :on-change #(swap! koordinaatti assoc :y (-> % .-target .-value js/parseFloat))}]]
+
+        [:td
+         [:button {:on-click #(do
+                                (let [p {:type :point
+                                          :coordinates [(:x @koordinaatti) (:y @koordinaatti)]}
+                                      ;; Lisää piirrettävä piste atomiin, jotta ne saadaan piirrettyä kaikki kartalle
+                                      _ (reset! piirrettava-piste2 p)]
+                                  (tasot/nayta-geometria! :piste-kartalle2
+                                    {:type :piste-kartalle2
+                                     :nimi "Piste kartalle"
+                                     :alue (assoc p
+                                                :fill "orange"
+                                                :radius 4
+                                                :stroke {:color "orange"
+                                                         :width 3})})
+                                  (tiedot-kartta/keskita-kartta-alueeseen! (harja.geo/extent-monelle [@piirrettava-piste1 p]))))}
+          "Piirrä piste"]]]]]]))
 
 (defonce reittitoteuman-piste-idt (atom nil))
 (defn- nayta-reittitoteuman-pisteet [payload]
@@ -376,7 +486,15 @@
       [:hr]
       [:h3 "Reittipisteiden haku - toteumille, tyokonehavainnoille tai tarkastusajoille"]
       [reittipisteiden-haku]
-      [reittitoteuma-payload]])))
+      [reittitoteuma-payload]
+      [:hr]
+      [:h3 "Tietokannasta haetun geometrian piirto kartalle"]
+      [geometrian-piirto]
+      [:hr]
+      [:h3 "Piirrä piste kartalle"]
+      [pisteen-piirto]
+      [:h3 "Piirrä toinen kartalle"]
+      [pisteen-piirto2]])))
 
 ;; eism tie 20
 ;; x: 431418, y: 7213120
