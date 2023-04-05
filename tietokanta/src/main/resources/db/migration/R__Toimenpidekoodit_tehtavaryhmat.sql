@@ -1415,3 +1415,9 @@ WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi
 SET api_seuranta = TRUE, api_tunnus = 7067, voimassaolo_alkuvuosi = 2019
 WHERE nimi = 'Reunantäyttö km' AND tehtavaryhma IS NOT NULL;
+
+-- Merkitään poistetuksi ylimääräiset Äkillisiin hoitotöihin ja Vahinkojen korjauksiin tehtäväryhmät
+-- Ei saa lisätä kulukohdistuksia näihin tehtäväryhmiin.
+-- Tietoja tarvitaan kuitenkin vielä raporteilla ja vanhojen hoitokausien tietoja tarkastellessa.
+UPDATE tehtavaryhma SET poistettu = TRUE WHERE nimi IN ('Äkilliset hoitotyöt, Talvihoito (T1)', 'Äkilliset hoitotyöt, Soratiet (T1)');
+UPDATE tehtavaryhma SET poistettu = TRUE WHERE nimi IN ('Vahinkojen korjaukset, Talvihoito (T2)', 'Vahinkojen korjaukset, Soratiet (T2)');
