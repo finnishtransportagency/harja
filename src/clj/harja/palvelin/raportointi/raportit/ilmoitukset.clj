@@ -11,7 +11,7 @@
     [+ilmoitusten-selitteet+ tilan-selite] :as domain]))
 
 (defn- rivi-taulukolle
-  [tiedot lihavoi?]
+  [tiedot]
   (let [ilmoitustyyppi (domain/ilmoitustyypin-lyhenne (:ilmoitustyyppi tiedot))
         ;; Rivittää lisätieto-kentän joka 90. kirjaimen seuraavalle riville, jos lisätiedossa paljon tekstiä 
         lisatieto-rivitetty (str/replace (str (:lisatieto tiedot)) #"(.{90})(?!$)" "$1\n")
@@ -21,27 +21,26 @@
         tietojen-selitteet (str/join ", " (map kasittelija (:selitteet tiedot)))]
     (rivi
      ;; Urakka
-     [:varillinen-teksti {:arvo (str (:urakkanimi tiedot)) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo (str (:urakkanimi tiedot))}]
      ;; Saapunut
-     [:varillinen-teksti {:arvo (pvm/pvm-aika (:valitetty tiedot)) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo (pvm/pvm-aika (:valitetty tiedot))}]
      ;; Tyyppi 
-     [:varillinen-teksti {:kustomi-tyyli ilmoitustyyppi :arvo ilmoitustyyppi :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:kustomi-tyyli ilmoitustyyppi :arvo ilmoitustyyppi}]
      ;; Selite
-     [:varillinen-teksti {:arvo (apply str tietojen-selitteet) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo (apply str tietojen-selitteet)}]
      ;; Lisätieto 
-     [:varillinen-teksti {:arvo lisatieto-rivitetty :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo lisatieto-rivitetty}]
      ;; Tie 
-     [:varillinen-teksti {:arvo (tr-domain/tierekisteriosoite-tekstina (:tr tiedot) {:teksti-tie? false}) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo (tr-domain/tierekisteriosoite-tekstina (:tr tiedot) {:teksti-tie? false})}]
      ;; Tila 
-     [:varillinen-teksti {:arvo ((:tila tiedot) tilan-selite) :lihavoi? lihavoi?}]
+     [:varillinen-teksti {:arvo ((:tila tiedot) tilan-selite)}]
      ;; Toimenpiteet aloitettu 
-     [:varillinen-teksti {:arvo (pvm/pvm-aika (:toimenpiteet-aloitettu tiedot)) :lihavoi? lihavoi?}])))
+     [:varillinen-teksti {:arvo (pvm/pvm-aika (:toimenpiteet-aloitettu tiedot))}])))
 
 (defn- taulukko [{:keys [otsikot tiedot]}]
   (let [rivit (into []
                     (remove nil?
-                            (for [x tiedot]
-                              (rivi-taulukolle x true))))]
+                            (map #(rivi-taulukolle %) tiedot)))]
 
     [:taulukko {:viimeinen-rivi-yhteenveto? false}
      (let [taulukon-rivit (map (fn [x]
@@ -141,13 +140,14 @@
         urakka (:urakka parametrit)
         hallintayksikko (:hallintayksikko parametrit)
         filtterit (:filtterit parametrit)
-        
+
         otsikot ["Urakka" "Saapunut"
                  "Tyyppi" "Selite"
                  "Lisätieto" "Tie"
                  "Tila" "Toimenpiteet aloitettu"]
 
-        valittu-ely (try (get ely/elynumero->nimi (Long/parseLong (:elynumero hallintayksikko))) (catch Throwable _ nil))
+        valittu-ely (when (:elynumero hallintayksikko)
+                      (get ely/elynumero->nimi (Long/parseLong (:elynumero hallintayksikko))))
 
         otsikko (if-not (:nimi urakka)
                   (str "Ilmoitukset, " valittu-ely) "Ilmoitukset")
