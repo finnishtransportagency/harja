@@ -447,10 +447,14 @@
     (pvm p)
     ""))
 
-(defn pvm-vali [[alku loppu]]
-  (str (pvm/pvm alku)
-       " \u2014 "
-       (pvm/pvm loppu)))
+(defn pvm-vali
+  "Näyttää päivämäärävälin joka vuoden kera tai ilman ihmisluettavassa muodossa."
+  ([[alku loppu]]
+   (pvm-vali [alku loppu] true))
+  ([[alku loppu] nayta-vuosi?]
+   (str (pvm/pvm alku {:nayta-vuosi-fn (constantly nayta-vuosi?)})
+        " \u2014 "
+        (pvm/pvm loppu {:nayta-vuosi-fn (constantly nayta-vuosi?)}))))
 
 (defn pvm-vali-opt [vali]
   (if vali
