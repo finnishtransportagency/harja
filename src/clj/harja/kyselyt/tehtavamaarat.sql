@@ -109,12 +109,15 @@ WHERE urakka = :urakka
 -- Pois jätetyt lisätyöhön viittaavat tehtäväryhmät ovat ainoastaan toteumien kirjaamista varten.
 -- Nämä dummy-tehtäväryhmät ja niihin liitetyt tehtävät tarvitaan, koska toteumiin on pakko liittää tehtävä.
 -- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
+-- Poistettuja tehtäväryhmiä ei voi filteröidä tässä, koska menneitä hoitokausia tarkastellessa myös
+-- myöhemmin poistettuihin tehtäväryhmiin kohdistetut kulut täytyy listata.
 SELECT distinct tpk3.id       as "toimenpide-id",
                 tpk3.nimi     as "toimenpide",
                 tr3.nimi      as "tehtavaryhma-nimi",
                 tr3.id        as "tehtavaryhma-id",
                 tr3.jarjestys as "jarjestys",
-                tpi.id        as "toimenpideinstanssi"
+                tpi.id        as "toimenpideinstanssi",
+                tr3.poistettu as "tehtavaryhma-poistettu"
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
        JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Lisätyöt%')
