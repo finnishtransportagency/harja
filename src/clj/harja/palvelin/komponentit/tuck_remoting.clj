@@ -94,16 +94,16 @@
 (defrecord TuckRemoting [konteksti-atomi]
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
-    (assoc this ::lopeta
-                (http/julkaise-palvelu http :ws
-                  (kasittelija
-                    (tee-tuck-remoting-kasittelija konteksti-atomi db))
-                  {:ring-kasittelija? true
-                   :ei-todennettava true})))
-  (stop [{lopeta ::lopeta http :http-palvelin :as this}]
-    (lopeta)
+    (http/julkaise-palvelu http :ws
+      (kasittelija
+        (tee-tuck-remoting-kasittelija konteksti-atomi db))
+      {:ring-kasittelija? true
+       :ei-todennettava true})
+
+    this)
+  (stop [{http :http-palvelin :as this}]
     (http/poista-palvelu http :ws)
-    (dissoc this ::lopeta)))
+    this))
 
 (defn luo-tuck-remoting []
   (->TuckRemoting (atom {::asiakkaat (atom {})
