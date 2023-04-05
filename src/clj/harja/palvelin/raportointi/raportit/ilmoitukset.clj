@@ -182,25 +182,23 @@
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
 
-     ;; Halutaan säilyttää frontin oma html, mutta generoidaan excelit ja pdf 
-     [:piilota-html
-      (filtterit-taulukko {:data nil
-                           :alkuaika alkuaika
-                           :valitetty-urakkaan-vakioaikavali valitetty-urakkaan-vakioaikavali
-                           :toimenpiteet-aloitettu-vakioaikavali toimenpiteet-aloitettu-vakioaikavali
-                           :hakuehto hakuehto
-                           :selite selite
-                           :tr-numero tr-numero
-                           :tunniste tunniste
-                           :ilmoittaja-nimi ilmoittaja-nimi
-                           :ilmoittaja-puhelin ilmoittaja-puhelin
-                           :tilat tilat
-                           :tyypit tyypit
-                           :vaikutukset vaikutukset
-                           :aloituskuittauksen-ajankohta aloituskuittauksen-ajankohta
-                           :sheet-nimi "ilmoitukset"
-                           :otsikko "Filtterit"})
+     (filtterit-taulukko {:data nil
+                          :alkuaika alkuaika
+                          :valitetty-urakkaan-vakioaikavali valitetty-urakkaan-vakioaikavali
+                          :toimenpiteet-aloitettu-vakioaikavali toimenpiteet-aloitettu-vakioaikavali
+                          :hakuehto hakuehto
+                          :selite selite
+                          :tr-numero tr-numero
+                          :tunniste tunniste
+                          :ilmoittaja-nimi ilmoittaja-nimi
+                          :ilmoittaja-puhelin ilmoittaja-puhelin
+                          :tilat tilat
+                          :tyypit tyypit
+                          :vaikutukset vaikutukset
+                          :aloituskuittauksen-ajankohta aloituskuittauksen-ajankohta
+                          :sheet-nimi "ilmoitukset"
+                          :otsikko "Filtterit"})
 
-      (taulukko {:otsikot otsikot
-                 :tiedot tiedot
-                 :sheet-nimi "ilmoitukset"})]]))
+     (taulukko {:otsikot otsikot
+                :tiedot tiedot
+                :sheet-nimi "ilmoitukset"})]))

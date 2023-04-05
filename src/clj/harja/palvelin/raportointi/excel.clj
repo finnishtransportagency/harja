@@ -617,21 +617,10 @@
 (defmethod muodosta-excel :otsikko-heading-small [[_ _] _] nil)
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
-    (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)]
-      (doseq [elementti (remove nil? sisalto)]
-
-        (try
-          ;; Voi olla äkkiseltään haastava hahmottaa mitä tässä tehdään
-          ;; Eli jätetään :piilota-html pois, ja muodostetaan kaikki elementit sen sisällä
-          ;; piilota-html on tehty jos halutaan piilottaa html muodostus mutta tehdään silti excel
-          (if (= (first elementti) :piilota-html)
-            (doseq [x (vec (rest elementti))]
-              (muodosta-excel (liita-yleiset-tiedot x raportin-tunnistetiedot) workbook))
-            (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
-          
-          (catch Throwable t
-            (log/error t "Virhe Excel muodostamisessa (raportti)")))))
+  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
+        tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)]
+    (doseq [elementti (remove nil? sisalto)]
+      (muodosta-excel (liita-yleiset-tiedot elementti raportin-tunnistetiedot) workbook))
     tiedoston-nimi))
 
 (defmethod muodosta-excel :default [elementti workbook]

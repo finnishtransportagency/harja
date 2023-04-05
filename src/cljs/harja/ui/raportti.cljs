@@ -348,11 +348,6 @@
                              [sisalto]))
                          sisalto))])
 
-(defmethod muodosta-html :piilota-html [[_ & _]]
-  ;; Jos halutaan säilyttää frontin oma html, ja generoida vain excel/pdf raportti
-  (log "Muodostetaan piilotettu html raportti")
-  nil)
-
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
 
