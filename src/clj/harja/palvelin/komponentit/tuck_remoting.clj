@@ -100,10 +100,10 @@
                     (tee-tuck-remoting-kasittelija konteksti-atomi db))
                   {:ring-kasittelija? true
                    :ei-todennettava true})))
-  (stop [{stop ::stop http :http-palvelin :as this}]
-    (stop)
+  (stop [{lopeta ::lopeta http :http-palvelin :as this}]
+    (lopeta)
     (http/poista-palvelu http :ws)
-    (dissoc this ::stop)))
+    (dissoc this ::lopeta)))
 
 (defn luo-tuck-remoting []
   (->TuckRemoting (atom {::asiakkaat (atom {})
