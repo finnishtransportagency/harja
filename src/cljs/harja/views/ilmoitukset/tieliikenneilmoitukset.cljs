@@ -12,6 +12,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.raportit :as raportit]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
@@ -28,10 +29,11 @@
             [tuck.core :refer [tuck]]
             [harja.tiedot.ilmoitukset.viestit :as v]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.views.ilmoitukset.ilmoitukset-raportti :as ilmoitukset-raportti])
+            [harja.tiedot.kartta :as kartta-tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
+
+(def raportin-parametrit (atom {}))
 
 (def selitehaku
   (reify protokollat/Haku
@@ -208,7 +210,21 @@
         valitse-ilmoitus! (when kuittaa-monta-nyt
                             #(e! (v/->ValitseKuitattavaIlmoitus %)))
         pikakuittaus-ilmoitus-id (when pikakuittaus
-                                   (get-in pikakuittaus [:ilmoitus :id]))]
+                                   (get-in pikakuittaus [:ilmoitus :id]))
+
+        _ (reset! raportin-parametrit (let [ur @nav/valittu-urakka
+                                       valinnat (:valinnat {})
+                                       alkuaika (:valitetty-urakkaan-alkuaika valinnat)]
+
+                                   (raportit/urakkaraportin-parametrit
+                                    (:id ur)
+                                    :ilmoitukset-raportti
+                                    {:urakka @nav/valittu-urakka
+                                     :hallintayksikko @nav/valittu-hallintayksikko
+                                     :tiedot haetut-ilmoitukset
+                                     :filtterit @tiedot/ilmoitukset
+                                     :alkupvm alkuaika
+                                     :urakkatyyppi (:tyyppi ur)})))]
     [:span.ilmoitukset
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -229,8 +245,6 @@
       [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
              (when @nav/valittu-urakka (str " Urakassa " (:nimi @nav/valittu-urakka))))]
       
-      [ilmoitukset-raportti/ilmoitukset_raportti haetut-ilmoitukset @tiedot/ilmoitukset]
-      
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
@@ -244,7 +258,11 @@
         :max-rivimaara 500
         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
         :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
-                         "ilmoitusrivi-fade")}
+                         "ilmoitusrivi-fade")
+        
+        :raporttivienti #{:excel :pdf}
+        :raporttivienti-lapinakyva? true
+        :raporttiparametrit @raportin-parametrit}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "

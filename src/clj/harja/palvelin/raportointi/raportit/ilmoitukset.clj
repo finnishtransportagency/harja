@@ -144,9 +144,15 @@
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}) rivit]))
 
-(defn suorita [_ _ {:keys [tiedot urakka hallintayksikko filtterit]}]
-  
-  (let [otsikot ["Urakka" "Saapunut"
+(defn suorita [_ _ {:keys [tiedot urakka hallintayksikko filtterit parametrit] }]
+
+  (let [;; Voiko destruktoida funktion parametreissa? Miten?
+        tiedot (:tiedot parametrit)
+        urakka (:urakka parametrit)
+        hallintayksikko (:hallintayksikko parametrit)
+        filtterit (:filtterit parametrit)
+        
+        otsikot ["Urakka" "Saapunut"
                  "Tyyppi" "Selite"
                  "Lisätieto" "Tie"
                  "Tila" "Toimenpiteet aloitettu"]

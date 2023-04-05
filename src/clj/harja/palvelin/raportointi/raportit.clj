@@ -59,6 +59,7 @@
     :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}
    
    {:nimi         :sanktioraportti-yllapito
+    
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sakko- ja bonusraportti"
