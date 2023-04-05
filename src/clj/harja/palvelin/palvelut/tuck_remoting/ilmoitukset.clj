@@ -96,14 +96,6 @@
 (defrecord IlmoituksetWS []
   component/Lifecycle
   (start [{tuck-remoting :tuck-remoting db :db :as this}]
-    ;; Varmista, että lopetataan ilmoitusten kuuntelu yksittäiselle asiakkaalle, kun asiakkaan WS-yhteys katkeaa.
-    ;; Asiakkaan täytyy muodostaa yhteys uudelleen ja pyytää sen jälkeen kuuntelun aloittamista uudestaan
-    (assoc this ::poista-yhteys-poikki-hook
-                (tr-komponentti/rekisteroi-yhteys-poikki-hook!
-                  tuck-remoting
-                  (fn [{::tr/keys [e! client-id] :as client}]
-                    (lopeta-ilmoitusten-kuuntelu client-id))))
-
     (extend-protocol tr/ServerEvent
       KuunteleIlmoituksia
       (process-event [{suodattimet :suodattimet} {::tr/keys [e! client-id] :keys [kayttaja]} app]
@@ -118,7 +110,15 @@
       LopetaIlmoitustenKuuntelu
       (process-event [_ {::tr/keys [client-id]} app]
         (lopeta-ilmoitusten-kuuntelu client-id)
-        app)))
+        app))
+
+    ;; Varmista, että lopetataan ilmoitusten kuuntelu yksittäiselle asiakkaalle, kun asiakkaan WS-yhteys katkeaa.
+    ;; Asiakkaan täytyy muodostaa yhteys uudelleen ja pyytää sen jälkeen kuuntelun aloittamista uudestaan
+    (assoc this ::poista-yhteys-poikki-hook
+                (tr-komponentti/rekisteroi-yhteys-poikki-hook!
+                  tuck-remoting
+                  (fn [{::tr/keys [e! client-id] :as client}]
+                    (lopeta-ilmoitusten-kuuntelu client-id)))))
 
   (stop [{poista-yhteys-poikki-hook ::poista-yhteys-poikki-hook :as this}]
     ;; Poista Tuck-remoting yhteys-poikki hookin rekisteröinti
@@ -126,7 +126,9 @@
 
     ;; Poista kaikkien clienttien kuuntelijat
     (doseq [client-id (keys @kuuntelijat)]
-      (lopeta-ilmoitusten-kuuntelu client-id))))
+      (lopeta-ilmoitusten-kuuntelu client-id))
+
+    this))
 
 (defn luo-ilmoitukset-ws []
   (->IlmoituksetWS))
