@@ -105,7 +105,8 @@ VALUES (
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
-                              yhaid, yllapitoluokka)
+                              yhaid, yllapitoluokka, raekoko, tyomenetelma,
+                              massamaara, nykyinen_paallyste, karttapaivamaara)
 VALUES (
   :yllapitokohde,
   :nimi,
@@ -124,7 +125,12 @@ VALUES (
                                           CAST(:tr_loppuetaisyys AS INTEGER),
 					  CAST(:tr_ajorata AS INTEGER))),
   :yhaid,
-  :yllapitoluokka);
+  :yllapitoluokka,
+  :raekoko,
+  :tyomenetelma,
+  :massamaara,
+  :nykyinen_paallyste,
+  :karttapaivamaara);
 
 -- name: hae-urakan-yha-id
 -- single?: true
