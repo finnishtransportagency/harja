@@ -112,7 +112,13 @@
   (process-event [_ app]
     (tuck/action!
       (fn [e!]
-        (e! (tr-tyokalut/->KatkaiseWS))))
+        ;; FIXME: Jotta KatkaiseWS voi muuttaa app-tilaa, eventin kutsu täytyy irroittaa kontekstista setTimeoutilla.
+        ;;        Jos tähän on parempi ratkaisu, niin se olisi suotavaa.
+        ;;        Kaikki tarjolla olevat ratkaisut, kuten käytetty tuck/action! tarjoavat käytännössä e!:n *current-send-function*:n
+        ;;        kautta, joten en löytänyt parempaakaan vaihtoehtoa, joka voisi toimia ilman setTimouttia.
+        (js/setTimeout
+          #(e! (tr-tyokalut/->KatkaiseWS))
+          0)))
     app)
 
   ;; -- Tuck-remoting eventtien käsittely --

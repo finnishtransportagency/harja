@@ -14,13 +14,13 @@
 (defrecord KatkaiseWS [])
 
 (defn ws-yhteys? [app]
-  (:ws-yhteys app))
+  (:ws-yhteys-kanava app))
 
 ;; ---- Tuck-remoting kirjaston parannuksia, TODO: Teen virallisen PR:n myöhemmin tuck-remoteen! (siksi koodi englanniksi)
 
 (declare disconnect!)
 
-(def ws-opts {:reconn-interval-ms (* 4 1000)
+(def ws-opts {:reconn-interval-ms (* 10 1000)
               ;:max-reconn-attempts 20
               :heartbeat-interval-ms (* 15 1000)
               ;; Timeout set to 60 seconds in case Chrome throttles timers aggressively.
@@ -112,8 +112,10 @@
                                                :closed-dirty))))
       (reset! tr/connection conn))))
 
+(def connection-channel (atom nil))
+
 (defn connect! [ws-url app-atom on-connect on-disconnect]
-  (let [channel (chan)
+  (let [channel (reset! connection-channel (chan))
         conn-attempts-count (atom 0)]
     (connect!* channel ws-url app-atom on-connect on-disconnect false)
 
@@ -123,15 +125,20 @@
           (reset! conn-attempts-count 0))
 
         (when (= :closed-dirty state)
-              (let [timeout-ms (+ (:reconn-interval-ms ws-opts) (* @conn-attempts-count 5000))]
-                (.info js/console (str "Tuck-remoting: Trying to reconnect the WebSocket connection in " (/ timeout-ms 1000) " seconds..."))
-                (<! (timeout timeout-ms))
+          (let [timeout-ms (+ (:reconn-interval-ms ws-opts) (* @conn-attempts-count 5000))
+                _ (.info js/console (str "Tuck-remoting: Trying to reconnect the WebSocket connection in " (/ timeout-ms 1000) " seconds..."))
+                [state _] (alts! [channel (timeout timeout-ms)])]
 
+            ;; State returns :closed before timeout finished, cancel the ongoing reconnection attempt.
+            (if-not (= :closed state)
+              (do
                 (swap! conn-attempts-count inc)
-                (connect!* channel ws-url app-atom on-connect on-disconnect true)))
+                (connect!* channel ws-url app-atom on-connect on-disconnect true))
+              (.info js/console (str "Tuck-remoting: Reconnection canceled.")))))
 
         (when-not (= :closed state)
-          (recur))))))
+          (recur))))
+    channel))
 
 (defn disconnect!
   ([] (disconnect! 1000))
@@ -143,7 +150,17 @@
      (when conn
        (.info js/console "Tuck-remoting: Disconnecting the WebSocket connection...")
        (.close conn close-code)
-       (reset! tr/connection nil)))))
+       (reset! tr/connection nil))
+
+     ;; If there is ongoing reconnection timout waiting, put :closed in the channel if disconnecting normally (code = 1000).
+     ;; This will cancel the ongoing reconnection timer and prevents unwanted reconnection loop.
+     ;; TODO: Check if this logic can be done better.
+     ;;       I'm not sure if the go-loop solution for reconnections is the best option.
+     (when (and @connection-channel (= 1000 close-code))
+       (put! @connection-channel :closed)))))
+
+(defn ^:export test-ws-disconnect [code]
+  (disconnect! code))
 
 ;; ---- END --- Tuck-remoting kirjaston parannuksia,
 
@@ -152,23 +169,22 @@
   (process-event [{:keys [tila-atom yhteys-onnistui-fn yhteys-katkaistu-fn]} app]
     (if (ws-yhteys? app)
       (do
-        ;; TODO: Poista debug-lokitus
-        (println "WS yhteys on jo aktiivinen, palautetaan vain app")
+        (log/info "WS-yhteys on jo toiminnassa. Käytetään vanhaa yhteyttä.")
         app)
-      (assoc app :ws-yhteys
-                 (connect!
-                   ;; Käytetään localhost-kehityksessä WS-protokollaa ja muualla WSS
-                   ;; Testipalvelimilla (ja tuotannossa) pitäisi olla normaalisti HTTPS-sertifikaatti käytössä, joten
-                   ;; WSS-protokollaa pitää käyttää niissä.
-                   (let [protokolla (if (k/kehitysymparistossa-localhost?) "ws://" "wss://")]
-                     (str protokolla js/window.location.host "/_/ws?"))
-                   tila-atom
-                   yhteys-onnistui-fn
-                   yhteys-katkaistu-fn))))
+      (assoc-in app [:ws-yhteys-kanava]
+        (connect!
+          ;; Käytetään localhost-kehityksessä WS-protokollaa ja muualla WSS
+          ;; Testipalvelimilla (ja tuotannossa) pitäisi olla normaalisti HTTPS-sertifikaatti käytössä, joten
+          ;; WSS-protokollaa pitää käyttää niissä.
+          (let [protokolla (if (k/kehitysymparistossa-localhost?) "ws://" "wss://")]
+            (str protokolla js/window.location.host "/_/ws?"))
+          tila-atom
+          yhteys-onnistui-fn
+          yhteys-katkaistu-fn))))
 
   KatkaiseWS
   (process-event [_ app]
     ;; Käytetään omaa implementaatiota disconnect! toiminnallisuudesta.
     ;; Pyritään toteuttamaan tämä tuck-remoting kirjastoon myöhemmin + muita parannuksia, mitä tarvitaan.
     (disconnect!)
-    (dissoc app :ws-yhteys)))
+    (dissoc app :ws-yhteys-kanava)))
