@@ -811,8 +811,12 @@
   Tehdään yksi formatointifunktio, joka osaa näyttää näissä kaikissa tilanteissa luvut lukutilassa oikein.
   Ja lisäksi näytetään viiva - mikäli arvoa ei ole annettu ollenkaan."
   [v]
-  (if (vector? v)
+  (cond
+    (vector? v)
     (clojure.string/join ", " v)
-    (if (or (nil? v) (and (seq? v) (empty? v)))
-      "-"
-      v)))
+
+    (or (nil? v) (and (seq? v) (empty? v)))
+    "-"
+
+    :else
+    v))
