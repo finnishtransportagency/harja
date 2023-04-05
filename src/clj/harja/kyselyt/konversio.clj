@@ -458,4 +458,8 @@
   (if (and (str/includes? xml "<sisalto>") (not (str/includes? xml "</sisalto>")))
     xml
     (let [parsittu-xml (data-xml/parse-str xml :support-dtd false)] ;; Asetetaan dtd support päälle xxe hyökkäysten varalta
-      (data-xml/indent-str parsittu-xml))))
+      (try
+        (data-xml/indent-str parsittu-xml)
+        (catch Exception e
+          ;; Jos prettyprint hajoaa mihin tahansa, niin palauta muokkaamaton xml
+          xml)))))
