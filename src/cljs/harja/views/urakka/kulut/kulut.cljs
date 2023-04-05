@@ -220,7 +220,7 @@
                                                       tehtavaryhma)
                                            :valinnat (if lisatyo?
                                                        toimenpiteet
-                                                       tehtavaryhmat)
+                                                       (filter #(= false (:passivoitu %)) tehtavaryhmat)) ;; Filteröidään vanhentuneet tehtäväryhmät kulukirjauksen valintalaatikosta
                                            :valittu-meta tehtavaryhma-meta
                                            :indeksi indeksi
                                            :lisatyo? lisatyo?
