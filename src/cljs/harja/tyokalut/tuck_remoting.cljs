@@ -20,9 +20,9 @@
 
 (declare disconnect!)
 
-(def ws-opts {:reconn-interval-ms (* 10 1000)
+(def ws-opts {:reconn-interval-ms (* 4 1000)
               ;:max-reconn-attempts 20
-              :heartbeat-interval-ms (* 20 1000)
+              :heartbeat-interval-ms (* 15 1000)
               ;; Timeout set to 60 seconds in case Chrome throttles timers aggressively.
               ;; In that case, Chrome will run timers every minute. So, the heartbeat timeout must be minimum 60s.
               :heartbeat-timeout-ms (* 60 1000)})
@@ -30,6 +30,7 @@
 ;; 3004 - A custom close code that we use to indicate a need to reconnect after disconnect
 ;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
 (def closed-unclean-code 3004)
+(def closed-clean-code 1000)
 (def heartbeat-state (atom {:timer-id nil
                             :timeout-timer-id nil}))
 
@@ -91,9 +92,12 @@
                                        ;; Otherwise, handle a normal Tuck-event
                                        (tr/receive app-atom event))))))
       (set! (.-onclose conn) (fn [event]
-                               (.info js/console (str "Tuck-remoting: WebSocket closed. WasClean? " (.-wasClean event)
+                               (.info js/console (str "Tuck-remoting: WebSocket closed. ("
+                                                   (str "Code: " (.-code event))
+                                                   (when (boolean? (.-wasClean event))
+                                                     (str ", WasClean?: " (.-wasClean event)))
                                                    (when (= (.-code event) closed-unclean-code)
-                                                    ", Heartbeat timeout? true")))
+                                                    ", Heartbeat timeout?: true") ")"))
                                (when (fn? on-disconnect)
                                  (on-disconnect (.-code event) (.-reason event) (.-wasClean event)))
 
@@ -101,9 +105,11 @@
                                (stop-heartbeat!)
 
                                ;; Trigger reconnect (:closed-dirty) if close was unclean or a custom close code was used
-                               (put! channel (if (or (not (.-wasClean event)) (= closed-unclean-code (.-code event)))
-                                               :closed-dirty
-                                               :closed))))
+                               (put! channel (if (and (not (= closed-unclean-code (.-code event)))
+                                                   ;; For some reason wasClean can be null, so the closing code much be also checked.
+                                                   (or (.-wasClean event) (= closed-clean-code (.-code event))))
+                                               :closed
+                                               :closed-dirty))))
       (reset! tr/connection conn))))
 
 (defn connect! [ws-url app-atom on-connect on-disconnect]
