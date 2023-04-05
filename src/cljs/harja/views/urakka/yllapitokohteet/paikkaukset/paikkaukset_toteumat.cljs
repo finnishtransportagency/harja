@@ -313,7 +313,7 @@
          {:otsikko "kg/m²"
           :leveys 5 :tasaa :oikea
           :nimi ::paikkaus/massamenekki}
-         {:otsikko "t"
+         {:otsikko "t" :fmt #(fmt/desimaaliluku-opt % 3)
           :leveys 5 :tasaa :oikea
           :nimi ::paikkaus/massamaara}]))))
 
@@ -440,7 +440,7 @@
                                        [:div (str (fmt/desimaaliluku-opt arvo-juoksumetri) " jm")]])
                (when (= "t" yksikko) [:span
                                       [:strong "Ton\u00ADnia"]
-                                      [:div (str (fmt/desimaaliluku-opt arvo-massamaara) " t")]])
+                                      [:div (str (fmt/desimaaliluku-opt arvo-massamaara 2) " t")]])
                (when (= "kpl" yksikko) [:span
                                         [:strong "Kpl"]
                                         [:div (str (fmt/desimaaliluku-opt arvo-kpl) " kpl")]])])
@@ -454,7 +454,7 @@
                                                  [:div (str (fmt/desimaaliluku-opt arvo-massamenekki) " kg/m²")]])
                (when (not= 0 arvo-massamaara) [:span
                                                [:strong "Ton\u00ADnia"]
-                                               [:div (str (fmt/desimaaliluku-opt arvo-massamaara) " t")]])])
+                                               [:div (str (fmt/desimaaliluku-opt arvo-massamaara 2) " t")]])])
             [:div.basis192.nogrow.body-text.shrink2.rajaus
              [yleiset/linkki "Lisää toteuma"
               #(luo-uusi-toteuma-kohteelle
