@@ -1198,10 +1198,15 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
 
 (defn ajan-muokkaus
   "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä.
-  Anna dt joda timena."
+  Anna dt joda timena tai java.sql.Date"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
   ([dt lisaa? maara aikamaare]
-   (let [muokkaus (if lisaa?
+   (let [dt (if #?(:clj (= java.sql.Date (type dt))
+                   :cljs false)
+              (joda-timeksi dt)
+              dt)
+
+         muokkaus (if lisaa?
                     t/plus
                     t/minus)
          aikamaara (case aikamaare

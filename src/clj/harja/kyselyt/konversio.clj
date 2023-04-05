@@ -157,7 +157,10 @@
 (defn konvertoi->int [arvo]
   (when-not (nil? arvo)
     (if (string? arvo)
-      (Integer/parseInt arvo)
+      (try
+        (Integer/parseInt arvo)
+        (catch Exception e
+          nil))
       (int arvo))))
 
 (defn seq->array
@@ -169,6 +172,15 @@
                     (name %)
                     (str %))]
     (str "{" (clojure.string/join "," (map kasittele collection)) "}")))
+
+(defn seq->pg-object-literal
+  "Muuntaa vektorissa olevat arvot Postgresin ymmärtämäksi object literaaliksi. Hyödyllinen mm. CUSTOM TYPEjen kanssa."
+  ;; esim. ([7 uta.valvoja@ely.fi] [7 ulli.urakoitsija@skanska.fi]) --> ((7,uta.valvoja@ely.fi) (7,ulli.urakoitsija@skanska.fi))
+  [collection]
+  (when-not (empty? collection)
+    (map
+      #(str "(" (clojure.string/join "," %)
+            ")") collection)))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."

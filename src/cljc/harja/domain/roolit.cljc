@@ -24,6 +24,9 @@
 (def urakoitsijan-urakan-vastuuhenkilo "urakoitsijan urakan vastuuhenkilo")
 (def urakoitsijan-laatuvastaava        "urakoitsijan laatuvastaava")
 
+(def aikataulunakyman-sahkopostiviestinnan-roolit
+  #{"ely urakanvalvoja" "urakan vastuuhenkilö" "ely rakennuttajakonsultti"})
+
 ;; Sähke roolit
 (def jarjestelmavastaava "Jarjestelmavastaava")
 

@@ -26,7 +26,7 @@
   (laajenna-integraatiojarjestelmafixturea
     kayttaja-yit
     :api-analytiikka (component/using
-                       (api-analytiikka/->Analytiikka)
+                       (api-analytiikka/->Analytiikka false)
                        [:http-palvelin :db-replica :integraatioloki])))
 
 (use-fixtures :each jarjestelma-fixture)
@@ -110,3 +110,56 @@
     (sisaltaa-perustiedot (:body @poistetut))
     (is (= (count (:reittitoteumat vastaus-body)) (count (:reittitoteumat poistetut-body))))
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
+
+(deftest materiaalin-maara-muuttuu
+  (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2000 1 1)))
+        paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+
+        _ (u (str "INSERT INTO kayttaja (etunimi, sukunimi, kayttajanimi, organisaatio, \"analytiikka-oikeus\") VALUES
+          ('etunimi','sukunimi', 'analytiikka-testeri', (SELECT id FROM organisaatio WHERE nimi = 'Liikennevirasto'), true)"))
+
+        ;; Haetaan alkuperäinen tieto
+        alkup-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
+        alkup-vastaus-body (-> (:body alkup-vastaus)
+                             (json/read-str)
+                             (clojure.walk/keywordize-keys))
+        toteuma-9 (first (filter
+                           #(when (= 9 (get-in % [:toteuma :tunniste :id]))
+                              %)
+                           (:reittitoteumat alkup-vastaus-body)))
+        ;; Muokkaa materiaalin muokattu aikaa ja määrää
+        uusi-maara 114022
+        _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
+        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+
+        muokattu-vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        muokattu-vastaus-body (-> (:body @muokattu-vastaus)
+                                (json/read-str)
+                                (clojure.walk/keywordize-keys))
+
+        toteuma-9-muokattu (first (filter
+                                    #(when (= 9 (get-in % [:toteuma :tunniste :id]))
+                                       %)
+                                    (:reittitoteumat muokattu-vastaus-body)))
+
+        ;; Vaihda määrä takaisin 
+        _ (u (str "UPDATE toteuma_materiaali set muokattu = NOW(), maara=25 where toteuma=9"))
+        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+
+        vastaus (future (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti))
+        vastaus-body (-> (:body @vastaus)
+                       (json/read-str)
+                       (clojure.walk/keywordize-keys))
+
+        toteuma-9-lopullinen (first (filter
+                                      #(when (= 9 (get-in % [:toteuma :tunniste :id]))
+                                         %)
+                                      (:reittitoteumat vastaus-body)))
+
+        ;; Rajapinnan vastauksissa pitäisi olla nyt eri määrät, muokattu määrä on ensimmäinen arvo
+        alkup-maara (get-in toteuma-9 [:toteuma :materiaalit 0 :maara :maara])
+        muokattu-maara (get-in toteuma-9-muokattu [:toteuma :materiaalit 0 :maara :maara])
+        lopullinen-maara (get-in toteuma-9-lopullinen [:toteuma :materiaalit 0 :maara :maara])]
+
+    (is (= alkup-maara lopullinen-maara))
+    (is (= uusi-maara muokattu-maara))))

@@ -68,7 +68,6 @@
    (map rivi-xf rivit)])
 
 (defn hae-rajoitusalueet-suolatoteumien-kanssa [db urakka-id alkupvm loppupvm]
-  ;; TODO: tänne tietokantahaku, joka palauttaa suunnilleen alla olevan tuloksen kaikille urakan rajoitusalueille
   (let [hakuparametrit {:hoitokauden-alkuvuosi (pvm/vuosi
                                                  (first
                                                    (pvm/paivamaaran-hoitokausi alkupvm)))

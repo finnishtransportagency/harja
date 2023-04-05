@@ -115,7 +115,7 @@
      :nimi ::kok/nimi
      :leveys 4}
     {:otsikko "Kohteiden lukumäärä"
-     :tyyppi :numero
+     :tyyppi :numero :kokonaisluku? true
      :nimi :kohteiden-lkm
      :leveys 1
      :muokattava? (constantly false)

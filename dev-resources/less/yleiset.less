@@ -365,8 +365,10 @@ button > .ajax-loader {
 
 .yleinen-pikkuvihje {
   .vihjeen-sisalto {
-    margin: 5px 0;
-    padding: @valistys-4;
+    display: flex;
+    gap: @valistys-8;
+    margin: @valistys-8 0;
+    padding: @valistys-12;
     svg {
       vertical-align: middle;
     }
@@ -559,67 +561,6 @@ button > .ajax-loader {
     flex-direction:column;
 }
 
-.flex-row {
-  display:flex;
-  flex-direction:row;
-  justify-content: space-between;
-  align-items:center;
-  width:100%;
-  &.lapsille-nolla-margin {
-      & > * {
-          margin:0;
-      }
-  }
-  &.sisallon-leveys {
-    width:auto;
-  }
-  &.alkuun {
-    justify-content: flex-start;
-  }
-  &.keskita {
-    justify-content: center;
-  }
-  &.loppuun {
-      justify-content: flex-end;
-  }
-  &.tasaa-alas {
-    align-items: flex-end;
-  }
-  &.tasaa-alkuun {
-    align-items: flex-start;
-  }
-  &.venyta {
-    align-items: stretch;
-  }
-  &.poista-leveys {
-      width: unset;
-  }
-  &.valistys48 {
-      .valistys(@valistys-48);
-  }
-  &.valistys16 {
-      .valistys(@valistys-16);
-  }
-  .col-mimic {
-// it's a mimic! laittaa samat paddingit mitä col-elementeillä, mutta ei ota kantaa leveyksiin
-    padding: 0 15px;
-  }
-
-  &.padding16 {
-      padding: 16px;
-  }
-
-  & > * {
-      &.oikealle {
-          margin-left:auto;
-      }
-  }
-}
-
-.flex-wrap {
-  flex-flow: wrap;
-}
-
 .map-lista {
   display: flex;
   flex-direction: row;
@@ -639,6 +580,7 @@ button > .ajax-loader {
     }
   }
 }
+
 
 .placeholder {
   color: @harmaa5;
@@ -684,45 +626,7 @@ button > .ajax-loader {
     color: @black-lighter;
 }
 
-.tee-marginit(@n, @i:4) when (@i =< @n) {
-    .margin-top-@{i} {
-        margin-top: (@i / 16rem);
-    }
 
-    .margin-right-@{i} {
-        margin-right: (@i / 16rem);
-    }
-
-    .tee-marginit(@n, @i * 2);
-}
-
-.tee-marginit(64); // kerrotaan aina kahdella -> 4, 8, 16, 32, 64
-
-.ei-marginia {
-  margin: 0;
-}
-
-.tee-sisennykset(@i:1) when (@i =< length(@laskettavat-sisennykset)) {
-    @nykyinen-arvo: extract(@laskettavat-sisennykset, @i);
-    .padding-horizontal-@{nykyinen-arvo} {
-        padding-left: (@nykyinen-arvo / 16rem);
-        padding-right: (@nykyinen-arvo / 16rem);
-    }
-  
-    .padding-vertical-@{nykyinen-arvo} {
-      padding-top: (@nykyinen-arvo / 16rem);
-      padding-bottom: (@nykyinen-arvo / 16rem);
-    }
-  
-    .padding-@{nykyinen-arvo} {
-      padding: (@nykyinen-arvo / 16rem)
-    }
-    .tee-sisennykset(@i + 1);
-}
-
-@laskettavat-sisennykset: 4, 8, 12, 16, 24, 32, 48, 64; // käytetyt arvot
-
-.tee-sisennykset();
 /*
   Design libraryn välistykset remeinä
   Designissa välistykset merkataan pikseleinä, mutta devauksessa halutaan käyttää mieluummin remejä,
@@ -732,6 +636,7 @@ button > .ajax-loader {
  */
 
 @valistys-4: 0.25rem;
+@valistys-6: 0.375rem;
 @valistys-8: 0.5rem;
 @valistys-12: 0.75rem;
 @valistys-16: 1rem;

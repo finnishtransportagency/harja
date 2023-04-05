@@ -1,0 +1,117 @@
+/* -------- Utility CSS - Luokat jotka tekevät vain yhden asian ala Tailwind ----- */
+/*-------------------------------------------*\ 
+Periaatteet:
+- Wrappaa #app tai käytä !important jotta utilityllä on viimeinen sana
+- Utility tekee vain yhden asian jotta se on yhdisteltävissä muiden utilityjen kanssa
+\*-------------------------------------------*/
+
+
+ #app {
+     /* ----- Margins ---- */
+     .tee-marginit(@n, @i: 4) when (@i =< @n) {
+         .margin-horizontal-@{i} {
+             margin-left: (@i / 16rem);
+             margin-right: (@i/ 16rem);
+         }
+
+         .margin-vertical-@{i} {
+             margin-top: (@i / 16rem);
+             margin-bottom: (@i / 16rem);
+         }
+
+         .margin-top-@{i} {
+             margin-top: (@i / 16rem);
+         }
+
+         .margin-right-@{i} {
+             margin-right: (@i / 16rem);
+         }
+
+         .margin-left-@{i} {
+             margin-left: (@i / 16rem);
+         }
+
+         .margin-bottom-@{i} {
+             margin-bottom: (@i / 16rem);
+         }
+
+         .margin-@{i} {
+             padding: (@i / 16rem)
+         }
+
+         .tee-marginit(@n, @i * 2);
+     }
+
+     .tee-marginit(64); // kerrotaan aina kahdella -> 4, 8, 16, 32, 64
+
+     .margin-x-0 {
+        margin-left: 0;
+        margin-right: 0;
+     }
+
+     .margin-y-0 {
+        margin-top: 0;
+        margin-bottom: 0;
+     }
+
+     .ei-marginia {
+         margin: 0;
+     }
+
+
+     /* ----- Paddings ---- */
+
+     .tee-sisennykset(@i: 1) when (@i =< length(@laskettavat-sisennykset)) {
+         @nykyinen-arvo: extract(@laskettavat-sisennykset, @i);
+
+         .padding-horizontal-@{nykyinen-arvo} {
+             padding-left: (@nykyinen-arvo / 16rem);
+             padding-right: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-vertical-@{nykyinen-arvo} {
+             padding-top: (@nykyinen-arvo / 16rem);
+             padding-bottom: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-top-@{nykyinen-arvo} {
+             padding-top: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-right-@{nykyinen-arvo} {
+             padding-right: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-left-@{nykyinen-arvo} {
+             padding-left: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-bottom-@{nykyinen-arvo} {
+             padding-bottom: (@nykyinen-arvo / 16rem);
+         }
+
+         .padding-@{nykyinen-arvo} {
+             padding: (@nykyinen-arvo / 16rem)
+         }
+
+         .tee-sisennykset(@i + 1);
+     }
+
+     @laskettavat-sisennykset: 4, 8, 12, 16, 24, 32, 48, 64; // käytetyt arvot
+
+     .tee-sisennykset();
+
+     .padding-x-0 {
+        padding-left: 0;
+        padding-right: 0;
+     }
+
+     .padding-y-0 {
+        padding-top: 0;
+        padding-bottom: 0;
+     }
+
+     .ei-paddingia {
+        padding: 0;
+    }
+ }

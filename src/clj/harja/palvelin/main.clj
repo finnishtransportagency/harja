@@ -68,6 +68,7 @@
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
+    [harja.palvelin.palvelut.hallinta.rajoitusalue-pituudet :as rajoitusalue-pituudet]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
     [harja.palvelin.palvelut.valitavoitteet :as valitavoitteet]
@@ -458,6 +459,9 @@
       :info (component/using
              (info/->Info)
              [:http-palvelin :db])
+      :rajoitusalue-pituudet (component/using
+              (rajoitusalue-pituudet/->RajoitusaluePituudet)
+              [:http-palvelin :db])
       :selainvirhe (component/using
                      (selainvirhe/->Selainvirhe kehitysmoodi)
                      [:http-palvelin])
@@ -693,7 +697,7 @@
                       [:http-palvelin :db  :integraatioloki])
 
       :api-analytiikka (component/using
-                  (analytiikka/->Analytiikka)
+                  (analytiikka/->Analytiikka (:kehitysmoodi asetukset))
                   [:http-palvelin :db-replica  :integraatioloki])
 
       :tieluvat (component/using

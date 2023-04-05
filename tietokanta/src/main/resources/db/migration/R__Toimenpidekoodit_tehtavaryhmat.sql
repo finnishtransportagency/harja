@@ -389,6 +389,11 @@ UPDATE toimenpidekoodi set emo = (select id from toimenpidekoodi where koodi = '
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Maakivien (>1m3) poisto', (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'),	'jm',	130, NULL, (select id from toimenpidekoodi where koodi = '23124'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Sorateiden hoito (C)'), jarjestys = 1270;
 
+INSERT INTO toimenpidekoodi (nimi, emo, taso, luotu, luoja, yksikko, jarjestys, hinnoittelu, api_seuranta, api_tunnus, tehtavaryhma, ensisijainen, suunnitteluyksikko, voimassaolo_alkuvuosi)
+VALUES ('Reunantäyttö km', (select id from toimenpidekoodi where koodi = '23116'), 4, current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 'jkm', 1160, '{kokonaishintainen}', TRUE, 7067, (select id from tehtavaryhma where nimi = 'Sorapientareet (O)'), FALSE, 'jkm', 2019)
+ON CONFLICT(nimi, emo) DO NOTHING;
+
+
 -- MHU Ylläpito
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES ('Avo-ojitus/päällystetyt tiet' , (select id from tehtavaryhma where nimi = 'Avo-ojitus, päällystetyt tiet (X)'), 'jm', 139, (select id from toimenpidekoodi where nimi = 'Avo-ojitus / päällystetyt tiet' and emo = (select id from toimenpidekoodi where koodi = '20112')), (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Avo-ojitus, päällystetyt tiet (X)'), jarjestys = 1390;
@@ -404,6 +409,8 @@ INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus,
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'), jarjestys = 1440;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Kalliokynsien louhinta ojituksen yhteydessä', (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'),	'm2',	145, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'), jarjestys = 1450;
+INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, suunnitteluyksikko, jarjestys, api_tunnus, voimassaolo_alkuvuosi, emo, luotu, luoja, taso, ensisijainen) VALUES ('Sorateitä kaventava ojitus', (select id from tehtavaryhma where nimi = 'Avo-ojitus, soratiet (Z)'), 'tiekm', 'tiekm', 1460, NULL, 2023, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
+ON CONFLICT(nimi, emo) DO NOTHING;
 INSERT into toimenpidekoodi (nimi, tehtavaryhma, yksikko, jarjestys, api_tunnus, emo, luotu, luoja, taso, ensisijainen) VALUES (	'Pohjavesisuojaukset', (select id from tehtavaryhma where nimi = 'Muut, MHU ylläpito (F)'),	NULL,	152, NULL, (select id from toimenpidekoodi where koodi = '20191'), current_timestamp, (select id from kayttaja where kayttajanimi = 'Integraatio'), 4, TRUE)
 ON CONFLICT(nimi, emo) DO UPDATE SET tehtavaryhma = (select id from tehtavaryhma where nimi = 'Muut, MHU ylläpito (F)'), jarjestys = 1520;
 -- Liikenneympäristön hoito
@@ -934,8 +941,8 @@ UPDATE toimenpidekoodi SET jarjestys = 1110	WHERE nimi = 'Reunapalkin ja pääll
 UPDATE toimenpidekoodi SET jarjestys = 1120	WHERE nimi = 'Reunapalkin liikuntasauman tiivistäminen' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden sr-pientareen täyttö' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden pientareiden täyttö' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = TRUE WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1160	WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = FALSE WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1160, kasin_lisattava_maara = FALSE 	WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1170, kasin_lisattava_maara = TRUE WHERE nimi = 'Päällystettyjen teiden palteiden poisto' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1180	WHERE nimi = 'Reunapalteen poisto kaiteen alta' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1200	WHERE nimi = 'Muut päällystettyjen teiden sorapientareiden kunnossapitoon liittyvät työt' AND tehtavaryhma IS NOT NULL;
@@ -948,11 +955,11 @@ UPDATE toimenpidekoodi SET jarjestys = 1255	WHERE nimi = 'Sorateiden pinnan hoit
 UPDATE toimenpidekoodi SET jarjestys = 1260	WHERE nimi = 'Sorateiden pinnan hoito, hoitoluokka III' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270	WHERE nimi = 'Sorapintaisten kävely- ja pyöräilyväylienhoito' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1280	WHERE nimi = 'Sorateiden pölynsidonta (materiaali)' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1290, kasin_lisattava_maara = TRUE	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1290, kasin_lisattava_maara = FALSE	WHERE nimi = 'Sorastus' AND tehtavaryhma IS NOT NULL; -- Materiaalimäärät kirjataan materiaalitoteumine
 UPDATE toimenpidekoodi SET jarjestys = 1290	WHERE nimi = 'Sorastus km' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1270, kasin_lisattava_maara = TRUE WHERE nimi = 'Maakivien (>1m3) poisto' AND tehtavaryhma IS NOT NULL;
 UPDATE toimenpidekoodi SET jarjestys = 1310, kasin_lisattava_maara = TRUE WHERE nimi = 'Oja- ja luiskameteriaalin käyttö kulutuskerrokseeen' AND tehtavaryhma IS NOT NULL;
-UPDATE toimenpidekoodi SET jarjestys = 1320, kasin_lisattava_maara = TRUE WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi SET jarjestys = 1320, kasin_lisattava_maara = FALSE WHERE nimi = 'Liikenteen varmistaminen kelirikkokohteessa' AND tehtavaryhma IS NOT NULL; -- Materiaalimäärät kirjataan materiaalitoteumina
 UPDATE toimenpidekoodi SET jarjestys = 1340	WHERE nimi = 'Muut Sorateiden hoitoon liittyvät tehtävät' AND tehtavaryhma IS NOT NULL;
 -- FIXME: Talvihoidolle ja sorateiden hoidolle ei voi enää kustannussuunnitelmassa kirjata Äkillisiä hoitotöitä. Pitääkö nöille tehdä jotakin?
 UPDATE toimenpidekoodi SET jarjestys = 1350 where nimi = 'Äkillinen hoitotyö (talvihoito)';
@@ -1385,8 +1392,7 @@ UPDATE toimenpidekoodi SET nimi = 'Meluesteiden siisteydestä huolehtiminen' WHE
 -- Ei nykyisellään aluetietoja
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE WHERE nimi IN ('Nopeusnäyttötaulujen ylläpito, käyttö ja siirto',
                                                                                                    'Nopeusnäyttötaulun hankinta',
-                                                                                                   'Meluesteiden siisteydestä huolehtiminen',
-                                                                                                   'Päällystettyjen teiden sorapientareen täyttö');
+                                                                                                   'Meluesteiden siisteydestä huolehtiminen');
 -- Aluetietoja
 UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = TRUE  WHERE nimi IN ('Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus',
                                                                        'Reunapaalujen kunnossapito',
@@ -1395,4 +1401,17 @@ UPDATE toimenpidekoodi SET kasin_lisattava_maara = TRUE, "raportoi-tehtava?" = T
                                                                        'Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)',
                                                                        'Laitureiden hoito (puhtaanapito, pienet kunnostustoimet, turvavarusteiden kunnon varmistaminen sekä vuositarkastukset)');
 
+-- Päällystettyjen teiden sorapientareen täyttö-tehtävää ei käytetä MH-urakoissa
+UPDATE toimenpidekoodi
+    SET voimassaolo_loppuvuosi = 2018 -- Hyvinkään HJU:n toteuman jäävät ohjautumaan tälle tehtävälle
+WHERE nimi = 'Päällystettyjen teiden sorapientareen täyttö' AND tehtavaryhma IS NOT NULL;
 
+-- Reunantäyttö on tehtävä, joka korvaa Päällystettyjen teiden sorapientareen täyttö-tehtävän MH-urakoissa.
+-- Siitä on kaksi versiota: käsin kirjattava (yksikkö tonni) ja koneellisesti kirjattava (yksikkö jkm).
+-- Materiaalikirjaukset on nykyään ohjeistettu tehtäväksi materiaalitoteumana myös käsin kirjattaessa.
+UPDATE toimenpidekoodi
+   SET api_seuranta = FALSE, api_tunnus = NULL, voimassaolo_alkuvuosi = 2019
+WHERE nimi = 'Reunantäyttö' AND tehtavaryhma IS NOT NULL;
+UPDATE toimenpidekoodi
+SET api_seuranta = TRUE, api_tunnus = 7067, voimassaolo_alkuvuosi = 2019
+WHERE nimi = 'Reunantäyttö km' AND tehtavaryhma IS NOT NULL;
