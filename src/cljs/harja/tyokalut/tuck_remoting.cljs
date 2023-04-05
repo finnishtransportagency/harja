@@ -20,7 +20,7 @@
 
 (declare disconnect!)
 
-(def ws-opts {:reconn-interval-ms (* 4 1000)
+(def ws-opts {:reconn-interval-ms (* 10 1000)
               ;:max-reconn-attempts 20
               :heartbeat-interval-ms (* 20 1000)
               ;; Timeout set to 60 seconds in case Chrome throttles timers aggressively.
@@ -70,6 +70,8 @@
   ;; Prevent creating a new WebSocket object, unless reconnecting
   (when (or (not @tr/connection) reconnect?)
     (let [conn (js/WebSocket. ws-url)]
+      (.info js/console "Tuck-remoting: Starting a WebSocket connection to: " ws-url "...")
+
       (set! (.-onopen conn) (fn [_]
                               ;; Stop any ongoing heartbeat timer and reset the heartbeat-state
                               (stop-heartbeat!)
@@ -133,6 +135,7 @@
          ;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
          close-code (if (int? close-code) close-code 1000)]
      (when conn
+       (.info js/console "Tuck-remoting: Disconnecting the WebSocket connection...")
        (.close conn close-code)
        (reset! tr/connection nil)))))
 

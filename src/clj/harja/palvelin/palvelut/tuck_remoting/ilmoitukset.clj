@@ -132,4 +132,3 @@
 
 (defn luo-ilmoitukset-ws []
   (->IlmoituksetWS))
-

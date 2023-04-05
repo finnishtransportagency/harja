@@ -13,6 +13,9 @@
 (defrecord KatkaiseYhteys [])
 (defrecord AsetaYhteydenTila [tila])
 
+(defn ws-yhteyden-tila [app]
+  (get-in app [:ws-yhteyden-tila]))
+
 (defn ws-yhteys-onnistui-kasittelija [e! kuuntelu-suodattimet]
   (log/info "Ilmoitukset: WS-yhteys aloitettu. Seurataan uusia ilmoituksia WS:n kautta.")
   (e! (->AsetaYhteydenTila :aktiivinen))
@@ -37,7 +40,6 @@
     (tuck/action!
       (fn [e!]
         (e! (tr-tyokalut/->YhdistaWS
-              ;; TODO: Testataan suoraan tilan muuttamistan tieliikenneilmoitukset-atomiin
               tieliikenneilmoitukset/ilmoitukset
               (partial ws-yhteys-onnistui-kasittelija e! suodattimet)
               (partial ws-yhteys-katkaistu-kasittelija e!)))))
@@ -63,7 +65,11 @@
         ;;        Jos tiedät Tuckilla paremman tavan tähän, niin tämän kikkailun voisi muuttaa.
         (js/setTimeout
           #(let [suodattimet (select-keys suodattimet [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
-            (e! (eventit/->KuunteleIlmoituksia suodattimet)))
+             ;; Estetään tuck-remoting eventin lähettäminen mikäli ws-yhteys ei ole täysin aktiivinen.
+             ;; TODO: Tuck-remotingin sisäinen send-event! funktio ei ota huomioon onko ws-yhteys connecting / closing tilassa
+             ;;       ja selain voi heittää virheen siinä tapauksessa. Parannus pitää tehdä tuck-remotingiin.
+             (when (= :aktiivinen (ws-yhteyden-tila app))
+               (e! (eventit/->KuunteleIlmoituksia suodattimet))))
           0)))
 
     (assoc-in app [:ws-ilmoitusten-kuuntelu] {:aktiivinen? false}))
@@ -92,7 +98,11 @@
   (process-event [_ app]
     (tuck/action!
       (fn [e!]
-        (e! (eventit/->LopetaIlmoitustenKuuntelu))))
+        ;; Estetään tuck-remoting eventin lähettäminen mikäli ws-yhteys ei ole täysin aktiivinen.
+        ;; TODO: Tuck-remotingin sisäinen send-event! funktio ei ota huomioon onko ws-yhteys connecting / closing tilassa
+        ;;       ja selain voi heittää virheen siinä tapauksessa. Parannus pitää tehdä tuck-remotingiin.
+        (when (= :aktiivinen (ws-yhteyden-tila app))
+          (e! (eventit/->LopetaIlmoitustenKuuntelu)))))
     app)
 
   ;; Jos haluat katkaista yhteyden ja lopettaa kuuntelijat palvelimella, pelkkä yhteyden katkaisu riittää.
