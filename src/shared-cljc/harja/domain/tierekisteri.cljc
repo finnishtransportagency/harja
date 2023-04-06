@@ -498,3 +498,9 @@
    :tr-alkuetaisyys :tr-alkuetaisyys
    :tr-loppuosa :tr-loppuosa
    :tr-loppuetaisyys :tr-loppuetaisyys})
+
+(defn tr-osoite-moderni-fmt
+  "Formatoi tr-osoitteen kentät modernilla tavalla, esim 4 - 1/0 - 3/300"
+  ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
+  [tie alkuosa alkuet loppuosa loppuet]
+  (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
