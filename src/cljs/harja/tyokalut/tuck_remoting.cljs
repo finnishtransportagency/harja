@@ -29,7 +29,7 @@
 
 ;; 3004 - A custom close code that we use to indicate a need to reconnect after disconnect
 ;; https://www.iana.org/assignments/websocket/websocket.xml#close-code-number
-(def closed-unclean-code 3004)
+(def closed-by-heartbeat-code 3004)
 (def closed-clean-code 1000)
 (def heartbeat-state (atom {:timer-id nil
                             :timeout-timer-id nil}))
@@ -38,7 +38,8 @@
   (let [timer-id (js/setTimeout
                    (fn []
                      ;; Disconnect and a request connection restart
-                     (disconnect! closed-unclean-code))
+                     (.info js/console "Tuck-remoting: Did not get response to heartbeat. Starting the reconnection process...")
+                     (disconnect! closed-by-heartbeat-code))
                    (:heartbeat-timeout-ms ws-opts))]
     (swap! heartbeat-state assoc :timeout-timer-id timer-id)))
 
@@ -96,7 +97,7 @@
                                                    (str "Code: " (.-code event))
                                                    (when (boolean? (.-wasClean event))
                                                      (str ", WasClean?: " (.-wasClean event)))
-                                                   (when (= (.-code event) closed-unclean-code)
+                                                   (when (= (.-code event) closed-by-heartbeat-code)
                                                     ", Heartbeat timeout?: true") ")"))
                                (when (fn? on-disconnect)
                                  (on-disconnect
@@ -107,8 +108,8 @@
                                ;; Stop the heartbeat timer and reset the heartbeat-state
                                (stop-heartbeat!)
 
-                               ;; Trigger reconnect (:closed-dirty) if close was unclean or a custom close code was used
-                               (put! channel (if (and (not (= closed-unclean-code (.-code event)))
+                               ;; Trigger reconnect (:closed-dirty) if close was unclean or a custom heartbeat close code was used
+                               (put! channel (if (and (not (= closed-by-heartbeat-code (.-code event)))
                                                    ;; For some reason wasClean can be null, so the closing code much be also checked.
                                                    (or (.-wasClean event) (= closed-clean-code (.-code event))))
                                                :closed
