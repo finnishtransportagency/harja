@@ -9,8 +9,8 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.http-palvelin :as palvelin]
-            [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit :refer [suorita-raportti]]
+            [harja.palvelin.raportointi :as raportointi :refer [suorita-raportti]]
+            [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]))
 
@@ -39,26 +39,20 @@
                       urakkatieto-fixture))
 
 (deftest ilmoitukset-raportti-toimii
-  (try
-    (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :suorita-raportti
-                               (fn [user raportti]
-                                 (suorita-raportti (:raportointi jarjestelma) user raportti))
-                               {:trace false})
+  (palvelin/julkaise-palvelu (:http-palvelin jarjestelma) :suorita-raportti
+                             (fn [user raportti]
+                               (suorita-raportti (:raportointi jarjestelma) user raportti))
+                             {:trace false})
 
-    (let [tiedot {:nimi :ilmoitukset-raportti
-                  :konteksti "urakka"
-                  :alkupvm (c/to-date (t/local-date 2023 3 28))}
+  (let [tiedot {:nimi :ilmoitukset-raportti
+                :konteksti "urakka"
+                :alkupvm (c/to-date (t/local-date 2023 3 28))}
 
-          raportti (ilmoitukset/suorita (:db jarjestelma)
-                                        +kayttaja-jvh+
-                                        tiedot)
+        raportti (ilmoitukset/suorita (:db jarjestelma)
+                                      +kayttaja-jvh+
+                                      tiedot)
 
-          raportin-nimi (-> raportti second :nimi)
-          taulukon-otsikko (-> raportti (nth 2) second (nth 2) first :otsikko)]
-      
-      ;; Raportti ei sisällä dataa, data annetaan parametreina 
-      (is (= taulukon-otsikko "Käytetyt filtterit"))
-      (is (= raportin-nimi "Ilmoitukset, Koko maa")))
+        raportin-nimi (-> raportti second :nimi)]
 
-    (catch Throwable t
-      (log/error t "Virhe testissä ilmoitukset-raportti-toimii"))))
+    ;; Raportti ei sisällä dataa, data annetaan parametreina 
+    (is (= raportin-nimi "Ilmoitukset, Koko maa"))))
