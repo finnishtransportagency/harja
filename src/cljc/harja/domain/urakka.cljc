@@ -5,6 +5,7 @@
             [harja.domain.organisaatio :as o]
             [harja.tyokalut.spec-apurit :as spec-apurit]
             [harja.domain.sopimus :as sopimus]
+            [clojure.string :as str]
             [harja.pvm :as pvm]
     #?@(:clj [
             [harja.kyselyt.specql-db :refer [define-tables]]
@@ -111,6 +112,24 @@
   "Onko urakka tyyppiä ylläpidon urakka"
   [urakan-tyyppi]
   (boolean (some #{urakan-tyyppi} #{:paallystys :paikkaus :tiemerkinta :valaistus})))
+
+(defn paallystysurakka?
+  [urakka]
+  (= (:tyyppi urakka) :paallystys))
+
+(defn paallystyksen-palvelusopimus?
+  [urakka]
+  (and
+    (paallystysurakka? urakka)
+    (= :palvelusopimus (:sopimustyyppi urakka))))
+
+(defn paikkausurakka?
+  [urakka]
+  (and
+    ;; kyllä: paikkausurakoiden urakkatyyppi on päällystys
+    (paallystysurakka? urakka)
+    (:nimi urakka)
+       (str/includes? (:nimi urakka) "paikkaus")))
 
 (defn mh-urakka?
   "Onko urakka tyyppiä MHU (Maanteiden hoitourakka)"
