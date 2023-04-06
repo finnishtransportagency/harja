@@ -174,45 +174,26 @@
   ;; Eli käydään läpi ja lasketaan tapahtumat joilla parametrien mukainen toiminto/suunta/muoto
   ;; Tapahtumilla voi olla useita kohteenosia, eli useita toimenpiteitä/palvelumuotoja, jotka otettu myös huomioon
   ;; Palautetaan integer (Long) montako toimenpidettä/palvelumuotoa löytyi
-  (let [yhteensa (atom 0)]
-    (doall (map
-            (fn [tapahtuma]
-              (let [suuntia-olemassa (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta)
+  (reduce (fn [acc tapahtuma]
+            (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta))
+                  toiminnot (filter (fn [toiminto]
+                                      (or
+                                       (and
+                                        suuntia-olemassa?
+                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
 
-                    _ (dorun (remove nil?
-                                     ;; Käy läpi tapahtumien toimenpiteet
-                                     (for [x (::lt/toiminnot tapahtuma)]
-                                       (do
-                                         ;; Lasketaan joko haluttua suuntaa tai pelkästään haluttua toimintoa
-                                         ;; Jos kohteilla useita toimenpiteitä, lasketaan kaikki
-                                         (when (or
-                                                (and
-                                                 (> suuntia-olemassa 0)
-                                                 (= haluttu-toiminto (::toiminto/toimenpide x)))
+                                       (and
+                                        haluttu-toiminto
+                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto))
+                                        (= haluttu-suunta nil))
 
-                                                (and
-                                                 haluttu-toiminto
-                                                 (= haluttu-toiminto (::toiminto/toimenpide x))
-                                                 (= haluttu-suunta nil)))
-
-                                           (swap! yhteensa inc @yhteensa))
-                                         (::toiminto/toimenpide x)))))
-
-                    _ (dorun (remove nil?
-                                     ;; Käydään läpi tapahtumien palvelumuodot
-                                     ;; Jos kohteilla useita palvelumuotoja, lasketaan kaikki
-                                     (for [x (::lt/toiminnot tapahtuma)]
-                                       (do
-                                         (when (and
-                                                haluttu-palvelumuoto
-                                                (= haluttu-palvelumuoto (::toiminto/palvelumuoto x))
-                                                (= haluttu-suunta nil)
-                                                (= haluttu-toiminto nil))
-
-                                           (swap! yhteensa inc @yhteensa))
-                                         (::toiminto/palvelumuoto x)))))]))
-            tapahtumat))
-    @yhteensa))
+                                       (and
+                                        haluttu-palvelumuoto
+                                        (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
+                                        (= haluttu-suunta nil)
+                                        (= haluttu-toiminto nil))))
+                                    (::lt/toiminnot tapahtuma))]
+              (+ acc (count toiminnot)))) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
