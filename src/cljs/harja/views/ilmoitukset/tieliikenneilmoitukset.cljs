@@ -33,8 +33,6 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [harja.tyokalut.ui :refer [for*]]))
 
-(def raportin-parametrit (atom {}))
-
 (def selitehaku
   (reify protokollat/Haku
     (hae [_ teksti]
@@ -210,21 +208,7 @@
         valitse-ilmoitus! (when kuittaa-monta-nyt
                             #(e! (v/->ValitseKuitattavaIlmoitus %)))
         pikakuittaus-ilmoitus-id (when pikakuittaus
-                                   (get-in pikakuittaus [:ilmoitus :id]))
-
-        _ (reset! raportin-parametrit (let [ur @nav/valittu-urakka
-                                       valinnat (:valinnat {})
-                                       alkuaika (:valitetty-urakkaan-alkuaika valinnat)]
-
-                                   (raportit/urakkaraportin-parametrit
-                                    (:id ur)
-                                    :ilmoitukset-raportti
-                                    {:urakka @nav/valittu-urakka
-                                     :hallintayksikko @nav/valittu-hallintayksikko
-                                     :tiedot haetut-ilmoitukset
-                                     :filtterit @tiedot/ilmoitukset
-                                     :alkupvm alkuaika
-                                     :urakkatyyppi (:tyyppi ur)})))]
+                                   (get-in pikakuittaus [:ilmoitus :id]))]
     [:span.ilmoitukset
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -262,7 +246,15 @@
         
         :raporttivienti #{:excel :pdf}
         :raporttivienti-lapinakyva? true
-        :raporttiparametrit @raportin-parametrit}
+        :raporttiparametrit (raportit/urakkaraportin-parametrit
+                             (:id @nav/valittu-urakka)
+                             :ilmoitukset-raportti
+                             {:urakka @nav/valittu-urakka
+                              :hallintayksikko @nav/valittu-hallintayksikko
+                              :tiedot haetut-ilmoitukset
+                              :filtterit @tiedot/ilmoitukset
+                              :alkupvm (:aloituskuittauksen-ajankohta valinnat-nyt)
+                              :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "
