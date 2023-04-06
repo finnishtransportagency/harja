@@ -366,6 +366,7 @@ UNION ALL
                                              AND tpk2.koodi = '23150')
             AND ek.pvm BETWEEN '"alkupvm"'::DATE AND '"loppupvm"'::DATE
             AND ek.poistettu IS NOT TRUE
+            AND ek.tyyppi::TEXT != 'alihankintabonus'
           GROUP BY ek.tyyppi, ek.indeksin_nimi"))
 
 (defn- ulk-rvar-suunniteltu-sql-haku [urakka alkupvm loppupvm]
