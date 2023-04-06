@@ -46,16 +46,20 @@
                                  selitteet))]
             (vec (sort itemit)))))))
 
-(defn vihjeet []
+(defn vihjeet [{ws-kuuntelu-aktiivinen? :aktiivinen? :as ws-ilmoitusten-kuuntelu}]
   [yleiset/vihje-elementti
-   [:span
-    [:span "Ilmoituksia päivitetään automaattisesti. Yhteydenottopyynnöt "]
-    [:span.bold "lihavoidaan"]
-    [:span ", edellinen valinta korostetaan "]
-    [:span.vihje-hento-korostus "sinisellä"]
-    [:span ", virka-apupyynnöt "]
-    [:span.selite-virkaapu "punaisella"]
-    [:span " selitelaatikossa."]]])
+   [:div
+    [:div
+     [:span "Ilmoituksia päivitetään automaattisesti. Yhteydenottopyynnöt "]
+     [:span.bold "lihavoidaan"]
+     [:span ", edellinen valinta korostetaan "]
+     [:span.vihje-hento-korostus "sinisellä"]
+     [:span ", virka-apupyynnöt "]
+     [:span.selite-virkaapu "punaisella"]
+     [:span " selitelaatikossa."]]
+    [:div [:i (if ws-kuuntelu-aktiivinen?
+                 "Uusien ilmoitusten reaaliaikahaku aktiivinen"
+                 (str "Uusia ilmoituksia haetaan " (/ tiedot/taustahaun-viive-ms 1000) " sekunnin välein."))]]]])
 
 (defn ilmoituksen-tiedot [e! ilmoitus]
   [:div
@@ -199,7 +203,8 @@
    [:span (or tunniste "-")]])
 
 (defn ilmoitusten-paanakyma
-  [e! {valinnat-nyt :valinnat
+  [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
+       valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
@@ -219,7 +224,7 @@
                           :teksti "Äänimerkki uusista ilmoituksista"}
        tiedot/aanimerkki-uusista-ilmoituksista?]
 
-      [vihjeet]
+      [vihjeet ws-ilmoitusten-kuuntelu]
 
       (when-not kuittaa-monta-nyt
         [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
