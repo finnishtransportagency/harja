@@ -20,7 +20,7 @@
 
 (declare disconnect!)
 
-(def ws-opts {:reconn-interval-ms (* 10 1000)
+(def ws-opts {:reconn-interval-ms (* 4 1000)
               ;:max-reconn-attempts 20
               :heartbeat-interval-ms (* 15 1000)
               ;; Timeout set to 60 seconds in case Chrome throttles timers aggressively.
