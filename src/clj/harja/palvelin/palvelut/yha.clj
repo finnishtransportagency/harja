@@ -142,6 +142,7 @@
                              :yhaid yha-id
                              :raekoko (:raekoko paallystystoimenpide)
                              :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                             :paallystetyyppi (:uusi-paallyste paallystystoimenpide)
                              :massamaara (:kokonaismassamaara paallystystoimenpide)})]))))
 
 (defn lisaa-kohteisiin-validointitiedot [db kohteet]
