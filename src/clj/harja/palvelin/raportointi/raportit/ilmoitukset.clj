@@ -125,7 +125,7 @@
                 :hoitokausi-arvotaulukko? false
                 :viimeinen-rivi-yhteenveto? false}
      (rivi
-      {:otsikko "Käytetyt filtterit" :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
+      {:otsikko "Käytetyt suodattimet" :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 12 :tyyppi :varillinen-teksti}
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}) rivit]))
@@ -180,8 +180,7 @@
                           :tyypit tyypit
                           :vaikutukset vaikutukset
                           :aloituskuittauksen-ajankohta aloituskuittauksen-ajankohta
-                          :sheet-nimi "ilmoitukset"
-                          :otsikko "Filtterit"})
+                          :sheet-nimi "ilmoitukset"})
 
      (taulukko {:otsikot otsikot
                 :tiedot tiedot
