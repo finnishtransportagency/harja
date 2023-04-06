@@ -80,18 +80,22 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
 
                                ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa 
-                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu))
-                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Tavoitepalkkio"
-                                                  :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
+                               (try
+                                 (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu))
+                                   (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Tavoitepalkkio"
+                                                    :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu :hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan false))
 
-                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu))
-                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
-                                                  :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
+                                 (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu))
+                                   (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa tavoitehinnan ylityksestä"
+                                                    :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan false))
 
-                               (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu))
-                                 (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
-                                                  :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
-
+                                 (when (raha-arvo-olemassa? (data :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu))
+                                   (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päättäminen / Urakoitsija maksaa kattohinnan ylityksestä"
+                                                    :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu :hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan false))
+                                 (catch Throwable t
+                                   (println "Tuotekohtainen - Hoitovuoden päättämisen tietoja ei löytynyt.")
+                                   nil))
+                               
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
                               :else
