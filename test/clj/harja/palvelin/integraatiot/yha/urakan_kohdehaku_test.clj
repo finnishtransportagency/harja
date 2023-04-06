@@ -76,7 +76,8 @@
                            :yha-kohdenumero 666
                            :yllapitokohdetyotyyppi :paikkaus
                            :yllapitokohdetyyppi "paallyste"}]
-        [od_id, od_yllapitokohde, od_nimi, od_tr_numero, od_tr_alkuosa, od_tr_alkuetaisyys, od_tr_loppuosa, od_tr_loppuetaisyys, od_poistettu, od_yhaid, od_tr_ajorata, od_tr_kaista, od_toimenpide, od_ulkoinen_id, od_paallystetyyppi, od_raekoko, od_tyomenetelma, od_massamaara, od_muokattu, od_keskimaarainen_vuorokausiliikenne, od_yllapitoluokka, od_nykyinen_paallyste] [45 32 nil 4 101 3 101 30 false 3 1 11 nil nil nil nil nil nil nil nil 1 nil]
+        [od_id, od_yllapitokohde, od_nimi, od_tr_numero, od_tr_alkuosa, od_tr_alkuetaisyys, od_tr_loppuosa, od_tr_loppuetaisyys, od_poistettu, od_yhaid, od_tr_ajorata, od_tr_kaista, od_toimenpide, od_ulkoinen_id, od_paallystetyyppi, od_raekoko, od_tyomenetelma, od_massamaara, od_muokattu, od_keskimaarainen_vuorokausiliikenne, od_yllapitoluokka, od_nykyinen_paallyste]
+        [45     32                nil      4             101            3                   101             30                   false         3         1              11            nil            nil             11                 12          22               124.00M         nil          nil                                   1                1]
         url urakan-kohteet-url]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
                     (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")

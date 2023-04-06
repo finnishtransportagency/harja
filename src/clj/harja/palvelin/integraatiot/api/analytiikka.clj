@@ -121,53 +121,62 @@
         ;; joten hoidetaan se koodilla
         materiaalikoodit (materiaalit-kyselyt/hae-materiaalikoodit db)
         ;; Haetaan reittitoteumat tietokannasta
+        alkudb (System/currentTimeMillis)
         toteumat (toteuma-kyselyt/hae-reittitoteumat-analytiikalle db {:alkuaika alkuaika
                                                                        :loppuaika loppuaika
                                                                        :koordinaattimuutos koordinaattimuutos})
-        toteumat (->> toteumat
-                   (map (fn [toteuma]
-                          (-> toteuma
-                            (update :reitti konversio/jsonb->clojuremap)
-                            (update :toteumatehtavat konversio/jsonb->clojuremap)
-                            (update :toteumamateriaalit konversio/jsonb->clojuremap))))
-                   (map #(update % :toteumatehtavat
-                           (fn [rivit]
-                             (keep
-                               (fn [r]
-                                 (-> r
-                                   (clojure.set/rename-keys db-tehtavat->avaimet)
-                                   (konversio/alaviiva->rakenne)))
-                               rivit))))
-                   (map #(update % :toteumamateriaalit
-                           (fn [rivit]
-                             (keep
-                               (fn [r]
-                                 (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+        koko (count toteumat)
+        loppudb (System/currentTimeMillis)
+        _ (log/info "Analytiikka-toteumat db haku" (- loppudb alkudb) " ms. Toteumamäärä: "koko)
+        _ (when (= koko 100000)
+            (log/info "Analytiikka-toteumat :: liian suuri aineisto:" koko "kpl"))
+        ;; Toteumien kutsu ei käytä streamiä, joten on riskinä, että muisti loppuu kesken. Joten rajoitetaan määrää
+        toteumat (when (< koko 100000)
+                   (->> toteumat
+                     (map (fn [toteuma]
+                            (-> toteuma
+                              (update :reitti konversio/jsonb->clojuremap)
+                              (update :toteumatehtavat konversio/jsonb->clojuremap)
+                              (update :toteumamateriaalit konversio/jsonb->clojuremap))))
+                     (map #(update % :toteumatehtavat
+                             (fn [rivit]
+                               (keep
+                                 (fn [r]
                                    (-> r
-                                     (clojure.set/rename-keys db-materiaalit->avaimet)
-                                     (konversio/alaviiva->rakenne))))
-                               rivit))))
-                   (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
-                                                     :toteumatehtavat :toteuma_tehtavat}))
-                   (map #(update % :reitti
-                           (fn [rivit]
-                             (keep
-                               (fn [r]
-                                 (let [r
-                                       (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
-                                         (clojure.set/rename-keys r db-reitti->avaimet))
-                                       ;; Muokkaa reittipisteen nimet oikein
-                                       r (-> r
-                                           (konversio/alaviiva->rakenne)
-                                           (rakenna-reittipiste-sijainti koordinaattimuutos)
-                                           (rakenna-reittipiste-tehtavat)
-                                           (rakenna-reittipiste-materiaalit materiaalikoodit))]
-                                   r))
-                               rivit)))))
-        toteumat {:reittitoteumat
-                  (map (fn [toteuma]
-                         (konversio/alaviiva->rakenne toteuma))
-                    toteumat)}]
+                                     (clojure.set/rename-keys db-tehtavat->avaimet)
+                                     (konversio/alaviiva->rakenne)))
+                                 rivit))))
+                     (map #(update % :toteumamateriaalit
+                             (fn [rivit]
+                               (keep
+                                 (fn [r]
+                                   (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+                                     (-> r
+                                       (clojure.set/rename-keys db-materiaalit->avaimet)
+                                       (konversio/alaviiva->rakenne))))
+                                 rivit))))
+                     (map #(clojure.set/rename-keys % {:toteumamateriaalit :toteuma_materiaalit
+                                                       :toteumatehtavat :toteuma_tehtavat}))
+                     (map #(update % :reitti
+                             (fn [rivit]
+                               (keep
+                                 (fn [r]
+                                   (let [r
+                                         (when (not (nil? (:f1 r))) ;; Varmista että Left joinilla haettuja rivejä on
+                                           (clojure.set/rename-keys r db-reitti->avaimet))
+                                         ;; Muokkaa reittipisteen nimet oikein
+                                         r (-> r
+                                             (konversio/alaviiva->rakenne)
+                                             (rakenna-reittipiste-sijainti koordinaattimuutos)
+                                             (rakenna-reittipiste-tehtavat)
+                                             (rakenna-reittipiste-materiaalit materiaalikoodit))]
+                                     r))
+                                 rivit))))))
+        toteumat (when (< koko 100000)
+                   {:reittitoteumat
+                    (map (fn [toteuma]
+                           (konversio/alaviiva->rakenne toteuma))
+                      toteumat)})]
     toteumat))
 
 (defn palauta-materiaalit
@@ -255,14 +264,14 @@
         suunniteltu-materialimaara (materiaalit-kyselyt/hae-urakan-suunniteltu-materiaalin-kaytto db urakka-id)
         ;; Kootaan tulokset vuosittain
         vuosittainen-suunniteltu-materialimaara (reduce (fn [tulos vuosi]
-                     (let [vuoden-materiaalit (filter
-                                                #(when (= vuosi (:hoitokauden-alkuvuosi %))
-                                                   %)
-                                                suunniteltu-materialimaara)
-                           tama-vuosi {:hoitokauden-alkuvuosi vuosi
-                                       :suunnitellut-materiaalit vuoden-materiaalit}]
-                       (conj tulos tama-vuosi)))
-             [] hoitokaudet)
+                                                          (let [vuoden-materiaalit (filter
+                                                                                     #(when (= vuosi (:hoitokauden-alkuvuosi %))
+                                                                                        %)
+                                                                                     suunniteltu-materialimaara)
+                                                                tama-vuosi {:hoitokauden-alkuvuosi vuosi
+                                                                            :suunnitellut-materiaalit vuoden-materiaalit}]
+                                                            (conj tulos tama-vuosi)))
+                                                  [] hoitokaudet)
 
         ;; MH-urakoiden suunnitellut materiaalitiedot tulee urakka_tehtavamaarat taulusta, mutta HJU urakoille on suunniteltu niitä myös materiaalin_kayttotauluun
         ;; Joten molempia hakuja on käytettävä.
@@ -427,16 +436,16 @@
         urakat (urakat-kyselyt/listaa-urakat-analytiikalle-hoitovuosittain db {:alkuvuosi alkuvuosi
                                                                                :loppuvuosi loppuvuosi})
         suunnitellut-tehtavat (mapv (fn [urakka]
-                                         {:urakka (:nimi urakka)
-                                          :urakka-id (:id urakka)
-                                          :vuosittaiset-suunnitelmat
-                                          (palauta-urakan-suunnitellut-tehtavamaarat db
-                                            {:alkuvuosi alkuvuosi
-                                             :loppuvuosi loppuvuosi
-                                             ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
-                                             :urakka-id (str (:id urakka))}
-                                            kayttaja)})
-                                   urakat)]
+                                      {:urakka (:nimi urakka)
+                                       :urakka-id (:id urakka)
+                                       :vuosittaiset-suunnitelmat
+                                       (palauta-urakan-suunnitellut-tehtavamaarat db
+                                         {:alkuvuosi alkuvuosi
+                                          :loppuvuosi loppuvuosi
+                                          ;; Validaation yksinkertaistamiseksi välitetään kaikki stringinä
+                                          :urakka-id (str (:id urakka))}
+                                         kayttaja)})
+                                urakat)]
     suunnitellut-tehtavat))
 
 (defrecord Analytiikka [kehitysmoodi?]

@@ -101,6 +101,7 @@
         prettyprint-xml (konversio/prettyprint-xml data-xml)]
     (is (not (nil? prettyprint-xml)))))
 
-(deftest xml-prettyprint-xxe-palauttaa-virheen
-  (let [data-xml (slurp "test/resurssit/konversio/xxe-xml.xml" )]
-    (is (thrown? Exception (konversio/prettyprint-xml data-xml)))))
+(deftest xml-prettyprint-xxe-palauttaa-konvertoimattoman-xmln
+  (let [data-xml (slurp "test/resurssit/konversio/xxe-xml.xml" )
+        vastaus (konversio/prettyprint-xml data-xml)]
+    (is (= data-xml vastaus))))
