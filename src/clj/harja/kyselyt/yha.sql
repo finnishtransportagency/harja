@@ -106,7 +106,8 @@ VALUES (
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, sijainti,
                               yhaid, yllapitoluokka, raekoko, tyomenetelma,
-                              massamaara, nykyinen_paallyste, karttapaivamaara)
+                              massamaara, nykyinen_paallyste, karttapaivamaara,
+                              paallystetyyppi)
 VALUES (
   :yllapitokohde,
   :nimi,
@@ -130,7 +131,8 @@ VALUES (
   :tyomenetelma,
   :massamaara,
   :nykyinen_paallyste,
-  :karttapaivamaara);
+  :karttapaivamaara,
+  :paallystetyyppi);
 
 -- name: hae-urakan-yha-id
 -- single?: true
