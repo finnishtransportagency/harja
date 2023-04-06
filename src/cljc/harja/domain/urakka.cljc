@@ -129,7 +129,7 @@
     ;; kyllä: paikkausurakoiden urakkatyyppi on päällystys
     (paallystysurakka? urakka)
     (:nimi urakka)
-       (str/includes? (:nimi urakka) "paikkaus")))
+    (str/includes? (:nimi urakka) "paikkaus")))
 
 (defn mh-urakka?
   "Onko urakka tyyppiä MHU (Maanteiden hoitourakka)"
