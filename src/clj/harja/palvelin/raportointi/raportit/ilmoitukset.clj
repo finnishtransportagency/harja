@@ -38,7 +38,7 @@
      [:varillinen-teksti {:arvo (pvm/pvm-aika (:toimenpiteet-aloitettu tiedot))}])))
 
 (defn- taulukko [{:keys [otsikot tiedot]}]
-  (let [rivit (into [] (map #(rivi-taulukolle %) tiedot))]
+  (let [rivit (mapv #(rivi-taulukolle %) tiedot)]
 
     [:taulukko {:viimeinen-rivi-yhteenveto? false}
      (let [taulukon-rivit (map (fn [x]
@@ -102,24 +102,23 @@
         myohassa (filtteri-paalla-str (contains? vaikutukset :myohassa))
         aiheutti-toimenpiteita (filtteri-paalla-str (contains? vaikutukset :aiheutti-toimenpiteita))
 
-        rivit (into []
-                    [(filtterit-rivi "Tiedotettu urakkaan" "Toimenpiteet aloitettu" nil nil true)
-                     (filtterit-rivi valitetty-urakkaan-vakioaikavali toimenpiteet-aloitettu-vakioaikavali nil nil false)
+        rivit [(filtterit-rivi "Tiedotettu urakkaan" "Toimenpiteet aloitettu" nil nil true)
+               (filtterit-rivi valitetty-urakkaan-vakioaikavali toimenpiteet-aloitettu-vakioaikavali nil nil false)
 
-                     (filtterit-rivi "Hakusana" "Selite" "Tienumero" "Tunniste" true)
-                     (filtterit-rivi hakuehto selite tr-numero tunniste false)
+               (filtterit-rivi "Hakusana" "Selite" "Tienumero" "Tunniste" true)
+               (filtterit-rivi hakuehto selite tr-numero tunniste false)
 
-                     (filtterit-rivi "Ilmoittaja" "Ilmoittajan puh" nil nil true)
-                     (filtterit-rivi ilmoittaja-nimi ilmoittaja-puhelin nil nil false)
+               (filtterit-rivi "Ilmoittaja" "Ilmoittajan puh" nil nil true)
+               (filtterit-rivi ilmoittaja-nimi ilmoittaja-puhelin nil nil false)
 
-                     (filtterit-rivi "Kuittaamaton" "Vastaanotettu" "Aloitettu" "Lopetettu" true)
-                     (filtterit-rivi kuittaamaton vastaanotettu aloitettu lopetettu false)
+               (filtterit-rivi "Kuittaamaton" "Vastaanotettu" "Aloitettu" "Lopetettu" true)
+               (filtterit-rivi kuittaamaton vastaanotettu aloitettu lopetettu false)
 
-                     (filtterit-rivi "TPP" "TUR" "URK" nil true)
-                     (filtterit-rivi TPP TUR URK nil false)
+               (filtterit-rivi "TPP" "TUR" "URK" nil true)
+               (filtterit-rivi TPP TUR URK nil false)
 
-                     (filtterit-rivi "Myöhästyneet ilmoitukset" "Toimenpiteitä aiheuttaneet" "Aloituskuittaus annettu" nil true)
-                     (filtterit-rivi myohassa aiheutti-toimenpiteita aloituskuittauksen-ajankohta nil false)])]
+               (filtterit-rivi "Myöhästyneet ilmoitukset" "Toimenpiteitä aiheuttaneet" "Aloituskuittaus annettu" nil true)
+               (filtterit-rivi myohassa aiheutti-toimenpiteita aloituskuittauksen-ajankohta nil false)]]
 
     [:taulukko {:piilota-border? true
                 :sheet-nimi sheet-nimi
@@ -131,13 +130,9 @@
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}) rivit]))
 
-(defn suorita [_ _ {:keys [tiedot urakka hallintayksikko filtterit parametrit] }]
+(defn suorita [_ _ {:keys [parametrit] }]
 
-  (let [;; Voiko destruktoida funktion parametreissa? Miten?
-        tiedot (:tiedot parametrit)
-        urakka (:urakka parametrit)
-        hallintayksikko (:hallintayksikko parametrit)
-        filtterit (:filtterit parametrit)
+  (let [{:keys [tiedot urakka hallintayksikko filtterit]} parametrit
 
         otsikot ["Urakka" "Saapunut"
                  "Tyyppi" "Selite"
@@ -153,19 +148,20 @@
         otsikko (if (and (not (:nimi urakka)) (not valittu-ely)) (str "Ilmoitukset, Koko maa") otsikko)
 
         valinnat (:valinnat filtterit)
-        alkuaika (:valitetty-urakkaan-alkuaika valinnat)
-        tyypit (:tyypit valinnat)
-        ilmoittaja-nimi (:ilmoittaja-nimi valinnat)
-        hakuehto (:hakuehto valinnat)
-        ilmoittaja-puhelin (:ilmoittaja-puhelin valinnat)
-        toimenpiteet-aloitettu-vakioaikavali (:toimenpiteet-aloitettu-vakioaikavali valinnat)
-        selite (:selite valinnat)
-        tilat (:tilat valinnat)
-        valitetty-urakkaan-vakioaikavali (:valitetty-urakkaan-vakioaikavali valinnat)
-        tr-numero (:tr-numero valinnat)
-        tunniste (:tunniste valinnat)
-        vaikutukset (:vaikutukset valinnat)
-        aloituskuittauksen-ajankohta (:aloituskuittauksen-ajankohta valinnat)]
+        
+        {alkuaika :valitetty-urakkaan-alkuaika
+         tyypit :tyypit
+         ilmoittaja-nimi :ilmoittaja-nimi
+         hakuehto :hakuehto
+         ilmoittaja-puhelin :ilmoittaja-puhelin
+         toimenpiteet-aloitettu-vakioaikavali :toimenpiteet-aloitettu-vakioaikavali
+         selite :selite
+         tilat :tilat
+         valitetty-urakkaan-vakioaikavali :valitetty-urakkaan-vakioaikavali
+         tr-numero :tr-numero
+         tunniste :tunniste
+         vaikutukset :vaikutukset
+         aloituskuittauksen-ajankohta :aloituskuittauksen-ajankohta} valinnat]
 
     [:raportti {:nimi otsikko
                 :piilota-otsikko? true}
