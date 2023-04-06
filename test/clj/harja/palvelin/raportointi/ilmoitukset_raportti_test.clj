@@ -10,10 +10,9 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.http-palvelin :as palvelin]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]
+            [harja.palvelin.palvelut.raportit :as raportit :refer [suorita-raportti]]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.palvelin.raportointi :refer [suorita-raportti]]))
+            [harja.palvelin.palvelut.urakat :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
