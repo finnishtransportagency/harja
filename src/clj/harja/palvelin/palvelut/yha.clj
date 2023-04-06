@@ -120,7 +120,8 @@
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-aikataulu<! db {:yllapitokohde (:id kohde)})
     (yllapitokohteet-q/luo-yllapitokohteelle-tyhja-kustannustaulu<! db {:yllapitokohde (:id kohde)})
     (doseq [{:keys [sijainti tierekisteriosoitevali yha-id nimi tunnus
-                    yllapitoluokka nykyinen-paallyste keskimaarainen-vuorokausiliikenne] :as alikohde} alikohteet]
+                    yllapitoluokka nykyinen-paallyste keskimaarainen-vuorokausiliikenne
+                    paallystystoimenpide] :as alikohde} alikohteet]
       (log/debug "Tallennetaan kohteen osa, jonka yha-id on " yha-id)
       (let [uusi-kohdeosa (yha-q/luo-yllapitokohdeosa<!
                             db
@@ -138,7 +139,10 @@
                              :yllapitoluokka yllapitoluokka
                              :nykyinen_paallyste nykyinen-paallyste
                              :keskimaarainen_vuorokausiliikenne keskimaarainen-vuorokausiliikenne
-                             :yhaid yha-id})]))))
+                             :yhaid yha-id
+                             :raekoko (:raekoko paallystystoimenpide)
+                             :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
+                             :massamaara (:kokonaismassamaara paallystystoimenpide)})]))))
 
 (defn lisaa-kohteisiin-validointitiedot [db kohteet]
   (map

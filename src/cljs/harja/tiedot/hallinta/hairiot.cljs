@@ -25,10 +25,12 @@
           (viesti/nayta! "Häiriöilmoitusten haku epäonnistui" :warn)
           (reset! hairiot vastaus)))))
 
-(defn aseta-hairioilmoitus [hairioilmoitus]
+(defn aseta-hairioilmoitus [{:keys [tyyppi teksti alkuaika loppuaika]}]
   (reset! tallennus-kaynnissa? true)
-  (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus {::hairio/tyyppi (:tyyppi hairioilmoitus)
-                                                        ::hairio/viesti (:teksti hairioilmoitus)}))]
+  (go (let [vastaus (<! (k/post! :aseta-hairioilmoitus {::hairio/tyyppi tyyppi
+                                                        ::hairio/viesti teksti
+                                                        ::hairio/alkuaika alkuaika
+                                                        ::hairio/loppuaika loppuaika}))]
         (reset! tallennus-kaynnissa? false)
         (reset! asetetaan-hairioilmoitus? false)
         (if (k/virhe? vastaus)

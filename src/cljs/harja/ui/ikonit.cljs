@@ -744,4 +744,4 @@
                              :opacity 1}
                             style)
                    :type "button"}
-    [close-svg]]))
+    [harja-icon-navigation-close]]))

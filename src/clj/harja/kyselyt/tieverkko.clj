@@ -139,10 +139,9 @@
                                                  (- (:pituus rivi) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys
                                                  (* (:ajoratojen-pituus rivi) (:ajoratojen-maara rivi)) ;; Ja lisätään muiden ajoratojen pituus
                                                  )
-                                               ;; Jos se ei osu, niin loput otetaan muista ajoradoista
-                                               (- (:ajoratojen-pituus rivi) (:aet k))
-                                               )
-                                             ))
+                                               ;; Jos se ei osu yhdelle ajoradalle esim tilanteessa jossa ajoratoja on 0,1,2 ja 0:n pituus on 1000 ja 1,2 = 100
+                                               ;; Niin otetaan loput ajoradoista, koska kaikkea ei saada 0 ajoradasta
+                                               (* (- (:ajoratojen-pituus rivi) (- (:aet k) (:pituus rivi))) (:ajoratojen-maara rivi)))))
                           (assoc k :pituus (+
                                              (:pituus k)    ;; Nykyinen pituus
                                              (- (:pituus rivi) (:aet k)) ;; Osamäpin osan pituudesta vähennetään alkuosan etäisyys

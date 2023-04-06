@@ -20,17 +20,6 @@
     [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet :as t-paikkauskohteet]
     [harja.domain.paallystysilmoitus :as pot]))
 
-(defn- fmt-vector
-  "Input -kentälle voidaan antaa joko numeerin arvo esim. 1, tai sitten vectorissa arvot [1 2].
-  Tehdään yksi formatointifunktio, joka osaa näyttää näissä kaikissa tilanteissa luvut lukutilassa oikein.
-  Ja lisäksi näytetään viiva - mikäli arvoa ei ole annettu ollenkaan."
-  [v]
-  (if (vector? v)
-    (clojure.string/join ", " v)
-    (if (or (nil? v) (and (vector? v) (empty? v)))
-      "-"
-      v)))
-
 (defn- maarakentan-otsikko
   "Määrä -kentän otsikko riippuu valitusta yksiköstä"
   [yksikko]
@@ -125,7 +114,7 @@
             :vayla-tyyli? true
             :virhe? (validointi/nayta-virhe? [:massatyyppi] toteumalomake)
             ::lomake/col-luokka "col-sm-6"
-            :rivi-luokka "lomakeryhman-rivi-tausta"})
+            :rivi-luokka "lomakeryhman-rivi-tausta.flex-rivi"})
          (when (not urem?)
            {:otsikko "Max raekoko"
             :tyyppi :valinta
@@ -166,25 +155,25 @@
        (lomake/rivi
          {:otsikko "Kok. massam."
           :tyyppi :positiivinen-numero
-          :nimi :massamenekki
+          :desimaalien-maara 3
+          :nimi :massamaara
           :yksikko "t"
           :piilota-yksikko-otsikossa? true
           :pakollinen? true
           :vayla-tyyli? true
+          :virhe? (validointi/nayta-virhe? [:massamaara] toteumalomake)
+          ::lomake/col-luokka "col-sm-4"
+          :rivi-luokka "lomakeryhman-rivi-tausta.flex-rivi"}
+         {:otsikko "Massamenekki"
+          :tyyppi :positiivinen-numero
+          :nimi :massamenekki
+          :yksikko "kg/m2"
+          :piilota-yksikko-otsikossa? true
+          :pakollinen? true
+          :vayla-tyyli? true
           :virhe? (validointi/nayta-virhe? [:massamenekki] toteumalomake)
-          ::lomake/col-luokka "col-sm-3"
+          ::lomake/col-luokka "col-sm-4"
           :rivi-luokka "lomakeryhman-rivi-tausta"}
-         (when (not urem?)
-           {:otsikko "Massamäärä"
-            :tyyppi :positiivinen-numero
-            :nimi :massamaara
-            :yksikko "kg/m2"
-            :piilota-yksikko-otsikossa? true
-            :pakollinen? true
-            :vayla-tyyli? true
-            :virhe? (validointi/nayta-virhe? [:massamaara] toteumalomake)
-            ::lomake/col-luokka "col-sm-3"
-            :rivi-luokka "lomakeryhman-rivi-tausta"})
          (when (not urem?)
            {:otsikko "Leveys"
             :tyyppi :positiivinen-numero
@@ -212,7 +201,7 @@
                     (:pinta-ala rivi))
                    ;; UREM: otetaan suoraan API:n kautta raportoitu pinta-ala
                    (:pinta-ala rivi)))
-          :vayla-tyyli? true ::lomake/col-luokka "col-sm-3" :rivi-luokka "lomakeryhman-rivi-tausta"})]
+          :vayla-tyyli? true ::lomake/col-luokka "col-sm-4" :rivi-luokka "lomakeryhman-rivi-tausta"})]
 
       ;; Muille työmenetelmille lomake on hieman erilainen
       [(lomake/ryhma
@@ -258,7 +247,7 @@
       :vayla-tyyli? true
       :virhe? (validointi/nayta-virhe? [:massatyyppi] toteumalomake)
       ::lomake/col-luokka "col-sm-4"
-      :rivi-luokka "lomakeryhman-rivi-tausta"}
+      :rivi-luokka "lomakeryhman-rivi-tausta.flex-rivi"}
      {:otsikko "Raekoko"
       :tyyppi :valinta
       :valinta-arvo first
@@ -422,32 +411,36 @@
         :piilota-yksikko-otsikossa? true
         :pakollinen? true
         :vayla-tyyli? true
-        ;::lomake/col-luokka "col-sm-3"
-        :rivi-luokka "lomakeryhman-rivi-tausta"}
+        :rivi-luokka "lomakeryhman-rivi-tausta.flex-rivi"
+        ::lomake/col-luokka "col-xs-3"}
        {:otsikko "Ajourat"
         :tyyppi :string
         :pakollinen? true
         :vayla-tyyli? true
         :nimi :ajourat
-        :fmt fmt-vector}
+        :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt
+        ::lomake/col-luokka "col-xs-3"}
        {:otsikko "Reunat"
         :tyyppi :string
         :pakollinen? true
         :vayla-tyyli? true
         :nimi :reunat
-        :fmt fmt-vector}
+        :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt
+        ::lomake/col-luokka "col-xs-3"}
        {:otsikko "Urien välit"
         :tyyppi :string
         :pakollinen? true
         :vayla-tyyli? true
         :nimi :ajouravalit
-        :fmt fmt-vector}
+        :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt
+        ::lomake/col-luokka "col-xs-3"}
        {:otsikko "Keskisauma"
         :tyyppi :string
         :pakollinen? true
         :vayla-tyyli? true
         :nimi :keskisaumat
-        :fmt fmt-vector})]))
+        :fmt t-paikkauskohteet/urapaikkauksen-sijainti-fmt
+        ::lomake/col-luokka "col-xs-3"})]))
 
 (defn toteuma-skeema
   "Määritellään toteumalomakkeen skeema. Skeema on jaoteltu osiin, jotta saadaan ulkonäöllisesti harmaat laatikot
@@ -512,25 +505,25 @@
     [:div {:style {:padding "16px"}}
      [debug/debug toteumalomake]
      [lomake/lomake
-      {:ei-borderia? true
+      {:ei-borderia? true :luokka (str "paikkaustoteumalomake " (when-not muokkaustila? "lukutila"))
        :virhe-optiot {:virheet-ulos? true}
        :voi-muokata? muokkaustila?
-       :blurrissa! (r/partial 
-                    (fn [kentan-nimi event]
-                      (let [arvo (.. event -target -value)]
-                        (e! (t-toteumalomake/->KenttaanKoskettu kentan-nimi arvo)))))
+       :blurrissa! (r/partial
+                     (fn [kentan-nimi event]
+                       (let [arvo (.. event -target -value)]
+                         (e! (t-toteumalomake/->KenttaanKoskettu kentan-nimi arvo)))))
        :header-fn (r/partial #(toteumalomake-header toteumalomake tyomenetelmat))
-       :muokkaa! (r/partial #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %) 
+       :muokkaa! (r/partial #(e! (t-toteumalomake/->PaivitaLomake (lomake/ilman-lomaketietoja %)
                                                                   (lomake/lomaketiedot %))))
-       :footer-fn (r/partial 
-                   (fn [toteumalomake]
-                     [:div.flex-row
-                      ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
-                      ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
-                      [footer-vasemmat-napit e! toteumalomake muokkaustila?]
-                      [napit/yleinen-toissijainen
-                       (if muokkaustila? "Peruuta" "Sulje")
-                       #(e! (t-toteumalomake/->SuljeToteumaLomake))
-                       {:paksu? true}]]))}
+       :footer-fn (r/partial
+                    (fn [toteumalomake]
+                      [:div.flex-row
+                       ;; UI on jaettu kahteen osioon. Oikeaan ja vasempaan.
+                       ;; Tarkistetaan ensin, että mitkä näapit tulevat vasemmalle
+                       [footer-vasemmat-napit e! toteumalomake muokkaustila?]
+                       [napit/yleinen-toissijainen
+                        (if muokkaustila? "Peruuta" "Sulje")
+                        #(e! (t-toteumalomake/->SuljeToteumaLomake))
+                        {:paksu? true}]]))}
       (toteuma-skeema toteumalomake tyomenetelmat)
       toteumalomake]]))

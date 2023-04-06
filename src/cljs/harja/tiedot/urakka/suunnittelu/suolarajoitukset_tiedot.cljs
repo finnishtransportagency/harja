@@ -473,6 +473,7 @@
                :paasta-virhe-lapi? true})]
 
       (-> app
+        (assoc :suolarajoitukset nil)
         (assoc :valittu-hoitovuosi (:hoitokauden-alkuvuosi lomake))
         (assoc :tallennus-kaynnissa? true)
         (assoc :rajoitusalue-lomake-auki? sivupaneeli-tila))))
@@ -484,6 +485,7 @@
       (hae-suolarajoitukset (:valittu-hoitovuosi app))
 
       (-> app
+        (assoc :suolarajoitukset nil)
         ;; Poimitaan uudelle lomakepohjalle aiemmin asetettu ":kopioidaan-tuleville-vuosille?"-asetus
         ;; Muutoin, tyhjennetään lomake.
         (assoc :lomake {:kopioidaan-tuleville-vuosille? (:kopioidaan-tuleville-vuosille? lomake)})
@@ -520,6 +522,7 @@
       (viesti/nayta-toast! "Rajoitusalueen poistaminen onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
       (hae-suolarajoitukset (:valittu-hoitovuosi app))
       (-> app
+        (assoc :suolarajoitukset nil)
         (assoc :suolarajoitukset-haku-kaynnissa? true)
         (assoc :poisto-kaynnissa? false)
         (assoc :lomake nil))))
