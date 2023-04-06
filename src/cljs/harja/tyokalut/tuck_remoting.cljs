@@ -99,7 +99,10 @@
                                                    (when (= (.-code event) closed-unclean-code)
                                                     ", Heartbeat timeout?: true") ")"))
                                (when (fn? on-disconnect)
-                                 (on-disconnect (.-code event) (.-reason event) (.-wasClean event)))
+                                 (on-disconnect
+                                   (.-code event) (.-reason event)
+                                   ;; Check if the connection was closed cleanly (wasClean can be null in some cases)
+                                   (or (.-wasClean event) (= (.-code event) closed-clean-code))))
 
                                ;; Stop the heartbeat timer and reset the heartbeat-state
                                (stop-heartbeat!)
