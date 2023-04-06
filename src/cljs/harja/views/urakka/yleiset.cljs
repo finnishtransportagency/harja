@@ -530,10 +530,13 @@
   (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? urakka)
         paallystysurakka? (= (:tyyppi urakka) :paallystys)
         paallystysurakka-sidottu? (some? (:yhatiedot urakka))
+        paikkausurakka? (and (:nimi urakka)
+                             (str/includes? (:nimi urakka) "paikkaus"))
         sidonta-lukittu? (get-in urakka [:yhatiedot :sidonta-lukittu?])
         palvelusopimus? (= :palvelusopimus (:sopimustyyppi urakka))]
     (when (and yha-tuontioikeus?
                paallystysurakka?
+               (not paikkausurakka?)
                (not paallystysurakka-sidottu?)
                (not sidonta-lukittu?)
                (not palvelusopimus?))
