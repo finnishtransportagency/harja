@@ -55,6 +55,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   [:myohassa :aiheutti-toimenpiteita])
 
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
+(def ws-kuuntelija-ominaisuus? (local-storage (atom true) :ws-kuuntelija-ominaisuus))
 
 (defonce ilmoitukset
   (atom {:ilmoitusnakymassa?            false

@@ -224,6 +224,13 @@
                           :teksti "Äänimerkki uusista ilmoituksista"}
        tiedot/aanimerkki-uusista-ilmoituksista?]
 
+      ;; FIXME: Tämä on väliaikainen toiminto WS-kuuntelijan testikäyttöä varten.
+      ;;        Käyttäjä voi aktivoida/deaktivoida WS-kuuntelun.
+      ;;        Asetus tallennnetaan localstorageen, jolloin valittu asetus on aktiivinen myös refreshin jälkeen.
+      [kentat/tee-kentta {:tyyppi :checkbox
+                          :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
+       tiedot/ws-kuuntelija-ominaisuus?]
+
       [vihjeet ws-ilmoitusten-kuuntelu]
 
       (when-not kuittaa-monta-nyt
@@ -332,7 +339,15 @@
                                     (let [vanhat (select-keys vanhat-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])
                                           uudet (select-keys uudet-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
                                       (when (not= vanhat uudet)
-                                        (e! (ilmoitukset-ws/->AloitaKuuntelu uudet-valinnat))))))
+                                        (when @tiedot/ws-kuuntelija-ominaisuus?
+                                          (e! (ilmoitukset-ws/->AloitaKuuntelu uudet-valinnat)))))))
+
+    ;; FIXME: Tämä on väliaikainen ominaisuus WS-kuuntelijan testikäyttöä varten.
+    (komp/watcher tiedot/ws-kuuntelija-ominaisuus?
+      (fn [_ _ uusi-tila]
+        (if (true? uusi-tila)
+          (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
+          (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -348,13 +363,19 @@
                          ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
                          ;; Kuuntelun aloittamisen yhteydessä annetaan käyttöliittymästä optioksi "valinnat",
                          ;; jotka toimivat suodattimina WebSocketin kautta vastaanotettaville ilmoituksille
-                         (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat)))
+                         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
+                         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
+                         (when @tiedot/ws-kuuntelija-ominaisuus?
+                           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
 
                          ;; Katkaise WS-yhteys ja lopeta samalla uusien ilmoitusten kuuntelu WebSocketin kautta
-                         (e! (ilmoitukset-ws/->KatkaiseYhteys))))
+                         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
+                         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
+                         (when @tiedot/ws-kuuntelija-ominaisuus?
+                           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]
