@@ -494,3 +494,15 @@ SELECT u.id as "urakka-id", u.nimi as urakka_nimi, ra.id, (ra.tierekisteriosoite
 FROM rajoitusalue ra
      JOIN urakka u on ra.urakka_id = u.id
 order by urakka_id;
+
+-- name: hae-urakan-rajoitusaluegeometriat
+SELECT r.id, r.tierekisteriosoite, r.sijainti
+  FROM rajoitusalue r
+ WHERE r.urakka_id = :urakka-id::INT;
+
+-- name: hae-paivan-suolatoteumageometriat
+SELECT sr.sijainti, t.alkanut
+  FROM toteuma t
+       JOIN suolatoteuma_reittipiste sr on sr.toteuma = t.id
+ WHERE t.urakka = :urakka-id::INT
+  AND t.alkanut BETWEEN :alkupaiva::DATE AND :loppupaiva::DATE + INTERVAL '1 days'
