@@ -94,6 +94,13 @@
 
                                (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
 
+                              (= "MHU Ylläpito" otsikko)
+                              [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Rahavaraukset" :rahavaraukset_laskutettu :rahavaraukset_laskutetaan false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sakot_laskutettu :sakot_laskutetaan false)
+                               (rivi-taulukolle data kyseessa-kk-vali? "Yhteensä" :kaikki_laskutettu :kaikki_laskutetaan true)]
+
                               :else
                               [(rivi-taulukolle data kyseessa-kk-vali? "Hankinnat" :hankinnat_laskutettu :hankinnat_laskutetaan false)
                                (rivi-taulukolle data kyseessa-kk-vali? "Lisätyöt" :lisatyot_laskutettu :lisatyot_laskutetaan false)
@@ -224,7 +231,6 @@
                                                               (select-keys rivi (laskettavat-kentat rivi konteksti)))
                                                             %))
                                                kaikki-tuotteittain))
-
         tiedot (into [] (map #(merge {:nimi (key %)} (val %)) kaikki-tuotteittain-summattuna))
         yhteenveto (koosta-yhteenveto tiedot)
         tavoite (koosta-tavoite tiedot urakka-tavoite)
