@@ -125,20 +125,23 @@
     (sulje-kaikki-ws-yhteydet!))
 
   (testing "Lähetä kaikille clientille"
-    ;; Luo kaksi yhteyttä
-    (luo-ws-yhteys! :asiakas-1)
-    (luo-ws-yhteys! :asiakas-2)
+    ;; Testaa viestien lähetystä isommalle asiakasjoukolle
 
-    ;; Lähetä testi-eventti kaikille clientille
-    (sut/laheta-kaikille! (:tuck-remoting jarjestelma) (->TestiEventti))
-    (odota-ehdon-tayttymista #(seq (ws-vastaus :asiakas-1)) "Tuck-remotingilta saatiin vastaus asiakkaalle 1" 1000)
-    (odota-ehdon-tayttymista #(seq (ws-vastaus :asiakas-2)) "Tuck-remotingilta saatiin vastaus asiakkaalle 2" 1000)
+    (let [asiakkaat-lkm 20]
+      (doseq [id (range asiakkaat-lkm)]
+        (luo-ws-yhteys! id))
 
-    (is (= "harja.palvelin.komponentit.tuck-remoting-test.TestiEventti" (::tr/event-type (ws-vastaus :asiakas-1))))
-    (is (= "harja.palvelin.komponentit.tuck-remoting-test.TestiEventti" (::tr/event-type (ws-vastaus :asiakas-2))))
+      ;; Lähetä testi-eventti kaikille clientille
+      (sut/laheta-kaikille! (:tuck-remoting jarjestelma) (->TestiEventti))
 
-    ;; Siivoa vastaus
-    (siivoa-ws-vastaus! :asiakas-1)
-    (siivoa-ws-vastaus! :asiakas-2)
+      (doseq [id (range asiakkaat-lkm)]
+        (odota-ehdon-tayttymista #(seq (ws-vastaus id)) (str "Tuck-remotingilta saatiin vastaus asiakkaalle " id) 2000))
 
-    (sulje-kaikki-ws-yhteydet!)))
+      (doseq [id (range asiakkaat-lkm)]
+        (is (= "harja.palvelin.komponentit.tuck-remoting-test.TestiEventti" (::tr/event-type (ws-vastaus id)))))
+
+      ;; Siivoa vastaukset
+      (doseq [id (range asiakkaat-lkm)]
+        (siivoa-ws-vastaus! id))
+
+      (sulje-kaikki-ws-yhteydet!))))
