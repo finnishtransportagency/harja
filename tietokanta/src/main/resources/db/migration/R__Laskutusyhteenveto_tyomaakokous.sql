@@ -110,6 +110,9 @@ DECLARE
     paallyste_rivi                        RECORD;
 
     -- MHU ylläpito
+    alihankintabonus_rivi                 RECORD;
+    alihank_bon_val_aika_yht              NUMERIC;
+    alihank_bon_hoitokausi_yht            NUMERIC;
     yllapito_tpi_id                       NUMERIC;
     yllapito_hoitokausi_yht               NUMERIC;
     yllapito_val_aika_yht                 NUMERIC;
@@ -658,6 +661,37 @@ BEGIN
             END IF;
         END LOOP;
 
+    -- Haetaan alihankintabonus, joka on siirretty rahavarauksen alle ja merkitään se MHU Ylläpidon hankintoihin.
+    alihank_bon_val_aika_yht := 0.0;
+    alihank_bon_hoitokausi_yht := 0.0;
+    FOR alihankintabonus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
+                                 FROM erilliskustannus ek
+                                 WHERE ek.sopimus = sopimus_id
+                                   AND ek.tyyppi = 'alihankintabonus'
+                                   AND ek.pvm >= hk_alkupvm
+                                   AND ek.pvm <= aikavali_loppupvm
+                                   AND ek.poistettu IS NOT TRUE
+        LOOP
+            RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Ylläpidolle: % ', alihankintabonus_rivi;
+
+            -- Alihankintabonukselle ei tule indeksikorotusta
+            -- Alihankintabonus käsitellään nykyään rahavarauksena ja se merkitään MHU Ylläpidon hankitoihin
+            IF alihankintabonus_rivi.pvm <= aikavali_loppupvm THEN
+                -- Hoitokauden alusta
+                alihank_bon_val_aika_yht := alihank_bon_val_aika_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
+
+                IF alihankintabonus_rivi.pvm >= aikavali_alkupvm AND
+                   alihankintabonus_rivi.pvm <= aikavali_loppupvm THEN
+                    -- Laskutetaan nyt
+                    alihank_bon_hoitokausi_yht := alihank_bon_hoitokausi_yht + COALESCE(alihankintabonus_rivi.rahasumma, 0.0);
+                END IF;
+            END IF;
+        END LOOP;
+    RAISE NOTICE 'Alihankintabonus - Rahavaraukset - alihank_bon_val_aika_yht :: alihank_bon_hoitokausi_yht: % :: %', alihank_bon_val_aika_yht, alihank_bon_hoitokausi_yht;
+
+    yllapito_val_aika_yht := yllapito_val_aika_yht + alihank_bon_val_aika_yht;
+    yllapito_hoitokausi_yht := yllapito_hoitokausi_yht + alihank_bon_hoitokausi_yht;
+
     RAISE NOTICE 'talvihoito_hoitokausi_yht: %', talvihoito_hoitokausi_yht;
     RAISE NOTICE 'talvihoito_val_aika_yht: %', talvihoito_val_aika_yht;
 
@@ -881,6 +915,8 @@ BEGIN
                                                                                            AND m.toimenpideinstanssi = tpi.id
                                                                                            AND tpk2.koodi = '23150'
                                                                                          LIMIT 1)))
+                           -- Alihankintabonukset on siirretty rahavarauksiin
+                           AND ek.tyyppi != 'alihankintabonus'
                            AND ek.pvm BETWEEN hk_alkupvm AND aikavali_loppupvm
                            AND ek.poistettu IS NOT TRUE
                            AND ek.tyyppi != 'muu'::erilliskustannustyyppi
