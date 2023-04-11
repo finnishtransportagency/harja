@@ -85,7 +85,7 @@
                 "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo",
                 "required": false,
                 "properties": {
-                  "sahkoposti": {
+                  "email": {
                     "type": "string",
                     "id": "urn:harja/urakka/yhteyshenkilot/0/yhteyshenkilo/email",
                     "required": false
