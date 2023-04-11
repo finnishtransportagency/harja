@@ -66,12 +66,12 @@
 
 (defn- hae-liikennetapahtumat* [tiedot tapahtumat urakkatiedot-fn urakka-idt]
   (->>
-   tapahtumat
-   (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
-   (suodata-liikennetapahtuma-aluksen-nimella tiedot)
-   (liita-kohteen-urakkatiedot urakkatiedot-fn)
-   (map (partial urakat-idlla urakka-idt))
-   (remove (comp empty? ::kohde/urakat ::lt/kohde))))
+    tapahtumat
+    (suodata-liikennetapahtuma-toimenpidetyypillä tiedot)
+    (suodata-liikennetapahtuma-aluksen-nimella tiedot)
+    (liita-kohteen-urakkatiedot urakkatiedot-fn)
+    (map (partial urakat-idlla urakka-idt))
+    (remove (comp empty? ::kohde/urakat ::lt/kohde))))
 
 (def ilman-poistettuja-aluksia (map #(update % ::lt/alukset (partial remove ::m/poistettu?))))
 
