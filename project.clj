@@ -119,6 +119,8 @@
 
                  ;; Fake-HTTP testaukseen
                  [http-kit.fake "0.2.2"]
+                 ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
+                 [java-http-clj "0.4.3"]
 
                  ;; Apache ANT core
                  [org.apache.ant/ant "1.10.5"]
