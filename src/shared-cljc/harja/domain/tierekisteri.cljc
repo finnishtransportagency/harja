@@ -59,7 +59,7 @@
 
 (defn tr-alkuiseksi [osoite]
   "Muuntaa osoitteen avaimet tr-prefiksatuiksi"
-  (muunna-osoitteen-avaimet :tr-tie :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
+  (muunna-osoitteen-avaimet :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
