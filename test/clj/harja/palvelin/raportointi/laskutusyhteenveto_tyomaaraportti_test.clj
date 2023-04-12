@@ -371,7 +371,7 @@
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
 
 
-(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii
+(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-ennen-2022
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -397,12 +397,36 @@
 
         raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                       hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-
-        _ (println "raportti: " (pr-str raportti))
-
         purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
     (is (= bonus_summa (:bonukset_hoitokausi_yht purettu)))
     (is (= bonus_summa (:bonukset_val_aika_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)))
     (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)))))
+
+;; Alihankintabonus siirtyy rahavarauksiin 2022 ja jälkeen alkavilla urakoilla
+(deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022
+  (let [hk_alkupvm "2022-10-01"
+        hk_loppupvm "2023-09-30"
+        aikavali_alkupvm "2022-10-01"
+        aikavali_loppupvm "2023-09-30"
+        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
+        sopimus-id (hae-oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)
+        tpi (hae-toimenpideinstanssi-id urakka-id "23151") ;; Hallinnolliset toimenpiteet
+        pvm (pvm/->pvm "15.10.2022")
+        bonus_summa 1000M
+        ;; Poistetaan kaikki bonukset ja sanktiot urakalta
+        _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+
+        ;; Luodaan bonus
+        _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, rahasumma, urakka, tyyppi)
+                      VALUES (%s, %s, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
+               sopimus-id tpi pvm bonus_summa urakka-id "alihankintabonus"))
+
+        raportti (q (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                      hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))]
+
+    (is (= 0.0M (:bonukset_hoitokausi_yht purettu)))
+    (is (= 0.0M (:bonukset_val_aika_yht purettu)))))
