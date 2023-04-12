@@ -20,11 +20,19 @@
 
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tr-tyokalut/websocket-fixture))
 
+(def jvh-kayttajan-oam-headerit {"oam_remote_user" "jvh"
+                                 "oam_user_first_name" "Jalmari"
+                                 "oam_user_last_name" "Järjestelmävastuuhenkilö"
+                                 "oam_user_mail" "erkki@esimerkki.com"
+                                 "oam_user_mobile" "1234567890"
+                                 "oam_organization" "Liikennevirasto"
+                                 "oam_groups" "Jarjestelmavastaava"})
+
 
 (deftest testaa-ilmoitusten-kuuntelu
   (testing "Testaa onnistuuko urakkakohtaisten kuuntelun aloittaminen"
     ;; Luo yhteys
-    (tr-tyokalut/luo-ws-yhteys! :asiakas-1)
+    (tr-tyokalut/luo-ws-yhteys! :asiakas-1 jvh-kayttajan-oam-headerit)
 
     ;; Muodosta yhteydelle asiakas-e! apuri, jolla Tuck-eventtejä lähetetään, kuten selaimen ws-client lähettäisi
     (let [e! (tr-tyokalut/asiakas-e! (tr-tyokalut/ws-yhteys :asiakas-1))]
@@ -44,7 +52,7 @@
 
   (testing "Testaa onnistuuko kaikkien ilmoitusten kuuntelun aloittaminen (suodatettu kuuntelija)"
     ;; Luo yhteys
-    (tr-tyokalut/luo-ws-yhteys! :asiakas-1)
+    (tr-tyokalut/luo-ws-yhteys! :asiakas-1 jvh-kayttajan-oam-headerit)
 
     ;; Muodosta yhteydelle asiakas-e! apuri, jolla Tuck-eventtejä lähetetään, kuten selaimen ws-client lähettäisi
     (let [e! (tr-tyokalut/asiakas-e! (tr-tyokalut/ws-yhteys :asiakas-1))]

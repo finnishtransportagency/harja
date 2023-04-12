@@ -21,6 +21,15 @@
 (use-fixtures :each (compose-fixtures jarjestelma-fixture tr-tyokalut/websocket-fixture))
 
 
+(def jvh-kayttajan-oam-headerit {"oam_remote_user" "jvh"
+                                 "oam_user_first_name" "Jalmari"
+                                 "oam_user_last_name" "Järjestelmävastuuhenkilö"
+                                 "oam_user_mail" "erkki@esimerkki.com"
+                                 "oam_user_mobile" "1234567890"
+                                 "oam_organization" "Liikennevirasto"
+                                 "oam_groups" "Jarjestelmavastaava"})
+
+
 (deftest testaa-yhteys-hookit
   (let [yhdistetty-atom (atom nil)
         ;; Rekisteröi palvelinpuolen hookit ennen client-yhteyden luomista
@@ -31,7 +40,7 @@
                                     (fn [{::tr/keys [e! client-id] :as client}]
                                       (reset! yhdistetty-atom "katkaistu")))
         ;; Luo yhteys
-        _ (tr-tyokalut/luo-ws-yhteys! :asiakas-1)]
+        _ (tr-tyokalut/luo-ws-yhteys! :asiakas-1 jvh-kayttajan-oam-headerit)]
 
     ;; Testataan toimiiko yhteyden luominen ja hook
     (odota-ehdon-tayttymista #(= "yhdistetty" @yhdistetty-atom) "Tuck-remoting yhdistetty" 1000)
@@ -48,7 +57,7 @@
 (deftest testaa-tuck-remoting
   (testing "Testaa vastaako tuck-remoting ping-viestiin"
     ;; Luo yhteys
-    (tr-tyokalut/luo-ws-yhteys! :asiakas-1)
+    (tr-tyokalut/luo-ws-yhteys! :asiakas-1 jvh-kayttajan-oam-headerit)
 
     ;; Lähetä ping-viesti
     (ws/send (tr-tyokalut/ws-yhteys :asiakas-1) (transit/clj->transit {:tuck.remoting/event-type :ping}))
@@ -65,9 +74,9 @@
   (testing "Lähetä kaikille clientille"
     ;; Testaa viestien lähetystä isommalle asiakasjoukolle
 
-    (let [asiakkaat-lkm 20]
+    (let [asiakkaat-lkm 40]
       (doseq [id (range asiakkaat-lkm)]
-        (tr-tyokalut/luo-ws-yhteys! id))
+        (tr-tyokalut/luo-ws-yhteys! id jvh-kayttajan-oam-headerit))
 
       ;; Lähetä testi-eventti kaikille clientille
       (sut/laheta-kaikille! (:tuck-remoting jarjestelma) (->TestiEventti))

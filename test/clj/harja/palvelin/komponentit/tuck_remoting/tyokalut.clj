@@ -1,6 +1,5 @@
 (ns harja.palvelin.komponentit.tuck-remoting.tyokalut
-  (:require [clojure.test :refer [deftest is use-fixtures compose-fixtures testing]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [java-http-clj.websocket :as ws]
             [taoensso.timbre :as log]
             [harja.testi :refer [portti]]
@@ -17,7 +16,7 @@
   "Saadut vastaukset ws-yhteyden id:llä varustettuna"
   (atom {}))
 
-(defn websocket-client [id]
+(defn websocket-client [id oam-headerit]
   (let [ws-url (str "ws://" "localhost:" portti "/_/ws?")]
     (log/info "Yhdistetään WS: " ws-url)
 
@@ -28,17 +27,11 @@
                   (swap! ws-client-yhteys-vastaukset-atom assoc id (transit/transit->clj vastaus)))
        :on-error (fn [ws throwable]
                    (log/error (str "WS-asiakas " id " sai virheen: ") (.getMessage throwable)))}
-      {:headers {"oam_remote_user" "jvh"
-                 "oam_user_first_name" "Jalmari"
-                 "oam_user_last_name" "Järjestelmävastuuhenkilö"
-                 "oam_user_mail" "erkki@esimerkki.com"
-                 "oam_user_mobile" "1234567890"
-                 "oam_organization" "Liikennevirasto"
-                 "oam_groups" "Jarjestelmavastaava"}})))
+      {:headers oam-headerit})))
 
-(defn luo-ws-yhteys! [id]
+(defn luo-ws-yhteys! [id oam-headerit]
   (when id
-    (swap! ws-client-yhteydet-atom assoc id (websocket-client id))))
+    (swap! ws-client-yhteydet-atom assoc id (websocket-client id oam-headerit))))
 
 (defn ws-yhteys [id]
   (get-in @ws-client-yhteydet-atom [id]))
