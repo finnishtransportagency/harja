@@ -68,6 +68,17 @@
 (def sopimuksen-tiedot
   #{[::sopimus sop/perustiedot]})
 
+(def kaikki-toimenpiteet*
+  ^{:private true}
+  {:sulutus "Sulutus"
+   :tyhjennys "Tyhjennys"
+   :avaus "Sillan avaus"
+   :ei-avausta "Ei avausta"})
+
+(defn kaikki-toimenpiteet->str [toimenpide]
+  (kaikki-toimenpiteet*
+   toimenpide))
+
 (def sulku-toimenpiteet*
   ^{:private true}
   {:sulutus "Sulutus"
