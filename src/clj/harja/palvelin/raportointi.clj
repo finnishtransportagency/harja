@@ -132,8 +132,12 @@
                    "hallintayksikko" hy-nimi
 
                    "koko maa" "Koko maa")
-         :alkupvm (some-> parametrit :alkupvm pvm/pvm)
-         :loppupvm (some-> parametrit :loppupvm pvm/pvm)
+         :alkupvm (or
+                    (some-> parametrit :alkupvm pvm/pvm)
+                    (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
+         :loppupvm (or
+                     (some-> parametrit :loppupvm pvm/pvm)
+                     (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
          :raportin-nimi (get-in raportti [1 :nimi])})
       (assoc-in
         [1 :tietoja]

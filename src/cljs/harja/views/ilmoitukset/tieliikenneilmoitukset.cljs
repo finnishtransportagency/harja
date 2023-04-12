@@ -208,7 +208,15 @@
         valitse-ilmoitus! (when kuittaa-monta-nyt
                             #(e! (v/->ValitseKuitattavaIlmoitus %)))
         pikakuittaus-ilmoitus-id (when pikakuittaus
-                                   (get-in pikakuittaus [:ilmoitus :id]))]
+                                   (get-in pikakuittaus [:ilmoitus :id]))
+
+        tunteja-valittu (-> valinnat-nyt :valitetty-urakkaan-vakioaikavali :tunteja)
+        vapaa-alkuaika (-> valinnat-nyt :valitetty-urakkaan-alkuaika)
+        vapaa-loppuaika (-> valinnat-nyt :valitetty-urakkaan-loppuaika)
+        tuntia-sitten (pvm/tuntia-sitten tunteja-valittu)
+        valittu-alkupvm (if tunteja-valittu tuntia-sitten vapaa-alkuaika)
+        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)]
+    
     [:span.ilmoitukset
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
@@ -247,14 +255,15 @@
         :raporttivienti #{:excel :pdf}
         :raporttivienti-lapinakyva? true
         :raporttiparametrit (raportit/urakkaraportin-parametrit
-                             (:id @nav/valittu-urakka)
-                             :ilmoitukset-raportti
-                             {:urakka @nav/valittu-urakka
-                              :hallintayksikko @nav/valittu-hallintayksikko
-                              :tiedot haetut-ilmoitukset
-                              :filtterit @tiedot/ilmoitukset
-                              :alkupvm (:aloituskuittauksen-ajankohta valinnat-nyt)
-                              :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
+                              (:id @nav/valittu-urakka)
+                              :ilmoitukset-raportti
+                              {:urakka @nav/valittu-urakka
+                               :hallintayksikko @nav/valittu-hallintayksikko
+                               :tiedot haetut-ilmoitukset
+                               :filtterit @tiedot/ilmoitukset
+                               :alkupvm valittu-alkupvm
+                               :loppupvm valittu-loppupvm
+                               :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "

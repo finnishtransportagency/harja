@@ -257,13 +257,15 @@
                  custom-ylin-rivi] :as tiedot}]
   (try 
     (let [rivi (.createRow sheet nolla)
-          solu (.createCell rivi 0)]
+          solu (.createCell rivi 0)
+          ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
+          loppupvm (if (= loppupvm alkupvm) nil loppupvm)]
       (excel/set-cell! solu (or
-                             custom-ylin-rivi
-                             (str raportin-nimi
-                                  (when urakka (str ", " urakka))
-                                  (when (and alkupvm (not loppupvm)) (str ", " alkupvm))
-                                  (when (and alkupvm loppupvm) (str ", " alkupvm "-" loppupvm)))))
+                              custom-ylin-rivi
+                              (str raportin-nimi
+                                (when urakka (str ", " urakka))
+                                (when (and alkupvm (not loppupvm)) (str ", " alkupvm))
+                                (when (and alkupvm loppupvm) (str ", " alkupvm " - " loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.
