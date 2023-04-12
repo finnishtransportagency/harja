@@ -56,7 +56,6 @@
         raportin-nimi (-> vastaus second :nimi)
         raportit (nth vastaus 3)
         laskutusyhteenveto (take 15 raportit)
-        _ (println "raportit: " raportit)
         talvihoito-yhteensa (-> (first laskutusyhteenveto) (nth 3) (nth 5) second second :arvo)
         liikenneymp-akilliset-hoitotyot (-> (second laskutusyhteenveto) (nth 3) (nth 3) second second :arvo)
         liikenneymp-vahinkojen-korjaukset (-> (second laskutusyhteenveto) (nth 3) (nth 4) second second :arvo)
