@@ -1,7 +1,9 @@
-<b>Nykyinen versio: 1.0.57</b>
-<b>Julkaistu: 27.10.2022</b>
+<b>Nykyinen versio: 1.0.58</b>
+<b>Julkaistu: 12.04.2023</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.58 Julkaistu 12.04.2023
+   - Päivitetty yhteystietorajapinnan kuvaus vastaamaan todellisuutta. Sahkoposti-elementin nimi on email.
 - Versionumero 1.0.57 Julkaistu 27.10.2022
    - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
 - Versionumero 1.0.56 Julkaistu 14.4.2022

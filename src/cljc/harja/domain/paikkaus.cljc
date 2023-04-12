@@ -98,6 +98,7 @@
     ::kuulamylly
     ::sijainti
     ::massamaara
+    ::pinta-ala
     ::lahde})
 
 (def tienkohta-perustiedot
