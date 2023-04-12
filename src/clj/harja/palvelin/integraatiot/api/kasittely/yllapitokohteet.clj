@@ -33,6 +33,7 @@
                           :raekoko (:raekoko alikohde)
                           :tyomenetelma (paallystysilmoitus/tyomenetelman-koodi-nimella (:tyomenetelma alikohde))
                           :massamaara (:kokonaismassamaara alikohde)
+                          :massamenekki (:massamenekki alikohde)
                           :toimenpide (:toimenpide alikohde)
                           :ulkoinen-id (:ulkoinen-id alikohde)})]
         (assoc alikohde :id (:id (q-yllapitokohteet/luo-yllapitokohdeosa<! db parametrit)))))

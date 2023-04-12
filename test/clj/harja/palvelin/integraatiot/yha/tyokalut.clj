@@ -107,6 +107,7 @@
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>
+              <massamenekki>100</massamenekki>
               <kokonaismassamaara>124</kokonaismassamaara>
               <rc-prosentti>14</rc-prosentti>
               <kuulamylly>4</kuulamylly>
@@ -131,6 +132,7 @@
             <paallystystoimenpide>
               <uusi-paallyste>11</uusi-paallyste>
               <raekoko>12</raekoko>
+              <massamenekki>100</massamenekki>
               <kokonaismassamaara>124</kokonaismassamaara>
               <rc-prosentti>14</rc-prosentti>
               <kuulamylly>4</kuulamylly>
