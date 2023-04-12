@@ -19,7 +19,9 @@
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [slingshot.slingshot :refer [throw+]]
-            [harja.domain.tierekisteri.validointi :as tr-validointi]))
+            [harja.domain.tierekisteri.validointi :as tr-validointi]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
+            [harja.domain.tierekisteri :as tr-domain]))
 
 (def merkitse-paikkauskohde-tarkistetuksi!
   "Päivittää paikkauskohteen tarkistaja-idn ja aikaleiman.")
@@ -334,6 +336,18 @@
         tyomenetelma (::paikkaus/tyomenetelma paikkaus)
         paikkaus (cond-> paikkaus
                          (not (nil? (::paikkaus/massamenekki paikkaus))) (update ::paikkaus/massamenekki bigdec))
+        tr-osoite-tr-muodossa (tr-domain/tr-alkuiseksi tr-osoite)
+        osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-muodossa])
+        pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle 20) tr-osoite-tr-muodossa)
+        pinta-ala (when (and (::paikkaus/leveys paikkaus) pituus)
+                    (* (::paikkaus/leveys paikkaus) pituus))
+        ;; lisätään paikkauksiin pinta-ala ja massamäärä, jos ne luvut saatavilla mistä pystytään johtamaan
+        paikkaus (assoc paikkaus
+                   ::paikkaus/pinta-ala pinta-ala
+                   ;; massamenekki on kg/m2, kokonaismassamäärä puolestaan aina tonneja -->
+                   ;; kokonaismassamäärä tonneina = massamenekki tonneina / m2 * pinta-ala m2
+                   ::paikkaus/massamaara (when (and (::paikkaus/massamenekki paikkaus) pinta-ala)
+                                           (* (/ (::paikkaus/massamenekki paikkaus) 1000) pinta-ala)))
         tyomenetelma (if (string? tyomenetelma)
                        (hae-tyomenetelman-id db tyomenetelma)
                        tyomenetelma)

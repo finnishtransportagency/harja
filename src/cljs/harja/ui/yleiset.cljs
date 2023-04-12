@@ -727,7 +727,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    (assert (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
    [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-          :style {:width leveys}}
+          :style {:width leveys :white-space "pre-line"}}
     [:div.infolaatikon-ikoni
      (case tyyppi
        :varoitus (ikonit/livicon-warning-sign)
@@ -735,7 +735,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
        :vahva-ilmoitus (ikonit/status-info-inline-svg +vari-black-light+)
        :neutraali (ikonit/status-info-inline-svg +vari-black-light+))]
     [:div {:style {:width "95%" :padding-top "16px" :padding-bottom "16px"}}
-     [:div {:style {:padding-left "8px"}}
+     [:div {:style {:padding-left "8px" :white-space "pre-line"}}
       ensisijainen-viesti]
      (when toissijainen-viesti
        [:div {:style {:padding-left "8px" :font-weight 400}}

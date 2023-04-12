@@ -218,12 +218,11 @@
   "Luo JSON-vastauksen joko annetulla statuksella tai oletuksena statuksella 200 (ok).
   Payload on Clojure dataa, joka muunnetaan JSON-dataksi."
   [status payload request-origin]
-  (if payload
+  (merge
     {:status status
-     :headers (lisaa-request-headerit false request-origin)
-     :body (cheshire/generate-string payload)}
-    {:status status
-     :headers (lisaa-request-headerit false request-origin)}))
+     :headers (lisaa-request-headerit false request-origin)}
+    (when payload
+      {:body (cheshire/generate-string payload)})))
 
 (defn kasittele-invalidi-json [resurssi otsikot kutsu virheet]
   (if (> (count kutsu) 10000)
@@ -512,8 +511,13 @@
                     (:headers request)
                     nil
                     #(let
-                       [_ (vaadi-jarjestelmaoikeudet db kayttaja vaadi-analytiikka-oikeus?)]
-                       (tee-optimoitu-json-vastaus 200 (kasittele-kutsu-fn parametrit kayttaja db) request-origin)))]
+                       [_ (vaadi-jarjestelmaoikeudet db kayttaja vaadi-analytiikka-oikeus?)
+                        payload (kasittele-kutsu-fn parametrit kayttaja db)]
+                       (if (nil? payload)
+                         ;; Saatiin null vastaus, joka viittaa siihen, että vastaus on liian suuri käsiteltäväksi
+                         {:status 413
+                          :body "Virhe: Liian suuri aineisto palautettavaksi."}
+                         (tee-optimoitu-json-vastaus 200 payload request-origin))))]
       (when integraatioloki
         (lokita-vastaus integraatioloki resurssi {:status (:status vastaus)
                                                   :body "Liian iso logitettavaksi"} tapahtuma-id))

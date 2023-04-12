@@ -528,12 +528,14 @@
   "Näyttää YHA-tuontidialogin, jos tarvii."
   [urakka]
   (let [yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? urakka)
-        paallystysurakka? (= (:tyyppi urakka) :paallystys)
+        paallystysurakka? (urakka-domain/paallystysurakka? urakka)
         paallystysurakka-sidottu? (some? (:yhatiedot urakka))
+        paikkausurakka? (urakka-domain/paikkausurakka? urakka)
         sidonta-lukittu? (get-in urakka [:yhatiedot :sidonta-lukittu?])
-        palvelusopimus? (= :palvelusopimus (:sopimustyyppi urakka))]
+        palvelusopimus? (urakka-domain/paallystyksen-palvelusopimus? urakka)]
     (when (and yha-tuontioikeus?
                paallystysurakka?
+               (not paikkausurakka?)
                (not paallystysurakka-sidottu?)
                (not sidonta-lukittu?)
                (not palvelusopimus?))
