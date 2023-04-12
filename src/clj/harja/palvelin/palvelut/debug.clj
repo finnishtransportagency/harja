@@ -77,10 +77,10 @@
                          rajoitusalueet)]
     rajoitusalueet))
 
-(defn- paivan-suolatoteumat
-  "Rajoitettu yhteen päivään, koska muuten haku on raskas ja dataa on helposti liikaa"
+(defn- hae-suolatoteumat
+  "Älä hae tällä liian laajalta aikaväliltä"
   [db tiedot]
-  (let [suolat (suolarajoitus-kyselyt/hae-paivan-suolatoteumageometriat db tiedot)
+  (let [suolat (suolarajoitus-kyselyt/hae-suolatoteumageometriat db tiedot)
         suolat (map (fn [s]
                               (-> s
                                 (assoc :sijainti (geo/pg->clj (:sijainti s)))))
@@ -115,7 +115,7 @@
       :debug-hae-rajoitusalueet
       (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
       :debug-hae-paivan-suolatoteumat
-      (vaadi-jvh! (partial #'paivan-suolatoteumat db)))
+      (vaadi-jvh! (partial #'hae-suolatoteumat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]

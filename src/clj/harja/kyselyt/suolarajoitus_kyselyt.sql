@@ -500,7 +500,7 @@ SELECT r.id, r.tierekisteriosoite, r.sijainti
   FROM rajoitusalue r
  WHERE r.urakka_id = :urakka-id::INT;
 
--- name: hae-paivan-suolatoteumageometriat
+-- name: hae-suolatoteumageometriat
 SELECT sr.sijainti, t.alkanut
   FROM toteuma t
        JOIN suolatoteuma_reittipiste sr on sr.toteuma = t.id
