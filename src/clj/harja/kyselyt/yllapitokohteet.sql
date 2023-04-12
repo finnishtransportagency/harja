@@ -373,6 +373,7 @@ SELECT
   raekoko,
   tyomenetelma,
   massamaara            AS "massamaara",
+  massamenekki          AS "massamenekki",
   toimenpide,
   sijainti
 FROM yllapitokohdeosa ypko
@@ -399,6 +400,7 @@ SELECT
   raekoko,
   tyomenetelma,
   massamaara                         AS "massamaara",
+  massamenekki                       AS "massamenekki",
   toimenpide,
   ST_Simplify(sijainti, :toleranssi) AS sijainti
 FROM yllapitokohdeosa ypko
