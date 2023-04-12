@@ -11,11 +11,13 @@
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [harja.kyselyt.paikkaus :as paikkaus-q]
             [harja.kyselyt.konversio :as konv]
+            [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.paikkaus :as paikkaus]
             [harja.tyokalut.paikkaus-test :refer :all]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
             [harja.palvelin.integraatiot.api.paikkaukset :as api-paikkaukset]
             [harja.palvelin.palvelut.yllapitokohteet.paikkaukset :as palvelu-paikkaukset]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.tierekisteri :as tierekisteri]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.yha.tyokalut :refer :all]
@@ -47,16 +49,25 @@
                (.replace "<PAIKKAUSTUNNISTE>" (str paikkaustunniste))
                (.replace "<KOHDETUNNISTE>" (str kohdetunniste)))
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka "/paikkaus"] kayttaja portti json)
+        odotettu-leveys 10M
+        tr-osoite {::tierekisteri/aet 1
+                   ::tierekisteri/let 16
+                   ::tierekisteri/tie 20
+                   ::tierekisteri/aosa 1
+                   ::tierekisteri/losa 5}
+        tr-osoite-tr-alkuisena (tr-domain/tr-alkuiseksi tr-osoite)
+        osien-pituudet-tielle (yllapitokohteet-yleiset/laske-osien-pituudet db [tr-osoite-tr-alkuisena])
+        paikkauksen-pituus (tr-domain/laske-tien-pituus (osien-pituudet-tielle 20) tr-osoite-tr-alkuisena) ;; 15953 m
+        odotettu-pinta-ala (* paikkauksen-pituus odotettu-leveys) ;; 159530 m2
+        odotettu-massamaara 1914.360M ;; laskettu kertomalla massamenekki t/m2 pinta-alan m2 kanssa (12 / 1000) * 159530
         odotettu-paikkaus {::paikkaus/tyomenetelma (hae-tyomenetelman-arvo :id :lyhenne "UREM" tyomenetelmat)
                            ::paikkaus/raekoko 1
                            ::paikkaus/ulkoinen-id 3453455
-                           ::paikkaus/leveys 10M
+                           ::paikkaus/leveys odotettu-leveys
                            ::paikkaus/urakka-id 4
-                           ::paikkaus/tierekisteriosoite {::tierekisteri/aet 1
-                                                          ::tierekisteri/let 16
-                                                          ::tierekisteri/tie 20
-                                                          ::tierekisteri/aosa 1
-                                                          ::tierekisteri/losa 5}
+                           ::paikkaus/tierekisteriosoite tr-osoite
+                           ::paikkaus/pinta-ala odotettu-pinta-ala
+                           ::paikkaus/massamaara odotettu-massamaara
                            ::paikkaus/massatyyppi "AB, Asfalttibetoni"
                            ::paikkaus/kuulamylly "AN5"
                            ::paikkaus/massamenekki 12M
