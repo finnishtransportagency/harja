@@ -120,7 +120,10 @@ SELECT distinct tpk3.id       as "toimenpide-id",
                 tr3.poistettu as "tehtavaryhma-poistettu"
 FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo and tr3.nimi not like ('%Lisätyöt%')
+       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
+                                    and tr3.nimi not like ('%Lisätyöt%')
+                                    -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
+                                    and tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'
        LEFT JOIN toimenpidekoodi tpk4
                  ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true

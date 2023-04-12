@@ -39,10 +39,10 @@ let valitseKulunPvm = () => {
 let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.contains('Tallenna').click();
 
-    cy.contains('Kulujen kohdistus')
+    cy.contains('Kulujen kohdistus');
 
-    cy.get('.pvm-kentta > input').eq(0).type('{selectall}29.09.2021')
-    cy.get('.pvm-kentta > input').eq(1).type('{selectall}29.09.2021')
+    cy.get('.pvm-kentta > input').eq(0).click().wait(3000).type('{selectall}29.09.2021');
+    cy.get('.pvm-kentta > input').eq(1).click().wait(3000).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
 
 

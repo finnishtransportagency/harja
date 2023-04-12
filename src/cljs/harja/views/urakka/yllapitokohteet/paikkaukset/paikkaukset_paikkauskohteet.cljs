@@ -111,7 +111,7 @@
                 ;; Alueurakoitsijat ja tiemerkkarit näkevät listassa muiden urakoiden tietoja
                 ;; Niimpä varmistetaan, että käyttäjällä on kustannusoikeudet paikkauskohteisiin
                 (when nayta-hinnat?
-                  {:otsikko "Suun. hinta"
+                  {:otsikko "Suunn. hinta"
                    :leveys 1.7
                    :nimi :suunniteltu-hinta
                    :fmt fmt/euro-opt
