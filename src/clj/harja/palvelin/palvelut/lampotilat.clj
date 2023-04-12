@@ -19,16 +19,16 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
   ;; Ilmatieteenlaitos käyttää :urakka-id -kentässään Harjan :alueurakkanro -kenttää, siksi muunnoksia alla
-  (let [hae-urakoiden-lampotilat (fn [url]
+  (let [hae-urakoiden-lampotilat (fn [url keskiarvo-alkuvuosi]
                                    (into {}
                                          (map (juxt :urakka-id #(dissoc % :urakka-id)))
-                                         (ilmatieteenlaitos/hae-talvikausi url vuosi)))
-        hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url)
+                                         (ilmatieteenlaitos/hae-talvikausi url vuosi keskiarvo-alkuvuosi)))
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
-                                                (str/replace url "tieindeksi2" "tieindeksi"))
-        hoidon-urakoiden-lampotilat-1991-2020 nil #_(hae-urakoiden-lampotilat
-                                                ;; TODO: Odota vastaus spostiin, mistä saadaan nämä.
-                                                (str/replace url "???" "tieindeksi"))
+                                                (str/replace url "tieindeksi2" "tieindeksi") nil)
+        hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url 1981)
+        ;; Ei voida hakea 91-20 keskiarvoa ennen vuotta 2021, koska keskiarvoa ei ole muodostettu.
+        hoidon-urakoiden-lampotilat-1991-2020 (when (> vuosi 2020)
+                                                (hae-urakoiden-lampotilat url 1991))
         hoidon-urakka-ja-alueurakkanro-avaimet
         (urakat/hae-aktiivisten-hoitourakoiden-alueurakkanumerot db vuosi)
         tulos (into {}
@@ -40,11 +40,11 @@
                                ;; sekä varmistetaan vielä erikseen että uuden vertailukauden ka on avaimessa :keskilampotila-1981-2010
                                ;; ja vanhan vertailukauden avaimessa :keskilampotila-1971-2000
                                (or
+                                 (get hoidon-urakoiden-lampotilat-1991-2020
+                                   (:alueurakkanro urakka))
                                  (get hoidon-urakoiden-lampotilat-1981-2010
                                    (:alueurakkanro urakka))
                                  (get hoidon-urakoiden-lampotilat-1971-2000
-                                   (:alueurakkanro urakka))
-                                 (get hoidon-urakoiden-lampotilat-1991-2020
                                    (:alueurakkanro urakka)))
                                {:keskilampotila-1981-2010 (:pitkakeskilampotila
                                                             (get hoidon-urakoiden-lampotilat-1981-2010

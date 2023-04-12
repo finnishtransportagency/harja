@@ -26,7 +26,7 @@
 (defn yhdista-lampotilat [vanha uusi]
   (assoc vanha
          :keskilampotila (or (:keskilampotila uusi) (:keskilampotila vanha))
-         :keskilampotila-1981-2010 (or (:keskilampotila-1991-2020 uusi) (:keskilampotila-1991-2020 vanha))
+         :keskilampotila-1991-2020 (or (:keskilampotila-1991-2020 uusi) (:keskilampotila-1991-2020 vanha))
          :keskilampotila-1981-2010 (or (:keskilampotila-1981-2010 uusi) (:keskilampotila-1981-2010 vanha))
          :keskilampotila-1971-2000 (or (:keskilampotila-1971-2000 uusi) (:keskilampotila-1971-2000 vanha))))
 
@@ -114,5 +114,5 @@
             (yleiset/vihje "Ilmatieteenlaitokselta saa tietoja hoitokaudesta 2011-2012 eteenpäin"))
           [:div.ilmatieteenlaitos-linkki
            [:span "Voit myös katsella lämpötiloja "]
-           [:a {:href "http://weather.weatherproof.fi/tieindeksi2/index.php?"}
+           [:a {:href "https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset.php"}
             "Ilmatieteenlaitoksen palvelussa"]]]]))))

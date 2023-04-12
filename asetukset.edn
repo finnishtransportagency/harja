@@ -101,7 +101,7 @@
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
- :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
+ :ilmatieteenlaitos {:lampotilat-url "https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
