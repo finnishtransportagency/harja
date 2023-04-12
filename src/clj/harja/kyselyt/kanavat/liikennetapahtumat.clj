@@ -141,30 +141,29 @@
         [alku loppu] aikavali]
     (hae-tapahtumien-perustiedot*
       (specql/fetch db
-                    ::lt/liikennetapahtuma
-                    (set/union
-                      lt/perustiedot
-                      lt/kuittaajan-tiedot
-                      lt/sopimuksen-tiedot
-                      lt/alusten-tiedot
-                      ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
-                      ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
-                      #{::lt/kohde-id})
-                    (op/and
-                      (when (and alku loppu)
-                        {::lt/aika (op/between alku loppu)})
-                      (when kohde-id
-                        {::lt/kohde-id kohde-id})
-                      (op/and
-                        {::m/poistettu? false
-                         ::lt/urakka-id (op/in urakka-idt)}
-                        (when (or suunta aluslajit)
-                          {::lt/alukset (op/and
-                                          (when suunta
-                                            {::lt-alus/suunta suunta})
-                                          {::lt-alus/laji (if (empty? aluslajit)
-                                                            (op/in (map name lt-alus/aluslajit))
-                                                            (op/in (map name aluslajit)))})}))))
+        ::lt/liikennetapahtuma
+        (set/union
+          lt/perustiedot
+          lt/kuittaajan-tiedot
+          lt/sopimuksen-tiedot
+          lt/alusten-tiedot
+          ;; Liikennetapahtumalle tarvitaan kohde JA kohteenosat, mutta specql
+          ;; bugittaa eikä saa palautettua kaikkea dataa. Liitetään kohdetiedot erikseen.
+          #{::lt/kohde-id})
+        (op/and
+          (when (and alku loppu)
+            {::lt/aika (op/between alku loppu)})
+          (when kohde-id
+            {::lt/kohde-id kohde-id})
+          (when (or suunta (not (empty? aluslajit)))
+            {::lt/alukset (op/and
+                            (when suunta
+                              {::lt-alus/suunta suunta})
+                            {::lt-alus/laji (if (empty? aluslajit)
+                                              (op/in (map name lt-alus/aluslajit))
+                                              (op/in (map name aluslajit)))})})
+          {::m/poistettu? false
+           ::lt/urakka-id (op/in urakka-idt)}))
       tiedot)))
 
 (defn hae-liikennetapahtumat [db user tiedot]
