@@ -70,3 +70,10 @@
     (suorita-ja-kirjaa-alku-loppu-ajat
       #(varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki this) (:db this) asetukset)
       "paivita-mhu-urakka-oidt-velhosta")))
+
+;; Esimerkki miten testiajojen suorittaminen onnistuu
+(comment 
+  (def j harja.palvelin.main/harja-jarjestelma)
+  (def asetukset (get-in j [:velho-integraatio :asetukset]))
+  (varusteet/paivita-mhu-urakka-oidt-velhosta (:integraatioloki j) (:db j) asetukset)
+  (varusteet/tuo-uudet-varustetoteumat-velhosta (:integraatioloki j) (:db j) asetukset))

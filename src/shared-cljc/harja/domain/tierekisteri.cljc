@@ -59,7 +59,7 @@
 
 (defn tr-alkuiseksi [osoite]
   "Muuntaa osoitteen avaimet tr-prefiksatuiksi"
-  (muunna-osoitteen-avaimet :tr-tie :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
+  (muunna-osoitteen-avaimet :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :tr-ajorata :tr-kaista osoite))
 
 (defn samalla-tiella? [tie1 tie2]
   (= (::tie (normalisoi tie1)) (::tie (normalisoi tie2))))
@@ -498,3 +498,9 @@
    :tr-alkuetaisyys :tr-alkuetaisyys
    :tr-loppuosa :tr-loppuosa
    :tr-loppuetaisyys :tr-loppuetaisyys})
+
+(defn tr-osoite-moderni-fmt
+  "Formatoi tr-osoitteen kentät modernilla tavalla, esim 4 - 1/0 - 3/300"
+  ;; Tätä on alettu käyttää enemmän noin 2022 tienoilla, ainakin paikkauspuolella.
+  [tie alkuosa alkuet loppuosa loppuet]
+  (str tie " - " alkuosa "/" alkuet " - " loppuosa "/" loppuet))
