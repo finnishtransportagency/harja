@@ -1,4 +1,4 @@
-(ns harja.palvelin.komponentit.tuck-remoting-test
+(ns harja.palvelin.komponentit.tuck-remoting.tuck-remoting-test
   (:require
     [com.stuartsierra.component :as component]
     [clojure.test :as t :refer [deftest is use-fixtures compose-fixtures testing]]
