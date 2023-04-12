@@ -44,9 +44,9 @@
                     <!--Optional:-->
                     <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
                     <!--Optional:-->
-                    <nykyinen-paallyste>1</nykyinen-paallyste>
+                    <yllapitoluokka>1</yllapitoluokka>
                     <!--Optional:-->
-            <yllapitoluokka>1</yllapitoluokka>
+                    <nykyinen-paallyste>1</nykyinen-paallyste>
                 </alikohde>
                 <alikohde>
                     <yha-id>4</yha-id>
@@ -74,9 +74,9 @@
                     <!--Optional:-->
                     <keskimaarainen-vuorokausiliikenne>1000</keskimaarainen-vuorokausiliikenne>
                     <!--Optional:-->
-                    <nykyinen-paallyste>1</nykyinen-paallyste>
-                    <!--Optional:-->
                     <yllapitoluokka>1</yllapitoluokka>
+                    <!--Optional:-->
+                    <nykyinen-paallyste>1</nykyinen-paallyste>
                 </alikohde>
             </alikohteet>
         </kohde>
