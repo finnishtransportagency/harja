@@ -864,9 +864,9 @@ BEGIN
             hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan := 0.0;
 
 
-            IF (t.tuotekoodi = '20190') THEN -- MHU Ylläpito
+            IF (hk_alkupvm >= '2022-10-01'::DATE AND t.tuotekoodi = '20190') THEN -- MHU Ylläpito
                 -- Alihankintabokset on määritelty toimenpideinstassille: MHU ja HJU hoidon johto
-                -- Mutta ne halutaan kuitenkin näyttää MHU Ylläpidon alla rahavarauksina.
+                -- Mutta ne halutaan kuitenkin näyttää MHU Ylläpidon alla rahavarauksina vuoden 2022 jälkeen
                 -- Tästä syystä ei verrata toimenpideinstanssia ollenkaan, vaan pelkästään bonuksen tyyppiä.
                 FOR erilliskustannus_rivi IN SELECT ek.pvm, ek.rahasumma, ek.indeksin_nimi, ek.tyyppi, ek.urakka
                                              FROM erilliskustannus ek
@@ -910,7 +910,26 @@ BEGIN
 
                         RAISE NOTICE ' ********************************************* ERILLISKUSTANNUS - MHU Hoidonjohdolle Tyyppi = % ', erilliskustannus_rivi.tyyppi;
 
-                        IF erilliskustannus_rivi.tyyppi = 'lupausbonus' THEN
+                        -- Alihankintabonukselle ei tule indeksikorotusta, joten tämä saa jäädä näin.
+                        -- Kun on aikaa, niin tämän voisi laittaa käyttämään erilliskustannuksen_indeksilaskentaa, vaikka korotusta ei tulisikaan
+                        -- Mutta se olisi yhdenmukaisempaa
+                        -- Alihankintabonus lasketaan bonuksiin vain, jos katsellaan 2021 alkavia hoitokausia ja sitä aikaisempi ajankohtia
+                        IF (hk_alkupvm < '2022-10-01'::DATE AND erilliskustannus_rivi.tyyppi = 'alihankintabonus') THEN
+                            -- Bonus :: alihankintabonus
+                            IF erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                -- Hoitokauden alusta
+                                alihank_bon_laskutettu :=
+                                            alihank_bon_laskutettu + COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
+
+                                IF erilliskustannus_rivi.pvm >= aikavali_alkupvm AND
+                                   erilliskustannus_rivi.pvm <= aikavali_loppupvm THEN
+                                    -- Laskutetaan nyt
+                                    alihank_bon_laskutetaan := alihank_bon_laskutetaan +
+                                                               COALESCE(erilliskustannus_rivi.rahasumma, 0.0);
+                                END IF;
+                            END IF;
+
+                        ELSEIF erilliskustannus_rivi.tyyppi = 'lupausbonus' THEN
                             -- Bonus :: lupausbonus
                             SELECT *
                             FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.pvm,
@@ -1028,14 +1047,15 @@ BEGIN
                 tavoitehinnan_ulk_rahav_laskutetaan := COALESCE(tavoitehinnan_ulk_rahav_rivi.summa, 0.0);
 
                 RAISE NOTICE 'Tavoitehinnan ulkopuoliset rahavaraukset laskutettu bonukseksi: % :: %', tavoitehinnan_ulk_rahav_laskutettu, tavoitehinnan_ulk_rahav_laskutetaan;
+                RAISE NOTICE 'Alihankintabonus laskutettu :: laskutetaan: % :: %', alihank_bon_laskutettu, alihank_bon_laskutetaan;
                 RAISE NOTICE 'Lupausbonus laskutettu :: laskutetaan: % :: %', lupaus_bon_laskutettu, lupaus_bon_laskutetaan;
                 RAISE NOTICE 'Asiakastyytyväisyysbonus laskutettu :: laskutetaan: % :: %', asiakas_tyyt_bon_laskutettu, asiakas_tyyt_bon_laskutetaan;
                 RAISE NOTICE 'Tavoitepalkkio laskutettu :: laskutetaan: % :: %', tavoitepalkk_bon_laskutettu, tavoitepalkk_bon_laskutetaan;
 
-                bonukset_laskutettu := bonukset_laskutettu + lupaus_bon_laskutettu +
+                bonukset_laskutettu := bonukset_laskutettu + alihank_bon_laskutettu + lupaus_bon_laskutettu +
                                        asiakas_tyyt_bon_laskutettu + tavoitepalkk_bon_laskutettu + muu_bonus_laskutettu
                                            + tavoitehinnan_ulk_rahav_laskutettu;
-                bonukset_laskutetaan := bonukset_laskutetaan + lupaus_bon_laskutetaan +
+                bonukset_laskutetaan := bonukset_laskutetaan + alihank_bon_laskutetaan + lupaus_bon_laskutetaan +
                                         asiakas_tyyt_bon_laskutetaan + tavoitepalkk_bon_laskutetaan + muu_bonus_laskutetaan
                                             + tavoitehinnan_ulk_rahav_laskutetaan;
                 RAISE NOTICE 'Bonuksia laskutettu :: laskutetaan: % :: %', bonukset_laskutettu, bonukset_laskutetaan;

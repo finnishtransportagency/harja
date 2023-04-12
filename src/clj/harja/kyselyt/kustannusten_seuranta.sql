@@ -422,7 +422,7 @@ UNION ALL
 -- kustannusarvoidut_työt
 SELECT 0                        AS budjetoitu_summa,
        0                        AS budjetoitu_summa_indeksikorjattu,
-       SUM((SELECT CASE WHEN ek.tyyppi = 'alihankintabonus' THEN (korotettuna * -1) ELSE korotettuna END korotettuna
+       SUM((SELECT CASE WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN (korotettuna * -1) ELSE korotettuna END korotettuna
               FROM erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi,
                  ek.rahasumma,ek.urakka , ek.tyyppi,
 CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS toteutunut_summa,
@@ -431,22 +431,22 @@ CASE WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE ELSE FALSE END))) AS
            WHEN ek.tyyppi = 'alihankintabonus' THEN 'alihankintabonus'
            ELSE 'bonus' END     AS maksutyyppi,
        CASE
-           WHEN ek.tyyppi = 'alihankintabonus' THEN 'rahavaraus'
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraus'
            ELSE 'bonus' END     AS toimenpideryhma,
        CASE
-           WHEN ek.tyyppi = 'alihankintabonus' THEN 'Tilaajan rahavaraus (T3)'
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'Tilaajan rahavaraus (T3)'
            ELSE MIN(ek.tyyppi)::TEXT END AS tehtava_nimi,
        CASE
-           WHEN ek.tyyppi = 'alihankintabonus' THEN 'MHU Ylläpito'
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'MHU Ylläpito'
            ELSE 'bonukset' END  AS toimenpide,
        MIN(ek.luotu)            AS luotu,
        MIN(ek.pvm)::TEXT        AS ajankohta,
        CASE
-           WHEN ek.tyyppi = 'alihankintabonus' THEN 'toteutunut'
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'toteutunut'
            ELSE 'bonus' END     AS toteutunut,
        0                        AS jarjestys,
        CASE
-           WHEN ek.tyyppi = 'alihankintabonus' THEN 'rahavaraukset'
+           WHEN :hoitokauden-alkuvuosi::INTEGER >= 2022 AND ek.tyyppi = 'alihankintabonus' THEN 'rahavaraukset'
            ELSE 'bonukset' END  AS paaryhma,
        NOW()                    AS indeksikorjaus_vahvistettu -- erilliskustannuksia ei indeksivahvisteta, joten ne on aina "true"
 FROM erilliskustannus ek
