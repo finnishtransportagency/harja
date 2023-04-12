@@ -126,5 +126,6 @@
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet
-      :debug-hae-rajoitusalueet)
+      :debug-hae-rajoitusalueet
+      :debug-hae-paivan-suolatoteumat)
     this))
