@@ -1189,7 +1189,7 @@
                                (pvm-tyhjana rivi))]
           [:span.pvm-aika-kentta
            [:div.inline-block
-            [:input.pvm {:class (when lomake? "form-control")
+            [:input.pvm {:class (when lomake? "form-control margin-bottom-4")
                          :placeholder "pp.kk.vvvv"
                          :on-click #(do (.stopPropagation %)
                                         (.preventDefault %)

@@ -72,43 +72,38 @@
           nolla (+ 2 nolla)]
 
       (doall
-       ;; Käydään läpi annettujen parametrien (yhteenveto) avaimet
-       (for [x (keys sarakkeiden-arvot)]
+        ;; Käydään läpi annettujen parametrien (yhteenveto) avaimet
+        (for [x (keys sarakkeiden-arvot)]
 
-         (let [rivi-indeksi (.indexOf (keys sarakkeen-ensimmainen-solu) x)
-               nolla (+ nolla rivi-indeksi)
-               rivi (.createRow sheet nolla)
-               tyyli-normaali (excel/create-cell-style! workbook {:font {:color :black
-                                                                         :size 12
-                                                                         :bold false
-                                                                         :name "Aria"}})
-               ensimmainen-sarake (.createCell rivi 0)]
+          (let [rivi-indeksi (.indexOf (keys sarakkeen-ensimmainen-solu) x)
+                nolla (+ nolla rivi-indeksi)
+                rivi (.createRow sheet nolla)
+                tyyli-normaali (excel/create-cell-style! workbook {:font {:color :black
+                                                                          :size 12
+                                                                          :bold false
+                                                                          :name "Aria"}})
+                ensimmainen-sarake (.createCell rivi 0)]
 
-           ;; Tehdään uusi rivi ja ensimmäinen sarake
-           (excel/set-cell! ensimmainen-sarake (str (x sarakkeen-ensimmainen-solu)))
-           (excel/set-cell-style! ensimmainen-sarake tyyli-normaali)
+            ;; Tehdään uusi rivi ja ensimmäinen sarake
+            (excel/set-cell! ensimmainen-sarake (str (x sarakkeen-ensimmainen-solu)))
+            (excel/set-cell-style! ensimmainen-sarake tyyli-normaali)
 
-           ;; Mergetään sarakkeita, hieman luettavampi
-           (.addMergedRegion sheet (CellRangeAddress. nolla nolla 0 1))
+            ;; Loput sarakkeet
+            (doseq [y (get sarakkeiden-arvot x)]
 
-           ;; Loput sarakkeet
-           (doseq [y (get sarakkeiden-arvot x)]
+              (let [nimi (liikenneyhteenveto-arvo-str sarakkeen_nimet x (first y))
+                    arvo (liikenneyhteenveto-arvo-str sarakkeiden-arvot x (first y))
+                    ;; Sarake indeksi (mille sarakkeelle data laitetaan)
+                    ;; Avaimet on indeksijärjestyksessä
+                    indeksi (inc (.indexOf (keys (x sarakkeen_nimet)) (first y)))
+                    solu-nro (dec indeksi)
+                    solu (.createCell rivi solu-nro)]
 
-             (let [nimi (liikenneyhteenveto-arvo-str sarakkeen_nimet x (first y))
-                   arvo (liikenneyhteenveto-arvo-str sarakkeiden-arvot x (first y))
-                   ;; Sarake indeksi (mille sarakkeelle data laitetaan)
-                   ;; Avaimet on indeksijärjestyksessä
-                   indeksi (inc (.indexOf (keys (x sarakkeen_nimet)) (first y)))
-                   ;; Lisätään *3 koska mergetään nämä rivit jotta data mahtuu sarakkeisiin ja sitä voi lukea
-                   indeksi (* indeksi 3)
-                   solu-nro (dec indeksi)
-                   ;; Neljännet arvot mergetään kolmella sarakkeella, tulee luettavampi
-                   merge (if (= solu-nro 11) (+ 2 solu-nro) (inc solu-nro))
-                   _ (.addMergedRegion sheet (CellRangeAddress. nolla nolla solu-nro merge))
-                   solu (.createCell rivi solu-nro)]
+                (excel/set-cell! solu (str nimi arvo))
+                (excel/set-cell-style! solu raportin-tiedot-tyyli)
 
-               (excel/set-cell! solu (str nimi arvo))
-               (excel/set-cell-style! solu raportin-tiedot-tyyli)))))))
+                ;; Korjattu välitys
+                (.autoSizeColumn sheet solu-nro)))))))
 
     (catch Throwable t
       (log/error t "Virhe Excel muodostamisessa (liikenneyhteenveto)"))))

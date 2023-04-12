@@ -19,10 +19,35 @@ Periaatteet:
         grid-template-columns: 1fr 2fr;
     }
 
+    .css-grid-colums-4x1 {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    @media (min-width: @screen-sm-min) {
+        .sm-css-grid-colums-4x1 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
     /* ----- Fixed values---- */
 
     .css-grid-colums-12rem-9 {
         grid-template-columns: 12rem 9fr;
+    }
+
+    /* ----- Column gap ---- */
+    .css-grid-colums-gap-32 {
+     column-gap: 2rem;
+    }
+
+    /* ----- Items : Start & end ---- */
+    .grid-column-start-1 {
+        grid-column-start: 1;
+    }
+
+    .grid-column-end-5 {
+        grid-column-start: 5;
+
     }
 
 }
