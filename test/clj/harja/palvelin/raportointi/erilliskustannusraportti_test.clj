@@ -148,7 +148,13 @@
                        {:fmt :raha
                         :leveys 6
                         :otsikko "Ind.korotus"})
-                     '(["15.03.2020"
+                     '(["15.01.2021"
+                        "666-TES"
+                        "Oulu MHU Hallinnolliset toimenpiteet TP"
+                        "Alihankinta­bonus"
+                        1000M
+                        0]
+                       ["15.03.2020"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
                         "Lupaus­bonus"
@@ -188,7 +194,7 @@
                          ""
                          ""
                          ""
-                         5000M
+                         6000M
                          202.500M))]]))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii
