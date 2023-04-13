@@ -323,7 +323,7 @@
                                 muokkaa-aina virheet muokatut tallennus-kaynnissa ennen-muokkausta
                                 tallenna-vain-muokatut nollaa-muokkaustiedot! aloita-muokkaus! peru! voi-kumota?
                                 peruuta otsikko validoi-fn tunniste nollaa-muokkaustiedot-tallennuksen-jalkeen?
-                                raporttivienti raporttiparametrit virhe-viesti]} skeema tiedot]
+                                raporttivienti raporttiparametrit virhe-viesti raporttivienti-lapinakyva?]} skeema tiedot]
   [:div.panel-heading
    (if-not muokataan
      [:span.pull-right.muokkaustoiminnot
@@ -366,8 +366,10 @@
                                         parametrit raporttiparametrit]
                                     (set! (.-value input)
                                           (tr/clj->transit parametrit))
-                                    true))]
-
+                                    true))
+              
+              raportin-napin-tyyli (if raporttivienti-lapinakyva? :button.nappi-toissijainen :button.nappi-ensisijainen)]
+          
           (if (not (empty? raporttivienti))
             [:span.raporttiviennit
              (map-indexed (fn [idx [ikoni teksti id url]]
@@ -377,7 +379,7 @@
                                     :action url}
                              [:input {:type "hidden" :name "parametrit"
                                       :value ""}]
-                             [:button.nappi-ensisijainen
+                             [raportin-napin-tyyli
                               {:type "submit"
                                :class (when (or (not= idx (- (count valitut-raportin-vientimuodot) 1))
                                                 tallenna) "margin-rightia")
@@ -805,6 +807,8 @@
                                         riveille yhteinen sääntö milloin rivejä saa muokata
   :raporttivienti                       Setti mitä raporttivientejä gridistä mahdollistetaan. Tuetut: :pdf ja :excel
   :raporttiparametrit                   Mäpissä raporttiparametrit, usein esim. nimi ja aikaväli ja urakkatyyppi
+  :raporttivienti-lapinakyva?           Boolean, käytetäänkö läpinäkyviä pdf/excel vientinappeja?
+
   :esta-tiivis-grid?                    Boolean, jolla voi estää tiiviin gridin tyylittelyn
   :sivuttain-rullattava?                Boolean, jolla mahdollistetaan gridin sivuttain rullaus, jos grid ei mahdu
                                         näytölle. Estää myös solujen rivittymisen.
@@ -1125,7 +1129,7 @@
                     piilota-toiminnot? nayta-toimintosarake? rivin-infolaatikko mahdollista-rivin-valinta?
                     muokkaa-footer muokkaa-aina rivin-luokka uusi-rivi tyhja vetolaatikot sivuta
                     rivi-valinta-peruttu korostustyyli max-rivimaara max-rivimaaran-ylitys-viesti piilota-muokkaus?
-                    validoi-fn voi-kumota? raporttivienti raporttiparametrit virhe-viesti data-cy reunaviiva?
+                    validoi-fn voi-kumota? raporttivienti raporttiparametrit raporttivienti-lapinakyva? virhe-viesti data-cy reunaviiva?
                     esta-tiivis-grid? ensimmainen-sarake-sticky? avattavat-rivit sivuttain-rullattava? paneelikomponentit] :as opts}
             skeema alkup-tiedot]
         (let [voi-kumota? (if (some? voi-kumota?) voi-kumota? true)
@@ -1177,6 +1181,7 @@
                                :nollaa-muokkaustiedot-tallennuksen-jalkeen? nollaa-muokkaustiedot-tallennuksen-jalkeen?
                                :tunniste tunniste :ennen-muokkausta ennen-muokkausta
                                :raporttivienti raporttivienti :raporttiparametrit raporttiparametrit
+                               :raporttivienti-lapinakyva? raporttivienti-lapinakyva?
                                :validoi-fn validoi-fn :virhe-viesti virhe-viesti}
                               skeema
                               tiedot))
