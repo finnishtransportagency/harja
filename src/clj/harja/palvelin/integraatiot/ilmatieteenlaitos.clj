@@ -5,8 +5,9 @@
             [clojure.zip :refer [xml-zip]]
             [clojure.data.zip.xml :as z]
             [slingshot.slingshot :refer [throw+]]
-            [clojure.string :as str]))
-            
+            [clojure.string :as str]
+            [harja.palvelin.integraatiot.integraatiotapahtuma :as integraatiotapahtuma]))
+
 
 (defn- lue-lampotilat [tieindeksi]
   (z/xml-> tieindeksi
@@ -27,30 +28,31 @@
   "Haetaan talvikausi ilmatieteenlaitoksen rajapinnasta.
    1971-2000 väli käyttää vanhempaa rajapintaa, joka ei ota vastaan aikaväliä. Jos käytät tätä, jätä keskiarvon-alkuvuosi tyhjäksi.
    1981-2010 ja 1991-2020 käyttävät uudempaa rajapintaa, ja aikaväli laitetaan climatology-parametrissa. Välitä tämä keskiarvon-alkuvuosi-parametrissa. "
-  [endpoint-url talvikauden-alkuvuosi keskiarvon-alkuvuosi]
+  [db integraatioloki endpoint-url talvikauden-alkuvuosi keskiarvon-alkuvuosi]
   (log/debug "hae talvikausi ilmatieteenlaitokselta: " endpoint-url " talvikauden alkuvuosi " talvikauden-alkuvuosi)
-  ;; TODO: Käytä integraatiotapahtumaa.
-  (let [{:keys [status body error headers]} @(http/post endpoint-url
-                                               {:query-params (merge
-                                                                {"season" (str talvikauden-alkuvuosi
-                                                                                 "-"
-                                                                                 (inc talvikauden-alkuvuosi))
-                                                                 "newversion" 1}
-                                                                (when keskiarvon-alkuvuosi
-                                                                  {"climatology" (str keskiarvon-alkuvuosi
-                                                                                   "-"
-                                                                                   (+ keskiarvon-alkuvuosi 29))}))
-                                                :timeout 10000})]
+  (let [{:keys [status body error headers]}
+        (integraatiotapahtuma/suorita-integraatio db integraatioloki "ilmatieteenlaitos" "lampotilojen-haku"
+          (fn [konteksti]
+            (let [talvikausi (str talvikauden-alkuvuosi "-" (inc talvikauden-alkuvuosi))
+                  keskiarvokausi (when keskiarvon-alkuvuosi
+                                   (str keskiarvon-alkuvuosi "-" (+ keskiarvon-alkuvuosi 29)))
+                  parametrit {:season talvikausi
+                              :climatology keskiarvokausi
+                              :newversion 1}
+                  http-asetukset {:metodi :POST
+                                  :url endpoint-url
+                                  :parametrit parametrit}]
+              (integraatiotapahtuma/laheta konteksti :http http-asetukset))))]
     (log/debug "STATUS: " status)
     (log/debug "HEADERS: " headers)
 
     (if error
       (do (log/warn "Ilmatieteenlaitoksen palvelun kutsu epäonnistui: " status error)
-          (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
-                   :error error}))
+        (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
+                 :error error}))
       (if (not (str/includes? (:content-type headers) "text/xml"))
         (throw+ {:type :ilmatieteenlaitoksen-lampotilahaku-epaonnistui
                  :error body})
-        (-> body 
-            (xml/lue "ISO-8859-1")
-            lue-lampotilat)))))
+        (-> body
+          (xml/lue "ISO-8859-1")
+          lue-lampotilat)))))

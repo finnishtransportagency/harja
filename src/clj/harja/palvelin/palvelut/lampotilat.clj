@@ -14,7 +14,7 @@
             [clojure.string :as str]))
 
 
-(defn hae-lampotilat-ilmatieteenlaitokselta [db user url vuosi]
+(defn hae-lampotilat-ilmatieteenlaitokselta [db integraatioloki user url vuosi]
   (log/debug "hae-lampotilat-ilmatieteenlaitokselta, url " url " vuosi " vuosi)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-lampotilat user) ;; vaatii KIRJOITUS oikeuden
   (assert (and url vuosi) "Annettava url ja vuosi kun haetaan ilmatieteenlaitokselta lämpötiloja.")
@@ -22,7 +22,7 @@
   (let [hae-urakoiden-lampotilat (fn [url keskiarvo-alkuvuosi]
                                    (into {}
                                          (map (juxt :urakka-id #(dissoc % :urakka-id)))
-                                         (ilmatieteenlaitos/hae-talvikausi url vuosi keskiarvo-alkuvuosi)))
+                                         (ilmatieteenlaitos/hae-talvikausi db integraatioloki url vuosi keskiarvo-alkuvuosi)))
         hoidon-urakoiden-lampotilat-1971-2000 (hae-urakoiden-lampotilat
                                                 (str/replace url "tieindeksi2" "tieindeksi") nil)
         hoidon-urakoiden-lampotilat-1981-2010 (hae-urakoiden-lampotilat url 1981)
@@ -151,22 +151,24 @@
 (defrecord Lampotilat [ilmatieteenlaitos-url]
   component/Lifecycle
   (start [this]
-    (let [http (:http-palvelin this)]
+    (let [http (:http-palvelin this)
+          db (:db this)
+          integraatioloki (:integraatioloki this)]
       (julkaise-palvelu http :hae-lampotilat-ilmatieteenlaitokselta
                         (fn [user {:keys [vuosi]}]
-                          (hae-lampotilat-ilmatieteenlaitokselta (:db this) user ilmatieteenlaitos-url vuosi)))
+                          (hae-lampotilat-ilmatieteenlaitokselta db integraatioloki user ilmatieteenlaitos-url vuosi)))
       (julkaise-palvelu http :hae-teiden-hoitourakoiden-lampotilat
                         (fn [user {:keys [hoitokausi]}]
-                          (hae-teiden-hoitourakoiden-lampotilat (:db this) user hoitokausi)))
+                          (hae-teiden-hoitourakoiden-lampotilat db user hoitokausi)))
       (julkaise-palvelu http :tallenna-teiden-hoitourakoiden-lampotilat
                         (fn [user tiedot]
-                          (tallenna-teiden-hoitourakoiden-lampotilat (:db this) user tiedot)))
+                          (tallenna-teiden-hoitourakoiden-lampotilat db user tiedot)))
       (julkaise-palvelu http :hae-urakan-suolasakot-ja-lampotilat
                         (fn [user urakka-id]
-                          (hae-urakan-suolasakot-ja-lampotilat (:db this) user urakka-id)))
+                          (hae-urakan-suolasakot-ja-lampotilat db user urakka-id)))
       (julkaise-palvelu http :tallenna-suolasakko-ja-pohjavesialueet
                         (fn [user tiedot]
-                          (tallenna-suolasakko-ja-pohjavesialueet (:db this) user tiedot)))
+                          (tallenna-suolasakko-ja-pohjavesialueet db user tiedot)))
       this))
 
   (stop [this]
