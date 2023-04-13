@@ -327,8 +327,13 @@
    ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
      (cond
-       (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+       (and
+        (= (:otsikon-koko raportin-tunnistetiedot) :iso)
+        (nil? (:piilota-otsikko? raportin-tunnistetiedot)))
        [:h1 (:nimi raportin-tunnistetiedot)]
+
+       (= (:piilota-otsikko? raportin-tunnistetiedot) true)
+       [:span]
 
        :else
        [:h3 (:nimi raportin-tunnistetiedot)]))

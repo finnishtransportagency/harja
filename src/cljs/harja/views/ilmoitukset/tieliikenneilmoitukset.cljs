@@ -14,6 +14,7 @@
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.raportit :as raportit]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
             [harja.ui.protokollat :as protokollat]
@@ -231,7 +232,15 @@
         valitse-ilmoitus! (when kuittaa-monta-nyt
                             #(e! (v/->ValitseKuitattavaIlmoitus %)))
         pikakuittaus-ilmoitus-id (when pikakuittaus
-                                   (get-in pikakuittaus [:ilmoitus :id]))]
+                                   (get-in pikakuittaus [:ilmoitus :id]))
+
+        tunteja-valittu (-> valinnat-nyt :valitetty-urakkaan-vakioaikavali :tunteja)
+        vapaa-alkuaika (-> valinnat-nyt :valitetty-urakkaan-alkuaika)
+        vapaa-loppuaika (-> valinnat-nyt :valitetty-urakkaan-loppuaika)
+        tuntia-sitten (pvm/tuntia-sitten tunteja-valittu)
+        valittu-alkupvm (if tunteja-valittu tuntia-sitten vapaa-alkuaika)
+        valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)]
+    
     [:span.ilmoitukset
      [debug/debug ilmoitukset]
 
@@ -259,8 +268,7 @@
 
       [:h2 (str (count haetut-ilmoitukset) " Ilmoitusta"
              (when @nav/valittu-urakka (str " Urakassa " (:nimi @nav/valittu-urakka))))]
-
-
+      
       [grid
        {:tyhja (if haetut-ilmoitukset
                  "Ei löytyneitä tietoja"
@@ -274,7 +282,20 @@
         :max-rivimaara 500
         :max-rivimaaran-ylitys-viesti "Yli 500 ilmoitusta. Tarkenna hakuehtoja."
         :rivin-luokka #(when (and pikakuittaus (not= (:id %) pikakuittaus-ilmoitus-id))
-                         "ilmoitusrivi-fade")}
+                         "ilmoitusrivi-fade")
+        
+        :raporttivienti #{:excel :pdf}
+        :raporttivienti-lapinakyva? true
+        :raporttiparametrit (raportit/urakkaraportin-parametrit
+                              (:id @nav/valittu-urakka)
+                              :ilmoitukset-raportti
+                              {:urakka @nav/valittu-urakka
+                               :hallintayksikko @nav/valittu-hallintayksikko
+                               :tiedot haetut-ilmoitukset
+                               :filtterit @tiedot/ilmoitukset
+                               :alkupvm valittu-alkupvm
+                               :loppupvm valittu-loppupvm
+                               :urakkatyyppi (:tyyppi @nav/valittu-urakka)})}
 
        [(when kuittaa-monta-nyt
           {:otsikko " "
