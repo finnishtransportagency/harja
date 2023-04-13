@@ -343,6 +343,7 @@ SELECT
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
   ypko.yllapitoluokka,
+  ypko.massamenekki     AS "massamenekki",
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -369,6 +370,7 @@ SELECT
   ypko.tr_ajorata       AS "tr-ajorata",
   ypko.tr_kaista        AS "tr-kaista",
   ypko.yllapitoluokka,
+  ypko.massamenekki          AS "massamenekki",
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -395,6 +397,7 @@ SELECT
   ypko.tr_ajorata                    AS "tr-ajorata",
   ypko.tr_kaista                     AS "tr-kaista",
   ypko.yllapitoluokka,
+  ypko.massamenekki                  AS "massamenekki",
   paallystetyyppi,
   raekoko,
   tyomenetelma,
@@ -501,7 +504,7 @@ WHERE id = :id
 -- Luo uuden yllapitokohdeosan
 INSERT INTO yllapitokohdeosa (yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys,
                               tr_loppuosa, tr_loppuetaisyys, tr_ajorata, tr_kaista, toimenpide,
-                              paallystetyyppi, raekoko, tyomenetelma, massamaara,
+                              paallystetyyppi, raekoko, tyomenetelma, massamaara, massamenekki,
                               ulkoinen_id, yllapitoluokka, sijainti)
 VALUES (:yllapitokohde,
         :nimi,
@@ -517,6 +520,7 @@ VALUES (:yllapitokohde,
         :raekoko,
         :tyomenetelma,
         :massamaara,
+        :massamenekki,
         :ulkoinen-id,
         :yllapitoluokka,
   (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
@@ -565,6 +569,7 @@ SET
   raekoko          = :raekoko,
   tyomenetelma     = :tyomenetelma,
   massamaara       = :massamaara,
+  massamenekki     = :massamenekki,
   toimenpide       = :toimenpide,
   muokattu         = NOW(),
   sijainti         = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom

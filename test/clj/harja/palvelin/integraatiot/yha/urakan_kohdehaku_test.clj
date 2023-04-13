@@ -33,6 +33,7 @@
                                                        :yllapitoluokka 1
                                                        :keskimaarainen-vuorokausiliikenne 1000)
                                              [{:paallystystoimenpide {:kokonaismassamaara 124.0
+                                                                      :massamenekki 100.0
                                                                       :kuulamylly 4
                                                                       :paallystetyomenetelma 22
                                                                       :raekoko 12
@@ -49,6 +50,7 @@
                                                :tunnus nil
                                                :yha-id 3}
                                               {:paallystystoimenpide {:kokonaismassamaara 124.0
+                                                                      :massamenekki 100.0
                                                                       :kuulamylly 4
                                                                       :paallystetyomenetelma 22
                                                                       :raekoko 12
@@ -76,8 +78,8 @@
                            :yha-kohdenumero 666
                            :yllapitokohdetyotyyppi :paikkaus
                            :yllapitokohdetyyppi "paallyste"}]
-        [od_id, od_yllapitokohde, od_nimi, od_tr_numero, od_tr_alkuosa, od_tr_alkuetaisyys, od_tr_loppuosa, od_tr_loppuetaisyys, od_poistettu, od_yhaid, od_tr_ajorata, od_tr_kaista, od_toimenpide, od_ulkoinen_id, od_paallystetyyppi, od_raekoko, od_tyomenetelma, od_massamaara, od_muokattu, od_keskimaarainen_vuorokausiliikenne, od_yllapitoluokka, od_nykyinen_paallyste]
-        [45     32                nil      4             101            3                   101             30                   false         3         1              11            nil            nil             11                 12          22               124.00M         nil          1000                                   1                1]
+        [od_id, od_yllapitokohde, od_nimi, od_tr_numero, od_tr_alkuosa, od_tr_alkuetaisyys, od_tr_loppuosa, od_tr_loppuetaisyys, od_poistettu, od_yhaid, od_tr_ajorata, od_tr_kaista, od_toimenpide, od_ulkoinen_id, od_paallystetyyppi, od_raekoko, od_tyomenetelma, od_massamaara, od_muokattu, od_keskimaarainen_vuorokausiliikenne, od_yllapitoluokka, od_nykyinen_paallyste od_massamenekki]
+        [45     32                nil      4             101            3                   101             30                   false         3         1              11            nil            nil             11                 12          22               124.00M         nil          1000                                   1                1                100M]
         url urakan-kohteet-url]
     (with-fake-http [url +onnistunut-urakan-kohdehakuvastaus+]
                     (let [vastaus (yha/hae-kohteet (:yha jarjestelma) urakka-id "testi")
@@ -87,7 +89,7 @@
 
                       (doseq [kohde validit-kohteet]
                         (yha-palvelu/tallenna-kohde-ja-alikohteet db urakka-id kohde))
-                      (let [[id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, poistettu, yhaid, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, paallystetyyppi, raekoko, tyomenetelma, massamaara, muokattu, keskimaarainen_vuorokausiliikenne, yllapitoluokka, nykyinen_paallyste] (first (q (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, poistettu, yhaid, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, paallystetyyppi, raekoko, tyomenetelma, massamaara, muokattu, keskimaarainen_vuorokausiliikenne, yllapitoluokka, nykyinen_paallyste FROM YLLAPITOKOHDEOSA WHERE yhaid IN (3,4);")))]
+                      (let [[id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, poistettu, yhaid, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, paallystetyyppi, raekoko, tyomenetelma, massamaara, muokattu, keskimaarainen_vuorokausiliikenne, yllapitoluokka, nykyinen_paallyste, massamenekki] (first (q (str "SELECT id, yllapitokohde, nimi, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, poistettu, yhaid, tr_ajorata, tr_kaista, toimenpide, ulkoinen_id, paallystetyyppi, raekoko, tyomenetelma, massamaara, muokattu, keskimaarainen_vuorokausiliikenne, yllapitoluokka, nykyinen_paallyste, massamenekki FROM YLLAPITOKOHDEOSA WHERE yhaid IN (3,4);")))]
                         (is (= id od_id) "id")
                         (is (= yllapitokohde od_yllapitokohde) "yllapitokohde")
                         (is (= nimi od_nimi) "nimi")
@@ -109,7 +111,8 @@
                         (is (= muokattu od_muokattu) "muokattu")
                         (is (= keskimaarainen_vuorokausiliikenne od_keskimaarainen_vuorokausiliikenne) "keskimaarainen_vuorokausiliikenne")
                         (is (= yllapitoluokka od_yllapitoluokka) "yllapitoluokka")
-                        (is (= nykyinen_paallyste od_nykyinen_paallyste) "nykyinen_paallyste"))
+                        (is (= nykyinen_paallyste od_nykyinen_paallyste) "nykyinen_paallyste")
+                        (is (= massamenekki od_massamenekki) "nykyinen_paallyste"))
 
 
         (is (= odotettu-vastaus vastaus))))))
