@@ -51,12 +51,11 @@
 (defn tee-tuck-remoting-kasittelija
   "Laajennettu tuck-remoting.server/make-handler-funktio.
   Lisätty käyttäjän hakeminen headereista ja tallentaminen client-mappiin."
-  [konteksti-atomi db]
+  [konteksti-atomi db koka-ohitusoikeudet]
   (fn tuck-remoting-handler [request]
     (let [konteksti @konteksti-atomi
           client-id (str (UUID/randomUUID))
-          ;; TODO: Välitä oikeudet, joilla voi ohittaa OAM_* headerit tietylle käyttäjille
-          kayttaja (todennus/koka->kayttajatiedot db (:headers request) nil)]
+          kayttaja (todennus/koka->kayttajatiedot db (:headers request) koka-ohitusoikeudet)]
       ;; https://http-kit.github.io/server.html#websocket
       (with-channel request kanava
         (on-close kanava (fn [status]
@@ -91,12 +90,12 @@
                                              ::tr/e! (e!-fn event-id)
                                              :kayttaja kayttaja} konteksti)))))))))))
 
-(defrecord TuckRemoting [konteksti-atomi]
+(defrecord TuckRemoting [konteksti-atomi koka-ohitusoikeudet]
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
     (http/julkaise-palvelu http :ws
       (kasittelija
-        (tee-tuck-remoting-kasittelija konteksti-atomi db))
+        (tee-tuck-remoting-kasittelija konteksti-atomi db koka-ohitusoikeudet))
       {:ring-kasittelija? true
        :ei-todennettava true})
 
@@ -105,11 +104,13 @@
     (http/poista-palvelu http :ws)
     this))
 
-(defn luo-tuck-remoting []
-  (->TuckRemoting (atom {::asiakkaat (atom {})
-                         ::yhdistaessa-hookit {}
-                         ::yhteys-poikki-hookit {}})))
-
+(defn luo-tuck-remoting
+  ([] (luo-tuck-remoting nil))
+  ([koka-ohitusoikeudet]
+   (->TuckRemoting (atom {::asiakkaat (atom {})
+                          ::yhdistaessa-hookit {}
+                          ::yhteys-poikki-hookit {}})
+     koka-ohitusoikeudet)))
 (defn merge-konteksti! [tuck-remoting konteksti]
   (swap! (:konteksti-atomi tuck-remoting) merge konteksti))
 

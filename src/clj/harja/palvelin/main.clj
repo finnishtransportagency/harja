@@ -216,7 +216,7 @@
                                                         kehitysmoodi)
                        [:todennus :metriikka :db])
       :tuck-remoting (component/using
-                       (tuck-remoting/luo-tuck-remoting)
+                       (tuck-remoting/luo-tuck-remoting (:sahke-headerit asetukset))
                        [:http-palvelin :db])
 
       ;; Tuck-remoting palvelu ilmoitusten välittämiseen WebSocketin yli
