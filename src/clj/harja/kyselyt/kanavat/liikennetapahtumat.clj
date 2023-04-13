@@ -465,12 +465,16 @@
                            ::ketjutus/sopimus-id (::lt/sopimus-id tapahtuma)}))))))
 
 (defn poista-toiminto! [db user toiminto]
-  (specql/update! db
-                  ::toiminto/liikennetapahtuman-toiminto
-                  {::m/poistaja-id (:id user)
-                   ::m/muokattu (pvm/nyt)
-                   ::m/poistettu? true}
-                  {::toiminto/id (::toiminto/id toiminto)}))
+  (let [toiminto-id (::toiminto/id toiminto)]
+    ;; Kun poistetaan tapahtuma, loopataan sen kohteenosat ja kutsutaan tätä funktiota
+    ;; Kaikilla kohteenosilla ei ole tätä toiminto-id:tä, joten chekataan onko nil niin ei synny virhettä
+    (when-not (nil? toiminto-id)
+      (specql/update! db
+        ::toiminto/liikennetapahtuman-toiminto
+        {::m/poistaja-id (:id user)
+         ::m/muokattu (pvm/nyt)
+         ::m/poistettu? true}
+        {::toiminto/id (::toiminto/id toiminto)}))))
 
 (defn poista-tapahtuma! [db user tapahtuma]
   (specql/update! db
