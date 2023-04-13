@@ -28,10 +28,10 @@ BEGIN
   WHERE urakka = urakka_id
     AND alkupvm = hk_alkupvm AND loppupvm = hk_loppupvm;
     
- IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.keskilampotila_1981_2010 IS NULL)
+ IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.pitka_keskilampotila IS NULL)
  THEN
    RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', urakka_id, hk_alkupvm, hk_loppupvm;
-   RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.keskilampotila_1981_2010;
+   RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.pitka_keskilampotila;
    RETURN NULL;
  END IF;
  
@@ -59,7 +59,7 @@ BEGIN
  RAISE NOTICE 'Suolaa käytetty: %', suolankaytto;
  
  -- Tarkistetaan lämpötilakorjaus sallittuun suolamäärään
- lampotilapoikkeama := lampotilat.keskilampotila - lampotilat.keskilampotila_1981_2010;
+ lampotilapoikkeama := lampotilat.keskilampotila - lampotilat.pitka_keskilampotila;
  IF lampotilapoikkeama >= 4.0 THEN
    RAISE NOTICE 'Lämpötilapoikkeama % >= 4 astetta, 30%% korotus sallittuun suolankäyttöön', lampotilapoikkeama;
    sallittu_suolankaytto := 1.30 * sallittu_suolankaytto;
