@@ -143,7 +143,8 @@
                              :raekoko (:raekoko paallystystoimenpide)
                              :tyomenetelma (:paallystetyomenetelma paallystystoimenpide)
                              :paallystetyyppi (:uusi-paallyste paallystystoimenpide)
-                             :massamaara (:kokonaismassamaara paallystystoimenpide)})]))))
+                             :massamaara (:kokonaismassamaara paallystystoimenpide)
+                             :massamenekki (:massamenekki paallystystoimenpide)})]))))
 
 (defn lisaa-kohteisiin-validointitiedot [db kohteet]
   (map

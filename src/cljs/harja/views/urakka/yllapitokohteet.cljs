@@ -71,7 +71,7 @@
 (def paallyste-leveys 10)
 (def raekoko-leveys 5)
 (def tyomenetelma-leveys 10)
-(def massamaara-leveys 7)
+(def massamenekki-leveys 7)
 (def toimenpide-leveys 10)
 
 (defn tierekisteriosoite-sarakkeet
@@ -208,10 +208,10 @@
                                                (if (:koodi rivi)
                                                  (str (:lyhenne rivi) " - " (:nimi rivi))
                                                  (:nimi rivi)))
-                                             (fn tayta-massamaara-fn [lahtorivi tama-rivi]
-                                               (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
-                                             (fn tayta-massamaara-toistuvasti-fn [toistettava-rivi tama-rivi]
-                                               (assoc tama-rivi :massamaara (:massamaara toistettava-rivi)))
+                                             (fn tayta-massamenekki-fn [lahtorivi tama-rivi]
+                                               (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
+                                             (fn tayta-massamenekki-toistuvasti-fn [toistettava-rivi tama-rivi]
+                                               (assoc tama-rivi :massamenekki (:massamenekki toistettava-rivi)))
                                              (fn tayta-toimenpide-fn [lahtorivi tama-rivi]
                                                (assoc tama-rivi :toimenpide (:toimenpide lahtorivi)))
                                              (fn tayta-toimenpide-toistuvasti-fn [toistettava-rivi tama-rivi]
@@ -220,7 +220,7 @@
             vain-nama-validoinnit? hae-fn tr-sarake-fn valinta-arity-3? dissoc-cols aikataulu?]}
     [tayta-alas?-fn tayta-paallyste-fn tayta-paallyste-toistuvasti-fn paallyste-valinta-nayta-fn tayta-raekoko-fn
      tayta-raekoko-toistuvasti-fn tayta-tyomenetelma-fn tayta-tyomenetelma-toistuvasti-fn tyomenetelma-valinta-nayta-fn
-     tayta-massamaara-fn tayta-massamaara-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn]]
+     tayta-massamenekki-fn tayta-massamenekki-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn]]
    (let [tr-sarakkeet-asetukset [{:nimi :nimi :pituus-max 30 :leveys (if aikataulu? kohde-leveys-aikataulu kohde-leveys)}
                                  {:nimi :tr-numero :muokattava? muokattava-tie?
                                   :validoi (:tr-numero validoi)}
@@ -286,15 +286,15 @@
                        :tayta-toistuvasti-fn tayta-tyomenetelma-toistuvasti-fn
                        :valinta-nayta tyomenetelma-valinta-nayta-fn
                        :kentta-arity-3? valinta-arity-3?)
-                     (when-not (contains? dissoc-cols :massamaara)
-                       {:otsikko "Massa\u00ADmenekki (kg/m²)" :nimi :massamaara
-                        :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamaara-leveys
+                     (when-not (contains? dissoc-cols :massamenekki)
+                       {:otsikko "Massa\u00ADmenekki (kg/m²)" :nimi :massamenekki
+                        :tyyppi :positiivinen-numero :tasaa :oikea :leveys massamenekki-leveys
                         :tayta-alas? tayta-alas?-fn
-                        :tayta-fn tayta-massamaara-fn
+                        :tayta-fn tayta-massamenekki-fn
                         :tayta-sijainti :ylos
                         :tayta-tooltip "Kopioi sama massamenekki alla oleville riveille"
                         :tayta-alas-toistuvasti? tayta-alas?-fn
-                        :tayta-toistuvasti-fn tayta-massamaara-toistuvasti-fn})
+                        :tayta-toistuvasti-fn tayta-massamenekki-toistuvasti-fn})
                      (when-not (contains? dissoc-cols :toimenpide)
                        {:otsikko "Toimenpiteen selitys" :nimi :toimenpide :tyyppi :string
                         :leveys toimenpide-leveys
@@ -444,7 +444,7 @@
                                                                                                                                     "")))]
         [tayta-alas?-fn tayta-paallyste-fn tayta-paallyste-toistuvasti-fn paallyste-valinta-nayta-fn tayta-raekoko-fn
          tayta-raekoko-toistuvasti-fn tayta-tyomenetelma-fn tayta-tyomenetelma-toistuvasti-fn tyomenetelma-valinta-nayta-fn
-         tayta-massamaara-fn tayta-massamaara-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn] [(fn tayta-alas?-fn [jotain]
+         tayta-massamenekki-fn tayta-massamenekki-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn] [(fn tayta-alas?-fn [jotain]
                                                                                                                      (not (nil? jotain)))
                                                                                                                    (fn tayta-paallyste-fn [lahtorivi tama-rivi]
                                                                                                                      (assoc tama-rivi :paallystetyyppi (:paallystetyyppi lahtorivi)))
@@ -466,10 +466,10 @@
                                                                                                                      (if (:koodi rivi)
                                                                                                                        (str (:lyhenne rivi) " - " (:nimi rivi))
                                                                                                                        (:nimi rivi)))
-                                                                                                                   (fn tayta-massamaara-fn [lahtorivi tama-rivi]
-                                                                                                                     (assoc tama-rivi :massamaara (:massamaara lahtorivi)))
-                                                                                                                   (fn tayta-massamaara-toistuvasti-fn [toistettava-rivi tama-rivi]
-                                                                                                                     (assoc tama-rivi :massamaara (:massamaara toistettava-rivi)))
+                                                                                                                   (fn tayta-massamenekki-fn [lahtorivi tama-rivi]
+                                                                                                                     (assoc tama-rivi :massamenekki (:massamenekki lahtorivi)))
+                                                                                                                   (fn tayta-massamenekki-toistuvasti-fn [toistettava-rivi tama-rivi]
+                                                                                                                     (assoc tama-rivi :massamenekki (:massamenekki toistettava-rivi)))
                                                                                                                    (fn tayta-toimenpide-fn [lahtorivi tama-rivi]
                                                                                                                      (assoc tama-rivi :toimenpide (:toimenpide lahtorivi)))
                                                                                                                    (fn tayta-toimenpide-toistuvasti-fn [toistettava-rivi tama-rivi]
@@ -492,7 +492,7 @@
                                                  :tr-sarake-fn [true-fn false-fn ajorata-fmt-fn kaista-fmt-fn ajorata-valinta-nayta-fn kaista-valinta-nayta-fn]}
                                                 [tayta-alas?-fn tayta-paallyste-fn tayta-paallyste-toistuvasti-fn paallyste-valinta-nayta-fn tayta-raekoko-fn
                                                  tayta-raekoko-toistuvasti-fn tayta-tyomenetelma-fn tayta-tyomenetelma-toistuvasti-fn tyomenetelma-valinta-nayta-fn
-                                                 tayta-massamaara-fn tayta-massamaara-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn])]
+                                                 tayta-massamenekki-fn tayta-massamenekki-toistuvasti-fn tayta-toimenpide-fn tayta-toimenpide-toistuvasti-fn])]
         [grid/muokkaus-grid
          {:tyhja tyhja-kohdeosa
           :tyhja-args [voi-muokata?]
