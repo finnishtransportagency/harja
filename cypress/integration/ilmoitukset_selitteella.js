@@ -1,4 +1,4 @@
-describe('Ilmoitus-näkymä', function () {
+describe('Ilmoitus-näkymä (Tieliikenne)', function () {
     beforeEach(function () {
         cy.visit("http://localhost:3000/#ilmoitukset/tieliikenne?")
     })
@@ -31,5 +31,16 @@ describe('Ilmoitus-näkymä', function () {
         cy.contains("Piilota kartta").click() // klikataan mitä vaan muuta jotta pvm-kentän muutos liipaisee päivityksen
         cy.wait('@ihaku', {timeout: 10000})
         cy.contains("Tie on liukas ja urainen")
+    })
+
+    it("Ilmoitusten http-pollaus", function () {
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: 10000 }).should('not.exist')
+        cy.contains('.ilmoitukset', /^Uusia ilmoituksia haetaan.+välein/)
+    })
+
+    it("Ilmoitusten ws-yhteys aktivoituu", function () {
+        cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: 10000 }).should('not.exist')
+        cy.contains('Aktivoi kokeellinen ilmoitusten reaaliaikahaku').click()
+        cy.contains('.ilmoitukset', 'Uusien ilmoitusten reaaliaikahaku aktiivinen')
     })
 })
