@@ -6,7 +6,7 @@
 -- Sydäntalven lämpötilat samat kuin AURAssa Vantaa, hoitokausi 2015-2016 (ks lämpötilojen testidata)
 -- Lopputulos oltava Suolabonus 6072e, ja indeksi 850,56e
 
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila, pitka_keskilampotila_vanha)
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010, keskilampotila_1971_2000)
 VALUES ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
         '2015-10-01', '2016-09-30', -3.5, -5.6, -5.6);
 
