@@ -174,10 +174,13 @@
 (defmethod muodosta-solu :arvo-ja-selite [[_ {:keys [arvo selite]}] solun-tyyli]
   [(str arvo (when selite (str " (" selite ")"))) solun-tyyli])
 
-(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt]}] solun-tyyli]
-  [arvo
-   (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
-   fmt])
+(defmethod muodosta-solu :varillinen-teksti [[_ {:keys [arvo tyyli fmt lihavoi?]}] solun-tyyli]
+  (let [solun-tyyli (if lihavoi?
+                      (merge solun-tyyli {:font {:bold true}})
+                      solun-tyyli)]
+    [arvo
+     (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
+     fmt]))
 
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
@@ -254,11 +257,15 @@
                  custom-ylin-rivi] :as tiedot}]
   (try 
     (let [rivi (.createRow sheet nolla)
-          solu (.createCell rivi 0)]
+          solu (.createCell rivi 0)
+          ;; Jos loppupvm on täysin sama, sitä ei tarvitse mainita
+          loppupvm (if (= loppupvm alkupvm) nil loppupvm)]
       (excel/set-cell! solu (or
                               custom-ylin-rivi
-                              (str raportin-nimi " - " urakka (when (and alkupvm loppupvm)
-                                                               (str " - " alkupvm "-" loppupvm)))))
+                              (str raportin-nimi
+                                (when urakka (str ", " urakka))
+                                (when (and alkupvm (not loppupvm)) (str ", " alkupvm))
+                                (when (and alkupvm loppupvm) (str ", " alkupvm " - " loppupvm)))))
       (excel/set-cell-style! solu tyyli)
       ;; Tehdään otsikkorivin 20 ensimmäistä solua mergetyksi.
       ;; Täten se ei häiritse automaattista solujen koon luontia, ja otsikon pitäisi kuitenkin näkyä klippaamatta.

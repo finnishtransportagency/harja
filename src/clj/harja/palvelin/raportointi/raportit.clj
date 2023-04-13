@@ -12,6 +12,7 @@
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen]
   [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tyomaa]
+  [harja.palvelin.raportointi.raportit.ilmoitukset]
   [harja.palvelin.raportointi.raportit.tehtavamaarat]
   [harja.palvelin.raportointi.raportit.vemtr]
   [harja.palvelin.raportointi.raportit.kulut-tehtavaryhmittain]
@@ -52,7 +53,13 @@
 ;; HOX Muista lisätä uusi raportti myös Roolit-Exceliin!
 
 (def raportit
-  [{:nimi         :sanktioraportti-yllapito
+  [{:nimi         :ilmoitukset-raportti
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :kuvaus       "Ilmoitukset"
+    :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}
+   
+   {:nimi         :sanktioraportti-yllapito
+    
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"hallintayksikko" "koko maa" "urakka" "hankinta-alue"}
     :kuvaus       "Sakko- ja bonusraportti"
