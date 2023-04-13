@@ -38,7 +38,7 @@
      [:varillinen-teksti {:arvo (pvm/pvm-aika (:toimenpiteet-aloitettu tiedot))}])))
 
 (defn- taulukko [{:keys [otsikot tiedot]}]
-  (let [rivit (mapv #(rivi-taulukolle %) tiedot)]
+  (let [rivit (mapv rivi-taulukolle tiedot)]
 
     [:taulukko {:viimeinen-rivi-yhteenveto? false}
      (let [taulukon-rivit (map (fn [x]
