@@ -383,7 +383,9 @@
     ;; FIXME: Tämä on väliaikainen ominaisuus WS-kuuntelijan testikäyttöä varten.
     (komp/watcher tiedot/ws-kuuntelija-ominaisuus?
       (fn [_ _ uusi-tila]
-        (if (true? uusi-tila)
+        (e! (ilmoitukset-ws/->Event1 (true? uusi-tila)))
+        #_(if (true? uusi-tila)
+          (e! (ilmoitukset-ws/->Event1))
           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (komp/sisaan-ulos #(do
@@ -404,7 +406,7 @@
                          ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
                          ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
                          (when @tiedot/ws-kuuntelija-ominaisuus?
-                           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
+                           #_(e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
                          (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
@@ -413,8 +415,11 @@
                          ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
                          ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
                          (when @tiedot/ws-kuuntelija-ominaisuus?
-                           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
+                           #_(e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
+      ;; TODO: Tämä on Tuck-event testiin liittyvää lokitusta
+      (println "### ilmoitukset-app: " "foo:" (:foo ilmoitukset) "bar: " (:bar ilmoitukset))
+
       [:span
        [kartta/kartan-paikka]
        (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)

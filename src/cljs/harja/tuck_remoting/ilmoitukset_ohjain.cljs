@@ -12,6 +12,8 @@
 (defrecord LopetaKuuntelu [])
 (defrecord KatkaiseYhteys [])
 (defrecord AsetaYhteydenTila [tila])
+(defrecord Event1 [val])
+(defrecord Event2 [val])
 
 (defn ws-yhteyden-tila [app]
   (get-in app [:ws-yhteyden-tila]))
@@ -32,6 +34,30 @@
     (log/info "Ilmoitukset: WS-yhteys katkesi. Yritetään muodostaa yhteys uudelleen.")))
 
 (extend-protocol tuck/Event
+  ;; TODO: Tämä on Tuck-event testiin liittyvä demo (Event1 ja Event2)
+  Event1
+  (process-event [{val :val} app]
+    (println "### Event1, asetaan foo: " val)
+    ;; action! ja send-async! toimivat samalla tavalla tässä tilanteessa
+    ;; Event2:sen :bar val ei päädy app-tilaan ja käyttöliittymässä näkyy vain :foo val.
+    (tuck/action!
+      (fn [e!]
+        (e! (->Event2 val))))
+    #_((tuck/send-async! ->Event2) val)
+
+    ;; js/timeOutilla korjattu kutsu toimii aina. Event2 päivittää :bar val onnistuneesti app-tilaan.
+    #_(tuck/action!
+        (fn [e!]
+          (js/setTimeout
+            #(e! (->Event2 val))
+            0)))
+    (assoc app :foo val))
+
+  Event2
+  (process-event [{val :val} app]
+    (println "### Event2, asetetaan bar: " val)
+    (assoc app :bar val))
+
   ;; Aloittaa WS-yhteyden ja lähettää kuuntelun aloittamisen käynnistävän viestin palvelimelle
   ;; ws-yhteys-onnistui-kasittelija -käsittelijässä.
   AloitaYhteysJaKuuntelu
