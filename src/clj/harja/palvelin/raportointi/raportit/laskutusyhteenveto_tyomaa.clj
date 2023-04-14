@@ -62,13 +62,13 @@
                                (rivi-taulukolle data kyseessa-kk-vali? "Sanktiot" :sanktiot_hoitokausi_yht :sanktiot_val_aika_yht false)
                                
                                ;; Näytetään päätökset vain jos ne on olemassa 
-                               (when (raha-arvo-olemassa? (data :paatos_kattoh_ylitys_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_kattoh_ylitys_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa kattohinnan ylityksestä" :paatos_kattoh_ylitys_hoitokausi_yht :paatos_kattoh_ylitys_val_aika_yht false))
 
-                               (when (raha-arvo-olemassa? (data :paatos_tavoiteh_ylitys_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_tavoiteh_ylitys_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Hoitovuoden päätös / Urakoitsija maksaa tavoitehinnan ylityksestä" :paatos_tavoiteh_ylitys_hoitokausi_yht :paatos_tavoiteh_ylitys_hoitokausi_yht false))
                                
-                               (when (raha-arvo-olemassa? (data :paatos_tavoitepalkkio_hoitokausi_yht))
+                               (when (raha-arvo-olemassa? (:paatos_tavoitepalkkio_hoitokausi_yht data))
                                  (rivi-taulukolle data kyseessa-kk-vali? "Tavoitepalkkio" :paatos_tavoitepalkkio_hoitokausi_yht :paatos_tavoitepalkkio_hoitokausi_yht false))])))]
 
     [:taulukko {:oikealle-tasattavat-kentat #{1 2}
