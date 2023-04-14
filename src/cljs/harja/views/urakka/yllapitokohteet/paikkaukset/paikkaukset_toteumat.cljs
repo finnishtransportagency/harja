@@ -44,7 +44,8 @@
             [harja.ui.lomake :as lomake]
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
-            [harja.domain.tierekisteri :as tr-domain])
+            [harja.domain.tierekisteri :as tr-domain]
+            [harja.asiakas.kommunikaatio :as komm])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -539,6 +540,12 @@
       {:leveys "600px" :jarjestys 1}
       [v-toteumalomake/toteumalomake e! app]])])
 
+(defn- lataa-urem-excel []
+  [yleiset/tiedoston-lataus-linkki
+   "Lataa urapaikkaustoteumien tuonti-Excel"
+   (str (when-not (komm/kehitysymparistossa?) "/harja") "/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx")
+   {:luokat ["pull-right" "margin-top-16"]}])
+
 (defn view [e! app]
   [:div
    [:div.row.filtterit {:style {:padding "16px"}}
@@ -553,6 +560,8 @@
      [ilmoita-virheesta-modal e! app])
    [:div.row
     [kartta/kartan-paikka]]
+   [:div.row
+    [lataa-urem-excel]]
    [:div.row
     [paikkaukset e! app]]])
 
