@@ -19,7 +19,6 @@
 (defn ws-yhteys-onnistui-kasittelija [e! kuuntelu-suodattimet]
   (log/info "Ilmoitukset: WS-yhteys aloitettu. Seurataan uusia ilmoituksia WS:n kautta.")
   (e! (->AsetaYhteydenTila :aktiivinen))
-  ;; TODO: Kuunnellaan kovakoodatusti Oulun MHU urakkaa (35), ota käyttöliittmältä parametrina
   (e! (->AloitaKuuntelu kuuntelu-suodattimet)))
 
 (defn ws-yhteys-katkaistu-kasittelija [e! koodi syy suljettu-puhtaasti?]

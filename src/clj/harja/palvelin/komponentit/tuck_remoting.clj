@@ -80,8 +80,6 @@
           (on-receive kanava
             (fn [data]
               (let [{::tr/keys [event-id event-type] :as msg} (lue-viesti data)]
-                ;; TODO: Poista debug-lokitus
-                #_(println "### tuck-remoting, received msg:" msg)
                 ;; Handle ping/pong heartbeat-events outside normal Tuck-event handling
                 (if (= :ping event-type)
                   (send! kanava (transit/clj->transit {::tr/event-type :pong}))
