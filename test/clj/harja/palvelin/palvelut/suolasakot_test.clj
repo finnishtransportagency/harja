@@ -42,7 +42,7 @@
       (is (= (:urakka suolasakko) urakka-id) "urakka")
       (is (> (count lampotilat) 0) "lampotilat saatiin")
       (is (= (:keskilampotila hk-2014-2015-lt) -6.2 ) "lampotila hk-2014-2015-lt")
-      (is (= (:pitkakeskilampotila hk-2014-2015-lt) -9.3 ) "lampotila hk-2014-2015-lt")
+      (is (= (:keskilampotila-1981-2010 hk-2014-2015-lt) -9.3 ) "lampotila hk-2014-2015-lt")
       (is (= (:loppupvm hk-2014-2015-lt) (pvm/->pvm "30.9.2015") ) "lampotila hk-2014-2015-lt")
       (is (= (:indeksi suolasakko) "MAKU 2005") "indeksi")
       (is (= (:hoitokauden_alkuvuosi suolasakko) 2014) "hoitokauden alkuvuosi")

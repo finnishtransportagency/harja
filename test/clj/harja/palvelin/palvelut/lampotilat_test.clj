@@ -43,7 +43,7 @@
       (is (some? (:lampotilaid lampotila-pudussa)) ":lampotilaid")
       (is (some? (:urakka lampotila-pudussa)) "urakka")
       (is (= (:keskilampotila lampotila-pudussa) -8.20M) "keskilampotila")
-      (is (= (:pitkakeskilampotila lampotila-pudussa) -9.00M) "pitkakeskilampotila")
+      (is (= (:keskilampotila-1981-2010 lampotila-pudussa) -9.00M) "pitkakeskilampotila")
       (is (= (:alkupvm lampotila-pudussa) hoitokauden-alkupvm) "hoitokauden-alkupvm")
       (is (= (:loppupvm lampotila-pudussa) hoitokauden-loppupvm) "hoitokauden-loppupvm")))
 
@@ -54,7 +54,7 @@
           urakka-id @oulun-alueurakan-2014-2019-id
 
           lampotilat [{:lampotilaid nil :keskilampotila -26.2
-                       :pitkakeskilampotila -8.3 :urakka urakka-id
+                       :keskilampotila-1981-2010 -8.3 :urakka urakka-id
                        :alkupvm hoitokauden-alkupvm :loppupvm hoitokauden-loppupvm}]
 
           lampotilat-kutsun-jalkeen (vals (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -66,7 +66,7 @@
       (is (some? (:lampotilaid lampotila-oulussa)) ":lampotilaid")
       (is (some? (:urakka lampotila-oulussa)) "urakka")
       (is (= (:keskilampotila lampotila-oulussa) -26.20M) "keskilampotila")
-      (is (= (:pitkakeskilampotila lampotila-oulussa) -8.30M) "pitkakeskilampotila")
+      (is (= (:keskilampotila-1981-2010 lampotila-oulussa) -8.30M) "pitkakeskilampotila")
       (is (= (:alkupvm lampotila-oulussa) hoitokauden-alkupvm) "hoitokauden-alkupvm")
       (is (= (:loppupvm lampotila-oulussa) hoitokauden-loppupvm) "hoitokauden-loppupvm")))
 
@@ -77,7 +77,7 @@
           urakka-id @oulun-alueurakan-2014-2019-id
           lampotila-id @oulun-alueurakan-lampotila-hk-2014-2015
           lampotilat [{:lampotilaid lampotila-id :keskilampotila -26.2
-                       :pitkakeskilampotila -8.3 :urakka urakka-id
+                       :keskilampotila-1981-2010 -8.3 :urakka urakka-id
                        :alkupvm hoitokauden-alkupvm :loppupvm hoitokauden-loppupvm}]
 
           lampotilat-kutsun-jalkeen (vals (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -89,6 +89,6 @@
       (is (= (:lampotilaid lampotila-oulussa) lampotila-id) ":lampotilaid")
       (is (some? (:urakka lampotila-oulussa)) "urakka")
       (is (= (:keskilampotila lampotila-oulussa) -26.20M) "keskilampotila")
-      (is (= (:pitkakeskilampotila lampotila-oulussa) -8.30M) "pitkakeskilampotila")
+      (is (= (:keskilampotila-1981-2010 lampotila-oulussa) -8.30M) "pitkakeskilampotila")
       (is (= (:alkupvm lampotila-oulussa) hoitokauden-alkupvm) "hoitokauden-alkupvm")
       (is (= (:loppupvm lampotila-oulussa) hoitokauden-loppupvm) "hoitokauden-loppupvm"))))
