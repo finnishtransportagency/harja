@@ -1,12 +1,12 @@
 -- name: uusi-lampotila<!
 INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila,
-                        pitka_keskilampotila, pitka_keskilampotila_vanha)
-VALUES (:urakka, :alku, :loppu, :keskilampo, :pitkalampo, :pitkalampo_vanha);
+                        keskilampotila_1991_2020, keskilampotila_1981_2010, keskilampotila_1971_2000)
+VALUES (:urakka, :alku, :loppu, :keskilampo, :lampo_91, :lampo_81, :lampo_71);
 
 -- name: paivita-lampotila<!
 UPDATE lampotilat SET
   urakka = :urakka, alkupvm = :alku, loppupvm = :loppu, keskilampotila = :keskilampo,
-  pitka_keskilampotila = :pitkalampo, pitka_keskilampotila_vanha = :pitkalampo_vanha
+  keskilampotila_1991_2020 = :lampo_91, keskilampotila_1981_2010 = :lampo_81, keskilampotila_1971_2000 = :lampo_71
 WHERE id = :id;
 
 -- name: hae-urakan-suolasakot
@@ -37,8 +37,9 @@ SELECT
   alkupvm,
   loppupvm,
   keskilampotila,
-  pitka_keskilampotila as pitkakeskilampotila,
-  pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
+  keskilampotila_1991_2020 as "keskilampotila-1991-2020",
+  keskilampotila_1981_2010 as "keskilampotila-1981-2010",
+  keskilampotila_1971_2000 as "keskilampotila-1971-2000"
 FROM lampotilat
 WHERE urakka = :urakka;
 
@@ -87,8 +88,9 @@ SELECT
   lt.alkupvm as alkupvm,
   lt.loppupvm as loppupvm,
   lt.keskilampotila as keskilampotila,
-  lt.pitka_keskilampotila as pitkakeskilampotila,
-  lt.pitka_keskilampotila_vanha as pitkakeskilampotila_vanha
+  lt.keskilampotila_1991_2020 as "keskilampotila-1991-2020",
+  lt.keskilampotila_1981_2010 as "keskilampotila-1981-2010",
+  lt.keskilampotila_1971_2000 as "keskilampotila-1971-2020"
 FROM urakka u
   LEFT JOIN lampotilat lt ON (lt.urakka = u.id AND lt.alkupvm = :alkupvm AND lt.loppupvm = :loppupvm)
 WHERE (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND
