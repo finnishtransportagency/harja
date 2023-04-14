@@ -171,7 +171,7 @@ VALUES
 -- Sydäntalven lämpötila hoitokaudella ja pitkän ajan keskiarvo, vaikuttaa sallittuun suolamäärään
 -- Testidataan syötetään poikkeuksellisesti Kajaanin kohdalla Oulun lämpötilat, koska lask.yht.veto testi vertaa että suolasakko on sama,
 -- ja muukin siihen vaikuttava data on sama
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila, pitka_keskilampotila_vanha)
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010, keskilampotila_1971_2000)
      VALUES ((SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'),
             '2014-10-01', '2015-09-30', -6.0, -9.0, -9.3);
 

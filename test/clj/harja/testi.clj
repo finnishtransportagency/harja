@@ -899,7 +899,7 @@
                    WHERE  nimi = 'Siirtyneiden poijujen siirto';"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
-  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
+  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010
                    FROM   lampotilat
                    WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
                    AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))

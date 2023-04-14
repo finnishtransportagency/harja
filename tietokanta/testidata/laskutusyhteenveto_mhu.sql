@@ -82,8 +82,8 @@ $$
         -- SUOLASAKOT
         -- Suolasakot :: Vaatii suolasakon, toteutuma_materiaalin, toteutuman sekä lämpötilat, toimiakseen.
         -- Lisätään hatusta vedetyt lämpötilat 10/2019 ja 09/2020 kuukausille
-        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila,
-                                pitka_keskilampotila_vanha)
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                keskilampotila_1971_2000)
             VALUES (urakka_id,
                 '2019-10-01', '2020-09-30', -3.5, -5.6, -5.6);
 

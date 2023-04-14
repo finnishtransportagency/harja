@@ -168,7 +168,7 @@ VALUES
 
 
 -- Sydäntalven lämpötila hoitokaudella ja pitkän ajan keskiarvo, vaikuttaa sallittuun suolamäärään
-INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila)
+INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010)
      VALUES ((SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
             '2014-10-01', '2015-09-30', -6.0, -8.8);
 
