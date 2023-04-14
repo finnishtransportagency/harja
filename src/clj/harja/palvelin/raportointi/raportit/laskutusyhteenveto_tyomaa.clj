@@ -109,13 +109,13 @@
                                         "vahvistamaton")
 
                                ;; Nätetään arvot vain jos on olemassa
-                               (when (raha-arvo-olemassa? (data :hoitokauden_tavoitehinta))
+                               (when (raha-arvo-olemassa? (:hoitokauden_tavoitehinta data))
                                  (kt-rivi data false "Tavoitehinta (indeksikorjattu)" :hoitokauden_tavoitehinta :hoitokauden_tavoitehinta true nil nil))
 
-                               (when (raha-arvo-olemassa? (data :hk_tavhintsiirto_ed_vuodelta))
+                               (when (raha-arvo-olemassa? (:hk_tavhintsiirto_ed_vuodelta data))
                                  (kt-rivi data false "Siirto edelliseltä vuodelta" :hk_tavhintsiirto_ed_vuodelta :hk_tavhintsiirto_ed_vuodelta true "red" nil))
 
-                               (when (raha-arvo-olemassa? (data :budjettia_jaljella))
+                               (when (raha-arvo-olemassa? (:budjettia_jaljella data))
                                  (kt-rivi data false "Budjettia jäljellä" :budjettia_jaljella :budjettia_jaljella true nil nil))
                                
                                (kt-rivi data false "" :nil :nil false nil nil)
