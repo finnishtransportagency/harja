@@ -1,0 +1,386 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "id": "urn:harja",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "tunniste": {
+            "id": "urn:harja/tunniste",
+            "type": "object",
+            "required": true,
+            "properties": {
+                "id": {
+                    "id": "urn:harja/tunniste/id",
+                    "required": true,
+                    "type": "string"
+                },
+                "versio": {
+                    "id": "urn:harja/tunniste/versio",
+                    "required": true,
+                    "type": "integer"
+                }
+            }
+        },
+        "saatiedot": {
+            "id": "urn:harja/saatiedot",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/saatiedot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "saatieto": {
+                        "id": "urn:harja/saatiedot/0",
+                        "type": "object",
+                        "properties": {
+                            "havaintoaika": {
+                                "id": "urn:harja/saatiedot/0/havaintoaika",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "aseman-tunniste": {
+                                "id": "urn:harja/saatiedot/0/aseman-tunniste",
+                                "required": false,
+                                "type": "string"
+                            },
+                            "aseman-tietojen-paivityshetki": {
+                                "id": "urn:harja/saatiedot/0/aseman-tietojen-paivityshetki",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "ilman-lampotila": {
+                                "id": "urn:harja/saatiedot/0/ilman-lampotila",
+                                "required": false,
+                                "type": "number"
+                            },
+                            "tien-lampotila": {
+                                "id": "urn:harja/saatiedot/0/tien-lampotila",
+                                "required": false,
+                                "type": "number"
+                            },
+                            "keskituuli": {
+                                "id": "urn:harja/saatiedot/0/keskituuli",
+                                "required": false,
+                                "type": "integer"
+                            },
+                            "sateen-olomuoto": {
+                                "id": "urn:harja/saatiedot/0/sateen-olomuoto",
+                                "required": false,
+                                "type": "number"
+                            },
+                            "sadesumma": {
+                                "id": "urn:harja/saatiedot/0/sadesumma",
+                                "required": false,
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "poikkeuksellisetsaahavainnot": {
+            "id": "urn:harja/poikkeuksellisetsaahavainnot",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "poikkeuksellinensaahavainto": {
+                        "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
+                        "type": "object",
+                        "properties": {
+                            "havaintoaika": {
+                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/havaintoaika",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "paikka": {
+                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/paikka",
+                                "required": false,
+                                "type": "string"
+                            },
+                            "kuvaus": {
+                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/kuvaus",
+                                "required": false,
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "kaluston-kaytto": {
+            "id": "urn:harja/kaluston-kaytto",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/kaluston-kaytto/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "kalusto": {
+                        "id": "urn:harja/kaluston-kaytto/0",
+                        "type": "object",
+                        "properties": {
+                            "aloitus": {
+                                "id": "urn:harja/kaluston-kaytto/0/aloitus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lopetus": {
+                                "id": "urn:harja/kaluston-kaytto/0/lopetus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "tyokoneiden-lkm": {
+                                "id": "urn:harja/kaluston-kaytto/0/tyokoneiden-lkm",
+                                "required": false,
+                                "type": "integer"
+                            },
+                            "lisakaluston-lkm": {
+                                "id": "urn:harja/kaluston-kaytto/0/lisakaluston-lkm",
+                                "required": false,
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "paivystajantiedot": {
+            "id": "urn:harja/paivystajantiedot",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/paivystajantiedot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "paivystaja": {
+                        "id": "urn:harja/paivystajantiedot/0",
+                        "type": "object",
+                        "properties": {
+                            "aloitus": {
+                                "id": "urn:harja/paivystajantiedot/0/aloitus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lopetus": {
+                                "id": "urn:harja/paivystajantiedot/0/lopetus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "nimi": {
+                                "id": "urn:harja/paivystajantiedot/0/nimi",
+                                "required": false,
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "tieston-toimenpiteet": {
+            "id": "urn:harja/tieston-toimenpiteet",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/tieston-toimenpiteet/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "tieston-toimenpide": {
+                        "id": "urn:harja/tieston-toimenpiteet/0",
+                        "type": "object",
+                        "properties": {
+                            "aloitus": {
+                                "id": "urn:harja/tieston-toimenpiteet/0/aloitus",
+                                "required": true,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lopetus": {
+                                "id": "urn:harja/tieston-toimenpiteet/0/lopetus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "tehtavat": {
+                                "id": "urn:harja/tieston-toimenpiteet/0/tehtavat",
+                                "required": true,
+                                "type": "array",
+                                "items": {
+                                    "id": "urn:harja/tieston-toimenpiteet/0/tehtavat/0",
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "tehtava": {
+                                            "id": {
+                                                "id": "urn:harja/tieston-toimenpiteet/0/tehtavat/0/tehtava",
+                                                "required": true,
+                                                "type": "integer"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "tieston-muuttoimenpiteet": {
+            "id": "urn:harja/tieston-muuttoimenpiteet",
+            "type": "array",
+            "required": false,
+            "items": {
+                "id": "urn:harja/tieston-muuttoimenpiteet/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "tieston-toimenpide": {
+                        "id": "urn:harja/tieston-muuttoimenpiteet/0",
+                        "type": "object",
+                        "properties": {
+                            "aloitus": {
+                                "id": "urn:harja/tieston-muuttoimenpiteet/0/aloitus",
+                                "required": true,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lopetus": {
+                                "id": "urn:harja/tieston-muuttoimenpiteet/0/lopetus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "tehtavat": {
+                                "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat",
+                                "required": true,
+                                "type": "array",
+                                "items": {
+                                    "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0",
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "properties": {
+                                        "tehtava": {
+                                            "kuvaus": {
+                                                "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava",
+                                                "required": true,
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "liikenteenohjausmuutokset": {
+            "id": "urn:harja/liikenteenohjausmuutokset",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/liikenteenohjausmuutokset/kuvaus",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "onnettomuudet": {
+            "id": "urn:harja/onnettomuudet",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/onnettomuudet/kuvaus",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "viranomaisenavustaminen": {
+            "id": "urn:harja/viranomaisenavustaminen",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/viranomaisenavustaminen/kuvaus",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "palautteet": {
+            "id": "urn:harja/palautteet",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/viranomaisenavustaminen/kuvaus",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "muutkirjaukset": {
+            "id": "urn:harja/muutkirjaukset",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/muutkirjaukset/kuvaus",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "tilaajanyhteydenotot": {
+            "id": "urn:harja/tilaajanyhteydenotot",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/tilaajanyhteydenotot/kuvaus",
+                    "required": true,
+                    "type": "string"
+                },
+                "nimi": {
+                    "id": "urn:harja/tilaajanyhteydenotot/nimi",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        },
+        "urakoitsijanmerkinnat": {
+            "id": "urn:harja/urakoitsijanmerkinnat",
+            "type": "object",
+            "required": false,
+            "properties": {
+                "kuvaus": {
+                    "id": "urn:harja/urakoitsijanmerkinnat/kuvaus",
+                    "required": true,
+                    "type": "string"
+                },
+                "nimi": {
+                    "id": "urn:harja/urakoitsijanmerkinnat/nimi",
+                    "required": true,
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
