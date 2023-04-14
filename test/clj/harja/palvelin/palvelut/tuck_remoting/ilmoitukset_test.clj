@@ -1,4 +1,4 @@
-(ns harja.palvelin.palvelut.tuck-remoting.ilmoitukset_test
+(ns ^:integraatio harja.palvelin.palvelut.tuck-remoting.ilmoitukset_test
   (:require
     [clojure.test :as t :refer [deftest is use-fixtures compose-fixtures testing]]
     [harja.testi :refer :all]
