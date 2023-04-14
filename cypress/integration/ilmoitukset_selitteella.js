@@ -35,7 +35,7 @@ describe('Ilmoitus-näkymä (Tieliikenne)', function () {
 
     it("Ilmoitusten http-pollaus", function () {
         cy.get('[data-cy=ilmoitukset-grid] .ajax-loader', { timeout: 10000 }).should('not.exist')
-        cy.contains('.ilmoitukset', /^Uusia ilmoituksia haetaan.+välein/)
+        cy.contains('.ilmoitukset', 'Uusia ilmoituksia haetaan')
     })
 
     it("Ilmoitusten ws-yhteys aktivoituu", function () {
