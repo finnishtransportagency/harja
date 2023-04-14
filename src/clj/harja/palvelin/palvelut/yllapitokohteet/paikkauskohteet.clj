@@ -563,6 +563,19 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
 
+(defn vastaanota-urem-excel [db fim email req kehitysmoodi?]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
+    (:kayttaja req)
+    (Integer/parseInt (get (:params req) "urakka-id")))
+  (let [urakka-id (Integer/parseInt (get (:params req) "urakka-id"))
+        kayttaja (:kayttaja req)]
+    ;; Tarkistetaan, että kutsussa on mukana urakka ja kayttaja
+    (if (and (not (nil? urakka-id))
+          (not (nil? kayttaja)))
+      nil ;; TOOD: lue urem excel
+      (throw+ {:type "Error"
+               :virheet [{:koodi "ERROR" :viesti "Ladatussa tiedostossa virhe."}]}))))
+
 ;; Korjataan tuotannossa oleva virhetilanne, jossa pot?=true merkinnän saaneet paikkauskohteet
 ;; eivät ole saaneet ylläpitokohdetta. Joten varmistetaan, että kaikilla pot-raportoitavilla on olemassa
 ;; ylläpitokohde
@@ -628,6 +641,9 @@
       (julkaise-palvelu http :hae-paikkauskohteiden-tyomenetelmat
                         (fn [user tiedot]
                           (paikkaus-q/hae-paikkauskohteiden-tyomenetelmat db user tiedot)))
+      (julkaise-palvelu http :lue-urapaikkaukset-excelista
+        (wrap-multipart-params (fn [req] (vastaanota-urem-excel db fim email req kehitysmoodi?)))
+        {:ring-kasittelija? true})
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
       this))

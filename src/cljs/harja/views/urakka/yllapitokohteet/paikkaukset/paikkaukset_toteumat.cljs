@@ -45,7 +45,8 @@
             [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.valinnat :as valinnat]
             [harja.domain.tierekisteri :as tr-domain]
-            [harja.asiakas.kommunikaatio :as komm])
+            [harja.asiakas.kommunikaatio :as komm]
+            [harja.ui.liitteet :as liitteet])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -456,26 +457,33 @@
                (when (not= 0 arvo-massamaara) [:span
                                                [:strong "Ton\u00ADnia"]
                                                [:div (str (fmt/desimaaliluku-opt arvo-massamaara 2) " t")]])])
-            [:div.basis192.nogrow.body-text.shrink2.rajaus
-             [yleiset/linkki "Lisää toteuma"
-              #(luo-uusi-toteuma-kohteelle
-                 e!
-                 {::paikkaus/tyomenetelma tyomenetelma
-                  ::paikkaus/paikkauskohde paikkauskohde})
-              {:stop-propagation true
-               :disabloitu? (or urapaikkaus?
-                                (not= "tilattu" paikkauskohteen-tila))
-               :ikoni (ikonit/livicon-plus)
-               :block? true}]
+            [:div.basis192.nogrow.body-text.shrink2.rajaus.items-start
+             (if urapaikkaus?
+               [liitteet/lataa-tiedosto
+                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                {:nappi-teksti "Tuo Excelillä"
+                 :nappi-luokka "napiton-nappi"
+                 :url "lue-urapaikkaukset-excelista"
+                 ;; TODO: Tee uudet tuck-eventit
+                 :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
+                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+               [napit/yleinen-toissijainen "Lisää toteuma"
+                #(luo-uusi-toteuma-kohteelle
+                   e!
+                   {::paikkaus/tyomenetelma tyomenetelma
+                    ::paikkaus/paikkauskohde paikkauskohde})
+                {:disable (or urapaikkaus?
+                            (not= "tilattu" paikkauskohteen-tila))
+                 :ikoni (ikonit/livicon-plus)
+                 :luokka "napiton-nappi"}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
              (when tilaaja?
-               [yleiset/linkki "Ilmoita virhe"
+               [napit/yleinen-toissijainen
+                "Ilmoita virhe"
                 #(e! (tiedot/->AvaaVirheModal paikkauskohde))
-                {:style {}
-                 :block? true
+                {:luokka "napiton-nappi"
                  :ikoni (ikonit/harja-icon-action-send-email)
-                 :disabloitu? urakoitsija-kayttajana?
-                 :stop-propagation true}])
+                 :disabled urakoitsija-kayttajana?}])
              (when ilmoitettu-virhe
                [:span.pieni-teksti
                 [:div "Ilmoitettu virhe:"]
@@ -487,27 +495,28 @@
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
                  (when tilaaja?
-                   [yleiset/linkki "Merkitse tarkistetuksi"
+                   [napit/yleinen-toissijainen "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
-                    {:disabloitu? (or
-                                    urakoitsija-kayttajana?
-                                    tarkistettu?)
+                    {:disabled (or
+                                 urakoitsija-kayttajana?
+                                 tarkistettu?)
                      :ikoni (ikonit/livicon-check)
-                     :style {:margin-top "0px"}
-                     :block? true
-                     :stop-propagation true}]))
-               [:div.small-text.harmaa (cond
-                                         (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
+                     :luokka "napiton-nappi"}]))
+               [:div.small-text.harmaa
+                ;; Täsmätään vihjetekstin sisennys napin tekstiin
+                (when (and (not tarkistettu) tilaaja?) {:style {:margin-left "34px"}})
+                (cond
+                  (= yha-lahetyksen-tila "lahetetty") "Lähetetty YHAan"
 
-                                         (true? tarkistettu?) "Tarkistettu"
+                  (true? tarkistettu?) "Tarkistettu"
 
-                                         (and
-                                           (false? tarkistettu?)
-                                           (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
+                  (and
+                    (false? tarkistettu?)
+                    (paikkaus/pitaako-paikkauskohde-lahettaa-yhaan? (paikkaus/tyomenetelma-id->lyhenne tyomenetelma tyomenetelmat))) "Lähetys YHAan"
 
-                                         :else
-                                         "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
+                  :else
+                  "Ko. toimenpidettä ei lähetetä YHA:an")]])]])))))
 
 
 (defn paikkaukset [e! {:keys [paikkaukset-grid
