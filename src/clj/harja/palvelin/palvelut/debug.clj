@@ -28,6 +28,10 @@
   (let [tulos (q/hae-tyokonehavainto-reitti db {:tyokoneid (:tyokone-id params)})
         reitti (:sijainti (first tulos))]
     reitti))
+(defn hae-urakan-tierekisteriosoitteita [db params]
+  (let [tulos (q/hae-urakan-tierekisteriosoitteita db {:urakka-id (:urakka-id params)})
+        _ (println "hae-urakan-tierekisteriosoitteita :: tulos: " tulos)]
+    tulos))
 
 (defn geometrisoi-reittoteuma [db json]
   (let [parsittu  (cheshire/decode json)
@@ -92,6 +96,8 @@
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
       (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db)))
+      :debug-hae-urakan-tierekisteriosoitteita
+      (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -102,4 +108,5 @@
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet)
+      :debug-hae-urakan-tierekisteriosoitteita
     this))

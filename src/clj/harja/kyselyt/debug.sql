@@ -12,4 +12,13 @@ SELECT t.reitti,
 -- name: hae-tyokonehavainto-reitti
 SELECT ST_Simplify(t.sijainti,0.6,true) as sijainti
   FROM tyokonehavainto t
-WHERE t.tyokoneid = :tyokoneid;
+WHERE t.tyokoneid = :tyokoneid;-- name: hae-urakan-tierekisteriosoitteita
+select tr.id, tr."tr-numero" as tie, tr."tr-osa" as osa, tr."tr-alkuetaisyys" as aet, tr."tr-loppuetaisyys" as let
+from tr_osoitteet tr,
+     urakka u
+WHERE u.id = :urakka-id
+  and st_within(
+    tr_osoitteelle_viiva3(tr."tr-numero", tr."tr-osa", tr."tr-alkuetaisyys", tr."tr-osa", tr."tr-loppuetaisyys"),
+    u.alue)
+order by tr."tr-numero" asc, tr."tr-osa" asc
+limit 200;

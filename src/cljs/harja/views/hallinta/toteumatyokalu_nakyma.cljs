@@ -7,6 +7,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.grid :as grid]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
@@ -41,6 +42,11 @@
                     [:div
                      [:p "Koska tämä viritelmä on kesken, niin tr-osoitteen koordinaatteja ei saada, ennenkuin ne haetaan serveriltä"]
                      [:p (str (:koordinaatit app))]
+                     (when (get-in app [:toteumatiedot :valittu-urakka :id])
+                      [napit/tallenna "Hae tr-osoitteet ja ulkoinen-id"
+                       #(do
+                          (e! (tiedot/->HaeSeuraavaVapaaUlkoinenId))
+                          (e! (tiedot/->HaeUrakanTierekisteriosoitteita (get-in app [:toteumatiedot :valittu-urakka :id]))))])
                      [napit/tallenna "Hae TR osoitteelle koordinaatit"
                       #(e! (tiedot/->HaeTROsoitteelleKoordinaatit toteumatiedot))
                       {:disabled disable-trhaku? :paksu? true}]
@@ -103,6 +109,16 @@
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}]
       toteumatiedot]]))
+     [:div [:b "Urakan tierekisteriosoitteita, joita voi käyttää toteuman lisäämisessä"]
+      [grid/grid
+       {:otsikko "Tierekisteriosoitteet"
+        :tunniste :id
+        :piilota-toiminnot? true}
+       [{:otsikko "Tie" :nimi :tie :tyyppi :string :leveys 1}
+        {:otsikko "Osa" :nimi :osa :tyyppi :string :leveys 1}
+        {:otsikko "Aet" :nimi :aet :tyyppi :string :leveys 1}
+        {:otsikko "Let" :nimi :let :tyyppi :string :leveys 1}]
+       (:tierekisteriosoitteita app)]]]))
 
 (defn simuloi-toteuma* []
   (komp/luo

@@ -109,6 +109,9 @@
 (defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
 (defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
 
+(defrecord HaeUrakanTierekisteriosoitteita [urakka-id])
+(defrecord HaeUrakanTierekisteriosoitteitaOnnistui [vastaus])
+(defrecord HaeUrakanTierekisteriosoitteitaEpaonnistui [vastaus])
 (defn hae-hallintayksikon-urakat [hal]
   (let [_ (tuck-apurit/post! :hallintayksikon-urakat
             (:id hal)
@@ -274,5 +277,25 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+  HaeUrakanTierekisteriosoitteita
+  (process-event [{urakka-id :urakka-id} app]
+    (let [_ (tuck-apurit/post! :debug-hae-urakan-tierekisteriosoitteita
+              {:urakka-id urakka-id}
+              {:onnistui ->HaeUrakanTierekisteriosoitteitaOnnistui
+               :epaonnistui ->HaeUrakanTierekisteriosoitteitaEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  HaeUrakanTierekisteriosoitteitaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanTierekisteriosoitteitaOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeUrakanTierekisteriosoitteitaOnnistui" :onnistui)
+    (assoc app :tierekisteriosoitteita vastaus))
+
+  HaeUrakanTierekisteriosoitteitaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanTierekisteriosoitteitaEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeUrakanTierekisteriosoitteitaEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app)
   )
