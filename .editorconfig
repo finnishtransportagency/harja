@@ -18,7 +18,7 @@ ij_visual_guides = none
 # https://cursive-ide.com/userguide/formatting.html
 # https://tonsky.me/blog/clojurefmt/
 ij_clojure_defaultonlyindent = true
-ij_clojure_forceonlyindent = false
+ij_clojure_forceonlyindent = true
 
 ij_clojure_alignbindingforms = false
 ij_clojure_alignmapvalues = false

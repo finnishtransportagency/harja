@@ -1,24 +1,15 @@
 (ns harja.views.ilmoitukset.tietyoilmoitukset
-  (:require [reagent.core :refer [atom] :as r]
-            [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
+  (:require [harja.tiedot.ilmoitukset.tietyoilmoitukset :as tiedot]
             [harja.ui.komponentti :as komp]
-            [harja.ui.grid :refer [grid]]
-            [harja.ui.kentat :refer [tee-kentta]]
-            [harja.ui.debug :as ui-debug]
             [harja.ui.yleiset :as yleiset]
-            [harja.loki :refer [tarkkaile! log]]
-            [cljs.pprint :refer [pprint]]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.kartta :as kartta]
             [harja.ui.notifikaatiot :as notifikaatiot]
-            [tuck.core :refer [tuck send-value! send-async!]]
             [harja.tiedot.hallintayksikot :as hallintayksikot-tiedot]
             [harja.tiedot.kartta :as kartta-tiedot]
             [harja.views.ilmoitukset.tietyoilmoitushakulomake :as tietyoilmoitushakulomake]
             [harja.views.ilmoitukset.tietyoilmoituslomake :as tietyoilmoituslomake]
-            [harja.tyokalut.spec-apurit :as spec-apurit])
-  (:require-macros
-    [cljs.core.async.macros :refer [go]]))
+            [harja.tyokalut.spec-apurit :as spec-apurit]))
 
 #_(defn- debug-state [app]
   [:span
@@ -28,6 +19,7 @@
 (defn ilmoitukset* [e! ilmoitukset]
   (e! (tiedot/->HaeKayttajanUrakat @hallintayksikot-tiedot/vaylamuodon-hallintayksikot))
   (e! (tiedot/->YhdistaValinnat @tiedot/ulkoisetvalinnat))
+
   (komp/luo
     (komp/lippu tiedot/karttataso-tietyoilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ ilmoitus]

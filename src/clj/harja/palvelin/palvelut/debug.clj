@@ -8,6 +8,7 @@
             [harja.kyselyt.debug :as q]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
@@ -39,8 +40,7 @@
     tulos))
 
 (defn paivita-raportit [db params]
-  (let [_ (println "paivita-raportit :: params: " params)
-        _ (q/paivita-toteuma-tehtavat db)
+  (let [_ (q/paivita-toteuma-tehtavat db)
         _ (q/paivita-toteuma-materiaalit db)
         _ (q/paivita-pohjavesialuekooste db)
         _ (q/paivita-pohjavesialueiden-suolatoteumat db)
@@ -84,6 +84,25 @@
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
 
+(defn- urakan-rajoitusalueet [db urakka-id]
+  (let [rajoitusalueet (suolarajoitus-kyselyt/hae-urakan-rajoitusaluegeometriat db {:urakka-id urakka-id})
+        rajoitusalueet (map (fn [r]
+                              (-> r
+                                (update :tierekisteriosoite konv/lue-tr-osoite)
+                                (assoc :sijainti (geo/pg->clj (:sijainti r)))))
+                         rajoitusalueet)]
+    rajoitusalueet))
+
+(defn- hae-suolatoteumat
+  "Älä hae tällä liian laajalta aikaväliltä"
+  [db tiedot]
+  (let [suolat (suolarajoitus-kyselyt/hae-suolatoteumageometriat db tiedot)
+        suolat (map (fn [s]
+                              (-> s
+                                (assoc :sijainti (geo/pg->clj (:sijainti s)))))
+                         suolat)]
+    suolat))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -114,7 +133,11 @@
       :debug-hae-urakan-tierekisteriosoitteita
       (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
       :debug-paivita-raportit
-      (vaadi-jvh! (partial #'paivita-raportit db)))
+      (vaadi-jvh! (partial #'paivita-raportit db))
+      debug-hae-rajoitusalueet
+      (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
+      :debug-hae-paivan-suolatoteumat
+      (vaadi-jvh! (partial #'hae-suolatoteumat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -127,5 +150,7 @@
       :debug-hae-tyokonehavainto-reittipisteet
       :debug-hae-seuraava-vapaa-ulkoinen-id
       :debug-hae-urakan-tierekisteriosoitteita
-      :debug-paivita-raportit)
+      :debug-paivita-raportit
+      :debug-hae-rajoitusalueet
+      :debug-hae-paivan-suolatoteumat)
     this))
