@@ -50,6 +50,7 @@ schemas:
  - paikkauskustannusten-kirjaus-request: !include schemas/paikkauskustannusten-kirjaus-request.schema.json
  - paikkausten-poisto-request: !include schemas/paikkausten-poisto-request.schema.json
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
+ - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
 
 securitySchemes:
  - basic:
@@ -1068,7 +1069,7 @@ documentation:
         body:
           application/json:
             example: !include examples/paikkauskustannusten-kirjaus-request.json
-            schema: paikkauskustannusten-kirjaus-request
+            schema: tyomaapaivakirja-kirjaus-request
         responses:
           200:
             body:
