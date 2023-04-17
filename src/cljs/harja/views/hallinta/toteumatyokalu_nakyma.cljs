@@ -123,7 +123,7 @@
           [:div
            [kartta/kartan-paikka]
            [debug/debug app]
-           (when (:oikeudet-urakoihin app)
+           (when (not (empty? (:oikeudet-urakoihin app)))
              [:div
               [:p [:b "Käyttäjällä on oikeus lisätä toteumia seuraaviin urakoihin:"]]
               (for [urakka (:oikeudet-urakoihin app)]
@@ -131,13 +131,14 @@
                 [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]])])
            [:div
             ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
-            (when (and (get-in app [:toteumatiedot :valittu-urakka])
+            (if (and (get-in app [:toteumatiedot :valittu-urakka])
                     (not (some (fn [u] (when (= (get-in app [:toteumatiedot :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
-              [:p "Lisää oikeudet puuttuvaan urakkaan"]
-              [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
-               #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
-               {:paksu? true}])]
-           (toteumalomake e! app)])
+              [:div
+               [:p [:b "Lisää oikeudet puuttuvaan urakkaan"]]
+               [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
+                #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
+                {:paksu? true}]]
+              (toteumalomake e! app))]])
         "Puutteelliset käyttöoikeudet"))))
 
 (defn simuloi-toteuma []
