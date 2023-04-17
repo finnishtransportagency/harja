@@ -38,6 +38,14 @@
         _ (println "hae-urakan-tierekisteriosoitteita :: tulos: " tulos)]
     tulos))
 
+(defn paivita-raportit [db params]
+  (let [_ (println "paivita-raportit :: params: " params)
+        _ (q/paivita-toteuma-tehtavat db)
+        _ (q/paivita-toteuma-materiaalit db)
+        _ (q/paivita-pohjavesialuekooste db)
+        _ (q/paivita-pohjavesialueiden-suolatoteumat db)
+        _ (q/paivita-materiaalin-kaytto-urakalle db params)]))
+
 (defn geometrisoi-reittoteuma [db json]
   (let [parsittu  (cheshire/decode json)
         reitti (or (get-in parsittu ["reittitoteuma" "reitti"])
@@ -105,6 +113,8 @@
       (vaadi-jvh! (partial #'hae-seuraava-vapaa-ulkoinen-id db))
       :debug-hae-urakan-tierekisteriosoitteita
       (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
+      :debug-paivita-raportit
+      (vaadi-jvh! (partial #'paivita-raportit db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -114,8 +124,8 @@
       :debug-geometrisoi-reittitoteuma
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
-      :debug-hae-tyokonehavainto-reittipisteet)
       :debug-hae-tyokonehavainto-reittipisteet
       :debug-hae-seuraava-vapaa-ulkoinen-id
       :debug-hae-urakan-tierekisteriosoitteita
+      :debug-paivita-raportit)
     this))

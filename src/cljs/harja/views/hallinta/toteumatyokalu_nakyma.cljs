@@ -2,7 +2,6 @@
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
@@ -11,7 +10,8 @@
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallintayksikot :as hal])
+            [harja.tiedot.hallintayksikot :as hal]
+            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -47,6 +47,9 @@
                        #(do
                           (e! (tiedot/->HaeSeuraavaVapaaUlkoinenId))
                           (e! (tiedot/->HaeUrakanTierekisteriosoitteita (get-in app [:toteumatiedot :valittu-urakka :id]))))])
+                     (when (get-in app [:toteumatiedot :valittu-urakka :id])
+                       [napit/tallenna "Päivitä raportit"
+                        #(e! (tiedot/->PaivitaRaportit))])
                      [napit/tallenna "Hae TR osoitteelle koordinaatit"
                       #(e! (tiedot/->HaeTROsoitteelleKoordinaatit toteumatiedot))
                       {:disabled disable-trhaku? :paksu? true}]
@@ -108,7 +111,8 @@
         :tyyppi :tierekisteriosoite
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}]
-      toteumatiedot]]))
+      toteumatiedot]
+
      [:div [:b "Urakan tierekisteriosoitteita, joita voi käyttää toteuman lisäämisessä"]
       [grid/grid
        {:otsikko "Tierekisteriosoitteet"
