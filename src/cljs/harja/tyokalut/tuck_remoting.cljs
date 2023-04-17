@@ -180,8 +180,12 @@
           ;; Käytetään localhost-kehityksessä WS-protokollaa ja muualla WSS
           ;; Testipalvelimilla (ja tuotannossa) pitäisi olla normaalisti HTTPS-sertifikaatti käytössä, joten
           ;; WSS-protokollaa pitää käyttää niissä.
-          (let [protokolla (if (k/kehitysymparistossa-localhost?) "ws://" "wss://")]
-            (str protokolla js/window.location.host "/_/ws?"))
+          (let [protokolla (if (k/kehitysymparistossa-localhost?) "ws://" "wss://")
+                host js/window.location.host
+                path-name js/window.location.pathname]
+            ;; Huom: harja.palvelin.komponentit.http-palvelin/transit-palvelun-polku määrittää -> "_/"-alun
+            ;;       "ws"-string tulee julkaistun palvelun nimestä :ws
+            (str protokolla host path-name "_/ws?"))
           tila-atom
           yhteys-onnistui-fn
           yhteys-katkaistu-fn))))
