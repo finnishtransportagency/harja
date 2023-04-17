@@ -132,8 +132,12 @@
                    "hallintayksikko" hy-nimi
 
                    "koko maa" "Koko maa")
-         :alkupvm (some-> parametrit :alkupvm pvm/pvm)
-         :loppupvm (some-> parametrit :loppupvm pvm/pvm)
+         :alkupvm (or
+                    (some-> parametrit :alkupvm pvm/pvm)
+                    (some-> (:parametrit parametrit) :alkupvm pvm/pvm))
+         :loppupvm (or
+                     (some-> parametrit :loppupvm pvm/pvm)
+                     (some-> (:parametrit parametrit) :loppupvm pvm/pvm))
          :raportin-nimi (get-in raportti [1 :nimi])})
       (assoc-in
         [1 :tietoja]
@@ -333,8 +337,8 @@
           (binding [*raportin-suoritus* this]
             ;; Tallennetaan loki raportin ajon startista
             (let [parametrit (assoc parametrit :kasittelija kasittelija)
-                  _ (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti
-                     " parametreilla " parametrit)
+                  _ (when-not (= nimi :ilmoitukset-raportti)
+                      (log/debug "SUORITETAAN RAPORTTI " nimi " kontekstissa " konteksti " parametreilla " parametrit))
                   suoritus-id (luo-suoritustieto-raportille
                                db 
                                kayttaja 

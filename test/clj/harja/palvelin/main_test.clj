@@ -106,7 +106,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
@@ -173,7 +173,7 @@
     :muut-tyot :kulut :toteumat :yllapitototeumat :paallystys :maaramuutokset
     :yllapitokohteet :muokkauslukko :yhteyshenkilot :toimenpidekoodit :pohjavesialueet
     :materiaalit :selainvirhe :valitavoitteet :siltatarkastukset :lampotilat :maksuerat
-    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset
+    :liitteet :laadunseuranta :tarkastukset :ilmoitukset :tietyoilmoitukset :tuck-remoting :ilmoitukset-ws-palvelu
     :turvallisuuspoikkeamat :integraatioloki-palvelu :raportit :digiroad :yha :yha-velho :varustetoteuma-ulkoiset :tr-haku
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
