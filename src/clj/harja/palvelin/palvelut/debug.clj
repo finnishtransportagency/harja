@@ -28,6 +28,11 @@
   (let [tulos (q/hae-tyokonehavainto-reitti db {:tyokoneid (:tyokone-id params)})
         reitti (:sijainti (first tulos))]
     reitti))
+(defn hae-seuraava-vapaa-ulkoinen-id [db params]
+  (let [tulos (q/seuraava-vapaa-ulkoinen-id db)
+        _ (println "hae-seuraava-vapaa-ulkoinen-id :: tulos: " tulos)]
+    (:ulkoinen_id (first tulos))))
+
 (defn hae-urakan-tierekisteriosoitteita [db params]
   (let [tulos (q/hae-urakan-tierekisteriosoitteita db {:urakka-id (:urakka-id params)})
         _ (println "hae-urakan-tierekisteriosoitteita :: tulos: " tulos)]
@@ -95,7 +100,9 @@
       :debug-geometrisoi-reittipisteet
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
-      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db)))
+      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db))
+      :debug-hae-seuraava-vapaa-ulkoinen-id
+      (vaadi-jvh! (partial #'hae-seuraava-vapaa-ulkoinen-id db))
       :debug-hae-urakan-tierekisteriosoitteita
       (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
     this)
@@ -108,5 +115,7 @@
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
       :debug-hae-tyokonehavainto-reittipisteet)
+      :debug-hae-tyokonehavainto-reittipisteet
+      :debug-hae-seuraava-vapaa-ulkoinen-id
       :debug-hae-urakan-tierekisteriosoitteita
     this))

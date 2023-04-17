@@ -278,6 +278,26 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
     app)
+  HaeSeuraavaVapaaUlkoinenId
+  (process-event [_ app]
+    (let [_ (tuck-apurit/post! :debug-hae-seuraava-vapaa-ulkoinen-id
+              {}
+              {:onnistui ->HaeSeuraavaVapaaUlkoinenIdOnnistui
+               :epaonnistui ->HaeSeuraavaVapaaUlkoinenIdEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  HaeSeuraavaVapaaUlkoinenIdOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaOikeudetUrakkaanOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdOnnistui" :onnistui)
+    (assoc-in app [:toteumatiedot :ulkoinen-id] vastaus))
+
+  HaeSeuraavaVapaaUlkoinenIdEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeSeuraavaVapaaUlkoinenIdEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+    app)
   HaeUrakanTierekisteriosoitteita
   (process-event [{urakka-id :urakka-id} app]
     (let [_ (tuck-apurit/post! :debug-hae-urakan-tierekisteriosoitteita

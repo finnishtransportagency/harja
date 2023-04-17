@@ -13,6 +13,12 @@ SELECT t.reitti,
 SELECT ST_Simplify(t.sijainti,0.6,true) as sijainti
   FROM tyokonehavainto t
 WHERE t.tyokoneid = :tyokoneid;-- name: hae-urakan-tierekisteriosoitteita
+-- name: seuraava-vapaa-ulkoinen-id
+select (COALESCE(t.ulkoinen_id, 0) + 1) as ulkoinen_id
+from toteuma t
+where t.ulkoinen_id is not null
+order by t.ulkoinen_id desc
+limit 1;
 select tr.id, tr."tr-numero" as tie, tr."tr-osa" as osa, tr."tr-alkuetaisyys" as aet, tr."tr-loppuetaisyys" as let
 from tr_osoitteet tr,
      urakka u
