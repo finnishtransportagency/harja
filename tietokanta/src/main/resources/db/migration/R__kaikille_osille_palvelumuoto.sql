@@ -1,10 +1,11 @@
 CREATE OR REPLACE FUNCTION kaikille_osille_palvelumuoto()
   RETURNS TRIGGER AS
 $$
-DECLARE tapahtuman_kohde INTEGER;
-DECLARE toiminto_poistettu BOOLEAN;
-DECLARE kohteen_osat INTEGER[];
-DECLARE palvelumuodot INTEGER[];
+DECLARE 
+	tapahtuman_kohde INTEGER;
+	toiminto_poistettu BOOLEAN;
+	kohteen_osat INTEGER[];
+	palvelumuodot INTEGER[];
 
 BEGIN
     tapahtuman_kohde := NEW."kohde-id";

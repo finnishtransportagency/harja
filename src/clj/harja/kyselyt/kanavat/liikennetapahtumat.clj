@@ -474,7 +474,7 @@
         {::m/poistaja-id (:id user)
          ::m/muokattu (pvm/nyt)
          ::m/poistettu? true}
-        {::toiminto/id (::toiminto/id toiminto)}))))
+        {::toiminto/id toiminto-id}))))
 
 (defn poista-tapahtuma! [db user tapahtuma]
   (specql/update! db
