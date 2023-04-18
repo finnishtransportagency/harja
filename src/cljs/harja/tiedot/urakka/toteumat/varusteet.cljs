@@ -82,6 +82,9 @@
                                  (t/send-async! v/->HaeVarusteToteumat)
                                  timeout)))
 
+(defn- virhe-tapahtui! [app virhe]
+  (assoc app :virhe virhe))
+
 (defn- tooltip [{:keys [toimenpide tietolaji alkupvm]}]
   (str
     (pvm/pvm alkupvm) " "
@@ -264,8 +267,10 @@
                                                            (varusteet-domain/selitys->tietolaji (:nimi %)))
                                                         tietolajit))}
                                {:onnistui v/->VarusteToteumatHaettu
-                                       :epaonnistui (partial v/->VirheTapahtui "Varustetoteumien haussa tapahtui virhe")})
-          (assoc :toteumahaku-id nil))))
+                                :epaonnistui v/->HaeVarusteToteumatEpaonnistui})
+          (assoc
+            :toteumahaku-id nil
+            :varustetoteumien-haku-kaynnissa? true))))
 
   v/VarusteToteumatHaettu
   (process-event [{toteumat :toteumat}
@@ -277,18 +282,26 @@
     (hae
       taustahaun-viive-ms
       (kartalle
-        (assoc app
-          :toteumat toteumat
-          :naytettavat-toteumat (naytettavat-toteumat {:tila (palauta-tilan-arvo (:virheelliset-ainoastaan? valinnat))
-                                                       :toimenpide valittu-toimenpide} toteumat)
-          :varustetoteuma (if valittu-toteumaid
-                            ;; Jos katsotaan vanhaa, päivitä tiedot palvelimelta
-                            (some #(when (= (:toteumaid %) valittu-toteumaid) %)
-                                  toteumat)
+        (-> app
+          (assoc
+            :toteumat toteumat
+            :naytettavat-toteumat (naytettavat-toteumat {:tila (palauta-tilan-arvo (:virheelliset-ainoastaan? valinnat))
+                                                         :toimenpide valittu-toimenpide} toteumat)
+            :varustetoteuma (if valittu-toteumaid
+                              ;; Jos katsotaan vanhaa, päivitä tiedot palvelimelta
+                              (some #(when (= (:toteumaid %) valittu-toteumaid) %)
+                                toteumat)
 
-                            ;; Luomassa uutta, ei kosketa toteumaan
-                            varustetoteuma)
-          :valittu-toteumaid nil))))
+                              ;; Luomassa uutta, ei kosketa toteumaan
+                              varustetoteuma)
+            :valittu-toteumaid nil)
+          (dissoc :varustetoteumien-haku-kaynnissa?)))))
+
+  v/HaeVarusteToteumatEpaonnistui
+  (process-event [_ app]
+    (-> app
+      (virhe-tapahtui! "Varustetoteumien haussa tapahtui virhe")
+      (dissoc :varustetoteumien-haku-kaynnissa?)))
 
   v/ValitseVarusteNaytetaanVirheelliset
   (process-event [{virheelliset-ainoastaan? :virheelliset-ainoastaan?} {:keys [valinnat toteumat] :as app}]
@@ -403,7 +416,7 @@
 
   v/VirheTapahtui
   (process-event [{virhe :virhe} app]
-    (assoc app :virhe virhe))
+    (virhe-tapahtui! app virhe))
 
   v/VirheKasitelty
   (process-event [_ app]

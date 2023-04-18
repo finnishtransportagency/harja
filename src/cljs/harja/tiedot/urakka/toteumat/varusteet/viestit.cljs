@@ -11,6 +11,7 @@
 ;; Hae varustetoteumat pyynnön laukaisu sekä sen paluuarvo
 (defrecord HaeVarusteToteumat [])
 (defrecord VarusteToteumatHaettu [toteumat])
+(defrecord HaeVarusteToteumatEpaonnistui [])
 
 ;; Valitse annettu toteuma
 (defrecord ValitseToteuma [toteuma])
