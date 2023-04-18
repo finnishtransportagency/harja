@@ -44,7 +44,7 @@
 
 (defn suolasakko [ur lampotila lampotila-pitka sakko-per-tonni sallittu-maara kaytetty-maara]
   ;; Muokkaa oulun alueurakan testidatan toteumia
-  (u (str "UPDATE lampotilat SET keskilampotila = " lampotila ", pitka_keskilampotila_vanha = " lampotila-pitka " WHERE urakka = " ur " AND alkupvm='2014-10-01'"))
+  (u (str "UPDATE lampotilat SET keskilampotila = " lampotila ", keskilampotila_1971_2000 = " lampotila-pitka " WHERE urakka = " ur " AND alkupvm='2014-10-01'"))
   (u (str "UPDATE suolasakko SET maara=" sakko-per-tonni ", talvisuolaraja=" sallittu-maara " WHERE urakka=" ur " AND hoitokauden_alkuvuosi=2014"))
 
   (u (str "UPDATE suolasakko SET maara=" sakko-per-tonni ", talvisuolaraja=" sallittu-maara " WHERE urakka=" ur " AND hoitokauden_alkuvuosi=2014"))

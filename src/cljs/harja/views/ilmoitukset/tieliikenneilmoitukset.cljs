@@ -6,7 +6,9 @@
              [kuittausvaatimukset-str ilmoitustyypin-lyhenne-ja-nimi
               +ilmoitusten-selitteet+ kuittaustyypin-selite kuittaustyypin-lyhenne
               tilan-selite vaikutuksen-selite] :as domain]
+            [harja.tuck-remoting.ilmoitukset-ohjain :as ilmoitukset-ws]
             [harja.ui.bootstrap :as bs]
+            [harja.ui.debug :as debug]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :refer [grid]]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
@@ -46,16 +48,20 @@
                                  selitteet))]
             (vec (sort itemit)))))))
 
-(defn vihjeet []
+(defn vihjeet [{ws-kuuntelu-aktiivinen? :aktiivinen? :as ws-ilmoitusten-kuuntelu}]
   [yleiset/vihje-elementti
-   [:span
-    [:span "Ilmoituksia päivitetään automaattisesti. Yhteydenottopyynnöt "]
-    [:span.bold "lihavoidaan"]
-    [:span ", edellinen valinta korostetaan "]
-    [:span.vihje-hento-korostus "sinisellä"]
-    [:span ", virka-apupyynnöt "]
-    [:span.selite-virkaapu "punaisella"]
-    [:span " selitelaatikossa."]]])
+   [:div
+    [:div
+     [:span "Ilmoituksia päivitetään automaattisesti. Yhteydenottopyynnöt "]
+     [:span.bold "lihavoidaan"]
+     [:span ", edellinen valinta korostetaan "]
+     [:span.vihje-hento-korostus "sinisellä"]
+     [:span ", virka-apupyynnöt "]
+     [:span.selite-virkaapu "punaisella"]
+     [:span " selitelaatikossa."]]
+    [:div [:i (if ws-kuuntelu-aktiivinen?
+                 "Uusien ilmoitusten reaaliaikahaku aktiivinen"
+                 (str "Uusia ilmoituksia haetaan " (/ tiedot/taustahaun-viive-ms 1000) " sekunnin välein."))]]]])
 
 (defn ilmoituksen-tiedot [e! ilmoitus]
   [:div
@@ -215,7 +221,8 @@
    [:span (or tunniste "-")]])
 
 (defn ilmoitusten-paanakyma
-  [e! {valinnat-nyt :valinnat
+  [e! {ws-ilmoitusten-kuuntelu :ws-ilmoitusten-kuuntelu
+       valinnat-nyt :valinnat
        kuittaa-monta :kuittaa-monta
        haetut-ilmoitukset :ilmoitukset
        ilmoituksen-haku-kaynnissa? :ilmoituksen-haku-kaynnissa?
@@ -235,6 +242,7 @@
         valittu-loppupvm (if tunteja-valittu (pvm/nyt) vapaa-loppuaika)]
     
     [:span.ilmoitukset
+     [debug/debug ilmoitukset]
 
      [ilmoitusten-hakuehdot e! valinnat-nyt]
      [:div
@@ -242,7 +250,14 @@
                           :teksti "Äänimerkki uusista ilmoituksista"}
        tiedot/aanimerkki-uusista-ilmoituksista?]
 
-      [vihjeet]
+      ;; FIXME: Tämä on väliaikainen toiminto WS-kuuntelijan testikäyttöä varten.
+      ;;        Käyttäjä voi aktivoida/deaktivoida WS-kuuntelun.
+      ;;        Asetus tallennnetaan localstorageen, jolloin valittu asetus on aktiivinen myös refreshin jälkeen.
+      [kentat/tee-kentta {:tyyppi :checkbox
+                          :teksti "Aktivoi kokeellinen ilmoitusten reaaliaikahaku (testikäyttö)"}
+       tiedot/ws-kuuntelija-ominaisuus?]
+
+      [vihjeet ws-ilmoitusten-kuuntelu]
 
       (when-not kuittaa-monta-nyt
         [napit/yleinen-toissijainen "Kuittaa monta ilmoitusta" #(e! (v/->AloitaMonenKuittaus))
@@ -347,15 +362,30 @@
 
              haetut-ilmoitukset)]]]))
 
-(defn- ilmoitukset* [e! ilmoitukset]
+(defn- ilmoitukset* [e! {valinnat :valinnat :as ilmoitukset-tila}]
   ;; Kun näkymään tullaan, yhdistetään navigaatiosta tulevat valinnat
   (e! (v/->YhdistaValinnat @tiedot/valinnat))
 
   (komp/luo
     (komp/lippu tiedot/karttataso-ilmoitukset)
     (komp/kuuntelija :ilmoitus-klikattu (fn [_ i] (e! (v/->ValitseIlmoitus (:id i)))))
-    (komp/watcher tiedot/valinnat (fn [_ _ uusi]
-                                    (e! (v/->YhdistaValinnat uusi))))
+    (komp/watcher tiedot/valinnat (fn [_ vanhat-valinnat uudet-valinnat]
+                                    (e! (v/->YhdistaValinnat uudet-valinnat))
+                                    ;; Aloita WS-ilmoitusten kuuntelu uudestaan, mikäli valinnat muuttuvat.
+                                    ;; Tarkkaillaan valinnoista vain "perussuodattiemien" muutoksia, jotta palvelinta
+                                    ;; ei kuormiteta liikaa muutoksilla palvelinpuolen kuuntelijoihin.
+                                    (let [vanhat (select-keys vanhat-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])
+                                          uudet (select-keys uudet-valinnat [:urakka :urakkatyyppi :urakoitsija :hallintayksikko])]
+                                      (when (not= vanhat uudet)
+                                        (when @tiedot/ws-kuuntelija-ominaisuus?
+                                          (e! (ilmoitukset-ws/->AloitaKuuntelu uudet-valinnat)))))))
+
+    ;; FIXME: Tämä on väliaikainen ominaisuus WS-kuuntelijan testikäyttöä varten.
+    (komp/watcher tiedot/ws-kuuntelija-ominaisuus?
+      (fn [_ _ uusi-tila]
+        (if (true? uusi-tila)
+          (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))
+          (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (komp/sisaan-ulos #(do
                          (notifikaatiot/pyyda-notifikaatiolupa)
                          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
@@ -366,10 +396,24 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:ilmoitus {:toiminto (fn [ilmoitus-infopaneelista]
                                                    (e! (v/->ValitseIlmoitus (:id ilmoitus-infopaneelista))))
-                                       :teksti "Valitse ilmoitus"}}))
+                                       :teksti "Valitse ilmoitus"}})
+
+                         ;; Aloita uusi WS-yhteys, sekä uusien ilmoituksien kuuntely WebSocketin kautta
+                         ;; Kuuntelun aloittamisen yhteydessä annetaan käyttöliittymästä optioksi "valinnat",
+                         ;; jotka toimivat suodattimina WebSocketin kautta vastaanotettaville ilmoituksille
+                         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
+                         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
+                         (when @tiedot/ws-kuuntelija-ominaisuus?
+                           (e! (ilmoitukset-ws/->AloitaYhteysJaKuuntelu valinnat))))
                       #(do
                          (kartta-tiedot/kasittele-infopaneelin-linkit! nil)
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)))
+                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+
+                         ;; Katkaise WS-yhteys ja lopeta samalla uusien ilmoitusten kuuntelu WebSocketin kautta
+                         ;; FIXME: Tämä on väliaikainen ehtolause WS-kuuntelijan testikäyttöä varten.
+                         ;;        Otetaan tämä ehtolause pois käytöstä, jos WS-kuuntelu koetaan testeissä vakaaksi.
+                         (when @tiedot/ws-kuuntelija-ominaisuus?
+                           (e! (ilmoitukset-ws/->KatkaiseYhteys)))))
     (fn [e! {valittu-ilmoitus :valittu-ilmoitus :as ilmoitukset}]
       [:span
        [kartta/kartan-paikka]

@@ -8,6 +8,7 @@
             [harja.kyselyt.debug :as q]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [cheshire.core :as cheshire]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
@@ -67,6 +68,25 @@
 (defn geometrisoi-reittipisteet [db pisteet]
   (reittitoteuma/hae-reitti db pisteet))
 
+(defn- urakan-rajoitusalueet [db urakka-id]
+  (let [rajoitusalueet (suolarajoitus-kyselyt/hae-urakan-rajoitusaluegeometriat db {:urakka-id urakka-id})
+        rajoitusalueet (map (fn [r]
+                              (-> r
+                                (update :tierekisteriosoite konv/lue-tr-osoite)
+                                (assoc :sijainti (geo/pg->clj (:sijainti r)))))
+                         rajoitusalueet)]
+    rajoitusalueet))
+
+(defn- hae-suolatoteumat
+  "Älä hae tällä liian laajalta aikaväliltä"
+  [db tiedot]
+  (let [suolat (suolarajoitus-kyselyt/hae-suolatoteumageometriat db tiedot)
+        suolat (map (fn [s]
+                              (-> s
+                                (assoc :sijainti (geo/pg->clj (:sijainti s)))))
+                         suolat)]
+    suolat))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -91,7 +111,11 @@
       :debug-geometrisoi-reittipisteet
       (vaadi-jvh! (partial #'geometrisoi-reittipisteet db))
       :debug-hae-tyokonehavainto-reittipisteet
-      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db)))
+      (vaadi-jvh! (partial #'hae-tyokonehavainto-reitti db))
+      :debug-hae-rajoitusalueet
+      (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
+      :debug-hae-paivan-suolatoteumat
+      (vaadi-jvh! (partial #'hae-suolatoteumat db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -101,5 +125,7 @@
       :debug-geometrisoi-reittitoteuma
       :debug-geometrisoi-tarkastus
       :debug-geometrisoi-reittipisteet
-      :debug-hae-tyokonehavainto-reittipisteet)
+      :debug-hae-tyokonehavainto-reittipisteet
+      :debug-hae-rajoitusalueet
+      :debug-hae-paivan-suolatoteumat)
     this))

@@ -1,5 +1,5 @@
 INSERT INTO lampotilat (urakka, alkupvm, loppupvm,
-                        keskilampotila, pitka_keskilampotila, pitka_keskilampotila_vanha)
+                        keskilampotila, keskilampotila_1981_2010, keskilampotila_1971_2000)
 VALUES
  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), '2005-10-01', '2006-09-30', -6.2, -9.0, -9.3),
  ((SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2005-2012'), '2006-10-01', '2007-09-30', -7.2, -9.0, -9.3),
