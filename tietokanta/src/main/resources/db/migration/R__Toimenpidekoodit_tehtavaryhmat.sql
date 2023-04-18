@@ -1230,7 +1230,7 @@ UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null
 WHERE nimi like ('%Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen%');
 UPDATE toimenpidekoodi
-SET suunnitteluyksikko = null
+SET suunnitteluyksikko = 'h', yksikko = 'h'
 WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon';
 UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null

@@ -62,11 +62,13 @@
     "virhe" [:span.tila-virhe (str "Epäonnistunut: " (pvm/pvm-aika lahetetty))]
     [:span.tila-odottaa-vastausta "Ei lähetetty"]))
 
-(defn toteumataulukko [e! toteumat]
+(defn toteumataulukko [e! toteumat varustetoteumien-haku-kaynnissa?]
   [:span
    [grid/grid
     {:otsikko "Varustetoteumat"
-     :tyhja (if (nil? toteumat) [ajax-loader "Haetaan toteumia..."] "Toteumia ei löytynyt")
+     :tyhja (if varustetoteumien-haku-kaynnissa?
+              [ajax-loader "Haetaan toteumia..." {:sama-rivi? true}]
+              [:span "Toteumia ei löytynyt"])
      :tunniste :id
      :rivi-klikattu #(e! (v/->ValitseToteuma %))}
     [{:tyyppi :vetolaatikon-tila :leveys 5}
@@ -345,7 +347,7 @@
    [:div.sisalto-container
     [:h1 "Vanhat varustekirjaukset Harjassa"]
     [valinnat e! nykyiset-valinnat]
-    [toteumataulukko e! naytettavat-toteumat]]])
+    [toteumataulukko e! naytettavat-toteumat (:varustetoteumien-haku-kaynnissa? app)]]])
 
 (defn kasittele-alkutila [e! {:keys [uudet-varustetoteumat muokattava-varuste naytettava-varuste]}]
   (when uudet-varustetoteumat
@@ -357,7 +359,11 @@
   (when naytettava-varuste
     (e! (v/->UusiVarusteToteuma :nayta naytettava-varuste))))
 
-(defn- varusteet* [e! varusteet]
+(defn- varusteet* [e! {nykyiset-valinnat :valinnat
+                       naytettavat-toteumat :naytettavat-toteumat
+                       varustetoteuma :varustetoteuma
+                       virhe :virhe
+                       :as app}]
   (e! (v/->YhdistaValinnat @varustetiedot/valinnat))
   (komp/luo
     (komp/lippu varustetiedot/karttataso-varustetoteuma)

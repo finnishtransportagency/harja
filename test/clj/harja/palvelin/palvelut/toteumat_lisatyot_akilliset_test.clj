@@ -40,7 +40,7 @@
                                       (toteumat/->Toteumat)
                                       [:http-palvelin :db :db-replica :karttakuvat :tierekisteri])
                           :tehtavamaarat (component/using
-                                           (tehtavamaarat/->Tehtavamaarat)
+                                           (tehtavamaarat/->Tehtavamaarat false)
                                            [:http-palvelin :db]))))))
 
   (testit)
