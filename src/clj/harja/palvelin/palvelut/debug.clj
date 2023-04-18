@@ -134,7 +134,7 @@
       (vaadi-jvh! (partial #'hae-urakan-tierekisteriosoitteita db))
       :debug-paivita-raportit
       (vaadi-jvh! (partial #'paivita-raportit db))
-      debug-hae-rajoitusalueet
+      :debug-hae-rajoitusalueet
       (vaadi-jvh! (partial #'urakan-rajoitusalueet db))
       :debug-hae-paivan-suolatoteumat
       (vaadi-jvh! (partial #'hae-suolatoteumat db)))
