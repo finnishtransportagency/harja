@@ -120,14 +120,13 @@
       [:input {:type "hidden" :name "parametrit"
                :value (transit/clj->transit tiedot)}]
       [:button {:type "submit"
-                :class #{"nappi-toissijainen napiton-nappi"}}
+                :class #{"nappi-reunaton"}}
        [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Lataa kustannus-Excel"]]]]
     (when (>= (:vuosi tiedot) nayta-kustannusexcelin-tuonti-alkaen-vuodesta)
       [liitteet/lataa-tiedosto
        {:urakka-id (-> @tila/tila :yleiset :urakka :id)
         :vuosi (:vuosi tiedot)}
        {:nappi-teksti "Tuo kustannukset excelistä"
-        :nappi-luokka "napiton-nappi"
         :url "tuo-paallystyskustannukset-excelista"
         :lataus-epaonnistui #(viesti/nayta! "Toiminto epäonnistui." :danger)
         :tiedosto-ladattu #(do

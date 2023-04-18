@@ -315,17 +315,22 @@ button > .ajax-loader {
 .liitekomponentti {
   /* Pakotettu fontin väri, jotta .lomake .label määritykset eivät yliajaisi näitä. */
   label.file-upload {
-    color: @blue-default!important;
+    color: @blue-dark;
 
     &.disabled {
-      color: @black-lighter !important;
+      color: @black-lighter;
     }
     &.ei-margin-topia {
       margin-top: 0;
     }
-  }
-  label.file-upload:hover {
-    color: @white-default!important;
+
+    &:hover {
+      color: @white-default;
+    }
+
+    &.nappi-reunaton:hover {
+      color: @blue-dark;
+    }
   }
 
   > .liite-virheviesti {

@@ -464,7 +464,6 @@
                 {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                  :paikkauskohde-id (::paikkaus/id paikkauskohde)}
                 {:nappi-teksti "Tuo Excelillä"
-                 :nappi-luokka "napiton-nappi"
                  :disabled? (not tilattu?)
                  :url "lue-urapaikkaukset-excelista"
                  :lataus-epaonnistui #(e! (tiedot/->UremPaikkausLatausEpaonnistui %))
@@ -476,14 +475,13 @@
                     ::paikkaus/paikkauskohde paikkauskohde})
                 {:disabled (or urapaikkaus? (not tilattu?))
                  :ikoni (ikonit/livicon-plus)
-                 :luokka "napiton-nappi"}])
+                 :luokka "nappi-reunaton"}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
              (when tilaaja?
-               [napit/yleinen-toissijainen
+               [napit/yleinen-reunaton
                 "Ilmoita virhe"
                 #(e! (tiedot/->AvaaVirheModal paikkauskohde))
-                {:luokka "napiton-nappi"
-                 :ikoni (ikonit/harja-icon-action-send-email)
+                {:ikoni (ikonit/harja-icon-action-send-email)
                  :disabled urakoitsija-kayttajana?}])
              (when ilmoitettu-virhe
                [:span.pieni-teksti
@@ -496,14 +494,13 @@
                  [:div.body-text.harmaa [ikonit/livicon-check] "Tarkistettu"]
                  ;; Annetaan vain tilaajan merkitä kohde tarkistetuksi
                  (when tilaaja?
-                   [napit/yleinen-toissijainen "Merkitse tarkistetuksi"
+                   [napit/yleinen-reunaton "Merkitse tarkistetuksi"
                     #(e! (tiedot/->PaikkauskohdeTarkistettu
                            {::paikkaus/paikkauskohde paikkauskohde}))
                     {:disabled (or
                                  urakoitsija-kayttajana?
                                  tarkistettu?)
-                     :ikoni (ikonit/livicon-check)
-                     :luokka "napiton-nappi"}]))
+                     :ikoni (ikonit/livicon-check)}]))
                [:div.small-text.harmaa
                 ;; Täsmätään vihjetekstin sisennys napin tekstiin
                 (when (and (not tarkistettu) tilaaja?) {:style {:margin-left "34px"}})

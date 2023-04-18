@@ -392,7 +392,7 @@
   (fn [params-map {:keys [tiedosto-ladattu lataus-epaonnistui nappi-luokka nappi-teksti grid? disabled? url] :as opts}]
     [:span
      [:span.liitekomponentti
-      [:label {:class (str "file-upload nappi-toissijainen ei-margin-topia "
+      [:label {:class (str "file-upload nappi-reunaton ei-margin-topia "
                            (when grid? "nappi-grid ")
                            (when disabled? "disabled ")
                            (when nappi-luokka (str nappi-luokka " ")))
