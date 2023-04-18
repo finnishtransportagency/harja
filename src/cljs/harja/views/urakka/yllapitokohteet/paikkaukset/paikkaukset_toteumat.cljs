@@ -396,7 +396,8 @@
             arvo-pinta-ala (pinta-alojen-summa paikkaukset (or urapaikkaus? levittimella-tehty?))
             arvo-juoksumetri (juoksumetri-summa paikkaukset)
             arvo-massamaara (massamaaran-summa paikkaukset)
-            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)]
+            arvo-massamenekki (massamenekin-keskiarvo paikkaukset)
+            tilattu? (= "tilattu" paikkauskohteen-tila)]
         (if ladataan-tietoja?
           [:div.flex-row.venyta.otsikkokomponentti
            [:div.basis512.growfill
@@ -460,20 +461,20 @@
             [:div.basis192.nogrow.body-text.shrink2.rajaus.items-start
              (if urapaikkaus?
                [liitteet/lataa-tiedosto
-                {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+                {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+                 :paikkauskohde-id (::paikkaus/id paikkauskohde)}
                 {:nappi-teksti "Tuo Excelillä"
                  :nappi-luokka "napiton-nappi"
+                 :disabled? (not tilattu?)
                  :url "lue-urapaikkaukset-excelista"
-                 ;; TODO: Tee uudet tuck-eventit
-                 :lataus-epaonnistui #(e! (t-paikkauskohteet/->TiedostoLadattu %))
-                 :tiedosto-ladattu #(e! (t-paikkauskohteet/->TiedostoLadattu %))}]
+                 :lataus-epaonnistui #(e! (tiedot/->UremPaikkausLatausEpaonnistui %))
+                 :tiedosto-ladattu #(e! (tiedot/->UremPaikkausLatausOnnistui %))}]
                [napit/yleinen-toissijainen "Lisää toteuma"
                 #(luo-uusi-toteuma-kohteelle
                    e!
                    {::paikkaus/tyomenetelma tyomenetelma
                     ::paikkaus/paikkauskohde paikkauskohde})
-                {:disable (or urapaikkaus?
-                            (not= "tilattu" paikkauskohteen-tila))
+                {:disabled (or urapaikkaus? (not tilattu?))
                  :ikoni (ikonit/livicon-plus)
                  :luokka "napiton-nappi"}])
              ;; Näytetään virheen ilmoitus vain tilaajalle

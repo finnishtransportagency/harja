@@ -316,6 +316,10 @@ button > .ajax-loader {
   /* Pakotettu fontin väri, jotta .lomake .label määritykset eivät yliajaisi näitä. */
   label.file-upload {
     color: @blue-default!important;
+
+    &.disabled {
+      color: @black-lighter !important;
+    }
     &.ei-margin-topia {
       margin-top: 0;
     }

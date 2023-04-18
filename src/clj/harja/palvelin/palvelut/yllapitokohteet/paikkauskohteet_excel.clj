@@ -8,7 +8,9 @@
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
-            [harja.domain.paikkaus :as paikkaus])
+            [harja.domain.paikkaus :as paikkaus]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.tierekisteri :as tr])
   (:import (org.apache.poi.ss.util CellRangeAddress)
            (java.util Date)))
 
@@ -193,3 +195,29 @@
                      taulukot))]
     (excel/muodosta-excel (vec taulukko)
                           workbook)))
+
+(defn erottele-uremit [workbook]
+  (let [sivu (first (xls/sheet-seq workbook))
+        paikkaukset (->> sivu
+                      xls/row-seq
+                      ;; Toisin kuin paikkauskohteissa, oletetaan että käyttäjä käyttää meidän pohjaa.
+                      ;; Pudotetaan otsikkorivit.
+                      (drop 4)
+                      (map xls/cell-seq)
+                      (mapv
+                        (fn [rivi]
+                          (map-indexed (fn [indeksi arvo]
+                                         (if (or
+                                               (= indeksi 0)
+                                               (= indeksi 1))
+                                           (try
+                                             ;; Yritetään lukea päivämääräkentät 1. ja 2. sarakkeista
+                                             (xls/read-cell-value arvo true)
+                                             (catch Exception e
+                                               ;; Jos ei onnistu, ei haittaa, validoidaan myöhemmin.
+                                               (xls/read-cell arvo)))
+                                           (xls/read-cell arvo)))
+                            rivi)))
+                      ;; Pohjassa on alustettu useampi sata riviä. Pudotetaan nekin pois.
+                      (filter #(not (every? nil? %))))]
+    paikkaukset))

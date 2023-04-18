@@ -13,7 +13,8 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.domain.paikkaus :as paikkaus]
             [harja.domain.tierekisteri :as tierekisteri]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [harja.ui.viesti :as viesti])
   (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -110,6 +111,9 @@
 (defrecord MerkitseTarkistetuksiOnnistui [vastaus])
 (defrecord PaivitaLomakedata [lomakedata])
 (defrecord PaivitaMuutVastaanottajat [muut])
+;; Urapaikkausten excel-tuonti
+(defrecord UremPaikkausLatausOnnistui [vastaus])
+(defrecord UremPaikkausLatausEpaonnistui [vastaus])
 
 (defn hae-paikkauskohteet [urakka-id {:keys [valinnat] :as app}]
   (tuck-apurit/post! :hae-urakan-paikkaukset
@@ -180,6 +184,17 @@
     (assoc app :lomakedata lomakedata))
   PaivitaMuutVastaanottajat
   (process-event [{muut :muut} app]
-    (assoc-in app [:lomakedata :muut-vastaanottajat] muut)))
+    (assoc-in app [:lomakedata :muut-vastaanottajat] muut))
+
+  UremPaikkausLatausOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Paikkaukset tuotu excelistä onnistuneesti")
+    (hae-paikkauskohteet (get-in @tila/yleiset [:urakka :id]) app)
+    app)
+
+  UremPaikkausLatausEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Paikkausten tuonti excelillä epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app))
 
 
