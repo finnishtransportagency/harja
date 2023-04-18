@@ -248,7 +248,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "tieston-toimenpide": {
+                    "tieston-muutoimenpide": {
                         "id": "urn:harja/tieston-muuttoimenpiteet/0",
                         "type": "object",
                         "properties": {

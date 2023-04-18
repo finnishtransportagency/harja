@@ -140,3 +140,6 @@
 
 (def +raportti-materiaaliraportti-response+ "api/schemas/raportti.schema.json")
 (def raportti-materiaaliraportti-response (tee-validaattori +raportti-materiaaliraportti-response+))
+
+(def +tyomaapaivakirja-kirjaus-request+ "api/schemas/tyomaapaivakirja-kirjaus-request.schema.json")
+(def tyomaapaivakirja-kirjaus-request (tee-validaattori +tyomaapaivakirja-kirjaus-request+))
