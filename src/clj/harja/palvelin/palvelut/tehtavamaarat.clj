@@ -281,9 +281,7 @@
 
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
-    (let [maara (if (big/big? maara)
-                  maara
-                  (-> maara big/->big big/unwrap))
+    (let [maara (bigdec maara)
           urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
           alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
@@ -302,10 +300,7 @@
     (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
     (if-not (= urakkatyyppi :teiden-hoito)
       (throw (IllegalArgumentException. (str "Urakka " urakka-id " on tyyppiä: " urakkatyyppi ". Urakkatyypissä ei ole sopimuksella tehtävä- ja määräluettelon tietoja."))))
-    (let [maara 100 ;;
-          maara (if (big/big? maara)
-                  maara
-                  (-> maara big/->big big/unwrap))
+    (let [maara 100M
           urakkatiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
           alkuvuosi (-> urakkatiedot :alkupvm pvm/vuosi)
           loppuvuosi (-> urakkatiedot :loppupvm pvm/vuosi)
