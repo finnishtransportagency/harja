@@ -1230,7 +1230,7 @@ UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null
 WHERE nimi like ('%Kolmansien osapuolten aiheuttamien vahinkojen korjaaminen%');
 UPDATE toimenpidekoodi
-SET suunnitteluyksikko = null
+SET suunnitteluyksikko = 'h', yksikko = 'h'
 WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon';
 UPDATE toimenpidekoodi
 SET suunnitteluyksikko = null
@@ -1387,7 +1387,6 @@ ON CONFLICT(nimi, emo) DO NOTHING;
 UPDATE toimenpidekoodi SET nimi = 'Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)' WHERE nimi = 'Opastustaulujen ja liikennemerkkien rakentaminen tukirakenteineen (sis. liikennemerkkien poistamisia)' and yksikko = 'm2';
 UPDATE toimenpidekoodi SET nimi = 'Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus' WHERE nimi = 'Valvontakameratolppien puhdistus/tarkistus keväisin' and yksikko = 'kpl';
 UPDATE toimenpidekoodi SET nimi = 'Meluesteiden siisteydestä huolehtiminen' WHERE nimi = 'Meluesteiden pesu' and suunnitteluyksikko = 'jm';
-UPDATE toimenpidekoodi SET suunnitteluyksikko = 'h' WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon' AND taso = 4;
 
 -- Viilataan käsinkirjausmahdollisuutta
 -- Ei nykyisellään aluetietoja

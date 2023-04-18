@@ -382,7 +382,7 @@
                    (muut-tyot/->Muut-tyot)
                    [:http-palvelin :db])
       :tehtavamaarat (component/using
-                   (tehtavamaarat/->Tehtavamaarat)
+                   (tehtavamaarat/->Tehtavamaarat (:kehitysmoodi asetukset))
                    [:http-palvelin :db])
       :kulut (component/using
                 (kulut/->Kulut)
