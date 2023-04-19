@@ -12,11 +12,13 @@
                 "id": {
                     "id": "urn:harja/tunniste/id",
                     "required": true,
+                    "description": "Päiväkirjan sivun id urakoitsijan järjestelmässä",
                     "type": "string"
                 },
                 "versio": {
                     "id": "urn:harja/tunniste/versio",
                     "required": true,
+                    "description": "Päiväkirjan sivun versionumero urakoitsijan järjestelmästä, alkaa numerosta 1...n",
                     "type": "integer"
                 }
             }
@@ -25,6 +27,7 @@
             "id": "urn:harja/saatiedot",
             "type": "array",
             "required": false,
+            "description": "Yleiskuvaus automaattisesti järjestelmistä (Tiesää) klo 2, 8, 14 ja 22 (sateen sadanta kumulatiivinen, ilman- ja tien lämpötila, tuuli) valitulta/valituilta tiesääasemilta (maksimi 5 kpl). Työmaapäiväkirjaan lasketaan kumulatiivinen sadanta kello 00:00 – 24:00 väliseltä ajalta.",
             "items": {
                 "id": "urn:harja/saatiedot/0",
                 "type": "object",
@@ -36,18 +39,18 @@
                         "properties": {
                             "havaintoaika": {
                                 "id": "urn:harja/saatiedot/0/havaintoaika",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "aseman-tunniste": {
                                 "id": "urn:harja/saatiedot/0/aseman-tunniste",
-                                "required": false,
+                                "required": true,
                                 "type": "string"
                             },
                             "aseman-tietojen-paivityshetki": {
                                 "id": "urn:harja/saatiedot/0/aseman-tietojen-paivityshetki",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -85,6 +88,7 @@
             "id": "urn:harja/poikkeuksellisetsaahavainnot",
             "type": "array",
             "required": false,
+            "description": "Poikkeukselliset paikalliset keliolosuhteet (omat havainnot).",
             "items": {
                 "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
                 "type": "object",
@@ -96,18 +100,18 @@
                         "properties": {
                             "havaintoaika": {
                                 "id": "urn:harja/poikkeuksellisetsaahavainnot/0/havaintoaika",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "paikka": {
                                 "id": "urn:harja/poikkeuksellisetsaahavainnot/0/paikka",
-                                "required": false,
+                                "required": true,
                                 "type": "string"
                             },
                             "kuvaus": {
                                 "id": "urn:harja/poikkeuksellisetsaahavainnot/0/kuvaus",
-                                "required": false,
+                                "required": true,
                                 "type": "string"
                             }
                         }
@@ -119,6 +123,7 @@
             "id": "urn:harja/kaluston-kaytto",
             "type": "array",
             "required": false,
+            "description": "Resurssien käyttö mitatuilta ajankohdilta, yhdestä työkoneesta tulee yksi merkintä riippumatta töistä mitä suorittaa urakka-alueella. Lisäkaluston käyttö mitatuilta ajankohdilta, yhdestä työkoneesta tulee yksi merkintä riippumatta töistä mitä suorittaa urakka-alueella.",
             "items": {
                 "id": "urn:harja/kaluston-kaytto/0",
                 "type": "object",
@@ -130,24 +135,24 @@
                         "properties": {
                             "aloitus": {
                                 "id": "urn:harja/kaluston-kaytto/0/aloitus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "lopetus": {
                                 "id": "urn:harja/kaluston-kaytto/0/lopetus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "tyokoneiden-lkm": {
                                 "id": "urn:harja/kaluston-kaytto/0/tyokoneiden-lkm",
-                                "required": false,
+                                "required": true,
                                 "type": "integer"
                             },
                             "lisakaluston-lkm": {
                                 "id": "urn:harja/kaluston-kaytto/0/lisakaluston-lkm",
-                                "required": false,
+                                "required": true,
                                 "type": "integer"
                             }
                         }
@@ -159,6 +164,7 @@
             "id": "urn:harja/paivystajantiedot",
             "type": "array",
             "required": false,
+            "description": "Päivystäjän/päivystäjien tiedot.",
             "items": {
                 "id": "urn:harja/paivystajantiedot/0",
                 "type": "object",
@@ -170,19 +176,19 @@
                         "properties": {
                             "aloitus": {
                                 "id": "urn:harja/paivystajantiedot/0/aloitus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "lopetus": {
                                 "id": "urn:harja/paivystajantiedot/0/lopetus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "nimi": {
                                 "id": "urn:harja/paivystajantiedot/0/nimi",
-                                "required": false,
+                                "required": true,
                                 "type": "string"
                             }
                         }
@@ -194,6 +200,7 @@
             "id": "urn:harja/tieston-toimenpiteet",
             "type": "array",
             "required": false,
+            "description": "Yleiskuvaus tärkeimmistä tapahtumista: esim. ”pistehiekoituksia”. Näytetään tehdyt työnimikkeet ilman määriä mitattavilta ajankohdilta.",
             "items": {
                 "id": "urn:harja/tieston-toimenpiteet/0",
                 "type": "object",
@@ -211,7 +218,7 @@
                             },
                             "lopetus": {
                                 "id": "urn:harja/tieston-toimenpiteet/0/lopetus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -243,6 +250,7 @@
             "id": "urn:harja/tieston-muuttoimenpiteet",
             "type": "array",
             "required": false,
+            "description": "Kirjataan tiestölle tehdyt muut toimenpiteet mitattavilta ajankohdilta",
             "items": {
                 "id": "urn:harja/tieston-muuttoimenpiteet/0",
                 "type": "object",
@@ -260,7 +268,7 @@
                             },
                             "lopetus": {
                                 "id": "urn:harja/tieston-muuttoimenpiteet/0/lopetus",
-                                "required": false,
+                                "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -292,6 +300,7 @@
             "id": "urn:harja/liikenteenohjausmuutokset",
             "type": "object",
             "required": false,
+            "description": "Tilapäiset liikenteenohjaus muutokset (nopeusrajoitus,painorajoitus, kiertotie jne.) Kirjataan päiväkirjaan (yksittäiset erikseen, talviajan nopeus rajoitukset massana, isommat liikenteen ohjaukset liikenteenohjaussuunnitelman mukaan)",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/liikenteenohjausmuutokset/kuvaus",
@@ -304,6 +313,7 @@
             "id": "urn:harja/onnettomuudet",
             "type": "object",
             "required": false,
+            "description": "Tietoon tulleet onnettomuudet, jotka todennäköisesti edellyttävät jälkikäteen tehtävän urakoitsijan selvityksen laatimista (olosuhteet ja toimenpiteet).",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/onnettomuudet/kuvaus",
@@ -316,6 +326,7 @@
             "id": "urn:harja/viranomaisenavustaminen",
             "type": "object",
             "required": false,
+            "description": "Esim. siirtoajoneuvot, vahingonkorvaus. Tähän kommentoidaan onko katselmuksia pidetty.",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/viranomaisenavustaminen/kuvaus",
@@ -328,6 +339,7 @@
             "id": "urn:harja/palautteet",
             "type": "object",
             "required": false,
+            "description": "Asiakkaiden, median yhteydenotot ja palautteet, jotka koskevat tilaajaa (jatkotoimia aiheuttavat). Tässä ei kirjata kaikkia, vaan oleelliset palautteet.",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/viranomaisenavustaminen/kuvaus",
@@ -340,6 +352,7 @@
             "id": "urn:harja/muutkirjaukset",
             "type": "object",
             "required": false,
+            "description": "Vapaa kenttä muille tarpeellisille kirjauksille.",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/muutkirjaukset/kuvaus",
@@ -352,6 +365,7 @@
             "id": "urn:harja/tilaajanyhteydenotot",
             "type": "object",
             "required": false,
+            "description": "Tilaajan huomautukset työmaapäiväkirjaan.",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/tilaajanyhteydenotot/kuvaus",
@@ -369,6 +383,7 @@
             "id": "urn:harja/urakoitsijanmerkinnat",
             "type": "object",
             "required": false,
+            "description": "Urakoitsijan merkinnät jälkikäteen.",
             "properties": {
                 "kuvaus": {
                     "id": "urn:harja/urakoitsijanmerkinnat/kuvaus",
