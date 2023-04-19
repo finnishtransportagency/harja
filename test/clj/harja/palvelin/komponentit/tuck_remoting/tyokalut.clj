@@ -17,7 +17,7 @@
   (atom {}))
 
 (defn websocket-client [id oam-headerit]
-  (let [ws-url (str "ws://" "localhost:" portti "/_/ws?")]
+  (let [ws-url (str "ws://" "localhost:" portti "/_/ws")]
     (log/info "Yhdistetään WS: " ws-url)
 
     (ws/build-websocket
