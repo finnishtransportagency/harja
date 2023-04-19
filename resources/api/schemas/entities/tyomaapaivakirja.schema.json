@@ -182,7 +182,7 @@
                             },
                             "lopetus": {
                                 "id": "urn:harja/paivystajantiedot/0/lopetus",
-                                "required": true,
+                                "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -218,7 +218,7 @@
                             },
                             "lopetus": {
                                 "id": "urn:harja/tieston-toimenpiteet/0/lopetus",
-                                "required": true,
+                                "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -232,10 +232,16 @@
                                     "additionalProperties": false,
                                     "properties": {
                                         "tehtava": {
-                                            "id": {
-                                                "id": "urn:harja/tieston-toimenpiteet/0/tehtavat/0/tehtava",
-                                                "required": true,
-                                                "type": "integer"
+                                            "id": "urn:harja/tieston-toimenpiteet/0/tehtavat/0/tehtava",
+                                            "type": "object",
+                                            "required": true,
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "id": {
+                                                    "id": "urn:harja/tieston-toimenpiteet/0/tehtavat/0/tehtava/0/id",
+                                                    "required": true,
+                                                    "type": "integer"
+                                                }
                                             }
                                         }
                                     }
@@ -268,7 +274,7 @@
                             },
                             "lopetus": {
                                 "id": "urn:harja/tieston-muuttoimenpiteet/0/lopetus",
-                                "required": true,
+                                "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
@@ -282,10 +288,16 @@
                                     "additionalProperties": false,
                                     "properties": {
                                         "tehtava": {
-                                            "kuvaus": {
-                                                "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava",
-                                                "required": true,
-                                                "type": "string"
+                                            "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava/0",
+                                            "type": "object",
+                                            "required": true,
+                                            "additionalProperties": false,
+                                            "properties": {
+                                                "kuvaus": {
+                                                    "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava/0/kuvaus",
+                                                    "required": true,
+                                                    "type": "string"
+                                                }
                                             }
                                         }
                                     }
