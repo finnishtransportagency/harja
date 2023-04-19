@@ -106,10 +106,13 @@
         vastaus (konversio/prettyprint-xml data-xml)]
     (is (= data-xml vastaus))))
 
-(deftest parsi-utc-str-aika->sql-timestamp-test
+(deftest parsi-utc-str-aika->sql-timestamp-test-toimii
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.162457Z") #inst "2023-04-14T09:07:20.000-00:00"))
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12345Z") #inst "2023-04-14T09:07:20.000-00:00"))
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1234Z") #inst "2023-04-14T09:07:20.000-00:00"))
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.123Z") #inst "2023-04-14T09:07:20.000-00:00"))
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12Z") #inst "2023-04-14T09:07:20.000-00:00"))
   (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1Z") #inst "2023-04-14T09:07:20.000-00:00")))
+
+(deftest parsi-utc-str-aika->sql-timestamp-test-epaonnistuu
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:2") nil)))
