@@ -105,3 +105,11 @@
   (let [data-xml (slurp "test/resurssit/konversio/xxe-xml.xml" )
         vastaus (konversio/prettyprint-xml data-xml)]
     (is (= data-xml vastaus))))
+
+(deftest parsi-utc-str-aika->sql-timestamp-test
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.162457Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12345Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1234Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.123Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (konversio/parsi-utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1Z") #inst "2023-04-14T09:07:20.000-00:00")))
