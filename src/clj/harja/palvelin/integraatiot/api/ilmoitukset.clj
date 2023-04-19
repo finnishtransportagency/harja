@@ -20,11 +20,7 @@
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
-            [harja.kyselyt.kayttajat :as kayttajat-kyselyt]
-            [harja.kyselyt.konversio :as konv]
-            [harja.pvm :as pvm]
-            [clojure.data.json :as json]
-            [clojure.string :as str])
+            [harja.pvm :as pvm])
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -208,11 +204,6 @@
    :f8 :kuittaaja_organisaatio_ytunnus
    :f9 :kanava})
 
-(defn- parsi-aika [aika]
-  (if (< (count aika) 25)
-    (.parse (SimpleDateFormat. pvm-aika-muoto1) aika)
-    (.parse (SimpleDateFormat. pvm-aika-muoto2) aika)))
-
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
   on mahdollista eritellä."
@@ -221,9 +212,9 @@
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
-        alkuaika (parsi-aika alkuaika)
+        alkuaika (konversio/parsi-utc-str-aika->sql-timestamp alkuaika)
         loppuaika (if loppuaika
-                    (parsi-aika loppuaika)
+                    (konversio/parsi-utc-str-aika->sql-timestamp loppuaika)
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
