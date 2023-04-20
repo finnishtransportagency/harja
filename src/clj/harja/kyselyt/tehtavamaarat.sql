@@ -280,7 +280,12 @@ GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaality
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat
 select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", MAX(yt.luotu) as luotu,
-       MAX(yt.muokattu) as muokattu, EXTRACT(YEAR FROM yt.alkupvm)::int as "hoitokauden-alkuvuosi"
+       MAX(yt.muokattu) as muokattu,
+       CASE
+           WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
+           WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 10 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN EXTRACT(YEAR FROM yt.alkupvm)::INT
+           END
+           AS "hoitokauden-alkuvuosi"
 from yksikkohintainen_tyo yt
      join toimenpidekoodi tk on yt.tehtava = tk.id
 where yt.urakka = :urakka-id
@@ -288,7 +293,7 @@ where yt.urakka = :urakka-id
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
   -- aikavälistä osuu annettuun ajankohtaan.
   and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
-group by yt.urakka, yt.tehtava, tk.id, yt.alkupvm;
+group by yt.urakka, yt.tehtava, tk.id, "hoitokauden-alkuvuosi";
 
 -- name: hae-mhurakan-suunnitellut-tehtavamaarat
 -- Hakee materiaalien suunnittelutiedot urakalle.

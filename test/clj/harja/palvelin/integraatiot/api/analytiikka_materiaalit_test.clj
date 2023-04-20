@@ -296,12 +296,16 @@
         loppuvuosi 2022
         ;; Hae suunnitellut materiaalit
         vastaus (api-tyokalut/get-kutsu [(format "/api/analytiikka/suunnitellut-materiaalit/%s/%s" alkuvuosi loppuvuosi)] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        ;; Hae hoito ja teiden-hoito tyyppiset urakat, jotka on annettuina vuosina voimassa, jotta voidaan verrata, että montako urakkaa on-
+        urakat-sql (q-map (format "SELECT id FROM urakka
+                                 WHERE tyyppi in ('hoito', 'teiden-hoito')
+                                   AND (alkupvm, loppupvm) OVERLAPS (concat('%s','-10-01')::DATE, concat('%s','-10-01')::DATE);" alkuvuosi loppuvuosi))]
 
     (is (= 200 (:status vastaus)))
     (is (not (nil? encoodattu-body)))
     ;; Pitäisi olla useamman urakan tiedot
-    (is (> (count encoodattu-body) 15))))
+    (is (= (count urakat-sql) (count encoodattu-body)))))
 
 (deftest hae-suunnitellut-tehtavamaarat-alueurakalle-onnistuu
   (let [; Luo väliaikainen käyttäjä, jolla on oikeudet analytiikkarajapintaan

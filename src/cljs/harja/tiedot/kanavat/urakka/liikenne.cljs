@@ -30,7 +30,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(def tila (atom {:nakymassa? false
+(def tila-arvot {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
                  :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
                  :tallennus-kaynnissa? false
@@ -42,7 +42,12 @@
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
                             ::lt-alus/aluslajit #{}
-                            :niput? false}}))
+                            :niput? false}})
+
+(def tila (atom tila-arvot))
+
+(defn resetoi-tila []
+  (reset! tila tila-arvot))
 
 (defn uusi-tapahtuma
   ([]
