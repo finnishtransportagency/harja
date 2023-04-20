@@ -1065,7 +1065,7 @@ documentation:
     /tyomaapaivakirja:
       post:
         is: [secured]
-        description: Uuden työmaapäiväkirjan luominen.
+        description: Ei vielä toteutettu - Uuden työmaapäiväkirjan luominen.
         body:
           application/json:
             example: !include examples/tyomaapaivakirja-kirjaus-request.json
@@ -1086,6 +1086,31 @@ documentation:
               application/json:
                 example: !include examples/virhe-response.json
                 schema: virhe-response
+      /{id}:
+        put:
+          is: [secured]
+          description: Ei vielä toteutettu - Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version.
+          body:
+            application/json:
+              example: !include examples/tyomaapaivakirja-kirjaus-request.json
+              schema: tyomaapaivakirja-kirjaus-request
+          responses:
+            200:
+              body:
+                application/json:
+                  example: !include examples/onnistunut-kirjaus-response.json
+                  schema: kirjaus-response
+            400:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+            500:
+              body:
+                application/json:
+                  example: !include examples/virhe-response.json
+                  schema: virhe-response
+
 
   /yhteystiedot:
     /{urakkanumero}:
