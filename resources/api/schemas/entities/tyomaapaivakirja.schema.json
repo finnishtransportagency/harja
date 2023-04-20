@@ -26,7 +26,7 @@
         "saatiedot": {
             "id": "urn:harja/saatiedot",
             "type": "array",
-            "required": false,
+            "minItems": 1,
             "description": "Yleiskuvaus automaattisesti järjestelmistä (Tiesää) klo 2, 8, 14 ja 22 (sateen sadanta kumulatiivinen, ilman- ja tien lämpötila, tuuli) valitulta/valituilta tiesääasemilta (maksimi 5 kpl). Työmaapäiväkirjaan lasketaan kumulatiivinen sadanta kello 00:00 – 24:00 väliseltä ajalta.",
             "items": {
                 "id": "urn:harja/saatiedot/0",
@@ -87,7 +87,6 @@
         "poikkeuksellisetsaahavainnot": {
             "id": "urn:harja/poikkeuksellisetsaahavainnot",
             "type": "array",
-            "required": false,
             "description": "Poikkeukselliset paikalliset keliolosuhteet (omat havainnot).",
             "items": {
                 "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
@@ -122,7 +121,7 @@
         "kaluston-kaytto": {
             "id": "urn:harja/kaluston-kaytto",
             "type": "array",
-            "required": false,
+            "minItems": 1,
             "description": "Resurssien käyttö mitatuilta ajankohdilta, yhdestä työkoneesta tulee yksi merkintä riippumatta töistä mitä suorittaa urakka-alueella. Lisäkaluston käyttö mitatuilta ajankohdilta, yhdestä työkoneesta tulee yksi merkintä riippumatta töistä mitä suorittaa urakka-alueella.",
             "items": {
                 "id": "urn:harja/kaluston-kaytto/0",
@@ -163,7 +162,7 @@
         "paivystajantiedot": {
             "id": "urn:harja/paivystajantiedot",
             "type": "array",
-            "required": false,
+            "minItems": 1,
             "description": "Päivystäjän/päivystäjien tiedot.",
             "items": {
                 "id": "urn:harja/paivystajantiedot/0",
@@ -199,7 +198,7 @@
         "tieston-toimenpiteet": {
             "id": "urn:harja/tieston-toimenpiteet",
             "type": "array",
-            "required": false,
+            "minItems": 1,
             "description": "Yleiskuvaus tärkeimmistä tapahtumista: esim. ”pistehiekoituksia”. Näytetään tehdyt työnimikkeet ilman määriä mitattavilta ajankohdilta.",
             "items": {
                 "id": "urn:harja/tieston-toimenpiteet/0",
