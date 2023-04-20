@@ -212,9 +212,9 @@
   (tarkista-ilmoitus-haun-parametrit parametrit)
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
-        alkuaika (konversio/parsi-utc-str-aika->sql-timestamp alkuaika)
+        alkuaika (pvm/utc-str-aika->sql-timestamp alkuaika)
         loppuaika (if loppuaika
-                    (konversio/parsi-utc-str-aika->sql-timestamp loppuaika)
+                    (pvm/utc-str-aika->sql-timestamp loppuaika)
                     (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
