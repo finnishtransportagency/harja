@@ -275,3 +275,14 @@
     (is (= "01.10.2021-30.09.2022" (pvm/hoitokausi-str-alkuvuodesta alkuvuosi)) "Hoitokauden formatointi onnistuu")
     (is (= "01.10.2022-30.09.2023" (pvm/hoitokausi-str-alkuvuodesta (inc alkuvuosi))) "Hoitokauden formatointi onnistuu")
     (is (nil? (pvm/hoitokausi-str-alkuvuodesta nil)) "Nil ei aiheuta poikkeutta")))
+
+(deftest parsi-utc-str-aika->sql-timestamp-test-toimii
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.162457Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12345Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1234Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.123Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.12Z") #inst "2023-04-14T09:07:20.000-00:00"))
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:20.1Z") #inst "2023-04-14T09:07:20.000-00:00")))
+
+(deftest parsi-utc-str-aika->sql-timestamp-test-epaonnistuu
+  (is (= (pvm/utc-str-aika->sql-timestamp "2023-04-14T09:07:2") nil)))

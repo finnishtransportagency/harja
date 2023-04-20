@@ -464,11 +464,3 @@
           (log/error "Error: " e)
           ;; Jos prettyprint hajoaa mihin tahansa, niin palauta muokkaamaton xml
           xml)))))
-
-(defn parsi-utc-str-aika->sql-timestamp
-  "Javan aika ei ymmärrä mikrosekunteja. Eli aika muodossa: '2023-04-14T09:07:20.162457Z' ei toimi. Sen vuoksi pakotetaan saatu tekstimuotoinen aika olemaan
-  19 merkkiä pitkä ja Z:lla varmistetaan sen UTC ajankohta."
-  [aika]
-  (when (< 18 (count aika))
-    (let [aika (str (subs aika 0 19) "Z")]
-      (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") aika))))

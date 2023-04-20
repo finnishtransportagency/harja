@@ -365,6 +365,9 @@
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
+(def iso8601-aikavyohykkeella-format
+  (luo-format "yyyy-MM-dd'T'HH:mm:ssX"))
+
 (defn jsondate
   "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
   [pvm]
@@ -1098,6 +1101,15 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
        (catch #?(:cljs js/Error
                  :clj  Exception) e
          nil))))
+
+#?(:clj
+   (defn utc-str-aika->sql-timestamp
+     "Javan aika ei ymmärrä mikrosekunteja. Eli aika muodossa: '2023-04-14T09:07:20.162457Z' ei toimi. Sen vuoksi pakotetaan saatu tekstimuotoinen aika olemaan
+     19 merkkiä pitkä ja Z:lla varmistetaan sen UTC ajankohta."
+     [teksti]
+     (when (< 18 (count teksti))
+       (let [teksti (str (subs teksti 0 19) "Z")]
+         (.parse iso8601-aikavyohykkeella-format teksti)))))
 
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
