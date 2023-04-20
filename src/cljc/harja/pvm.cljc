@@ -1113,8 +1113,9 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
      [teksti]
      (if (and (= 22 (count teksti)) (not (str/includes? teksti "Z")))
        (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") teksti)
-       (let [teksti (str (subs teksti 0 19) "Z")]
-         (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") teksti)))))
+       (when (< 18 (count teksti))
+         (let [teksti (str (subs teksti 0 19) "Z")]
+           (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") teksti))))))
 
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
