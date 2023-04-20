@@ -22,7 +22,7 @@
                         :db (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :tehtavamaarat (component/using
-                                         (->Tehtavamaarat)
+                                         (->Tehtavamaarat false)
                                          [:http-palvelin :db])))))
 
   (testit)
