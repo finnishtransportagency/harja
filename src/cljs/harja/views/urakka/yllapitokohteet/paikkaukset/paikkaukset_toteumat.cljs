@@ -47,7 +47,7 @@
             [harja.domain.tierekisteri :as tr-domain]
             [harja.asiakas.kommunikaatio :as komm]
             [harja.ui.liitteet :as liitteet])
-  (:require-macros [cljs.core.async.macros :refer [go]]))
+  (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 
 (defn- pinta-alojen-summa [paikkaukset tehty-koneellisesti?]
@@ -148,6 +148,27 @@
         varmista-kayttajalta/modal-sahkopostikopio]
        lomakedata]
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
+
+(defn excel-tuonti-virhe-modal
+  [e! {:keys [excel-tuontivirhe] :as app}]
+  [modal/modal
+   {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
+    :nakyvissa? excel-tuontivirhe
+    :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
+    :footer [:div
+             [napit/sulje #(e! (tiedot/->SuljeUremLatausVirhe))]]}
+   [:div
+    [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R ei ole muokattu, ja paikkaukset alkavat riviltä 5. Mikäli välissä on tyhjiä rivejä, rivinumerot eivät välttämättä pidä paikkaansa."]
+    [:br]
+    (for* [[rivi virheet] excel-tuontivirhe]
+      [:<>
+       [:p "Rivi " rivi ":"]
+       [:ul
+        (for* [virhe virheet]
+          (do
+            (println virhe)
+            [:li virhe]))]])]])
+
 
 (def ohje-teksti-tilaajalle
   "Tarkista toteumat ja valitse Merkitse tarkistetuksi, jolloin tiettyjen työmenetelmien tiedot lähtevät YHA:an. Valitse Ilmoita virhe lähettääksesi virhetiedot sähköpostitse urakoitsijalle.")
@@ -565,6 +586,7 @@
    [debug/debug app]
    (when (:modalin-paikkauskohde app)
      [ilmoita-virheesta-modal e! app])
+   [excel-tuonti-virhe-modal e! app]
    [:div.row
     [kartta/kartan-paikka]]
    [:div.row

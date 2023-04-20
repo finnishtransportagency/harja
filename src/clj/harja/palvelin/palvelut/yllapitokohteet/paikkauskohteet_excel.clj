@@ -206,18 +206,21 @@
                       (map xls/cell-seq)
                       (mapv
                         (fn [rivi]
-                          (map-indexed (fn [indeksi arvo]
-                                         (if (or
-                                               (= indeksi 0)
-                                               (= indeksi 1))
-                                           (try
-                                             ;; Yritetään lukea päivämääräkentät 1. ja 2. sarakkeista
-                                             (xls/read-cell-value arvo true)
-                                             (catch Exception e
-                                               ;; Jos ei onnistu, ei haittaa, validoidaan myöhemmin.
-                                               (xls/read-cell arvo)))
-                                           (xls/read-cell arvo)))
-                            rivi)))
+                          ;; Ei lueta rivejä sarakkeita 18. (R) jälkeen.
+                          (let [rivi (take 18 rivi)]
+                            {:rivi (inc (.getRowIndex (first rivi)))
+                             :paikkaus (map-indexed (fn [indeksi arvo]
+                                                      (if (or
+                                                            (= indeksi 0)
+                                                            (= indeksi 1))
+                                                        (try
+                                                          ;; Yritetään lukea päivämääräkentät 1. ja 2. sarakkeista
+                                                          (xls/read-cell-value arvo true)
+                                                          (catch Exception e
+                                                            ;; Jos ei onnistu, ei haittaa, validoidaan myöhemmin.
+                                                            (xls/read-cell arvo)))
+                                                        (xls/read-cell arvo)))
+                                         rivi)})))
                       ;; Pohjassa on alustettu useampi sata riviä. Pudotetaan nekin pois.
-                      (filter #(not (every? nil? %))))]
+                      (filter #(not (every? nil? (:paikkaus %)))))]
     paikkaukset))

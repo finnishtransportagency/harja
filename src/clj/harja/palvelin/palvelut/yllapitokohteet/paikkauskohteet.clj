@@ -8,7 +8,6 @@
             [clojure.set :as set]
             [dk.ative.docjure.spreadsheet :as xls]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-            [specql.core :refer [fetch update! insert! upsert! delete!]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.tierekisteri.validointi :as tr-validointi]
             [harja.domain.roolit :as roolit]
@@ -599,8 +598,13 @@
         (when keskisaumat {::paikkaus/keskisaumat [keskisaumat]})))
     (dissoc ::paikkaus/ajourat ::paikkaus/ajorata ::paikkaus/ajouravalit ::paikkaus/reunat ::paikkaus/keskisaumat)))
 
-(defn- tee-sijainti [hae-sijainti-fn paikkaus]
-  (assoc paikkaus ::paikkaus/sijainti (hae-sijainti-fn paikkaus)))
+(defn- yrita-tehda-sijainti [{::tr/keys [tie aosa aet losa let] :as paikkaus} db]
+  (if (and tie aosa aet losa let)
+    (assoc paikkaus ::paikkaus/sijainti
+      (q-tr/tierekisteriosoite-viivaksi db {:tie tie :aosa aosa
+                                            :aet aet :losa losa
+                                            :loppuet let}))
+    paikkaus))
 
 (defn- tee-massamenekki [{pinta-ala ::paikkaus/pinta-ala
                           massamaara ::paikkaus/massamaara :as paikkaus}]
@@ -641,68 +645,63 @@
                                     kuulamylly ::paikkaus/kuulamylly
                                     massamaara ::paikkaus/massamaara
                                     pinta-ala ::paikkaus/pinta-ala}]
-
-  (let [puuttuvat-avaimet (cond-> #{}
-                            (nil? alkuaika) (conj :alkuaika-puuttuu)
-                            (nil? loppuaika) (conj :loppuaika-puuttuu)
-                            (nil? tie) (conj :tie-puuttuu)
-                            (nil? aosa) (conj :aosa-puuttuu)
-                            (nil? aet) (conj :aet-puuttuu)
-                            (nil? losa) (conj :losa-puuttuu)
-                            (nil? loppuet) (conj :let-puuttuu)
-                            (nil? massatyyppi) (conj :massatyyppi-puuttuu)
-                            (nil? raekoko) (conj :raekoko-puutuu)
-                            (nil? kuulamylly) (conj :kuulamylly-puutuu)
-                            (nil? massamaara) (conj :massamaara-puutuu)
-                            (nil? pinta-ala) (conj :pinta-ala-puuttuu))
-        tr-virheet (tr-validointi/validoi-tieosoite #{} tie aosa losa aet loppuet)
-        loppu-alun-jalkeen? (when-not (pvm/jalkeen? loppuaika alkuaika) #{:loppu-ei-alun-jalkeen})]
-    (concat puuttuvat-avaimet tr-virheet loppu-alun-jalkeen?)))
+  (cond-> []
+    (not (s/valid? ::paikkaus/alkuaika alkuaika)) (conj "Alkuaika puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/loppuaika loppuaika)) (conj "Loppuaika puuttuu tai on virheellinen")
+    (not (s/valid? ::tr/numero tie)) (conj "Tienumero puuttuu tai on virheellinen")
+    (not (s/valid? ::tr/alkuosa aosa)) (conj "Alkuosa puuttuu tai on virheellinen")
+    (not (s/valid? ::tr/alkuetaisyys aet)) (conj "Alkuetäisyys puuttuu tai on virheellinen")
+    (not (s/valid? ::tr/loppuosa losa)) (conj "Loppuosa puuttuu tai on virheellinen")
+    (not (s/valid? ::tr/loppuetaisyys loppuet)) (conj "Loppuetäisyys puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/massatyyppi massatyyppi)) (conj "Massatyyppi puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/massamaara massamaara)) (conj "Massamäärä puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-ala puuttuu tai on virheellinen")
+    (and
+      (s/valid? ::paikkaus/alkuaika alkuaika)
+      (s/valid? ::paikkaus/alkuaika alkuaika)
+      (not (pvm/jalkeen? loppuaika alkuaika))) (conj "Loppuaika on ennen aloitusaikaa!")))
 
 
 (defn- kasittele-urem-excel [db fim email urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         toteumat (p-excel/erottele-uremit workbook)
 
-        tee-sijainti (partial tee-sijainti
-                       #(q-tr/tierekisteriosoite-viivaksi db {:tie (::tr/tie %) :aosa (::tr/aosa %)
-                                                              :aet (::tr/aet %) :losa (::tr/losa %)
-                                                              :loppuet (::tr/let %)}))
-
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
 
         paikkaukset (map (fn [rivi]
-                           (-> (zipmap (partial paikkauksen-domain-avaimet) rivi)
-                             (muuta-arvot intattavat-avaimet #(when % (int %)))
-                             (muuta-arvot bigdecattavat-avaimet #(when % (bigdec %)))
-                             tee-sijainti
-                             tee-tr-osoite
-                             tee-tienkohta
-                             tee-massamenekki
-                             (assoc
-                               ::muokkaustiedot/luoja-id kayttaja-id
-                               ::muokkaustiedot/luotu (pvm/nyt)
-                               ::paikkaus/urakka-id urakka-id
-                               ::paikkaus/lahde "excel"
-                               ::paikkaus/paikkauskohde-id paikkauskohde-id
-                               ::paikkaus/tyomenetelma (::paikkaus/tyomenetelma paikkauskohde)
-                               ::paikkaus/ulkoinen-id 0)))
+                           (update rivi :paikkaus
+                             (fn [paikkaus]
+                               (-> (zipmap (partial paikkauksen-domain-avaimet) paikkaus)
+                                 (muuta-arvot intattavat-avaimet #(when (number? %) (int %)))
+                                 (muuta-arvot bigdecattavat-avaimet #(when (number? %) (bigdec %)))
+                                 (yrita-tehda-sijainti db)
+                                 tee-tr-osoite
+                                 tee-tienkohta
+                                 tee-massamenekki
+                                 (assoc
+                                   ::muokkaustiedot/luoja-id kayttaja-id
+                                   ::muokkaustiedot/luotu (pvm/nyt)
+                                   ::paikkaus/urakka-id urakka-id
+                                   ::paikkaus/lahde "excel"
+                                   ::paikkaus/paikkauskohde-id paikkauskohde-id
+                                   ::paikkaus/tyomenetelma (::paikkaus/tyomenetelma paikkauskohde)
+                                   ::paikkaus/ulkoinen-id 0)))))
                       toteumat)
 
-        paikkausten-validoinnit (into {} (map-indexed (fn [i paikkaus]
-                                                        (let [validointivirhe (validoi-urem-excel-paikkaus paikkaus)]
-                                                          (when-not (empty? validointivirhe)
-                                                            ;; Palautetaan excelin rivi + validointivirhe,
-                                                            ;; Sillä oletuksella, että välissä ei ole tyhjiä rivejä.
-                                                            [(+ 5 i) validointivirhe])))
+        paikkausten-validoinnit (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
+                                                (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
+                                                  (when-not (empty? validointivirheet)
+                                                    [rivi validointivirheet])))
                                            paikkaukset))
 
         tallennetut-paikkaukset (when (empty? paikkausten-validoinnit)
-                                  (map
-                                    (partial paikkaus-q/tallenna-urem-paikkaus-excelista db)
+                                  (mapv
+                                    #(paikkaus-q/tallenna-urem-paikkaus-excelista db (:paikkaus %))
                                     paikkaukset))
         body (cheshire/encode (cond
-                                (> (count tallennetut-paikkaukset) 0)
+                                tallennetut-paikkaukset
                                 {:message "OK"}
                                 (seq paikkausten-validoinnit)
                                 {:virheet paikkausten-validoinnit}
@@ -714,18 +713,16 @@
                :virheet [{:koodi :puuttelliset-parametrit
                           :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id)}]}))
 
-    ;; TODO: Testaile validaatiota
-    ;; TODO: Vaihda frontisa tuck-eventit oikeiksi
-    ;; TODO: Salli vain tilatuille lähetys kälistä
-    ;; TODO: Hae lisätyt heti kun ne lisätään
+    (when (seq paikkausten-validoinnit)
+      (log/error (str "Yritettiin tuoda urapaikkauksia excelillä, mutta paikkauksissa on virheitä. Virheet:" paikkausten-validoinnit)))
 
-    (if (> (count tallennetut-paikkaukset) 0)
-        {:status 200
-         :headers {"Content-Type" "application/json; charset=UTF-8"}
-         :body body}
-        {:status 400
-         :headers {"Content-Type" "application/json; charset=UTF-8"}
-         :body body})))
+    (if tallennetut-paikkaukset
+      {:status 200
+       :headers {"Content-Type" "application/json; charset=UTF-8"}
+       :body body}
+      {:status 400
+       :headers {"Content-Type" "application/json; charset=UTF-8"}
+       :body body})))
 
 (defn vastaanota-urem-excel [db fim email req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset

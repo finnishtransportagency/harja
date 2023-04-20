@@ -114,6 +114,7 @@
 ;; Urapaikkausten excel-tuonti
 (defrecord UremPaikkausLatausOnnistui [vastaus])
 (defrecord UremPaikkausLatausEpaonnistui [vastaus])
+(defrecord SuljeUremLatausVirhe [])
 
 (defn hae-paikkauskohteet [urakka-id {:keys [valinnat] :as app}]
   (tuck-apurit/post! :hae-urakan-paikkaukset
@@ -187,14 +188,17 @@
     (assoc-in app [:lomakedata :muut-vastaanottajat] muut))
 
   UremPaikkausLatausOnnistui
-  (process-event [{vastaus :vastaus} app]
+  (process-event [_ app]
     (viesti/nayta-toast! "Paikkaukset tuotu excelistä onnistuneesti")
     (hae-paikkauskohteet (get-in @tila/yleiset [:urakka :id]) app)
     app)
 
   UremPaikkausLatausEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Paikkausten tuonti excelillä epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
-    app))
+  (process-event [{{response :response} :vastaus} app]
+    (assoc app :excel-tuontivirhe (get response "virheet")))
+
+  SuljeUremLatausVirhe
+  (process-event [_ app]
+    (dissoc app :excel-tuontivirhe)))
 
 

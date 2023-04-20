@@ -156,6 +156,31 @@
 (s/def ::paikkausurakan-kustannukset-vastaus (s/keys :req-un [::kustannukset]
                                                      :opt-un [::paikkauskohteet ::tyomenetelmat]))
 
+(def massatyypit #{"AB, Asfalttibetoni"
+                   "SMA, Kivimastiksiasfaltti"
+                   "PAB-B, Pehmeät asfalttibetonit"
+                   "PAB-V, Pehmeät asfalttibetonit"
+                   "PAB-O, Pehmeät asfalttibetonit"
+                   "VA, valuasfaltti"
+                   "SIP, Sirotepintaus"
+                   "SOP, Soratien pintaus"})
+
+(def kuulamyllyt #{"AN5"
+                   "AN7"
+                   "AN10"
+                   "AN14"
+                   "AN19"
+                   "AN30"
+                   "AN22"})
+
+(s/def ::alkuaika ::pvm)
+(s/def ::loppuaika ::pvm)
+(s/def ::massatyyppi massatyypit)
+(s/def ::raekoko (s/and some? number?))
+(s/def ::kuulamylly kuulamyllyt)
+(s/def ::massamaara (s/and some? number?))
+(s/def ::pinta-ala (s/and some? number?))
+
 ;; VHAR-1384, huom. nämä lyhenteitä
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
   #{"UREM" "KTVA" "REPA" "SIPA" "SIPU"})
