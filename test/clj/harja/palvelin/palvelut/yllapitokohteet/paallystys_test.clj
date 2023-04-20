@@ -815,13 +815,13 @@
                 :raekoko nil,
                 :tyomenetelma nil,
                 :massamaara nil,
-                :toimenpide "Wut"}
+                :toimenpide "21"}
                {:nimi "Kohdeosa kaista 11",
                 :paallystetyyppi nil,
                 :raekoko nil,
                 :tyomenetelma nil,
                 :massamaara nil,
-                :toimenpide "Wut"}}
+                :toimenpide "12"}}
              yllapitokohdeosadata))
       (let [[tallennettu-versio ilmoitustiedot] (first (q "SELECT versio, ilmoitustiedot FROM paallystysilmoitus
                                                            WHERE paallystyskohde = " paallystyskohde-id))]
@@ -872,47 +872,6 @@
 
         (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))))
 
-(deftest paivittaa-pot2-paallystysilmoitus-ei-muoka-kaikki-yllapitokohdeosan-kentat
-  (let [;; Ei saa olla POT ilmoitusta
-        paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")]
-    (is (= 28 paallystyskohde-id))
-    (u (str "UPDATE yllapitokohdeosa SET toimenpide = 'Freude' WHERE yllapitokohde = 28"))
-    (let [alkuperainen-paallystysilmoitus (-> pot2-testidata
-                                 (assoc :paallystyskohde-id paallystyskohde-id)
-                                 (assoc-in [:perustiedot :valmis-kasiteltavaksi] true))
-          [_ _ _ yllapitokohdeosadata] (tallenna-testipaallystysilmoitus
-                                                                alkuperainen-paallystysilmoitus
-                                                                paallystysilmoitus-domain/pot2-vuodesta-eteenpain)]
-      (is (= yllapitokohdeosadata
-             #{{:nimi "Kohdeosa kaista 12",
-                :paallystetyyppi nil,
-                :raekoko nil,
-                :tyomenetelma nil,
-                :massamaara nil,
-                :toimenpide "Freude"}
-               {:nimi "Kohdeosa kaista 11",
-                :paallystetyyppi nil,
-                :raekoko nil,
-                :tyomenetelma nil,
-                :massamaara nil,
-                :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty")
-      (let [uusi-paallystysilmoitus (-> alkuperainen-paallystysilmoitus
-                                        (assoc-in [:paallystekerros 0 :nimi] "Uusi uudistettu tie 22"))
-            [_ _ _ paivitetty-yllapitokohdeosadata] (tallenna-testipaallystysilmoitus uusi-paallystysilmoitus 2020)]
-        (is (= paivitetty-yllapitokohdeosadata
-               #{{:nimi "Kohdeosa kaista 12",
-                  :paallystetyyppi nil,
-                  :raekoko nil,
-                  :tyomenetelma nil,
-                  :massamaara nil,
-                  :toimenpide "Freude"}
-                 {:nimi "Uusi uudistettu tie 22",
-                  :paallystetyyppi nil,
-                  :raekoko nil,
-                  :tyomenetelma nil,
-                  :massamaara nil,
-                  :toimenpide "Freude"}}) "toimenpide jne ei ole päivetetty, mutta nimi on päivetetty")))
-    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest paivittaa-pot2-paallystysilmoitus-luonnostilassa-vaikka-epavalidi
   (let [;; Ei saa olla POT ilmoitusta

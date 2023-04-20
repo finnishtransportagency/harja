@@ -5,7 +5,8 @@
             [reagent.core :as r]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.pvm :as pvm]
-            [harja.fmt :as fmt]))
+            [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]))
 
 (defonce taulukko-tila (r/atom {}))
 (defonce taulukko-avatut-vetolaatikot (r/atom #{}))
@@ -25,6 +26,7 @@
 (defrecord SamatTulevilleMoodi [samat?])
 (defrecord SopimuksenHakuOnnistui [tulos])
 (defrecord TallennaSopimus [tallennettu])
+(defrecord TestiTallennaKaikkiinTehtaviinArvo [parametrit])
 (defrecord SopimuksenTallennusOnnistui [vastaus])
 (defrecord SopimuksenTallennusEpaonnistui [vastaus])
 (defrecord HaeSopimuksenTila [])
@@ -423,7 +425,7 @@
     [{:keys [tallennettu]} app]
     (let [app (dissoc app :virhe-kaikkia-syottaessa?)
           virheet (tarkista-sovitut-maarat @taulukko-tila)
-          kaikki-arvot-syotetty? (empty? (keys virheet))] 
+          kaikki-arvot-syotetty? (empty? (keys virheet))]
       (if (or kaikki-arvot-syotetty? 
             (false? tallennettu)) 
         (do
@@ -437,6 +439,20 @@
         (when (not (empty? (keys virheet))) 
           (reset! taulukko-virheet virheet)
           (assoc app :virhe-sopimuksia-syottaessa? true)))))
+
+  TestiTallennaKaikkiinTehtaviinArvo
+  (process-event
+    [{parametrit :parametrit} app]
+    (when (k/kehitysymparistossa?)
+      (tallenna
+        app
+        {:polku :tallenna-sopimuksen-tehtavamaara-kaikille-tehtaville-test
+         :parametrit
+         {:onnistui ->TehtavaHakuOnnistui
+          :epaonnistui ->HakuEpaonnistui
+          :onnistui-parametrit [parametrit]
+          :paasta-virhe-lapi? true}}
+        {:urakka-id (-> @tiedot/yleiset :urakka :id)})))
 
   SopimuksenTilaEiHaettu
   (process-event 

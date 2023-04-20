@@ -30,7 +30,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction]]))
 
-(def tila (atom {:nakymassa? false
+(def tila-arvot {:nakymassa? false
                  :liikennetapahtumien-haku-kaynnissa? false
                  :liikennetapahtumien-haku-tulee-olemaan-kaynnissa? false
                  :tallennus-kaynnissa? false
@@ -42,7 +42,12 @@
                             ::lt/kohde nil
                             ::lt-alus/suunta nil
                             ::lt-alus/aluslajit #{}
-                            :niput? false}}))
+                            :niput? false}})
+
+(def tila (atom tila-arvot))
+
+(defn resetoi-tila []
+  (reset! tila tila-arvot))
 
 (defn uusi-tapahtuma
   ([]
@@ -121,7 +126,7 @@
 
 (defn toimenpide->str [tapahtuma]
   (str/join ", "
-            (into #{} (sort (keep (comp lt/sulku-toimenpide->str
+            (into #{} (sort (keep (comp lt/kaikki-toimenpiteet->str
                                         ::toiminto/toimenpide)
                                   (::lt/toiminnot tapahtuma))))))
 
@@ -172,29 +177,28 @@
 (defn laske-yhteenveto [tapahtumat haluttu-toiminto haluttu-suunta haluttu-palvelumuoto]
   ;; Laskee liikennetapahtumien yhteenvetotietoja
   ;; Eli käydään läpi ja lasketaan tapahtumat joilla parametrien mukainen toiminto/suunta/muoto
-  ;; Palautetaan integer (Long) montako tapahtumaa löytyi
-  (let [yhteensa (filter
-                  (fn [tapahtuma]
-                    (let [toiminto (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))
-                          palvelumuoto (::toiminto/palvelumuoto (first (::lt/toiminnot tapahtuma)))
-                          suuntia-olemassa (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta)]
+  ;; Tapahtumilla voi olla useita kohteenosia, eli useita toimenpiteitä/palvelumuotoja, jotka otettu myös huomioon
+  ;; Palautetaan integer (Long) montako toimenpidettä/palvelumuotoa löytyi
+  (reduce (fn [acc tapahtuma]
+            (let [suuntia-olemassa? (pos? (hae-sulutuksen-suunta tapahtuma haluttu-toiminto haluttu-suunta))
+                  toiminnot (filter (fn [toiminto]
+                                      (or
+                                       (and
+                                        suuntia-olemassa?
+                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto)))
 
-                      (or
-                       ;; Lasketaan sulutuksia
-                       (> suuntia-olemassa 0)
+                                       (and
+                                        haluttu-toiminto
+                                        (= haluttu-toiminto (::toiminto/toimenpide toiminto))
+                                        (= haluttu-suunta nil))
 
-                       ;; Lasketaan annettua toimenpidettä 
-                       (and
-                        (= haluttu-suunta nil)
-                        (= toiminto haluttu-toiminto))
-
-                       ;; Lasketaan annettua palvelumuotoa
-                       (and
-                        (= haluttu-suunta nil)
-                        (= haluttu-toiminto nil)
-                        (= palvelumuoto haluttu-palvelumuoto))))) tapahtumat)]
-
-    (count yhteensa)))
+                                       (and
+                                        haluttu-palvelumuoto
+                                        (= haluttu-palvelumuoto (::toiminto/palvelumuoto toiminto))
+                                        (= haluttu-suunta nil)
+                                        (= haluttu-toiminto nil))))
+                                    (::lt/toiminnot tapahtuma))]
+              (+ acc (count toiminnot)))) 0 tapahtumat))
 
 (defn tapahtumat-haettu [app tulos]
   (let [sulutukset-alas (laske-yhteenveto tulos :sulutus :alas nil)
@@ -206,18 +210,14 @@
         itsepalvelut (laske-yhteenveto tulos nil nil :itse)
         muut (laske-yhteenveto tulos nil nil :muu)
 
-        ;; Lasketaan toimenpiteet mitkä kuuluvat yhteenvetoon (kaikki paitsi :ei-avausta)
-        tapahtumat-joilla-toimenpide (count (filter
-                                             (fn [tapahtuma]
-                                               ;; Käydään läpi tapahtumat, ja lasketaan ne joilla on toimenpide muu kuin ei-avausta
-                                               (let [toimenpide (::toiminto/toimenpide (first (::lt/toiminnot tapahtuma)))]
-                                                 (not= toimenpide :ei-avausta))) tulos))
-
         toimenpiteet {:sulutukset-ylos sulutukset-ylos
                       :sulutukset-alas sulutukset-alas
                       :sillan-avaukset sillan-avaukset
                       :tyhjennykset tyhjennykset
-                      :yhteensa tapahtumat-joilla-toimenpide}
+                      :yhteensa (+ sulutukset-ylos 
+                                   sulutukset-alas 
+                                   sillan-avaukset 
+                                   tyhjennykset)}
 
         palvelumuoto {:paikallispalvelu paikallispalvelut
                       :kaukopalvelu kaukopalvelut
@@ -300,8 +300,7 @@
   (let [alukset (remove :poistettu (::lt/alukset t))]
     (boolean
      (and (not (:grid-virheita? t))
-          (every? #(some? (::lt-alus/lkm %))
-                  alukset)
+          (every? #(some? (::lt-alus/lkm %)) alukset)
 
          ; Jos toimenpide ei ole tyhjennys niin alus laji ei saa olla "Ei alusta" eikä nil
           (every? #(if
@@ -319,8 +318,13 @@
                   alukset)
           (or
            (not-empty alukset)
-           (every? #(or (= :itse (::toiminto/palvelumuoto %))
-                        (= :ei-avausta (::toiminto/toimenpide %))) (::lt/toiminnot t)))))))
+           ;; Sallitaan tallennus myös jos aluksia ei ole
+           (every? #(and 
+                     (not (nil? (::toiminto/palvelumuoto %)))
+                     (not (nil? (:arvo @lt/toimenpide-atom)))
+                     ) (::lt/toiminnot t))))
+                        
+                        )))
 
 (defn sama-alusrivi? [a b]
   ;; Tunnistetaan muokkausgridin rivi joko aluksen id:llä, tai jos rivi on uusi, gridin sisäisellä id:llä

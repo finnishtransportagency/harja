@@ -529,10 +529,10 @@ BEGIN
     SELECT * INTO lampotilat FROM lampotilat
     WHERE urakka = ur AND alkupvm = hk_alkupvm AND loppupvm = hk_loppupvm;
 
-    IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.pitka_keskilampotila IS NULL)
+    IF (lampotilat IS NULL OR lampotilat.keskilampotila IS NULL OR lampotilat.keskilampotila_1981_2010 IS NULL)
     THEN
       RAISE NOTICE 'Urakalle % ei ole lämpötiloja hoitokaudelle % - %', ur, hk_alkupvm, hk_loppupvm;
-      RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.pitka_keskilampotila;
+      RAISE NOTICE 'Keskilämpötila hoitokaudella %, pitkän ajan keskilämpötila %', lampotilat.keskilampotila, lampotilat.keskilampotila_1981_2010;
       lampotila_puuttuu = TRUE;
     ELSE
       lampotila_puuttuu = FALSE;
