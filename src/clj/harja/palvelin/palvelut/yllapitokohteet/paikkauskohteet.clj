@@ -612,14 +612,7 @@
     (when (and pinta-ala massamaara
             (number? pinta-ala)
             (number? massamaara))
-      ;; with-precision haluaa tarkkuuden, ei skaalaa.
-      ;; Koska ei voida tietää ennen desimaalia olevien määrää, joudutaan laskemaan tarkkuus hieman hankalasti.
-      (let [tarkkuus (+ 2 (count (str (int (/ (* 1000 (float massamaara))
-                                             (float pinta-ala))))))]
-        (with-precision
-          tarkkuus
-          (/ (* 1000 massamaara)
-            pinta-ala))))))
+      (paikkaus/massamaara-ja-pinta-ala->massamenekki massamaara pinta-ala))))
 
 (defn- muuta-arvot [paikkaus avaimet fn]
   (reduce #(update % %2 fn) paikkaus avaimet))

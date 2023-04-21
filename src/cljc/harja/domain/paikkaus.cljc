@@ -222,6 +222,24 @@
        (= "PAB-paikkaus levittäjällä" tyomenetelma)
        (= "SMA-paikkaus levittäjällä" tyomenetelma))))
 
+(defn massamaara-ja-pinta-ala->massamenekki [massamaara pinta-ala]
+  (when (and massamaara pinta-ala (pos? pinta-ala))
+    #?(:clj
+       ;; with-precision haluaa tarkkuuden, ei skaalaa.
+       ;; Koska ei voida tietää ennen desimaalia olevien määrää,
+       ;; joudutaan laskemaan tarkkuus hieman hankalasti. Lisätään kokonaislukujen määrään kaksi, jotta saadaan
+       ;; luku kahden desimaalin tarkkuudella.
+       (let [tarkkuus (+ 2 (count (str (int (/ (* 1000 (float massamaara))
+                                              (float pinta-ala))))))]
+         (with-precision
+           tarkkuus
+           (/ (* 1000 massamaara)
+             pinta-ala)))
+       :cljs
+       ;; cljs-puolella hoidetaan pyöristys fmt-funktioilla
+       (/ (* 1000 massamaara)
+         pinta-ala))))
+
 (def paikkaus->speqcl-avaimet
   {:id :harja.domain.paikkaus/id
    :luotu ::muokkaustiedot/luotu

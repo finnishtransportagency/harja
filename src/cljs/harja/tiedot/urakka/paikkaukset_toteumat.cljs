@@ -195,6 +195,11 @@
 
   UremPaikkausLatausEpaonnistui
   (process-event [{{response :response} :vastaus} app]
+    (viesti/nayta-toast!
+      (if (get response "virheet")
+        "Urapaikkausten tuonti excelistä epäonnistui"
+        "Odottamaton virhe urapaikkausten tuonnista excelillä")
+      :varoitus)
     (assoc app :excel-tuontivirhe (get response "virheet")))
 
   SuljeUremLatausVirhe

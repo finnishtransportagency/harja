@@ -273,7 +273,8 @@
   [tyomenetelma tyomenetelmat yksikko]
   (let [desimaalien-maara 2
         urapaikkaus? (urem? tyomenetelma tyomenetelmat)
-        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)]
+        levittimella-tehty? (paikkaus/levittimella-tehty? {:tyomenetelma tyomenetelma} tyomenetelmat)
+        excelista-tuotu?-fn #(= "excel" (::paikkaus/lahde %))]
     (concat
       [{:otsikko "Pvm." :leveys 6 :nimi ::paikkaus/pvm
         :hae #(select-keys % [::paikkaus/alkuaika ::paikkaus/loppuaika])
@@ -330,6 +331,9 @@
          {:otsikko "m\u00B2"
           :leveys 5 :tasaa :oikea
           :fmt #(fmt/desimaaliluku-opt % desimaalien-maara)
+          :hae #(if (excelista-tuotu?-fn %)
+                  (::paikkaus/pinta-ala %)
+                  (:suirun-pinta-ala %))
           :nimi :suirun-pinta-ala}
          {:otsikko "kg/m²"
           :leveys 5 :tasaa :oikea
@@ -492,7 +496,7 @@
                    e!
                    {::paikkaus/tyomenetelma tyomenetelma
                     ::paikkaus/paikkauskohde paikkauskohde})
-                {:disabled (or urapaikkaus? (not tilattu?))
+                {:disabled (not tilattu?)
                  :ikoni (ikonit/livicon-plus)
                  :luokka "nappi-reunaton"}])
              ;; Näytetään virheen ilmoitus vain tilaajalle
