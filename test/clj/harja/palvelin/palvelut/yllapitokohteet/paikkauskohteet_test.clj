@@ -2,17 +2,15 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [clojure.set :as set]
-            [clojure.string :as str]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
+            [cheshire.core :as cheshire]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet :as paikkauskohteet]
             [harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel :as p-excel]
-            [harja.kyselyt.paikkaus :as q-paikkaus]
             [harja.kyselyt.tieverkko :as tieverkko-kyselyt]
             [harja.domain.paikkaus :as paikkaus]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.tyokalut.paikkaus-test :refer :all]
-            [taoensso.timbre :as log]
             [harja.pvm :as pvm]
             [dk.ative.docjure.spreadsheet :as xls]
             [clojure.java.io :as io]))
@@ -490,10 +488,10 @@
 
 
 (defn hae-paikkaukset [urakka-id paikkauskohde-id]
-  (let [paikkaukset (first (q (str "SELECT id FROM paikkaus
+  (let [paikkaukset (q-map (str "SELECT * FROM paikkaus
                               WHERE poistettu = false
                                 AND \"urakka-id\" = " urakka-id "
-                                AND \"paikkauskohde-id\" = " paikkauskohde-id " ;")))]
+                                AND \"paikkauskohde-id\" = " paikkauskohde-id " ;"))]
     paikkaukset))
 
 ;;Happycase
@@ -521,3 +519,47 @@
         poistettu-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))]
     (is (= alkup-paikkausmaara poistettu-paikkausmaara))
     (is (= (inc alkup-paikkausmaara) tallennettu-paikkausmaara))))
+
+(deftest lisaa-urem-paikkaus-excelista
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                default-paikkauskohde)
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-paikkauskohde-urakalle
+                        +kayttaja-jvh+
+                        (assoc kohde :paikkauskohteen-tila "tilattu"))
+        alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        lue-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
+                        :lue-urapaikkaukset-excelista
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :paikkauskohde-id (:id paikkauskohde)}
+                        "test/resurssit/excel/urem_tuonti.xlsx")
+        paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
+    (is (= (:status lue-excelista) 200))
+    (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
+    (is (= (count paikkaukset-jalkeen) 1) "Excel-tuonnista pitäisi tulla yksi paikkaus")
+    (is (= (:massatyyppi (first paikkaukset-jalkeen)) "AB, Asfalttibetoni"))
+    (is (= (:massamenekki (first paikkaukset-jalkeen)) 15.38M))))
+
+(deftest lisaa-urem-paikkaus-excelista-epaonnistuu
+  (let [urakka-id @kemin-alueurakan-2019-2023-id
+        kohde (merge {:urakka-id urakka-id}
+                default-paikkauskohde)
+        paikkauskohde (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :tallenna-paikkauskohde-urakalle
+                        +kayttaja-jvh+
+                        (assoc kohde :paikkauskohteen-tila "tilattu"))
+        alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        lue-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
+                        :lue-urapaikkaukset-excelista
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :paikkauskohde-id (:id paikkauskohde)}
+                        "test/resurssit/excel/urem_tuonti_fail.xlsx")
+        virheet (get (cheshire/decode (:body lue-excelista)) "virheet")
+        paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
+    (is (= (:status lue-excelista) 400))
+    (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
+    (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")
+    (is (= (get virheet "5") ["Pinta-ala puuttuu tai on virheellinen"]))))
