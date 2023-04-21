@@ -165,9 +165,7 @@
        [:p "Rivi " rivi ":"]
        [:ul
         (for* [virhe virheet]
-          (do
-            (println virhe)
-            [:li virhe]))]])]])
+          [:li virhe])]])]])
 
 
 (def ohje-teksti-tilaajalle
