@@ -671,7 +671,7 @@
       (not (pvm/jalkeen? loppuaika alkuaika))) (conj "Loppuaika on ennen aloitusaikaa!")))
 
 
-(defn- kasittele-urem-excel [db fim email urakka-id paikkauskohde-id {kayttaja-id :id} req]
+(defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         toteumat (p-excel/erottele-uremit workbook)
 
@@ -731,7 +731,7 @@
        :headers {"Content-Type" "application/json; charset=UTF-8"}
        :body body})))
 
-(defn vastaanota-urem-excel [db fim email req]
+(defn vastaanota-urem-excel [db req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
     (:kayttaja req)
     (Integer/parseInt (get (:params req) "urakka-id")))
@@ -743,7 +743,7 @@
           (some? urakka-id)
           (some? kayttaja)
           (some? paikkauskohde-id))
-      (kasittele-urem-excel db fim email urakka-id paikkauskohde-id kayttaja req)
+      (kasittele-urem-excel db urakka-id paikkauskohde-id kayttaja req)
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Urakka, käyttäjä tai paikkauskohde puuttuu."}]}))))
 
@@ -813,7 +813,7 @@
                         (fn [user tiedot]
                           (paikkaus-q/hae-paikkauskohteiden-tyomenetelmat db user tiedot)))
       (julkaise-palvelu http :lue-urapaikkaukset-excelista
-        (wrap-multipart-params (fn [req] (vastaanota-urem-excel db fim email req)))
+        (wrap-multipart-params (fn [req] (vastaanota-urem-excel db req)))
         {:ring-kasittelija? true})
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :paikkauskohteet-urakalle-excel (partial #'p-excel/vie-paikkauskohteet-exceliin db)))
