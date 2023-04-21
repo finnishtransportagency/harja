@@ -84,32 +84,32 @@
                 }
             }
         },
-        "poikkeuksellisetsaahavainnot": {
-            "id": "urn:harja/poikkeuksellisetsaahavainnot",
+        "poikkeukselliset-saahavainnot": {
+            "id": "urn:harja/poikkeukselliset-saahavainnot",
             "type": "array",
             "description": "Poikkeukselliset paikalliset keliolosuhteet (omat havainnot).",
             "items": {
-                "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
+                "id": "urn:harja/poikkeukselliset-saahavainnot/0",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "poikkeuksellinensaahavainto": {
-                        "id": "urn:harja/poikkeuksellisetsaahavainnot/0",
+                    "poikkeuksellinen-saahavainto": {
+                        "id": "urn:harja/poikkeukselliset-saahavainnot/0",
                         "type": "object",
                         "properties": {
                             "havaintoaika": {
-                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/havaintoaika",
+                                "id": "urn:harja/poikkeukselliset-saahavainnot/0/havaintoaika",
                                 "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "paikka": {
-                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/paikka",
+                                "id": "urn:harja/poikkeukselliset-saahavainnot/0/paikka",
                                 "required": true,
                                 "type": "string"
                             },
                             "kuvaus": {
-                                "id": "urn:harja/poikkeuksellisetsaahavainnot/0/kuvaus",
+                                "id": "urn:harja/poikkeukselliset-saahavainnot/0/kuvaus",
                                 "required": true,
                                 "type": "string"
                             }
@@ -159,34 +159,34 @@
                 }
             }
         },
-        "paivystajantiedot": {
-            "id": "urn:harja/paivystajantiedot",
+        "paivystajan-tiedot": {
+            "id": "urn:harja/paivystajan-tiedot",
             "type": "array",
             "minItems": 1,
             "description": "Päivystäjän/päivystäjien tiedot.",
             "items": {
-                "id": "urn:harja/paivystajantiedot/0",
+                "id": "urn:harja/paivystajan-tiedot/0",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                     "paivystaja": {
-                        "id": "urn:harja/paivystajantiedot/0",
+                        "id": "urn:harja/paivystajan-tiedot/0",
                         "type": "object",
                         "properties": {
                             "aloitus": {
-                                "id": "urn:harja/paivystajantiedot/0/aloitus",
+                                "id": "urn:harja/paivystajan-tiedot/0/aloitus",
                                 "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "lopetus": {
-                                "id": "urn:harja/paivystajantiedot/0/lopetus",
+                                "id": "urn:harja/paivystajan-tiedot/0/lopetus",
                                 "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "nimi": {
-                                "id": "urn:harja/paivystajantiedot/0/nimi",
+                                "id": "urn:harja/paivystajan-tiedot/0/nimi",
                                 "required": true,
                                 "type": "string"
                             }
@@ -195,33 +195,33 @@
                 }
             }
         },
-        "tyonjohtajantiedot": {
+        "tyonjohtajan-tiedot": {
             "id": "urn:harja/tyonjohtajantiedot",
             "type": "array",
             "description": "Työnjohtajan/Työnjohtajien tiedot.",
             "items": {
-                "id": "urn:harja/tyonjohtajantiedot/0",
+                "id": "urn:harja/tyonjohtajan-tiedot/0",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
                     "tyonjohtaja": {
-                        "id": "urn:harja/tyonjohtajantiedot/0",
+                        "id": "urn:harja/tyonjohtajan-tiedot/0",
                         "type": "object",
                         "properties": {
                             "aloitus": {
-                                "id": "urn:harja/tyonjohtajantiedot/0/aloitus",
+                                "id": "urn:harja/tyonjohtajan-tiedot/0/aloitus",
                                 "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "lopetus": {
-                                "id": "urn:harja/tyonjohtajantiedot/0/lopetus",
+                                "id": "urn:harja/tyonjohtajan-tiedot/0/lopetus",
                                 "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "nimi": {
-                                "id": "urn:harja/tyonjohtajantiedot/0/nimi",
+                                "id": "urn:harja/tyonjohtajan-tiedot/0/nimi",
                                 "required": true,
                                 "type": "string"
                             }
@@ -286,49 +286,49 @@
                 }
             }
         },
-        "tieston-muuttoimenpiteet": {
-            "id": "urn:harja/tieston-muuttoimenpiteet",
+        "tieston-muut-toimenpiteet": {
+            "id": "urn:harja/tieston-muut-toimenpiteet",
             "type": "array",
             "required": false,
             "description": "Kirjataan tiestölle tehdyt muut toimenpiteet mitattavilta ajankohdilta",
             "items": {
-                "id": "urn:harja/tieston-muuttoimenpiteet/0",
+                "id": "urn:harja/tieston-muut-toimenpiteet/0",
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "tieston-muutoimenpide": {
-                        "id": "urn:harja/tieston-muuttoimenpiteet/0",
+                    "tieston-muu-toimenpide": {
+                        "id": "urn:harja/tieston-muut-toimenpiteet/0",
                         "type": "object",
                         "properties": {
                             "aloitus": {
-                                "id": "urn:harja/tieston-muuttoimenpiteet/0/aloitus",
+                                "id": "urn:harja/tieston-muut-toimenpiteet/0/aloitus",
                                 "required": true,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "lopetus": {
-                                "id": "urn:harja/tieston-muuttoimenpiteet/0/lopetus",
+                                "id": "urn:harja/tieston-muut-toimenpiteet/0/lopetus",
                                 "required": false,
                                 "type": "string",
                                 "format": "date-time"
                             },
                             "tehtavat": {
-                                "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat",
+                                "id": "urn:harja/tieston-muut-toimenpiteet/0/tehtavat",
                                 "required": true,
                                 "type": "array",
                                 "items": {
-                                    "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0",
+                                    "id": "urn:harja/tieston-muut-toimenpiteet/0/tehtavat/0",
                                     "type": "object",
                                     "additionalProperties": false,
                                     "properties": {
                                         "tehtava": {
-                                            "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava/0",
+                                            "id": "urn:harja/tieston-muut-toimenpiteet/0/tehtavat/0/tehtava/0",
                                             "type": "object",
                                             "required": true,
                                             "additionalProperties": false,
                                             "properties": {
                                                 "kuvaus": {
-                                                    "id": "urn:harja/tieston-muuttoimenpiteet/0/tehtavat/0/tehtava/0/kuvaus",
+                                                    "id": "urn:harja/tieston-muut-toimenpiteet/0/tehtavat/0/tehtava/0/kuvaus",
                                                     "required": true,
                                                     "type": "string"
                                                 }
@@ -342,14 +342,14 @@
                 }
             }
         },
-        "liikenteenohjausmuutokset": {
-            "id": "urn:harja/liikenteenohjausmuutokset",
+        "liikenteenohjaus-muutokset": {
+            "id": "urn:harja/liikenteenohjaus-muutokset",
             "type": "object",
             "required": false,
             "description": "Tilapäiset liikenteenohjaus muutokset (nopeusrajoitus,painorajoitus, kiertotie jne.) Kirjataan päiväkirjaan (yksittäiset erikseen, talviajan nopeus rajoitukset massana, isommat liikenteen ohjaukset liikenteenohjaussuunnitelman mukaan)",
             "properties": {
                 "kuvaus": {
-                    "id": "urn:harja/liikenteenohjausmuutokset/kuvaus",
+                    "id": "urn:harja/liikenteenohjaus-muutokset/kuvaus",
                     "required": true,
                     "type": "string"
                 }
@@ -368,19 +368,19 @@
                 }
             }
         },
-        "viranomaisenavustaminen": {
-            "id": "urn:harja/viranomaisenavustaminen",
+        "viranomaisen-avustaminen": {
+            "id": "urn:harja/viranomaisen-avustaminen",
             "type": "object",
             "required": false,
             "description": "Esim. siirtoajoneuvot, vahingonkorvaus. Tähän kommentoidaan onko katselmuksia pidetty.",
             "properties": {
                 "kuvaus": {
-                    "id": "urn:harja/viranomaisenavustaminen/kuvaus",
+                    "id": "urn:harja/viranomaisen-avustaminen/kuvaus",
                     "required": true,
                     "type": "string"
                 },
                 "tunnit": {
-                    "id": "urn:harja/viranomaisenavustaminen/tunnit",
+                    "id": "urn:harja/viranomaisen-avustaminen/tunnit",
                     "required": false,
                     "description": "Käytetty aika tunteina kahden desimaalin tarkkuudella",
                     "type": "number"
@@ -400,50 +400,50 @@
                 }
             }
         },
-        "muutkirjaukset": {
-            "id": "urn:harja/muutkirjaukset",
+        "muut-kirjaukset": {
+            "id": "urn:harja/muut-kirjaukset",
             "type": "object",
             "required": false,
             "description": "Vapaa kenttä muille tarpeellisille kirjauksille.",
             "properties": {
                 "kuvaus": {
-                    "id": "urn:harja/muutkirjaukset/kuvaus",
+                    "id": "urn:harja/muut-kirjaukset/kuvaus",
                     "required": true,
                     "type": "string"
                 }
             }
         },
-        "tilaajanyhteydenotot": {
-            "id": "urn:harja/tilaajanyhteydenotot",
+        "tilaajan-yhteydenotot": {
+            "id": "urn:harja/tilaajan-yhteydenotot",
             "type": "object",
             "required": false,
             "description": "Tilaajan huomautukset työmaapäiväkirjaan.",
             "properties": {
                 "kuvaus": {
-                    "id": "urn:harja/tilaajanyhteydenotot/kuvaus",
+                    "id": "urn:harja/tilaajan-yhteydenotot/kuvaus",
                     "required": true,
                     "type": "string"
                 },
                 "nimi": {
-                    "id": "urn:harja/tilaajanyhteydenotot/nimi",
+                    "id": "urn:harja/tilaajan-yhteydenotot/nimi",
                     "required": true,
                     "type": "string"
                 }
             }
         },
-        "urakoitsijanmerkinnat": {
-            "id": "urn:harja/urakoitsijanmerkinnat",
+        "urakoitsijan-merkinnat": {
+            "id": "urn:harja/urakoitsijan-merkinnat",
             "type": "object",
             "required": false,
             "description": "Urakoitsijan merkinnät jälkikäteen.",
             "properties": {
                 "kuvaus": {
-                    "id": "urn:harja/urakoitsijanmerkinnat/kuvaus",
+                    "id": "urn:harja/urakoitsijan-merkinnat/kuvaus",
                     "required": true,
                     "type": "string"
                 },
                 "nimi": {
-                    "id": "urn:harja/urakoitsijanmerkinnat/nimi",
+                    "id": "urn:harja/urakoitsijan-merkinnat/nimi",
                     "required": true,
                     "type": "string"
                 }

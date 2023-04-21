@@ -31,9 +31,9 @@
         }
       }
     ],
-    "poikkeuksellisetsaahavainnot": [
+    "poikkeukselliset-saahavainnot": [
       {
-        "poikkeuksellinensaahavainto": {
+        "poikkeuksellinen-saahavainto": {
           "havaintoaika": "2016-01-30T12:00:00+02:00",
           "paikka": "Kauhava",
           "kuvaus": "Jäätävä sade"
@@ -50,7 +50,7 @@
         }
       }
     ],
-    "paivystajantiedot": [
+    "paivystajan-tiedot": [
       {
         "paivystaja": {
           "aloitus": "2016-01-30T12:00:00+02:00",
@@ -59,7 +59,7 @@
         }
       }
     ],
-    "tyonjohtajantiedot": [
+    "tyonjohtajan-tiedot": [
       {
         "tyonjohtaja": {
           "aloitus": "2016-01-30T12:00:00+02:00",
@@ -83,9 +83,9 @@
         }
       }
     ],
-    "tieston-muuttoimenpiteet": [
+    "tieston-muut-toimenpiteet": [
       {
-        "tieston-muutoimenpide": {
+        "tieston-muu-toimenpide": {
           "aloitus": "2016-01-30T12:00:00+02:00",
           "lopetus": "2017-01-30T12:00:00+02:00",
           "tehtavat": [
@@ -98,27 +98,27 @@
         }
       }
     ],
-    "liikenteenohjausmuutokset": {
+    "liikenteenohjaus-muutokset": {
       "kuvaus": "Paljon muutoksia"
     },
     "onnettomuudet": {
       "kuvaus": "Onnettomuus tiellä 4"
     },
-    "viranomaisenavustaminen": {
+    "viranomaisen-avustaminen": {
       "kuvaus": "Katselmointi pidetty hyvässä ymmärryksessä",
       "tunnit": 4.75
     },
     "palautteet": {
       "kuvaus": "Esimerkki palaute"
     },
-    "muutkirjaukset": {
+    "muut-kirjaukset": {
       "kuvaus": "Huomatus vielä että kiire tuli hommissa"
     },
-    "tilaajanyhteydenotot": {
+    "tilaajan-yhteydenotot": {
       "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan",
       "nimi": "Tiia Tilaaja"
     },
-    "urakoitsijanmerkinnat": {
+    "urakoitsijan-merkinnat": {
       "kuvaus": "Urakoitsijan merkinnät jälkikäteen",
       "nimi": "Ulla Urakoitsija"
     }
