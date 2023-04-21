@@ -2,15 +2,16 @@
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
+            [harja.ui.grid :as grid]
             [harja.views.kartta :as kartta]
             [harja.views.kartta.tasot :as kartta-tasot]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.hallintayksikot :as hal])
+            [harja.tiedot.hallintayksikot :as hal]
+            [harja.tiedot.hallinta.toteumatyokalu-tiedot :as tiedot])
 
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
@@ -41,6 +42,14 @@
                     [:div
                      [:p "Koska tämä viritelmä on kesken, niin tr-osoitteen koordinaatteja ei saada, ennenkuin ne haetaan serveriltä"]
                      [:p (str (:koordinaatit app))]
+                     (when (get-in app [:toteumatiedot :valittu-urakka :id])
+                      [napit/tallenna "Hae tr-osoitteet ja ulkoinen-id"
+                       #(do
+                          (e! (tiedot/->HaeSeuraavaVapaaUlkoinenId))
+                          (e! (tiedot/->HaeUrakanTierekisteriosoitteita (get-in app [:toteumatiedot :valittu-urakka :id]))))])
+                     (when (get-in app [:toteumatiedot :valittu-urakka :id])
+                       [napit/tallenna "Päivitä raportit"
+                        #(e! (tiedot/->PaivitaRaportit))])
                      [napit/tallenna "Hae TR osoitteelle koordinaatit"
                       #(e! (tiedot/->HaeTROsoitteelleKoordinaatit toteumatiedot))
                       {:disabled disable-trhaku? :paksu? true}]
@@ -102,7 +111,18 @@
         :tyyppi :tierekisteriosoite
         :vayla-tyyli? true
         :lataa-piirrettaessa-koordinaatit? true}]
-      toteumatiedot]]))
+      toteumatiedot]
+
+     [:div [:b "Urakan tierekisteriosoitteita, joita voi käyttää toteuman lisäämisessä"]
+      [grid/grid
+       {:otsikko "Tierekisteriosoitteet"
+        :tunniste :id
+        :piilota-toiminnot? true}
+       [{:otsikko "Tie" :nimi :tie :tyyppi :string :leveys 1}
+        {:otsikko "Osa" :nimi :osa :tyyppi :string :leveys 1}
+        {:otsikko "Aet" :nimi :aet :tyyppi :string :leveys 1}
+        {:otsikko "Let" :nimi :let :tyyppi :string :leveys 1}]
+       (:tierekisteriosoitteita app)]]]))
 
 (defn simuloi-toteuma* []
   (komp/luo
@@ -123,7 +143,7 @@
           [:div
            [kartta/kartan-paikka]
            [debug/debug app]
-           (when (:oikeudet-urakoihin app)
+           (when (not (empty? (:oikeudet-urakoihin app)))
              [:div
               [:p [:b "Käyttäjällä on oikeus lisätä toteumia seuraaviin urakoihin:"]]
               (for [urakka (:oikeudet-urakoihin app)]
@@ -131,13 +151,14 @@
                 [:div [:span (str (:urakka-id urakka) " ")] [:span (:urakka-nimi urakka)]])])
            [:div
             ;; Näytetään mahdollisuus lisätä oikeudet urakkaan vain, jos siihen ei vielä ole oikeuksia
-            (when (and (get-in app [:toteumatiedot :valittu-urakka])
+            (if (and (get-in app [:toteumatiedot :valittu-urakka])
                     (not (some (fn [u] (when (= (get-in app [:toteumatiedot :valittu-urakka :id]) (:urakka-id u)) true)) (:oikeudet-urakoihin app))))
-              [:p "Lisää oikeudet puuttuvaan urakkaan"]
-              [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
-               #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
-               {:paksu? true}])]
-           (toteumalomake e! app)])
+              [:div
+               [:p [:b "Lisää oikeudet puuttuvaan urakkaan"]]
+               [napit/tallenna (str "Lisää oikeudet urakkaan: " (get-in app [:toteumatiedot :valittu-urakka :nimi]))
+                #(e! (tiedot/->LisaaOikeudetUrakkaan (get-in app [:toteumatiedot :valittu-urakka :id])))
+                {:paksu? true}]]
+              (toteumalomake e! app))]])
         "Puutteelliset käyttöoikeudet"))))
 
 (defn simuloi-toteuma []
