@@ -59,8 +59,8 @@ Numero on tierekisterin koodi luokalle."}
   [{:nimi "I" :kuvaus "I lk Vilkkaat soratiet" :numero 1 :soratieluo "I lk"}
    {:nimi "II" :kuvaus "II lk Perussoratiet" :numero 2 :soratieluo "II lk"}
    {:nimi "III" :kuvaus "III lk Vähäliikenteiset soratiet" :numero 3 :soratieluo "III lk"}
-   {:nimi "I - uusi" :kuvaus "I lk Vilkkaat soratiet" :numero 4 :soratieluo "I lk - uusi"}
-   {:nimi "II - uusi" :kuvaus "II lk Perussoratiet" :numero 5 :soratieluo "II lk - uusi"}
+   {:nimi "I - uusi" :kuvaus "I lk Vilkkaat soratiet" :numero 4 :soratieluo "I lk uusi"}
+   {:nimi "II - uusi" :kuvaus "II lk Perussoratiet" :numero 5 :soratieluo "II lk uusi"}
    {:nimi "Käsin kirjattu" :kuvaus "Käsin kirjattu" :numero 99}
    {:nimi "Hoitoluokka puuttuu" :kuvaus "Hoitoluokka puuttuu" :numero 100 :soratieluo ""}])
 
