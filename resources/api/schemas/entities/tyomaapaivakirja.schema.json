@@ -195,6 +195,41 @@
                 }
             }
         },
+        "tyonjohtajantiedot": {
+            "id": "urn:harja/tyonjohtajantiedot",
+            "type": "array",
+            "description": "Työnjohtajan/Työnjohtajien tiedot.",
+            "items": {
+                "id": "urn:harja/tyonjohtajantiedot/0",
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "tyonjohtaja": {
+                        "id": "urn:harja/tyonjohtajantiedot/0",
+                        "type": "object",
+                        "properties": {
+                            "aloitus": {
+                                "id": "urn:harja/tyonjohtajantiedot/0/aloitus",
+                                "required": true,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "lopetus": {
+                                "id": "urn:harja/tyonjohtajantiedot/0/lopetus",
+                                "required": false,
+                                "type": "string",
+                                "format": "date-time"
+                            },
+                            "nimi": {
+                                "id": "urn:harja/tyonjohtajantiedot/0/nimi",
+                                "required": true,
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "tieston-toimenpiteet": {
             "id": "urn:harja/tieston-toimenpiteet",
             "type": "array",
@@ -343,6 +378,12 @@
                     "id": "urn:harja/viranomaisenavustaminen/kuvaus",
                     "required": true,
                     "type": "string"
+                },
+                "tunnit": {
+                    "id": "urn:harja/viranomaisenavustaminen/tunnit",
+                    "required": false,
+                    "description": "Käytetty aika tunteina kahden desimaalin tarkkuudella",
+                    "type": "number"
                 }
             }
         },
