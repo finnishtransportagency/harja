@@ -660,9 +660,9 @@
     (not (s/valid? ::tr/alkuetaisyys aet)) (conj "Alkuetäisyys puuttuu tai on virheellinen")
     (not (s/valid? ::tr/loppuosa losa)) (conj "Loppuosa puuttuu tai on virheellinen")
     (not (s/valid? ::tr/loppuetaisyys loppuet)) (conj "Loppuetäisyys puuttuu tai on virheellinen")
-    (not (s/valid? ::paikkaus/massatyyppi massatyyppi)) (conj "Massatyyppi puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/urapaikkaus-massatyyppi massatyyppi)) (conj "Massatyyppi puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/raekoko raekoko)) (conj "Raekoko puuttuu tai on virheellinen")
-    (not (s/valid? ::paikkaus/kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
+    (not (s/valid? ::paikkaus/urapaikkaus-kuulamylly kuulamylly)) (conj "Kuulamylly puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/massamaara massamaara)) (conj "Massamäärä puuttuu tai on virheellinen")
     (not (s/valid? ::paikkaus/pinta-ala pinta-ala)) (conj "Pinta-ala puuttuu tai on virheellinen")
     (and

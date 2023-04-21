@@ -175,11 +175,11 @@
 
 (s/def ::alkuaika ::pvm)
 (s/def ::loppuaika ::pvm)
-(s/def ::massatyyppi massatyypit)
-(s/def ::raekoko (s/and some? number?))
-(s/def ::kuulamylly kuulamyllyt)
-(s/def ::massamaara (s/and some? number?))
-(s/def ::pinta-ala (s/and some? number?))
+(s/def ::urapaikkaus-massatyyppi massatyypit)
+(s/def ::raekoko number?)
+(s/def ::urapaikkaus-kuulamylly kuulamyllyt)
+(s/def ::massamaara number?)
+(s/def ::pinta-ala number?)
 
 ;; VHAR-1384, huom. nämä lyhenteitä
 (def paikkaustyomenetelmat-jotka-kiinnostaa-yhaa
