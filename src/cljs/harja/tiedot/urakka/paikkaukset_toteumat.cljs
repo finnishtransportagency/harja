@@ -200,10 +200,10 @@
         "Urapaikkausten tuonti excelistä epäonnistui"
         "Odottamaton virhe urapaikkausten tuonnista excelillä")
       :varoitus)
-    (assoc app :excel-tuontivirhe (get response "virheet")))
+    (assoc app :urem-excel-virheet (get response "virheet")))
 
   SuljeUremLatausVirhe
   (process-event [_ app]
-    (dissoc app :excel-tuontivirhe)))
+    (dissoc app :urem-excel-virheet)))
 
 

@@ -150,22 +150,36 @@
       [yleiset/vihje "Huom! Lähetetyn sähköpostiviestin sisältö tallennetaan Harjaan ja se saatetaan näyttää Harjassa paikkauskohteen tietojen yhteydessä."]]]))
 
 (defn excel-tuonti-virhe-modal
-  [e! {:keys [excel-tuontivirhe] :as app}]
-  [modal/modal
-   {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
-    :nakyvissa? excel-tuontivirhe
-    :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
-    :footer [:div
-             [napit/sulje #(e! (tiedot/->SuljeUremLatausVirhe))]]}
-   [:div
-    [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R ei ole muokattu, ja paikkaukset alkavat riviltä 5. Mikäli välissä on tyhjiä rivejä, rivinumerot eivät välttämättä pidä paikkaansa."]
-    [:br]
-    (for* [[rivi virheet] excel-tuontivirhe]
-      [:<>
-       [:p "Rivi " rivi ":"]
-       [:ul
-        (for* [virhe virheet]
-          [:li virhe])]])]])
+  [e! {:keys [urem-excel-virheet] :as app}]
+  (let [{validointivirheet "paikkausten-validointivirheet"
+         paikkauskohteen-tila-virhe "paikkauskohteen-tila-virhe"
+         excel-luku-virhe "excel-luku-virhe"} urem-excel-virheet]
+    [modal/modal
+     {:otsikko "Virheitä urapaikkausten tuonnissa excelillä"
+      :nakyvissa? urem-excel-virheet
+      :sulje-fn #(e! (tiedot/->SuljeUremLatausVirhe))
+      :footer [:div
+               [napit/sulje #(e! (tiedot/->SuljeUremLatausVirhe))]]}
+     [:div
+      (when validointivirheet
+        [:<>
+         [:p "Tuotua exceliä ei voitu lukea. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R ei ole muokattu, ja paikkaukset alkavat riviltä 5."]
+         [:<>
+          [:br]
+          (for* [[rivi virheet] validointivirheet]
+            [:<>
+             [:p "Rivi " rivi ":"]
+             [:ul
+              (for* [virhe virheet]
+                [:li virhe])]])]])
+      (when paikkauskohteen-tila-virhe
+        [:<>
+         [:br]
+         [:p paikkauskohteen-tila-virhe]])
+      (when excel-luku-virhe
+        [:<>
+         [:br]
+         [:p "Tuotu excel ei näytä oikeanlaiselta. Varmista, että käytät HARJAsta ladattua pohjaa, jonka sarakkeita A-R tai otsikkorivejä ei ole muokattu."]])]]))
 
 
 (def ohje-teksti-tilaajalle

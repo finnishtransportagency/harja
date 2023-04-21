@@ -550,16 +550,27 @@
                         :tallenna-paikkauskohde-urakalle
                         +kayttaja-jvh+
                         (assoc kohde :paikkauskohteen-tila "tilattu"))
-        alkup-paikkausmaara (count (hae-paikkaukset urakka-id (:id paikkauskohde)))
+        paikkaukset-ennen (hae-paikkaukset urakka-id (:id paikkauskohde))
         lue-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
                         :lue-urapaikkaukset-excelista
                         +kayttaja-jvh+
                         {:urakka-id urakka-id
                          :paikkauskohde-id (:id paikkauskohde)}
                         "test/resurssit/excel/urem_tuonti_fail.xlsx")
-        virheet (get (cheshire/decode (:body lue-excelista)) "virheet")
+        virheet1 (get-in (cheshire/decode (:body lue-excelista)) ["virheet" "paikkausten-validointivirheet"])
+
+        lue-roskaa-excelista (kutsu-excel-vienti-palvelua (:http-palvelin jarjestelma)
+                               :lue-urapaikkaukset-excelista
+                               +kayttaja-jvh+
+                               {:urakka-id urakka-id
+                                :paikkauskohde-id (:id paikkauskohde)}
+                               "test/resurssit/excel/odottamaton-excel.xlsx")
+
+        virheet2 (get-in (cheshire/decode (:body lue-roskaa-excelista)) ["virheet" "excel-luku-virhe"])
         paikkaukset-jalkeen (hae-paikkaukset urakka-id (:id paikkauskohde))]
     (is (= (:status lue-excelista) 400))
-    (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
-    (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")
-    (is (= (get virheet "5") ["Pinta-ala puuttuu tai on virheellinen"]))))
+    (is (= (count paikkaukset-ennen) 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
+    (is (= (get virheet1 "5") ["Pinta-ala puuttuu tai on virheellinen"]))
+    (is (= virheet2 "Excelin otsikot eivät täsmää pohjaan"))
+    (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
+

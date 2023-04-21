@@ -665,15 +665,14 @@
 
 (defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
-        toteumat (p-excel/erottele-uremit workbook)
+        {paikkaukset :paikkaukset excel-luku-virhe :virhe} (p-excel/erottele-uremit workbook)
 
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
 
-        _ (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
-            (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
-            (throw+ {:type "Validaatiovirhe"
-                     :virheet [{:koodi :puuttelliset-parametrit
-                                :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id)}]}))
+        paikkauskohteen-tila-virhe
+        (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
+          (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
+          "Paikkauskohteen täytyy olla tilattu, jotta sille voi tehdä toteumia")
 
         paikkaukset (map (fn [rivi]
                            (update rivi :paikkaus
@@ -693,28 +692,34 @@
                                    ::paikkaus/paikkauskohde-id paikkauskohde-id
                                    ::paikkaus/tyomenetelma (::paikkaus/tyomenetelma paikkauskohde)
                                    ::paikkaus/ulkoinen-id 0)))))
-                      toteumat)
+                      paikkaukset)
 
-        paikkausten-validoinnit (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
-                                                (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
-                                                  (when-not (empty? validointivirheet)
-                                                    [rivi validointivirheet])))
-                                           paikkaukset))
+        paikkausten-validointivirheet (into {} (map (fn [{rivi :rivi paikkaus :paikkaus}]
+                                                      (let [validointivirheet (validoi-urem-excel-paikkaus paikkaus)]
+                                                        (when-not (empty? validointivirheet)
+                                                          [rivi validointivirheet])))
+                                                 paikkaukset))
 
-        tallennetut-paikkaukset (when (empty? paikkausten-validoinnit)
+        virheet (merge {}
+                  (when (seq paikkausten-validointivirheet) {:paikkausten-validointivirheet paikkausten-validointivirheet})
+                  (when paikkauskohteen-tila-virhe {:paikkauskohteen-tila-virhe paikkauskohteen-tila-virhe})
+                  (when excel-luku-virhe {:excel-luku-virhe excel-luku-virhe}))
+
+        tallennetut-paikkaukset (when (empty? virheet)
                                   (mapv
                                     #(paikkaus-q/tallenna-urem-paikkaus-excelista db (:paikkaus %))
                                     paikkaukset))
         body (cheshire/encode (cond
                                 tallennetut-paikkaukset
                                 {:message "OK"}
-                                (seq paikkausten-validoinnit)
-                                {:virheet paikkausten-validoinnit}
+                                (seq virheet)
+                                {:virheet virheet}
                                 :else
                                 {:virheet [{:virhe "Excelistä ei löydetty päällystyksiä!"}]}))]
 
-    (when (seq paikkausten-validoinnit)
-      (log/error (str "Yritettiin tuoda urapaikkauksia excelillä, mutta paikkauksissa on virheitä. Virheet:" paikkausten-validoinnit)))
+    (when (seq paikkausten-validointivirheet)
+      (log/error (str "Yritettiin tuoda urapaikkauksia excelillä, mutta paikkauksissa on virheitä. Virheet:"
+                   paikkausten-validointivirheet)))
 
     {:status (if tallennetut-paikkaukset 200 400)
      :headers {"Content-Type" "application/json; charset=UTF-8"}

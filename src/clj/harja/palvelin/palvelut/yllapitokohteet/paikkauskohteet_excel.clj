@@ -1,18 +1,14 @@
 (ns harja.palvelin.palvelut.yllapitokohteet.paikkauskohteet-excel
   "Luetaan paikkauskohteet excelistä tiedot ulos"
   (:require [dk.ative.docjure.spreadsheet :as xls]
-            [clojure.set :as set]
+            [slingshot.slingshot :refer [throw+]]
             [clojure.string :refer [trim]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.kyselyt.paikkaus :as q]
             [harja.kyselyt.urakat :as q-urakat]
             [harja.pvm :as pvm]
-            [harja.domain.paikkaus :as paikkaus]
-            [harja.domain.muokkaustiedot :as muokkaustiedot]
-            [harja.domain.tierekisteri :as tr])
-  (:import (org.apache.poi.ss.util CellRangeAddress)
-           (java.util Date)))
+            [harja.domain.paikkaus :as paikkaus]))
 
 
 (defn erottele-paikkauskohteet [workbook]
@@ -196,31 +192,50 @@
     (excel/muodosta-excel (vec taulukko)
                           workbook)))
 
+(defn- lue-urem-excelin-otsikot [sivu]
+  (->> sivu
+    xls/row-seq
+    (take 4)
+    (map xls/cell-seq)
+    (map (partial map xls/read-cell))))
+
+(def urem-excel-pohjan-otsikot
+  (-> "excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
+    xls/load-workbook-from-resource
+    xls/sheet-seq
+    first
+    lue-urem-excelin-otsikot))
+
 (defn erottele-uremit [workbook]
   (let [sivu (first (xls/sheet-seq workbook))
-        paikkaukset (->> sivu
-                      xls/row-seq
-                      ;; Toisin kuin paikkauskohteissa, oletetaan että käyttäjä käyttää meidän pohjaa.
-                      ;; Pudotetaan otsikkorivit.
-                      (drop 4)
-                      (map xls/cell-seq)
-                      (mapv
-                        (fn [rivi]
-                          ;; Ei lueta rivejä sarakkeita 18. (R) jälkeen.
-                          (let [rivi (take 18 rivi)]
-                            {:rivi (inc (.getRowIndex (first rivi)))
-                             :paikkaus (map-indexed (fn [indeksi arvo]
-                                                      (if (or
-                                                            (= indeksi 0)
-                                                            (= indeksi 1))
-                                                        (try
-                                                          ;; Yritetään lukea päivämääräkentät 1. ja 2. sarakkeista
-                                                          (xls/read-cell-value arvo true)
-                                                          (catch Exception e
-                                                            ;; Jos ei onnistu, ei haittaa, validoidaan myöhemmin.
-                                                            (xls/read-cell arvo)))
-                                                        (xls/read-cell arvo)))
-                                         rivi)})))
-                      ;; Pohjassa on alustettu useampi sata riviä. Pudotetaan nekin pois.
-                      (filter #(not (every? nil? (:paikkaus %)))))]
-    paikkaukset))
+
+        excel-tasmaa-pohjaan? (= (lue-urem-excelin-otsikot sivu) urem-excel-pohjan-otsikot)
+
+        paikkaukset (when excel-tasmaa-pohjaan?
+                      (->> sivu
+                        xls/row-seq
+                        ;; Toisin kuin paikkauskohteissa, oletetaan että käyttäjä käyttää meidän pohjaa.
+                        ;; Pudotetaan otsikkorivit.
+                        (drop 4)
+                        (map xls/cell-seq)
+                        (mapv
+                          (fn [rivi]
+                            ;; Ei lueta rivejä sarakkeita 18. (R) jälkeen.
+                            (let [rivi (take 18 rivi)]
+                              {:rivi (inc (.getRowIndex (first rivi)))
+                               :paikkaus (map-indexed (fn [indeksi arvo]
+                                                        (if (or
+                                                              (= indeksi 0)
+                                                              (= indeksi 1))
+                                                          (try
+                                                            ;; Yritetään lukea päivämääräkentät 1. ja 2. sarakkeista
+                                                            (xls/read-cell-value arvo true)
+                                                            (catch Exception e
+                                                              ;; Jos ei onnistu, ei haittaa, validoidaan myöhemmin.
+                                                              (xls/read-cell arvo)))
+                                                          (xls/read-cell arvo)))
+                                           rivi)})))
+                        ;; Pohjassa on alustettu useampi sata riviä. Pudotetaan nekin pois.
+                        (filter #(not (every? nil? (:paikkaus %))))))]
+    {:paikkaukset paikkaukset
+     :virhe (when-not excel-tasmaa-pohjaan? "Excelin otsikot eivät täsmää pohjaan")}))
