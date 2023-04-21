@@ -670,12 +670,17 @@
       (s/valid? ::paikkaus/alkuaika alkuaika)
       (not (pvm/jalkeen? loppuaika alkuaika))) (conj "Loppuaika on ennen aloitusaikaa!")))
 
-
 (defn- kasittele-urem-excel [db urakka-id paikkauskohde-id {kayttaja-id :id} req]
   (let [workbook (xls/load-workbook-from-file (:path (bean (get-in req [:params "file" :tempfile]))))
         toteumat (p-excel/erottele-uremit workbook)
 
         paikkauskohde (first (paikkaus-q/hae-paikkauskohteet db {::paikkaus/id paikkauskohde-id}))
+
+        _ (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
+            (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
+            (throw+ {:type "Validaatiovirhe"
+                     :virheet [{:koodi :puuttelliset-parametrit
+                                :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id)}]}))
 
         paikkaukset (map (fn [rivi]
                            (update rivi :paikkaus
@@ -714,22 +719,13 @@
                                 {:virheet paikkausten-validoinnit}
                                 :else
                                 {:virheet [{:virhe "Excelistä ei löydetty päällystyksiä!"}]}))]
-    (when (not= "tilattu" (::paikkaus/paikkauskohteen-tila paikkauskohde))
-      (log/error (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id))
-      (throw+ {:type "Validaatiovirhe"
-               :virheet [{:koodi :puuttelliset-parametrit
-                          :viesti (str "Yritettiin luoda kohteelle, jonka tila ei ole 'tilattu', toteumaa :: kohteen-id " paikkauskohde-id)}]}))
 
     (when (seq paikkausten-validoinnit)
       (log/error (str "Yritettiin tuoda urapaikkauksia excelillä, mutta paikkauksissa on virheitä. Virheet:" paikkausten-validoinnit)))
 
-    (if tallennetut-paikkaukset
-      {:status 200
-       :headers {"Content-Type" "application/json; charset=UTF-8"}
-       :body body}
-      {:status 400
-       :headers {"Content-Type" "application/json; charset=UTF-8"}
-       :body body})))
+    {:status (if tallennetut-paikkaukset 200 400)
+     :headers {"Content-Type" "application/json; charset=UTF-8"}
+     :body body}))
 
 (defn vastaanota-urem-excel [db req]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-paikkauskohteetkustannukset
