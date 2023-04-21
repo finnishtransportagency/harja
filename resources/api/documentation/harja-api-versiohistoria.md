@@ -1,19 +1,21 @@
-<b>Nykyinen versio: 1.0.57</b>
+<b>Nykyinen versio: 1.0.58</b>
 <b>Julkaistu: 27.10.2022</b>
 
 <b>Versiohistoria:</b>
+- Versionumero 1.0.58 Julkaistu 24.04.2023
+    - Lisätty vedos työmaapaivakirja rajapinnoista. Ei vielä toteutettu.
 - Versionumero 1.0.57 Julkaistu 27.10.2022
-   - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
+    - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
 - Versionumero 1.0.56 Julkaistu 14.4.2022
-      - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
-      - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
-      - Poistettu varusterajapinta käytöstä.
+    - Ilmoitus-skeemaa laajennettu ei-pakollisilla tiedoilla (alueurakka, kuittaukset). Näitä hyödynnetään ilmoitukset/ytunnus-rajapinnassa, joka palauttaa ilmoitukset ja kuittaukset, jotka annettuna aikavälinä ovat urakoitsijan urakoissa päivittyneet.
+    - Versio sisältää myös analytiikkaportaalin käyttämän rajapinnan.
+    - Poistettu varusterajapinta käytöstä.
 - Versionumero 1.0.55 Julkaistu 24.2.2022
-      - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
+    - Toteuma-skeemaa laajennettu ei-pakollisilla tiedoilla (tiesijainti, muokkaustiedot)
 - Versionumero 1.0.54 Julkaistu 26.1.2022
-      - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
+    - Toteuman skeemaan (koskee piste- ja reittitoteumia) lisätty tekstikenttä: lisatieto. Kentässä voi välittää toteumaan liittyvää taustatietoa.
 - Versionumero 1.0.53 Julkaistu 24.2.2021
-      - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
+    - Yhteystietorajapinnan roolienumeraatioon uusia rooleja: Vastuunalainen työnjohtaja, Päätoiminen apulainen, Apulainen/Työnjohtaja/Vipa-tehtävät, Viherhoidosta vastaava henkilö.
 - Versionumero 1.0.52 Paikkausten työmenetelmä muutettu enumeraatioksi. 3.11.2020
 - Versionumero 1.0.51 Julkaistu 11.9.2020
     - Työkoneseurannan viivageometria erotettu erilliseen skeematiedostoon koodigeneroinnin helpottamiseksi. Skeemamääritys ei muutu. Päivitetty versiohistoria raml-tiedoston tasolle.
