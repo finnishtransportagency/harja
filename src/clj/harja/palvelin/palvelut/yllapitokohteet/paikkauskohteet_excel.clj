@@ -200,7 +200,7 @@
     (map (partial map xls/read-cell))))
 
 (def urem-excel-pohjan-otsikot
-  (-> "excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
+  (-> "public/excel/harja_urapaikkaustoteumien_tuonti_pohja.xlsx"
     xls/load-workbook-from-resource
     xls/sheet-seq
     first
