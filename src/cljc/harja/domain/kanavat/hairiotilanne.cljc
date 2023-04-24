@@ -94,6 +94,12 @@
                                                      ::haku-paikallinen-kaytto?]))
 (s/def ::hae-hairiotilanteet-vastaus (s/coll-of ::hairiotilanne))
 
+;; Häiriötilanteen odotus & korjausaika. Frontilta lähetetään POST kutsu -> validointi haluaa datan BIG muodossa,
+;; mutta frontissa tätä muunnosta ei saa tehtyä tuckin kautta, joten korjataan tässä validointi numeroksi
+;; Tietokannasta sarakkeet on muutettu NUMERIC, joten tässä toimii nyt molemmat int & float numerot
+(s/def ::odotusaika-h number?)
+(s/def ::korjausaika-h number?)
+
 (s/def ::tallenna-hairiotilanne-kutsu
   (s/keys :req [::hae-hairiotilanteet-kysely
                 ::hairiotilanne

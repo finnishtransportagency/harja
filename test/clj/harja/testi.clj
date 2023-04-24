@@ -30,7 +30,8 @@
     [clj-gatling.core :as gatling]
     [clojure.java.jdbc :as jdbc]
     [harja.tyokalut.env :as env]
-    [slingshot.slingshot :refer [throw+ try+]])
+    [slingshot.slingshot :refer [throw+ try+]]
+    [clojure.java.io :as io])
   (:import (org.postgresql.util PSQLException)
            (java.util Locale)
            (java.lang Boolean Exception)
@@ -424,7 +425,10 @@
   (kutsu-excel-palvelua
     ;; Palauttaa halutun excelin testiin ennen kuin siitä generoidaan
     ;; oikea excel-tiedosto, eli raporttielementteinä.
-    [this nimi kayttaja payload]))
+    [this nimi kayttaja payload])
+
+  (kutsu-excel-vienti-palvelua
+    [this nimi kayttaja params tiedostonimi]))
 
 (defn- palvelua-ei-loydy [nimi]
   (is false (str "Palvelua " nimi " ei löydy!"))
@@ -511,7 +515,23 @@
           ((get @palvelut :excel)
            {:kayttaja kayttaja
             :body payload
-            :params {"_" nimi}}))))))
+            :params {"_" nimi}})))
+
+      (kutsu-excel-vienti-palvelua [_ nimi kayttaja params tiedostonimi]
+        (if-let [palvelu (get @palvelut nimi)]
+          (let [tiedosto (io/file tiedostonimi)
+                ;; Muunnetaan mapin avaimet ja arvot stringiksi, kuten käy tällaisissa kutsuissa.
+                params (into {} (map (fn [[k v]]
+                                       [(name k) (str v)]) params))
+                payload {:kayttaja kayttaja
+                         :params (merge params
+                                   {"file" {:filename tiedostonimi
+                                            :tempfile (io/file tiedosto)}})}
+                vastaus (palvelu payload)]
+            (if (http/async-response? vastaus)
+              (async/<!! (:channel vastaus))
+              vastaus))
+          (palvelua-ei-loydy nimi))))))
 
 (defn materiaali-haun-pg-Array->map
   [haku]
@@ -899,7 +919,7 @@
                    WHERE  nimi = 'Siirtyneiden poijujen siirto';"))))
 
 (defn hae-oulun-alueurakan-lampotila-hk-2014-2015 []
-  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, pitka_keskilampotila
+  (ffirst (q (str "SELECT id, urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010
                    FROM   lampotilat
                    WHERE  urakka = " @oulun-alueurakan-2014-2019-id "
                    AND alkupvm = '2014-10-01' AND loppupvm = '2015-09-30'"))))

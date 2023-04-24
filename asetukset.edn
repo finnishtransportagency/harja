@@ -101,7 +101,7 @@
 
  :integraatiot {:paivittainen-lokin-puhdistusaika nil}
 
- :ilmatieteenlaitos {:lampotilat-url "http://weather.weatherproof.fi/tieindeksi2/tulokset.php"}
+ :ilmatieteenlaitos {:lampotilat-url "https://tieindeksi.weatherproof.fi/tieindeksi2/tulokset.php"}
 
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
@@ -157,15 +157,15 @@
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
 
- :velho {:paallystetoteuma-url "https://api-v2.stg.velho.vayla.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
-         :token-url "https://auth.stg.velho.vayla.fi/oauth2/token"
-         :kayttajatunnus "udqtidknab4bbr8uruua44mql"
+ :velho {:paallystetoteuma-url "https://apiv2stgvelho.testivaylapilvi.fi/toimenpiderekisteri/api/v1/kohde/toimenpiteet/tienrakennetoimenpiteet"
+         :token-url "https://vayla-velho-stg.auth.eu-west-1.amazoncognito.com/oauth2/token"
+         :kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
          :salasana #=(slurp "../.harja/velho-salasana")
-         :varuste-api-juuri-url "https://api-v2.stg.velho.vayla.fi"
-         :varuste-kayttajatunnus "341q7imnmoaqlgnjh2ol47jk90"
+         :varuste-api-juuri-url "https://apiv2stgvelho.testivaylapilvi.fi"
+         :varuste-kayttajatunnus "6o9f1j147qvdvo49nufo0fhufp"
          :varuste-salasana #=(slurp "../.harja/velho-varuste-salasana")
-         :varuste-urakka-oid-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
-         :varuste-urakka-kohteet-url "https://api-v2.stg.velho.vayla.fi/hallintorekisteri/api/v1/kohteet"}
+         :varuste-urakka-oid-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/tunnisteet/urakka/maanteiden-hoitourakka"
+         :varuste-urakka-kohteet-url "https://apiv2stgvelho.testivaylapilvi.fi/hallintorekisteri/api/v1/kohteet"}
 
  :yha-velho {}
 

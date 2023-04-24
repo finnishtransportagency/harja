@@ -365,6 +365,9 @@
 (def yha-aikaleimalla
   (luo-format "yyyy-MM-dd'T'HH:mm:ss.SZ"))
 
+(def iso8601-aikavyohykkeella-format
+  (luo-format "yyyy-MM-dd'T'HH:mm:ssX"))
+
 (defn jsondate
   "Luodaan (t/now) tyyppisestä ajasta json date formaatti -> 2022-08-10T12:00:00Z"
   [pvm]
@@ -731,16 +734,28 @@
       " - "
       (formatoi fi-pvm (second paivamaaran-hoitokausi)))))
 
+#?(:clj
+  (defn hoitokauden-alkuvuosi
+    ([^org.joda.time.DateTime pvm]
+     (let [vuosi (.getYear pvm)
+           kuukausi (.getMonthOfYear pvm)]
+       (hoitokauden-alkuvuosi vuosi kuukausi)))
+    ([vuosi kuukausi]
+     (if (<= 10 kuukausi)
+       vuosi
+       (dec vuosi)))))
 
-(defn hoitokauden-alkuvuosi
-  ([^org.joda.time.DateTime pvm]
-   (let [vuosi (.getYear pvm)
-         kuukausi (.getMonthOfYear pvm)]
-     (hoitokauden-alkuvuosi vuosi kuukausi)))
-  ([vuosi kuukausi]
-   (if (<= 10 kuukausi)
-     vuosi
-     (dec vuosi))))
+#?(:cljs
+  (defn hoitokauden-alkuvuosi
+    ([pvm]
+     (let [aika (parsi (luo-format "yyyy-MM-dd'T'HH:mm:ss'Z'") pvm)
+           vuosi (t/year aika)
+           kuukausi (t/month aika)]
+       (hoitokauden-alkuvuosi vuosi kuukausi)))
+    ([vuosi kuukausi]
+     (if (<= 10 kuukausi)
+       vuosi
+       (dec vuosi)))))
 
 (defn hoitokauden-alkuvuosi-nykyhetkesta [nyt]
   (hoitokauden-alkuvuosi (vuosi nyt) (kuukausi nyt)))
@@ -1099,6 +1114,21 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                  :clj  Exception) e
          nil))))
 
+#?(:clj
+   (defn rajapinta-str-aika->sql-timestamp
+     "Rajapintoihin voi tulla hakuparametreina aika useammassa formaatissa.
+     Formatoi saatu tekstimuotoinen aika aina utc sql muotoon.
+
+     Formatoidaan: '2023-04-20T08:21:17+03' muotoinen aika  #inst '2023-04-20T05:21:17.000-00:00' formaattiin eli utc ajaksi.
+     Javan aika ei ymmärrä mikrosekunteja. Eli saatu aika muodossa: '2023-04-14T09:07:20.162457Z' ei toimi. Sen vuoksi pakotetaan saatu tekstimuotoinen aika olemaan
+     19 merkkiä pitkä ja Z:lla varmistetaan sen UTC ajankohta."
+     [teksti]
+     (if (and (= 22 (count teksti)) (not (str/includes? teksti "Z")))
+       (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") teksti)
+       (when (< 18 (count teksti))
+         (let [teksti (str (subs teksti 0 19) "Z")]
+           (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") teksti))))))
+
 (defn edelliset-n-vuosivalia [n]
   (let [pvmt (take n (iterate #(t/minus % (t/years 1)) (t/now)))]
     (mapv t/year pvmt)))
@@ -1196,15 +1226,13 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
       (t/in-days (t/interval paiva1 paiva2))
       (- (t/in-days (t/interval paiva2 paiva1))))))
 
+#?(:clj
 (defn ajan-muokkaus
   "Tällä voi lisätä tai vähentää jonku tietyn ajan annetusta päivästä.
   Anna dt joda timena tai java.sql.Date"
   ([dt lisaa? maara] (ajan-muokkaus dt lisaa? maara :sekuntti))
   ([dt lisaa? maara aikamaare]
-   (let [dt (if #?(:clj (= java.sql.Date (type dt))
-                   :cljs false)
-              (joda-timeksi dt)
-              dt)
+   (let [dt (joda-timeksi dt)
 
          muokkaus (if lisaa?
                     t/plus
@@ -1217,7 +1245,7 @@ kello 00:00:00.000 ja loppu on kuukauden viimeinen päivä kello 23:59:59.999 ."
                      :viikko (t/weeks maara)
                      :kuukausi (t/months maara)
                      :vuosi (t/years maara))]
-     (muokkaus dt aikamaara))))
+     (muokkaus dt aikamaara)))))
 
 (defn myohaisin
   "Palauttaa myöhäisimmän ajan annetuista ajoista"

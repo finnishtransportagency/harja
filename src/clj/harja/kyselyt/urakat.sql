@@ -1086,6 +1086,7 @@ SELECT id, sampoid, nimi, alkupvm, loppupvm, hallintayksikko, urakoitsija, hanke
        urakkanro as alueurakkanro, tyyppi, poistettu, velho_oid, luotu, muokattu
   FROM urakka
   WHERE (:alkuvuosi::INT IS NULL OR (alkupvm, loppupvm) OVERLAPS (concat(:alkuvuosi::text,'-10-01')::DATE, concat(:loppuvuosi::text,'-10-01')::DATE))
+    AND tyyppi in ('hoito', 'teiden-hoito')
  ORDER BY alkupvm ASC;
 
 -- name: listaa-kaikki-urakat-analytiikalle

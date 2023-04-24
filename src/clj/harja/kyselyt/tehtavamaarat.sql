@@ -120,7 +120,8 @@ FROM tehtavaryhma tr1
        JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
                                     and tr3.nimi not like ('%Lisätyöt%')
                                     -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
-                                    and tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'
+                                    AND (tr3.yksiloiva_tunniste IS NULL
+                                        OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
        LEFT JOIN toimenpidekoodi tpk4
                  ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true
@@ -279,7 +280,12 @@ GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaality
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat
 select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", MAX(yt.luotu) as luotu,
-       MAX(yt.muokattu) as muokattu, EXTRACT(YEAR FROM yt.alkupvm)::int as "hoitokauden-alkuvuosi"
+       MAX(yt.muokattu) as muokattu,
+       CASE
+           WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
+           WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 10 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN EXTRACT(YEAR FROM yt.alkupvm)::INT
+           END
+           AS "hoitokauden-alkuvuosi"
 from yksikkohintainen_tyo yt
      join toimenpidekoodi tk on yt.tehtava = tk.id
 where yt.urakka = :urakka-id
@@ -287,7 +293,7 @@ where yt.urakka = :urakka-id
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
   -- aikavälistä osuu annettuun ajankohtaan.
   and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
-group by yt.urakka, yt.tehtava, tk.id, yt.alkupvm;
+group by yt.urakka, yt.tehtava, tk.id, "hoitokauden-alkuvuosi";
 
 -- name: hae-mhurakan-suunnitellut-tehtavamaarat
 -- Hakee materiaalien suunnittelutiedot urakalle.
