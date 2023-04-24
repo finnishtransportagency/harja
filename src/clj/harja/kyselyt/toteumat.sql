@@ -568,8 +568,7 @@ SELECT t.id        AS toteuma_id,
 -- Listaa kaikki toimenpiteet (tehtäväryhmät) määrien toteumille. Ehtona toimii emo is null ja tyyppi 'ylataso'
 SELECT DISTINCT ON (tr.otsikko) tr.otsikko AS otsikko, tr.id
     FROM tehtavaryhma tr
-    WHERE tr.emo IS NULL
-      AND tr.tyyppi = 'ylataso'
+    WHERE tr.tyyppi = 'alataso'
     ORDER BY otsikko ASC, tr.id ASC;
 
 -- name: listaa-maarien-toteumien-toimenpiteiden-tehtavat
