@@ -256,6 +256,11 @@
                     (konversio/konvertoi->int urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        ;; Vaadi urakan olemassa olo
+        _ (when (nil? urakan-tiedot)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                                :viesti (str "Urakkaa id:llä: " urakka-id " ei ole olemassa.")}]}))
         ;; Jos parametrina on annettu vuodet, niin käytetään niitä
         hoitokaudet (range (or alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
                       (inc (or loppuvuosi (dec (pvm/vuosi (:loppupvm urakan-tiedot))))))
@@ -392,6 +397,11 @@
                     (konversio/konvertoi->int urakka-id))
         ;; Haetaan urakan tiedoista aikaväli, jolle suunnittelutiedot haetaan
         urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        ;; Vaadi urakan olemassaolo
+        _ (when (nil? urakan-tiedot)
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+puutteelliset-parametrit+
+                                :viesti (str "Urakkaa id:llä: " urakka-id " ei ole olemassa.")}]}))
 
         alkuvuosi (when-not (nil? alkuvuosi)
                     (konversio/konvertoi->int alkuvuosi))
