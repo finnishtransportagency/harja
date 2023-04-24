@@ -24,6 +24,15 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
+(defn hae-harjassa-luodut-sopimukset-voimassa [db user]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
+    (let [sopimukset (into []
+                       (map konv/alaviiva->rakenne)
+                       (q/hae-harjassa-luodut-sopimukset-voimassa db))
+          vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
+                                           :inner {:urakka {:ns :harja.domain.urakka}}})]
+      vastaus)))
 
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
@@ -81,25 +90,34 @@
 
 (defrecord Sopimukset []
   component/Lifecycle
-  (start [{http :http-palvelin
-           db :db :as this}]
+  (start [{http :http-palvelin db :db :as this}]
+    
     (julkaise-palvelu http
-                      :hae-harjassa-luodut-sopimukset
-                      (fn [user _]
-                        (hae-harjassa-luodut-sopimukset db user))
-                      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+      :hae-harjassa-luodut-sopimukset
+      (fn [user _]
+        (hae-harjassa-luodut-sopimukset db user))
+      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+
     (julkaise-palvelu http
-                      :tallenna-sopimus
-                      (fn [user tiedot]
-                        (tallenna-sopimus db user tiedot))
-                      {:kysely-spec ::sopimus/tallenna-sopimus-kysely
-                       :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
+      :hae-harjassa-luodut-sopimukset-voimassa
+      (fn [user _]
+        (hae-harjassa-luodut-sopimukset-voimassa db user))
+      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+
+    (julkaise-palvelu http
+      :tallenna-sopimus
+      (fn [user tiedot]
+        (tallenna-sopimus db user tiedot))
+      {:kysely-spec ::sopimus/tallenna-sopimus-kysely
+       :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
 
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http
-                     :hae-harjassa-luodut-sopimukset
-                     :tallenna-sopimus)
+    (poista-palvelut
+      http
+      :hae-harjassa-luodut-sopimukset
+      :hae-harjassa-luodut-sopimukset-voimassa
+      :tallenna-sopimus)
 
     this))

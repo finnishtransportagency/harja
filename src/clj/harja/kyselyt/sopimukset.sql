@@ -61,6 +61,20 @@ FROM sopimus s
 WHERE s.harjassa_luotu IS TRUE
 ORDER BY s.alkupvm DESC, s.nimi;
 
+-- name: hae-harjassa-luodut-sopimukset-voimassa
+SELECT
+  s.id,
+  s.nimi,
+  s.alkupvm,
+  s.loppupvm,
+  s.paasopimus as "paasopimus-id",
+  u.nimi AS urakka_nimi,
+  u.id AS urakka_id
+FROM sopimus s
+  LEFT JOIN urakka u ON s.urakka = u.id
+WHERE s.harjassa_luotu IS TRUE AND s.loppupvm > NOW() 
+ORDER BY s.alkupvm DESC, s.nimi;
+
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus s SET urakka=:urakka
 WHERE id IN (:sopimukset)

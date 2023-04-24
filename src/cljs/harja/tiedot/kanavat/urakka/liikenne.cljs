@@ -461,12 +461,25 @@
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
                                         edellisten-haku-kaynnissa?
                                         edelliset]}]
-  (boolean
-    (and (::lt/kohde valittu-liikennetapahtuma)
-         (not edellisten-haku-kaynnissa?)
-         (or (:alas edelliset) (:ylos edelliset))
-         (some? (:valittu-suunta valittu-liikennetapahtuma))
-         (not (id-olemassa? (::lt/id valittu-liikennetapahtuma))))))
+  
+  (println "\n [] Valittu liikennetapahtuma " valittu-liikennetapahtuma)
+
+  (let [sopimus-nimi (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/nimi)
+        sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)]
+    
+    ;; Tämä poistetaan ja tehdään hallintapaneeliin uusi tabi
+    (if (and
+          (= sopimus-nimi "01QP1-T00012635")
+          (= sopimus-id 1310))
+      ;; Halutaan tapahtumien "Ketjutus" vain urakalle  
+      ;; Saimaan kanavan käyttö ja kunnossapito 2019 - 2023 
+      (boolean
+        (and (::lt/kohde valittu-liikennetapahtuma)
+          (not edellisten-haku-kaynnissa?)
+          (or (:alas edelliset) (:ylos edelliset))
+          (some? (:valittu-suunta valittu-liikennetapahtuma))
+          (not (id-olemassa? (::lt/id valittu-liikennetapahtuma)))))
+      false)))
 
 (defn nayta-suunnan-ketjutukset? [{:keys [valittu-liikennetapahtuma]} suunta tiedot]
   (boolean
