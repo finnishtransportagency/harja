@@ -1,8 +1,8 @@
 <b>Nykyinen versio: 1.0.58</b>
-<b>Julkaistu: 27.10.2022</b>
+<b>Julkaistu: 25.04.2023</b>
 
 <b>Versiohistoria:</b>
-- Versionumero 1.0.58 Julkaistu 24.04.2023
+- Versionumero 1.0.58 Julkaistu 25.04.2023
     - Lisätty vedos työmaapaivakirja rajapinnoista. Ei vielä toteutettu.
 - Versionumero 1.0.57 Julkaistu 27.10.2022
     - Lisätty uusi rajapinta urakan materiaaliraporttien hakua varten: GET "/api/urakat/:id/raportit/materiaali/:alkupvm/:loppupvm
