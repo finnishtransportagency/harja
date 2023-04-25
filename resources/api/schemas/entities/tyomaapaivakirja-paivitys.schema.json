@@ -434,20 +434,20 @@
         "urakoitsijan-merkinnat": {
             "id": "urn:harja/urakoitsijan-merkinnat",
             "type": "object",
-            "required": false,
-            "description": "Urakoitsijan merkinnät jälkikäteen.",
+            "required": true,
+            "description": "Urakoitsijan merkinnät jälkikäteen kun päiväkirja on merkitty valmiiksi.",
             "properties": {
-                "kuvaus": {
-                    "id": "urn:harja/urakoitsijan-merkinnat/kuvaus",
-                    "required": true,
-                    "type": "string"
-                },
-                "nimi": {
-                    "id": "urn:harja/urakoitsijan-merkinnat/nimi",
-                    "required": true,
-                    "type": "string"
-                }
+              "kuvaus": {
+                "id": "urn:harja/urakoitsijan-merkinnat/kuvaus",
+                "required": true,
+                "type": "string"
+              },
+              "nimi": {
+                "id": "urn:harja/urakoitsijan-merkinnat/nimi",
+                "required": true,
+                "type": "string"
+              }
             }
-        }
+          }
     }
 }

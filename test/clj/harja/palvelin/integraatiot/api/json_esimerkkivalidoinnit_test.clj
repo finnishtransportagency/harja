@@ -94,5 +94,6 @@
 
   (is (nil? (validoi json-skeemat/raportti-materiaaliraportti-response json-esimerkit/+raportti-materiaaliraportti-response+)))
   
-  (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-request json-esimerkit/+tyomaapaivakirja-kirjaus-request+))))
+  (is (nil? (validoi json-skeemat/tyomaapaivakirja-kirjaus-request json-esimerkit/+tyomaapaivakirja-kirjaus-request+)))
+  (is (nil? (validoi json-skeemat/tyomaapaivakirja-paivitys-request json-esimerkit/+tyomaapaivakirja-paivitys-request+))))
 

@@ -117,6 +117,10 @@
     "tilaajan-yhteydenotot": {
       "kuvaus": "Tilaajan huomautukset työmaapäiväkirjaan",
       "nimi": "Tiia Tilaaja"
+    },
+    "urakoitsijan-merkinnat": {
+      "kuvaus": "Urakoitsijan merkinnät jälkikäteen",
+      "nimi": "Ulla Urakoitsija"
     }
   }
 }

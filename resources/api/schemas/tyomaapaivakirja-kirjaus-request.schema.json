@@ -15,7 +15,7 @@
         "id": "urn:harja/tyomaapaivakirja",
         "type": "object",
         "additionalProperties": false,
-        "$ref": "file:resources/api/schemas/entities/tyomaapaivakirja.schema.json",
+        "$ref": "file:resources/api/schemas/entities/tyomaapaivakirja-kirjaus.schema.json",
         "required": true
       }
     }

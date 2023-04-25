@@ -93,4 +93,5 @@
 (def +raportti-materiaaliraportti-response+ "api/examples/raportti-materiaaliraportti-response.json")
 
 (def +tyomaapaivakirja-kirjaus-request+ "api/examples/tyomaapaivakirja-kirjaus-request.json")
+(def +tyomaapaivakirja-paivitys-request+ "api/examples/tyomaapaivakirja-paivitys-request.json")
 

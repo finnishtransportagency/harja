@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "tyomaapaivakirja": {
+      "id": "urn:harja/tyomaapaivakirja",
+      "type": "object",
+      "additionalProperties": true,
+      "$ref": "file:resources/api/schemas/entities/tyomaapaivakirja-paivitys.schema.json",
+      "required": true
+    }
+  }
+}
