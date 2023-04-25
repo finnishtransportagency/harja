@@ -17,7 +17,7 @@
 (def +mahdolliset-urakat+
   [
    {:id 34 :nimi "Ivalon MHU testiurakka (uusi) (aseta sopimusid 19)"}
-   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 40)"}
+   {:id 35 :nimi "Oulun MHU 2019-2024 (Aseta sopimusid 42)"}
    ])
 
 (def alkutila {:toteumatiedot {:tierekisteriosoite nil
@@ -39,7 +39,9 @@
 
 (def +mahdolliset-materiaalit+
   [{:id 1 :nimi "Talvisuolaliuos NaCl" :yksikko "t"}
-   {:id 6 :nimi "Kaliumformiaattiliuos" :yksikko "t"}])
+   {:id 6 :nimi "Kaliumformiaattiliuos" :yksikko "t"}
+   {:id 10 :nimi "Kesäsuola sorateiden kevätkunnostus" :yksikko "t"}
+   {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
 (defn muodosta-reittipiste [x y app pisteiden-maara]
   {:reittipiste
@@ -109,6 +111,18 @@
 (defrecord LisaaOikeudetUrakkaanOnnistui [vastaus])
 (defrecord LisaaOikeudetUrakkaanEpaonnistui [vastaus])
 
+(defrecord HaeSeuraavaVapaaUlkoinenId [])
+(defrecord HaeSeuraavaVapaaUlkoinenIdOnnistui [vastaus])
+(defrecord HaeSeuraavaVapaaUlkoinenIdEpaonnistui [vastaus])
+
+(defrecord HaeUrakanTierekisteriosoitteita [urakka-id])
+(defrecord HaeUrakanTierekisteriosoitteitaOnnistui [vastaus])
+(defrecord HaeUrakanTierekisteriosoitteitaEpaonnistui [vastaus])
+
+(defrecord PaivitaRaportit [])
+(defrecord PaivitaRaportitOnnistui [vastaus])
+(defrecord PaivitaRaportitEpaonnistui [vastaus])
+
 (defn hae-hallintayksikon-urakat [hal]
   (let [_ (tuck-apurit/post! :hallintayksikon-urakat
             (:id hal)
@@ -129,10 +143,6 @@
     (let [;; Tarkista hallintayksikko
           toteumatiedot (if (and (not= (get-in app [:toteumatiedot :valittu-hallintayksikko]) (:valittu-hallintayksikko toteumatiedot)))
                           (do
-                            (js/console.log "(get-in app [::toteumatiedot :valittu-hallintayksikko])" (get-in app [:toteumatiedot :valittu-hallintayksikko]))
-                            (js/console.log "(:valittu-hallintayksikko toteumatiedot)" (:valittu-hallintayksikko toteumatiedot))
-                            ;(reset! valittu-hallintayksikko (:valittu-hallintayksikko toteumatiedot))
-                            ;(nav/valitse-hallintayksikko! (:valittu-hallintayksikko toteumatiedot))
                             (hae-hallintayksikon-urakat (:valittu-hallintayksikko toteumatiedot))
                             ;; Haetaan urakkahaun yhteydessä aina myös tiedot, että onko käyttäjällä oikeudet lisätä urakkaan API:n kautta toteumia :hae-urakat-lisaoikeusvalintaan
                             (hae-kayttajan-kaytto-oikeudet)
@@ -274,5 +284,70 @@
   LisaaOikeudetUrakkaanEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.log "LisaaOikeudetUrakkaanEpaonnistui :: vastaus" (pr-str vastaus))
+    app)
+
+  HaeSeuraavaVapaaUlkoinenId
+  (process-event [_ app]
+    (let [_ (tuck-apurit/post! :debug-hae-seuraava-vapaa-ulkoinen-id
+              {}
+              {:onnistui ->HaeSeuraavaVapaaUlkoinenIdOnnistui
+               :epaonnistui ->HaeSeuraavaVapaaUlkoinenIdEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  HaeSeuraavaVapaaUlkoinenIdOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "LisaaOikeudetUrakkaanOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdOnnistui" :onnistui)
+    (assoc-in app [:toteumatiedot :ulkoinen-id] vastaus))
+
+  HaeSeuraavaVapaaUlkoinenIdEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeSeuraavaVapaaUlkoinenIdEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeSeuraavaVapaaUlkoinenIdEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+    app)
+
+  HaeUrakanTierekisteriosoitteita
+  (process-event [{urakka-id :urakka-id} app]
+    (let [_ (tuck-apurit/post! :debug-hae-urakan-tierekisteriosoitteita
+              {:urakka-id urakka-id}
+              {:onnistui ->HaeUrakanTierekisteriosoitteitaOnnistui
+               :epaonnistui ->HaeUrakanTierekisteriosoitteitaEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  HaeUrakanTierekisteriosoitteitaOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanTierekisteriosoitteitaOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeUrakanTierekisteriosoitteitaOnnistui" :onnistui)
+    (assoc app :tierekisteriosoitteita vastaus))
+
+  HaeUrakanTierekisteriosoitteitaEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "HaeUrakanTierekisteriosoitteitaEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "HaeUrakanTierekisteriosoitteitaEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+    app)
+
+  PaivitaRaportit
+  (process-event [_ app]
+    (let [_ (tuck-apurit/post! :debug-paivita-raportit
+              {:urakka-id (get-in app [:toteumatiedot :valittu-urakka :id])
+               :alkupvm (str (pvm/hoitokauden-alkuvuosi (get-in app [:toteumatiedot :lahetysaika])) "-10-01")
+               :loppupvm (str (inc (pvm/hoitokauden-alkuvuosi (get-in app [:toteumatiedot :lahetysaika]))) "-09-30")}
+              {:onnistui ->PaivitaRaportitOnnistui
+               :epaonnistui ->PaivitaRaportitEpaonnistui
+               :paasta-virhe-lapi? true})]
+      app))
+
+  PaivitaRaportitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "PaivitaRaportitOnnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "PaivitaRaportitOnnistui" :onnistui)
+    app)
+
+  PaivitaRaportitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.log "PaivitaRaportitEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "PaivitaRaportitEpaonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     app)
   )

@@ -8,11 +8,14 @@
             [harja.tiedot.urakka.suunnittelu.mhu-tehtavat :as t]
             [harja.ui.komponentti :as komp]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.yleiset :as yleiset]   
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.tyokalut.vieritys :as vieritys]
-            [harja.pvm :as pvm]))
+            [harja.pvm :as pvm]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.domain.roolit :as roolit]
+            [harja.tiedot.istunto :as istunto]))
 
 (defn sarakkeiden-leveys [sarake]
   (case sarake
@@ -304,11 +307,24 @@
 (defn sopimuksen-tallennus-boksi
   [e! virhe-sopimuksia-syottaessa?]
   [:div.table-default-even.col-xs-12
-   [:div.flex-row 
+   [:div.flex-row
     [:h3 "Syötä tarjouksen määrät"]
     [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))]]
-   (when virhe-sopimuksia-syottaessa?  
+   (when virhe-sopimuksia-syottaessa?
      [yleiset/info-laatikko :varoitus "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä '0'" "" "100%" {:luokka "ala-margin-16"}])])
+
+(defn kaikille-tehtaville-arvon-tallennus
+  [e!]
+  (when (and (k/kehitysymparistossa?)
+             (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+    [:div.table-default-even.col-xs-12
+     [:div.flex-row
+      [:h3 "Pikatäytä arvot kaikille tehtäville kerralla (vain testikäytössä)"]
+      [napit/tallenna "Pikatäytä arvot kaikille tehtäville"
+       (comp (vieritys/vierita ::top) #(when (and (k/kehitysymparistossa?)
+                                                  (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+                                         (e! (t/->TestiTallennaKaikkiinTehtaviinArvo {:hoitokausi :kaikki}))))
+       {:luokka "nappi-ensisijainen"}]]]))
 
 (defn tehtavat*
   [e! _]
@@ -332,19 +348,23 @@
        ;[debug/debug @t/taulukko-tila]
        ;[debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
-       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]       
+       [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
        (when (not sopimukset-syotetty?)
-         [yleiset/keltainen-vihjelaatikko    
+         [yleiset/keltainen-vihjelaatikko
           [:<>
            [:div "Urakan aluksi syötä tehtäville tarjouksen tehtävä- ja määräluettelosta määrät. Hoitoluokkatiedot syötetään sellaisenaan tarjouksesta. Suunnitellut määrät kerrotaan suunnittelua varten oletuksena hoitovuosien määrän mukaan. Jos haluat suunnitella vuosikohtaisesti niin aukaise rivi ja valitse “Haluan syöttää joka vuoden erikseen”."]
            [:div "Syötä kaikkiin tehtäviin määrät. Jos sopimuksessa ei ole määriä kyseiselle tehtävälle, syötä ‘0’. Tarjouksien määriä käytetään apuna urakan määrien suunnitteluun ja seurantaan."]]
           :info])
-       (when (not sopimukset-syotetty?) 
+       (when (not sopimukset-syotetty?)
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])
+       ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
+       (when (and (k/kehitysymparistossa?)
+                  (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
+         [kaikille-tehtaville-arvon-tallennus e!])
        (when sopimukset-syotetty?
          [valitaso-filtteri e! app])
        [tehtava-maarat-taulukko-kontti e! app]
-       (when (not sopimukset-syotetty?) 
+       (when (not sopimukset-syotetty?)
          [sopimuksen-tallennus-boksi e! virhe-sopimuksia-syottaessa?])])))
 
 (defn tehtavat []
