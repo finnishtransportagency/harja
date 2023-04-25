@@ -25,6 +25,4 @@ ALTER TABLE siltapalvelusopimus
     ALTER COLUMN urakkanro TYPE VARCHAR(32);
 
 ALTER TABLE analytiikka_toteumat
-ALTER COLUMN toteuma_alueurakkanumero TYPE VARCHAR(32);
-
-
+    ALTER COLUMN toteuma_alueurakkanumero TYPE VARCHAR(32);
