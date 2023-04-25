@@ -24,12 +24,12 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
-(defn hae-harjassa-luodut-sopimukset-voimassa [db user]
+(defn hae-vesivayla-kanavien-hoito-sopimukset [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
     (let [sopimukset (into []
                        (map konv/alaviiva->rakenne)
-                       (q/hae-harjassa-luodut-sopimukset-voimassa db))
+                       (q/hae-vesivayla-kanavien-hoito-sopimukset db))
           vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
       vastaus)))
@@ -99,10 +99,10 @@
       {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
 
     (julkaise-palvelu http
-      :hae-harjassa-luodut-sopimukset-voimassa
+      :hae-vesivayla-kanavien-hoito-sopimukset
       (fn [user _]
-        (hae-harjassa-luodut-sopimukset-voimassa db user))
-      {:vastaus-spec ::sopimus/hae-harjassa-luodut-sopimukset-vastaus})
+        (hae-vesivayla-kanavien-hoito-sopimukset db user))
+      {:vastaus-spec ::sopimus/hae-vesivayla-kanavien-hoito-sopimukset-vastaus})
 
     (julkaise-palvelu http
       :tallenna-sopimus
@@ -117,7 +117,7 @@
     (poista-palvelut
       http
       :hae-harjassa-luodut-sopimukset
-      :hae-harjassa-luodut-sopimukset-voimassa
+      :hae-vesivayla-kanavien-hoito-sopimukset
       :tallenna-sopimus)
 
     this))

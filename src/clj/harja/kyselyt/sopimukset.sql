@@ -61,19 +61,24 @@ FROM sopimus s
 WHERE s.harjassa_luotu IS TRUE
 ORDER BY s.alkupvm DESC, s.nimi;
 
--- name: hae-harjassa-luodut-sopimukset-voimassa
+-- name: hae-vesivayla-kanavien-hoito-sopimukset
 SELECT
   s.id,
+  u.tyyppi,
+  s.sampoid,
   s.nimi,
   s.alkupvm,
   s.loppupvm,
-  s.paasopimus as "paasopimus-id",
   u.nimi AS urakka_nimi,
   u.id AS urakka_id
 FROM sopimus s
   LEFT JOIN urakka u ON s.urakka = u.id
-WHERE s.harjassa_luotu IS TRUE AND s.loppupvm > NOW() 
+WHERE u.tyyppi = 'vesivayla-kanavien-hoito' 
 ORDER BY s.alkupvm DESC, s.nimi;
+
+-- name: paivita-ketjutus<!
+INSERT INTO kan_lt_ketjutus_aktivointi (sopimus_id, sampoid, ketjutus_kaytossa) VALUES (:sopimus_id, :sampoid, :ketjutus_kaytossa)
+ON CONFLICT (sopimus_id) DO UPDATE SET ketjutus_kaytossa = :ketjutus_kaytossa;
 
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus s SET urakka=:urakka

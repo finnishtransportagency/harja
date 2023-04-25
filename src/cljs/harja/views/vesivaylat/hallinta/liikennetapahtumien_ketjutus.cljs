@@ -25,18 +25,14 @@
        [grid/grid
         {:otsikko (if (and (some? haetut-sopimukset) sopimuksien-haku-kaynnissa?)
                     [ajax-loader-pieni "Päivitetään listaa"]
-                    "Vesiväyläsopimuksien liikennetapahtumien ketjutus")
+                    "Liikennetapahtumien ketjutus")
          :tunniste ::sopimus/id
          :tyhja (if (nil? haetut-sopimukset)
                   [ajax-loader "Haetaan sopimuksia"]
-                  "Sopimuksia ei löytynyt")
-         :rivi-klikattu #(e! (tiedot/->ValitseSopimus %))}
-        [{:otsikko "Nimi" :nimi ::sopimus/nimi :tyyppi :string}
+                  "Sopimuksia ei löytynyt")}
+        [{:otsikko "Sopimus" :nimi ::sopimus/nimi :tyyppi :string}
          {:otsikko "Alku" :nimi ::sopimus/alkupvm :tyyppi :pvm :fmt pvm/pvm-opt}
          {:otsikko "Loppu" :nimi ::sopimus/loppupvm :tyyppi :pvm :fmt pvm/pvm-opt}
-         {:otsikko "Pääsopimus" :nimi ::sopimus/paasopimus-id
-          :hae (fn [s]
-                 (::sopimus/nimi (sopimus/sopimuksen-paasopimus haetut-sopimukset s)))}
          {:otsikko "Urakka" :nimi :urakan-nimi :hae #(get-in % [::sopimus/urakka ::urakka/nimi])}
 
          {:otsikko (str "Ketjutus käytössä?")
@@ -57,7 +53,7 @@
                           (r/wrap
                             true
                             (fn [uusi]
-                              (println "Uusi: " uusi)))
+                              (println "Uusi: " uusi " Rivi: " rivi)))
                           
                           ])}
          
