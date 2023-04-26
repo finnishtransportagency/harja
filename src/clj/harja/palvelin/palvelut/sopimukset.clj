@@ -24,15 +24,19 @@
                                            :inner {:urakka {:ns :harja.domain.urakka}}})]
         vastaus)))
 
+(defn vesivayla-kanavien-hoito-sopimukset-vastaus [db]
+  (let [sopimukset (into []
+                     (map konv/alaviiva->rakenne)
+                     (q/hae-vesivayla-kanavien-hoito-sopimukset db))
+        
+        vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
+                                         :inner {:urakka {:ns :harja.domain.urakka}}})]
+    vastaus))
+
 (defn hae-vesivayla-kanavien-hoito-sopimukset [db user]
   (when (ominaisuus-kaytossa? :vesivayla)
     (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-vesivaylat user)
-    (let [sopimukset (into []
-                       (map konv/alaviiva->rakenne)
-                       (q/hae-vesivayla-kanavien-hoito-sopimukset db))
-          vastaus (namespacefy sopimukset {:ns :harja.domain.sopimus
-                                           :inner {:urakka {:ns :harja.domain.urakka}}})]
-      vastaus)))
+    (vesivayla-kanavien-hoito-sopimukset-vastaus db)))
 
 (defn- paivita-sopimusta! [db user sopimus]
   (let [id (::sopimus/id sopimus)
@@ -88,6 +92,21 @@
          ::sopimus/loppupvm (:loppupvm tallennettu-sopimus)
          ::sopimus/paasopimus-id (:paasopimus-id tallennettu-sopimus)}))))
 
+(defn tallenna-ketjutus [db user {:keys [tiedot]}]
+  (when (ominaisuus-kaytossa? :vesivayla)
+    (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-vesivaylat user)
+
+    (let [sopimus_id (::sopimus/id tiedot)
+          sampoid (::sopimus/sampoid tiedot)
+          kaytossa (not (:ketjutus tiedot))]
+      (println "\n Kysely: id" sopimus_id " sampoid " sampoid " kaytössä " kaytossa)
+
+      (q/paivita-ketjutus<! db {:sopimus_id sopimus_id
+                                :sampoid sampoid
+                                :ketjutus_kaytossa kaytossa})
+
+      (vesivayla-kanavien-hoito-sopimukset-vastaus db))))
+
 (defrecord Sopimukset []
   component/Lifecycle
   (start [{http :http-palvelin db :db :as this}]
@@ -110,6 +129,11 @@
         (tallenna-sopimus db user tiedot))
       {:kysely-spec ::sopimus/tallenna-sopimus-kysely
        :vastaus-spec ::sopimus/tallenna-sopimus-vastaus})
+    
+    (julkaise-palvelu http
+      :tallenna-ketjutus
+      (fn [user tiedot]
+        (tallenna-ketjutus db user tiedot)))
 
     this)
 
@@ -118,6 +142,7 @@
       http
       :hae-harjassa-luodut-sopimukset
       :hae-vesivayla-kanavien-hoito-sopimukset
-      :tallenna-sopimus)
+      :tallenna-sopimus
+      :tallenna-ketjutus)
 
     this))

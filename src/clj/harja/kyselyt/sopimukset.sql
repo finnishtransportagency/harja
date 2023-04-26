@@ -63,6 +63,7 @@ ORDER BY s.alkupvm DESC, s.nimi;
 
 -- name: hae-vesivayla-kanavien-hoito-sopimukset
 SELECT
+  k.ketjutus_kaytossa AS ketjutus,
   s.id,
   u.tyyppi,
   s.sampoid,
@@ -73,6 +74,7 @@ SELECT
   u.id AS urakka_id
 FROM sopimus s
   LEFT JOIN urakka u ON s.urakka = u.id
+  LEFT JOIN kan_lt_ketjutus_aktivointi k ON k.sopimus_id = s.id
 WHERE u.tyyppi = 'vesivayla-kanavien-hoito' 
 ORDER BY s.alkupvm DESC, s.nimi;
 

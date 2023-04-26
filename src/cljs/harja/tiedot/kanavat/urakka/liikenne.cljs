@@ -469,8 +469,8 @@
     
     ;; Tämä poistetaan ja tehdään hallintapaneeliin uusi tabi
     (if (and
-          (= sopimus-nimi "01QP1-T00012635")
-          (= sopimus-id 1310))
+          (not= sopimus-nimi "01QP1-T00012635www")
+          (not= sopimus-id 1310))
       ;; Halutaan tapahtumien "Ketjutus" vain urakalle  
       ;; Saimaan kanavan käyttö ja kunnossapito 2019 - 2023 
       (boolean
