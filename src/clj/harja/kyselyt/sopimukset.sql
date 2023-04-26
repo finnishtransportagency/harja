@@ -78,9 +78,12 @@ FROM sopimus s
 WHERE u.tyyppi = 'vesivayla-kanavien-hoito' 
 ORDER BY s.alkupvm DESC, s.nimi;
 
--- name: paivita-ketjutus<!
+-- name: luo-tai-paivita-ketjutus!
 INSERT INTO kan_lt_ketjutus_aktivointi (sopimus_id, sampoid, ketjutus_kaytossa) VALUES (:sopimus_id, :sampoid, :ketjutus_kaytossa)
 ON CONFLICT (sopimus_id) DO UPDATE SET ketjutus_kaytossa = :ketjutus_kaytossa;
+
+-- name: poista-sopimuksen-liikenne-ketjutus!
+UPDATE kan_lt_ketjutus_aktivointi SET ketjutus_kaytossa=:ketjutus_kaytossa WHERE sopimus_id = :sopimus_id;
 
 -- name: liita-sopimukset-urakkaan!
 UPDATE sopimus s SET urakka=:urakka

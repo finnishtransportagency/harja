@@ -18,7 +18,6 @@
             [reagent.core :refer [atom] :as r]))
 
 (defn sopimusgrid [e! haetut-sopimukset sopimuksien-haku-kaynnissa?]
-  (println "\n Haetut: " haetut-sopimukset sopimuksien-haku-kaynnissa?)
   [grid/grid
    {:otsikko (if (and (some? haetut-sopimukset) sopimuksien-haku-kaynnissa?)
                [ajax-loader-pieni "Päivitetään listaa"]
@@ -37,19 +36,14 @@
      :tyyppi :komponentti
      :tasaa :keskita
      :nimi :valinta
-
      :komponentti (fn [rivi]
-                    (println "Ketjutus käytössä: " (boolean (::sopimus/ketjutus rivi)) (::sopimus/ketjutus rivi) " sopimus id: " (::sopimus/id rivi))
-
                     [kentat/tee-kentta
                      {:tyyppi :checkbox}
                      (r/wrap
                        (boolean (::sopimus/ketjutus rivi))
                        (fn [uusi]
-                         (println "Uusi: " uusi " Rivi: " rivi)
-                         (tuck-apurit/e-kanavalla! e! tiedot/->TallennaKetjutus rivi)))])}]
-   haetut-sopimukset]
-   )
+                         (tuck-apurit/e-kanavalla! e! tiedot/->TallennaKetjutus rivi uusi)))])}]
+   haetut-sopimukset])
 
 (defn liikennetapahtumien-ketjutus* [e! _]
   (komp/luo
@@ -58,7 +52,6 @@
          (e! (tiedot/->HaeSopimukset))))
 
     (fn [e! {:keys [haetut-sopimukset sopimuksien-haku-kaynnissa?]}]
-      (println "Sop: " haetut-sopimukset sopimuksien-haku-kaynnissa?)
       [:div
        [sopimusgrid e! haetut-sopimukset sopimuksien-haku-kaynnissa?]])))
 

@@ -9,7 +9,7 @@
 (defrecord ValitseSopimus [sopimus])
 (defrecord Nakymassa? [nakymassa?])
 ;;(defrecord UusiSopimus [])
-(defrecord TallennaKetjutus [sopimus])
+(defrecord TallennaKetjutus [sopimus kaytossa?])
 (defrecord KetjutusTallennettu [vastaus])
 (defrecord KetjutusEiTallennettu [virhe])
 ;;(defrecord SopimustaMuokattu [sopimus])
@@ -48,16 +48,16 @@
     (assoc app :sopimuksien-haku-kaynnissa? false))
 
   TallennaKetjutus
-  (process-event [{sopimus :sopimus} app]
+  (process-event [{sopimus :sopimus kaytossa? :kaytossa?} app]
     (tuck-apurit/post! app :tallenna-ketjutus
-      {:tiedot sopimus}
+      {:tiedot sopimus
+       :kaytossa? kaytossa?}
       {:onnistui ->KetjutusTallennettu
        :epaonnistui ->KetjutusEiTallennettu})
     (assoc app :tallennus-kaynnissa? true))
 
   KetjutusTallennettu
   (process-event [{vastaus :vastaus} app]
-    (println "\n OK! " app)
     (-> app
       (assoc :haetut-sopimukset vastaus)
       (assoc :tallennus-kaynnissa? false)))
