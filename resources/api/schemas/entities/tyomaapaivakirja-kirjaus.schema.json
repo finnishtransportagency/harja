@@ -56,7 +56,7 @@
                             },
                             "ilman-lampotila": {
                                 "id": "urn:harja/saatiedot/0/ilman-lampotila",
-                                "required": false,
+                                "required": true,
                                 "type": "number"
                             },
                             "tien-lampotila": {
