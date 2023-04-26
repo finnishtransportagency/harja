@@ -459,20 +459,17 @@
            (str ", " (count (get-in edelliset [suunta :edelliset-alukset])) " lähestyvää alusta")))))
 
 (defn nayta-edelliset-alukset? [{:keys [valittu-liikennetapahtuma
+                                        haetut-sopimukset
                                         edellisten-haku-kaynnissa?
                                         edelliset]}]
-  
-  (println "\n [] Valittu liikennetapahtuma " valittu-liikennetapahtuma)
 
-  (let [sopimus-nimi (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/nimi)
-        sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)]
-    
-    ;; Tämä poistetaan ja tehdään hallintapaneeliin uusi tabi
-    (if (and
-          (not= sopimus-nimi "01QP1-T00012635www")
-          (not= sopimus-id 1310))
-      ;; Halutaan tapahtumien "Ketjutus" vain urakalle  
-      ;; Saimaan kanavan käyttö ja kunnossapito 2019 - 2023 
+  (let [sopimus-id (-> valittu-liikennetapahtuma ::lt/sopimus ::sop/id)
+        ketjutus-kaytossa? (first (filter (fn[asd]
+                                            (= sopimus-id (::sop/id asd))) haetut-sopimukset))
+        ketjutus-kaytossa? (boolean (::sop/ketjutus ketjutus-kaytossa?))]
+
+    ;; Onko ketjutus käytössä tällä sopimuksella/urakalla?
+    (if ketjutus-kaytossa?
       (boolean
         (and (::lt/kohde valittu-liikennetapahtuma)
           (not edellisten-haku-kaynnissa?)
