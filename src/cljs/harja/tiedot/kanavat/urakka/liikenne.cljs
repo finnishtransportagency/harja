@@ -49,6 +49,13 @@
 (defn resetoi-tila []
   (reset! tila tila-arvot))
 
+(defn paivita-liikennenakyma []
+  ;; Kun kohteita/osia/urakkaliitoksia muokataan, resetoidaan liikennenäkymän tiedot
+  ;; Eli pakotetaan näkymän uudelleenlataus, jotta uudet teidot tulevat näkyviin ja vältymme erroreilta
+  (resetoi-tila)
+  (reset! nav/valittu-hallintayksikko-id nil)
+  (reset! nav/valittu-urakka-id nil))
+
 (defn uusi-tapahtuma
   ([]
    (uusi-tapahtuma istunto/kayttaja u/valittu-sopimusnumero nav/valittu-urakka (pvm/nyt)))

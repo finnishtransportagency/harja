@@ -3,18 +3,12 @@
             [tuck.core :refer [tuck]]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.vesivaylat.hallinta.liikennetapahtumien-ketjutus :as tiedot]
-            [harja.ui.napit :as napit]
             [harja.ui.yleiset :refer [ajax-loader ajax-loader-pieni]]
             [harja.ui.grid :as grid]
             [harja.pvm :as pvm]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.urakka :as urakka]
             [harja.ui.kentat :as kentat]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.ikonit :as ikonit]
-            [harja.ui.debug :as debug]
-            [harja.domain.oikeudet :as oikeudet]
-            [harja.ui.valinnat :as valinnat]
             [reagent.core :refer [atom] :as r]))
 
 (defn sopimusgrid [e! haetut-sopimukset sopimuksien-haku-kaynnissa?]
