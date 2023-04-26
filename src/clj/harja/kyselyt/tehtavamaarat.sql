@@ -111,24 +111,21 @@ WHERE urakka = :urakka
 -- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
 SELECT distinct tpk3.id       as "toimenpide-id",
                 tpk3.nimi     as "toimenpide",
-                tr3.nimi      as "tehtavaryhma-nimi",
-                tr3.id        as "tehtavaryhma-id",
-                tr3.jarjestys as "jarjestys",
+                tr.nimi      as "tehtavaryhma-nimi",
+                tr.id        as "tehtavaryhma-id",
+                tr.jarjestys as "jarjestys",
                 tpi.id        as "toimenpideinstanssi"
-FROM tehtavaryhma tr1
-       JOIN tehtavaryhma tr2 ON tr1.id = tr2.emo
-       JOIN tehtavaryhma tr3 ON tr2.id = tr3.emo
-                                    and tr3.nimi not like ('%Lisätyöt%')
-                                    -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
-                                    AND (tr3.yksiloiva_tunniste IS NULL
-                                        OR (tr3.yksiloiva_tunniste IS NOT NULL AND tr3.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
+FROM tehtavaryhma tr
        LEFT JOIN toimenpidekoodi tpk4
-                 ON tr3.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
+                 ON tr.id = tpk4.tehtavaryhma and tpk4.taso = 4 AND tpk4.ensisijainen is true AND
                     tpk4.poistettu is not true AND tpk4.piilota is not true
        JOIN toimenpidekoodi tpk3 ON tpk4.emo = tpk3.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tpk3.id and tpi.urakka = :urakka
-WHERE tr1.emo is null
-order by tr3.jarjestys;
+ WHERE tr.tyyppi = 'alataso' and tr.nimi not like ('%Lisätyöt%')
+   -- Jätetään tehtäväryhmä: Tilaajan rahavaraus (T3) pois, koska se lisätään bonuksista
+   AND (tr.yksiloiva_tunniste IS NULL
+     OR (tr.yksiloiva_tunniste IS NOT NULL AND tr.yksiloiva_tunniste != '0e78b556-74ee-437f-ac67-7a03381c64f6'))
+ order by tr.jarjestys;
 
 -- name: hae-tehtavahierarkia
 -- Palauttaa tehtävähierarkian kokonaisuudessaan.
