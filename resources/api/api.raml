@@ -51,6 +51,8 @@ schemas:
  - paikkausten-poisto-request: !include schemas/paikkausten-poisto-request.schema.json
  - raportti-materiaaliraportti-response: !include schemas/raportti.schema.json
  - tyomaapaivakirja-kirjaus-request: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
+ - tyomaapaivakirja-paivitys-request: !include schemas/tyomaapaivakirja-paivitys-request.schema.json
+
 
 securitySchemes:
  - basic:
@@ -1092,8 +1094,8 @@ documentation:
           description: Ei vielä toteutettu - Työmaapäiväkirjan päivittäminen. Korvaa edeltävän version.
           body:
             application/json:
-              example: !include examples/tyomaapaivakirja-kirjaus-request.json
-              schema: tyomaapaivakirja-kirjaus-request
+              example: !include examples/tyomaapaivakirja-paivitys-request.json
+              schema: tyomaapaivakirja-paivitys-request
           responses:
             200:
               body:
