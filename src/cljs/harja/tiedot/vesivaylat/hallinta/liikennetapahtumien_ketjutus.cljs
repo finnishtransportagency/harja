@@ -8,11 +8,9 @@
 
 (defrecord ValitseSopimus [sopimus])
 (defrecord Nakymassa? [nakymassa?])
-;;(defrecord UusiSopimus [])
 (defrecord TallennaKetjutus [sopimus kaytossa?])
 (defrecord KetjutusTallennettu [vastaus])
 (defrecord KetjutusEiTallennettu [virhe])
-;;(defrecord SopimustaMuokattu [sopimus])
 (defrecord HaeSopimukset [])
 (defrecord SopimuksetHaettu [sopimukset])
 (defrecord SopimuksetEiHaettu [virhe])
