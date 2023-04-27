@@ -14,17 +14,21 @@
             [clojure.string :as str])
   (:use [slingshot.slingshot :only [throw+]]))
 
+(defn validi-sampo-id? [id]
+  (boolean (re-matches #"PR[a-zA-Z0-9]+" id)))
+
 (defn pudota-etunollat [alueurakkanumero]
   (str/replace alueurakkanumero #"^0+" ""))
 
 (defn pura-alueurakkanro [urakka-sampoid alueurakkanro]
   (let [tarkista-alueurakkanro #(if (or
                                       (merkkijono/kokonaisluku? %)
-                                      (string? %))
+                                      (validi-sampo-id? %))
                                   %
                                   (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero tai SAMPO-id.
                                                     Alueurakkanumero täytyy korjata Sampoon."
                                                      urakka-sampoid alueurakkanro)))
+
         osat (str/split alueurakkanro #"-")]
     (if (= 2 (count osat))
       {:tyypit (first osat) :alueurakkanro (tarkista-alueurakkanro (second osat))}
