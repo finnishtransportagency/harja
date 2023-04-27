@@ -662,7 +662,7 @@
                                          (tks-putsaus/->TyokoneenseurantaPuhdistus)
                                          [:db])
       :api-turvallisuuspoikkeama (component/using
-                                   (turvallisuuspoikkeama/->Turvallisuuspoikkeama)
+                                   (turvallisuuspoikkeama/->Turvallisuuspoikkeama (:kehitysmoodi asetukset))
                                    [:http-palvelin :db :integraatioloki
                                     :liitteiden-hallinta :turi])
       :api-suolasakkojen-lahetys (component/using

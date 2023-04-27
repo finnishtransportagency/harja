@@ -280,7 +280,7 @@
       (async/thread (laheta-poikkeamat-turin turi idt)))
     (vastaus turvallisuuspoikkeamat)))
 
-(defrecord Turvallisuuspoikkeama []
+(defrecord Turvallisuuspoikkeama [kehitysmoodi?]
   component/Lifecycle
   (start [{http :http-palvelin db :db liitteiden-hallinta :liitteiden-hallinta turi :turi
            integraatioloki :integraatioloki :as this}]
@@ -288,11 +288,22 @@
       http :lisaa-turvallisuuspoikkeama
       (POST "/api/urakat/:id/turvallisuuspoikkeama" request
         (kasittele-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
-                         json-skeemat/turvallisuuspoikkeamien-kirjaus json-skeemat/kirjausvastaus
-                         (fn [parametrit data kayttaja db]
-                           (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja)))))
+          json-skeemat/turvallisuuspoikkeamien-kirjaus json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (kirjaa-turvallisuuspoikkeama liitteiden-hallinta turi db parametrit data kayttaja)))))
+    (julkaise-reitti
+      http :hae-turvallisuuspoikkeamat
+      (GET "/api/turvallisuuspoikkeamat/:alkuaika/:loppuaika" request
+        ;; TODO: HOX!!!! ihan väärä integraatio tallennetaan kantaan
+        (kasittele-get-kutsu db integraatioloki :lisaa-turvallisuuspoikkeama request
+          json-skeemat/+turvallisuuspoikkeamien-vastaus+
+          (fn [parametrit kayttaja db]
+            (hae-turvallisuuspoikkeamat db parametrit kayttaja))
+          ;; Tarkista sallitaanko admin käyttälle API:en käyttöoikeus
+          (not kehitysmoodi?))))
     this)
 
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http :lisaa-turvallisuuspoikkeama)
+    (poista-palvelut http :hae-turvallisuuspoikkeamat)
     this))
