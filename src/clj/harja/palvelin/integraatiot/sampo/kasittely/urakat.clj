@@ -18,9 +18,11 @@
   (str/replace alueurakkanumero #"^0+" ""))
 
 (defn pura-alueurakkanro [urakka-sampoid alueurakkanro]
-  (let [tarkista-alueurakkanro #(if (merkkijono/kokonaisluku? %)
+  (let [tarkista-alueurakkanro #(if (or
+                                      (merkkijono/kokonaisluku? %)
+                                      (string? %))
                                   %
-                                  (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero.
+                                  (log/error (format "Sampon urakan (id: %s) alueurakkanumero (%s) ei ole validi numero tai SAMPO-id.
                                                     Alueurakkanumero täytyy korjata Sampoon."
                                                      urakka-sampoid alueurakkanro)))
         osat (str/split alueurakkanro #"-")]
